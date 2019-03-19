@@ -3,6 +3,9 @@
 <head>
   <title>Ballerina Language Specification, 2019r0</title>
   <meta charset="utf-8" />
+  <style>
+    pre.prettyprint code, code.grammar { background-color: #00FFFF } 
+  </style>
 </head>
 <body>
 <h1>Ballerina Language Specification, 2019r0</h1>
@@ -135,8 +138,8 @@ denoted by the hexadecimal numeral X
 <li><code>^x</code> means any single Unicode code point that does not match x
 and is not a disallowed character;
 <li><code>x..y</code> means any single Unicode character whose code point is
-greater than or equal to that of x and less than or equal to that of y_
-<li><code>str_</code> means the characters <code>str</code> literally
+greater than or equal to that of x and less than or equal to that of y
+<li><code class="grammar">str</code> means the characters <code>str</code> literally
 <li><code>symbol </code>means a reference to production for the nonterminal
 <code>symbol</code>
 <li><code>x|y</code> means x or y
@@ -268,8 +271,8 @@ points.
 class="prettyprint">identifier := UndelimitedIdentifier | DelimitedIdentifier
 UndelimitedIdentifier :=
    IdentifierInitialChar IdentifierFollowingChar*
-DelimitedIdentifier := _^"_ StringChar+ _"_
-IdentifierInitialChar := _A_ .. _Z_ | _a_ .. _z_ | ___ | UnicodeIdentifierChar
+DelimitedIdentifier := <code>^"</code> StringChar+ <code>"</code>
+IdentifierInitialChar := <code>A</code> .. <code>Z</code> | <code>a</code> .. <code>z</code> | <code>_</code> | UnicodeIdentifierChar
 IdentifierFollowingChar := IdentifierInitialChar | Digit
 UnicodeIdentifierChar := ^ ( AsciiChar | UnicodeNonIdentifierChar )
 AsciiChar := 0x0 .. 0x7F
@@ -284,7 +287,7 @@ UnicodePrivateUseChar :=
 UnicodePatternWhiteSpaceChar := 0x200E | 0x200F | 0x2028 | 0x2029
 UnicodePatternSyntaxChar :=
    character with Unicode property Pattern_Syntax=True
-Digit := _0_ .. _9_
+Digit := <code>0</code> .. <code>9</code>
 </pre>
 <p>
 Note that the set of characters allowed in identifiers follows the requirements
@@ -295,7 +298,7 @@ the sense that it does not change between Unicode versions.
 
 <pre
 class="prettyprint">TokenWhiteSpace := (Comment | WhiteSpaceChar)*
-Comment ::= _//_ AnyCharButNewline*
+Comment ::= <code>//</code> AnyCharButNewline*
 AnyCharButNewline ::= ^ 0xA
 WhiteSpaceChar := 0x9 | 0xA | 0xD | 0x20
 </pre>
@@ -660,8 +663,8 @@ class="prettyprint">simple-type-descriptor :=
 
 
 <pre
-class="prettyprint">nil-type-descriptor :=  _(_ _)_
-nil-literal :=  _(_ _)_ | _null_
+class="prettyprint">nil-type-descriptor :=  <code>(</code> <code>)</code>
+nil-literal :=  <code>(</code> <code>)</code> | <code>null</code>
 </pre>
 <p>
 The nil type contains a single value, called nil, which is used to represent the
@@ -682,8 +685,8 @@ The implicit initial value for the nil type is <code>()</code>.
 
 
 <pre
-class="prettyprint">boolean-type-descriptor := _boolean_
-boolean-literal := _true_ | _false_
+class="prettyprint">boolean-type-descriptor := <code>boolean</code>
+boolean-literal := <code>true</code> | <code>false</code>
 </pre>
 <p>
 The boolean type consists of the values true and false.
@@ -696,15 +699,15 @@ The implicit initial value for the boolean type is false.
 
 
 <pre
-class="prettyprint">int-type-descriptor := _int_
+class="prettyprint">int-type-descriptor := <code>int</code>
 int-literal := DecimalNumber | HexIntLiteral
-DecimalNumber := _0_ | NonZeroDigit Digit*
+DecimalNumber := <code>0</code> | NonZeroDigit Digit*
 HexIntLiteral := HexIndicator HexNumber
 HexNumber := HexDigit+
-HexIndicator := _0x_ | _0X_
-HexDigit := Digit | _a_ .. _f_ | _A_ .. _F_
-Digit := _0_ .. _9_
-NonZeroDigit := _1_ .. _9_
+HexIndicator := <code>0x</code> | <CODE>0X</CODE>
+HexDigit := Digit | <code>a</code> .. <code>f</code> | <code>A</code> .. <code>F</code>
+Digit := <code>0</code> .. <code>9</code>
+NonZeroDigit := <code>1</code> .. <code>9</code>
 </pre>
 <p>
 The int type consists of integers between -9,223,372,036,854,775,808 and
@@ -719,27 +722,27 @@ The implicit initial value for the int type is 0.
 
 
 <pre
-class="prettyprint">floating-point-type-descriptor := _float_ | _decimal_
+class="prettyprint">floating-point-type-descriptor := <code>float</code> | <code>decimal</code>
 floating-point-literal :=
    DecimalFloatingPointNumber | HexFloatingPointLiteral
 DecimalFloatingPointNumber :=
    DecimalNumber Exponent
    | DottedDecimalNumber [Exponent]
 DottedDecimalNumber :=
-   DecimalNumber _._ Digit*
-   | _._ Digit+
+   DecimalNumber <code>.</code> Digit*
+   | <code>.</code> Digit+
 Exponent := ExponentIndicator [Sign] Digit+
-ExponentIndicator := _e_ | _E_
+ExponentIndicator := <code>e</code> | <code>E</code>
 HexFloatingPointLiteral := HexIndicator HexFloatingPointNumber
 HexFloatingPointNumber :=
    HexNumber HexExponent
    | DottedHexNumber [HexExponent]
 DottedHexNumber :=
-   HexDigit+ _._ HexDigit*
-   | _._ HexDigit+
+   HexDigit+ <code>.</code> HexDigit*
+   | <code>.</code> HexDigit+
 HexExponent := HexExponentIndicator [Sign] Digit+
-HexExponentIndicator := _p_ | _P_
-Sign := _+_ | _-_
+HexExponentIndicator := <code>p</code> | <code>P</code>
+Sign := <code>+</code> | <code>-</code>
 </pre>
 <p>
 There are two basic types for floating point numbers:
@@ -775,13 +778,13 @@ The implicit initial value for each floating point type is 0.0.
 
 
 <pre
-class="prettyprint">string-type-descriptor := _string_
+class="prettyprint">string-type-descriptor := <code>string</code>
 string-literal := DoubleQuotedStringLiteral
-DoubleQuotedStringLiteral := _"_ (StringChar | StringEscape)* _"_
-StringChar := ^ ( 0xA | 0xD | _\_ | _"_ )
+DoubleQuotedStringLiteral := <code>"</code> (StringChar | StringEscape)* <code>"</code>
+StringChar := ^ ( 0xA | 0xD | <code>\</code> | <code>"</code> )
 StringEscape := StringSingleEscape | StringNumericEscape
-StringSingleEscape := _\t_ | _\n_ | _\r_ | _\\_ | _\"_
-StringNumericEscape := _\u[_ CodePoint _]_
+StringSingleEscape := <code>\t</code> | <code>\n</code> | <code>\r</code> | <code>\\</code> | <code>\"</code>
+StringNumericEscape := <code>\u[</code> CodePoint <code>]</code>
 CodePoint := HexDigit+
 </pre>
 <p>
@@ -937,13 +940,13 @@ that the value for all members must belong to, and optionally, a length.
 
 
 <pre
-class="prettyprint">array-type-descriptor := member-type-descriptor _[_ [ array-length ] _]_
+class="prettyprint">array-type-descriptor := member-type-descriptor <code>[</code> [ array-length ] <code>]</code>
 member-type-descriptor := type-descriptor
 array-length :=
    int-literal
    | constant-reference-expr
    | implied-array-length
-implied-array-length := _*_
+implied-array-length := <code>*</code>
 </pre>
 <p>
 A type <code>T[]</code> contains a list shape if all members of the list shape
@@ -995,7 +998,7 @@ type for each member of the list.
 
 <pre
 class="prettyprint">tuple-type-descriptor :=
-   _(_ member-type-descriptor (_,_ member-type-descriptor)+ _)_
+   <code>(</code> member-type-descriptor (<code>,</code> member-type-descriptor)+ <code>)</code>
 </pre>
 <p>
 A type (T<sub>1</sub>, T<sub>2</sub>, … T<sub>n</sub>) contains a list shape S
@@ -1060,8 +1063,8 @@ that the value for all fields must belong to.
 
 
 <pre
-class="prettyprint">map-type-descriptor := _map_ type-parameter
-type-parameter := _&lt;_ type-descriptor _>_
+class="prettyprint">map-type-descriptor := <code>map</code> type-parameter
+type-parameter := <code>&lt;</code> type-descriptor <code>></code>
 </pre>
 <p>
 A type <code>map&lt;T></code> contains a mapping shape <em>m</em> if every field
@@ -1085,14 +1088,14 @@ separately for the value of each field.
 class="prettyprint">record-type-descriptor :=
    open-record-type-descriptor | closed-record-type-descriptor
 open-record-type-descriptor :=
-   _record_ _{_ field-descriptor* [record-rest-descriptor] _}_
-closed-record-type-descriptor :=  _record_ _{|_ field-descriptor+ _|}_
+   <code>record</code> <code>{</code> field-descriptor* [record-rest-descriptor] <code>}</code>
+closed-record-type-descriptor :=  <code>record</code> <code>{|</code> field-descriptor+ <code>|}</code>
 
 field-descriptor :=
    individual-field-descriptor | record-type-reference
-individual-field-descriptor := type-descriptor field-name [_?_]_;_
-record-type-reference := _*_ type-descriptor-reference _;_
-record-rest-descriptor := type-descriptor _..._ _;_
+individual-field-descriptor := type-descriptor field-name [<code>?</code>]<code>;</code>
+record-type-reference := <code>*</code> type-descriptor-reference <code>;</code>
+record-rest-descriptor := type-descriptor <code>...</code> <code>;</code>
 </pre>
 <p>
 Each <code>individual-field-descriptor</code> specifies an additional constraint
@@ -1167,15 +1170,15 @@ marked as a primary key, that value of that column in both rows is the same.
 
 
 <pre
-class="prettyprint">table-type-descriptor := _table_ _{_ column-type-descriptor+ _}_
+class="prettyprint">table-type-descriptor := <code>table</code> <code>{</code> column-type-descriptor+ <code>}</code>
 column-type-descriptor :=
    individual-column-type-descriptor
    | column-record-type-reference
 individual-column-type-descriptor :=
-   [_key_] type-descriptor column-name _;_
+   [<code>key</code>] type-descriptor column-name <code>;</code>
 column-record-type-reference :=
-   _*_ type-reference [key-specifier (_,_ key-specifier)*] _;_
-key-specifier := _key_ column-name
+   <code>*</code> type-reference [key-specifier (<code>,</code> key-specifier)*] <code>;</code>
+key-specifier := <code>key</code> column-name
 column-name := identifier
 </pre>
 <p>
@@ -1222,7 +1225,7 @@ and +0.0 or 1.0 and 1 in primary key columns?
 
 
 
-<pre class="prettyprint">xml-type-descriptor := _xml_
+<pre class="prettyprint">xml-type-descriptor := <code>xml</code>
 </pre>
 <p>
 An XML value represents an immutable sequence of zero or more of the items that
@@ -1253,7 +1256,7 @@ represented by a sequence consisting of just that item.
 
 <pre
 class="prettyprint">error-type-descriptor :=
-   _error_ [_&lt;_reason-type-descriptor[_,_ detail-type-descriptor]_>_]
+   <code>error</code> [<code>&lt;</code>reason-type-descriptor[<code>,</code> detail-type-descriptor]<code>></code>]
 reason-type-descriptor := type-descriptor
 detail-type-descriptor := type-descriptor
 </pre>
@@ -1307,17 +1310,17 @@ class="prettyprint">behavioral-type-descriptor :=
 
 
 <pre
-class="prettyprint">function-type-descriptor := _function_ function-signature
-function-signature := _(_ param-list _)_ return-type-descriptor
-return-type-descriptor := [ _returns_ annots type-descriptor ]
+class="prettyprint">function-type-descriptor := <code>function</code> function-signature
+function-signature := <code>(</code> param-list <code>)</code> return-type-descriptor
+return-type-descriptor := [ <code>returns</code> annots type-descriptor ]
 param-list :=
    [ individual-param-list [, rest-param]]
    | rest-param
-individual-param-list := individual-param (_,_ individual-param)*
+individual-param-list := individual-param (<code>,</code> individual-param)*
 individual-param :=
-   annots type-descriptor param-name [_=_ default-value]
+   annots type-descriptor param-name [<code>=</code> default-value]
 default-value := const-expr
-rest-param := annots type-descriptor _..._ [param-name]
+rest-param := annots type-descriptor <code>...</code> [param-name]
 </pre>
 <p>
 A function is a part of a program that can be explicitly executed. In Ballerina,
@@ -1397,10 +1400,10 @@ abstract object type descriptor.
 
 <pre
 class="prettyprint">object-type-descriptor :=
-   object-type-quals _object_ _{_
-      object-member-descriptor*    _}_
+   object-type-quals <code>object</code> <code>{</code>
+      object-member-descriptor*    <code>}</code>
 object-type-quals :=
-   [_abstract_] [_client_] | [_client_] _abstract_
+   [<code>abstract</code>] [<code>client</code>] | [<code>client</code>] <code>abstract</code>
 object-member-descriptor :=
    object-field-descriptor
    | object-method
@@ -1424,7 +1427,7 @@ methods; other objects types must not.
 
 <pre
 class="prettyprint">object-field-descriptor :=
-   [visibility-qual] type-descriptor field-name _;_
+   [visibility-qual] type-descriptor field-name <code>;</code>
 </pre>
 <p>
 An <code>object-field-descriptor</code> specifies a field of the object. The
@@ -1441,13 +1444,13 @@ value of that type using a <code>method-call-expr</code>.
 class="prettyprint">object-method := method-decl | method-defn
 method-decl :=
    metadata
-   [visibility-qual][_remote_]
-   _function_ method-name function-signature _;_
+   [visibility-qual][<code>remote</code>]
+   <code>function</code> method-name function-signature <code>;</code>
 method-defn :=
    metadata
    method-defn-quals
-   _function_ method-name function-signature method-body
-method-defn-quals := [visibility-qual] [_remote_]
+   <code>function</code> method-name function-signature method-body
+method-defn-quals := [visibility-qual] [<code>remote</code>]
 method-name := identifier
 method-body := function-body
 </pre>
@@ -1484,8 +1487,8 @@ abstract must be defined outside the object at the top-level of the module:
 class="prettyprint">outside-method-defn :=
    annots
    method-defn-quals
-   _function_ qual-method-name function-signature function-body
-qual-method-name := object-type-name _._ method-name
+   <code>function</code> qual-method-name function-signature function-body
+qual-method-name := object-type-name <code>.</code> method-name
 </pre>
 <p>
 The <code>method-defn-quals</code> on an outside-method-defn must contain the
@@ -1540,7 +1543,7 @@ compile error if a <code>__init</code> method:
 
 <pre
 class="prettyprint">object-type-reference :=
-   _*_ type-descriptor-reference _;_
+   <code>*</code> type-descriptor-reference <code>;</code>
 </pre>
 <p>
 The <code>type-descriptor-reference</code> in an
@@ -1558,7 +1561,7 @@ AT, then each method declared in AT must be defined in OT using either a
 
 
 <pre
-class="prettyprint">visibility-qual := _public_ | _private_;
+class="prettyprint">visibility-qual := <code>public</code> | <code>private</code>;
 </pre>
 <p>
 Visibility of fields, object initializer and methods is specified uniformly:
@@ -1576,7 +1579,7 @@ type cannot be private.
 
 
 <pre
-class="prettyprint">future-type-descriptor := _future_ type-parameter
+class="prettyprint">future-type-descriptor := <code>future</code> type-parameter
 </pre>
 <p>
 A future value represents a value to be returned by a named worker.  A future
@@ -1588,7 +1591,7 @@ belongs to T.
 
 
 <pre
-class="prettyprint">service-type-descriptor := _service_
+class="prettyprint">service-type-descriptor := <code>service</code>
 </pre>
 <p>
 A service value contains resources and methods. A service method is similar to
@@ -1609,7 +1612,7 @@ annotations on type definitions to support this.
 
 
 <pre
-class="prettyprint">stream-type-descriptor := _stream_ type-parameter
+class="prettyprint">stream-type-descriptor := <code>stream</code> type-parameter
 </pre>
 <p>
 A value of type <code>stream&lt;T></code> is a distributor for values of type
@@ -1626,7 +1629,7 @@ distribute values.
 
 
 <pre
-class="prettyprint">typedesc-type-descriptor := _typedesc_ [type-parameter]
+class="prettyprint">typedesc-type-descriptor := <code>typedesc</code> [type-parameter]
 </pre>
 <p>
 A type descriptor value is a value representing a type descriptor. Referencing
@@ -1655,7 +1658,7 @@ class="prettyprint">type-descriptor :=
    | byte-type-descriptor
    | json-type-descriptor
    | type-descriptor-reference
-   | _(_ type-descriptor _)_
+   | <code>(</code> type-descriptor <code>)</code>
 type-descriptor-reference := qualified-identifier
 </pre>
 <p>
@@ -1687,7 +1690,7 @@ specify the type.
 
 
 <pre
-class="prettyprint">union-type-descriptor := type-descriptor _|_ type-descriptor
+class="prettyprint">union-type-descriptor := type-descriptor <code>|</code> type-descriptor
 </pre>
 <p>
 The value space of a union type <code>T1|T2</code> is the union of
@@ -1712,7 +1715,7 @@ of B, then the implicit initial value of U is the implicit initial value of B
 
 
 <pre
-class="prettyprint">optional-type-descriptor := type-descriptor _?_
+class="prettyprint">optional-type-descriptor := type-descriptor <code>?</code>
 </pre>
 <p>
 A type <code>T?</code> means T optionally, and is exactly equivalent to
@@ -1726,7 +1729,7 @@ the implicit initial value for an optional type will always be ().
 
 
 
-<pre class="prettyprint">any-type-descriptor := _any_
+<pre class="prettyprint">any-type-descriptor := <code>any</code>
 </pre>
 <p>
 The type descriptor <code>any</code> describes the type consisting of all values
@@ -1740,8 +1743,7 @@ type.
 
 
 <pre
-class="prettyprint">anydata-type-descriptor := _anydata__
-_
+class="prettyprint">anydata-type-descriptor := <code>anydata</code>
 </pre>
 <p>
 The type descriptor <code>anydata</code> describes the type of all pure values
@@ -1763,7 +1765,7 @@ class="prettyprint">    () | boolean | int | float | decimal | string
 
 
 
-<pre class="prettyprint">byte-type-descriptor := _byte_
+<pre class="prettyprint">byte-type-descriptor := <code>byte</code>
 </pre>
 <p>
 The byte type is an abbreviation for a union of the int values in the range 0 to
@@ -1996,27 +1998,27 @@ class="prettyprint">binding-pattern :=
    | structured-binding-pattern
 simple-binding-pattern := variable-name | ignore
 variable-name := identifier
-ignore := ___
+ignore := <code>_</code>
 structured-binding-pattern :=
    | tuple-binding-pattern
    | record-binding-pattern
    | error-binding-pattern
-tuple-binding-pattern := _(_ binding-pattern (_,_ binding-pattern)+ _)_
+tuple-binding-pattern := <code>(</code> binding-pattern (<code>,</code> binding-pattern)+ <code>)</code>
 record-binding-pattern :=
    open-record-binding-pattern | closed-record-binding-pattern
-open-record-binding-pattern := _{_ entry-binding-patterns _}_
-closed-record-binding-pattern :=  _{|_ field-binding-patterns _|}_
+open-record-binding-pattern := <code>{</code> entry-binding-patterns <code>}</code>
+closed-record-binding-pattern :=  <code>{|</code> field-binding-patterns <code>|}</code>
 entry-binding-patterns :=
-   field-binding-patterns [_,_ rest-binding-pattern]
+   field-binding-patterns [<code>,</code> rest-binding-pattern]
    | [ rest-binding-pattern ] 
 field-binding-patterns :=
-  field-binding-pattern (_,_ field-binding-pattern)* 
+  field-binding-pattern (<code>,</code> field-binding-pattern)* 
 field-binding-pattern :=
-   field-name _:_ binding-pattern
+   field-name <code>:</code> binding-pattern
    | variable-name
-rest-binding-pattern := _..._ variable-name
+rest-binding-pattern := <code>...</code> variable-name
 error-binding-pattern :=
-   _error_ _(_ simple-binding-pattern [_,_ error-detail-binding-pattern] _)_
+   <code>error</code> <code>(</code> simple-binding-pattern [<code>,</code> error-detail-binding-pattern] <code>)</code>
 error-detail-binding-pattern :=
    simple-binding-pattern
    | record-binding-pattern
@@ -2082,7 +2084,7 @@ descriptor.
 
 <pre
 class="prettyprint">typed-binding-pattern := impliable-type-descriptor binding-pattern
-impliable-type-descriptor := type-descriptor | _var_
+impliable-type-descriptor := type-descriptor | <code>var</code>
 </pre>
 <p>
 A typed-binding-pattern combines a type-descriptor and a binding-pattern, and is
@@ -2170,7 +2172,7 @@ class="prettyprint">expression :=
    | check-expr
    | trap-expr
    | table-query-expr
-   | _(_ expression _)_
+   | <code>(</code> expression <code>)</code>
 </pre>
 <p>
 For simplicity, the expression grammar is ambiguous. The following table shows
@@ -2449,7 +2451,7 @@ class="prettyprint">const-expr :=
    | binary-bitwise-expr
    | logical-expr
    | conditional-expr
-   | _(_ const-expr _)_
+   | <code>(</code> const-expr <code>)</code>
 </pre>
 <p>
 Within a <code>const-expr</code>, any nested expression must also be a
@@ -2479,7 +2481,7 @@ class="prettyprint">simple-const-expr :=
   | [floating-point-type] [Sign] floating-point-literal
   | string-literal
   | variable-reference
-floating-point-type := _&lt;_ (_decimal_|_float_) _>_
+floating-point-type := <code>&lt;</code> (<code>decimal</code>|<code>float</code>) <code>></code>
 </pre>
 <p>
 A simple-const-expr is a restricted form of const-expr used in contexts where
@@ -2526,16 +2528,16 @@ of the floating-point-literal is a decimal,
 
 <pre
 class="prettyprint">byte-array-literal := Base16Literal | Base64Literal
-Base16Literal := _base16_ WS _`_ HexGroup* WS _`_
-HexGroup := WS HexDigit WS HexDigit__
-Base64Literal := _base64_ WS _`_ Base64Group* [PaddedBase64Group] WS _`_
+Base16Literal := <code>base16</code> WS <code>`</code> HexGroup* WS <code>`</code>
+HexGroup := WS HexDigit WS HexDigit
+Base64Literal := <code>base64</code> WS <code>`</code> Base64Group* [PaddedBase64Group] WS <code>`</code>
 Base64Group :=
    WS Base64Char WS Base64Char WS Base64Char WS Base64Char
 PaddedBase64Group :=
    WS Base64Char WS Base64Char WS Base64Char WS PaddingChar
    | WS Base64Char WS Base64Char WS PaddingChar WS PaddingChar
-Base64Char := _A_ .. _Z_ | _a_ .. _z_ | _0_ .. _9_ | _+_ | _/_
-PaddingChar := _=_
+Base64Char := <code>A</code> .. <code>Z</code> | <code>a</code> .. <code>z</code> | <code>0</code> .. <code>9</code> | <code>+</code> | <code>/</code>
+PaddingChar := <code>=</code>
 WS := WhiteSpaceChar*
 </pre>
 <p>
@@ -2548,8 +2550,8 @@ of the array value created is also <code>byte[N]</code>.
 
 
 <pre
-class="prettyprint">array-constructor-expr := _[_ [ expr-list ] _]_
-expr-list = expression (_,_ expression)*
+class="prettyprint">array-constructor-expr := <code>[</code> [ expr-list ] <code>]</code>
+expr-list = expression (<code>,</code> expression)*
 </pre>
 <p>
 Creates a new list value. The members of the list come from evaluating each
@@ -2569,8 +2571,8 @@ array-constructor-expr will be the same as the inherent type.
 
 
 <pre
-class="prettyprint">tuple-constructor-expr := _(_ expr-list2 _)_
-expr-list2 := expression (_,_ expression)+
+class="prettyprint">tuple-constructor-expr := <code>(</code> expr-list2 <code>)</code>
+expr-list2 := expression (<code>,</code> expression)+
 </pre>
 <p>
 Creates a new list value. The members of the list come from evaluating each
@@ -2591,10 +2593,10 @@ inherent type.
 
 
 <pre
-class="prettyprint">mapping-constructor-expr := _{_ [field (_,_ field)*] _}_
-field := (literal-field-name | computed-field-name) _:_ value-expr
+class="prettyprint">mapping-constructor-expr := <code>{</code> [field (<code>,</code> field)*] <code>}</code>
+field := (literal-field-name | computed-field-name) <code>:</code> value-expr
 literal-field-name := field-name | string-literal
-computed-field-name := _[_ expression _]_
+computed-field-name := <code>[</code> expression <code>]</code>
 value-expr := expression
 </pre>
 <p>
@@ -2614,32 +2616,27 @@ types of the expressions occurring in the constructor.
 
 <pre
 class="prettyprint">table-constructor-expr :=
-   _table_ _{_ [column-descriptors [_,_ table-rows]] _}_
-column-descriptors := _{_ column-descriptor (_,_ column-descriptor)* _}_
+   <code>table</code> <code>{</code> [column-descriptors [<code>,</code> table-rows]] <code>}</code>
+column-descriptors := <code>{</code> column-descriptor (<code>,</code> column-descriptor)* <code>}</code>
 column-descriptor := column-constraint* column-name
 column-constraint :=
-   _key_
-   | _unique_
-   | _auto_ auto-kind 
+   <code>key</code>
+   | <code>unique</code>
+   | <code>auto</code> auto-kind 
 auto-kind := auto-kind-increment
-auto-kind-increment := _increment_ [_(_seed_,_ increment_)_]
+auto-kind-increment := <code>increment</code> [<code>(</code>seed<code>,</code> increment<code>)</code>]
 seed := integer
 increment := integer
-table-rows :=  _[_ table-row (_,_ table-row)* _]_
-table-row := _{_ expression (_,_ expression)* _}
-_
+table-rows :=  <code>[</code> table-row (<code>,</code> table-row)* <code>]</code>
+table-row := <code>{</code> expression (<code>,</code> expression)* <code>}</code>
 </pre>
 <p>
 The contextually expected type of the table-constructor-expr determines the
 inherent type of the constructed value.
 </p>
 <p>
-For example,_
+For example,
 </p>
-<p>
-_
-</p>
-
 
 <pre
 class="prettyprint">table {
@@ -2655,7 +2652,7 @@ class="prettyprint">table {
 
 
 <pre
-class="prettyprint">error-constructor-expr := _error_ _(_ reason-expr [_,_ detail-expr] _)_
+class="prettyprint">error-constructor-expr := <code>error</code> <code>(</code> reason-expr [<code>,</code> detail-expr] <code>)</code>
 reason-expr := expression
 detail-expr := expression
 </pre>
@@ -2677,14 +2674,14 @@ constructor was evaluated.
 
 
 <pre
-class="prettyprint">service-constructor-expr := annots _service_ service-body-block
-service-body-block := _{_ service-method-defn* _}_
+class="prettyprint">service-constructor-expr := annots <code>service</code> service-body-block
+service-body-block := <code>{</code> service-method-defn* <code>}</code>
 service-method-defn :=
    metadata
    service-method-defn-quals
    function identifier function-signature method-body
 service-method-defn-quals :=
-   [visibility-qual] | _resource_
+   [visibility-qual] | <code>resource</code>
 </pre>
 <p>
 A <code>service-constructor-expr</code> constructs a service value. The result
@@ -2698,17 +2695,17 @@ a service-method-defn in the same way as for objects.
 
 
 <pre
-class="prettyprint">string-template-expr := _string_ BacktickString
+class="prettyprint">string-template-expr := <code>string</code> BacktickString
 BacktickString :=
-  _`_ BacktickItem* [BacktickFinalOneChar] _`_
+  <code>`</code> BacktickItem* [BacktickFinalOneChar] <code>`</code>
 BacktickItem :=
    BacktickOneChar
    | BacktickTwoChars
    | [BacktickFinalOneChar] interpolation
-interpolation := _${_ expr _}_
-BacktickOneChar := ^ ( _`_ | _$_ )
-BacktickTwoChars :=  _$_ ^ ( _{_ | _`_ | _$_)
-BacktickFinalOneChar := _$_
+interpolation := <code>${</code> expr <code>}</code>
+BacktickOneChar := ^ ( <code>`</code> | <code>$</code> )
+BacktickTwoChars :=  <code>$</code> ^ ( <code>{</code> | <code>`</code> | <code>$</code>)
+BacktickFinalOneChar := <code>$</code>
 </pre>
 <p>
 A <code>string-template-expr</code> interpolates the results of evaluating
@@ -2733,7 +2730,7 @@ interpolation <code>${"`"}</code>.
 
 
 <pre
-class="prettyprint">xml-expr := _xml_ BacktickString
+class="prettyprint">xml-expr := <code>xml</code> BacktickString
 </pre>
 <p>
 An XML expression creates an XML value as follows:
@@ -2773,7 +2770,7 @@ evaluation.
 <pre
 class="prettyprint">new-expr := new-value-expr | new-object-expr 
 new-value-expr : new [type-descriptor]
-new-object-expr := new [type-descriptor] _(_ arg-list _)_
+new-object-expr := new [type-descriptor] <code>(</code> arg-list <code>)</code>
 </pre>
 <p>
 A new-value-expr allocates storage for a behavioural type and initializes it
@@ -2824,7 +2821,7 @@ that type.
 
 
 <pre
-class="prettyprint">field-access-expr := expression _._ field-name
+class="prettyprint">field-access-expr := expression <code>.</code> field-name
 </pre>
 <p>
 {MISSING}
@@ -2834,7 +2831,7 @@ class="prettyprint">field-access-expr := expression _._ field-name
 
 
 <pre
-class="prettyprint">annot-access-expr := expression _@._ annot-tag-reference
+class="prettyprint">annot-access-expr := expression <code>@.</code> annot-tag-reference
 </pre>
 <p>
 The annot-tag-reference must refer to an annotation tag declared with an
@@ -2857,22 +2854,21 @@ of the annotation tag.
 
 
 <pre
-class="prettyprint">index-expr := expression _[_ expression _]
-_
+class="prettyprint">index-expr := expression <code>[</code> expression <code>]</code>
 </pre>
 <p>
 {MISSING}
 </p>
 <p>
 Evaluation of an index-expr that attempts to accessing a list with an out of
-bounds index will complete abruptly with a panic.__
+bounds index will complete abruptly with a panic.
 </p>
 <h3>[Preview] XML attributes expression</h3>
 
 
 
 <pre
-class="prettyprint">xml-attributes-expr := expression _@_
+class="prettyprint">xml-attributes-expr := expression <code>@</code>
 </pre>
 <p>
 Returns the attributes map of a singleton xml value, or nil if the operand is
@@ -2883,15 +2879,15 @@ not a singleton xml value. The result type is <code>map&lt;string>?</code>.
 
 
 <pre
-class="prettyprint">function-call-expr := function-reference _(_ arg-list _)_
+class="prettyprint">function-call-expr := function-reference <code>(</code> arg-list <code>)</code>
 function-reference := variable-reference
 arg-list :=
    [ individual-arg-list [, rest-arg]]
    | rest-arg
-individual-arg-list := individual-arg (_,_ individual-arg)*
-individual-arg := [arg-name _=_] expression
+individual-arg-list := individual-arg (<code>,</code> individual-arg)*
+individual-arg := [arg-name <code>=</code>] expression
 arg-name := identifier
-rest-arg := _..._ expression
+rest-arg := <code>...</code> expression
 </pre>
 <p>
 When a function to be called results from the evaluation of an expression that
@@ -2904,7 +2900,7 @@ built-in method on functions.
 
 
 <pre
-class="prettyprint">method-call-expr := expression _._ method-name _(_ arg-list _)_
+class="prettyprint">method-call-expr := expression <code>.</code> method-name <code>(</code> arg-list <code>)</code>
 </pre>
 <p>
 The basic type of the value that results from evaluating expression determines
@@ -2921,7 +2917,7 @@ resource.
 
 <pre
 class="prettyprint">anonymous-function-expr :=
-  annots _function_ function-signature function-body-block__
+  annots <code>function</code> function-signature function-body-block
 </pre>
 <p>
 Evaluating an anonymous-function-expr creates a closure, whose basic type is
@@ -2935,10 +2931,10 @@ reference not a copy.
 
 
 <pre
-class="prettyprint">arrow-function-expr := arrow-param-list _=>_ expression
+class="prettyprint">arrow-function-expr := arrow-param-list <code>=></code> expression
 arrow-param-list :=
    identifier
-   | _(_[identifier (_,_ identifier)*]_)_
+   | <code>(</code>[identifier (<code>,</code> identifier)*]<code>)</code>
 </pre>
 <p>
 Arrow functions provide a convenient alternative to anonymous function
@@ -2956,7 +2952,7 @@ contextually expected type for <code>expression</code> is T.
 
 
 <pre
-class="prettyprint">type-cast-expr := _&lt;_ type-descriptor _>_ expression
+class="prettyprint">type-cast-expr := <code>&lt;</code> type-descriptor <code>></code> expression
 </pre>
 <p>
 A <code>type-cast-expr</code> casts the value resulting from evaluating
@@ -2989,7 +2985,7 @@ the contextually expected type.
 
 
 <pre
-class="prettyprint">typeof-expr := _typeof_ expression
+class="prettyprint">typeof-expr := <code>typeof</code> expression
 </pre>
 <p>
 The result of a <code>typeof-expr</code> is a typedesc value for the runtime
@@ -3024,10 +3020,10 @@ static type of <code>expression</code>.
 
 <pre
 class="prettyprint">unary-expr :=
-   _+_ expression
-   | _-_ expression
-   | _~_ expression
-   | _!_ expression
+   <code>+</code> expression
+   | <code>-</code> expression
+   | <code>~</code> expression
+   | <code>!</code> expression
 
 
 </pre>
@@ -3065,9 +3061,9 @@ its operand is false and false if its operand is true.
 
 <pre
 class="prettyprint">multiplicative-expr :=
-   expression _*_ expression
-   | expression _/_ expression
-   | expression _%_ expression
+   expression <code>*</code> expression
+   | expression <code>/</code> expression
+   | expression <code>%</code> expression
 </pre>
 <p>
 The <code>*</code> operator performs multiplication; the <code>/</code> operator
@@ -3125,8 +3121,8 @@ then its sign is that of x
 
 <pre
 class="prettyprint">additive-expr :=
-   expression _+_ expression
-   | expression _-_ expression
+   expression <code>+</code> expression
+   | expression <code>-</code> expression
 </pre>
 <p>
 The <code>+</code> operator is used for both addition and concatenation; the
@@ -3181,9 +3177,9 @@ were an xml sequence with one character item for each code point in the string
 
 <pre
 class="prettyprint">shift-expr :=
-   expression _&lt;&lt;_ expression
-   expression _>>_ expression
-   expression _>>>_ expression
+   expression <code>&lt;&lt;</code> expression
+   expression <code>>></code> expression
+   expression <code>>>></code> expression
 </pre>
 <p>
 A shift-expr performs a bitwise shift. Both operand expressions must have static
@@ -3212,8 +3208,8 @@ result is int.
 
 <pre
 class="prettyprint">range-expr :=
-   expression _..._ expression
-   | expression _..&lt;_ expression
+   expression <code>...</code> expression
+   | expression <code>..&lt;</code> expression
 </pre>
 <p>
 A range-expr results in a new array of integers in increasing order including
@@ -3245,10 +3241,10 @@ anywhere.
 
 <pre
 class="prettyprint">numerical-comparison-expr :=
-   expression _&lt;_ expression
-   | expression _>_ expression
-   | expression _&lt;=_ expression
-   | expression _>=_ expression
+   expression <code>&lt;</code> expression
+   | expression <code>></code> expression
+   | expression <code>&lt;=</code> expression
+   | expression <code>>=</code> expression
 </pre>
 <p>
 A numerical-comparison-expr compares two numbers.
@@ -3271,7 +3267,7 @@ Floating point comparisons follow IEEE, 754-2008, so
 
 <pre
 class="prettyprint">is-expr :=
-   expression _is_ type-descriptor
+   expression <code>is</code> type-descriptor
 </pre>
 <p>
 An is-expr tests where a value belongs to a type.
@@ -3287,10 +3283,10 @@ is true; otherwise the result of the is-expr is false.
 
 <pre
 class="prettyprint">equality-expr :=
-   expression _==_ expression
-   | expression _!=_ expression
-   | expression _===_ expression
-   | expression _!==_ expression
+   expression <code>==</code> expression
+   | expression <code>!=</code> expression
+   | expression <code>===</code> expression
+   | expression <code>!==</code> expression
 </pre>
 <p>
 An equality-expr tests whether two values are equal. For all four operators, it
@@ -3331,9 +3327,9 @@ class="prettyprint">binary-bitwise-expr :=
    bitwise-and-expr
    | bitwise-xor-expr
    | bitwise-or expr
-bitwise-and-expr = expression _&_ expression
-bitwise-xor-expr = expression _^_ expression
-bitwise-or-expr = expression _|_ expression
+bitwise-and-expr = expression <code>&</code> expression
+bitwise-xor-expr = expression <code>^</code> expression
+bitwise-or-expr = expression <code>|</code> expression
 </pre>
 <p>
 A binary-bitwise-expr does a bitwise AND, XOR, or OR operation on its operands.
@@ -3356,8 +3352,8 @@ then the result has type byte; otherwise, the result has type int;
 
 <pre
 class="prettyprint">logical-expr :=
-   expression _&&_ expression
-   | expression _||_ expression
+   expression <code>&&</code> expression
+   | expression <code>||</code> expression
 </pre>
 <h3>Conditional expression</h3>
 
@@ -3365,8 +3361,8 @@ class="prettyprint">logical-expr :=
 
 <pre
 class="prettyprint">conditional-expr :=
-   expression _?_ expression _:_ expression
-   | expression _?:_ expression
+   expression <code>?</code> expression <code>:</code> expression
+   | expression <code>?:</code> expression
 </pre>
 <p>
 L <code>?:</code> R is evaluated as follows:
@@ -3382,7 +3378,7 @@ L <code>?:</code> R is evaluated as follows:
 
 
 <pre
-class="prettyprint">check-expression := _check_ expression
+class="prettyprint">check-expression := <code>check</code> expression
 </pre>
 <p>
 Evaluates expression resulting in value v. If v has basic type error, then
@@ -3398,9 +3394,9 @@ the static type of check e is T.
 The trap expression stops a panic and gives access to the error value associated
 with the panic.
 </p>
-<p>
- <code> trap-expr := _trap_ expression</code>
-</p>
+<pre
+class="prettyprint">trap-expr := <code>trap</code> expression
+</pre>  
 <p>
 Semantics are:
 </p>
@@ -3430,10 +3426,10 @@ class="prettyprint">action :=
    | synchronous-send-action
    | check-action
    | trap-action
-   | _(_ action _)_
+   | <code>(</code> action <code>)</code>
 action-or-expr := action | expression
-check-action := _check_ action
-trap-action := _trap_ action
+check-action := <code>check</code> action
+trap-action := <code>trap</code> action
 </pre>
 <p>
 Actions are an intermediate syntactic category between expressions and
@@ -3456,11 +3452,11 @@ same way as a <code>check-exp</code>r and <code>trap-expr</code> respectively.
 
 <pre
 class="prettyprint">function-body-block :=
-   _{_ [default-worker-init, named-worker-decl+] default-worker _}_
+   <code>{</code> [default-worker-init, named-worker-decl+] default-worker <code>}</code>
 default-worker-init := sequence-stmt
 default-worker := sequence-stmt
 named-worker-decl :=
-   _worker_ worker-name return-type-descriptor _{_ sequence-stmt _}_
+   <code>worker</code> worker-name return-type-descriptor <code>{</code> sequence-stmt <code>}</code>
 worker-name := identifier
 </pre>
 <p>
@@ -3593,7 +3589,7 @@ execution of the statement terminates at that point.
 
 <pre
 class="prettyprint">sequence-stmt := statement*
-block-stmt := _{_ sequence-stmt _}_
+block-stmt := <code>{</code> sequence-stmt <code>}</code>
 </pre>
 <p>
 A <code>sequence-stmt</code> executes its statements sequentially. A
@@ -3604,7 +3600,7 @@ A <code>sequence-stmt</code> executes its statements sequentially. A
 
 
 <pre
-class="prettyprint">fork-stmt := _fork_ _{_ named-worker-decl+ _}_
+class="prettyprint">fork-stmt := <code>fork</code> <code>{</code> named-worker-decl+ <code>}</code>
 </pre>
 <p>
 The fork statement starts one or more named workers, which run in parallel with
@@ -3658,7 +3654,7 @@ type-check in any case).
 
 
 <pre
-class="prettyprint">single-wait-action := _wait_ wait-future-expr
+class="prettyprint">single-wait-action := <code>wait</code> wait-future-expr
 </pre>
 <p>
 A single-wait-action waits for a single future.
@@ -3681,10 +3677,10 @@ type of the single-wait-action is then T.
 
 
 <pre
-class="prettyprint">multiple-wait-action := _wait_ _{_ wait-field (_,_ wait-field)* _}_
+class="prettyprint">multiple-wait-action := <code>wait</code> <code>{</code> wait-field (<code>,</code> wait-field)* <code>}</code>
 wait-field :=
   variable-name
-  | field-name _:_ wait-future-expr
+  | field-name <code>:</code> wait-future-expr
 </pre>
 <p>
 A multiple-wait-action waits for multiple futures, returning the result as a
@@ -3707,7 +3703,7 @@ value is the completion value of the strand.
 
 
 <pre
-class="prettyprint">alternate-wait-action := _wait_ wait-future-expr (_|_ wait-future-expr)+
+class="prettyprint">alternate-wait-action := <code>wait</code> wait-future-expr (<code>|</code> wait-future-expr)+
 </pre>
 <p>
 An alternate-wait-action waits for one of multiple futures to terminate.
@@ -3746,7 +3742,7 @@ a function.
 
 
 <pre
-class="prettyprint">peer-worker := worker-name | _default_
+class="prettyprint">peer-worker := worker-name | <code>default</code>
 </pre>
 <p>
 A worker-name refers to a worker named in a named-worker-decl, which must be in
@@ -3765,8 +3761,8 @@ added to the queue.
 
 
 <pre
-class="prettyprint">sync-send-action := expression _->>_ peer-worker
-async-send-stmt := expression _->_ peer-worker _;_
+class="prettyprint">sync-send-action := expression <code>->></code> peer-worker
+async-send-stmt := expression <code>-></code> peer-worker <code>;</code>
 </pre>
 <p>
 The sync-send-action and async-send-stmt send a message to another worker. In
@@ -3849,7 +3845,7 @@ class="prettyprint">receive-action := single-receive-action | multiple-receive-a
 
 
 <pre
-class="prettyprint">single-receive-action := _&lt;-_ peer-worker
+class="prettyprint">single-receive-action := <code>&lt;-</code> peer-worker
 </pre>
 <p>
 A single-receive-action receives a message from a single worker.
@@ -3903,10 +3899,10 @@ failure type of the corresponding send set.
 
 <pre
 class="prettyprint">multiple-receive-action :=
-   _&lt;-_  _{_ receive-field (_,_ receive-field)* _}_
+   <code>&lt;-</code>  <code>{</code> receive-field (<code>,</code> receive-field)* <code>}</code>
 receive-field :=
    peer-worker
-   | field-name _:_ peer-worker
+   | field-name <code>:</code> peer-worker
 </pre>
 <p>
 A multiple-receive-action receives a message from multiple workers.
@@ -3964,7 +3960,7 @@ receive-field
 
 
 <pre
-class="prettyprint">flush-action := _flush_ [peer-worker]
+class="prettyprint">flush-action := <code>flush</code> [peer-worker]
 </pre>
 <p>
 If peer-worker is specified, then flush waits until the queue of messages to be
@@ -4038,7 +4034,7 @@ class="prettyprint">local-var-decl-stmt :=
    local-init-var-decl-stmt
    | local-no-init-var-decl-stmt
 local-init-var-decl-stmt :=
-   annots [_final_] typed-binding-pattern _=_ action-or-expr _;_
+   annots [<code>final</code>] typed-binding-pattern <code>=</code> action-or-expr <code>;</code>
 </pre>
 <p>
 A <code>local-var-decl-stmt</code> is used to declare variables with a scope
@@ -4068,7 +4064,7 @@ assigned to outside the local-init-var-decl-stmt.
 
 <pre
 class="prettyprint">local-no-init-var-decl-stmt :=
-   annots [_final_] type-descriptor variable-name _;_
+   annots [<code>final</code>] type-descriptor variable-name <code>;</code>
 </pre>
 <p>
 A local variable declared <code>local-no-init-var-decl-stmt</code> must be
@@ -4191,7 +4187,7 @@ possibility of x being assigned to
 
 
 <pre
-class="prettyprint">xmlns-decl-stmt := _xmlns_ xml-namespace [ _as_ identifier ] _;_
+class="prettyprint">xmlns-decl-stmt := <code>xmlns</code> xml-namespace [ <code>as</code> identifier ] <code>;</code>
 xml-namespace := simple-const-expr
 </pre>
 <p>
@@ -4207,12 +4203,12 @@ simple-const-expr must be a subtype of string.
 
 
 <pre
-class="prettyprint">assignment-stmt := lhs _=_ action-or-expr _;_
+class="prettyprint">assignment-stmt := lhs <code>=</code> action-or-expr <code>;</code>
 lhs :=
    variable-reference
-   | lhs _._ field-name
-   | lhs _[_ expression _]_
-   | lhs _@_
+   | lhs <code>.</code> field-name
+   | lhs <code>[</code> expression <code>]</code>
+   | lhs <code>@</code>
 </pre>
 <p>
 An lhs evaluates to a reference.  A reference is one of
@@ -4289,9 +4285,9 @@ keyed access and any[] for indexed access
 
 <pre
 class="prettyprint">compound-assignment-stmt := 
-   lhs CompoundAssignmentOperator action-or-expr _;_
-CompoundAssignmentOperator := BinaryOperator _=_
-BinaryOperator := _+_ | _-_ | _*_ | _/_ | _&_ | _|_ | _^_ | _&lt;&lt;_ | _>>_ | _>>>_
+   lhs CompoundAssignmentOperator action-or-expr <code>;</code>
+CompoundAssignmentOperator := BinaryOperator <code>=</code>
+BinaryOperator := <code>+</code> | <code>-</code> | <code>*</code> | <code>/</code> | <code>&</code> | <code>|</code> | <code>^</code> | <code>&lt;&lt;</code> | <code>>></code> | <code>>>></code>
 </pre>
 <p>
 These statements update the value of the LHS variable to the value that results
@@ -4304,7 +4300,7 @@ the value of the expression.
 
 <pre
 class="prettyprint">destructure-assignment-stmt :=
-   structured-binding-pattern _=_ action-or-expr _;_
+   structured-binding-pattern <code>=</code> action-or-expr <code>;</code>
 </pre>
 <p>
 </p>
@@ -4322,7 +4318,7 @@ this type.
 
 
 
-<pre class="prettyprint">action-stmt := action _;_
+<pre class="prettyprint">action-stmt := action <code>;</code>
 </pre>
 <p>
 An action-stmt is a statement that is executed by evaluating an action and
@@ -4334,12 +4330,12 @@ the static type of an action in an action-stmt is not nil.
 
 
 <pre
-class="prettyprint">call-stmt := call-expr _;_
+class="prettyprint">call-stmt := call-expr <code>;</code>
 call-expr :=
    function-call-expr
    | method-call-expr
-   | _check_ call-expr
-   | _trap_ call-expr
+   | <code>check</code> call-expr
+   | <code>trap</code> call-expr
 </pre>
 <p>
 A call-stmt is executed by evaluating call-expr as an expression and discarding
@@ -4352,7 +4348,7 @@ static type of the call-expr in an call-stmt is not nil.
 
 <pre
 class="prettyprint">remote-method-call-action :=
-  expr _->_ method-name _(_ arg-list _)_
+  expr <code>-></code> method-name <code>(</code> arg-list <code>)</code>
 </pre>
 <p>
 Calls a remote method. This works the same as a method call expression, except
@@ -4364,9 +4360,9 @@ that it is used only for a method with the <code>remote</code> modifier.
 
 <pre
 class="prettyprint">if-else-stmt :=
-   _if_ expression block-stmt 
-   [ _else_ _if_ expression block-stmt ]* 
-   [ _else_ block-stmt ]
+   <code>if</code> expression block-stmt 
+   [ <code>else</code> <code>if</code> expression block-stmt ]* 
+   [ <code>else</code> block-stmt ]
 </pre>
 <p>
 The if-else statement is used for conditional execution.
@@ -4382,10 +4378,10 @@ is present, the corresponding block statement is executed.
 
 
 <pre
-class="prettyprint">match-stmt := _match_ action-or-expr _{_ match-clause+ _}_
+class="prettyprint">match-stmt := <code>match</code> action-or-expr <code>{</code> match-clause+ <code>}</code>
 match-clause :=
-  match-pattern-list [match-guard] _=>_ block-stmt
-match-guard := _if_ expression
+  match-pattern-list [match-guard] <code>=></code> block-stmt
+match-guard := <code>if</code> expression
 </pre>
 <p>
 A match statement selects a block statement to execute based on which patterns a
@@ -4422,7 +4418,7 @@ static type of the expression in match-guard must be a subtype of boolean.
 
 <pre
 class="prettyprint">match-pattern-list := 
-  match-pattern (_|_ match-pattern)*
+  match-pattern (<code>|</code> match-pattern)*
 </pre>
 <p>
 A match-pattern-list can be matched against a value. An attempted match can
@@ -4437,7 +4433,7 @@ variables.
 
 <pre
 class="prettyprint">match-pattern :=
-  _var_ binding-pattern
+  <code>var</code> binding-pattern
   | ignore
   | const-pattern
   | structured-match-pattern
@@ -4483,28 +4479,28 @@ class="prettyprint">structured-match-pattern :=
    | record-match-pattern
    | error-match-pattern
 tuple-match-pattern :=
-   _(_ match-pattern (_,_ match-pattern)+ _)_
-record-match-pattern := _{_ entry-match-patterns _}_
+   <code>(</code> match-pattern (<code>,</code> match-pattern)+ <code>)</code>
+record-match-pattern := <code>{</code> entry-match-patterns <code>}</code>
 entry-match-patterns :=
-   field-match-patterns [_,_ rest-match-pattern]
+   field-match-patterns [<code>,</code> rest-match-pattern]
    | [ rest-match-pattern ] 
 field-match-patterns :=
-   field-match-pattern (_,_ field-match-pattern)* 
+   field-match-pattern (<code>,</code> field-match-pattern)* 
 field-match-pattern :=
-   field-name _:_ match-pattern
+   field-name <code>:</code> match-pattern
 rest-match-pattern :=
-   _..._ _var_ variable-name
-   | _!_ _..._
+   <code>...</code> <code>var</code> variable-name
+   | <code>!</code> <code>...</code>
 error-match-pattern :=
-   _error_ _(_ simple-match-pattern 
-           [_,_ error-detail-match-pattern] _)_
+   <code>error</code> <code>(</code> simple-match-pattern 
+           [<code>,</code> error-detail-match-pattern] <code>)</code>
 error-detail-match-pattern :=
    simple-match-pattern
    | record-match-pattern
 simple-match-pattern :=
   ignore
   | const-pattern
-  | _var_ variable-name
+  | <code>var</code> variable-name
 
 
 </pre>
@@ -4514,7 +4510,7 @@ simple-match-pattern :=
 
 <pre
 class="prettyprint">foreach-stmt :=
-   _foreach_ typed-binding-pattern _in_ action-or-expr block-stmt
+   <code>foreach</code> typed-binding-pattern <code>in</code> action-or-expr block-stmt
 </pre>
 <p>
 A foreach statement iterates over a sequence, executing a block statement once
@@ -4567,7 +4563,7 @@ typed-binding-pattern uses var, then the type will be inferred from the type of
 
 
 <pre
-class="prettyprint">while-stmt := _while_ expression block-stmt
+class="prettyprint">while-stmt := <code>while</code> expression block-stmt
 </pre>
 <p>
 A while statement repeatedly executes a block statement so long as a
@@ -4599,7 +4595,7 @@ The static type of <code>expression</code> must be a subtype of boolean.
 
 
 <pre
-class="prettyprint">continue-stmt := _continue_ _;_
+class="prettyprint">continue-stmt := <code>continue</code> <code>;</code>
 </pre>
 <p>
 A continue statement is only allowed if it is lexically enclosed within a
@@ -4611,7 +4607,7 @@ outermost block-stmt in the while-stmt or foreach-stmt.
 
 
 
-<pre class="prettyprint">break-stmt := _break_ _;_
+<pre class="prettyprint">break-stmt := <code>break</code> <code>;</code>
 </pre>
 <p>
 A break statement is only allowed if it is lexically enclosed within a
@@ -4623,7 +4619,7 @@ enclosing while-stmt or foreach-stmt to terminate.
 
 
 <pre
-class="prettyprint">lock-stmt := _lock_ block-stmt
+class="prettyprint">lock-stmt := <code>lock</code> block-stmt
 </pre>
 <p>
 A lock statement is used to execute a series of assignment statements in a
@@ -4642,7 +4638,7 @@ in a future version.</em>
 
 
 <pre
-class="prettyprint">panic-stmt := _panic_ expression _;_
+class="prettyprint">panic-stmt := <code>panic</code> expression <code>;</code>
 </pre>
 <p>
 A panic statement terminates the current worker abnormally. The result of
@@ -4656,7 +4652,7 @@ The static type of <code>expression</code> must be a subtype of error.
 
 
 <pre
-class="prettyprint">return-stmt := _return_ [ action-or-expr ] _;_
+class="prettyprint">return-stmt := <code>return</code> [ action-or-expr ] <code>;</code>
 </pre>
 <p>
 A return statement terminates the current worker normally.The result of
@@ -4902,17 +4898,17 @@ will call the __stop request on each registered listener before terminating.
 
 <pre
 class="prettyprint">import-declaration := 
-   _import_ [org-name _/_] pkg-name [_version_ sem-ver] 
-   [_as_ module-identifier] _;_
+   <code>import</code> [org-name <code>/</code>] pkg-name [<code>version</code> sem-ver] 
+   [<code>as</code> module-identifier] <code>;</code>
 module-identifier := identifier
 org-name := identifier
-pkg-name := identifier (_._ identifier)*
-sem-ver := major-num [_._ minor-num [_._ patch-num]]
+pkg-name := identifier (<code>.</code> identifier)*
+sem-ver := major-num [<code>.</code> minor-num [<code>.</code> patch-num]]
 major-num := DecimalNumber
 minor-num := DecimalNumber
 patch-num := DecimalNumber
 
-qualified-identifier := [module-identifier _:_] identifier
+qualified-identifier := [module-identifier <code>:</code>] identifier
 </pre>
 <p>
 A module-identifier in a qualified-identifier must refer to a module-identifier
@@ -4925,7 +4921,7 @@ specified in an import-declaration in the same source part.
 <pre
 class="prettyprint">module-type-defn :=
    metadata
-   _public_? _type_ identifier type-descriptor _;_
+   <code>public</code>? <code>type</code> identifier type-descriptor <code>;</code>
 </pre>
 <h3>Module variable declaration</h3>
 
@@ -4934,8 +4930,8 @@ class="prettyprint">module-type-defn :=
 <pre
 class="prettyprint">module-var-decl :=
    metadata
-   [_final_]
-   typed-binding-pattern _=_ expression _;_
+   [<code>final</code>]
+   typed-binding-pattern <code>=</code> expression <code>;</code>
 </pre>
 <p>
 The scope of variables declared in a module-var-decl is the entire module. Note
@@ -4952,7 +4948,7 @@ the precise type is used, and otherwise the broad type is used.
 <pre
 class="prettyprint">module-const-decl :=
    metadata
-   _public_? _const_ [type-descriptor] identifier _=_ const-expr _;_
+   <code>public</code>? <code>const</code> [type-descriptor] identifier <code>=</code> const-expr <code>;</code>
 </pre>
 <p>
 A module-const-decl declares a compile-time constant. A compile-time constant is
@@ -4981,7 +4977,7 @@ be a subtype of the type specified by the type-descriptor.
 <pre
 class="prettyprint">listener-decl :=
    metadata
-   _public_? _listener_ [type-descriptor] identifier _=_ expression _;_
+   <code>public</code>? <code>listener</code> [type-descriptor] identifier <code>=</code> expression <code>;</code>
 </pre>
 <p>
 A <code>listener-decl</code> defines a module listener.
@@ -5009,10 +5005,10 @@ static type of <code>expression</code>.
 <pre
 class="prettyprint">function-defn := 
    metadata
-   [_public_]
-   _function_ identifier function-signature function-body       __
+   [<code>public</code>]
+   <code>function</code> identifier function-signature function-body
 function-body := function-body-block | external-function-body
-external-function-body := _=_ annots _external_ _;_
+external-function-body := <code>=</code> annots <code>external</code> <code>;</code>
 </pre>
 <p>
 An <code>extern-function-body</code> means that the implementation of the
@@ -5025,8 +5021,8 @@ function is not provided in the Ballerina source module.
 <pre
 class="prettyprint">service-decl :=
   metadata
-  _service_ [identifier] _on_ expression-list service-body-block
-expression-list := expression (_,_ expression)*
+  <code>service</code> [identifier] <code>on</code> expression-list service-body-block
+expression-list := expression (<code>,</code> expression)*
 </pre>
 <p>
 Creates a service and attaches it to one or more listeners.
@@ -5060,22 +5056,22 @@ in motion, respectively.
 
 <pre
 class="prettyprint">table-query-expr := 
-   _from_ query-source [query-join-type query-join-source] 
+   <code>from</code> query-source [query-join-type query-join-source] 
       [query-select] [query-group-by] [query-order-by]
       [query-having] [query-limit]
-query-source := identifier [_as_ identifier] [query-where]
-query-where := _where_ expression
-query-join-type := [([_left_ | _right_ | _full_] _outer_)| _inner_] _join_
-query-join-source := query-source _on_ expression
-query-select := _select_ (_*_ | query-select-list)
+query-source := identifier [<code>as</code> identifier] [query-where]
+query-where := <code>where</code> expression
+query-join-type := [([<code>left</code> | <code>right</code> | <code>full</code>] <code>outer</code>)| <code>inner</code>] <code>join</code>
+query-join-source := query-source <code>on</code> expression
+query-select := <code>select</code> (<code>*</code> | query-select-list)
 query-select-list := 
-   expression [_as_ identifier] (, expression [_as_ identifier])*
-query-group-by := _group_ _by_ identifier (_,_ identifier)*
+   expression [<code>as</code> identifier] (, expression [<code>as</code> identifier])*
+query-group-by := <code>group</code> <code>by</code> identifier (<code>,</code> identifier)*
 query-order-by :=
-   _order_ _by_ identifier [(_ascending_ | _descending_)]
-      (_,_ identifier [(_ascending_ | _descending_)])*
-query-having := _having_ expression
-query-limit := _limit_ int-literal
+   <code>order</code> <code>by</code> identifier [(<code>ascending</code> | <code>descending</code>)]
+      (<code>,</code> identifier [(<code>ascending</code> | <code>descending</code>)])*
+query-having := <code>having</code> expression
+query-limit := <code>limit</code> int-literal
 </pre>
 <p>
 Query expressions being language integrated SQL-like querying to Ballerina
@@ -5087,61 +5083,60 @@ tables.
 
 <pre
 class="prettyprint">forever-stmt :=
-   _forever_ _{_ 
+   <code>forever</code> <code>{</code> 
       streaming-query-pattern+
-   _}
-_
+   <code>}</code>
 streaming-query-pattern :=
-   streaming-query-expr _=>_ _(_ array-type-descriptor identifier _)_
+   streaming-query-expr <code>=></code> <code>(</code> array-type-descriptor identifier <code>)</code>
       block-stmt
-streaming-query-expr_ :=
-   _from_ (sq-source [_query-join-type sq-join-source_]) | _sq-pattern_
+streaming-query-expr :=
+   <code>from</code> (sq-source [query-join-type sq-join-source]) | sq-pattern
       [query-select] [query-group-by] [query-order-by]
-      [query-having] [query-limit]_ _
+      [query-having] [query-limit] 
       [sq-output-rate-limiting]
-sq-source_ := _
-   identifier_ [query-where] _[sq-window [query-where]] _
-      [_as_ identifier]*_
-sq-window := _window_ function-call-exp
-sq-join-source := sq-source _on_ expression__
+sq-source := 
+   identifier [query-where] [sq-window [query-where]] 
+      [<code>as</code> identifier]*
+sq-window := <code>window</code> function-call-exp
+sq-join-source := sq-source <code>on</code> expression
 sq-output-rate-limiting := 
    sq-time-or-event-output | sq-snapshot-output
 sq-time-or-event-output := 
-   (_all_ | _last_ | _first_) _every_ int-literal (time-scale | _events_)
+   (<code>all</code> | <code>last</code> | <code>first</code>) <code>every</code> int-literal (time-scale | <code>events</code>)
 sq-snapshot-output :=
-   _snapshot_ _every_ _int-literal_ time-scale
-time-scale := _seconds_ | _minutes_ | _hours_ | _days_ | _months_ | _years__
-sq-pattern_ := [_every_] sp-input [sp-within-clause]_
-sp-within-clause_ := _within_ expression_
-sp-input := _
-   sp-edge-input_ (_followed_ _by_) | _,_ streaming-pattern-input_
-   | _not_ sp-edge-input (_and_ sp-edge-input) | (_for_ simple-literal)
-   | [sp-edge-input ( _and_ | _or_ ) ] sp-edge-input__
-   | _(_ _sp-input_ _)_
-sp-edge-input_ := _
-   identifier_ [query-where] [_int-range-expr_] [_as_ identifier]
+   <code>snapshot</code> <code>every</code> int-literal time-scale
+time-scale := <code>seconds</code> | <code>minutes</code> | <code>hours</code> | <code>days</code> | <code>months</code> | <code>years</code>
+sq-pattern := [<code>every</code>] sp-input [sp-within-clause]
+sp-within-clause := <code>within</code> expression
+sp-input :=
+   sp-edge-input (<code>followed</code> <code>by</code>) | <code>,</code> streaming-pattern-input
+   | <code>not</code> sp-edge-input (<code>and</code> sp-edge-input) | (<code>for</code> simple-literal)
+   | [sp-edge-input ( <code>and</code> | <code>or</code> ) ] sp-edge-input
+   | <code>(</code> sp-input <code>)</code>
+sp-edge-input :=
+   identifier [query-where] [int-range-expr] [<code>as</code> identifier]
 </pre>
 <p>
 The forever statement is used to execute a set of streaming queries against some
 number of streams concurrently and to execute a block of code when a pattern
 matches. The statement will never complete and therefore the worker containing
-it will never complete. See section 10 for details._
+it will never complete. See section 10 for details.
 </p>
 <h2>11. [Experimental] Transactions</h2>
 
 
 
 <pre
-class="prettyprint">transaction-stmt := _transaction_ trans-conf? block-stmt trans-retry?
+class="prettyprint">transaction-stmt := <code>transaction</code> trans-conf? block-stmt trans-retry?
 transaction-control-stmt := retry-stmt | abort-stmt
-trans-conf := trans-conf-item (_,_ trans-conf-item)*
+trans-conf := trans-conf-item (<code>,</code> trans-conf-item)*
 trans-conf-item := trans-retries | trans-oncommit | trans-onabort
-trans-retries := _retries_ _=_ expression
-trans-oncommit := _oncommit_ _=_ identifier
-trans-onabort := _onabort_ _=_ identifier
-trans-retry := _onretry_ block-stmt
-retry-stmt := _retry_ _;_
-abort-stmt := _abort_ _;_
+trans-retries := <code>retries</code> <code>=</code> expression
+trans-oncommit := <code>oncommit</code> <code>=</code> identifier
+trans-onabort := <code>onabort</code> <code>=</code> identifier
+trans-retry := <code>onretry</code> block-stmt
+retry-stmt := <code>retry</code> <code>;</code>
+abort-stmt := <code>abort</code> <code>;</code>
 </pre>
 <p>
 A transaction statement is used to execute a block of code within a 2PC
@@ -5231,7 +5226,7 @@ There are two forms of metadata: documentation and annotations.
 
 <pre
 class="prettyprint">annots := annotation*
-annotation := _@_ annot-tag-reference annot-value
+annotation := <code>@</code> annot-tag-reference annot-value
 </pre>
 <p>
 Annotations provide structured metadata about a particular construct. Multiple
@@ -5243,10 +5238,9 @@ tag and a value.
 <pre
 class="prettyprint">annotation-decl :=
    metadata
-   [_public_] [_const_] _annotation_ [type-descriptor] annot-tag 
-   [_on_ annot-attach-points]
+   [<code>public</code>] [<code>const</code>] <code>annotation</code> [type-descriptor] annot-tag 
+   [<code>on</code> annot-attach-points]
 annot-tag := identifier
- __
 </pre>
 <p>
 An annotation-decl declares an annotation tag. Annotations tags are in a
@@ -5316,25 +5310,24 @@ resolved.
 
 
 <pre
-class="prettyprint">annot-attach-points := annot-attach-point (_,_ annot-attach-point)*
+class="prettyprint">annot-attach-points := annot-attach-point (<code>,</code> annot-attach-point)*
 annot-attach-point :=
    dual-attach-point
    | source-only-attach-point
-dual-attach-point := [_source_] dual-attach-point-ident
+dual-attach-point := [<code>source</code>] dual-attach-point-ident
 dual-attach-point-ident :=
-   [_object_] _type_
-   | [_object_|_resource_] _function_
-   | _parameter_
-   | _return_
-   | _service_
-   | _listener_
-source-only-attach-point := _source_ source-only-attach-point-ident
+   [<code>object</code>] <code>type</code>
+   | [<code>object</code>|<code>resource</code>] <code>function</code>
+   | <code>parameter</code>
+   | <code>return</code>
+   | <code>service</code>
+   | <code>listener</code>
+source-only-attach-point := <code>source</code> source-only-attach-point-ident
 source-only-attach-point-ident :=
-   _annotation_
-   | _external_
-   | _var_
-   | _const
- _
+   <code>annotation</code>
+   | <code>external</code>
+   | <code>var</code>
+   | <code>const</code>
 </pre>
 <p>
 The <code>annot-attach-points</code> specify the constructs to which an
@@ -5482,7 +5475,7 @@ The documentation statement is used to document various Ballerina constructs.
 
 <pre
 class="prettyprint">DocumentationString := DocumentationLine +
-DocumentationLine := BlankSpace* _#_ [Space] DocumentationContent
+DocumentationLine := BlankSpace* <code>#</code> [Space] DocumentationContent
 DocumentationContent := (^ 0xA)* 0xA
 BlankSpace := Tab | Space
 Space := 0x20
