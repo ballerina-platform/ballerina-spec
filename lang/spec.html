@@ -4224,17 +4224,17 @@ class="grammar">structured-match-pattern :=
    | error-match-pattern
 tuple-match-pattern :=
    <code>(</code> match-pattern (<code>,</code> match-pattern)+ <code>)</code>
-record-match-pattern := <code>{</code> entry-match-patterns <code>}</code>
+record-match-pattern :=
+   open-record-match-pattern | closed-record-match-pattern
+open-record-match-pattern := <code>{</code> entry-match-patterns <code>}</code>
+closed-record-match-pattern := <code>{|</code> [field-match-patterns] <code>|}</code>
 entry-match-patterns :=
    field-match-patterns [<code>,</code> rest-match-pattern]
    | [ rest-match-pattern ] 
 field-match-patterns :=
    field-match-pattern (<code>,</code> field-match-pattern)* 
-field-match-pattern :=
-   field-name <code>:</code> match-pattern
-rest-match-pattern :=
-   <code>...</code> <code>var</code> variable-name
-   | <code>!</code> <code>...</code>
+field-match-pattern := field-name <code>:</code> match-pattern
+rest-match-pattern := <code>...</code> <code>var</code> variable-name
 error-match-pattern :=
    <code>error</code> <code>(</code> simple-match-pattern 
            [<code>,</code> error-detail-match-pattern] <code>)</code>
@@ -4245,8 +4245,18 @@ simple-match-pattern :=
   ignore
   | const-pattern
   | <code>var</code> variable-name
-
 </pre>
+
+<p>
+Matching a <code>open-record-match-pattern</code> against a mapping value
+succeeds if every <code>field-match-pattern</code> matches against a field of
+the mapping value. The variable in the <code>rest-match-pattern</code>, if
+specified, is bound to a new mapping that contains just the fields for which
+there was no matching <code>field-match-pattern</code>. Matching a
+<code>closed-record-match-pattern</code> succeeds only if there were no
+unmatched fields.
+</p>
+
 <h3>Foreach statement</h3>
 
 <pre
