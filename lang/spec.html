@@ -2744,7 +2744,7 @@ not a singleton xml value. The result type is <code>map&lt;string>?</code>.
 <h3>Function call expression</h3>
 
 <pre
-class="grammar">function-call-expr := function-reference <code>(</code> arg-list <code>)</code>
+class="grammar">function-call-expr := [<code>start</code>] function-reference <code>(</code> arg-list <code>)</code>
 function-reference := variable-reference
 arg-list :=
    [ individual-arg-list [, rest-arg]]
@@ -2760,10 +2760,16 @@ is not merely a variable reference, the function can be called either by first
 storing the value of the expression in a variable or using the <code>call</code>
 built-in method on functions.
 </p>
+<p>
+If <code>start</code> is specified, then the called function is executed on a new
+strand, and the result of the <code>function-call-expr</code> is a value of type
+future&lt;T>, where T is the return type of the function called.
+</p>
+
 <h3>Method call expression</h3>
 
 <pre
-class="grammar">method-call-expr := expression <code>.</code> method-name <code>(</code> arg-list <code>)</code>
+class="grammar">method-call-expr := [<code>start</code>] expression <code>.</code> method-name <code>(</code> arg-list <code>)</code>
 </pre>
 <p>
 The basic type of the value that results from evaluating expression determines
@@ -2774,6 +2780,12 @@ method-call-expr cannot be used to call a remote method; it can only be called
 by a remote-method-call-action. A method-call-expr cannot be used to invoke a
 resource.
 </p>
+<p>
+If <code>start</code> is specified, then the called method is executed on a new
+strand, and the result of the <code>method-call-expr</code> is a value of type
+future&lt;T>, where T is the return type of the method called.
+</p>
+
 <h3>Anonymous function expression</h3>
 
 <pre
@@ -4103,12 +4115,18 @@ static type of the call-expr in an call-stmt is not nil.
 
 <pre
 class="grammar">remote-method-call-action :=
-  expr <code>-></code> method-name <code>(</code> arg-list <code>)</code>
+   [<code>start</code>] expression <code>-></code> method-name <code>(</code> arg-list <code>)</code>
 </pre>
 <p>
 Calls a remote method. This works the same as a method call expression, except
 that it is used only for a method with the <code>remote</code> modifier.
 </p>
+<p>
+If <code>start</code> is specified, then the called method is executed on a new
+strand, and the result of the <code>remote-method-call-expr</code> is a value of type
+future&lt;T>, where T is the return type of the method called.
+</p>
+
 <h3>Conditional statement</h3>
 
 <pre
