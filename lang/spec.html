@@ -709,8 +709,9 @@ class="grammar">floating-point-type-descriptor := <code>float</code> | <code>dec
 floating-point-literal :=
    DecimalFloatingPointNumber | HexFloatingPointLiteral
 DecimalFloatingPointNumber :=
-   DecimalNumber Exponent
-   | DottedDecimalNumber [Exponent]
+   DecimalNumber Exponent [FloatingPointTypeSuffix]
+   | DottedDecimalNumber [Exponent] [FloatingPointTypeSuffix]
+   | DecimalNumber FloatingPointTypeSuffix
 DottedDecimalNumber :=
    DecimalNumber <code>.</code> Digit*
    | <code>.</code> Digit+
@@ -726,6 +727,9 @@ DottedHexNumber :=
 HexExponent := HexExponentIndicator [Sign] Digit+
 HexExponentIndicator := <code>p</code> | <code>P</code>
 Sign := <code>+</code> | <code>-</code>
+FloatingPointTypeSuffix := DecimalTypeSuffix | FloatTypeSuffix
+DecimalTypeSuffix := <code>d</code> | <code>D</code>
+FloatTypeSuffix :=  <code>f</code> | <code>F</code>
 </pre>
 <p>
 There are two basic types for floating point numbers:
@@ -2300,16 +2304,14 @@ precise and broad types.
 </p>
 <p>
 The most important case where the precise type and the broad type are different
-is literals. For a literal other than a floating-point-literal, the precise type
-is a singleton type for the literal value, but the broad type is the basic type
-containing the literal value. (There are no singleton float or decimal types, so
-the precise and broad types for a floating-point-literal are both the basic type
-<code>float</code>.) For example, the precise type of the string literal
-<code>"X"</code> is the singleton type <code>"X"</code>, but the broad type is
-<code>string</code>.
+is literals. The precise type is a singleton type containing just the shape of
+the value that the literal represents, whereas the broad type is the precise
+type widened to contain the entire basic type of which it is a subtype. For
+example, the precise type of the string literal <code>"X"</code> is the
+singleton type <code>"X"</code>, but the broad type is <code>string</code>.
 </p>
 <p>
-For an type-cast-expr, the precise type and the broad type are the type
+For a type-cast-expr, the precise type and the broad type are the type
 specified in the cast.
 </p>
 <h3>Casting and conversion</h3>
@@ -2380,10 +2382,9 @@ class="grammar">simple-const-expr :=
   nil-literal
   | boolean
   | [Sign] int-literal
-  | [floating-point-type] [Sign] floating-point-literal
+  | [Sign] floating-point-literal
   | string-literal
   | variable-reference
-floating-point-type := <code>&lt;</code> (<code>decimal</code>|<code>float</code>) <code>></code>
 </pre>
 <p>
 A simple-const-expr is a restricted form of const-expr used in contexts where
@@ -2396,32 +2397,42 @@ the same as a const-expr.
 class="grammar">literal :=
    nil-literal
    | boolean-literal
-   | int-literal
-   | floating-point-literal
+   | numeric-literal
    | string-literal
    | byte-array-literal
+numeric-literal := int-literal | floating-point-literal
 </pre>
 <p>
-The type of an int-literal depends on the contextually expected numeric type,
+A numeric-literal represents a value belonging to one of the basic types
+int, float or decimal. The basic type to which the value belongs is determined
+as follows:
+</p>
+<ul>
+<li>if the numeric-literal includes a <code>FloatTypeSuffix</code>, then the
+basic type is float;</li>
+<li>if the numeric-literal includes a <code>DecimalTypeSuffix</code>, then the
+basic type is decimal;</li>
+<li>if the numeric-literal is a <code>HexFloatingPointLiteral</code>, then the
+basic type is float;</li>
+<li>otherwise, the basic type depends on the contextually expected numeric type,
 where the contextually expected numeric type is the intersection of the
 contextually expected type with <code>int|float|decimal</code>:
-</p>
 <ul>
-<li>if the contextually expected numeric type is a subtype of float, then the
-type of the int-literal is a float</li>
 <li>if the contextually expected numeric type is a subtype of decimal, then the
-type of the int-literal is decimal</li>
-<li>otherwise, the broad type of the int-literal is int, and the narrow type is
-a singleton int type</li>
+basic type is decimal;</li>
+<li>if the contextually expected numeric type is a subtype of float, then the
+basic type is float;</li>
+<li>otherwise, if the numeric literal is an int-literal, then the basic type is
+int;</li>
+<li>otherwise, the basic type is float.</li>
+</ul>
+</li>
 </ul>
 <p>
-Similarly the type of a floating-point-literal is determined as follows:
+The precise type of a numeric-literal is the singleton type containing just the
+shape of the value that the numeric-literal represents. The broad type is
+the basic type of which the precise type is a subset.
 </p>
-<ul>
-<li>if the contextually expected numeric type is a subtype of decimal, the type
-of the floating-point-literal is a decimal,</li>
-<li>otherwise, the type of the floating-point literal is float</li>
-</ul>
 
 <pre
 class="grammar">byte-array-literal := Base16Literal | Base64Literal
@@ -5318,6 +5329,9 @@ at runtime.</li>
 <li>The <code>typedesc</code> type now takes an optional type parameter.</li>
 <li>The syntax for a function with an external implementation has changed to use
 <code>=external</code> in place of the curly braces.</li>
+<li>A numeric literal can use a suffix of <code>d</code> or <code>f</code> to
+indicate that it represents a value belonging to the decimal or float type
+respectively.</li>
 </ol>
 <h3>Summary of changes from 0.980 to 0.990</h3>
 <p>
