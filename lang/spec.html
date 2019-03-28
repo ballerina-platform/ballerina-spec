@@ -1928,9 +1928,10 @@ same time.
 class="grammar">binding-pattern :=
    simple-binding-pattern
    | structured-binding-pattern
-simple-binding-pattern := variable-name | ignore
+simple-binding-pattern := capture-binding-pattern | wildcard
+capture-binding-pattern := variable-name
 variable-name := identifier
-ignore := <code>_</code>
+wildcard := <code>_</code>
 structured-binding-pattern :=
    | tuple-binding-pattern
    | record-binding-pattern
@@ -1963,9 +1964,11 @@ causes values to be assigned to all the variables occurring the binding-pattern.
 A binding pattern matches a value in any of the following cases.
 </p>
 <ul>
-<li>a simple-binding-pattern matches any value; if the simple-binding-pattern
-consists of a variable-name then it causes the matched value to be assigned to
-the named variable;</li>
+<li>a capture-binding-pattern always matches a value and causes the matched
+value to be assigned to named variable;</li>
+<li>a wildcard matches a value if the value belongs to type any, in other words
+if the basic type of the value is not error; it does not cause any assignments
+to be made;</li>
 <li>a tuple-binding-pattern (p1, p2, ..., pn) matches a list value of length n
 [v1, v2, ..., vn] if pi matches vi for each i in 1 to n;</li>
 <li>an open-record-binding-pattern { f1: p1, f2: p2, ..., fn: pn, r } matches a
@@ -1999,15 +2002,16 @@ the binding pattern successfully matches the value causing each variable to be
 assigned a value belonging to the type descriptor for that variable.
 </p>
 <ul>
-<li>for a simple-binding-pattern that is a variable name, the type descriptor is
-the type descriptor for that variable;</li>
-<li>for a simple-binding-pattern that is _, the type descriptor is any</li>
+<li>for a capture-binding-pattern, the type descriptor is the type descriptor
+for that variable;</li>
+<li>for a wildcard, the type descriptor is any</li>
 <li>for a tuple-binding-pattern, the type descriptor is a tuple type descriptor;</li>
 <li>for a record-binding-pattern, the type descriptor is a record type
 descriptor;</li>
 <li>for an error-binding-pattern, the type descriptor is an error type
 descriptor.</li>
 </ul>
+
 <h4>Typed binding patterns</h4>
 
 <pre
@@ -4198,7 +4202,7 @@ A match-stmt is executed as follows:
 <li>if the attempted match fails, the execution of the match-stmt continues to
 the next match-clause</li>
 <li>if the attempted match succeeds, then the variables in match-pattern are
-creates</li>
+created</li>
 <li>if there is a match-guard, then the expression in match-guard is executed
 resulting in a value b</li>
 <li>if b is false, then the execution of the match-stmt continues to the next
@@ -4231,7 +4235,7 @@ variables.
 <pre
 class="grammar">match-pattern :=
   <code>var</code> binding-pattern
-  | ignore
+  | wildcard
   | const-pattern
   | structured-match-pattern
 </pre>
@@ -4256,7 +4260,6 @@ than once in a match-pattern.
 
 <pre
 class="grammar">const-pattern := simple-const-expr
-
 </pre>
 <p>
 A const-pattern denotes a single value. Matching a const-pattern against a value
@@ -4264,6 +4267,10 @@ succeeds if the value has the same shape as the value denoted by the
 const-pattern. A variable-reference in a const-pattern must refer to a constant.
 Successfully matching a const-pattern does not cause any variables to be
 created.
+</p>
+<p>
+Matching a wildcard match-pattern against a value succeeds if the value belongs to
+type any, in other words if the basic type of the value is not error.
 </p>
 
 <pre
@@ -4291,7 +4298,7 @@ error-detail-match-pattern :=
    simple-match-pattern
    | record-match-pattern
 simple-match-pattern :=
-  ignore
+  wildcard
   | const-pattern
   | <code>var</code> variable-name
 </pre>
