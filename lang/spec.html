@@ -408,7 +408,7 @@ value) are iterable, meaning that a value of the type can be accessed as a
 sequence of simpler values.
 </p>
 <p>
-The following table summarizes the  type descriptors provided by Ballerina.
+The following table summarizes the type descriptors provided by Ballerina.
 Experimental features are not included.
 </p>
 <table>
@@ -836,11 +836,9 @@ to a type if and only if that type is its inherent type or a subset of its
 inherent type.
 </p>
 <p>
-A frozen container value belongs to a type if and only if  the type contains the
-shape of the value. Thus after a container value is frozen, its inherent type
-does not provide additional information that cannot be derived from the value.
-In other words, freezing a container narrows its inherent type to a type that
-consists of just its current shape.
+A frozen container value belongs to a type if and only if the type contains the
+shape of the value. In other words, freezing a container narrows its inherent
+type to a type that consists of just its current shape.
 </p>
 
 <pre
@@ -2291,18 +2289,16 @@ key points that programmers might need to be aware of.
 </p>
 <h4>Contextually expected type</h4>
 <p>
-In Ballerina's type system, values do not belong to just a single type. It is
-accordingly convenient to allow an expression that constructs a value to have a
-different static type in different contexts. The context of every expression
-determines a type that the static type of the expression must be a subtype of.
-This is called the contextually expected type. For example, the contextually
-expected type of an expression that initializes a variable of type T is T. In
-some cases, there will be no constraint on the type of an expression; this is
-equivalent to having a contextually expected type of any.
-</p>
-<p>
-The contextually expected type of an expression that constructs a value can
-affect what value the expression creates when it is evaluated.
+For a context in which an expression occurs, there may be a type descriptor that
+describes the static type that the expression is expected to have. This is
+called the <em>contextually expected type</em>. For example, if a variable is
+declared by a type descriptor TD, then TD will be the contextually expected type
+for the expression initializing the variable. Many expressions that construct
+values use the contextually expected type to determine the type of value
+constructed, rather than requiring the type to be specified explicitly. In some
+contexts, there will not be any type descriptor constraining the type that an
+expression is expected to have; this is equivalent to having the contextually
+expected type be a type that all values belong to, i.e. <code>any|error</code>.
 </p>
 <h4>Precise and broad types</h4>
 <p>
@@ -2881,8 +2877,8 @@ with its numeric shapes transformed to take account to the possibility of the
 numeric conversion specified in the previous paragraph.
 </p>
 <p>
-The <code>expression</code> is interpreted with <code>type-descriptor</code> as
-the contextually expected type.
+The <code>type-descriptor</code> provides the contextually expected type for
+<code>expression</code>.
 </p>
 <h3>Typeof expression</h3>
 
@@ -3878,11 +3874,13 @@ A local-init-var-decl-stmt is executed by evaluating the action-or-expr
 resulting in a value, and then matching the typed-binding-pattern to the value,
 causing assignments to the variables occurring in the typed-binding-pattern. The
 typed-binding-pattern is used unconditionally, meaning that it is a compile
-error if the static types do not guarantee the success of the match.  If the
+error if the static types do not guarantee the success of the match. If the
 typed-binding-pattern uses <code>var</code>, then the type of the variable is
 inferred from the static type of the action-or-expr; if the
 local-init-var-decl-stmt includes final, the precise type is used, and otherwise
-the broad type is used.
+the broad type is used. If the typed-binding-pattern specifies a
+type-descriptor, then that type-descriptor provides the contextually expected
+type for action-or-expr.
 </p>
 <p>
 If <code>final</code> is specified, then the variables declared must not be
@@ -4050,9 +4048,9 @@ Operations on references:
 An lhs is evaluated for a particular usage type, which is one of
 </p>
 <ul>
-<li>  assignment</li>
-<li>  keyed access</li>
-<li>  indexed access</li>
+<li>assignment</li>
+<li>keyed access</li>
+<li>indexed access</li>
 </ul>
 <p>
 L = R is evaluated as follows:
@@ -4093,6 +4091,9 @@ where T1 is the member type of the inherent type of v, and T2 is map&lt;any> for
 keyed access and any[] for indexed access</li>
 <li>result is reference to index x of v</li>
 </ol>
+<p>
+The type of lhs provides the contextually expected type for action-or-expr.
+</p>
 <h3>Compound assignment statement</h3>
 
 <pre
@@ -4714,10 +4715,12 @@ class="grammar">module-var-decl :=
 <p>
 The scope of variables declared in a module-var-decl is the entire module. Note
 that module variables are not allowed to be public. If final is specified, then
-it is not allowed to assign to the variable.  If the typed-binding-pattern uses
+it is not allowed to assign to the variable. If the typed-binding-pattern uses
 <code>var</code>, then the type of the variable is inferred from the static type
 of <code>expression</code>; if the module-var-decl includes <code>final</code>,
-the precise type is used, and otherwise the broad type is used.
+the precise type is used, and otherwise the broad type is used. If the
+typed-binding-pattern specifies a type-descriptor, then that type-descriptor
+provides the contextually expected type for action-or-expr.
 </p>
 <h3>Module constant declaration</h3>
 
