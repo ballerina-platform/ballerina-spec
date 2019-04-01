@@ -396,7 +396,10 @@ arbitrarily many types, even though they look like or belong to exactly one
 </p>
 <p>
 In addition to describing a type, a type descriptor may also include information
-used to construct a value of the type, as well as metadata.
+used to construct a value of the type, as well as metadata. Whereas the type
+described by a type descriptor is known at compile time, this additional
+information may need to be resolved at runtime. The typedesc basic type
+represents a type descriptor that has been resolved.
 </p>
 <p>
 Most types, including all simple basic types, have an implicit initial value,
@@ -1290,70 +1293,103 @@ class="grammar">function-type-descriptor := <code>function</code> function-signa
 function-signature := <code>(</code> param-list <code>)</code> return-type-descriptor
 return-type-descriptor := [ <code>returns</code> annots type-descriptor ]
 param-list :=
-   [ individual-param-list [, rest-param]]
-   | rest-param
-individual-param-list := individual-param (<code>,</code> individual-param)*
-individual-param :=
-   annots type-descriptor param-name [<code>=</code> default-value]
-default-value := const-expr
+   required-params [<code>,</code> defaultable-params] [<code>,</code> rest-param]
+   | defaultable-params [<code>,</code> rest-param]
+   | [rest-param]
+required-params := required-param (<code>,</code> required-param)*
+required-param := annots type-descriptor param-name
+defaultable-params := defaultable-param (<code>,</code> defaultable-param)*
+defaultable-param := annots type-descriptor param-name <code>=</code> default-value
+default-value := expression
 rest-param := annots type-descriptor <code>...</code> [param-name]
 </pre>
 <p>
 A function is a part of a program that can be explicitly executed. In Ballerina,
 a function is also a value, implying that it can be stored in variables, and
-passed to or returned from functions.
+passed to or returned from functions. When a function is executed, it is passed
+an argument list as input and returns a value as output.
 </p>
 <p>
-When a function is executed, it is passed argument values as input and returns a
-value as output.
+When the execution of a function returns to its caller, it returns exactly one
+value. A function that would in other programming languages not return a value
+is represented in Ballerina by a function returning <code>()</code>. Note that
+the function definition does not have to explicitly return <code>()</code>; a
+return statement or falling off the end of the function body will implicitly
+return <code>()</code>.
 </p>
 <p>
-A function always returns exactly one value. A function that would in other
-programming languages not return a value is represented in Ballerina by a
-function returning <code>()</code>. (Note that the function definition does not
-have to explicitly return (); a return statement or falling of the end of the
-function body will implicitly return ().)
+The argument list passed to a function consists of zero or arguments in order;
+each argument is a value, but the argument list itself is not passed as a value.
+The argument list must conform to the param-list as described in this section.
+Usually, the compiler's type checking will ensure that this is the case; if not,
+the function will panic.
 </p>
 <p>
-A function can be passed any number of arguments. Each argument is passed in one
-of three ways: as a positional argument, as a named argument or as a rest
-argument. A positional argument is identified by its position relative to other
-positional arguments. A named argument is identified by name. Only one rest
-argument can be passed and its value must be an array.
+It is convenient to consider the complete param-list to have a type (containing
+list shapes), which is defined as follows. Let the non-rest parameters (that
+every required-param and defaultable-param) of the param-list have types
+T<sub>1</sub>,...T<sub>m</sub>; if the param-list has a rest-param, then let
+T<sub>r</sub> be the type of the rest-param, otherwise let T<sub>r</sub> be a
+type that contains no shapes. Then the type for the param-list contains a list
+shape with members shapes s<sub>1</sub>,...,s<sub>n</sub> if and only if
+</p>
+<ul>
+<li>m &lt;= n and,</li>
+<li>for each i with 1 &lt;= i &lt;= m, T<sub>i</sub> contains s<sub>i</sub>, and</li>
+<li>for each j with m &lt;= j &lt;= n, T<sub>r</sub> contains s<sub>j</sub>.</li>
+</ul>
+<p>
+An argument list consisting of values v<sub>1</sub>,..., v<sub>n</sub> conforms
+to a param-list that has type P, if and only if for each i with 1 &lt;= i &lt;=
+n, vi belongs to T<sub>i</sub>, where T<sub>i</sub> is defined to be the type
+that contains a shape s if and only if P contains a list shape whose i-th member
+is s.
 </p>
 <p>
-A function definition defines a number of named parameters, which can be
-referenced like variables within the body of the function definition. The
-parameters of a function definition are of three kinds: required, defaultable
-and rest. The relative order of required parameters is significant, but not for
-defaultable parameters. There can be at most one rest parameter.
+When an argument list is passed to a function, the non-rest parameters are
+initialized from the arguments in the argument list in order. The conformance of
+the argument list to the param-list declared for the function ensures that each
+parameter will be initialized to a value that belongs to the declared type of
+the parameter. If there is a rest-param, then that is a initialized to a newly
+created lists containing the remaining arguments in the argument-list; the
+inherent type of this list will be T[] where T is the type of the rest-param.
+The conformance of the argument list ensures that the members of this list will
+belong to type T.
 </p>
 <p>
-When a function is executed, the arguments are used to assign a value to each of
-the parameters. First, the required parameters are assigned values from the
-positional arguments in order. There must be at least as many positional
-arguments as required parameters. If there are more positional arguments than
-required parameters, then there must be a rest parameter and not be a rest
-argument, and an array of the remaining positional arguments is assigned to the
-rest parameter. Next, the defaultable parameters are assigned values from the
-named arguments. For each named argument, there must be a defaultable parameter
-with the same name. If there is no named argument for a defaultable parameter
-then the default value is assigned to that parameter. Finally, if there is a
-rest argument, there must be a rest parameter and the rest argument is assigned
-to the rest parameter.
+A defaultable-param is a parameter that has a default value. The expression
+specifying the default value may refer to previous parameters by name. For each
+defaultable parameter, the function's type descriptor includes a closure that
+computes the default value for the parameter using the values of previous
+parameters. The caller of the function uses the closures in the function's type
+descriptor to compute default values for any defaultable arguments that were not
+specified explicitly. These default values are included in the argument list
+passed to the function. Whether a parameter is defaultable, and what its default
+is, do not affect the shape of the function and thus do not affect typing. The
+closures computing the defaultable parameters are created when the type
+descriptor is resolved; the default value is computed by calling the closure
+each time the function is called and the corresponding parameter is not
+specified. Whether a parameter is defaultable is used at compile time, but the
+closure that computes the default value is only used at runtime.
 </p>
 <p>
-The type system classifies functions based only on the arguments they are
-declared to accept and the values they are declared to return. Other aspects of
-a function value, such as how the return value depends on the argument, or what
-the side-effects of calling the function are, are not considered as part of the
-function's type.
+The name of each parameter is included in the function's type descriptor. A
+caller of the function may specify parameters by name. In this case, the caller
+uses the parameter name at compile time in conjunction with the type descriptor
+to create the argument list. The parameter names do not affect the shape of the
+function and thus do not affect typing.
 </p>
 <p>
-For return values, typing is straightforward: <code>returns T</code> means that
-the value returned by the function is always of type <code>T</code>. A function
-value declared as returning type T will belong to a function type declared as
-returning type T' only if T is a subset of T'.
+The process by which the function caller creates an argument list, which may
+make use of arguments specified both by position and by name, is described in
+more detail in the <a href="#function_call">section on function calls</a>.
+</p>
+<p>
+Functions are covariant in the return types and contravariant in type of their
+parameter lists. More precisely, a function type with return type type R and
+parameter list type P is a subtype of a function type with result type R' and
+parameter list type P' if and only if R is a subtype of R' and P' is a subtype
+of P.
 </p>
 <h4>Objects</h4>
 <p>
@@ -1582,23 +1618,24 @@ pure type.
 The implicit initial value of a stream type is a newly created stream, ready to
 distribute values.
 </p>
-<h4>Type descriptors</h4>
 
+<h4>Type descriptors</h4>
 <pre
 class="grammar">typedesc-type-descriptor := <code>typedesc</code> [type-parameter]
 </pre>
 <p>
-A type descriptor value is a value representing a type descriptor. Referencing
-an identifier defined by a type definition in an expression context will result
-in a type descriptor value.
+A type descriptor value is an immutable value representing a resolved type
+descriptor. The type typedesc contains all values with basic type typedesc. A
+typedesc value <var>t</var> belongs to a type typedesc&lt;<var>T</var>&gt; if
+and only if the type described by <code>t</code> is a subtype of <var>T</var>.
+The typedesc type is thus covariant with its type parameter.
 </p>
 <p>
-The type typedesc contains all values with basic type typedesc. A typedesc value
-t belongs to a type typedesc&lt;T> if and only if the type described by t is a
-subtype of T. The typedesc type is thus covariant with its type parameter.
+Referencing an identifier defined by a type definition in an expression context
+will result in a type descriptor value.
 </p>
-<h3>Type descriptors</h3>
 
+<h3>Type descriptors</h3>
 <pre
 class="grammar">type-descriptor :=
    simple-type-descriptor
@@ -2299,6 +2336,8 @@ constructed, rather than requiring the type to be specified explicitly. In some
 contexts, there will not be any type descriptor constraining the type that an
 expression is expected to have; this is equivalent to having the contextually
 expected type be a type that all values belong to, i.e. <code>any|error</code>.
+A type descriptor must be resolved before it can be used to provide a
+contextually expected type.
 </p>
 <h4>Precise and broad types</h4>
 <p>
@@ -2772,29 +2811,75 @@ class="grammar">xml-attributes-expr := expression <code>@</code>
 Returns the attributes map of a singleton xml value, or nil if the operand is
 not a singleton xml value. The result type is <code>map&lt;string>?</code>.
 </p>
-<h3>Function call expression</h3>
+<h3 id="function_call">Function call expression</h3>
 
 <pre
 class="grammar">function-call-expr := [<code>start</code>] function-reference <code>(</code> arg-list <code>)</code>
 function-reference := variable-reference
 arg-list :=
-   [ individual-arg-list [, rest-arg]]
-   | rest-arg
-individual-arg-list := individual-arg (<code>,</code> individual-arg)*
-individual-arg := [arg-name <code>=</code>] expression
+   positional-args [<code>,</code> other-args]
+   | [other-args]
+positional-args := positional-arg (<code>,</code> positional-arg)*
+positional-arg := expression
+other-args := named-args | rest-arg
+named-args := named-arg (<code>,</code> named-arg)*
+named-arg := arg-name <code>=</code> expression
 arg-name := identifier
 rest-arg := <code>...</code> expression
 </pre>
+<p>
+A function-call-expr is evaluated by constructing an argument list and passing
+the argument list to the function referred to by the variable-name. If the
+function terminates normally, then the result of the function-call-expr is the
+return value of the function; otherwise the function-call-expr completes
+abruptly with a panic. The static type of the function-call-expr is the return
+type of the function type.
+</p>
+<p>
+However, if <code>start</code> is specified, then the called function is
+executed on a new strand, and the result of the <code>function-call-expr</code>
+is a value of type future&lt;T>, where T is the return type of the function
+called.
+</p>
+<p>
+The variable-reference must refer to a variable with function type. The type
+descriptor of that function type is used to construct an argument list from the
+specified arg-list. Note that it is the type descriptor of the declared type of
+the variable that is used for this purpose, rather than the runtime type
+descriptor of the referenced function value.
+</p>
+<p>
+The expressions occurring in the arg-list are evaluated in the order in which
+they occur in the arg-list. The result of evaluating each positional-arg is
+added to the argument list in order. The contextually expected type for the
+expression in the i-th positional-arg is the type of the i-th parameter.
+</p>
+<p>
+If there is a rest-arg, then it is evaluated. The result must be a list value.
+Each member of the list value is added to the argument in the order that it
+occurs. The static type of the list value must be such as to guarantee that the
+resulting argument list will conform to the function's declared param-list. The
+rest-arg is not restricted to supplying the part of the argument list that will
+be bound to a rest-param, and its static type is not restricted to being an
+array type. If there is rest-arg, then no parameter defaults are added.
+</p>
+<p>
+If there is no rest-arg, then each non-rest parameter that was not supplied by
+positional argument is added in order from a named parameter, if there is one,
+and otherwise using the parameter default. The contextually expected type for
+the expression specifying a named argument is the type declared for the
+corresponding parameter. A default parameter is computed by calling the closure
+in the type descriptor, passing it the previous arguments in the argument list.
+It is a compile-time error if there is a non-rest parameter for which there was
+no positional argument and no named argument and which is not defaultable. It is
+also an error if there is a named argument for a parameter that was supplied by
+a positional argument.
+</p>
 <p>
 When a function to be called results from the evaluation of an expression that
 is not merely a variable reference, the function can be called either by first
 storing the value of the expression in a variable or using the <code>call</code>
 built-in method on functions.
-</p>
-<p>
-If <code>start</code> is specified, then the called function is executed on a new
-strand, and the result of the <code>function-call-expr</code> is a value of type
-future&lt;T>, where T is the return type of the function called.
 </p>
 
 <h3>Method call expression</h3>
@@ -5061,11 +5146,10 @@ mapping-constructor-expr is evaluated when the annotation is evaluated and the
 resulting value is automatically frozen.
 </p>
 <p>
-An annotations applied to a module-level declaration is evaluated when the
-module is initialized. An annotation applied to a service constructor is
-evaluated when the service constructor is evaluated. An annotation occurring
-within a type descriptor in a block is evaluated when the type descriptor is
-resolved.
+An annotation applied to a module-level declaration is evaluated when the module
+is initialized. An annotation applied to a service constructor is evaluated when
+the service constructor is evaluated. An annotation occurring within a type
+descriptor is evaluated when the type descriptor is resolved.
 </p>
 
 <pre
@@ -5358,6 +5442,8 @@ at runtime.</li>
 <li>A numeric literal can use a suffix of <code>d</code> or <code>f</code> to
 indicate that it represents a value belonging to the decimal or float type
 respectively.</li>
+<li>In the argument list of a function or method call, positional arguments are
+now required to be specified before named arguments.</li>
 </ol>
 <h3>Summary of changes from 0.980 to 0.990</h3>
 <p>
