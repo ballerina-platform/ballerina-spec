@@ -1090,8 +1090,8 @@ closed-record-type-descriptor :=  <code>record</code> <code>{|</code> field-desc
 field-descriptor :=
    individual-field-descriptor | record-type-reference
 individual-field-descriptor :=
-   type-descriptor field-name [<code>?</code>] [<code>=</code> default-value]<code>;</code>
-default-value := expression
+   type-descriptor field-name [<code>?</code> | default-value] <code>;</code>
+default-value := <code>=</code> expression
 record-type-reference := <code>*</code> type-descriptor-reference <code>;</code>
 record-rest-descriptor := type-descriptor <code>...</code> <code>;</code>
 </pre>
@@ -1303,7 +1303,7 @@ param-list :=
 required-params := required-param (<code>,</code> required-param)*
 required-param := annots type-descriptor param-name
 defaultable-params := defaultable-param (<code>,</code> defaultable-param)*
-defaultable-param := annots type-descriptor param-name <code>=</code> default-value
+defaultable-param := annots type-descriptor param-name default-value
 rest-param := annots type-descriptor <code>...</code> [param-name]
 </pre>
 <p>
@@ -1360,20 +1360,20 @@ The conformance of the argument list ensures that the members of this list will
 belong to type T.
 </p>
 <p>
-A defaultable-param is a parameter that has a default value. The expression
-specifying the default value may refer to previous parameters by name. For each
-defaultable parameter, the function's type descriptor includes a closure that
-computes the default value for the parameter using the values of previous
-parameters. The caller of the function uses the closures in the function's type
-descriptor to compute default values for any defaultable arguments that were not
-specified explicitly. These default values are included in the argument list
-passed to the function. Whether a parameter is defaultable, and what its default
-is, do not affect the shape of the function and thus do not affect typing. The
-closures computing the defaultable parameters are created when the type
-descriptor is resolved; the default value is computed by calling the closure
-each time the function is called and the corresponding parameter is not
-specified. Whether a parameter is defaultable is used at compile time, but the
-closure that computes the default value is only used at runtime.
+A defaultable-param is a parameter for which a default value is specified. The
+expression specifying the default value may refer to previous parameters by
+name. For each defaultable parameter, the function's type descriptor includes a
+closure that computes the default value for the parameter using the values of
+previous parameters. The caller of the function uses the closures in the
+function's type descriptor to compute default values for any defaultable
+arguments that were not specified explicitly. These default values are included
+in the argument list passed to the function. Whether a parameter is defaultable,
+and what its default is, do not affect the shape of the function and thus do not
+affect typing. The closures computing the defaultable parameters are created
+when the type descriptor is resolved; the default value is computed by calling
+the closure each time the function is called and the corresponding parameter is
+not specified. Whether a parameter is defaultable is used at compile time, but
+the closure that computes the default value is only used at runtime.
 </p>
 <p>
 The name of each parameter is included in the function's type descriptor. A
@@ -1438,7 +1438,7 @@ methods; other objects types must not.
 
 <pre
 class="grammar">object-field-descriptor :=
-   [visibility-qual] type-descriptor field-name [<code>=</code> default-value]<code>;</code>
+   [visibility-qual] type-descriptor field-name [default-value]<code>;</code>
 </pre>
 <p>
 An <code>object-field-descriptor</code> specifies a field of the object. The
