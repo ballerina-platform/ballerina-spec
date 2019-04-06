@@ -1965,16 +1965,14 @@ same time.
 
 <pre
 class="grammar">binding-pattern :=
-   simple-binding-pattern
-   | structured-binding-pattern
-simple-binding-pattern := capture-binding-pattern | wildcard
-capture-binding-pattern := variable-name
-variable-name := identifier
-wildcard := <code>_</code>
-structured-binding-pattern :=
+   capture-binding-pattern
+   | wildcard-binding-pattern
    | tuple-binding-pattern
    | record-binding-pattern
    | error-binding-pattern
+capture-binding-pattern := variable-name
+variable-name := identifier
+wildcard-binding-pattern := <code>_</code>
 tuple-binding-pattern := <code>(</code> binding-pattern (<code>,</code> binding-pattern)+ <code>)</code>
 record-binding-pattern :=
    open-record-binding-pattern | closed-record-binding-pattern
@@ -1991,6 +1989,9 @@ field-binding-pattern :=
 rest-binding-pattern := <code>...</code> variable-name
 error-binding-pattern :=
    <code>error</code> <code>(</code> simple-binding-pattern [<code>,</code> error-detail-binding-pattern] <code>)</code>
+simple-binding-pattern :=
+   capture-binding-pattern
+   | wildcard-binding-patterm
 error-detail-binding-pattern :=
    simple-binding-pattern
    | record-binding-pattern
@@ -2005,9 +2006,9 @@ A binding pattern matches a value in any of the following cases.
 <ul>
 <li>a capture-binding-pattern always matches a value and causes the matched
 value to be assigned to named variable;</li>
-<li>a wildcard matches a value if the value belongs to type any, in other words
-if the basic type of the value is not error; it does not cause any assignments
-to be made;</li>
+<li>a wildcard-binding-pattern matches a value if the value belongs to type any,
+in other words if the basic type of the value is not error; it does not cause
+any assignments to be made;</li>
 <li>a tuple-binding-pattern (p1, p2, ..., pn) matches a list value of length n
 [v1, v2, ..., vn] if pi matches vi for each i in 1 to n;</li>
 <li>an open-record-binding-pattern { f1: p1, f2: p2, ..., fn: pn, r } matches a
@@ -2043,7 +2044,7 @@ assigned a value belonging to the type descriptor for that variable.
 <ul>
 <li>for a capture-binding-pattern, the type descriptor is the type descriptor
 for that variable;</li>
-<li>for a wildcard, the type descriptor is any</li>
+<li>for a wildcard-binding-pattern, the type descriptor is any</li>
 <li>for a tuple-binding-pattern, the type descriptor is a tuple type descriptor;</li>
 <li>for a record-binding-pattern, the type descriptor is a record type
 descriptor;</li>
@@ -4200,17 +4201,22 @@ the value of the expression.
 
 <pre
 class="grammar">destructure-assignment-stmt :=
-   structured-binding-pattern <code>=</code> action-or-expr <code>;</code>
+   binding-pattern-not-variable-reference <code>=</code> action-or-expr <code>;</code>
+binding-pattern-not-variable-reference :=
+   wildcard-binding-pattern
+   | tuple-binding-pattern
+   | record-binding-pattern
+   | error-binding-pattern
 </pre>
 <p>
-A destructuring assignment is executed by evaluating the expression resulting in
-a value v, and then matching the structured binding pattern to v, causing
-assignments to the variables occurring in the structured binding pattern.
+A destructuring assignment is executed by evaluating the action-or-expr
+resulting in a value v, and then matching the binding pattern to v, causing
+assignments to the variables occurring in the binding pattern.
 </p>
 <p>
 The binding-pattern has a static type implied by the static type of the
-variables occurring in it. The static type of expression must be a subtype of
-this type.
+variables occurring in it. The static type of action-or-expr must be a subtype
+of this type.
 </p>
 <h3>Action statement</h3>
 
@@ -4325,9 +4331,11 @@ variables.
 <pre
 class="grammar">match-pattern :=
   <code>var</code> binding-pattern
-  | wildcard
-  | const-pattern
-  | structured-match-pattern
+   | wildcard-match-pattern
+   | const-pattern
+   | tuple-match-pattern
+   | record-match-pattern
+   | error-match-pattern
 </pre>
 <p>
 A match-pattern combines the destructuring done by a binding-pattern with the
@@ -4359,15 +4367,12 @@ Successfully matching a const-pattern does not cause any variables to be
 created.
 </p>
 <p>
-Matching a wildcard match-pattern against a value succeeds if the value belongs to
+Matching a wildcard-match-pattern against a value succeeds if the value belongs to
 type any, in other words if the basic type of the value is not error.
 </p>
 
 <pre
-class="grammar">structured-match-pattern :=
-   | tuple-match-pattern
-   | record-match-pattern
-   | error-match-pattern
+class="grammar">wildcard-match-pattern := <code>_</code>
 tuple-match-pattern :=
    <code>(</code> match-pattern (<code>,</code> match-pattern)+ <code>)</code>
 record-match-pattern :=
@@ -4384,13 +4389,13 @@ rest-match-pattern := <code>...</code> <code>var</code> variable-name
 error-match-pattern :=
    <code>error</code> <code>(</code> simple-match-pattern 
            [<code>,</code> error-detail-match-pattern] <code>)</code>
+simple-match-pattern :=
+   wildcard-match-pattern
+   | const-pattern
+   | <code>var</code> variable-name
 error-detail-match-pattern :=
    simple-match-pattern
    | record-match-pattern
-simple-match-pattern :=
-  wildcard
-  | const-pattern
-  | <code>var</code> variable-name
 </pre>
 
 <p>
