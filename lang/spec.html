@@ -960,10 +960,9 @@ initial value, an array of T? may be used instead; see Optional Types.)
 <p>
 A <code>constant-reference-expr</code> in an <code>array-length</code> must
 evaluate to a non-negative integer. An array length of <code>*</code> means that
-the length of the array is to be implied from the context; this is allowed in
-the same contexts where <code>var</code> would be allowed in place of the type
-descriptor in which <code>array-length</code> occurs (see "Typed binding
-patterns"); its meaning is the same as if the length was specified explicitly.
+the length of the array is to be inferred from the context; this is allowed only
+within a type descriptor occurring in a context that is specified to be
+inferable; its meaning is the same as if the length was specified explicitly.
 </p>
 <p>
 When <code>array-length</code> is present, the implicit initial value of the
@@ -1244,9 +1243,11 @@ represented by a sequence consisting of just that item.
 
 <pre
 class="grammar">error-type-descriptor :=
-   <code>error</code> [<code>&lt;</code>reason-type-descriptor[<code>,</code> detail-type-descriptor]<code>></code>]
+   <code>error</code> [explicit-error-type-params | inferred-error-type-params]
+explicit-error-type-params := <code>&lt;</code>reason-type-descriptor[<code>,</code> detail-type-descriptor]<code>&gt;</code>
 reason-type-descriptor := type-descriptor
 detail-type-descriptor := type-descriptor
+inferred-error-type-params := <code>*</code>
 </pre>
 <p>
 An error value belongs to the error basic type, which is a basic type which is
@@ -1266,11 +1267,18 @@ information cannot be changed.
 <p>
 The shape of an error value consists of the shape of the reason and the shape of
 the detail; the stack trace is not part of the shape. A type descriptor
-error&lt;r, d> contains an error shape if r contains the shape's reason, and d,
-if present, contains the shape's detail. The bare type error contains all error
-shapes. The reason-type-descriptor must be a subtype of string; the
-detail-type-descriptor must be a subtype of <code>record { } </code>(which is
-equivalent to<code> map&lt;anydata|error></code>).
+error&lt;<var>r</var>, <var>d</var>&gt; contains an error shape if <var>r</var>
+contains the shape's reason, and <var>d</var>, if present, contains the shape's
+detail. The bare type error contains all error shapes. The
+reason-type-descriptor must be a subtype of string; the detail-type-descriptor
+must be a subtype of <code>record { }</code> (which is equivalent to
+<code>map&lt;anydata|error&gt;</code>).
+</p>
+<p>
+A type of <code>error&lt;*&gt;</code> means that the type is a subtype of error,
+where the precise subtype is to be inferred from the context. This is allowed
+only within type descriptors occurring in a context that is specified to be
+inferable.
 </p>
 <p>
 Error is the only structured basic type that is not iterable.
@@ -2055,14 +2063,17 @@ descriptor.</li>
 <h4>Typed binding patterns</h4>
 
 <pre
-class="grammar">typed-binding-pattern := impliable-type-descriptor binding-pattern
-impliable-type-descriptor := type-descriptor | <code>var</code>
+class="grammar">typed-binding-pattern := inferable-type-descriptor binding-pattern
+inferable-type-descriptor := type-descriptor | <code>var</code>
 </pre>
 <p>
 A typed-binding-pattern combines a type-descriptor and a binding-pattern, and is
 used to create the variables occurring in the binding-pattern. If var is used
-instead of a type-descriptor, it means the type is implied. How the type is
-implied depends on the context of the typed-binding-pattern.
+instead of a type-descriptor, it means the type is inferred. How the type is
+inferred depends on the context of the typed-binding-pattern. An
+inferable-type-descriptor is an inferable context for a type descriptor, which
+means that <code>*</code> can be used with the type descriptor to infer certain
+parts of it.
 </p>
 <p>
 The simplest and most common form of a typed-binding-pattern is for the binding
@@ -3446,9 +3457,13 @@ the termination of its named workers. There is a wait-action that allows one
 worker to explicitly wait for the termination of another worker.
 </p>
 <p>
-A named worker has a return type.  If the worker terminates normally, the
+A named worker has a return type. If the worker terminates normally, the
 termination value will belong to the return type. If the return type of a worker
-is not specified, it defaults to nil as for functions.
+is not specified, it defaults to nil as for functions. A return-type-descriptor
+in a named-worker-decl is an inferable context for a type descriptor, which
+means that <code>*</code> can be used to infer parts of the type descriptor; in
+particular, it is convenient to use <code>error&lt;*&gt;</code> to specify the
+error type.
 </p>
 <p>
 When a function has named workers, the default worker executes in three stages,
@@ -5428,8 +5443,10 @@ version of the specification released in year 20<em>XY</em> will be labelled
 <code>|}</code> delimiters rather than <code>!...</code>.</li>
 <li>Record binding patterns and match patterns now also use <code>{|</code> and
 <code>|}</code> delimiters instead of<code> !...</code>.</li>
-<li>The syntax for an array with an array length that is implied has changed
+<li>The syntax for an array with an array length that is inferred has changed
 from <code>T[!...]</code> to <code>T[*]</code>.</li>
+<li>A type descriptor of <code>error&lt;*&gt;</code> can be used to specify an
+error type whose subtype is inferred.</li>
 <li>A new expression can no longer be used to create values of structural types;
 it is only allowed for behavioural types.</li>
 <li>Symbolic string literals <code>'ident</code> have been removed (compile time
