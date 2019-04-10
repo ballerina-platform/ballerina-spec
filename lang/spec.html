@@ -404,8 +404,9 @@ information may need to be resolved at runtime. The typedesc basic type
 represents a type descriptor that has been resolved.
 </p>
 <p>
-Most types, including all simple basic types, have an implicit initial value,
-which is used to initialize structure members.
+Some type descriptors may also determine an implicit initial value, which is
+used to initialize structure members. In particular, the type descriptor for
+every simple basic type always has an implicit initial value.
 </p>
 <p>
 Most basic types of structured values (along with one basic type of simple
@@ -1100,13 +1101,14 @@ that a mapping value shape must satisfy for it to be a member of the described
 type. The constraint depends on whether ? is present:
 </p>
 <ul>
-<li>if ? is not present, then the constraint is that the mapping value shape
-must have a field shape with the specified field-name and with a value shape
-that is a member of the specified type-descriptor; this is called a required
-field;</li>
-<li>if ? is present, then the constraint is that if the mapping value shape has
-a field shape with the specified field-name, then its value shape must be a
-member of the specified type-descriptor; this is called an optional field.</li>
+<li>if <code>?</code> is not present, then the constraint is that the mapping
+value shape must have a field shape with the specified field-name and with a
+value shape that is a member of the specified type-descriptor; this is called a
+required field;</li>
+<li>if <code>?</code> is present, then the constraint is that if the mapping
+value shape has a field shape with the specified field-name, then its value
+shape must be a member of the specified type-descriptor; this is called an
+optional field.</li>
 </ul>
 <p>
 The order of the <code>individual-field-descriptor</code>s within a
@@ -1133,18 +1135,30 @@ specified, the value shape of the extra field shapes must be pure;</li>
 the value shape of every extra field shape must be a member of <code>T</code>.</li>
 </ul>
 <p>
+A <code>default-value</code> specifies a default value for the field, which is
+used when the record type descriptor is used to construct a mapping value but no
+value is specified explicitly for the field. The type descriptor contains a
+0-argument function closure for each default value. The closure is created from
+the expression when the type descriptor is resolved. The closure is evaluated to
+create a field value each time the default is used in the construction of a
+mapping value. The default value does not affect the type described by the type
+descriptor.
+</p>
+<p>
 A <code>record-type-reference</code> pulls in fields from a named record type.
 The <code>type-descriptor-reference</code> must reference a type defined by
 a<code> record-type-descriptor</code>. The <code>field-descriptor</code>s from
 the referenced type are copied into the type being defined; the meaning is the
-same as if they had been specified explicitly. Note that it does not pull in the
+same as if they had been specified explicitly. For default values, the closure
+rather than the expression is copied in. Note that it does not pull in the
 <code>record-rest-descriptor</code> from the referenced type.
 </p>
 <p>
-If the types of the fields of a record type all have an implicit initial value,
-then the implicit initial value for the record type is a record where each
-required field is initialized to its implicit initial value; the implicit
-initial value does not include optional fields.
+If the required fields of a record type descriptor all have a default value,
+then the implicit initial value for the record type descriptor is a record where
+each required field is initialized with its default value; the implicit initial
+value does not include optional fields. Otherwise, it does not have an implicit
+initial value.
 </p>
 <h4>[Preview] Tables</h4>
 <p>
@@ -2578,10 +2592,31 @@ used to specify the name of a field by enclosing the expression in square
 brackets.
 </p>
 <p>
-The contextually expected type of mapping-constructor-expr determines the
-inherent type of the constructed value. If the contextually expected type is
-neither a record type nor a map type, the inherent type is inferred from the
-types of the expressions occurring in the constructor.
+The mapping-constructor-expr selects at compile time a type descriptor to use as the inherent
+type of the new mapping value that it constructs.
+</p>
+<p> 
+If there is a contextually expected type, it will select a type descriptor using
+the contextually expected type. The contextually expected type is normalized
+into a union of one or more type descriptors, where each member of the union is
+not a union and describes shapes of only one basic type. Next it eliminates any
+members of the union whose basic type is not mapping or that are inconsistent
+with the names of the fields specified in the mapping-constructor-expr. This is
+done at compile-time, so for a computed-field-name it considers only the static
+type of the expression not the runtime value. It is a compile-time error if this
+does not unambiguously determine a single type descriptor to use as the inherent
+type.
+</p>
+<p>
+If there is no contextually expected type, the inherent type is inferred from
+the field names and the static types of the expressions occurring in the mapping
+constructor.
+</p>
+<p>
+If the inherent type descriptor is a record type descriptor, a field will be
+added to the constructed value using the default value from the type descriptor
+for any field that is not specified explicitly in the mapping constructor and
+that has a default value.
 </p>
 <h3>[Preview] Table constructor</h3>
 
@@ -4666,9 +4701,10 @@ structure of v is not a tree, then stamp returns an error.</li>
 <li>If the shape of v is not a member of the set of shapes denoted by t (i.e. v
 does not look like t), then stamp will attempt to modify it so that it is by
 using numeric conversions (as defined by the NumericConvert operation) on
-structure members in v. If this fails or can be done in more than one way, then
-stamp will return an error. Frozen structures will not be modified, nor will new
-structures be created.</li>
+members of containers and by adding fields for which a default value is defined.
+If this fails or can be done in more than one way, then stamp will return an
+error. Frozen structures will not be modified, nor will new structures be
+created.</li>
 <li>At this point, v looks like t. Now stamp narrows the inherent type of v, and
 recursively of any members of v, so that the v belongs to t, and then returns v.
 Any frozen values in v are left unchanged by this.</li>
@@ -4685,7 +4721,8 @@ t.convert(v) works as follows:
 <li>It checks that v is a tree. If v is a reference value, and the graph
 structure of v is not a tree, then convert returns an error.</li>
 <li>convert now creates a new value that has the same shape as v, except
-possibly for differences in numeric types, but belongs to type</li>
+possibly for differences in numeric types and for the addition of fields for
+which a default value is defined, but belongs to type</li>
 </ol>
 <h2 id="module_level">9. Module-level declarations</h2>
 <p>
@@ -5468,8 +5505,7 @@ at runtime.</li>
 <li>A numeric literal can use a suffix of <code>d</code> or <code>f</code> to
 indicate that it represents a value belonging to the decimal or float type
 respectively.</li>
-<li>In the argument list of a function or method call, positional arguments are
-now required to be specified before named arguments.</li>
+<li>Record type descriptors may now specify a default value for fields.</li>
 <li>Providing a default value for a parameter no longer affects whether a function
 call must supply the argument for that parameter positionally or by name. Instead
 the argument for any parameter can be supplied either positionally or by name.
@@ -5478,6 +5514,8 @@ arguments specified by name.</li>
 <li>Expressions specifying the default value for function parameters are not
 compile time constants, and are evaluated each time they are used to supply a
 missing argument.</li>
+<li>In the argument list of a function or method call, positional arguments are
+now required to be specified before named arguments.</li>
 </ol>
 <h3>Summary of changes from 0.980 to 0.990</h3>
 <p>
