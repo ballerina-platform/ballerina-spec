@@ -1082,11 +1082,11 @@ separately for the value of each field.
 
 <pre
 class="grammar">record-type-descriptor :=
-   open-record-type-descriptor | closed-record-type-descriptor
-open-record-type-descriptor :=
-   <code>record</code> <code>{</code> field-descriptor* [record-rest-descriptor] <code>}</code>
-closed-record-type-descriptor :=  <code>record</code> <code>{|</code> field-descriptor+ <code>|}</code>
-
+   inclusive-record-type-descriptor | exclusive-record-type-descriptor
+inclusive-record-type-descriptor :=
+   <code>record</code> <code>{</code> field-descriptor* <code>}</code>
+exclusive-record-type-descriptor :=
+   <code>record</code> <code>{|</code> field-descriptor* [record-rest-descriptor] <code>|}</code>
 field-descriptor :=
    individual-field-descriptor | record-type-reference
 individual-field-descriptor :=
@@ -1098,7 +1098,7 @@ record-rest-descriptor := type-descriptor <code>...</code> <code>;</code>
 <p>
 Each <code>individual-field-descriptor</code> specifies an additional constraint
 that a mapping value shape must satisfy for it to be a member of the described
-type. The constraint depends on whether ? is present:
+type. The constraint depends on whether <code>?</code> is present:
 </p>
 <ul>
 <li>if <code>?</code> is not present, then the constraint is that the mapping
@@ -1116,24 +1116,32 @@ The order of the <code>individual-field-descriptor</code>s within a
 identifier syntax allows the field name to be any non-empty string.
 </p>
 <p>
-A record type described that uses the <code>{|</code> and <code>|}</code> the
-delimiters is called <em>closed</em>; a record type that uses the <code>{</code>
-and <code>}</code> delimiters is called <em>open</em>.
-</p>
-<p>
-For a mapping value shape and a record-type-descriptor, let the extra field
-shapes be the field shapes of the mapping value shapes whose names are not the
-same as field-name of any individual-field-descriptor. A mapping value shape is
-a member of the described type only if the extra fields shapes satisfy the
-following constraints:
+An exclusive-record-type-descriptor, which uses the <code>{|</code> and
+<code>|}</code> delimiters, allows exclusively the fields described. More
+precisely, for a mapping value shape and a record-type-descriptor, let the extra
+field shapes be the field shapes of the mapping value shapes whose names are not
+the same as field-name of any individual-field-descriptor; a mapping value shape
+is a member of the type described by an exclusive-record-type-descriptor only if
+either:
 </p>
 <ul>
-<li>if the record type is closed, then there must be not extra field shapes;</li>
-<li>if the record type is open but no the <code>record-rest-descriptor</code> is
-specified, the value shape of the extra field shapes must be pure;</li>
-<li>if the <code>record-rest-descriptor</code> is <code>T...</code>, then then
-the value shape of every extra field shape must be a member of <code>T</code>.</li>
+<li>there are no extra fields shapes, or</li>
+<li>there is a record-rest-descriptor <code>T...</code>, and the value shape of
+every extra field shape is a member of <code>T</code>.</li>
 </ul>
+<p>
+An inclusive-record-type-descriptor, which uses the <code>{</code> and
+<code>}</code> delimiters, allows any mapping value that includes the fields
+described. More precisely, a type descriptor <code>record { F };</code> is
+equivalent to <code>record {| F; T...; |}</code>, where T is the type that
+contains all pure shapes (which can be written as <code>anydata|error</code>).
+</p>
+<p>
+A record type descriptor that either is an inclusive-record-type-descriptor or
+is an exclusive-record-type-descriptor with a record-rest-descriptor is called
+<em>open</em>; a record type descriptor that is not open is called
+<em>closed</em>.
+</p>
 <p>
 A <code>default-value</code> specifies a default value for the field, which is
 used when the record type descriptor is used to construct a mapping value but no
@@ -1147,7 +1155,7 @@ descriptor.
 <p>
 A <code>record-type-reference</code> pulls in fields from a named record type.
 The <code>type-descriptor-reference</code> must reference a type defined by
-a<code> record-type-descriptor</code>. The <code>field-descriptor</code>s from
+a <code>record-type-descriptor</code>. The <code>field-descriptor</code>s from
 the referenced type are copied into the type being defined; the meaning is the
 same as if they had been specified explicitly. For default values, the closure
 rather than the expression is copied in. Note that it does not pull in the
@@ -2005,14 +2013,12 @@ variable-name := identifier
 wildcard-binding-pattern := <code>_</code>
 tuple-binding-pattern := <code>(</code> binding-pattern (<code>,</code> binding-pattern)+ <code>)</code>
 record-binding-pattern :=
-   open-record-binding-pattern | closed-record-binding-pattern
-open-record-binding-pattern := <code>{</code> entry-binding-patterns <code>}</code>
-closed-record-binding-pattern :=  <code>{|</code> field-binding-patterns <code>|}</code>
+   inclusive-record-binding-pattern | exclusive-record-binding-pattern
+inclusive-record-binding-pattern := <code>{</code> entry-binding-patterns <code>}</code>
+exclusive-record-binding-pattern := <code>{|</code> entry-binding-patterns <code>|}</code>
 entry-binding-patterns :=
-   field-binding-patterns [<code>,</code> rest-binding-pattern]
+   field-binding-pattern (<code>,</code> field-binding-pattern)* [<code>,</code> rest-binding-pattern]
    | [ rest-binding-pattern ] 
-field-binding-patterns :=
-  field-binding-pattern (<code>,</code> field-binding-pattern)* 
 field-binding-pattern :=
    field-name <code>:</code> binding-pattern
    | variable-name
@@ -2041,22 +2047,21 @@ in other words if the basic type of the value is not error; it does not cause
 any assignments to be made;</li>
 <li>a tuple-binding-pattern (p1, p2, ..., pn) matches a list value of length n
 [v1, v2, ..., vn] if pi matches vi for each i in 1 to n;</li>
-<li>an open-record-binding-pattern { f1: p1, f2: p2, ..., fn: pn, r } matches a
-mapping value m that has fields f1, f2, ... , fn if pi matches the value of
-field fi for each i in 1 to n, and if the rest-binding-pattern r, if present,
-matches a new mapping x consisting of all the fields other than f1, f2,...,fn
+<li>an inclusive-record-binding-pattern { f<sub>1</sub>: p<sub>1</sub>,
+f<sub>2</sub>: p<sub>2</sub>, ..., f<sub>n</sub>: p<sub>n</sub>, r } or
+exclusive-record-binding-pattern {| f<sub>1</sub>: p<sub>1</sub>, f<sub>2</sub>:
+p<sub>2</sub>, ..., f<sub>n</sub>: p<sub>n</sub>, r |} matches a mapping value m
+that has fields f<sub>1</sub>, f<sub>2</sub>, ... , f<sub>n</sub> if
+p<sub>i</sub> matches the value of field f<sub>i</sub> for each i in 1 to n,
+and, either
 <ul>
-<li>if r is <code>...v</code> it matches any mapping x and causes x to be
-assigned to v</li>
-<li>if r is missing, the match of the record-binding-pattern is not affected by
-x</li>
-<li>a field-binding-pattern consisting of just a variable name <code>x</code> is
-equivalent to a field-binding-pattern <code>x: x</code></li>
+<li>if it is an inclusive-record-binding-pattern, then the value of any other
+fields must belong to type error|anydata, or</li>
+<li>if it is an exclusive-record-binding-pattern, then either there are no other
+fields or r must not be empty;</li>
 </ul>
-</li>
-<li>a closed-record-binding-pattern {| f1: p1, f2: p2, ..., fn: pn, r |} matches a
-mapping value m that has fields f1, f2, ... , fn, and no others if pi matches
-the value of field fi for each i in 1 to n</li>
+if r is <code>...v</code> then a successful match causes a new mapping value
+consisting of all the other fields to be assigned to <code>v</code>;</li>
 <li>an error-binding-pattern error(rp, dp) matches an error value if rp matches
 the error reason and dp matches the error detail record;</li>
 <li>an error-binding-pattern error(rp) is equivalent to error(rp, _)</li>
@@ -2637,8 +2642,8 @@ expressions occurring in the mapping constructor. The inferred type will have
 field-descriptor for each literal-field-name occurring in the constructor; each
 field-descriptor will be required, and the static type will the broad type of
 the value-expr for the field; the type will be open to
-<code>anydata|error</code>, just as if it had been specified using <code>record
-{ <var>field-descriptors</var> }</code>.
+<code>anydata|error</code>, just as if it had been specified using an inclusive
+record type descriptor.
 </p>
 <p>
 A value-expr will not have a contextually expected type if its
@@ -4457,14 +4462,12 @@ class="grammar">wildcard-match-pattern := <code>_</code>
 tuple-match-pattern :=
    <code>(</code> match-pattern (<code>,</code> match-pattern)+ <code>)</code>
 record-match-pattern :=
-   open-record-match-pattern | closed-record-match-pattern
-open-record-match-pattern := <code>{</code> entry-match-patterns <code>}</code>
-closed-record-match-pattern := <code>{|</code> [field-match-patterns] <code>|}</code>
+   inclusive-record-match-pattern | exclusive-record-match-pattern
+inclusive-record-match-pattern := <code>{</code> entry-match-patterns <code>}</code>
+exclusive-record-match-pattern := <code>{|</code> entry-match-patterns <code>|}</code>
 entry-match-patterns :=
-   field-match-patterns [<code>,</code> rest-match-pattern]
+   field-match-pattern (<code>,</code> field-match-pattern)* [<code>,</code> rest-match-pattern]
    | [ rest-match-pattern ] 
-field-match-patterns :=
-   field-match-pattern (<code>,</code> field-match-pattern)* 
 field-match-pattern := field-name <code>:</code> match-pattern
 rest-match-pattern := <code>...</code> <code>var</code> variable-name
 error-match-pattern :=
@@ -4480,13 +4483,20 @@ error-detail-match-pattern :=
 </pre>
 
 <p>
-Matching a <code>open-record-match-pattern</code> against a mapping value
-succeeds if every <code>field-match-pattern</code> matches against a field of
-the mapping value. The variable in the <code>rest-match-pattern</code>, if
-specified, is bound to a new mapping that contains just the fields for which
-there was no matching <code>field-match-pattern</code>. Matching a
-<code>closed-record-match-pattern</code> succeeds only if there were no
-unmatched fields.
+Matching a <code>record-match-pattern</code> against a mapping value succeeds if
+and only every <code>field-match-pattern</code> matches against a field of the
+value, and either
+</p>
+<ul>
+<li>if it is an <code>inclusive-record-match-pattern</code>, then the value of
+any other fields must belong to type error|anydata;</li>
+<li>if it is an <code>exclusive-record-match-pattern</code>, then either there
+are no other fields or there is <code>rest-match-pattern</code>.</li>
+</ul>
+<p>
+The variable in the <code>rest-match-pattern</code>, if specified, is bound to a
+new mapping that contains just the fields for which that did not match a
+<code>field-match-pattern</code>.
 </p>
 
 <h3>Foreach statement</h3>
@@ -5507,8 +5517,12 @@ version of the specification released in year 20<em>XY</em> will be labelled
 20<em>XY</em>r<em>N</em>.
 </p>
 <ol>
-<li>The syntax for closed record types now uses <code>{|</code> and
-<code>|}</code> delimiters rather than <code>!...</code>.</li>
+<li>The way that record type descriptors express openness has changed. Instead
+of the <code>!...</code> syntax, there are two flavours of record type
+descriptor, which use different delimiters: <code>record {| |}</code> allows any
+mapping that has exclusively the specified fields, whereas <code>record {
+}</code> allows any mapping that includes the specified fields; the former can
+use the <code>T...</code> syntax, whereas the latter cannot.</li>
 <li>Record binding patterns and match patterns now also use <code>{|</code> and
 <code>|}</code> delimiters instead of<code> !...</code>.</li>
 <li>The syntax for an array with an array length that is inferred has changed
