@@ -2028,14 +2028,15 @@ field-binding-pattern :=
    field-name <code>:</code> binding-pattern
    | variable-name
 rest-binding-pattern := <code>...</code> variable-name
-error-binding-pattern :=
-   <code>error</code> <code>(</code> simple-binding-pattern [<code>,</code> error-detail-binding-pattern] <code>)</code>
+error-binding-pattern := <code>error</code> <code>(</code> error-arg-list-binding-pattern <code>)</code>
+error-arg-list-binding-pattern :=
+   simple-binding-pattern (<code>,</code> named-arg-binding-pattern)* [<code>,</code> rest-binding-pattern]
+   | named-arg-binding-pattern (<code>,</code> named-arg-binding-pattern)* [<code>,</code> rest-binding-pattern]
+   | [ rest-binding-pattern]
 simple-binding-pattern :=
    capture-binding-pattern
-   | wildcard-binding-patterm
-error-detail-binding-pattern :=
-   simple-binding-pattern
-   | record-binding-pattern
+   | wildcard-binding-pattern
+named-arg-binding-pattern := arg-name <code>=</code> binding-pattern
 </pre>
 <p>
 A binding pattern may succeed or fail in matching a value. A successful match
@@ -2050,8 +2051,9 @@ value to be assigned to named variable;</li>
 <li>a wildcard-binding-pattern matches a value if the value belongs to type any,
 in other words if the basic type of the value is not error; it does not cause
 any assignments to be made;</li>
-<li>a tuple-binding-pattern (p1, p2, ..., pn) matches a list value of length n
-[v1, v2, ..., vn] if pi matches vi for each i in 1 to n;</li>
+<li>a tuple-binding-pattern (p<sub>1</sub>, p<sub>2</sub>, ..., p<sub>n</sub>)
+matches a list value of length n [v<sub>1</sub>, v<sub>2</sub>, ...,
+v<sub>n</sub>] if p<sub>i</sub> matches v<sub>i</sub> for each i in 1 to n;</li>
 <li>an inclusive-record-binding-pattern { f<sub>1</sub>: p<sub>1</sub>,
 f<sub>2</sub>: p<sub>2</sub>, ..., f<sub>n</sub>: p<sub>n</sub>, r } or
 exclusive-record-binding-pattern {| f<sub>1</sub>: p<sub>1</sub>, f<sub>2</sub>:
@@ -2067,9 +2069,14 @@ fields or r must not be empty;</li>
 </ul>
 if r is <code>...v</code> then a successful match causes a new mapping value
 consisting of all the other fields to be assigned to <code>v</code>;</li>
-<li>an error-binding-pattern error(rp, dp) matches an error value if rp matches
-the error reason and dp matches the error detail record;</li>
-<li>an error-binding-pattern error(rp) is equivalent to error(rp, _)</li>
+<li>an error-binding-pattern error(p<sub>r</sub>, f<sub>1</sub> = p<sub>1</sub>,
+f<sub>2</sub> = p<sub>2</sub>, ..., f<sub>n</sub> = p<sub>n</sub>, r) matches an
+error value if it has an error reason string that matches p<sub>r</sub> and a
+detail record that has fields f<sub>1</sub>, f<sub>2</sub>, ... , f<sub>n</sub> such
+that p<sub>i</sub> matches the value of field f<sub>i</sub> for each i in 1 to
+n; if r is <code>...v</code> then a successful match causes a new mapping value
+consisting of all fields other than f<sub>1</sub>, f<sub>2</sub>, ... ,
+f<sub>n</sub> to be assigned to <code>v</code>;</li>
 </ul>
 <p>
 All the variables in a binding-pattern must be distinct e.g. (x, x) is not
@@ -2984,22 +2991,36 @@ future&lt;T>, where T is the return type of the method called.
 <h3>Error constructor</h3>
 
 <pre
-class="grammar">error-constructor-expr := <code>error</code> <code>(</code> reason-expr [<code>,</code> detail-expr] <code>)</code>
-reason-expr := expression
-detail-expr := expression
+class="grammar">error-constructor-expr := <code>error</code> <code>(</code> error-arg-list <code>)</code>
+error-arg-list :=
+   positional-arg (<code>,</code> named-arg)*
+   | [named-arg (<code>,</code> named-arg)*]
 </pre>
 <p>
-An error-constructor-expr constructs a new error value with the specified reason
-string and detail mapping. The static type of reason-expr must be a subtype of
-string. The static type of detail-expr, if present, must be a subtype of
-<code>record { }</code> (i.e. it must be a pure type and a mapping). The result
-of evaluating reason-expr is cloned using the Clone abstract operation and then
-frozen using the Freeze abstract operation.
+An error-constructor-expr constructs a new error value. The positional-arg, if
+present, specifies the error reason string. Each named-arg specifies a field of
+the error detail mapping. The static type of positional-arg must be a subtype of
+string; the static type of each named-arg must be a pure type. The stack trace
+describes the stack at the point where the error constructor was evaluated.
 </p>
 <p>
- If detail-expr is omitted, then the detail mapping for the error is a new empty
-mapping. The stack trace describes the stack at the point where the error
-constructor was evaluated.
+If there is a contextually expected type and the type of the error reason of
+the applicable contextually expected error type is a singleton string type, then
+the positional-arg can be omitted and the error reason will be the single
+string allowed by the type.
+</p>
+<p>
+If there is a contextually expected type and the applicable contextually
+expected type is an error type (rather than a union) with detail type
+<var>d</var>, then the error detail mapping will also have a field for any
+defaultable fields of <var>d</var> for which no named-arg was specified.
+</p>
+<p>
+Evaluating the error-constructor-expr creates a new detail record. The result of
+evaluating each named-arg and every defaultable arg is cloned using the Clone
+abstract operation, then frozen using the Freeze abstract operation, before
+being added to the detail record. The detail record is itself frozen after all
+fields have been added.
 </p>
 
 <h3>Anonymous function expression</h3>
@@ -4483,16 +4504,16 @@ entry-match-patterns :=
    | [ rest-match-pattern ] 
 field-match-pattern := field-name <code>:</code> match-pattern
 rest-match-pattern := <code>...</code> <code>var</code> variable-name
-error-match-pattern :=
-   <code>error</code> <code>(</code> simple-match-pattern 
-           [<code>,</code> error-detail-match-pattern] <code>)</code>
+error-match-pattern := <code>error</code> <code>(</code> error-arg-list-match-pattern <code>)</code>
+error-arg-list-match-pattern :=
+   simple-match-pattern (<code>,</code> named-arg-match-pattern)* [<code>,</code> rest-match-pattern]
+   | named-arg-match-pattern (<code>,</code> named-arg-match-pattern)* [<code>,</code> rest-match-pattern]
+   | [ rest-match-pattern]
 simple-match-pattern :=
    wildcard-match-pattern
    | const-pattern
    | <code>var</code> variable-name
-error-detail-match-pattern :=
-   simple-match-pattern
-   | record-match-pattern
+named-arg-match-pattern := arg-name <code>=</code> match-pattern
 </pre>
 
 <p>
@@ -5551,6 +5572,12 @@ annotations instead).</li>
 <li>The syntax for named arguments in a function call has reverted to
 <code>arg=</code> from <code>arg:</code>, since the latter caused syntactic
 ambiguities.</li>
+<li>The syntax for error constructors specifies fields of the error detail
+separately as named arguments, rather than specifying the error detail as a
+single argument; the syntax for binding patterns and match patterns for error
+values has also changed accordingly.</li>
+<li>The error reason argument can be omitted from an error constructor if it
+can be determined from the contextually expected type.</li>
 <li>The syntax for annotation declarations has been revised; the places where
 annotations are allowed has been revised to match the possible attachment
 points.</li>
