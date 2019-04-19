@@ -2155,7 +2155,6 @@ class="grammar">expression :=
    | tuple-constructor-expr
    | mapping-constructor-expr
    | table-constructor-expr
-   | error-constructor-expr
    | service-constructor-expr
    | string-template-expr
    | xml-expr
@@ -2167,6 +2166,7 @@ class="grammar">expression :=
    | xml-attributes-expr
    | function-call-expr
    | method-call-expr
+   | error-constructor-expr
    | anonymous-function-expr
    | arrow-function-expr
    | type-cast-expr
@@ -2696,26 +2696,6 @@ For example,
   ]
 }
 </pre>
-<h3>Error constructor</h3>
-
-<pre
-class="grammar">error-constructor-expr := <code>error</code> <code>(</code> reason-expr [<code>,</code> detail-expr] <code>)</code>
-reason-expr := expression
-detail-expr := expression
-</pre>
-<p>
-An error-constructor-expr constructs a new error value with the specified reason
-string and detail mapping. The static type of reason-expr must be a subtype of
-string. The static type of detail-expr, if present, must be a subtype of
-<code>record { }</code> (i.e. it must be a pure type and a mapping). The result
-of evaluating reason-expr is cloned using the Clone abstract operation and then
-frozen using the Freeze abstract operation.
-</p>
-<p>
- If detail-expr is omitted, then the detail mapping for the error is a new empty
-mapping. The stack trace describes the stack at the point where the error
-constructor was evaluated.
-</p>
 <h3>Service constructor</h3>
 
 <pre
@@ -3000,6 +2980,26 @@ resource.
 If <code>start</code> is specified, then the called method is executed on a new
 strand, and the result of the <code>method-call-expr</code> is a value of type
 future&lt;T>, where T is the return type of the method called.
+</p>
+<h3>Error constructor</h3>
+
+<pre
+class="grammar">error-constructor-expr := <code>error</code> <code>(</code> reason-expr [<code>,</code> detail-expr] <code>)</code>
+reason-expr := expression
+detail-expr := expression
+</pre>
+<p>
+An error-constructor-expr constructs a new error value with the specified reason
+string and detail mapping. The static type of reason-expr must be a subtype of
+string. The static type of detail-expr, if present, must be a subtype of
+<code>record { }</code> (i.e. it must be a pure type and a mapping). The result
+of evaluating reason-expr is cloned using the Clone abstract operation and then
+frozen using the Freeze abstract operation.
+</p>
+<p>
+ If detail-expr is omitted, then the detail mapping for the error is a new empty
+mapping. The stack trace describes the stack at the point where the error
+constructor was evaluated.
 </p>
 
 <h3>Anonymous function expression</h3>
