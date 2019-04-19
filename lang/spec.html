@@ -2378,11 +2378,23 @@ For a context in which an expression occurs, there may be a type descriptor that
 describes the static type that the expression is expected to have. This is
 called the <em>contextually expected type</em>. For example, if a variable is
 declared by a type descriptor TD, then TD will be the contextually expected type
-for the expression initializing the variable. Many expressions that construct
-values use the contextually expected type to determine the type of value
-constructed, rather than requiring the type to be specified explicitly. A type
-descriptor must be resolved before it can be used to provide a contextually
-expected type.
+for the expression initializing the variable. A type descriptor must be
+resolved before it can be used to provide a contextually expected type.</p>
+<p>
+Many kinds of expression that construct values use the contextually expected
+type to determine the type of value constructed, rather than requiring the type
+to be specified explicitly. For each such kind of expression, there is a set of
+basic types (most often consisting of a single basic type) that the value
+constructed by that kind of expression will always belong to. In this case, the
+contextually expected type is narrowed by intersecting it with this set of basic
+types; this narrowed type is called the <em>applicable</em> contextually
+expected type. The narrowing is performed on the type descriptor by first
+normalizing the type descriptor into a union, where each member of the union is
+not a union and describes shapes from a single basic type, and then eliminating
+any members of the union with the wrong basic type; if this leaves no members,
+then it is a compile-time error; if it leaves a single member of the union, then
+the the applicable contextually expected type is this single member, otherwise
+it is a union of the remaining members.
 </p>
 <p>
 Note the language provides a way to say that the type of a variable is to be
@@ -2521,13 +2533,12 @@ basic type is float;</li>
 basic type is decimal;</li>
 <li>if the numeric-literal is a <code>HexFloatingPointLiteral</code>, then the
 basic type is float;</li>
-<li>otherwise, the basic type depends on the contextually expected numeric type,
-where the contextually expected numeric type is the intersection of the
-contextually expected type with <code>int|float|decimal</code>:
+<li>otherwise, the basic type depends on the applicable expected numeric type
+(where the possible basic types are int, float and decimal):
 <ul>
-<li>if the contextually expected numeric type is a subtype of decimal, then the
-basic type is decimal;</li>
-<li>if the contextually expected numeric type is a subtype of float, then the
+<li>if the applicable contextually expected type is a subtype of decimal, then
+the basic type is decimal;</li>
+<li>if the applicable contextually expected type is a subtype of float, then the
 basic type is float;</li>
 <li>otherwise, if the numeric literal is an int-literal, then the basic type is
 int;</li>
@@ -2614,31 +2625,8 @@ used to specify the name of a field by enclosing the expression in square
 brackets.
 </p>
 <p>
-The mapping-constructor-expr selects at compile time a type descriptor to use as the inherent
-type of the new mapping value that it constructs.
-</p>
-<p> 
-If there is a contextually expected type, it will select a type descriptor using
-the contextually expected type. The contextually expected type is normalized
-into a union of one or more type descriptors, where each member of the union is
-not a union and describes shapes of only one basic type. Next it eliminates any
-members of the union whose basic type is not mapping or that are inconsistent
-with the names of the fields specified in the mapping-constructor-expr. This is
-done at compile-time, so for a computed-field-name it considers only the static
-type of the expression not the runtime value. It is a compile-time error if this
-does not unambiguously determine a single type descriptor to use as the inherent
-type.
-</p>
-<p>
-If there is a contextually expected type, then the type that it requires for
-each field determines the contextually expected type for the value-expr for that
-field. The contextually expected type for a computed-field-name is string.
-</p>
-<p>
-If the inherent type descriptor is a record type descriptor, a field will be
-added to the constructed value using the default value from the type descriptor
-for any field that is not specified explicitly in the mapping constructor and
-that has a default value.
+The mapping-constructor-expr selects at compile time a type descriptor to use as
+the inherent type of the new mapping value that it constructs.
 </p>
 <p>
 If there is no contextually expected type, the type descriptor for the inherent
@@ -2651,9 +2639,29 @@ the value-expr for the field; the type will be open to
 record type descriptor.
 </p>
 <p>
-A value-expr will not have a contextually expected type if its
-mapping-constructor-expr does not have a contextually expected type.
+If there is a contextually expected type, then the applicable contextually
+expected type is either a mapping type descriptor or a union of mapping type
+descriptors. If it is a mapping type descriptor, then this will be used as the
+inherent type. Otherwise, any members of the union that are inconsistent with
+the field names specified as a literal-field-name in the
+mapping-constructor-expr will be eliminated. It is a compile-time error if this
+does not unambiguously determine a single type descriptor to use as the inherent
+type.
 </p>
+<p>
+If the inherent type descriptor is a record type descriptor, a field will be
+added to the constructed value using the default value from the type descriptor
+for any field that is not specified explicitly in the mapping constructor and
+that has a default value.
+</p>
+<p>
+When there is a contextually expected type, the type that the inherent type
+requires for each field provides the contextually expected type for the
+value-expr for that field. When there is no contextually expected type, the
+value-expr will not have a contextually expected type. The contextually expected
+type for a computed-field-name is string.
+</p>
+
 <h3>[Preview] Table constructor</h3>
 
 <pre
