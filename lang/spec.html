@@ -996,21 +996,42 @@ type for each member of the list.
 
 <pre
 class="grammar">tuple-type-descriptor :=
-   <code>(</code> member-type-descriptor (<code>,</code> member-type-descriptor)+ <code>)</code>
+   <code>(</code> tuple-member-type-descriptors <code>)</code>
+tuple-member-type-descriptors :=
+   member-type-descriptor (<code>,</code> member-type-descriptor)+
+   | member-type-descriptor <code>,</code>
+   | member-type-descrptor (<code>,</code> member-type-descriptor)* <code>,</code> tuple-rest-descriptor
+   | tuple-rest-descriptor
+tuple-rest-descriptor := type-descriptor <code>...</code>
+
 </pre>
 <p>
-A type (T<sub>1</sub>, T<sub>2</sub>, ... T<sub>n</sub>) contains a list shape S
-if for each T<sub>i</sub> the i-th member shape of S is in T<sub>i</sub> and the
-length of S is n.
+A tuple type descriptor T with m member type descriptors contains a list shape L
+of length n if and only if:
+</p>
+<ul>
+<li>m is less than or equal to n</li>
+<li>the i-th member type descriptor of T contains the i-th member of L for each
+i from 1 to m;</li>
+<li>if n is greater than m, then T has a tuple-rest-descriptor
+R<code>...</code>, and R contains the j-th member of L for each j from m + 1 to
+n.</li>
+</ul>
+<p>
+The syntax for a tuple type that allows exactly one member uses a trailing comma to
+distinguish it from the syntax for grouping.
 </p>
 <p>
 If the member types of a tuple type all have an implicit initial value, then the
 implicit initial value for the tuple type is the list of those implicit initial
-values; otherwise, the tuple type does not have an implicit initial value.
+values; otherwise, the tuple type does not have an implicit initial value. Any
+tuple-rest-descriptor does not affect the implicit initial value of the tuple
+type.
 </p>
 <p>
 Note that a tuple type where all the <code>member-type-descriptor</code>s are
-the same is equivalent to a an array-type-descriptor with a length.
+the same and there is no tuple-rest-descriptor is equivalent to an
+array-type-descriptor with a length.
 </p>
 <h4>Mappings</h4>
 <p>
@@ -2016,12 +2037,17 @@ class="grammar">binding-pattern :=
 capture-binding-pattern := variable-name
 variable-name := identifier
 wildcard-binding-pattern := <code>_</code>
-tuple-binding-pattern := <code>(</code> binding-pattern (<code>,</code> binding-pattern)+ <code>)</code>
+tuple-binding-pattern := <code>(</code> tuple-member-binding-patterns <code>)</code>
+tuple-member-binding-patterns :=
+   binding-pattern (<code>,</code> binding-pattern)+
+   | binding-pattern <code>,</code>
+   | binding-pattern (<code>,</code> binding-pattern)* <code>,</code> rest-binding-pattern
+   | rest-binding-pattern
 record-binding-pattern :=
    inclusive-record-binding-pattern | exclusive-record-binding-pattern
-inclusive-record-binding-pattern := <code>{</code> entry-binding-patterns <code>}</code>
-exclusive-record-binding-pattern := <code>{|</code> entry-binding-patterns <code>|}</code>
-entry-binding-patterns :=
+inclusive-record-binding-pattern := <code>{</code> field-binding-patterns <code>}</code>
+exclusive-record-binding-pattern := <code>{|</code> field-binding-patterns <code>|}</code>
+field-binding-patterns :=
    field-binding-pattern (<code>,</code> field-binding-pattern)* [<code>,</code> rest-binding-pattern]
    | [ rest-binding-pattern ] 
 field-binding-pattern :=
@@ -2051,9 +2077,13 @@ value to be assigned to named variable;</li>
 <li>a wildcard-binding-pattern matches a value if the value belongs to type any,
 in other words if the basic type of the value is not error; it does not cause
 any assignments to be made;</li>
-<li>a tuple-binding-pattern (p<sub>1</sub>, p<sub>2</sub>, ..., p<sub>n</sub>)
-matches a list value of length n [v<sub>1</sub>, v<sub>2</sub>, ...,
-v<sub>n</sub>] if p<sub>i</sub> matches v<sub>i</sub> for each i in 1 to n;</li>
+<li>a tuple-binding-pattern with m binding patterns matches a list with n
+members if m is less than or equal to m, and the i-th binding pattern matches
+the i-th member of the list for each i in 1 to m, and either m is equal to n or
+the tuple-binding-pattern includes a rest-binding-pattern; if there is a
+rest-binding-pattern <code>...v</code>, then a successful match causes a new
+list value consisting of all members of the matched list except for the the
+first m values to be assigned to <code>v</code>;</li>
 <li>an inclusive-record-binding-pattern { f<sub>1</sub>: p<sub>1</sub>,
 f<sub>2</sub>: p<sub>2</sub>, ..., f<sub>n</sub>: p<sub>n</sub>, r } or
 exclusive-record-binding-pattern {| f<sub>1</sub>: p<sub>1</sub>, f<sub>2</sub>:
@@ -2158,7 +2188,7 @@ overlap.
 <pre
 class="grammar">expression := 
    literal
-   | array-constructor-expr
+   | list-constructor-expr
    | tuple-constructor-expr
    | mapping-constructor-expr
    | table-constructor-expr
@@ -2578,44 +2608,68 @@ The static type of byte-array-literal is <code>byte[N]</code>, where N is the
 number of bytes encoded by the Base16Literal or Base64Literal. The inherent type
 of the array value created is also <code>byte[N]</code>.
 </p>
-<h3>Array constructor</h3>
+<h3>List constructor</h3>
 
 <pre
-class="grammar">array-constructor-expr := <code>[</code> [ expr-list ] <code>]</code>
+class="grammar">list-constructor-expr := <code>[</code> [ expr-list ] <code>]</code>
 expr-list = expression (<code>,</code> expression)*
 </pre>
 <p>
 Creates a new list value. The members of the list come from evaluating each
 expression in the expr-list in order. The inherent type of the newly created
-list will be an array type. If the contextually expected type is an array type,
-then that type will be used as the inherent type, and the contextually expected
-type for each expression in the expr-list is the member type of the array type.
-If the contextually expected type is an array type with a length, then it is a
-compile error if the length of the array type is not equal to the number of
-expressions in the expr-list. If the contextually expected type is not an array
-type, then the member type of the inherent type is the union of the broad types
-of the expressions for the members. In both cases, the static type of the
-array-constructor-expr will be the same as the inherent type.
+list will be a list type.
+</p>
+<p>
+If there is no contextually expected type, then the inherent type will be an
+array type, not of fixed length, where the member type of the inherent type is
+the union of the broad types of the static type of the expressions for the
+members.
+</p>
+<p>
+If there is a contextually expected type, then the inherent type is derived from
+the applicable contextually expected type. If the applicable contextually
+expected type is a list type descriptor, then that used as the inherent type. If
+the applicable contextually expected type is a union type descriptor, then any
+members of the union that do not contain list shapes of length N will be
+ignored, where N is the number of expressions in the <code>expr-list</code>; it
+is a compile-time error if this does not leave a single list type descriptor,
+which is then used as the inherent type.
+</p>
+<p>
+In both cases, the static type of the array-constructor-expr will be the same as
+the inherent type.
 </p>
 <h3>Tuple constructor</h3>
 
 <pre
-class="grammar">tuple-constructor-expr := <code>(</code> expr-list2 <code>)</code>
-expr-list2 := expression (<code>,</code> expression)+
+class="grammar">tuple-constructor-expr := <code>(</code> tuple-expr-list <code>)</code>
+tuple-expr-list :=
+   expression (<code>,</code> expression)+
+   | expression <code>,</code>
 </pre>
 <p>
 Creates a new list value. The members of the list come from evaluating each
-expression in <code>expr-list2</code> in order. The inherent type of the newly
-created list will be a tuple type. If the contextually expected type is a tuple
-type, then that type is used as the inherent type, and the contextually expected
-type for each expression in <code>expr-list2</code> is the corresponding member
-type of the tuple type; it is a compile error if the number of members of the
-contextually expected tuple type is not equal to the number of expressions in
-<code>expr-list2</code>. If the contextually expected type is not a tuple, then
-the inherent type will be a tuple where each member type is the broad type of
-the corresponding expressions in <code>expr-list2</code>. In both cases, the
-static type of the <code>tuple-constructor-expr</code> will be the same as the
-inherent type.
+expression in <code>tuple-expr-list</code> in order. The inherent type of the
+newly created list will be a list type of fixed length N, where N is the
+number of expressions in the <code>tuple-expr-list</code>.
+</p>
+<p>
+If there is no contextually expected type, then the inherent type will be a
+tuple type with N members, where the type of each member is the broad type of
+the corresponding expression in <code>tuple-expr-list</code>.
+</p>
+<p>
+If there is a contextually expected type, then the inherent type is derived from
+the applicable contextually expected type in two stages. First, if the
+applicable contextually expected type is a union type descriptor, then any
+members of the union that do not contain list shapes of length N will be
+ignored; it is a compile-time error if this does not leave a single list type
+descriptor. Second, if the resulting list type descriptor it not of fixed length
+N, then it is transformed into its subtype that is of fixed length N.
+</p>
+<p>
+In both cases, the static type of the <code>tuple-constructor-expr</code> will
+be the same as the inherent type.
 </p>
 <h3>Mapping constructor</h3>
 
@@ -4493,8 +4547,12 @@ type any, in other words if the basic type of the value is not error.
 
 <pre
 class="grammar">wildcard-match-pattern := <code>_</code>
-tuple-match-pattern :=
-   <code>(</code> match-pattern (<code>,</code> match-pattern)+ <code>)</code>
+tuple-match-pattern := <code>(</code> tuple-member-match-patterns <code>)</code>
+tuple-member-match-patterns :=
+   match-pattern (<code>,</code> match-pattern)+
+   | match-pattern <code>,</code>
+   | match-pattern (<code>,</code> match-pattern)* <code>,</code> rest-match-pattern
+   | rest-match-pattern
 record-match-pattern :=
    inclusive-record-match-pattern | exclusive-record-match-pattern
 inclusive-record-match-pattern := <code>{</code> entry-match-patterns <code>}</code>
@@ -5558,7 +5616,11 @@ mapping that has exclusively the specified fields, whereas <code>record {
 }</code> allows any mapping that includes the specified fields; the former can
 use the <code>T...</code> syntax, whereas the latter cannot.</li>
 <li>Record binding patterns and match patterns now also use <code>{|</code> and
-<code>|}</code> delimiters instead of<code> !...</code>.</li>
+<code>|}</code> delimiters instead of <code>!...</code>.</li>
+<li>Tuple types can now use <code>T...</code> syntax, with similar semantics
+to <code>record {| |}</code>.</li>
+<li>The grammar allows tuples types and constructors to have a single member by
+using a trailing comma.</li>
 <li>The syntax for an array with an array length that is inferred has changed
 from <code>T[!...]</code> to <code>T[*]</code>.</li>
 <li>A type descriptor of <code>error&lt;*&gt;</code> can be used to specify an
