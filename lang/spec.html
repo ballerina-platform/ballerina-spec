@@ -996,12 +996,10 @@ type for each member of the list.
 
 <pre
 class="grammar">tuple-type-descriptor :=
-   <code>(</code> tuple-member-type-descriptors <code>)</code>
+   <code>[</code> tuple-member-type-descriptors <code>]</code>
 tuple-member-type-descriptors :=
-   member-type-descriptor (<code>,</code> member-type-descriptor)+
-   | member-type-descriptor <code>,</code>
-   | member-type-descrptor (<code>,</code> member-type-descriptor)* <code>,</code> tuple-rest-descriptor
-   | tuple-rest-descriptor
+   member-type-descrptor (<code>,</code> member-type-descriptor)* [<code>,</code> tuple-rest-descriptor]
+   | [ tuple-rest-descriptor ]
 tuple-rest-descriptor := type-descriptor <code>...</code>
 
 </pre>
@@ -2031,18 +2029,16 @@ same time.
 class="grammar">binding-pattern :=
    capture-binding-pattern
    | wildcard-binding-pattern
-   | tuple-binding-pattern
+   | list-binding-pattern
    | mapping-binding-pattern
    | error-binding-pattern
 capture-binding-pattern := variable-name
 variable-name := identifier
 wildcard-binding-pattern := <code>_</code>
-tuple-binding-pattern := <code>(</code> tuple-member-binding-patterns <code>)</code>
-tuple-member-binding-patterns :=
-   binding-pattern (<code>,</code> binding-pattern)+
-   | binding-pattern <code>,</code>
-   | binding-pattern (<code>,</code> binding-pattern)* <code>,</code> rest-binding-pattern
-   | rest-binding-pattern
+list-binding-pattern := <code>(</code> list-member-binding-patterns <code>)</code>
+list-member-binding-patterns :=
+   binding-pattern (<code>,</code> binding-pattern)* [<code>,</code> rest-binding-pattern]
+   | [ rest-binding-pattern ]
 mapping-binding-pattern := <code>{</code> field-binding-patterns <code>}</code>
 field-binding-patterns :=
    field-binding-pattern (<code>,</code> field-binding-pattern)* [<code>,</code> rest-binding-pattern]
@@ -2055,7 +2051,7 @@ error-binding-pattern := <code>error</code> <code>(</code> error-arg-list-bindin
 error-arg-list-binding-pattern :=
    simple-binding-pattern (<code>,</code> named-arg-binding-pattern)* [<code>,</code> rest-binding-pattern]
    | named-arg-binding-pattern (<code>,</code> named-arg-binding-pattern)* [<code>,</code> rest-binding-pattern]
-   | [ rest-binding-pattern]
+   | [ rest-binding-pattern ]
 simple-binding-pattern :=
    capture-binding-pattern
    | wildcard-binding-pattern
@@ -2074,10 +2070,10 @@ value to be assigned to named variable;</li>
 <li>a wildcard-binding-pattern matches a value if the value belongs to type any,
 in other words if the basic type of the value is not error; it does not cause
 any assignments to be made;</li>
-<li>a tuple-binding-pattern with m binding patterns matches a list with n
+<li>a list-binding-pattern with m binding patterns matches a list with n
 members if m is less than or equal to m, and the i-th binding pattern matches
 the i-th member of the list for each i in 1 to m, and either m is equal to n or
-the tuple-binding-pattern includes a rest-binding-pattern; if there is a
+the list-binding-pattern includes a rest-binding-pattern; if there is a
 rest-binding-pattern <code>...v</code>, then a successful match causes a new
 list value consisting of all members of the matched list except for the the
 first m values to be assigned to <code>v</code>;</li>
@@ -2113,7 +2109,7 @@ assigned a value belonging to the type descriptor for that variable.
 <li>for a capture-binding-pattern, the type descriptor is the type descriptor
 for that variable;</li>
 <li>for a wildcard-binding-pattern, the type descriptor is any</li>
-<li>for a tuple-binding-pattern, the type descriptor is a tuple type descriptor;</li>
+<li>for a list-binding-pattern, the type descriptor is a tuple type descriptor;</li>
 <li>for a mapping-binding-pattern, the type descriptor is a record type
 descriptor;</li>
 <li>for an error-binding-pattern, the type descriptor is an error type
@@ -2180,7 +2176,6 @@ overlap.
 class="grammar">expression := 
    literal
    | list-constructor-expr
-   | tuple-constructor-expr
    | mapping-constructor-expr
    | table-constructor-expr
    | service-constructor-expr
@@ -2485,8 +2480,7 @@ different types of number; there are no implicit conversions.
 <pre
 class="grammar">const-expr := 
    literal
-   | array-constructor-expr
-   | tuple-constructor-expr
+   | list-constructor-expr
    | mapping-constructor-expr
    | table-constructor-expr
    | string-template-expr
@@ -2607,60 +2601,23 @@ expr-list = expression (<code>,</code> expression)*
 </pre>
 <p>
 Creates a new list value. The members of the list come from evaluating each
-expression in the expr-list in order. The inherent type of the newly created
-list will be a list type.
+expression in the expr-list in order.
 </p>
 <p>
-If there is no contextually expected type, then the inherent type will be an
-array type, not of fixed length, where the member type of the inherent type is
-the union of the broad types of the static type of the expressions for the
-members.
+The inherent type of the newly created list is derived from the applicable
+contextually expected type. It is an error if there is no contextually expected
+type. If the applicable contextually expected type is a list type descriptor,
+then that used as the inherent type. If the applicable contextually expected
+type is a union type descriptor, then any members of the union that do not
+contain list shapes of length N will be ignored, where N is the number of
+expressions in the <code>expr-list</code>; it is a compile-time error if this
+does not leave a single list type descriptor, which is then used as the inherent
+type. The static type of the list-constructor-expr will be the same as the
+inherent type.
 </p>
 <p>
-If there is a contextually expected type, then the inherent type is derived from
-the applicable contextually expected type. If the applicable contextually
-expected type is a list type descriptor, then that used as the inherent type. If
-the applicable contextually expected type is a union type descriptor, then any
-members of the union that do not contain list shapes of length N will be
-ignored, where N is the number of expressions in the <code>expr-list</code>; it
-is a compile-time error if this does not leave a single list type descriptor,
-which is then used as the inherent type.
-</p>
-<p>
-In both cases, the static type of the array-constructor-expr will be the same as
-the inherent type.
-</p>
-<h3>Tuple constructor</h3>
-
-<pre
-class="grammar">tuple-constructor-expr := <code>(</code> tuple-expr-list <code>)</code>
-tuple-expr-list :=
-   expression (<code>,</code> expression)+
-   | expression <code>,</code>
-</pre>
-<p>
-Creates a new list value. The members of the list come from evaluating each
-expression in <code>tuple-expr-list</code> in order. The inherent type of the
-newly created list will be a list type of fixed length N, where N is the
-number of expressions in the <code>tuple-expr-list</code>.
-</p>
-<p>
-If there is no contextually expected type, then the inherent type will be a
-tuple type with N members, where the type of each member is the broad type of
-the corresponding expression in <code>tuple-expr-list</code>.
-</p>
-<p>
-If there is a contextually expected type, then the inherent type is derived from
-the applicable contextually expected type in two stages. First, if the
-applicable contextually expected type is a union type descriptor, then any
-members of the union that do not contain list shapes of length N will be
-ignored; it is a compile-time error if this does not leave a single list type
-descriptor. Second, if the resulting list type descriptor it not of fixed length
-N, then it is transformed into its subtype that is of fixed length N.
-</p>
-<p>
-In both cases, the static type of the <code>tuple-constructor-expr</code> will
-be the same as the inherent type.
+The type that the inherent type requires for each list member provides the
+contextually expected type for the expression for the member.
 </p>
 <h3>Mapping constructor</h3>
 
@@ -2677,28 +2634,16 @@ used to specify the name of a field by enclosing the expression in square
 brackets.
 </p>
 <p>
-The mapping-constructor-expr selects at compile time a type descriptor to use as
-the inherent type of the new mapping value that it constructs.
-</p>
-<p>
-If there is no contextually expected type, the type descriptor for the inherent
-type will be inferred from the field names and the static types of the
-expressions occurring in the mapping constructor. The inferred type will have
-field-descriptor for each literal-field-name occurring in the constructor; each
-field-descriptor will be required, and the static type will the broad type of
-the value-expr for the field; the type will be open to
-<code>anydata|error</code>, just as if it had been specified using an inclusive
-record type descriptor.
-</p>
-<p>
-If there is a contextually expected type, then the applicable contextually
-expected type is either a mapping type descriptor or a union of mapping type
-descriptors. If it is a mapping type descriptor, then this will be used as the
-inherent type. Otherwise, any members of the union that are inconsistent with
-the field names specified as a literal-field-name in the
-mapping-constructor-expr will be eliminated. It is a compile-time error if this
-does not unambiguously determine a single type descriptor to use as the inherent
-type.
+The inherent type of the newly created mapping is derived from the applicable
+contextually expected type. It is an error if there is no contextually expected
+type. If the applicable contextually expected type is a mapping type descriptor,
+then that used as the inherent type. If the applicable contextually expected
+type is a union type descriptor, then any members of the union that are
+inconsistent with the field names specified as a literal-field-name in the
+mapping-constructor-expr will be ignored; it is a compile-time error if this
+does not leave a single mapping type descriptor, which is then used as the
+inherent type. The static type of the mapping-constructor-expr will be the same
+as the inherent type.
 </p>
 <p>
 If the inherent type descriptor is a record type descriptor, a field will be
@@ -2707,11 +2652,9 @@ for any field that is not specified explicitly in the mapping constructor and
 that has a default value.
 </p>
 <p>
-When there is a contextually expected type, the type that the inherent type
-requires for each field provides the contextually expected type for the
-value-expr for that field. When there is no contextually expected type, the
-value-expr will not have a contextually expected type. The contextually expected
-type for a computed-field-name is string.
+The type that the inherent type requires for each field provides the
+contextually expected type for the value-expr for that field. The contextually
+expected type for a computed-field-name is string.
 </p>
 
 <h3>[Preview] Table constructor</h3>
@@ -4498,7 +4441,7 @@ class="grammar">match-pattern :=
   <code>var</code> binding-pattern
    | wildcard-match-pattern
    | const-pattern
-   | tuple-match-pattern
+   | list-match-pattern
    | mapping-match-pattern
    | error-match-pattern
 </pre>
@@ -4538,12 +4481,10 @@ type any, in other words if the basic type of the value is not error.
 
 <pre
 class="grammar">wildcard-match-pattern := <code>_</code>
-tuple-match-pattern := <code>(</code> tuple-member-match-patterns <code>)</code>
-tuple-member-match-patterns :=
-   match-pattern (<code>,</code> match-pattern)+
-   | match-pattern <code>,</code>
-   | match-pattern (<code>,</code> match-pattern)* <code>,</code> rest-match-pattern
-   | rest-match-pattern
+list-match-pattern := <code>(</code> list-member-match-patterns <code>)</code>
+list-member-match-patterns :=
+   match-pattern (<code>,</code> match-pattern)* [<code>,</code> rest-match-pattern]
+   | [ rest-match-pattern ]
 mapping-match-pattern := <code>{</code> field-match-patterns <code>}</code>
 field-match-patterns :=
    field-match-pattern (<code>,</code> field-match-pattern)* [<code>,</code> rest-match-pattern]
@@ -5588,18 +5529,19 @@ version of the specification released in year 20<em>XY</em> will be labelled
 20<em>XY</em>r<em>N</em>.
 </p>
 <ol>
+<li>Tuples types now use square brackets, rather than parentheses, as do tuple
+binding patterns and tuple match patterns. Array constructors and tuple
+constructors are now unified into list constructors, which use square brackets.
+Tuple types can have zero members or one member, and can use <code>T...</code>
+syntax allow trailing members of a specified type.</li>
 <li>The way that record type descriptors express openness has changed. Instead
 of the <code>!...</code> syntax, there are two flavours of record type
 descriptor, which use different delimiters: <code>record {| |}</code> allows any
 mapping that has exclusively the specified fields, whereas <code>record {
 }</code> allows any mapping that includes the specified fields; the former can
-use the <code>T...</code> syntax, whereas the latter cannot.</li>
-<li>Record binding patterns and match patterns now also use <code>{|</code> and
-<code>|}</code> delimiters instead of <code>!...</code>.</li>
-<li>Tuple types can now use <code>T...</code> syntax, with similar semantics
-to <code>record {| |}</code>.</li>
-<li>The grammar allows tuples types and constructors to have a single member by
-using a trailing comma.</li>
+use the <code>T...</code> syntax, whereas the latter cannot. The
+<code>!...</code> is no longer allowed for record binding patterns and record
+match patterns.</li>
 <li>The syntax for an array with an array length that is inferred has changed
 from <code>T[!...]</code> to <code>T[*]</code>.</li>
 <li>A type descriptor of <code>error&lt;*&gt;</code> can be used to specify an
