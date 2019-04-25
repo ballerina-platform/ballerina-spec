@@ -1398,6 +1398,11 @@ is not definitely assigned at that point. It is a compile error if a
 </ul>
 </li>
 </ul>
+<p>
+An object must have a __init method unless all its fields have a default value.
+An object without a __init method behaves as it had a __init method with no
+parameters and an empty body (which will always return nil).
+</p>
 <h5>Object type references</h5>
 
 <pre
@@ -2654,36 +2659,33 @@ evaluation.</li>
 <h3>New expression</h3>
 
 <pre
-class="grammar">new-expr := new-object-expr | new-value-expr
-new-object-expr := new [type-descriptor] <code>(</code> arg-list <code>)</code>
-new-value-expr : new [type-descriptor]
+class="grammar">new-expr := explicit-new-expr | implicit-new-expr
+explicit-new-expr := new type-descriptor <code>(</code> arg-list <code>)</code>
 </pre>
 <p>
-A new-object-expr initializes an object, passing the supplied arg-list to the
-object's <code>__init</code> method. It is a compile error if the
-type-descriptor for a new-object-expr, whether explicitly specified or not, is
-not an object type or if the arg-list does not match the signature of the object
-type's <code>__init</code> method. If the result of calling the
-<code>__init</code> method is an error value e, then the result of evaluating
-the new-object-expr is e; otherwise the result is the newly initialized object.
-If an object type does not have an <code>__init</code> method, then <code>new
-T()</code> is the same as <code>new T</code>.
+A new-expr constructs a new object.</p>
+<p>
+An explicit-new-expr allocates storage for the object and initializes it,
+passing the supplied arg-list to the object's <code>__init</code> method. It is
+a compile error if the type-descriptor does not specify an object type or if the
+arg-list does not match the signature of the object type's <code>__init</code>
+method. If the result of calling the <code>__init</code> method is an error
+value e, then the result of evaluating the explicit-new-expr is e; otherwise the
+result is the newly initialized object.
 </p>
 <p>
-A new-value-expr allocates storage for a behavioural type and initializes it
-with the implicit initial value for that type. It is a compile error if the
-type-descriptor for a new-value-expr, whether explicitly specified or not, is
-not a behavioural type with an implicit initial value.
+An explicit-type-expr specifying a type descriptor T has static type T, except
+that if the type of the <code>__init</code> method is E?, where E is a subtype
+of error, then it has static type T|E.
 </p>
+<pre
+class="grammar">implicit-new-expr := new [<code>(</code> arg-list <code>)</code>]
+</pre>
 <p>
-If the type-descriptor in a new-expr specifies a type T, then the static type of
-a new-expr is T, except that, in the case of a new-object-expr, if the type of
-the __init method is E?, where E is a subtype of error, then the type of the
-new-object-expr is T|E.
-</p>
-<p>
-If the type descriptor is omitted in either kind of new-expr, then the
-contextually expected type is used instead.
+An implicit-new-expr is equivalent to an explicit-new-expr that specifies the
+applicable contextually expected type as the type descriptor. An
+implicit-new-expr consisting of just <code>new</code> is equivalent to
+<code>new()</code>.
 </p>
 <h3>Variable reference expression</h3>
 
