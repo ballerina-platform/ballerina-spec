@@ -1372,8 +1372,7 @@ An object is initialized by:
 </p>
 <ol>
 <li>allocating storage for the object</li>
-<li>initializing each field with its implicit initial value, if there is one
-defined for the type of the field</li>
+<li>initializing each field with its default value, if it has one</li>
 <li>initializing the methods of the object using the type's method definitions</li>
 <li>calling the object's <code>__init</code> method, if there is one</li>
 </ol>
@@ -1384,24 +1383,18 @@ it means that initialization of the object failed. The <code>__init</code>
 method can declare parameters in the same way as any other method.
 </p>
 <p>
-When an object is initialized to its implicit initial value, no parameters are
-available, and <code>__init</code> must not return an error. Thus an object type
-has an implicit initial value unless it has a <code>__init</code> method with a
-non-nil return type or required parameters.
-</p>
-<p>
 At any point in the body of a <code>__init</code> method, the compiler
 determines which fields are potentially uninitialized. A field is potentially
-uninitialized at some point if it is a field of a type that does not have an
-implicit initial value and it is not definitely assigned at that point. It is a
-compile error if a <code>__init</code> method:
+uninitialized at some point if that field does not have a default value and it
+is not definitely assigned at that point. It is a compile error if a
+<code>__init</code> method:
 </p>
 <ul>
 <li>accesses a field at a point where it is potentially initialized, or</li>
 <li>at a point where there is any potentially uninitialized value
 <ul>
 <li>returns nil, or</li>
-<li>uses the self variable other than to access or modify the value of a field.</li>
+<li>uses the <code>self</code> variable other than to access or modify the value of a field.</li>
 </ul>
 </li>
 </ul>
@@ -2424,8 +2417,9 @@ specifies the filler value for each kind of type descriptor that provides one.
 <tr>
 <td>object</td>
 <td><code>new T()</code></td>
-<td>if this is valid, where <code>T</code> is the object type descriptor
-(an abstract object type will not have a filler value)</td>
+<td>if this is valid and its static type does not include error, where
+<code>T</code> is the object type descriptor (an abstract object type will not
+have a filler value)</td>
 </tr>
 <tr>
 <td><code>xml</code></td>
