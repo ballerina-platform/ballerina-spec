@@ -404,11 +404,6 @@ information may need to be resolved at runtime. The typedesc basic type
 represents a type descriptor that has been resolved.
 </p>
 <p>
-Some type descriptors may also determine an implicit initial value, which is
-used to initialize structure members. In particular, the type descriptor for
-every simple basic type always has an implicit initial value.
-</p>
-<p>
 Most basic types of structured values (along with one basic type of simple
 value) are iterable, meaning that a value of the type can be accessed as a
 sequence of simpler values.
@@ -578,9 +573,6 @@ The nil type is special, in that it is the only basic type that consists of a
 single value. The type descriptor for the nil type is not written using a
 keyword, but is instead written <code>() </code>like the value.
 </p>
-<p>
-The implicit initial value for the nil type is <code>()</code>.
-</p>
 <h4>Boolean</h4>
 
 <pre
@@ -589,9 +581,6 @@ boolean-literal := <code>true</code> | <code>false</code>
 </pre>
 <p>
 The boolean type consists of the values true and false.
-</p>
-<p>
-The implicit initial value for the boolean type is false.
 </p>
 <h4>Int</h4>
 
@@ -610,9 +599,6 @@ NonZeroDigit := <code>1</code> .. <code>9</code>
 The int type consists of integers between -9,223,372,036,854,775,808 and
 9,223,372,036,854,775,807 (i.e. signed integers than can fit into 64 bits using
 a two's complement representation)
-</p>
-<p>
-The implicit initial value for the int type is 0.
 </p>
 <h4>Floating point types</h4>
 
@@ -668,9 +654,6 @@ extended precision for intermediate results. This ensures that all
 implementations will produce identical results. (This is the same as what is
 required by strictfp in Java.)
 </p>
-<p>
-The implicit initial value for each floating point type is 0.0.
-</p>
 <h4>Strings</h4>
 
 <pre
@@ -697,9 +680,6 @@ integer <em>n</em> where 0 &lt;= <em>n</em> &lt; 0xD800 or 0xDFFF &lt; n &lt;=
 <p>
 A string is iterable as a sequence of its single code point substrings. String
 is the only simple type that is iterable.
-</p>
-<p>
-The implicit initial value for the string type is an empty string.
 </p>
 <h3>Structured values</h3>
 <p>
@@ -832,22 +812,11 @@ are in <code>T</code>. A type <code>T[n]</code> contains a list shape if in
 addition the length of the list shape is n.
 </p>
 <p>
-The member type of an array type can be any type T (including arrays), provided
-only that T has an implicit initial value. (When T does not have an implicit
-initial value, an array of T? may be used instead; see Optional Types.)
-</p>
-<p>
 A <code>constant-reference-expr</code> in an <code>array-length</code> must
 evaluate to a non-negative integer. An array length of <code>*</code> means that
 the length of the array is to be inferred from the context; this is allowed only
 within a type descriptor occurring in a context that is specified to be
 inferable; its meaning is the same as if the length was specified explicitly.
-</p>
-<p>
-When <code>array-length</code> is present, the implicit initial value of the
-array type is a list of the specified length, with each member of the array
-having its implicit initial value; otherwise, the implicit initial value of an
-array type is an array of length 0.
 </p>
 <p>
 When a list value has an inherent type that is an array without an array-length,
@@ -893,13 +862,6 @@ i from 1 to m;</li>
 R<code>...</code>, and R contains the j-th member of L for each j from m + 1 to
 n.</li>
 </ul>
-<p>
-If the member types of a tuple type all have an implicit initial value, then the
-implicit initial value for the tuple type is the list of those implicit initial
-values; otherwise, the tuple type does not have an implicit initial value. Any
-tuple-rest-descriptor does not affect the implicit initial value of the tuple
-type.
-</p>
 <p>
 Note that a tuple type where all the <code>member-type-descriptor</code>s are
 the same and there is no tuple-rest-descriptor is equivalent to an
@@ -963,9 +925,6 @@ shape in <em>m</em> has a value shape that is in <code>T</code>.
 <p>
 A value belonging to type <code>map&lt;T></code> is iterable as a sequence of
 values of type <code>(string, T)</code>.
-</p>
-<p>
-The implicit initial value for a map type is an empty map.
 </p>
 <h5>Record types</h5>
 <p>
@@ -1059,13 +1018,6 @@ that is an <code>inclusive-record-type-descriptor</code> is treated as if it
 were the equivalent <code>exclusive-record-type-descriptor</code> with an
 explicit <code>record-rest-descriptor</code>.
 </p>
-<p>
-If the required fields of a record type descriptor all have a default value,
-then the implicit initial value for the record type descriptor is a record where
-each required field is initialized with its default value; the implicit initial
-value does not include optional fields. Otherwise, it does not have an implicit
-initial value.
-</p>
 <h4>[Preview] Tables</h4>
 <p>
 A table is intended to be similar to the table of relational database table. A
@@ -1118,21 +1070,13 @@ name and the value of that column in that row as the field value. The mapping
 values will belong to a closed record type.
 </p>
 <p>
-The implicit initial value for a table is a table with no rows. The columns in
-the implicit initial value are determined by the type context in which the
-implicit initial value is used.
-</p>
-<p>
-[Issues
+Issues:
 </p>
 <ul>
 <li>Need to say that unique constraint is part of the value.</li>
 <li>Do we want to allow values that are distinct but numerically equal e.g. -0.0
 and +0.0 or 1.0 and 1 in primary key columns?</li>
 </ul>
-<p>
-]
-</p>
 <h4>XML</h4>
 
 <pre class="grammar">xml-type-descriptor := <code>xml</code>
@@ -1202,9 +1146,6 @@ inferable.
 </p>
 <p>
 Error is the only structured basic type that is not iterable.
-</p>
-<p>
-An error type does not have an implicit initial value.
 </p>
 <h3>Behavioral values</h3>
 
@@ -1354,8 +1295,7 @@ object-member-descriptor :=
 <p>
 If <code>object-type-quals</code> contains the keyword <code>abstract</code>,
 then the object type descriptor is an abstract object type descriptor. An
-abstract object type descriptor must not have an object-ctor-function and does
-not have an implicit initial value.
+abstract object type descriptor must not have an object-ctor-function.
 </p>
 <p>
 If <code>object-type-quals</code> contains the keyword <code>client</code>, then
@@ -1554,10 +1494,6 @@ pure type.
 A value belongs to a type <code>stream</code> (without the type-parameter)
 if it has basic type stream.
 </p>
-<p>
-The implicit initial value of a stream type is a newly created stream, ready to
-distribute values.
-</p>
 
 <h4>Type descriptors</h4>
 <pre
@@ -1609,10 +1545,6 @@ described using an compile-time constant expression for a single value: the type
 contains the shape of that value. Note that it is possible for the
 variable-reference within the simple-const-expr to reference a structured value.
 </p>
-<p>
-The implicit initial value for a singleton type is the single value used to
-specify the type.
-</p>
 <h4>Union types</h4>
 
 <pre
@@ -1622,19 +1554,6 @@ class="grammar">union-type-descriptor := type-descriptor <code>|</code> type-des
 The value space of a union type <code>T1|T2</code> is the union of
 <code>T1</code> and <code>T2</code>.
 </p>
-<p>
-The rules for the implicit initial value of a union type descriptor U are as
-follows:
-</p>
-<ul>
-<li>if the set of shapes denoted by U contains <code>()</code>, then the implicit initial
-value for U is <code>()</code>;</li>
-<li>otherwise if there is a simple basic type B that contains every member of
-the set of shapes denoted by U, and that set contains the implicit initial value
-of B, then the implicit initial value of U is the implicit initial value of B
-(for example, the implicit initial value for 0|1 is 0);</li>
-<li>otherwise U does not have an implicit initial value.</li>
-</ul>
 <h4>Optional types</h4>
 
 <pre
@@ -1643,10 +1562,6 @@ class="grammar">optional-type-descriptor := type-descriptor <code>?</code>
 <p>
 A type <code>T?</code> means T optionally, and is exactly equivalent to
 <code>T|()</code>.
-</p>
-<p>
-Following the rules for the implicit initial value of union types implies that
-the implicit initial value for an optional type will always be ().
 </p>
 <h4>Any Type</h4>
 
@@ -1686,10 +1601,6 @@ type <code>anydata</code> is equivalent to the union
 <p>
 The byte type is an abbreviation for a union of the int values in the range 0 to
 255 inclusive.
-</p>
-<p>
-Following the rules for the implicit initial value of union types implies that
-the implicit initial value of byte is 0.
 </p>
 <h4>JSON types</h4>
 
@@ -2460,6 +2371,131 @@ inherent type.
 The type that the inherent type requires for each list member provides the
 contextually expected type for the expression for the member.
 </p>
+<p>
+Some members of a list can be filled in automatically. A member can be filled in
+automatically if its type descriptor, as determined by the inherent type of the
+list, provides a way to create a <em>filler</em> value. The following table
+specifies the filler value for each kind of type descriptor that provides one.
+</p>
+<table>
+<tr>
+<th>Type descriptor</th>
+<th>Filler value</th>
+<th>When provided</th>
+</tr>
+<tr>
+<td><code>()</code></td>
+<td><code>()</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>boolean</code></td>
+<td><code>false</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>int</code></td>
+<td><code>0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>float</code></td>
+<td><code>+0.0f</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>decimal</code></td>
+<td><code>+0.0d</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>string</code></td>
+<td><code>""</code></td>
+<td></td>
+</tr>
+<tr>
+<td>list type descriptor</td>
+<td><code>[]</code></td>
+<td>if that is a valid constructor for the type</td>
+</tr>
+<tr>
+<td>mapping type descriptor</td>
+<td><code>{ }</code></td>
+<td>if that is a valid constructor for the type</td>
+</tr>
+<tr>
+<td>table</td>
+<td>empty table (with no rows)</td>
+<td></td>
+</tr>
+<tr>
+<td>object</td>
+<td><code>new T()</code></td>
+<td>if this is valid, where <code>T</code> is the object type descriptor
+(an abstract object type will not have a filler value)</td>
+</tr>
+<tr>
+<td><code>xml</code></td>
+<td><code>xml``</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>stream&lt;T&gt;</code></td>
+<td><code>new stream&lt;T&gt;</code></td>
+<td></td>
+</tr>
+<tr>
+<td>singleton</td>
+<td>the single value used to specify the type</td>
+<td></td>
+</tr>
+<tr>
+<td rowspan="2">union</td>
+<td><code>()</code></td>
+<td>if <code>()</code> is a member of the union</td>
+</tr>
+<tr>
+<td>the filler value for basic type B</td>
+<td>if all members of the union belong to a single basic type B,
+and the filler value for B also belongs to the union</td>
+</tr>
+<tr>
+<td><code>T?</code></td>
+<td><code>()</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>any</code></td>
+<td><code>()</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>anydata</code></td>
+<td><code>()</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>byte</code></td>
+<td><code>0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>json</code></td>
+<td><code>()</code></td>
+<td></td>
+</tr>
+</table>
+<p>
+The inherent type of a list establishes either a fixed length for the list or
+just a minimum length for the list, which may be zero. In the latter case, for
+each <var>j</var> greater than <var>m</var>, where <var>m</var> is the minimum
+length of the list, the inherent type of the list must be such that
+<var>j</var>-th member can be filled in automatically. In either case, a list
+constructor may specify only the first <var>k</var> members, provided that for
+each <var>i</var> from <var>k</var> + 1 up to the fixed length of the list, the
+<var>i</var>-th member can be filled in automatically.
+</p>
+
 <h3>Mapping constructor</h3>
 
 <pre
