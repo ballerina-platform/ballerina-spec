@@ -1255,10 +1255,11 @@ is a subtype of T.
 </p>
 <h4>Objects</h4>
 <p>
-Objects are a combination of public and private fields along with a set of
-associated functions, called methods, that can be used to manipulate them. An
-object's methods are associated with the object when the object is constructed
-and cannot be changed thereafter.
+Objects are a combination of fields along with a set of associated functions,
+called methods, which can be used to manipulate them. An object's methods are
+associated with the object when the object is constructed and cannot be changed
+thereafter. The fields and methods of an object are in separate namespaces, so
+it is possible for an object to have a field and a method with the same name.
 </p>
 <p>
 An object type descriptor, in addition to describing the object type, also
@@ -1296,7 +1297,7 @@ methods; other objects types must not.
 
 <pre
 class="grammar">object-field-descriptor :=
-   [visibility-qual] type-descriptor field-name [default-value]<code>;</code>
+   object-visibility-qual type-descriptor field-name [default-value]<code>;</code>
 </pre>
 <p>
 An <code>object-field-descriptor</code> specifies a field of the object. The
@@ -1312,21 +1313,19 @@ value of that type using a <code>method-call-expr</code>.
 class="grammar">object-method := method-decl | method-defn
 method-decl :=
    metadata
-   [visibility-qual][<code>remote</code>]
+   object-visibility-qual [<code>remote</code>]
    <code>function</code> method-name function-signature <code>;</code>
 method-defn :=
    metadata
    method-defn-quals
    <code>function</code> method-name function-signature method-body
-method-defn-quals := [visibility-qual] [<code>remote</code>]
+method-defn-quals := object-visibility-qual [<code>remote</code>]
 method-name := identifier
 method-body := function-body
 </pre>
 <p>
 The names of all the methods of an object must be distinct: there is no method
-overloading. But the fields and methods of an object are in separate namespaces,
-so it is possible for an object to have a field and a method with the same name.
-Method names beginning with two underscores are reserved for use by <a
+overloading. Method names beginning with two underscores are reserved for use by <a
 href="#built-in_abstract_object_types">built-in abstract object types</a>.
 </p>
 <p>
@@ -1362,6 +1361,71 @@ The <code>method-defn-quals</code> on an outside-method-defn must contain the
 same qualifiers (both <code>remote</code> and visibility qualifiers) as the
 declaration of the method within the object.
 </p>
+<h5>Visibility</h5>
+
+<pre
+class="grammar">object-visibility-qual := [explicit-visibility-qual]
+explicit-visibility-qual := <code>public</code> | <code>private</code>
+</pre>
+<p>
+Each field and method of an object type is visible within and can be accessed
+from a specific region of code, which is specified by its object-visibility-qual
+as follows:
+</p>
+<ul>
+<li>if the object-visibility qual is <code>private</code>, then the visibility
+region consists of the methods defined by this object type descriptor;</li>
+<li>if the object-visibility-qual is empty, then the visibility region is the
+entire module containing this object type descriptor; this is called
+module-level visibility;</li>
+<li>if the object-visibility-qual is <code>public</code>, then the visibility region
+contains all modules.</li>
+</ul>
+<p>
+The visibility of a method or field of an abstract object type cannot be
+<code>private</code>.
+</p>
+<h5>Typing</h5>
+
+<p>
+The shape of an object consists of an unordered collection of object field
+shapes and an unordered collection of object method shapes. An object field
+shape or object method shape is a triple consisting of the name of the field or
+method, the visibility region, and a shape for the value of the field or for the
+method's function.
+</p>
+<p>
+An object type is inclusive, in a similar way to an
+inclusive-record-type-descriptor: an object shape belongs to an object type if
+it has at least the fields and methods described in the object-type-descriptor.
+</p>
+<p>
+An object-type-descriptor that has a field with name f, visibility region R and
+type T contains an object shape only if the object shape contains an object
+field shape that has name f, visibility region R and a value shape that is
+contained in T. An object-type-descriptor that has a method with name m,
+visibility region R and function type T contains an object shape only if the
+object shape contains an object method shape that has name m, visibility region
+R and a function value that belongs to type T.
+</p>
+<p>
+Thus an object type T' is a subtype of an object type T only if for each field
+or method f of T there is a corresponding field or method f' of T such that the
+type of f' in T' is a subtype of the type of f in T and the visibility region of
+f' in T' is the same as the visibility region of f in T.
+</p>
+<p>
+This implies that:
+</p>
+<ul>
+<li>if an object type descriptor T has private fields or methods, then it is not
+possible to define another object type descriptor that is a subtype of T,
+and</li>
+<li>if an object type descriptor T has fields or methods with module-level
+visibility, then it is possible to define another object type descriptor that is
+a subtype of T only within the same module as T.</li>
+</ul>
+ 
 <h5>Initialization</h5>
 <p>
 A non-abstract object type provides a way to initialize an object of the type.
@@ -1400,6 +1464,9 @@ An object must have a __init method unless all its fields have a default value.
 An object without a __init method behaves as it had a __init method with no
 parameters and an empty body (which will always return nil).
 </p>
+<p>
+The visibility of the <code>__init</code> method cannot be <code>private</code>.
+</p>
 <h5>Object type references</h5>
 
 <pre
@@ -1408,31 +1475,17 @@ class="grammar">object-type-reference :=
 </pre>
 <p>
 The <code>type-descriptor-reference</code> in an
-<code>object-type-reference</code> must reference a an abstract object type. The
+<code>object-type-reference</code> must reference an abstract object type. The
 object-member-descriptors from the referenced type are copied into the type
 being defined; the meaning is the same as if they had been specified explicitly.
 </p>
 <p>
-If a non-abstract object type OT has a type reference to an abstract object type
-AT, then each method declared in AT must be defined in OT using either a
-<code>method-defn</code> or an <code>outside-method-defn</code>.
-</p>
-<h5>Visibility</h5>
-
-<pre
-class="grammar">visibility-qual := <code>public</code> | <code>private</code>;
-</pre>
-<p>
-Visibility of fields, object initializer and methods is specified uniformly:
-<code>public</code> means that access is unrestricted; <code>private</code>
-means that access is allowed only from methods defined by the same object type
-descriptor; if no visibility is specified explicitly, then access is allowed
-only from the same module.
-</p>
-<p>
-Visibility of the <code>__init</code> method cannot be specified to be
-<code>private</code>. The visibility of a method or field of an abstract object
-type cannot be private.
+If a non-abstract object type T<sub>o</sub> has a type reference to an abstract
+object type T<sub>a</sub>, then each method declared in T<sub>a</sub> must be
+defined in T<sub>o</sub> using either a <code>method-defn</code> or an
+<code>outside-method-defn</code> with the same visibility. If T<sub>a</sub> has
+a method or field with module-level visibility, the T<sub>o</sub> must be in the
+same module.
 </p>
 <h4>Futures</h4>
 
@@ -2567,7 +2620,7 @@ service-method-defn :=
    service-method-defn-quals
    function identifier function-signature method-body
 service-method-defn-quals :=
-   [visibility-qual] | <code>resource</code>
+   [explicit-visibility-qual | <code>resource</code>]
 </pre>
 <p>
 A <code>service-constructor-expr</code> constructs a service value. The result
