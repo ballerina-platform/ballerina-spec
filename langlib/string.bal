@@ -1,6 +1,6 @@
 public function length(string s) returns int = external;
 
-public type Iterator object {
+public type Iterator abstract object {
     public next() returns record {| string value; |}?;
 };
 
