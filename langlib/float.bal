@@ -8,6 +8,27 @@ public const float NaN = 0.0/0.0;
 // XXX Infinity or INFINITY or POSITIVE_INFINITY (and NEGATIVE_INFINITY);
 public const float Infinity = 1.0/0.0;
 
+// Classification
+// These are already in the spec as built-in methods
+
+# Tests whether a float is finite.
+# x - the float to be tested
+# return - true if `x` is finite, i.e. neither NaN nor +∞ nor -∞
+# Exactly one of isFinite, isInfinite and IsNaN will be true for any float value
+public function boolean isFinite(float x) = external;
+
+# Tests whether a float is infinite.
+# x - the float to be tested
+# return - true if `x` is either +∞ nor -∞
+# Exactly one of isFinite, isInfinite and IsNaN will be true for any float value
+public function boolean isInfinite(float x) = external;
+
+# Tests whether a float is NaN.
+# x - the float to be tested
+# return - true if `x` is NaN
+# Exactly one of isFinite, isInfinite and IsNaN will be true for any float value
+public function boolean isNaN(float x) = external;
+
 # Sum of all the arguments
 # +0.0 if no args
 # NaN if any arg is NaN
