@@ -4,8 +4,9 @@
 public const float PI = 3.141592653589793;
 public const float E =  2.718281828459045;
 public const float NaN = 0.0/0.0;
-// XXX This or POSITIVE_INFINITY, NEGATIVE_INFINITY;
-public const int Infinity = 1.0/0.0;
+
+// XXX Infinity or INFINITY or POSITIVE_INFINITY (and NEGATIVE_INFINITY);
+public const float Infinity = 1.0/0.0;
 
 # Sum of all the arguments
 # +0.0 if no args
@@ -25,6 +26,15 @@ public function min(float... xn) returns float = external;
 # IEEE abs operation
 public function abs(float x) returns float = external;
 
+# Floating point value that is a mathematical integer and closest to `x`.
+# If there are two such integers, choose the one that is even
+# (this is the round-to-nearest rounding mode, which is the default for IEEE
+# and for Ballerina).
+# Same as Java Math.rint method
+# Same as .NET Math.round method
+# IEEE roundToIntegralTiesToEven operation
+# XXX different from Java round which returns a long, and rounds ties to +∞
+# Note that `<int>x` is the same as `<int>x.round()`
 public function round(float x) returns float = external;
 
 # Largest (closest to +∞) floating point value not greater than `x` that is a mathematical integer
@@ -41,6 +51,7 @@ public function sqrt(float x) returns float = external;
 # IEEE rootn(x, 3)
 public function cbrt(float x) returns float = external;
 
+# `x` to the power of `y`
 # IEEE pow(x, y)
 public function pow(float x, float y) returns float = external;
 
