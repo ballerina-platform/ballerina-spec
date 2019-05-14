@@ -1,0 +1,8 @@
+public function length(string s) returns int = external;
+
+public type Iterator object {
+    public next() returns record {| string value; |}?;
+};
+
+public function iterator(string s) returns Iterator = external;
+
