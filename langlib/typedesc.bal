@@ -21,7 +21,7 @@ private type AnydataType anydata;
 # will be in the set of shapes denoted by `t`. Now stamp narrows the inherent type of `v`, and
 # recursively of any members of `v`, so that the `v` belongs to `t`, and then returns `v`.
 # Any frozen values in `v` are left unchanged by this.
-public function stamp(typedesc<AnydataType> t, anydata v) returns AnydataType|error = extern;
+public function stamp(typedesc<AnydataType> t, anydata v) returns AnydataType|error = external;
 
 # Create a copy of a value with a specified inherent type.
 # + t - the type for the copy to be created
@@ -34,4 +34,4 @@ public function stamp(typedesc<AnydataType> t, anydata v) returns AnydataType|er
 # The function now creates a new value that has the same shape as `v`, except
 # possibly for differences in numeric types and for the addition of fields for
 # which a default value is defined, but belongs to type `t`.
-public function convert(typedesc<AnydataType> t, anydata v) returns AnydataType|error = extern;
+public function convert(typedesc<AnydataType> t, anydata v) returns AnydataType|error = external;
