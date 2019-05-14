@@ -32,17 +32,17 @@ public function boolean isNaN(float x) = external;
 # Sum of all the arguments
 # +0.0 if no args
 # NaN if any arg is NaN
-public function sum(float... xn) returns float = external;
+public function sum(float... xs) returns float = external;
 
 # Maximum of all the arguments
 # -∞ if no args
 # NaN if any arg is NaN
-public function max(float... xn) returns float = external;
+public function max(float... xs) returns float = external;
 
 # Minimum of all the arguments
 # +∞ if no args
 # NaN if any arg is NaN
-public function min(float... xn) returns float = external;
+public function min(float... xs) returns float = external;
 
 # IEEE abs operation
 public function abs(float x) returns float = external;
