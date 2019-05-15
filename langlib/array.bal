@@ -39,7 +39,7 @@ public function slice(Type[] arr, int start, int end = arr.length()) returns Typ
 
 # Returns index of first member of `arr` that is equal to `val`
 # Equality is tested using `==`
-public function indexOf(PureType[] arr, PureType val) returns int? = external;
+public function indexOf(PureType[] arr, PureType val, int startIndex = 0) returns int? = external;
 // XXX modifies arg?
 public function reverse(Type[] arr) returns Type[] = external;
 // XXX modifies arg?
