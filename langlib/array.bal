@@ -33,6 +33,7 @@ public function forEach(Type[] arr, function(Type val) returns () func) returns 
 public function filter(Type[] arr, function(Type val) returns boolean func) returns Type[] = external;
 public function reduce(Type[] arr, function(Type1 accum, Type val) returns Type1 func, Type1 initial) returns Type1 = external;
 
+
 // subarray
 public function slice(Type[] arr, int start, int end = arr.length()) returns Type[] = external;
 
@@ -41,6 +42,8 @@ public function slice(Type[] arr, int start, int end = arr.length()) returns Typ
 public function indexOf(PureType[] arr, PureType val) returns int? = external;
 // XXX modifies arg?
 public function reverse(Type[] arr) returns Type[] = external;
+// XXX modifies arg?
+public function sort(Type[] arr, function(Type val1, Type val2) returns int func) returns Type[] = external;
 // Stack methods (JavaScript, Perl)
 public function pop(Type[] arr) returns Type = external;
 public function push(Type[] arr, Type... vals) returns () = external;
