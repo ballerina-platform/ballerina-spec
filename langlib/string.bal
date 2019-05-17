@@ -33,3 +33,8 @@ public function toUpperAscii(string str) returns string = extern;
 # Remove ASCII white space characters (0x9...0xD, 0x20) from start and end of `str`
 public function trim(string str) returns string = extern;
 
+# Encode `str` in UTF-8
+public function toUtf8Bytes(string str) returns byte[] = extern;
+# Decode `bytes` as UTF-8
+public function fromUtf8Bytes(byte[] bytes) returns string|error = extern;
+
