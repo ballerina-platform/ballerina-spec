@@ -1,10 +1,9 @@
 public function length(string str) returns int = external;
 
-public type Iterator abstract object {
+public function iterator(string str) returns abstract object {
     public next() returns record {| string value; |}?;
-};
+} = external;
 
-public function iterator(string str) returns Iterator = external;
 # Concatenate all the `strs`. Empty string if empty.
 public function concat(string... strs) return str;
 
@@ -14,10 +13,9 @@ public function substring(string str, int start, int end = str.length()) returns
 // This will allow strings to be ordered in a consistent and well-defined way,
 // but the ordering will not typically be consistent with cultural expectations
 // for sorted order.
-public function codePointCompare(string str1, string str2) returns int;
+public function codePointCompare(string str1, string str2) returns int = external;
 
-// XXX several issues: which arg first and things to be joined as array or separate args
-public function join(string separator, string[] array) returns string;
+public function join(string separator, string... strs) returns string = external;
 
 # Returns the index of the first occurrence of `substr` in the part of the `str` starting at `startIndex`
 # or nil if it does not occur
@@ -29,10 +27,9 @@ public function endsWith(string str, string substr) returns boolean = extern;
 // to deal with Unicode properly. These will need to be updated as each
 // new Unicode version is released.
 # Return A-Z into a-z and leave other characters unchanged
-public function toLowerASCII(string str) returns string = extern;
+public function toLowerAscii(string str) returns string = extern;
 # Return a-z into A-Z and leave other characters unchanged
-public function toUpperASCII(string str) returns string = extern;
+public function toUpperAscii(string str) returns string = extern;
 # Remove ASCII white space characters (0x9...0xD, 0x20) from start and end of `str`
-# XXX which other characters should be included?
 public function trim(string str) returns string = extern;
 
