@@ -4,17 +4,7 @@ private type Type = any|error;
 private type Type1 = any|error;
 @typeParam
 private type PureType = anydata|error;
-@typeParam
-private type PureArrayType = (anydata|error)[];
 
-// Previously built-in methods
-# Freezes `arr` and returns it
-public function clone(PureArrayType arr) returns PureArrayType = external;
-# Returns clone of `arr` that is not frozee
-public function freeze(PureArrayType arr) returns PureArrayType = external;
-public function unfrozenClone(PureArrayType arr) returns PureArrayType = external;
-# Tests whether `arr` is frozen
-public function isFrozen((anydata|error)[] arr) returns boolean = external;
 # Returns number of members in `arr`.
 public function length((any|error)[] arr) returns int = external;
 # Returns an iterator over the members of `arr`
