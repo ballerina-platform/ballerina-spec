@@ -36,19 +36,23 @@ public function reduce(Type[] arr, function(Type1 accum, Type val) returns Type1
 
 // subarray
 public function slice(Type[] arr, int start, int end = arr.length()) returns Type[] = external;
-// panic if i is out of range
-// returns existing member
+
+# Removes the member of `arr` and index `i` and returns it.
+# Panics if `i` is out of range.
 public function remove(Type[] arr, int i) returns Type = external;
-// returns old length
+// no return value to avoid need to ignore it
+# Increase or decrease length.
 public function setLength(Type[] arr, int i);
 
-# Returns index of first member of `arr` that is equal to `val`
+# Returns index of first member of `arr` that is equal to `val` if there is one.
+# Returns `()` if not found
 # Equality is tested using `==`
-# Returns nil if not found
 public function indexOf(PureType[] arr, PureType val, int startIndex = 0) returns int? = external;
-// modifies arg
+# Reverse the order of the members of `arr`.
+# Returns `arr`.
 public function reverse(Type[] arr) returns Type[] = external;
-// modifies arg
+# Sort `arr` using `func` to order members.
+# Returns `arr`.
 public function sort(Type[] arr, function(Type val1, Type val2) returns int func) returns Type[] = external;
 // Stack-like methods (JavaScript, Perl)
 // panic on fixed-length array
