@@ -73,6 +73,7 @@ public function convertTo(anydata v, typedesc<AnydataType> t) returns AnydataTyp
 # Returns a simple, human-readable representation of `v` as a string.
 # - if `v` is a string, then returns `v`
 # - if `v` is `()`, then returns an empty string
+# - if `v` is boolean, then the string `true` or `false`
 # - if `v` is an int, then return `v` represented as a decimal string
 # - if `v` is a float or decimal, then return `v` represented as a decimal string,
 #   with a decimal point only if necessary, but without any suffix indicating the type of `v`;
