@@ -75,7 +75,8 @@ public function convertTo(anydata v, typedesc<AnydataType> t) returns AnydataTyp
 # - if `v` is `()`, then returns an empty string
 # - if `v` is an int, then return `v` represented as a decimal string
 # - if `v` is a float or decimal, then return `v` represented as a decimal string,
-#   with a decimal point only if necessary, but without any suffix indicating the type of `v`
+#   with a decimal point only if necessary, but without any suffix indicating the type of `v`;
+#   return `NaN`, `Infinity` for positive infinity, and `-Infinity` for negative infinity
 # - if `v` is a list, then returns the results toString on each member of the list
 #   separated by a space character
 # - if `v` is a map, then returns key=value for each member separated by a space character
