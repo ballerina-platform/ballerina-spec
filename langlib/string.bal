@@ -54,3 +54,10 @@ public function toBytes(string str) returns byte[] = extern;
 # Convert back to a string from its UTF-8 representation in `bytes`.
 public function fromBytes(byte[] bytes) returns string|error = extern;
 
+# Returns an array with an int for each code point in `str`.
+public function toCodePointInts(string str) returns int[] = extern;
+# Creates a string from an array of ints representing its code points.
+# Returns an error if any member of `codePoints` is negative or greater than 0x10FFFF
+# or is a surrogate (i.e. in the range 0xD800 or 0xDFFF inclusive).
+public function fromCodePointInts(int[] codePoints) returns string|error = extern;
+
