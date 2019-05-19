@@ -71,7 +71,7 @@ public function setType(anydata v, typedesc<AnydataType> t) returns AnydataType|
 public function convertTo(anydata v, typedesc<AnydataType> t) returns AnydataType|error = external;
 
 // JSON conversion
-# Return the string that represents `v` JSON format.
+# Return the string that represents `v` in JSON format.
 public function toJsonString(json v) returns string = external;
 # Parse a string in JSON format and return the the value that it represents.
 # All numbers in the JSON will be represented as float values.
