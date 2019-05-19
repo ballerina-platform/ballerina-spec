@@ -30,3 +30,9 @@ public function max(int n, int... ns) returns int = external;
 # Minimum of all the arguments
 # XXX should we allow no args?
 public function min(int n, int... ns) returns int = external;
+
+# Return the integer that `s` represents in decimal.
+# Returns error if `s` is not the decimal representation of an integer.
+# The first character may be `+` or `-`.
+# This is the inverse of `value:toString` applied to an `int`.
+public function fromString(string s) returns int|error = external;

@@ -131,3 +131,13 @@ public function cosh(float x) returns float = external;
 
 # IEEE tanh operation
 public function tanh(float x) returns float = external;
+
+# Return the float value represented by `s`.
+# `s` must follow the syntax of DecimalFloatingPointNumber as defined by the Ballerina specification
+# with the following modifications
+# - the DecimalFloatingPointLiteral may have a leading `+` or `-` sign
+# - `NaN` is allowed
+# - `Infinity` is allowed with an optional leading `+` or `-` sign
+# - a FloatingPointTypeSuffix is not allowed
+# This is the inverse of `value:toString` applied to an `float`.
+public function fromString(string s) returns float|error = external;

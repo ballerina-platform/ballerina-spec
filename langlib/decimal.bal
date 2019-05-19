@@ -42,3 +42,11 @@ public function floor(decimal x) returns decimal = external;
 
 # Smallest (closest to -∞) floating point value not less than `x` that is a mathematical integer
 public function ceiling(decimal x) returns decimal = external;
+
+# Return the decimal value represented by `s`.
+# `s` must follow the syntax of DecimalFloatingPointNumber as defined by the Ballerina specification
+# with the following modifications
+# - the DecimalFloatingPointLiteral may have a leading `+` or `-` sign
+# - a FloatingPointTypeSuffix is not allowed
+# This is the inverse of `value:toString` applied to an `decimal`.
+public function fromString(string s) returns decimal|error = external;
