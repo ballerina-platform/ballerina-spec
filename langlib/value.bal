@@ -69,3 +69,11 @@ public function setType(anydata v, typedesc<AnydataType> t) returns AnydataType|
 # possibly for differences in numeric types and for the addition of fields for
 # which a default value is defined, but belongs to type `t`.
 public function convertTo(anydata v, typedesc<AnydataType> t) returns AnydataType|error = external;
+
+// JSON conversion
+# Return the string that represents `v` JSON format.
+public function toJsonString(json v) returns string = external;
+# Parse a string in JSON format and return the the value that it represents.
+# All numbers in the JSON will be represented as float values.
+# Returns an error if the string cannot be parsed.
+public function fromJsonString(string str) returns json|error = external;
