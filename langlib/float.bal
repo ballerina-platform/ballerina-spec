@@ -77,9 +77,8 @@ public function round(float x) returns float = external;
 # Largest (closest to +∞) floating point value not greater than `x` that is a mathematical integer
 public function floor(float x) returns float = external;
 
-# XXX ceiling or ceil?
 # Smallest (closest to -∞) floating point value not less than `x` that is a mathematical integer
-public function ceil(float x) returns float = external;
+public function ceiling(float x) returns float = external;
 
 # IEEE squareRoot operation
 public function sqrt(float x) returns float = external;

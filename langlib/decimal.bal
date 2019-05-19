@@ -40,6 +40,5 @@ public function round(decimal x) returns decimal = external;
 # Largest (closest to +∞) floating point value not greater than `x` that is a mathematical integer
 public function floor(decimal x) returns decimal = external;
 
-# XXX ceiling or ceil?
 # Smallest (closest to -∞) floating point value not less than `x` that is a mathematical integer
-public function ceil(decimal x) returns decimal = external;
+public function ceiling(decimal x) returns decimal = external;
