@@ -141,3 +141,9 @@ public function tanh(float x) returns float = external;
 # - a FloatingPointTypeSuffix is not allowed
 # This is the inverse of `value:toString` applied to an `float`.
 public function fromString(string s) returns float|error = external;
+
+# Returns IEEE 64-bit binary floating point format representation of `x` as an int. 
+public function toBitsInt(float x) return int = external;
+# Returns the float that is represented in IEEE 64-bit floating point by `x`.
+# All bit patterns that IEEE defines to be NaNs will all be mapping to the single float NaN value.
+public function fromBitsInt(int x) return float = external;
