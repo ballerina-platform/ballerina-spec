@@ -135,15 +135,33 @@ public function tanh(float x) returns float = external;
 # Return the float value represented by `s`.
 # `s` must follow the syntax of DecimalFloatingPointNumber as defined by the Ballerina specification
 # with the following modifications
-# - the DecimalFloatingPointLiteral may have a leading `+` or `-` sign
+# - the DecimalFloatingPointNumber may have a leading `+` or `-` sign
 # - `NaN` is allowed
 # - `Infinity` is allowed with an optional leading `+` or `-` sign
 # - a FloatingPointTypeSuffix is not allowed
 # This is the inverse of `value:toString` applied to an `float`.
 public function fromString(string s) returns float|error = external;
 
+# Returns a string that represents `x` as a hexadecimal floating point number.
+# The returned string will comply to the grammar of HexFloatingPointLiteral
+# in the Ballerina spec with the following modifications:
+# - it will have a leading `-` sign if negative
+# - positive infinity will be represented by `Infinity`
+# - negative infinity will be represented by `-Infinity`
+# - NaN will be represented by `NaN`
+# The representation includes `0x` for finite numbers.
+public function toHexString(float x) returns string;
+
+# Return the float value represented by `s`.
+# `s` must follow the syntax of HexFloatingPointLiteral as defined by the Ballerina specification
+# with the following modifications
+# - the HexFloatingPointLiteral may have a leading `+` or `-` sign
+# - `NaN` is allowed
+# - `Infinity` is allowed with an optional leading `+` or `-` sign
+public function fromHexString(string s) returns float|error = external;
+
 # Returns IEEE 64-bit binary floating point format representation of `x` as an int. 
 public function toBitsInt(float x) return int = external;
 # Returns the float that is represented in IEEE 64-bit floating point by `x`.
-# All bit patterns that IEEE defines to be NaNs will all be mapping to the single float NaN value.
+# All bit patterns that IEEE defines to be NaNs will all be mapped to the single float NaN value.
 public function fromBitsInt(int x) return float = external;
