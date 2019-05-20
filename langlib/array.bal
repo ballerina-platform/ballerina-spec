@@ -71,5 +71,29 @@ public function push(Type[] arr, Type... vals) returns () = external;
 public function shift(Type[] arr) returns Type = external;
 public function unshift(Type[] arr, Type... vals) returns () = external;
 
+// Conversion
+# Returns a string representing `arr` using Base64.
+# The representation is the same as used by a Ballerina Base64Literal.
+# The result will contain only characters  `A..Z`, `a..z`, `0..9`, `+`, `/` and `=`.
+# There will be no whitespace in the returned string.
+public function toBase64(byte[] arr) returns string = external;
+
+# Returns the byte array that `str` represents in Base64.
+# `str` must consist of the characters `A..Z`, `a..z`, `0..9`, `+`, `/`, `=`
+# and whitespace as allowed by a Ballerina Base64Literal.
+public function fromBase64(string str) returns byte[]|error = external;
+
+# Returns a string representing `arr` using Base16.
+# The representation is the same as used by a Ballerina Base16Literal.
+# The result will contain only characters  `0..9`, `a..f`.
+# There will be no whitespace in the returned string.
+public function toBase16(byte[] arr) returns string = external;
+
+# Returns the byte array that `str` represents in Base16.
+# `str` must consist of the characters `0..9`, `A..F`, `a..f`
+# and whitespace as allowed by a Ballerina Base16Literal.
+public function fromBase16(string str) returns byte[]|error = external;
+
+
 
 
