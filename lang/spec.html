@@ -71,14 +71,15 @@ mailing list.
 <p><a href="#values_types">5. Values, types and variables</a></p>
 <p><a href="#expressions">6. Expressions</a></p>
 <p><a href="#actions_statements">7. Actions and statements</a></p>
-<p><a href="#built-in_methods">8. Built-in methods</a></p>
-<p><a href="#module_level">9. Module-level declarations</a></p>
-<p><a href="#querying">10. [Experimental] Querying</a></p>
-<p><a href="#transactions">11. [Experimental] Transactions</a></p>
-<p><a href="#metadata">12. Metadata</a></p>
+<p><a href="#module_level">8. Module-level declarations</a></p>
+<p><a href="#querying">9. [Experimental] Querying</a></p>
+<p><a href="#transactions">10. [Experimental] Transactions</a></p>
+<p><a href="#metadata">11. Metadata</a></p>
+<p><a href="#lang_library">12. Lang library</a></p>
 <p><a href="#references">A. References</a></p>
 <p><a href="#changes">B. Changes since previous versions</a></p>
 <p><a href="#contributors">C. Other contributors</a></p>
+
 <h2 id="introduction">1. Introduction</h2>
 <p>
 Ballerina is a programming language intended for network distributed
@@ -1753,7 +1754,7 @@ precise service type that is used to the first argument to
 <p>
 These section specifies a number of operations that can be performed on values.
 These operations are for internal use by the specification.  These operations
-are named in CamelCase to distinguish them from built-in methods.
+are named in CamelCase to distinguish them from functions in the lang library.
 </p>
 <h4>Freeze</h4>
 <p>
@@ -2882,9 +2883,8 @@ a positional argument.
 </p>
 <p>
 When a function to be called results from the evaluation of an expression that
-is not merely a variable reference, the function can be called either by first
-storing the value of the expression in a variable or using the <code>call</code>
-built-in method on functions.
+is not merely a variable reference, the function can be called by first storing
+the value of the expression in a variable.
 </p>
 
 <h3>Method call expression</h3>
@@ -2893,18 +2893,49 @@ built-in method on functions.
 class="grammar">method-call-expr := [<code>start</code>] expression <code>.</code> method-name <code>(</code> arg-list <code>)</code>
 </pre>
 <p>
-The basic type of the value that results from evaluating expression determines
-how the method-name is used to lookup the method to call. If the basic type is
-service or object, then the method is looked up in the object's methods;
-otherwise, the method is looked up in the built-in methods of that basic type. A
-method-call-expr cannot be used to call a remote method; it can only be called
-by a remote-method-call-action. A method-call-expr cannot be used to invoke a
-resource.
+A <code>method-call-expr</code> either calls a method or calls a function in the
+lang library. The evaluation of the method-call-expr starts by evaluating
+<code>expression</code> resulting in some value <var>v</var>. There is no
+contextually expected type for <code>expression</code>.
 </p>
 <p>
-If <code>start</code> is specified, then the called method is executed on a new
-strand, and the result of the <code>method-call-expr</code> is a value of type
-future&lt;T>, where T is the return type of the method called.
+If the static type of <code>expression</code> is a subtype of object or a
+subtype of service, and the object type or service type includes a method named
+<code>method-name</code>, then the <code>method-call-expr</code> is executed by
+calling that method on <var>v</var>. The <code>arg-list</code> is used to
+construct an argument list that is passed to the method in the same way as with
+a <code>function-call-expr</code>. A <code>method-call-expr</code> cannot be
+used to call a remote method; it can only be called by a
+<code>remote-method-call-action</code>. A <code>method-call-expr</code> cannot
+be used to invoke a resource.
+</p>
+<p>
+Otherwise, the <code>method-call-expr</code> will be turned into a call to a
+function in the lang library <code>m:method-name(expression, arg-list)</code>,
+where m is an automatically created module alias for a module lang.M of the lang
+library, where M is selected as follows.
+</p>
+<ul>
+<li>If the static type of <code>expression</code> is a subtype of some basic
+type with identifier B, and the module lang.B contains a function
+<code>method-name</code> then M is B. The identifier for a basic type is the
+reserved identifier used in type descriptors for subtypes of that basic type:
+<code>int</code>, <code>float</code>, <code>decimal</code>, <code>array</code>
+(for basic type list), <code>map</code> (for basic type mapping),
+<code>table</code>, <code>xml</code>, <code>error</code> (other basic types do
+not yet have a type-specific lang library module).</li>
+<li>Otherwise, M is <code>value</code>.</li>
+</ul>
+<p>
+It is a compile-time error if the resulting function call does not satisfy all
+the constraints that would apply if it has been written explicitly as a
+<code>function-call-expr</code>.
+</p>
+<p>
+If <code>start</code> is specified, then the called method or function is
+executed on a new strand, and the result of the <code>method-call-expr</code> is
+a value of type future&lt;T>, where T is the return type of the function or
+method called.
 </p>
 <h3>Error constructor</h3>
 
@@ -4540,134 +4571,7 @@ A return statement terminates the current worker normally.The result of
 evaluating the action-or-expr provides the termination value of the worker. If
 action-or-expr is omitted, then the termination value is nil.
 </p>
-<h2 id="built-in_methods">8. Built-in methods</h2>
-<p>
-The following built-in methods are available.
-</p>
-<h3>Generic methods</h3>
-<p>
-The following methods are provided on a variety of different basic types, with a
-consistent semantics.
-</p>
-<h4>length</h4>
-<p>
-The length method returns an integer representing the number of items that a
-value contains, where the meaning of item depends on the basic type of value.
-The following list specifies the basic types for which it is provided, and the
-meaning on each basic type:
-</p>
-<ul>
-<li>string: is the number of code points in the string</li>
-<li>list: the number of members of the list</li>
-<li>mapping: the length of a mapping is the number of members in the mapping</li>
-<li>table: the number of rows in the table</li>
-<li>xml: the number of content items in this XML value, where each character,
-element, comment and processing instructions is counted as a single content item</li>
-</ul>
-<h4>iterator</h4>
-<p>
-The iterator method is provided for all iterable basic types. It returns a new
-object belonging to the Iterator&lt;T> abstract type, where T depends on the
-basic type as follows:
-</p>
-<ul>
-<li>string: T is string; it will iterate over the substrings of length 1</li>
-<li>list: T is the union of the type of members of the list</li>
-<li>mapping: T is (string, M) where M is the union of the types of the members
-of the mapping</li>
-<li>table: T is a record representing a single row</li>
-<li>xml: T is string|xml</li>
-</ul>
-<h4>freeze, clone, unfrozenClone</h4>
-<p>
-The freeze, clone and unfrozenClone built-in methods work in a similar way. They
-are provided on all structural types other than error, and all basic types other
-than nil. When applied to a value v, the method starts by checking whether v is
-a pure value; if it is not, the method returns an error. (If v belongs to type
-anydata, then it is guaranteed that v is a pure value.) Otherwise, the method
-returns Freeze(v), Clone(v) or UnfrozenClone(v).
-</p>
-<p>
-The static type of the return type of applying one of these methods to an
-expression of type T is T if T is a subtype of anydata, and otherwise is
-T|error.
-</p>
-<h4>isFrozen</h4>
-<p>
-The isFrozen method is provided on all structural types other than error. When
-applied to a value v, it returns true if the value is frozen and false
-otherwise.
-</p>
-<h3>Floating point methods</h3>
-<p>
-The following  built-in methods are provided on both the decimal and float basic
-types. They all return boolean.
-</p>
-<ul>
-<li>isFinite: true iff this is neither infinity nor NaN</li>
-<li>isInfinite: true iff this is infinity (plus or minus)</li>
-<li>isNaN: true iff this is NaN</li>
-</ul>
-<h3>Error methods</h3>
-<p>
-The following  built-in methods are provided on the error basic type:
-</p>
-<ul>
-<li>reason: returns the error's reason string</li>
-<li>detail: returns the error's detail record as a frozen mapping</li>
-<li>stackTrace: returns an object representing the stack trace of the error</li>
-</ul>
-<h3>Function methods</h3>
-<p>
-The following built-in method is provided on the function basic type:
-</p>
-<ul>
-<li>call: <code>f.call(args)</code> means the same as <code>f(args)</code>; this
-allows f to be an arbitrary expression</li>
-</ul>
-<h3>Typedesc methods</h3>
-<p>
-The stamp and convert methods are provided on typedesc values. They both take a
-single parameter of type anydata, and return a value of type T|error where T is
-the type denoted by the typedesc value.
-</p>
-<h4>stamp</h4>
-<p>
-The stamp method takes a single argument of type anydata.
-</p>
-<p>
-t.stamp(v) works as follows
-</p>
-<ol>
-<li>It checks that v is a tree. If v is a reference value, and the graph
-structure of v is not a tree, then stamp returns an error.</li>
-<li>If the shape of v is not a member of the set of shapes denoted by t (i.e. v
-does not look like t), then stamp will attempt to modify it so that it is by
-using numeric conversions (as defined by the NumericConvert operation) on
-members of containers and by adding fields for which a default value is defined.
-If this fails or can be done in more than one way, then stamp will return an
-error. Frozen structures will not be modified, nor will new structures be
-created.</li>
-<li>At this point, v looks like t. Now stamp narrows the inherent type of v, and
-recursively of any members of v, so that the v belongs to t, and then returns v.
-Any frozen values in v are left unchanged by this.</li>
-</ol>
-<h4>convert</h4>
-<p>
-The convert method takes a single argument of type anydata. It is similar to
-stamp, but it does not modify its argument.
-</p>
-<p>
-t.convert(v) works as follows:
-</p>
-<ol>
-<li>It checks that v is a tree. If v is a reference value, and the graph
-structure of v is not a tree, then convert returns an error.</li>
-<li>convert now creates a new value that has the same shape as v, except
-possibly for differences in numeric types and for the addition of fields for
-which a default value is defined, but belongs to type</li>
-</ol>
-<h2 id="module_level">9. Module-level declarations</h2>
+<h2 id="module_level">8. Module-level declarations</h2>
 <p>
 Each source part in a Ballerina module must match the production
 <code>module-part</code>.
@@ -4769,21 +4673,23 @@ terminating.
 
 <pre
 class="grammar">import-decl := 
-   <code>import</code> [org-name <code>/</code>] pkg-name [<code>version</code> sem-ver] 
-   [<code>as</code> module-identifier] <code>;</code>
-module-identifier := identifier
+   <code>import</code> [org-name <code>/</code>] module-name [<code>version</code> sem-ver] 
+   [<code>as</code> module-alias] <code>;</code>
+module-alias := identifier
 org-name := identifier
-pkg-name := identifier (<code>.</code> identifier)*
+module-name := identifier (<code>.</code> identifier)*
 sem-ver := major-num [<code>.</code> minor-num [<code>.</code> patch-num]]
 major-num := DecimalNumber
 minor-num := DecimalNumber
 patch-num := DecimalNumber
 
-qualified-identifier := [module-identifier <code>:</code>] identifier
+qualified-identifier := [module-alias <code>:</code>] identifier
 </pre>
 <p>
-A module-identifier in a qualified-identifier must refer to a module-identifier
-specified in an import-declaration in the same source part.
+A <code>module-alias</code> is a name that is used locally within the source of
+a module to refer to another module. A <code>module-alias</code> in a
+qualified-identifier must refer to a <code>module-alias</code> specified in an
+import-declaration in the same source part.
 </p>
 <h3>Module type definition</h3>
 
@@ -4905,7 +4811,7 @@ expected type</li>
 argument to obj.attach along with s (nil if not present)</li>
 <li>if __attach returns an error, then module initialization panics</li>
 </ul>
-<h2 id="querying">10. [Experimental] Querying</h2>
+<h2 id="querying">9. [Experimental] Querying</h2>
 <p>
 Ballerina tables and streams are designed for processing data at rest and data
 in motion, respectively.
@@ -4978,7 +4884,7 @@ number of streams concurrently and to execute a block of code when a pattern
 matches. The statement will never complete and therefore the worker containing
 it will never complete. See section 10 for details.
 </p>
-<h2 id="transactions">11. [Experimental] Transactions</h2>
+<h2 id="transactions">10. [Experimental] Transactions</h2>
 
 <pre
 class="grammar">transaction-stmt := <code>transaction</code> trans-conf? block-stmt trans-retry?
@@ -5061,7 +4967,7 @@ above.
 The transaction context is also propagated over the network via the Ballerina
 Microtransaction Protocol [XXX].
 </p>
-<h2 id="metadata">12. Metadata</h2>
+<h2 id="metadata">11. Metadata</h2>
 <p>
 Ballerina allows metadata to be attached to a construct by specifying the
 metadata before the construct.
@@ -5362,6 +5268,31 @@ Example
     # + return - the sum of them
     function add (int x, int y) returns int  { return x + y; }
 </pre>
+<h2 id="lang_library">12. Lang library</h2>
+
+<p>
+Modules in the <code>ballerina</code> organization with a module name starting
+with <code>lang.</code> are reserved for use by this specification. These
+modules are called the <em>lang library</em>. The version of these modules is
+tied to the version of this specification.
+</p>
+<p>
+These modules are currently defined in the <code>langlib</code> <a
+href="https://github.com/ballerina-platform/ballerina-spec/tree/master/langlib"
+>directory</a> of the specification's GitHub repository <code><a
+href="https://github.com/ballerina-platform/ballerina-spec"
+>https://github.com/ballerina-platform/ballerina-spec</a></code>.
+</p>
+<p>
+Modules in the lang library can make use parameterized typing. Since
+parameterized typing has not yet been added to Ballerina, the source code for
+the modules use an annotation to describe parameterized typing as follows. When
+a module type definition has a <code>@typeParam</code> annotation, it means that
+this type serves as a type parameter when it is used in a function definition:
+all uses of the type parameter in a function definition refer to the same type;
+the definition of the type is an upper bound on the type parameter.
+</p>
+
 <h2 id="references">A. References</h2>
 <ul>
 <li>Unicode</li>
@@ -5374,6 +5305,12 @@ Example
 <h2 id="changes">B. Changes since previous versions</h2>
 <h3>Summary of changes from 2019R1 to 2019R2</h3>
 <ol>
+<li>The concept of a built-in method has been replaced by the concept of a lang
+library. A method call on a value of non-object type is now treated as a
+convenient syntax for a call to a function in a module of the lang library. The
+design of the many of the existing built-in methods has been changed to fit in
+with this. There are many functions in the lang library that were not previously
+available as built-in methods.</li>
 <li>The basic type <code>handle</code> has been added.</li>
 </ol>
 
