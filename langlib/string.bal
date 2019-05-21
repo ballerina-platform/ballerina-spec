@@ -16,6 +16,8 @@
 
 public function length(string str) returns int = external;
 
+# Returns an iterator over the string
+# The iterator will return the substrings of length 1 in order.
 public function iterator(string str) returns abstract object {
     public next() returns record {| string value; |}?;
 } = external;

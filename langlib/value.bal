@@ -28,13 +28,24 @@ private type AnydataType anydata;
 
 // Functions that were previously built-in methods
 
-# Freezes `struct` and returns it
-public function clone(PureStructureType struct) returns PureStructureType = external;
-# Returns clone of `struct` that is not frozee
-public function freeze(PureStructureType struct) returns PureStructureType = external;
-public function unfrozenClone(PureStructureType struct) returns PureStructureType = external;
-# Tests whether `struct` is frozen
-public function isFrozen(PureStructure struct) returns boolean = external;
+# Returns a clone of `v`.
+# A clone is a deep copy that does not copy immutable subtrees.
+# A clone can therefore safely be used concurrently with the original.
+# It corresponds to the Clone(v) abstract operation,
+# defined in the Ballerina Language Specification. 
+public function clone(PureStructureType v) returns PureStructureType = external;
+# Freezes `v` and returns it.
+# It corresponds to the Freeze(v) abstract operation,
+# as defined in the Ballerina Language Specification. 
+public function freeze(PureStructureType v) returns PureStructureType = external;
+# Returns clone of `v` that is not frozen
+# For any frozen subtree, an unfrozen copy is created.
+# It corresponds the UnfrozenClone(v) abstract operation,
+# as defined in the Ballerina Language Specification. 
+public function unfrozenClone(PureStructureType v) returns PureStructureType = external;
+# Tests whether `v` is frozen
+# Returns true if frozen, false otherwise.
+public function isFrozen(PureStructure v) returns boolean = external;
 
 # Modify the inherent type of a value
 # + v - the value whose type is to be changed
