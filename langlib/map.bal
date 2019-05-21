@@ -40,9 +40,6 @@ public function forEach(map<Type> m, function(Type val) returns () func) returns
 public function filter(map<Type> m, function(Type val) returns boolean func) returns map<Type> = external;
 public function reduce(map<Type> m, function(Type1 accum, Type val) returns Type1 func, Type1 initial) returns Type1 = external;
 
-// subarray
-public function slice(map<Type> m, int start, int end = m.length()) returns map<Type> = external;
-
 # Removes the member of `m` with key `k` and returns it.
 # Panics if there is no such member
 public function remove(map<Type> m, string k) returns Type = external;
