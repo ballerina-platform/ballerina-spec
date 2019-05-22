@@ -1258,7 +1258,7 @@ is a subtype of T.
 Objects are a combination of fields along with a set of associated functions,
 called methods, which can be used to manipulate them. An object's methods are
 associated with the object when the object is constructed and cannot be changed
-thereafter. The fields and methods of an object are in separate namespaces, so
+thereafter. The fields and methods of an object are in separate symbol spaces, so
 it is possible for an object to have a field and a method with the same name.
 </p>
 <p>
@@ -2912,7 +2912,7 @@ be used to invoke a resource.
 <p>
 Otherwise, the <code>method-call-expr</code> will be turned into a call to a
 function in the lang library <code>m:method-name(expression, arg-list)</code>,
-where m is an automatically created module alias for a module lang.M of the lang
+where m is an automatically created module prefix for a module lang.M of the lang
 library, where M is selected as follows.
 </p>
 <ul>
@@ -4178,16 +4178,28 @@ is executed.
 <h3>XML namespace declaration statement</h3>
 
 <pre
-class="grammar">xmlns-decl-stmt := <code>xmlns</code> xml-namespace [ <code>as</code> identifier ] <code>;</code>
-xml-namespace := simple-const-expr
+class="grammar">xmlns-decl-stmt :=
+   <code>xmlns</code> xml-namespace-uri [ <code>as</code> xml-namespace-prefix ] <code>;</code>
+xml-namespace-uri := simple-const-expr
+xml-namespace-prefix := identifier
 </pre>
 <p>
-The xml-decl-stmt is used to declare a XML namespace. If the identifier is
-omitted then the default namespace is defined. Once a default namespace is
-defined, it is applicable for all XML values in the current scope. If an
-identifier is provided then that identifier is the namespace prefix used to
-qualify elements and/or attribute names.  The static type of the
-simple-const-expr must be a subtype of string.
+The <code>xmlns-decl-stmt</code> is used to declare a XML namespace. If there is
+an <code>xml-namespace-prefix</code>, then the in-scope namespaces that are used
+to perform namespace processing on an <code>xml-expr</code> will include a
+binding of that prefix to the specified <code>xml-namespace-uri</code>;
+otherwise the in-scope namespaces will include a default namespace with the
+specified <code>xml-namespace-uri</code>.
+</p>
+<p>
+An <code>xml-namespace-prefix</code> declared by an <code>xmlns-decl-stmt</code>
+is in the same symbol space as a <code>module-prefix</code> declared by an
+<code>import-decl</code>. This symbol space is distinct from a module's main
+symbol space used by other declarations.
+</p>
+<p>
+The static type of the <code>simple-const-expr</code> must be a subtype of
+string.
 </p>
 <h3>Assignment statement</h3>
 
@@ -4674,8 +4686,8 @@ terminating.
 <pre
 class="grammar">import-decl := 
    <code>import</code> [org-name <code>/</code>] module-name [<code>version</code> sem-ver] 
-   [<code>as</code> module-alias] <code>;</code>
-module-alias := identifier
+   [<code>as</code> module-prefix] <code>;</code>
+module-prefix := identifier
 org-name := identifier
 module-name := identifier (<code>.</code> identifier)*
 sem-ver := major-num [<code>.</code> minor-num [<code>.</code> patch-num]]
@@ -4683,14 +4695,21 @@ major-num := DecimalNumber
 minor-num := DecimalNumber
 patch-num := DecimalNumber
 
-qualified-identifier := [module-alias <code>:</code>] identifier
+qualified-identifier := [module-prefix <code>:</code>] identifier
 </pre>
 <p>
-A <code>module-alias</code> is a name that is used locally within the source of
-a module to refer to another module. A <code>module-alias</code> in a
-qualified-identifier must refer to a <code>module-alias</code> specified in an
+A <code>module-prefix</code> is a name that is used locally within the source of
+a module to refer to another module. A <code>module-prefix</code> in a
+qualified-identifier must refer to a <code>module-prefix</code> specified in an
 import-declaration in the same source part.
 </p>
+<p>
+A <code>module-prefix</code> declared by an <code>import-decl</code> is in the
+same symbol space as a <code>xmlns-namespace-prefix</code> declared by an
+<code>xmlns-decl-stmt</code>. This symbol space is distinct from a module's main
+symbol space used by other declarations.
+</p>
+
 <h3>Module type definition</h3>
 
 <pre
@@ -5000,8 +5019,9 @@ annot-tag := identifier
 </pre>
 <p>
 An annotation-decl declares an annotation tag. Annotations tags are in a
-separate namespace and cannot conflict with other module level declarations and
-definitions.
+separate symbol space and cannot conflict with other module level declarations
+and definitions. The annotation tag symbol space is also distinct from the
+symbol space used by module prefixes and XML namespace prefixes.
 </p>
 <p>
 The type-descriptor specifies the type of the annotation tag. The type must be a
