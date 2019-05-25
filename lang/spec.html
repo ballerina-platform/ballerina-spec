@@ -1156,15 +1156,6 @@ class="grammar">behavioral-type-descriptor :=
 class="grammar">function-type-descriptor := <code>function</code> function-signature
 function-signature := <code>(</code> param-list <code>)</code> return-type-descriptor
 return-type-descriptor := [ <code>returns</code> annots type-descriptor ]
-param-list :=
-   required-params [<code>,</code> defaultable-params] [<code>,</code> rest-param]
-   | defaultable-params [<code>,</code> rest-param]
-   | [rest-param]
-required-params := required-param (<code>,</code> required-param)*
-required-param := annots type-descriptor param-name
-defaultable-params := defaultable-param (<code>,</code> defaultable-param)*
-defaultable-param := annots type-descriptor param-name default-value
-rest-param := annots type-descriptor <code>...</code> [param-name]
 </pre>
 <p>
 A function is a part of a program that can be explicitly executed. In Ballerina,
@@ -1179,6 +1170,22 @@ is represented in Ballerina by a function returning <code>()</code>. Note that
 the function definition does not have to explicitly return <code>()</code>; a
 return statement or falling off the end of the function body will implicitly
 return <code>()</code>.
+</p>
+<pre
+class="grammar">param-list :=
+   required-params [<code>,</code> defaultable-params] [<code>,</code> rest-param]
+   | defaultable-params [<code>,</code> rest-param]
+   | [rest-param]
+required-params := required-param (<code>,</code> required-param)*
+required-param := annots type-descriptor [param-name]
+defaultable-params := defaultable-param (<code>,</code> defaultable-param)*
+defaultable-param := annots type-descriptor [param-name] default-value
+rest-param := annots type-descriptor <code>...</code> [param-name]
+</pre>
+<p>
+A param-name can be omitted from a required-param, defaultable-param or
+rest-param only when occuring in the function-signature of a
+function-type-descriptor.
 </p>
 <p>
 The argument list passed to a function consists of zero or arguments in order;
