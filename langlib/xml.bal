@@ -19,7 +19,7 @@ public function length(xml x) returns int = external;
 
 # Returns an iterator over the XML items in x.
 # A character item is represented by a string of length 1.
-# Other items are represented by an xml item of length 1.
+# Other items are represented by an xml value of length 1.
 public function iterator(xml x) returns abstract object {
     public next() returns record {| (xml|string) value; |}?;
 } = external;
