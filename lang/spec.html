@@ -2036,7 +2036,7 @@ class="grammar">expression :=
    | binary-bitwise-expr
    | logical-expr
    | conditional-expr
-   | check-expr
+   | checking-expr
    | trap-expr
    | table-query-expr
    | <code>(</code> expression <code>)</code>
@@ -3397,16 +3397,21 @@ L <code>?:</code> R is evaluated as follows:
 <li>If x is not nil, then return x.</li>
 <li>Otherwise, return the result of evaluating R.</li>
 </ol>
-<h3>Check expression</h3>
+<h3>Checking expression</h3>
 
 <pre
-class="grammar">check-expression := <code>check</code> expression
+class="grammar">checking-expr := checking-keyword expression
+checking-keyword := <code>check</code> | <code>checkpanic</code>
 </pre>
 <p>
 Evaluates expression resulting in value v. If v has basic type error, then
-check-expression completes abruptly with a check-fail with associated value v.
-Otherwise evaluation completes normally with result v.
 </p>
+<ul>
+<li>if the checking-keyword is <code>check</code>, then the check-expression
+completes abruptly with a check-fail with associated value v;</li>
+<li>if the checking-keyword is <code>checkfail</code>, then the check-expression
+completes abruptly with a panic with associated value v.</li>
+</ul>
 <p>
 If the static type of expression e is T|E, where E is a subtype of error, then
 the static type of check e is T.
@@ -3443,11 +3448,11 @@ class="grammar">action :=
    | wait-action
    | flush-action
    | synchronous-send-action
-   | check-action
+   | checking-action
    | trap-action
    | <code>(</code> action <code>)</code>
 action-or-expr := action | expression
-check-action := <code>check</code> action
+checking-action := checking-keyword action
 trap-action := <code>trap</code> action
 </pre>
 <p>
@@ -3462,8 +3467,8 @@ An action is evaluated in the same way as an expression. Static typing for
 actions is the same as for expressions.
 </p>
 <p>
-A <code>check-action</code> and <code>trap-action</code> is evaluated in the
-same way as a <code>check-expr</code> and <code>trap-expr</code> respectively.
+A <code>checking-action</code> and <code>trap-action</code> is evaluated in the
+same way as a <code>checking-expr</code> and <code>trap-expr</code> respectively.
 </p>
 <h3>Function and worker execution</h3>
 
@@ -4281,7 +4286,7 @@ class="grammar">call-stmt := call-expr <code>;</code>
 call-expr :=
    function-call-expr
    | method-call-expr
-   | <code>check</code> call-expr
+   | checking-keyword call-expr
    | <code>trap</code> call-expr
 </pre>
 <p>
@@ -5343,6 +5348,8 @@ function allows it to be iterated as a sequence of key-value pairs.</li>
 <li>The basic type <code>handle</code> has been added.</li>
 <li>The <code>table&lt;T&gt;</code> type descriptor shorthand has been brought
 back.</li>
+<li>There is now a variation on <code>check</code> called
+<code>checkpanic</code>, which panics rather than returns on error.</li>
 </ol>
 
 <h3>Summary of changes from 0.990 to 2019R1</h3>
