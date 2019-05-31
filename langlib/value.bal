@@ -15,16 +15,12 @@
 // under the License.
 
 // Module lang.value
-private type PureStructure = (anydata|error)[]|map<anydata|error>;
 
-# A type parameter that is a subtype of `PureStructure`.
+# A type parameter that is a subtype of `anydata`.
 # Has the special semantic that when used in a declaration
 # all uses in the declaration must refer to same type. 
 @typeParam
-private type PureStructureType = PureStructure;
-
-@typeParam
-private type AnydataType anydata;
+private type AnydataType = anydata;
 
 // Functions that were previously built-in methods
 
@@ -33,19 +29,22 @@ private type AnydataType anydata;
 # A clone can therefore safely be used concurrently with the original.
 # It corresponds to the Clone(v) abstract operation,
 # defined in the Ballerina Language Specification. 
-public function clone(PureStructureType v) returns PureStructureType = external;
+public function clone(AnydataType v) returns AnydataType = external;
+
 # Freezes `v` and returns it.
 # It corresponds to the Freeze(v) abstract operation,
 # as defined in the Ballerina Language Specification. 
-public function freeze(PureStructureType v) returns PureStructureType = external;
+public function freeze(AnydataType v) returns AnydataType = external;
+
 # Returns clone of `v` that is not frozen
 # For any frozen subtree, an unfrozen copy is created.
 # It corresponds the UnfrozenClone(v) abstract operation,
 # as defined in the Ballerina Language Specification. 
-public function unfrozenClone(PureStructureType v) returns PureStructureType = external;
+public function unfrozenClone(AnydataType v) returns AnydataType = external;
+
 # Tests whether `v` is frozen
 # Returns true if frozen, false otherwise.
-public function isFrozen(PureStructure v) returns boolean = external;
+public function isFrozen(anydata v) returns boolean = external;
 
 # Modify the inherent type of a value
 # + v - the value whose type is to be changed
@@ -114,8 +113,10 @@ public function convertTo(anydata v, typedesc<AnydataType> t) returns AnydataTyp
 public function toString((any|error) v) returns string = external;
 
 // JSON conversion
+
 # Return the string that represents `v` in JSON format.
 public function toJsonString(json v) returns string = external;
+
 # Parse a string in JSON format and return the the value that it represents.
 # All numbers in the JSON will be represented as float values.
 # Returns an error if the string cannot be parsed.
