@@ -1027,7 +1027,10 @@ marked as a primary key, that value of that column in both rows is the same.
 </p>
 
 <pre
-class="grammar">table-type-descriptor := <code>table</code> <code>{</code> column-type-descriptor+ <code>}</code>
+class="grammar">table-type-descriptor := direct-table-type-descriptor | indirect-table-type-descriptor
+direct-table-type-descriptor := <code>table</code> <code>{</code> column-type-descriptor+ <code>}</code>
+indirect-table-type-descriptor := <code>table</code> type-parameter
+
 column-type-descriptor :=
    individual-column-type-descriptor
    | column-record-type-reference
@@ -1039,11 +1042,18 @@ key-specifier := <code>key</code> column-name
 column-name := identifier
 </pre>
 <p>
-A table type descriptor has a descriptor for each column, which specifies the
+A direct-table-type-descriptor has a descriptor for each column, which specifies the
 name of the column, whether that column is part of a primary key and the type
 that values in that column must belong to. The type descriptor for the column
 must be a pure type. If a column is part of a primary key, then the type
 descriptor for the column must also allow only non-nil simple values.
+</p>
+<p>
+An indirect-table-type-descriptor describes a table type in terms of the shape
+of the the rows of the table. A type <code>table&lt;T&gt;</code> contains a
+table shape if <code>T</code> contains the mapping shape of every member of the
+table shape. If <code>T</code> is a closed record type, then
+<code>table&lt;T&gt;</code> is equivalent to <code>table { *T; }</code>.
 </p>
 <p>
 Note that a table type T' will be a subtype of a table type T if and only if:
@@ -1055,19 +1065,10 @@ Note that a table type T' will be a subtype of a table type T if and only if:
 that column in T.</li>
 </ul>
 <p>
-A table is iterable as a sequence of mapping values, one for each row, where
-each mapping value has a field for each column, with the column as the field
-name and the value of that column in that row as the field value. The mapping
-values will belong to a closed record type.
+A table is iterable as a sequence of mapping values, one for each row; the
+inherent type of each mapping value will be a closed record type.
 </p>
-<p>
-Issues:
-</p>
-<ul>
-<li>Need to say that unique constraint is part of the value.</li>
-<li>Do we want to allow values that are distinct but numerically equal e.g. -0.0
-and +0.0 or 1.0 and 1 in primary key columns?</li>
-</ul>
+
 <h4>XML</h4>
 
 <pre class="grammar">xml-type-descriptor := <code>xml</code>
@@ -5340,6 +5341,8 @@ available as built-in methods.</li>
 rather than as a sequence of key-value pairs. The <code>entries</code> lang library
 function allows it to be iterated as a sequence of key-value pairs.</li>
 <li>The basic type <code>handle</code> has been added.</li>
+<li>The <code>table&lt;T&gt;</code> type descriptor shorthand has been brought
+back.</li>
 </ol>
 
 <h3>Summary of changes from 0.990 to 2019R1</h3>
