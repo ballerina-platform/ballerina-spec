@@ -14,18 +14,18 @@
 // specific language governing permissions and limitations
 // under the License.
 
-# A type parameter that is a subtype of `anydata`.
+# A type parameter that is a subtype of `anydata|error`.
 # Has the special semantic that when used in a declaration
 # all uses in the declaration must refer to same type. 
 @typeParam
-private type AnydataType = anydata;
+private type PureType = anydata|error;
 
 # Publishes data to the stream.
 #
 # + data - Data to be published to the stream
-public function stream<AnydataType>.publish(AnydataType data) = external;
+public function stream<PureType>.publish(PureType data) = external;
 
 # Subscribes to data from the stream.
 #
 # + func - The function pointer for the subscription, which will be invoked with data published to the stream
-public function stream<AnydataType>.subscribe(function (AnydataType) func) = external;
+public function stream<PureType>.subscribe(function (PureType) func) = external;
