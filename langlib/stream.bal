@@ -22,10 +22,14 @@ private type PureType = anydata|error;
 
 # Publishes data to the stream.
 #
-# + data - Data to be published to the stream
-public function stream<PureType>.publish(PureType data) = external;
+# + strm - the stream to publish to
+# + data - data to be published to the stream
+# 
+# Each subscriber receives a separate clone of the data.
+public function publish(stream<PureType> strm, PureType data) = external;
 
 # Subscribes to data from the stream.
 #
-# + func - The function pointer for the subscription, which will be invoked with data published to the stream
-public function stream<PureType>.subscribe(function (PureType) func) = external;
+# + strm - the stream to subscribe to
+# + func - the function pointer for the subscription, which will be invoked with data published to the stream
+public function subscribe(stream<PureType> strm, function (PureType) func) = external;
