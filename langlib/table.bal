@@ -18,7 +18,7 @@
 # The type bound for a table row.
 # Note that this is equivalent to `map<anydata|error>`.
 @typeParam
-private type RowType = record { };
+type RowType = record { };
 
 # Returns number of members in `tbl`.
 public function length(table<record { }> tbl) returns int = external;

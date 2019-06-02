@@ -18,7 +18,7 @@
 # Has the special semantic that when used in a declaration
 # all uses in the declaration must refer to same type. 
 @typeParam
-private type PureType = anydata|error;
+type PureType = anydata|error;
 
 # Publishes data to the stream.
 #

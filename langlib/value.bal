@@ -20,7 +20,7 @@
 # Has the special semantic that when used in a declaration
 # all uses in the declaration must refer to same type. 
 @typeParam
-private type AnydataType = anydata;
+type AnydataType = anydata;
 
 // Functions that were previously built-in methods
 
