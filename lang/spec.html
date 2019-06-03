@@ -361,10 +361,10 @@ the set of shapes denoted by T. Every value has a corresponding shape. A shape
 is specific to a basic type: if two values have different basic types, then they
 have different shapes. Since shapes do not deal with storage location, they have
 no concept of identity; shapes therefore represent trees rather graphs. For
-simple values, there is no difference between a shape and a value, except for
-one case: positive and negative zero of a floating point basic type are distinct
-values but have the same shape. There are two important relations between a
-value and a type:
+simple values, there is no difference between a shape and a value, with the
+exception of floating point values where the shape does not consider
+representation details that do not affect the mathematical value being
+represented. There are two important relations between a value and a type:
 </p>
 <ul>
 <li>a value <em>looks like</em> a type at a particular point in the execution of
@@ -433,7 +433,7 @@ Experimental features are not included.
   </tr>
   <tr>
    <td>decimal</td>
-   <td>128-bit IEEE 754-2008 decimal floating point numbers</td>
+   <td>decimal floating point numbers</td>
   </tr>
   <tr>
    <td>string</td>
@@ -629,15 +629,15 @@ FloatingPointTypeSuffix := DecimalTypeSuffix | FloatTypeSuffix
 DecimalTypeSuffix := <code>d</code> | <code>D</code>
 FloatTypeSuffix :=  <code>f</code> | <code>F</code>
 </pre>
+
+<h5>Float</h5>
+
 <p>
-There are two basic types for floating point numbers:
+The float type corresponds to IEEE 754-2008 64-bit binary (radix 2) floating
+point numbers. A float value can be represented by either a
+DecimalFloatingPointNumber with an optional FloatTypeSuffix, or by a
+HexFloatingPointLiteral.
 </p>
-<ul>
-<li>the float type corresponds to IEEE 754-2008 64-bit binary (radix 2) floating
-point numbers</li>
-<li>the decimal type corresponds to IEEE 754-2008 128-bit decimal (radix 10)
-floating point numbers</li>
-</ul>
 <p>
 The multiple bit patterns that IEEE 754 treats as NaN are considered to be the
 same value in Ballerina. Positive and negative zero of a floating point basic
@@ -645,15 +645,60 @@ type are distinct values, following IEEE 754, but are defined to have the same
 shape, so that they will usually be treated as being equal.
 </p>
 <p>
-IEEE-defined operations on floating point values must be performed using a
+IEEE-defined operations on float values must be performed using a
 rounding-direction attribute of roundTiesToEven (which is the default IEEE
-rounding direction, sometimes called <em>round to nearest</em>). All floating
-point values, including the intermediate results of expressions, must use the
-value space defined for the float and decimal type; implementations must not use
-extended precision for intermediate results. This ensures that all
-implementations will produce identical results. (This is the same as what is
-required by strictfp in Java.)
+rounding direction, sometimes called <em>round to nearest</em>). All float
+values, including the intermediate results of expressions, must use the value
+space defined for the float type; implementations must not use extended
+precision for intermediate results. This ensures that all implementations will
+produce identical results. (This is the same as what is required by strictfp in
+Java.)
 </p>
+
+<h5>Decimal</h5>
+
+<p>
+The decimal type corresponds to a subset of IEEE 754-2008 128-bit decimal (radix
+10) floating point numbers. Any decimal value can be represented by a
+DecimalFloatingPointNumber with an optional DecimalTypeSuffix.
+</p>
+<p>
+A decimal value is a triple (<var>s</var>, <var>c</var>, <var>e</var>) where
+</p>
+<ul>
+<li><var>s</var> is sign, either 0 or -1</li>
+<li><var>c</var> is the coefficient, an unsigned integer that can be exactly
+represented in 34 decimal digits</li>
+<li><var>e</var> is the exponent, a signed integer</li>
+</ul>
+<p>
+representing the mathematical value -1<sup><var>s</var></sup> &#xD7;
+<var>c</var> &#xD7; 10<sup><var>e</var></sup>. The range for the exponent
+<var>e</var> is implementation dependent, but must be at least the range
+supported by the IEEE 754-2008 decimal128 format (which is -6176 to 6111
+inclusive).
+</p>
+<p>
+The decimal type corresponds to the ANSI X3.X274 subset of IEEE 754-2008, which
+has the following simplifications:
+</p>
+<ul>
+<li>+0 and -0 are not distinguished; if the coefficent is zero, then the sign is
+also constrained to be zero;</li>
+<li>NaN, infinities and subnormals are not supported; operations that would
+result in one of these values according to the normal rules of IEEE 754-2008
+instead result in a panic.</li>
+</ul>
+<p>
+Operations on the decimal type use the roundTiesToEven rounding mode, like the
+float type.
+</p>
+<p>
+The shape of a decimal value is its mathematical value. Thus two decimal values
+have the same shape if they represent the same mathematical value, even if they
+do so using different exponents.
+</p>
+
 <h4>Strings</h4>
 
 <pre
@@ -3367,13 +3412,22 @@ static type that is pure. Two values v1, v2 are deeply equal if SameShape(v1,
 v2) is true.
 </p>
 <p>
-Note that === and == are the same for simple values except as regards floating
-point zero: == treats positive and negative zero from the same basic type as
-equal whereas === treats them as unequal. Both == and === treat two NaN values
-from the same basic type as equal. This means that none of these operators
-correspond to operations defined by IEEE 754-2008, because they do not treat NaN
-in the special way defined for those operations.
+Note that === and == are the same for simple values except for floating point types.
 </p>
+<p>
+For the float type, the operators differ as regards floating point zero: ==
+treats positive and negative zero from the same basic type as equal whereas ===
+treats them as unequal. Both == and === treat two NaN values from the same basic
+type as equal. This means that neither of these operators correspond to
+operations defined by IEEE 754-2008, because they do not treat NaN in the
+special way defined for those operations.
+</p>
+<p>
+For the decimal type, the operators differ in whether they consider the
+precision of the value. For example, <code>1.0 == 1.00</code> is true but
+<code>1.0 === 1.00</code> is false.
+</p>
+
 <h3>Binary bitwise expression</h3>
 
 <pre
@@ -5376,6 +5430,8 @@ back.</li>
 <code>checkpanic</code>, which panics rather than returns on error.</li>
 <li>A range-expr now returns an object belonging to the Iterable abstract object
 type, rather than a list.</li>
+<li>The decimal type now uses a simplified subset of IEEE 754-2008 decimal
+floating point.</li>
 </ol>
 
 <h3>Summary of changes from 0.990 to 2019R1</h3>
