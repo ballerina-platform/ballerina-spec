@@ -2425,20 +2425,27 @@ Creates a new list value. The members of the list come from evaluating each
 expression in the expr-list in order.
 </p>
 <p>
-The inherent type of the newly created list is derived from the applicable
-contextually expected type. It is an error if there is no contextually expected
-type. If the applicable contextually expected type is a list type descriptor,
-then that used as the inherent type. If the applicable contextually expected
-type is a union type descriptor, then any members of the union that do not
-contain list shapes of length N will be ignored, where N is the number of
-expressions in the <code>expr-list</code>; it is a compile-time error if this
-does not leave a single list type descriptor, which is then used as the inherent
-type. The static type of the list-constructor-expr will be the same as the
-inherent type.
+If there is a contextually expected type, then the inherent type of the newly
+created list is derived from the applicable contextually expected type. If the
+applicable contextually expected type is a list type descriptor, then that used
+as the inherent type. If the applicable contextually expected type is a union
+type descriptor, then any members of the union that do not contain list shapes
+of length N will be ignored, where N is the number of expressions in the
+<code>expr-list</code>; it is a compile-time error if this does not leave a
+single list type descriptor, which is then used as the inherent type. The static
+type of the list-constructor-expr will be the same as the inherent type.
 </p>
 <p>
-The type that the inherent type requires for each list member provides the
-contextually expected type for the expression for the member.
+If there is no contextually expected type, then the inherent type will be
+<code>T[]</code>, where T is the union of the broad types of the expressions in
+<code>expr-list</code>. It is an compile-time error if <code>expr-list</code> is
+empty and there is no contextually expected type.
+</p>
+<p>
+If there is a contextually expected type, then the type that the inherent type
+requires for each list member provides the contextually expected type for the
+expression for the member; otherwise there is no contextually expected type for
+the expressions for members.
 </p>
 <p>
 Some members of a list can be filled in automatically. A member can be filled in
@@ -2581,16 +2588,22 @@ used to specify the name of a field by enclosing the expression in square
 brackets.
 </p>
 <p>
-The inherent type of the newly created mapping is derived from the applicable
-contextually expected type. It is an error if there is no contextually expected
-type. If the applicable contextually expected type is a mapping type descriptor,
-then that used as the inherent type. If the applicable contextually expected
-type is a union type descriptor, then any members of the union that are
-inconsistent with the field names specified as a literal-field-name in the
+If there is a contextually expected type, then the inherent type of the newly
+created mapping is derived from the applicable contextually expected type. If
+the applicable contextually expected type is a mapping type descriptor, then
+that used as the inherent type. If the applicable contextually expected type is
+a union type descriptor, then any members of the union that are inconsistent
+with the field names specified as a literal-field-name in the
 mapping-constructor-expr will be ignored; it is a compile-time error if this
 does not leave a single mapping type descriptor, which is then used as the
 inherent type. The static type of the mapping-constructor-expr will be the same
 as the inherent type.
+</p>
+<p>
+If there is no contextually expected type, then the inherent type will be
+<code>map&lt;T&gt;</code>, where T is the union of the broad type of every
+value-expr in the mapping-constructor-expr. It is an compile-time error if there
+is both no value-expr and no contextually expected type.
 </p>
 <p>
 If the inherent type descriptor is a record type descriptor, a field will be
@@ -2599,9 +2612,11 @@ for any field that is not specified explicitly in the mapping constructor and
 that has a default value.
 </p>
 <p>
-The type that the inherent type requires for each field provides the
-contextually expected type for the value-expr for that field. The contextually
-expected type for a computed-field-name is string.
+If there is a contextually expected type, then the type that the inherent type
+requires for each field provides the contextually expected type for the
+value-expr for that field; otherwise there is no contextually expected type for
+the value-expr forfields. The contextually expected type for a
+computed-field-name is string.
 </p>
 
 <h3>[Preview] Table constructor</h3>
