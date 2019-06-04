@@ -46,6 +46,9 @@ public function clear(map<any|error> m) returns () = external;
 # Removes the member of `m` with key `k` and returns it.
 # Panics if there is no such member
 public function remove(map<Type> m, string k) returns Type = external;
+# Removes all members of `m`.
+# Panics if any member cannot be removed.
+public function removeAll(map<any|error> m) returns () = external;
 # Tells whether m has a member with key `k`.
 public function hasKey(map<Type> m, string k) returns boolean = external;
 # Returns a list of all the keys of map `m`.

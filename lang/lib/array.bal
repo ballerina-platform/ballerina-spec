@@ -46,9 +46,13 @@ public function slice(Type[] arr, int start, int end = arr.length()) returns Typ
 # Removes the member of `arr` and index `i` and returns it.
 # Panics if `i` is out of range.
 public function remove(Type[] arr, int i) returns Type = external;
+# Removes all members of `arr`.
+# Panics if any member cannot be removed.
+public function removeAll((any|error)[] arr) returns () = external;
 // no return value to avoid need to ignore it
 # Increase or decrease length.
-public function setLength(Type[] arr, int i);
+# `setLength(arr, 0)` is equivalent to `removeAll(arr)`.
+public function setLength((any|error)[] arr, int i) returns () = external;
 
 # Returns index of first member of `arr` that is equal to `val` if there is one.
 # Returns `()` if not found
