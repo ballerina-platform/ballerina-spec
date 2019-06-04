@@ -1335,8 +1335,7 @@ object-member-descriptor :=
 </pre>
 <p>
 If <code>object-type-quals</code> contains the keyword <code>abstract</code>,
-then the object type descriptor is an abstract object type descriptor. An
-abstract object type descriptor must not have an object-ctor-function.
+then the object type descriptor is an abstract object type descriptor.
 </p>
 <p>
 If <code>object-type-quals</code> contains the keyword <code>client</code>, then
@@ -1375,7 +1374,9 @@ method-body := function-body
 </pre>
 <p>
 The names of all the methods of an object must be distinct: there is no method
-overloading. Method names beginning with two underscores are reserved for use by <a
+overloading. Method names beginning with two underscores are reserved for use
+with semantics defined by this specification, either as an <code>__init</code>
+method or as a method declared by a <a
 href="#built-in_abstract_object_types">built-in abstract object types</a>.
 </p>
 <p>
@@ -1384,33 +1385,16 @@ implicitly in-scope; instead the keyword <code>self</code> is bound to the
 object and can be used to access fields and methods of the object.
 </p>
 <p>
-All the methods of an object type must be either declared or defined in the
-object. A <code>method-decl</code> declares a method without defining it; a
-<code>method-defn</code> also supplies a definition.  An abstract object type
-descriptor must not contain a <code>method-defn</code>.
+If an object type is abstract, every method must be specified using a
+<code>method-decl</code>. Otherwise every method must be specified using a
+<code>method-defn</code>.
 </p>
 <p>
 A method that is declared or defined with the remote qualifier is a remote
 method. A remote method is allowed only in a client object. A remote method is
 invoked using a different syntax from a non-remote method.
 </p>
-<p>
-Any method that is declared but not defined within an object that is not
-abstract must be defined outside the object at the top-level of the module:
-</p>
 
-<pre
-class="grammar">outside-method-defn :=
-   annots
-   method-defn-quals
-   <code>function</code> qual-method-name function-signature function-body
-qual-method-name := object-type-name <code>.</code> method-name
-</pre>
-<p>
-The <code>method-defn-quals</code> on an outside-method-defn must contain the
-same qualifiers (both <code>remote</code> and visibility qualifiers) as the
-declaration of the method within the object.
-</p>
 <h5>Visibility</h5>
 
 <pre
@@ -1541,10 +1525,9 @@ being defined; the meaning is the same as if they had been specified explicitly.
 <p>
 If a non-abstract object type T<sub>o</sub> has a type reference to an abstract
 object type T<sub>a</sub>, then each method declared in T<sub>a</sub> must be
-defined in T<sub>o</sub> using either a <code>method-defn</code> or an
-<code>outside-method-defn</code> with the same visibility. If T<sub>a</sub> has
-a method or field with module-level visibility, the T<sub>o</sub> must be in the
-same module.
+defined in T<sub>o</sub> using a <code>method-defn</code> with the same
+visibility. If T<sub>a</sub> has a method or field with module-level visibility,
+the T<sub>o</sub> must be in the same module.
 </p>
 <h4>Futures</h4>
 
@@ -4688,7 +4671,6 @@ other-decl :=
    | module-var-decl
    | listener-decl
    | function-defn
-   | outside-method-defn
    | service-decl
    | xmlns-decl-stmt
    | annotation-decl
@@ -5225,8 +5207,7 @@ descriptor</td>
   </tr>
   <tr>
    <td>function</td>
-   <td>function-defn, method-decl, method-defn, outside-method-defn,
-anonymous-function-expr, service-method-defn</td>
+   <td>function-defn, method-decl, method-defn, anonymous-function-expr, service-method-defn</td>
    <td>type of function</td>
   </tr>
   <tr>
@@ -5454,6 +5435,8 @@ type, rather than a list.</li>
 <li>The decimal type now uses a simplified subset of IEEE 754-2008 decimal
 floating point.</li>
 <li>The status of XML-related features has been changed to preview.</li>
+<li>The ability to define a method outside the object type has been
+removed.</li>
 </ol>
 
 <h3>Summary of changes from 0.990 to 2019R1</h3>
