@@ -61,7 +61,7 @@ public function getChildren(Element elem) returns xml = external;
 
 # Sets the children of `elem` to `children`.
 # Panics if `isElement(elem)` is not true.
-public function setChildren(Element elem, xml children) = external;
+public function setChildren(Element elem, xml|string children) = external;
 
 # Returns the map representing the attributes of `elem`.
 # This includes namespace attributes.
