@@ -36,12 +36,6 @@ public function clone(AnydataType v) returns AnydataType = external;
 # as defined in the Ballerina Language Specification. 
 public function freeze(AnydataType v) returns AnydataType = external;
 
-# Returns clone of `v` that is not frozen
-# For any frozen subtree, an unfrozen copy is created.
-# It corresponds the UnfrozenClone(v) abstract operation,
-# as defined in the Ballerina Language Specification. 
-public function unfrozenClone(AnydataType v) returns AnydataType = external;
-
 # Tests whether `v` is frozen
 # Returns true if frozen, false otherwise.
 public function isFrozen(anydata v) returns boolean = external;
