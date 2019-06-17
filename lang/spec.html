@@ -728,9 +728,9 @@ is the only simple type that is iterable.
 </p>
 <h3>Structured values</h3>
 <p>
-There are five basic types of structured value. First, there are three container
-basic types: list, mapping and table. Second, there is the xml basic type and
-the error basic type, which are both special in different ways.
+There are five basic types of structured value. First, there are two container
+basic types: list and mapping. Second, there are the table, xml and error basic
+types, which are each special in different ways.
 </p>
 <p>
 Values of the container basic types are containers for other values, which are
@@ -761,6 +761,14 @@ A frozen container value belongs to a type if and only if the type contains the
 shape of the value. In other words, freezing a container narrows its inherent
 type to a type that consists of just its current shape.
 </p>
+<p>
+Each member has a key that uniquely identifies it within the container. The
+<em>member type</em> for a key type K in a container type T consists of all
+shapes v such that there is a shape in T with key in K and shape v. A type K is
+an <em>optional member type</em> for T if there is a shape v in T and a key k in
+K such that v does not have a member k; a member type that is not optional is
+required.
+</p>
 
 <pre
 class="grammar">structured-type-descriptor :=
@@ -776,7 +784,7 @@ The following table summarizes the type descriptors for structured types.
 <table>
   <tr>
    <td></td>
-   <td>Integer index</td>
+   <td>Integer key</td>
    <td>String key</td>
   </tr>
   <tr>
@@ -809,11 +817,12 @@ contains only pure shapes.
 <h4>Lists</h4>
 <p>
 A list value is a container that keeps its members in an ordered list. The
-number of members of the list is called the <em>length </em>of the list. A
-member of a list can be referenced by an integer index representing its position
-in the list. For a list of length <em>n</em>, the indices of the members of the
-list, from first to last, are 0,1,...,<em>n</em> - 1. The shape of a list value
-is an ordered list of the shapes of its members.
+number of members of the list is called the <em>length </em>of the list. The key
+for a member of a list is the integer index representing its position in the
+list, with the index of the first member being 0. For a list of length
+<em>n</em>, the indices of the members of the list, from first to last, are
+0,1,...,<em>n</em> - 1. The shape of a list value is an ordered list of the
+shapes of its members.
 </p>
 <p>
 A list is iterable as a sequence of its members.
@@ -1795,9 +1804,130 @@ precise service type that is used to the first argument to
 <h3>Abstract operations</h3>
 <p>
 These section specifies a number of operations that can be performed on values.
-These operations are for internal use by the specification.  These operations
-are named in CamelCase to distinguish them from functions in the lang library.
+These operations are for internal use by the specification. These operations are
+named in CamelCase with an initial upper-case letter to distinguish them from
+functions in the lang library.
 </p>
+<h4 id="FillMember">FillMember</h4>
+<p>
+The FillMember(c, k) operation is defined for a container value c and a key
+value k. It can be performed when c does not have a member with key k; if it
+succeeds, it will result in a member with key k being added to c. It will
+succeeds if the inherent type of c allows the addition of a member with key k
+and there is a way to construct a filler value for the type descriptor that the
+inherent type of c requires for member k. The following table specifies when and
+how a filler value can be constructed for a type descriptor.
+</p>
+<table>
+<tr>
+<th>Type descriptor</th>
+<th>Filler value</th>
+<th>When available</th>
+</tr>
+<tr>
+<td><code>()</code></td>
+<td><code>()</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>boolean</code></td>
+<td><code>false</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>int</code></td>
+<td><code>0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>float</code></td>
+<td><code>+0.0f</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>decimal</code></td>
+<td><code>+0.0d</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>string</code></td>
+<td><code>""</code></td>
+<td></td>
+</tr>
+<tr>
+<td>list type descriptor</td>
+<td><code>[]</code></td>
+<td>if that is a valid constructor for the type</td>
+</tr>
+<tr>
+<td>mapping type descriptor</td>
+<td><code>{ }</code></td>
+<td>if that is a valid constructor for the type</td>
+</tr>
+<tr>
+<td>table</td>
+<td>empty table (with no rows)</td>
+<td></td>
+</tr>
+<tr>
+<td>object</td>
+<td><code>new T()</code></td>
+<td>if this is valid and its static type does not include error, where
+<code>T</code> is the object type descriptor (an abstract object type will not
+have a filler value)</td>
+</tr>
+<tr>
+<td><code>xml</code></td>
+<td><code>xml``</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>stream&lt;T&gt;</code></td>
+<td><code>new stream&lt;T&gt;</code></td>
+<td></td>
+</tr>
+<tr>
+<td>singleton</td>
+<td>the single value used to specify the type</td>
+<td></td>
+</tr>
+<tr>
+<td rowspan="2">union</td>
+<td><code>()</code></td>
+<td>if <code>()</code> is a member of the union</td>
+</tr>
+<tr>
+<td>the filler value for basic type B</td>
+<td>if all members of the union belong to a single basic type B,
+and the filler value for B also belongs to the union</td>
+</tr>
+<tr>
+<td><code>T?</code></td>
+<td><code>()</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>any</code></td>
+<td><code>()</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>anydata</code></td>
+<td><code>()</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>byte</code></td>
+<td><code>0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>json</code></td>
+<td><code>()</code></td>
+<td></td>
+</tr>
+</table>
+
 <h4>Freeze</h4>
 <p>
 Freeze(v) is defined for any pure value v. The result of Freeze(v) is always v.
@@ -2045,7 +2175,7 @@ class="grammar">expression :=
    | variable-reference-expr
    | field-access-expr
    | annot-access-expr
-   | index-expr
+   | member-access-expr
    | xml-attributes-expr
    | function-call-expr
    | method-call-expr
@@ -2469,129 +2599,16 @@ expression for the member; otherwise there is no contextually expected type for
 the expressions for members.
 </p>
 <p>
-Some members of a list can be filled in automatically. A member can be filled in
-automatically if its type descriptor, as determined by the inherent type of the
-list, provides a way to create a <em>filler</em> value. The following table
-specifies the filler value for each kind of type descriptor that provides one.
-</p>
-<table>
-<tr>
-<th>Type descriptor</th>
-<th>Filler value</th>
-<th>When provided</th>
-</tr>
-<tr>
-<td><code>()</code></td>
-<td><code>()</code></td>
-<td></td>
-</tr>
-<tr>
-<td><code>boolean</code></td>
-<td><code>false</code></td>
-<td></td>
-</tr>
-<tr>
-<td><code>int</code></td>
-<td><code>0</code></td>
-<td></td>
-</tr>
-<tr>
-<td><code>float</code></td>
-<td><code>+0.0f</code></td>
-<td></td>
-</tr>
-<tr>
-<td><code>decimal</code></td>
-<td><code>+0.0d</code></td>
-<td></td>
-</tr>
-<tr>
-<td><code>string</code></td>
-<td><code>""</code></td>
-<td></td>
-</tr>
-<tr>
-<td>list type descriptor</td>
-<td><code>[]</code></td>
-<td>if that is a valid constructor for the type</td>
-</tr>
-<tr>
-<td>mapping type descriptor</td>
-<td><code>{ }</code></td>
-<td>if that is a valid constructor for the type</td>
-</tr>
-<tr>
-<td>table</td>
-<td>empty table (with no rows)</td>
-<td></td>
-</tr>
-<tr>
-<td>object</td>
-<td><code>new T()</code></td>
-<td>if this is valid and its static type does not include error, where
-<code>T</code> is the object type descriptor (an abstract object type will not
-have a filler value)</td>
-</tr>
-<tr>
-<td><code>xml</code></td>
-<td><code>xml``</code></td>
-<td></td>
-</tr>
-<tr>
-<td><code>stream&lt;T&gt;</code></td>
-<td><code>new stream&lt;T&gt;</code></td>
-<td></td>
-</tr>
-<tr>
-<td>singleton</td>
-<td>the single value used to specify the type</td>
-<td></td>
-</tr>
-<tr>
-<td rowspan="2">union</td>
-<td><code>()</code></td>
-<td>if <code>()</code> is a member of the union</td>
-</tr>
-<tr>
-<td>the filler value for basic type B</td>
-<td>if all members of the union belong to a single basic type B,
-and the filler value for B also belongs to the union</td>
-</tr>
-<tr>
-<td><code>T?</code></td>
-<td><code>()</code></td>
-<td></td>
-</tr>
-<tr>
-<td><code>any</code></td>
-<td><code>()</code></td>
-<td></td>
-</tr>
-<tr>
-<td><code>anydata</code></td>
-<td><code>()</code></td>
-<td></td>
-</tr>
-<tr>
-<td><code>byte</code></td>
-<td><code>0</code></td>
-<td></td>
-</tr>
-<tr>
-<td><code>json</code></td>
-<td><code>()</code></td>
-<td></td>
-</tr>
-</table>
-<p>
-The inherent type of a list establishes either a fixed length for the list or
-just a minimum length for the list, which may be zero. In the latter case, for
-each <var>j</var> greater than <var>m</var>, where <var>m</var> is the minimum
-length of the list, the inherent type of the list must be such that
-<var>j</var>-th member can be filled in automatically. In either case, a list
-constructor may specify only the first <var>k</var> members, provided that for
-each <var>i</var> from <var>k</var> + 1 up to the fixed length of the list, the
-<var>i</var>-th member can be filled in automatically.
+A member of a list can be filled in automatically if the <a
+href="#FillMember">FillMember</a> abstract operation would succeed on it. The
+inherent type of a list establishes either a fixed length for the list or just a
+minimum length for the list, which may be zero. In the latter case, for each
+<var>j</var> greater than <var>m</var>, where <var>m</var> is the minimum length
+of the list, the inherent type of the list must be such that <var>j</var>-th
+member can be filled in automatically. In either case, a list constructor may
+specify only the first <var>k</var> members, provided that for each <var>i</var>
+from <var>k</var> + 1 up to the fixed length of the list, the <var>i</var>-th
+member can be filled in automatically.
 </p>
 
 <h3>Mapping constructor</h3>
@@ -2845,16 +2862,16 @@ annotation; otherwise, the result is nil.
 The static type of the <code>annot-access-expr</code> is T? where T is the type
 of the annotation tag.
 </p>
-<h3>Index expression</h3>
+<h3>Member access expression</h3>
 
 <pre
-class="grammar">index-expr := expression <code>[</code> expression <code>]</code>
+class="grammar">member-access-expr := expression <code>[</code> expression <code>]</code>
 </pre>
 <p>
 {MISSING}
 </p>
 <p>
-Evaluation of an index-expr that attempts to accessing a list with an out of
+Evaluation of a member-access-expr that attempts to access a list with an out of
 bounds index will complete abruptly with a panic.
 </p>
 <h3>[Preview] XML attributes expression</h3>
@@ -4263,44 +4280,270 @@ symbol space used by other declarations.
 The static type of the <code>simple-const-expr</code> must be a subtype of
 string.
 </p>
-<h3>Assignment statement</h3>
+<h3>Assignment</h3>
+
+<p>
+There are three kinds of assignment statement:
+</p>
+<ul>
+<li>an ordinary assignment statement, which is usually called simply an
+assignment statement,</li>
+<li>a compound assignment statement, and</li>
+<li>a destructuring assignment statement.</li>
+</ul>
+<p>
+The first two of these build on the concept of an <em>lvalue</em>, whereas the
+last one builds on the concept of a binding pattern.
+</p>
+
+<h4>Lvalues</h4>
+
+<p>
+An lvalue is what the left hand side of an assignment evaluates to. An lvalue
+refers to a storage location which is one of the following:
+</p>
+<ul>
+<li>a variable;</li>
+<li>a specific named field of an object;</li>
+<li>the member of a container having a specific key, which will be either an
+integer or a string according as the container is a list or a mapping.</li>
+</ul>
+
+<p>
+An lvalue that is both defined and initialized refers to a storage location that
+holds a value:
+</p>
+<ul>
+<li>an lvalue referring to a variable is always defined but may be
+uninitialized;</li>
+<li>an lvalue referring to a specific named field of an object is always defined
+but may not be initialized until the <code>__init</code> method returns</li>
+<li>an lvalue referring to member of a container having a specific key is
+undefined if the container does not have a member with that key; if such an
+lvalue is defined, it is also initialized; note that an lvalue always refers to
+a container that is already constructed.</li>
+</ul>
 
 <pre
-class="grammar">assignment-stmt := lhs <code>=</code> action-or-expr <code>;</code>
-lhs :=
-   variable-reference
-   | lhs <code>.</code> field-name
-   | lhs <code>[</code> expression <code>]</code>
-   | lhs <code>@</code>
+class="grammar">lvexpr :=
+   variable-reference-lvexpr
+   | field-access-lvexpr
+   | member-access-lvexpr
+</pre>
+
+<p>
+The left hand side of an assignment is syntactically a restricted type of
+expression, called an lvexpr. When the evaluation of an lvexpr completes
+normally, its result is an lvalue. The evaluation of an lvexpr can also complete
+abruptly, with a panic or check-fail, just as with the evaluation of an
+expression.
+</p>
+<p>
+The compiler determines a static type for each lvexpr just as it does for
+expressions, but the meaning is slightly different. For an lvexpr L to have
+static type T means that if the runtime evaluation of L completes normally
+resulting in an lvalue x, then if x is defined and initialized, it refers to a
+storage location that holds a value belonging to type T. In addition to a type,
+the compiler determines for each lvexpr whether it is potentially undefined and
+whether it is potentially uninitialized.
+</p>
+<p>
+An lvalue supports three operations: store, read and filling-read.
+</p>
+<p>
+The fundamental operation on an lvalue is to store a value in the storage
+location it refers to. This operation does not required the lvalue to be defined
+or initialized; a successful store operation on an undefined lvalue will result
+in the addition of a member to the container; a store on an uninitialized lvalue
+will initialize it. When an lvalue refers to a variable, it is possible to
+determine at compile-time whether the store of a value is permissible based on
+the declaration of the variable and the static type of the value to be stored.
+However, when the lvalue refers to a member of a container, this is not in
+general possible for three reasons.
+</p>
+<ol>
+<li>The guarantee provided by an lvalue having a static type T is not that the
+referenced storage location can hold every value that belongs to type T; rather
+the guarantee is that every value that the referenced storage location can hold
+belongs to type T. This is because of container types are covariant in their
+member types. The values that the storage location can actually hold are
+determined by the inherent type of the container.</li>
+<li>The member may not be defined and the inherent type of the container may not
+allow a member with that specific key. The permissible keys of a container can
+be constrained by closed record types, fixed-length array types, and tuple types
+(with any rest descriptor).</li>
+<li>The container may be frozen. The static type of an lvalue referring to a
+member of a container makes no guaranteees that the container is not frozen.</li>
+</ol>
+<p>
+The first of these reasons also applies to lvalues that refer to fields of
+objects. Accordingly, stores to lvalues other than lvalues that refer to
+variables must be verified at runtime to ensure that they are not impermissible
+for any of the above three reasons. An attempt to perform an impermissible store
+results in a panic at runtime.
+</p>
+<p>
+List values maintain the invariant that there is a unique integer n, the length
+of the list, such that a member k of the list is defined if and only if k is a
+non-negative integer less than n. When a store is performed on an lvalue
+referring to a member k of a list value and the length of the list is n and k is
+&gt; n, then each member with index i for each &lt;= i &lt; k is filled in, by
+using the FillMember abstract operation. The FillMember abstract operation may
+fail; in particular it will fail if the list is a fixed-length array. If the
+FillMember operation fails, then the attempt to store will panic.
+</p>
+<p>
+An lvalue also allows a read operation, which is used by the compound assignment
+statement. Unlike a store operation, a read operation cannot result in a runtime
+panic. A read operation cannot be performed on an lvalue that is undefined or
+uninitialized.
+</p>
+<p>
+Finally, a lvalue supports a filling-read operation, which is used to support
+chained assignment. A filling-read is performed only an lvalue with a static
+type that is a container type. It differs from a read operation only when it is
+performed on a potentially undefined lvalue. If the lvalue is undefined at
+runtime, then the filling-read will use the FillMember abstract operation on the
+member that the lvalue refers to. If the FillMember operation fails, then the
+filling-read panics. Unlike the read operation, the filling-read operation can
+be performed on an undefined lvalue; it cannot, however, be performed on an
+uninitialized lvalue.
+</p>
+<p>
+The evaluation of an lvexpr is specified in terms of the evaluation of its
+subexpressions, the evaluation of its sub-lvexprs, and store and
+filling-read operations on lvalues. If any of these result in a panic, then
+the evaluation of the lvexpr completes abruptly with a panic.
+</p>
+
+<pre class="grammar">variable-reference-lvexpr := variable-reference
 </pre>
 <p>
-An <code>lhs</code> evaluates to a storage location, into which a value can be
-stored and from which a value can be fetched.
+The result of evaluating variable-reference-lvexpr is an lvalue referring to a
+variable. Its static type is the declared or inferred type of the variable. The
+lvexpr is potentially uninitialized if it is possible for execution to have
+reached this point without initializing the referenced variable.
+</p>
+
+<pre class="grammar">field-access-lvexpr := lvexpr <code>.</code> field-name
+</pre>
+
+<p>
+The static type of lvexpr must be either a subtype of the mapping basic type
+or a subtype of the object basic type.
 </p>
 <p>
-When a list value has an inherent type that is not fixed length. then attempting
-to write a member of a list at an index <em>i</em> that is greater than or equal
-to the current length of the list will first increase the length of the list to
-<em>i</em> + 1, with the newly added members of the array being filled in
-automatically.
+In the case where the static type of lvexpr is a subtype of the object basic
+type, the object type must have a field with the specified name, and the
+resulting lvalue refers to that object field.
 </p>
 <p>
-The type of lhs provides the contextually expected type for action-or-expr.
+In the case where the static type of lvexpr is a subtype of the mapping basic
+type, the semantics are as follows.
 </p>
-<h3>Compound assignment statement</h3>
+<ul>
+<li>The following requirements apply at compile time: the type of lvexpr must
+include mapping shapes that have the specified field-name; type descriptor for
+lvexpr must include <code>field-name</code> as an individual-type-descriptor (if
+lvexpr is a union, then this requirement applies to every member of the union);
+lvexpr must not be potentially uninitialized, but may be potentially
+undefined.</li>
+<li>
+It is evaluated as follows:
+<ol>
+<li>evaluate lvexpr to get lvalue <var>lv</var>;</li>
+<li>perform a filling-read operation on <var>lv</var> to get mapping value
+<var>m</var>;</li>
+<li>the result is an lvalue referring to the member of <var>m</var> with the
+specified field-name.</li>
+</ol>
+</li>
+<li>The static type of the field-access-expr is the member type for the key type
+K in T, where T is the static type of the lvexpr and K is the singleton string
+type containing the field-name; the field-access-expr is potentially undefined
+if K is an optional member type for T.</li>
+</ul>
+
+<pre class="grammar">member-access-lvexpr := lvexpr <code>[</code> expression <code>]</code>
+</pre>
+<p>
+The static type of lvexpr must be either a subtype of the mapping basic type or
+a subtype of the list basic type. In the former case, the contextually expected
+type of expression must be string and it is an error if the static type of
+expression is not string; in the latter case, the contextually expected type of
+expression must be int and it is an error if the static type of expression is
+not int.
+</p>
+It is evaluated as follows:
+<ol>
+<li>evaluate expression to get a string or int <var>k</var>;</li>
+<li>evaluate lvexpr to get lvalue <var>lv</var>;</li>
+<li>perform a filling-read operation on <var>lv</var> to get a list or mapping value
+<var>v</var>;</li>
+<li>the result is an lvalue referring to the member of <var>c</var> with key
+<var>k</var>.</li>
+</ol>
+<p>
+The static type of the member-access-expr is the member type for the key type K
+in T, where T is the static type of the lvexpr and K is the static type type of
+expression; the member-access-expr is potentially undefined if K is an optional
+member type for T.
+</p>
+
+<h4>Assignment statement</h4>
 
 <pre
-class="grammar">compound-assignment-stmt := 
-   lhs CompoundAssignmentOperator action-or-expr <code>;</code>
+class="grammar">assignment-stmt := lvexpr <code>=</code> action-or-expr <code>;</code>
+</pre>
+<p>
+The static type of action-or-expr must be a subtype of the static type of
+lvexpr. The static type of lvexpr provides the contextually expected type for
+action-or-expr. It is not an error for lvexpr to be potentially undefined or
+potentially uninitialized.
+</p>
+<p>
+It is executed at as follows:
+</p>
+<ol>
+<li>execute action-or-expr to get a value <var>v</var>;</li>
+<li>evaluate lvexpr to get an lvalue <var>lv</var>;</li>
+<li>perform the store operation of <var>lv</var> with value <var>v</var>.</li>
+</ol>
+
+<h4>Compound assignment statement</h4>
+
+<pre
+class="grammar">compound-assignment-stmt := lvexpr CompoundAssignmentOperator action-or-expr <code>;</code>
 CompoundAssignmentOperator := BinaryOperator <code>=</code>
-BinaryOperator := <code>+</code> | <code>-</code> | <code>*</code> | <code>/</code> | <code>&amp;</code> | <code>|</code> | <code>^</code> | <code>&lt;&lt;</code> | <code>>></code> | <code>>>></code>
+BinaryOperator := <code>+</code> | <code>-</code> | <code>*</code> | <code>/</code> | <code>&amp;</code> | <code>|</code> | <code>^</code> | <code>&lt;&lt;</code> | <code>&gt;&gt;</code> | <code>&gt;&gt;&gt;</code>
 </pre>
 <p>
-These statements update the value of the LHS variable to the value that results
-from applying the corresponding binary operator to the value of the variable and
-the value of the expression.
+It is a compile error if lvexpr is potentially undefined unless the static type
+of lvexpr is a subtype of the list basic type. It is a compile error if lvexpr
+is potentially uninitialized.
 </p>
-<h3>Destructuring assignment statement</h3>
+<p>
+Let T1 be the static type of lvexpr, and let T2 be the static type of
+action-expr. Then let T3 be the static type of an expression E1 BinaryOp E2
+where E1 has type T1 and E2 has type T2. It is a compile error if T3 is not a
+subtype of T1.
+</p>
+<p>
+It is executed as follows:
+</p>
+<ol>
+<li>execute action-or-expr to get a value <var>v2</var>;</li>
+<li>evaluate lvexpr to get an lvalue <var>lv</var>;</li>
+<li>if <var>lv</var> is undefined, panic (<var>lv</var> must refer to an
+undefined member of a list)</li>
+<li>perform the read operation on <var>lv</var> to get a value
+<var>v1</var></li>
+<li>perform the operation specified by BinaryOperator on operands <var>v1</var>
+and <var>v2</var>, resulting in a value <var>v3</var></li>
+<li>perform the store operation on <var>lv</var> with value <var>v3</var>.</li>
+</ol>
+
+<h4>Destructuring assignment statement</h4>
 
 <pre
 class="grammar">destructure-assignment-stmt :=
