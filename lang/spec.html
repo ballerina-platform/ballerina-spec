@@ -2885,15 +2885,17 @@ container-expression := expression
 key-expression := expression
 </pre>
 <p>
-A member-access-expr accesses a member of a container value using its key.
+A member-access-expr accesses a member of a container value using its key,
+or a character of a string using its index.
 </p>
 <p>
-There are two cases for the static type of container-expr:
+The requirements on the static type of container-expr and key-expression are as
+follows:
 </p>
 <ul>
-<li>if container-expr is a subtype of basic type list, then the contextually
-expected type for key-expression is int and the static type of key-expression
-must be a subtype of int;</li>
+<li>if container-expr is a subtype of string or is a subtype of basic
+type list, then the contextually expected type for key-expression is int and
+the static type of key-expression must be a subtype of int;</li>
 <li>otherwise container-expr must be a subtype of the union of nil and basic
 type list; in this case the contextually expected type for key-expression is
 string and the static type of key-expression must be a subtype of string.</li>
@@ -2906,21 +2908,27 @@ A member-access-expr is evaluated as follows:
 <li>the key-expression is evaluated to get a value <var>k</var>;</li>
 <li>depending on the basic type of <var>c</var>
 <ul>
+<li>if it is string, and <var>k</var> is &lt; 0 or &gt;= the length of
+<var>c</var>, then the evaluation completes abruptly with a panic; otherwise,
+the result is a string of length 1 containing the character with index
+<var>k</var> in <var>c</var>;</li>
+<li>if it is list, and <var>k</var> is &lt; 0 or &gt;= the length of
+<var>c</var>, then the evaluation completes abruptly with a panic; otherwise,
+the result is the member of <var>c</var> with index <var>k</var>;</li>
 <li>if it is mapping, then if <var>c</var> is <code>()</code> or <var>c</var>
 does not contain a member with key <var>k</var>, then the result is
-<code>()</code>;</li>
-<li>if it is list, then if <var>c</var> does not contain a member with key
-<var>k</var>, the evaluation completes abruptly with a panic</li>
+<code>()</code>; otherwise, the result is the member of <var>c</var> with key
+<var>k</var>.</li>
 </ul>
 </li>
-<li>otherwise, the result is the member of <var>c</var> with key
-<var>k</var>.</li>
 </ol>
 <p>
-Let K be the static type of key-expression, let T the static type of
-container-expression, and let M be the member type of K in T. If T contains nil,
-or T is a subtype of mapping and K is an optional key type for T, then the
-static type of the member-access-expr is M?, otherwise the static type is M.
+Let T the static type of container-expression. If T is a subtype of string, then
+the static type of the member-access-expr is string. Otherwise, let K be the
+static type of key-expression and let M be the member type of K in T; if T
+contains nil, or T is a subtype of mapping and K is an optional key type for T,
+then the static type of the member-access-expr is M?, otherwise the static type
+is M.
 </p>
 
 <h3>[Preview] XML attributes expression</h3>
