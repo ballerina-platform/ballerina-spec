@@ -2865,15 +2865,49 @@ of the annotation tag.
 <h3>Member access expression</h3>
 
 <pre
-class="grammar">member-access-expr := expression <code>[</code> expression <code>]</code>
+class="grammar">member-access-expr := container-expression <code>[</code> key-expression <code>]</code>
+container-expression := expression
+key-expression := expression
 </pre>
 <p>
-{MISSING}
+A member-access-expr accesses a member of a container value using its key.
 </p>
 <p>
-Evaluation of a member-access-expr that attempts to access a list with an out of
-bounds index will complete abruptly with a panic.
+There are two cases for the static type of container-expr:
 </p>
+<ul>
+<li>if container-expr is a subtype of basic type list, then the contextually
+expected type for key-expression is int and the static type of key-expression
+must be a subtype of int;</li>
+<li>otherwise container-expr must be a subtype of the union of nil and basic
+type list; in this case the contextually expected type for key-expression is
+string and the static type of key-expression must be a subtype of string.</li>
+</ul>
+<p>
+A member-access-expr is evaluated as follows:
+</p>
+<ol>
+<li>the container-expression is evaluated to get a value <var>c</var>;</li>
+<li>the key-expression is evaluated to get a value <var>k</var>;</li>
+<li>depending on the basic type of <var>c</var>
+<ul>
+<li>if it is mapping, then if <var>c</var> is <code>()</code> or <var>c</var>
+does not contain a member with key <var>k</var>, then the result is
+<code>()</code>;</li>
+<li>if it is list, then if <var>c</var> does not contain a member with key
+<var>k</var>, the evaluation completes abruptly with a panic</li>
+</ul>
+</li>
+<li>otherwise, the result is the member of <var>c</var> with key
+<var>k</var>.</li>
+</ol>
+<p>
+Let K be the static type of key-expression, let T the static type of
+container-expression, and let M be the member type of K in T. If T contains nil,
+or T is a subtype of mapping and K is an optional member type for T, then the
+static type of the member-access-expr is M?, otherwise the static type is M.
+</p>
+
 <h3>[Preview] XML attributes expression</h3>
 
 <pre
@@ -5674,6 +5708,8 @@ floating point.</li>
 <li>The ability to define a method outside the object type has been
 removed.</li>
 <li>The UnfrozenClone operation has been removed.</li>
+<li>The semantics of field access, member access and assignment are now
+fully specified.</li>
 </ol>
 
 <h3>Summary of changes from 0.990 to 2019R1</h3>
