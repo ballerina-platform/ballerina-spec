@@ -25,7 +25,7 @@ public function iterator(string str) returns abstract object {
 # Concatenate all the `strs`. Empty string if empty.
 public function concat(string... strs) return str;
 
-public function codePointAt(string str, int i) returns int = external;
+public function getCodePoint(string str, int i) returns int = external;
 public function substring(string str, int start, int end = str.length()) returns string = external;
 // Lexicographically compare strings using their Unicode code points
 // This will allow strings to be ordered in a consistent and well-defined way,
