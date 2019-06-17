@@ -969,8 +969,12 @@ A type <code>map&lt;T></code> contains a mapping shape <em>m</em> if every field
 shape in <em>m</em> has a value shape that is in <code>T</code>.
 </p>
 <p>
-A value belonging to type <code>map&lt;T></code> is iterable as a sequence of
+A value belonging to type <code>map&lt;T&gt;</code> is iterable as a sequence of
 values of type <code>T</code>.
+</p>
+<p>
+If a type descriptor T has <a href="#lax_static_typing">lax static typing</a>,
+then the type <code>map&lt;T&gt;</code> also has lax static typing.
 </p>
 <h5>Record types</h5>
 <p>
@@ -1706,16 +1710,25 @@ type <code>anydata</code> is equivalent to the union
 <pre class="grammar">byte-type-descriptor := <code>byte</code>
 </pre>
 <p>
-The byte type is an abbreviation for a union of the int values in the range 0 to
+The byte type is a built-in name for a union of the int values in the range 0 to
 255 inclusive.
 </p>
 <h4>JSON types</h4>
 
 <pre
 class="grammar">json-type-descriptor := json
-
-json means <code>() | boolean | int | float | decimal | string | json[] | map&lt;json&gt;</code>
 </pre>
+<p>
+The <code>json</code> type is designed for processing data expression in JSON
+format. It is a built-in name for a union defined as follows:
+</p>
+<pre>type json = () | boolean | int | float | decimal | string | json[] | map&lt;json&gt;;
+</pre>
+<p>
+In addition, the <code>json</code> type is defined to have <a
+href="#lax_static_typing">lax static typing</a>.
+</p>
+
 <h3 id="built-in_abstract_object_types">Built-in abstract object types</h3>
 <p>
 There are several abstract object types that are built-in in the sense that the
@@ -2365,9 +2378,37 @@ however, for panic abrupt completion, no type is computed.
 </p>
 <p>
 The detailed rules for the static typing of expressions are quite elaborate and
-are not specified completely in this document. This document only mentions some
-key points that programmers might need to be aware of.
+are not yet specified completely in this document.
 </p>
+
+<h4 id="lax_static_typing">Lax static typing</h4>
+<p>
+In some situations it is convenient for static typing to be less strict than
+normal. One such situation is when processing data in Ballerina using a static
+type that is less precisse than the type that the data is in fact expected to
+belong to. For example, when the Ballerina <code>json</code> type is used for
+the processing of data in JSON format, the Ballerina static type will not
+capture the constraints of the particular JSON format that is been processed.
+</p>
+<p>
+Ballerina supports this situation through the concept of lax static typing,
+which has two parts: the first part is that a type descriptor can be classified
+as lax; the second part is that particular kinds of expression can have less
+strict static typing rules when the static type of a subexpression is described
+by a lax type descriptor. With these less strict rules, a potential type error
+that would have been a compile-time error according to the normal strict static
+typing rules would instead be allowed at compile-time and result in an error
+value at runtime; the effect is thus that some static type-checking is instead
+done dynamically.
+</p>
+<p>
+In this version of Ballerina, only the first step has been taken towards
+supporting this concept. There is a fixed set of type descriptors that are
+classified as lax: specifically <code>json</code> is lax, and
+<code>map&lt;T&gt;</code> is lax if T is lax. The only kind of expression for
+which lax typing rules are specified is the field-access-expr.
+</p>
+
 <h4>Contextually expected type</h4>
 <p>
 For a context in which an expression occurs, there may be a type descriptor that
@@ -2840,22 +2881,44 @@ that type.
 class="grammar">field-access-expr := expression <code>.</code> field-name
 </pre>
 <p>
-A field-access-expr accesses a field of an object or a member of a mapping.
+A field-access-expr accesses a field of an object or a member of a mapping. The
+semantics depends on the static type T of expression.
 </p>
 <p>
-Let T be the static type of expression. There are two cases for T:
-of
+If T is a subtype of the object basic type, then T must have a field field-name
+and the static type of the field-access-expr is the type of that field. In this
+case, the field-access-expression is evaluated by first evaluating the
+expression to get a value <var>obj</var>; the result of the field-access-expr is
+the value of that field of <var>obj</var>.
+</p>
+<p>
+Otherwise, let K is the singleton type containing just the string field-name;
+the semantics of a field-access-expr depends on whether the type descriptor
+describing T is lax:
 </p>
 <ul>
-<li>if T is a subtype of the object basic type, then the static type of T must
-have a field field-name and the static type of the field-access-expr is the type of
-that field;
-</li>
-<li>otherwise, T must be a subtype of the mapping basic type; in this case, K
-must be a required key type for T, where K is the singleton type containing just
-field-name; the static type of the field-access-expr is the member type for K in
-T.</li>
+<li>if it is not lax, then T must be a subtype of the mapping basic type and K
+must be a required key type for T; the static type of the field-access-expr is
+the member type for K in T;</li>
+<li>if it is lax, then the only compile-time requirement is that the
+intersection of T with the basic type mapping is non-empty; the static type of
+the field-access-expr is the union of error and the member type for K in the
+intersection of T and basic type list.</li>
 </ul>
+<p>
+In both cases, the field-access-expr is evaluated as follows:
+</p>
+<ol>
+<li>expression is evaluated resulting in a value <var>v</var></li>
+<li>if <var>v</var> has basic type error, the result is <var>v</var> (this can
+only happen in the lax case)</li>
+<li>otherwise, if <var>v</var> does not have basic typing mapping, the result is
+a new error value (this can only happen in the lax case)</li>
+<li>otherwise, if <var>v</var> does not have a member whose key is field-name,
+the result is a new error value (this can only happen in the lax case)</li>
+<li>otherwise, the result is the member of <var>v</var> whose key is
+field-name.</li>
+</ol>
 
 <h3>Annotation access expression</h3>
 
