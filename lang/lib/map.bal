@@ -29,6 +29,9 @@ public function iterator(map<Type> m) returns abstract object {
         Type value;
     |}?;
 } = external;
+# Returns the member of map m with key k.
+# Panics if m does not have a member with key k.
+public function get(map<Type> m, string k) returns Type = external;
 public function entries(map<Type> m) returns map<[string, Type]> = external;
 
 // Functional iteration
