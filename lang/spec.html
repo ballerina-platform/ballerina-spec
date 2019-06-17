@@ -765,9 +765,9 @@ type to a type that consists of just its current shape.
 Each member has a key that uniquely identifies it within the container. The
 <em>member type</em> for a key type K in a container type T consists of all
 shapes v such that there is a shape in T with key in K and shape v. A type K is
-an <em>optional member type</em> for T if there is a shape v in T and a key k in
-K such that v does not have a member k; a member type that is not optional is
-required.
+an <em>optional key type</em> for T if there is a shape v in T and a key k in K
+such that v does not have a member k; a type that is not an optional key type is
+a required key type.
 </p>
 
 <pre
@@ -2839,8 +2839,23 @@ that type.
 class="grammar">field-access-expr := expression <code>.</code> field-name
 </pre>
 <p>
-{MISSING}
+A field-access-expr accesses a field of an object or a member of a mapping.
 </p>
+<p>
+Let T be the static type of expression. There are two cases for T:
+of
+</p>
+<ul>
+<li>if T is a subtype of the object basic type, then the static type of T must
+have a field field-name and the static type of the field-access-expr is the type of
+that field;
+</li>
+<li>otherwise, T must be a subtype of the mapping basic type; in this case, K
+must be a required key type for T, where K is the singleton type containing just
+field-name; the static type of the field-access-expr is the member type for K in
+T.</li>
+</ul>
+
 <h3>Annotation access expression</h3>
 
 <pre
@@ -2904,7 +2919,7 @@ does not contain a member with key <var>k</var>, then the result is
 <p>
 Let K be the static type of key-expression, let T the static type of
 container-expression, and let M be the member type of K in T. If T contains nil,
-or T is a subtype of mapping and K is an optional member type for T, then the
+or T is a subtype of mapping and K is an optional key type for T, then the
 static type of the member-access-expr is M?, otherwise the static type is M.
 </p>
 
@@ -4495,7 +4510,7 @@ specified field-name.</li>
 <li>The static type of the field-access-expr is the member type for the key type
 K in T, where T is the static type of the lvexpr and K is the singleton string
 type containing the field-name; the field-access-expr is potentially undefined
-if K is an optional member type for T.</li>
+if K is an optional key type for T.</li>
 </ul>
 
 <pre class="grammar">member-access-lvexpr := lvexpr <code>[</code> expression <code>]</code>
@@ -4521,7 +4536,7 @@ It is evaluated as follows:
 The static type of the member-access-expr is the member type for the key type K
 in T, where T is the static type of the lvexpr and K is the static type type of
 expression; the member-access-expr is potentially undefined if K is an optional
-member type for T.
+key type for T.
 </p>
 
 <h4>Assignment statement</h4>
