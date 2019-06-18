@@ -1216,7 +1216,7 @@ class="grammar">behavioral-type-descriptor :=
 <pre
 class="grammar">function-type-descriptor := <code>function</code> function-signature
 function-signature := <code>(</code> param-list <code>)</code> return-type-descriptor
-return-type-descriptor := [ <code>returns</code> annots type-descriptor ]
+return-type-descriptor := [ <code>returns</code> [annots] type-descriptor ]
 </pre>
 <p>
 A function is a part of a program that can be explicitly executed. In Ballerina,
@@ -1238,10 +1238,10 @@ class="grammar">param-list :=
    | defaultable-params [<code>,</code> rest-param]
    | [rest-param]
 required-params := required-param (<code>,</code> required-param)*
-required-param := annots type-descriptor [param-name]
+required-param := [annots] type-descriptor [param-name]
 defaultable-params := defaultable-param (<code>,</code> defaultable-param)*
-defaultable-param := annots type-descriptor [param-name] default-value
-rest-param := annots type-descriptor <code>...</code> [param-name]
+defaultable-param := [annots] type-descriptor [param-name] default-value
+rest-param := [annots] type-descriptor <code>...</code> [param-name]
 </pre>
 <p>
 A param-name can be omitted from a required-param, defaultable-param or
@@ -2739,7 +2739,7 @@ For example,
 <h3>Service constructor</h3>
 
 <pre
-class="grammar">service-constructor-expr := annots <code>service</code> service-body-block
+class="grammar">service-constructor-expr := [annots] <code>service</code> service-body-block
 service-body-block := <code>{</code> service-method-defn* <code>}</code>
 service-method-defn :=
    metadata
@@ -3217,7 +3217,7 @@ fields have been added.
 
 <pre
 class="grammar">anonymous-function-expr :=
-  annots <code>function</code> function-signature function-body-block
+  [annots] <code>function</code> function-signature function-body-block
 </pre>
 <p>
 Evaluating an anonymous-function-expr creates a closure, whose basic type is
@@ -3248,7 +3248,7 @@ contextually expected type for <code>expression</code> is T.
 <h3>Type cast expression</h3>
 
 <pre
-class="grammar">type-cast-expr := <code>&lt;</code> type-descriptor <code>></code> expression
+class="grammar">type-cast-expr := <code>&lt;</code> type-descriptor <code>&gt;</code> expression
 </pre>
 <p>
 A <code>type-cast-expr</code> casts the value resulting from evaluating
@@ -4275,7 +4275,7 @@ class="grammar">local-var-decl-stmt :=
    local-init-var-decl-stmt
    | local-no-init-var-decl-stmt
 local-init-var-decl-stmt :=
-   annots [<code>final</code>] typed-binding-pattern <code>=</code> action-or-expr <code>;</code>
+   [annots] [<code>final</code>] typed-binding-pattern <code>=</code> action-or-expr <code>;</code>
 </pre>
 <p>
 A <code>local-var-decl-stmt</code> is used to declare variables with a scope
@@ -4306,7 +4306,7 @@ assigned to outside the local-init-var-decl-stmt.
 
 <pre
 class="grammar">local-no-init-var-decl-stmt :=
-   annots [<code>final</code>] type-descriptor variable-name <code>;</code>
+   [annots] [<code>final</code>] type-descriptor variable-name <code>;</code>
 </pre>
 <p>
 A local variable declared <code>local-no-init-var-decl-stmt</code> must be
@@ -4425,7 +4425,7 @@ possibility of x being assigned to</li>
 
 <pre
 class="grammar">local-type-defn-stmt :=
-   annots <code>type</code> identifier type-descriptor <code>;</code>
+   [annots] <code>type</code> identifier type-descriptor <code>;</code>
 </pre>
 <p>
 A local-type-defn-stmt binds the identifier to a type descriptor within the
@@ -5278,7 +5278,7 @@ class="grammar">function-defn :=
    [<code>public</code>]
    <code>function</code> identifier function-signature function-body
 function-body := function-body-block | external-function-body
-external-function-body := <code>=</code> annots <code>external</code> <code>;</code>
+external-function-body := <code>=</code> [annots] <code>external</code> <code>;</code>
 </pre>
 <p>
 An <code>external-function-body</code> means that the implementation of the
@@ -5475,7 +5475,7 @@ metadata before the construct.
 </p>
 
 <pre
-class="grammar">metadata := [DocumentationString] annots
+class="grammar">metadata := [DocumentationString] [annots]
 </pre>
 <p>
 There are two forms of metadata: documentation and annotations.
@@ -5483,7 +5483,7 @@ There are two forms of metadata: documentation and annotations.
 <h3>Annotations</h3>
 
 <pre
-class="grammar">annots := annotation*
+class="grammar">annots := annotation+
 annotation := <code>@</code> annot-tag-reference annot-value
 </pre>
 <p>
