@@ -2189,6 +2189,7 @@ class="grammar">expression :=
    | new-expr
    | variable-reference-expr
    | field-access-expr
+   | optional-field-access-expr
    | annot-access-expr
    | member-access-expr
    | xml-attributes-expr
@@ -2406,8 +2407,9 @@ done dynamically.
 In this version of Ballerina, only the first step has been taken towards
 supporting this concept. There is a fixed set of type descriptors that are
 classified as lax: specifically <code>json</code> is lax, and
-<code>map&lt;T&gt;</code> is lax if T is lax. The only kind of expression for
-which lax typing rules are specified is the field-access-expr.
+<code>map&lt;T&gt;</code> is lax if T is lax. The only kinds of expression for
+which lax typing rules are specified are field-access-expr and
+optional-field-access-expr.
 </p>
 
 <h4>Contextually expected type</h4>
@@ -2888,35 +2890,89 @@ semantics depends on the static type T of expression.
 <p>
 If T is a subtype of the object basic type, then T must have a field field-name
 and the static type of the field-access-expr is the type of that field. In this
-case, the field-access-expression is evaluated by first evaluating the
-expression to get a value <var>obj</var>; the result of the field-access-expr is
-the value of that field of <var>obj</var>.
+case, the field-access-expr is evaluated by first evaluating the expression to
+get a value <var>obj</var>; the result of the field-access-expr is the value of
+that field of <var>obj</var>. The rest of this subsection applies when T is not
+a subtype of the object basic type.
 </p>
 <p>
-Otherwise, let K is the singleton type containing just the string field-name;
-the semantics of a field-access-expr depends on whether the type descriptor
-describing T is lax:
+Let T' be the intersection of T and basic type list, let K be the singleton type
+containing just the string field-name, and let M be the member type for K in T'.
+The compile-time requirements on the field-access-expr depend on whether the
+type descriptor describing T is lax:
 </p>
 <ul>
+<li>if it is lax, then the only compile-time requirement is M is non-empty;</li>
 <li>if it is not lax, then T must be a subtype of the mapping basic type and K
-must be a required key type for T; the static type of the field-access-expr is
-the member type for K in T;</li>
-<li>if it is lax, then the only compile-time requirement is that the
-intersection of T with the basic type mapping is non-empty; the static type of
-the field-access-expr is the union of error and the member type for K in the
-intersection of T and basic type list.</li>
+must be a required key type for T.</li>
 </ul>
 <p>
-In both cases, the field-access-expr is evaluated as follows:
+The static type of field-access-expr is M|E, where E is empty if K is a required
+key type and T' is a subtype of T, and error otherwise (E can only be error in
+the lax case.)
+</p>
+<p>
+A field-access-expr is evaluated as follows:
 </p>
 <ol>
 <li>expression is evaluated resulting in a value <var>v</var></li>
 <li>if <var>v</var> has basic type error, the result is <var>v</var> (this can
 only happen in the lax case)</li>
-<li>otherwise, if <var>v</var> does not have basic typing mapping, the result is
-a new error value (this can only happen in the lax case)</li>
+<li>otherwise, if <var>v</var> does not have basic type mapping, the result is a
+new error value (this can only happen in the lax case)</li>
 <li>otherwise, if <var>v</var> does not have a member whose key is field-name,
 the result is a new error value (this can only happen in the lax case)</li>
+<li>otherwise, the result is the member of <var>v</var> whose key is
+field-name.</li>
+</ol>
+
+<h3>Optional field access expression</h3>
+
+<pre
+class="grammar">optional-field-access-expr := expression <code>?.</code> field-name
+</pre>
+<p>
+An optional-field-access-expr accesses a possibly undefined mapping member,
+returning <code>()</code> if the member does not exist.
+</p>
+<p>
+Let T be the static type of expression, let T' be the intersection of T and
+basic type list, let K be the singleton type containing just the string
+field-name and let M be the member type of K in T'. The compile-time
+requirements on the optional-field-access-expr depend on whether the type
+descriptor describing T is lax:
+</p>
+<ul>
+<li>if it is lax, then the only compile-time requirement is that M is
+non-empty;</li>
+<li>if it is not lax, then, in addition, T must be a subtype of the union of
+<code>()</code> and the mapping basic type, and the type descriptor for T must
+include <code>field-name</code> as an individual-type-descriptor (if the type
+descriptor is a union, then this requirement must be satisfied by at least one
+member of the union).</li>
+</ul>
+<p>
+The static type of the optional-field-access-expr is M|N|E where
+</p>
+<ul>
+<li>N is <code>()</code> if <code>()</code> is a subtype of T or K is not a
+required key type for T', and empty otherwise;</li>
+<li>E is <code>error</code> if T' is not a subtype of T?, and empty otherwise (E
+can only be error in the lax case).</li>
+</ul>
+
+<p>
+An optional-field-access-expr is evaluated as follows:
+</p>
+<ol>
+<li>expression is evaluated resulting in a value <var>v</var></li>
+<li>if <var>v</var> is <code>()</code>, the result is <code>()</code></li>
+<li>otherwise, if <var>v</var> has basic type error, the result is <var>v</var>
+(this can only happen in the lax case)</li>
+<li>otherwise, if <var>v</var> does not have basic type mapping, the result is a
+new error value (this can only happen in the lax case)</li>
+<li>otherwise, if <var>v</var> does not have a member whose key is field-name,
+the result is <code>()</code></li>
 <li>otherwise, the result is the member of <var>v</var> whose key is
 field-name.</li>
 </ol>
