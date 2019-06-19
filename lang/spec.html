@@ -1377,7 +1377,7 @@ value of that type using a <code>method-call-expr</code>.
 class="grammar">object-method := method-decl | method-defn
 method-decl :=
    metadata
-   object-visibility-qual [<code>remote</code>]
+   method-defn-quals
    <code>function</code> method-name function-signature <code>;</code>
 method-defn :=
    metadata
@@ -1390,7 +1390,7 @@ method-body := function-body
 <p>
 The names of all the methods of an object must be distinct: there is no method
 overloading. Method names beginning with two underscores are reserved for use
-with semantics defined by this specification, either as an <code>__init</code>
+with semantics defined by this specification, either as the <code>__init</code>
 method or as a method declared by a <a
 href="#built-in_abstract_object_types">built-in abstract object types</a>.
 </p>
@@ -1451,11 +1451,11 @@ Thus all object values belong to the type <code>object { }</code>.
 </p>
 <p>
 An object-type-descriptor that has a field with name f, visibility region R and
-type T contains an object shape only if the object shape contains an object
+type T contains an object shape only if the object type contains an object
 field shape that has name f, visibility region R and a value shape that is
 contained in T. An object-type-descriptor that has a method with name m,
 visibility region R and function type T contains an object shape only if the
-object shape contains an object method shape that has name m, visibility region
+object type contains an object method shape that has name m, visibility region
 R and a function value that belongs to type T.
 </p>
 <p>
@@ -1502,7 +1502,7 @@ is not definitely assigned at that point. It is a compile error if a
 </p>
 <ul>
 <li>accesses a field at a point where it is potentially initialized, or</li>
-<li>at a point where there is any potentially uninitialized value
+<li>at a point where there is any potentially uninitialized field
 <ul>
 <li>returns nil, or</li>
 <li>uses the <code>self</code> variable other than to access or modify the value of a field.</li>
@@ -1828,7 +1828,7 @@ functions in the lang library.
 The FillMember(c, k) operation is defined for a container value c and a key
 value k. It can be performed when c does not have a member with key k; if it
 succeeds, it will result in a member with key k being added to c. It will
-succeeds if the inherent type of c allows the addition of a member with key k
+succeed if the inherent type of c allows the addition of a member with key k
 and there is a way to construct a filler value for the type descriptor that the
 inherent type of c requires for member k. The following table specifies when and
 how a filler value can be constructed for a type descriptor.
@@ -1949,14 +1949,14 @@ Freeze(v) is defined for any pure value v. The result of Freeze(v) is always v.
 It recursively freezes any structural values and their members, thus maintaining
 the invariant that frozen values can only refer to immutable values. Freeze(v)
 for a value v is already frozen or is of an immutable type (i.e. a simple type
-of error) just returns v without modifying it.  Freeze(v) must terminate for any
+or error) just returns v without modifying it.  Freeze(v) must terminate for any
 pure value v, even if v has cycles.
 </p>
 <h4>Clone</h4>
 <p>
 Clone(v) is defined for any pure value v. It performs a deep copy, recursively
 copying all structural values and their members. Clone(v) for a value v that is
-frozen or of an immutable type (ie a simple type or error) returns v. If v is a
+frozen or of an immutable type (i.e. a simple type or error) returns v. If v is a
 container, Clone(v) has the same inherent type as v.  The graph of references of
 Clone(v) must have the same structure as that of v. This implies that the number
 of distinct references reachable from Clone(v) must be the same as the number of
@@ -1981,7 +1981,7 @@ and v2 have different basic types, then SameShape(v1, v2) will be false.
 </p>
 <p>
 The possibility of cycles means that SameShape cannot be implemented simply by
-calling SameShape recursively on members. Rather SameShape must maintaom a
+calling SameShape recursively on members. Rather SameShape must maintain a
 mapping that records for each pair of references whether it is already in
 process of comparing those references. When a SameShape operation starts, this
 map is empty. Whenever it starts to compare two references, it should see
