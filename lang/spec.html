@@ -195,7 +195,8 @@ A repository organizes binary modules into a 3-level hierarchy:
 </ol>
 <p>
 Organizations are identified by Unicode strings, and are unique within a
-repository. The organization name <code>ballerina</code> is reserved for use by
+repository. Any organization name starting with the string
+<code>ballerina</code> is reserved for use by
 the Ballerina Platform. A module name is a Unicode string and is unique within a
 repository organization. A particular module name can have one or more versions
 each associated with a separate binary module. Versions are semantic, as
@@ -969,8 +970,12 @@ A type <code>map&lt;T></code> contains a mapping shape <em>m</em> if every field
 shape in <em>m</em> has a value shape that is in <code>T</code>.
 </p>
 <p>
-A value belonging to type <code>map&lt;T></code> is iterable as a sequence of
+A value belonging to type <code>map&lt;T&gt;</code> is iterable as a sequence of
 values of type <code>T</code>.
+</p>
+<p>
+If a type descriptor T has <a href="#lax_static_typing">lax static typing</a>,
+then the type <code>map&lt;T&gt;</code> also has lax static typing.
 </p>
 <h5>Record types</h5>
 <p>
@@ -1211,7 +1216,7 @@ class="grammar">behavioral-type-descriptor :=
 <pre
 class="grammar">function-type-descriptor := <code>function</code> function-signature
 function-signature := <code>(</code> param-list <code>)</code> return-type-descriptor
-return-type-descriptor := [ <code>returns</code> annots type-descriptor ]
+return-type-descriptor := [ <code>returns</code> [annots] type-descriptor ]
 </pre>
 <p>
 A function is a part of a program that can be explicitly executed. In Ballerina,
@@ -1233,10 +1238,10 @@ class="grammar">param-list :=
    | defaultable-params [<code>,</code> rest-param]
    | [rest-param]
 required-params := required-param (<code>,</code> required-param)*
-required-param := annots type-descriptor [param-name]
+required-param := [annots] type-descriptor [param-name]
 defaultable-params := defaultable-param (<code>,</code> defaultable-param)*
-defaultable-param := annots type-descriptor [param-name] default-value
-rest-param := annots type-descriptor <code>...</code> [param-name]
+defaultable-param := [annots] type-descriptor [param-name] default-value
+rest-param := [annots] type-descriptor <code>...</code> [param-name]
 </pre>
 <p>
 A param-name can be omitted from a required-param, defaultable-param or
@@ -1372,7 +1377,7 @@ value of that type using a <code>method-call-expr</code>.
 class="grammar">object-method := method-decl | method-defn
 method-decl :=
    metadata
-   method-defn-quals
+   object-visibility-qual [<code>remote</code>]
    <code>function</code> method-name function-signature <code>;</code>
 method-defn :=
    metadata
@@ -1385,7 +1390,7 @@ method-body := function-body
 <p>
 The names of all the methods of an object must be distinct: there is no method
 overloading. Method names beginning with two underscores are reserved for use
-with semantics defined by this specification, either as the <code>__init</code>
+with semantics defined by this specification, either as an <code>__init</code>
 method or as a method declared by a <a
 href="#built-in_abstract_object_types">built-in abstract object types</a>.
 </p>
@@ -1446,11 +1451,11 @@ Thus all object values belong to the type <code>object { }</code>.
 </p>
 <p>
 An object-type-descriptor that has a field with name f, visibility region R and
-type T contains an object shape only if the object type contains an object
+type T contains an object shape only if the object shape contains an object
 field shape that has name f, visibility region R and a value shape that is
 contained in T. An object-type-descriptor that has a method with name m,
 visibility region R and function type T contains an object shape only if the
-object type contains an object method shape that has name m, visibility region
+object shape contains an object method shape that has name m, visibility region
 R and a function value that belongs to type T.
 </p>
 <p>
@@ -1497,7 +1502,7 @@ is not definitely assigned at that point. It is a compile error if a
 </p>
 <ul>
 <li>accesses a field at a point where it is potentially initialized, or</li>
-<li>at a point where there is any potentially uninitialized field
+<li>at a point where there is any potentially uninitialized value
 <ul>
 <li>returns nil, or</li>
 <li>uses the <code>self</code> variable other than to access or modify the value of a field.</li>
@@ -1706,16 +1711,25 @@ type <code>anydata</code> is equivalent to the union
 <pre class="grammar">byte-type-descriptor := <code>byte</code>
 </pre>
 <p>
-The byte type is an abbreviation for a union of the int values in the range 0 to
+The byte type is a built-in name for a union of the int values in the range 0 to
 255 inclusive.
 </p>
 <h4>JSON types</h4>
 
 <pre
 class="grammar">json-type-descriptor := json
-
-json means <code>() | boolean | int | float | decimal | string | json[] | map&lt;json&gt;</code>
 </pre>
+<p>
+The <code>json</code> type is designed for processing data expression in JSON
+format. It is a built-in name for a union defined as follows:
+</p>
+<pre>type json = () | boolean | int | float | decimal | string | json[] | map&lt;json&gt;;
+</pre>
+<p>
+In addition, the <code>json</code> type is defined to have <a
+href="#lax_static_typing">lax static typing</a>.
+</p>
+
 <h3 id="built-in_abstract_object_types">Built-in abstract object types</h3>
 <p>
 There are several abstract object types that are built-in in the sense that the
@@ -1814,7 +1828,7 @@ functions in the lang library.
 The FillMember(c, k) operation is defined for a container value c and a key
 value k. It can be performed when c does not have a member with key k; if it
 succeeds, it will result in a member with key k being added to c. It will
-succeed if the inherent type of c allows the addition of a member with key k
+succeeds if the inherent type of c allows the addition of a member with key k
 and there is a way to construct a filler value for the type descriptor that the
 inherent type of c requires for member k. The following table specifies when and
 how a filler value can be constructed for a type descriptor.
@@ -1935,14 +1949,14 @@ Freeze(v) is defined for any pure value v. The result of Freeze(v) is always v.
 It recursively freezes any structural values and their members, thus maintaining
 the invariant that frozen values can only refer to immutable values. Freeze(v)
 for a value v is already frozen or is of an immutable type (i.e. a simple type
-or error) just returns v without modifying it.  Freeze(v) must terminate for any
+of error) just returns v without modifying it.  Freeze(v) must terminate for any
 pure value v, even if v has cycles.
 </p>
 <h4>Clone</h4>
 <p>
 Clone(v) is defined for any pure value v. It performs a deep copy, recursively
 copying all structural values and their members. Clone(v) for a value v that is
-frozen or of an immutable type (i.e. a simple type or error) returns v. If v is a
+frozen or of an immutable type (ie a simple type or error) returns v. If v is a
 container, Clone(v) has the same inherent type as v.  The graph of references of
 Clone(v) must have the same structure as that of v. This implies that the number
 of distinct references reachable from Clone(v) must be the same as the number of
@@ -1967,7 +1981,7 @@ and v2 have different basic types, then SameShape(v1, v2) will be false.
 </p>
 <p>
 The possibility of cycles means that SameShape cannot be implemented simply by
-calling SameShape recursively on members. Rather SameShape must maintain a
+calling SameShape recursively on members. Rather SameShape must maintaom a
 mapping that records for each pair of references whether it is already in
 process of comparing those references. When a SameShape operation starts, this
 map is empty. Whenever it starts to compare two references, it should see
@@ -2175,6 +2189,7 @@ class="grammar">expression :=
    | new-expr
    | variable-reference-expr
    | field-access-expr
+   | optional-field-access-expr
    | annot-access-expr
    | member-access-expr
    | xml-attributes-expr
@@ -2365,9 +2380,38 @@ however, for panic abrupt completion, no type is computed.
 </p>
 <p>
 The detailed rules for the static typing of expressions are quite elaborate and
-are not specified completely in this document. This document only mentions some
-key points that programmers might need to be aware of.
+are not yet specified completely in this document.
 </p>
+
+<h4 id="lax_static_typing">Lax static typing</h4>
+<p>
+In some situations it is convenient for static typing to be less strict than
+normal. One such situation is when processing data in Ballerina using a static
+type that is less precisse than the type that the data is in fact expected to
+belong to. For example, when the Ballerina <code>json</code> type is used for
+the processing of data in JSON format, the Ballerina static type will not
+capture the constraints of the particular JSON format that is been processed.
+</p>
+<p>
+Ballerina supports this situation through the concept of lax static typing,
+which has two parts: the first part is that a type descriptor can be classified
+as lax; the second part is that particular kinds of expression can have less
+strict static typing rules when the static type of a subexpression is described
+by a lax type descriptor. With these less strict rules, a potential type error
+that would have been a compile-time error according to the normal strict static
+typing rules would instead be allowed at compile-time and result in an error
+value at runtime; the effect is thus that some static type-checking is instead
+done dynamically.
+</p>
+<p>
+In this version of Ballerina, only the first step has been taken towards
+supporting this concept. There is a fixed set of type descriptors that are
+classified as lax: specifically <code>json</code> is lax, and
+<code>map&lt;T&gt;</code> is lax if T is lax. The only kinds of expression for
+which lax typing rules are specified are field-access-expr and
+optional-field-access-expr.
+</p>
+
 <h4>Contextually expected type</h4>
 <p>
 For a context in which an expression occurs, there may be a type descriptor that
@@ -2695,7 +2739,7 @@ For example,
 <h3>Service constructor</h3>
 
 <pre
-class="grammar">service-constructor-expr := annots <code>service</code> service-body-block
+class="grammar">service-constructor-expr := [annots] <code>service</code> service-body-block
 service-body-block := <code>{</code> service-method-defn* <code>}</code>
 service-method-defn :=
    metadata
@@ -2840,22 +2884,98 @@ that type.
 class="grammar">field-access-expr := expression <code>.</code> field-name
 </pre>
 <p>
-A field-access-expr accesses a field of an object or a member of a mapping.
+A field-access-expr accesses a field of an object or a member of a mapping. The
+semantics depends on the static type T of expression.
 </p>
 <p>
-Let T be the static type of expression. There are two cases for T:
-of
+If T is a subtype of the object basic type, then T must have a field field-name
+and the static type of the field-access-expr is the type of that field. In this
+case, the field-access-expr is evaluated by first evaluating the expression to
+get a value <var>obj</var>; the result of the field-access-expr is the value of
+that field of <var>obj</var>. The rest of this subsection applies when T is not
+a subtype of the object basic type.
+</p>
+<p>
+Let T' be the intersection of T and basic type list, let K be the singleton type
+containing just the string field-name, and let M be the member type for K in T'.
+The compile-time requirements on the field-access-expr depend on whether the
+type descriptor describing T is lax:
 </p>
 <ul>
-<li>if T is a subtype of the object basic type, then the static type of T must
-have a field field-name and the static type of the field-access-expr is the type of
-that field;
-</li>
-<li>otherwise, T must be a subtype of the mapping basic type; in this case, K
-must be a required key type for T, where K is the singleton type containing just
-field-name; the static type of the field-access-expr is the member type for K in
-T.</li>
+<li>if it is lax, then the only compile-time requirement is M is non-empty;</li>
+<li>if it is not lax, then T must be a subtype of the mapping basic type and K
+must be a required key type for T.</li>
 </ul>
+<p>
+The static type of field-access-expr is M|E, where E is empty if K is a required
+key type and T' is a subtype of T, and error otherwise (E can only be error in
+the lax case.)
+</p>
+<p>
+A field-access-expr is evaluated as follows:
+</p>
+<ol>
+<li>expression is evaluated resulting in a value <var>v</var></li>
+<li>if <var>v</var> has basic type error, the result is <var>v</var> (this can
+only happen in the lax case)</li>
+<li>otherwise, if <var>v</var> does not have basic type mapping, the result is a
+new error value (this can only happen in the lax case)</li>
+<li>otherwise, if <var>v</var> does not have a member whose key is field-name,
+the result is a new error value (this can only happen in the lax case)</li>
+<li>otherwise, the result is the member of <var>v</var> whose key is
+field-name.</li>
+</ol>
+
+<h3>Optional field access expression</h3>
+
+<pre
+class="grammar">optional-field-access-expr := expression <code>?.</code> field-name
+</pre>
+<p>
+An optional-field-access-expr accesses a possibly undefined mapping member,
+returning <code>()</code> if the member does not exist.
+</p>
+<p>
+Let T be the static type of expression, let T' be the intersection of T and
+basic type list, let K be the singleton type containing just the string
+field-name and let M be the member type of K in T'. The compile-time
+requirements on the optional-field-access-expr depend on whether the type
+descriptor describing T is lax:
+</p>
+<ul>
+<li>if it is lax, then the only compile-time requirement is that M is
+non-empty;</li>
+<li>if it is not lax, then, in addition, T must be a subtype of the union of
+<code>()</code> and the mapping basic type, and the type descriptor for T must
+include <code>field-name</code> as an individual-type-descriptor (if the type
+descriptor is a union, then this requirement must be satisfied by at least one
+member of the union).</li>
+</ul>
+<p>
+The static type of the optional-field-access-expr is M|N|E where
+</p>
+<ul>
+<li>N is <code>()</code> if <code>()</code> is a subtype of T or K is not a
+required key type for T', and empty otherwise;</li>
+<li>E is <code>error</code> if T' is not a subtype of T?, and empty otherwise (E
+can only be error in the lax case).</li>
+</ul>
+
+<p>
+An optional-field-access-expr is evaluated as follows:
+</p>
+<ol>
+<li>expression is evaluated resulting in a value <var>v</var></li>
+<li>if <var>v</var> is <code>()</code>, the result is <code>()</code></li>
+<li>otherwise, if <var>v</var> has basic type error, the result is <var>v</var>
+(this can only happen in the lax case)</li>
+<li>otherwise, if <var>v</var> does not have basic type mapping, the result is a
+new error value (this can only happen in the lax case)</li>
+<li>otherwise, if <var>v</var> does not have a member whose key is field-name,
+the result is <code>()</code></li>
+<li>otherwise, the result is the member of <var>v</var> whose key is
+field-name.</li>
+</ol>
 
 <h3>Annotation access expression</h3>
 
@@ -3097,7 +3217,7 @@ fields have been added.
 
 <pre
 class="grammar">anonymous-function-expr :=
-  annots <code>function</code> function-signature function-body-block
+  [annots] <code>function</code> function-signature function-body-block
 </pre>
 <p>
 Evaluating an anonymous-function-expr creates a closure, whose basic type is
@@ -3128,8 +3248,17 @@ contextually expected type for <code>expression</code> is T.
 <h3>Type cast expression</h3>
 
 <pre
-class="grammar">type-cast-expr := <code>&lt;</code> type-descriptor <code>></code> expression
+class="grammar">type-cast-expr := <code>&lt;</code> type-cast-param <code>&gt;</code> expression
+type-cast-param := [annots] type-descriptor | annots
 </pre>
+<p>
+Normally, the parameter for a type-cast-expr includes a type-descriptor.
+However, it is also allowed for the parameter to consist only of annotations; in
+this case, the only effect of the type cast is for the contextually expected
+type for expression to be augmented with the specified annotations. The rest of
+this subsection describes the normal case, where the type-cast-expr includes a
+type-descriptor.
+</p>
 <p>
 A <code>type-cast-expr</code> casts the value resulting from evaluating
 <code>expression</code> to the type described by the type-descriptor, performing
@@ -4155,7 +4284,7 @@ class="grammar">local-var-decl-stmt :=
    local-init-var-decl-stmt
    | local-no-init-var-decl-stmt
 local-init-var-decl-stmt :=
-   annots [<code>final</code>] typed-binding-pattern <code>=</code> action-or-expr <code>;</code>
+   [annots] [<code>final</code>] typed-binding-pattern <code>=</code> action-or-expr <code>;</code>
 </pre>
 <p>
 A <code>local-var-decl-stmt</code> is used to declare variables with a scope
@@ -4186,7 +4315,7 @@ assigned to outside the local-init-var-decl-stmt.
 
 <pre
 class="grammar">local-no-init-var-decl-stmt :=
-   annots [<code>final</code>] type-descriptor variable-name <code>;</code>
+   [annots] [<code>final</code>] type-descriptor variable-name <code>;</code>
 </pre>
 <p>
 A local variable declared <code>local-no-init-var-decl-stmt</code> must be
@@ -4305,7 +4434,7 @@ possibility of x being assigned to</li>
 
 <pre
 class="grammar">local-type-defn-stmt :=
-   annots <code>type</code> identifier type-descriptor <code>;</code>
+   [annots] <code>type</code> identifier type-descriptor <code>;</code>
 </pre>
 <p>
 A local-type-defn-stmt binds the identifier to a type descriptor within the
@@ -5158,7 +5287,7 @@ class="grammar">function-defn :=
    [<code>public</code>]
    <code>function</code> identifier function-signature function-body
 function-body := function-body-block | external-function-body
-external-function-body := <code>=</code> annots <code>external</code> <code>;</code>
+external-function-body := <code>=</code> [annots] <code>external</code> <code>;</code>
 </pre>
 <p>
 An <code>external-function-body</code> means that the implementation of the
@@ -5355,7 +5484,7 @@ metadata before the construct.
 </p>
 
 <pre
-class="grammar">metadata := [DocumentationString] annots
+class="grammar">metadata := [DocumentationString] [annots]
 </pre>
 <p>
 There are two forms of metadata: documentation and annotations.
@@ -5363,7 +5492,7 @@ There are two forms of metadata: documentation and annotations.
 <h3>Annotations</h3>
 
 <pre
-class="grammar">annots := annotation*
+class="grammar">annots := annotation+
 annotation := <code>@</code> annot-tag-reference annot-value
 </pre>
 <p>
@@ -5490,7 +5619,7 @@ The available attachment points are described in the following table.
   </tr>
   <tr>
    <td>type</td>
-   <td>module-type-defn, local-type-defn-stmt</td>
+   <td>module-type-defn, local-type-defn-stmt, type-cast-expr</td>
    <td>defined type</td>
   </tr>
   <tr>
@@ -5734,6 +5863,8 @@ removed.</li>
 <li>The UnfrozenClone operation has been removed.</li>
 <li>The semantics of field access, member access and assignment are now
 fully specified.</li>
+<li>A <code>?.</code> operator has been added for access to optional fields.</li>
+<li>A type-cast-expr can include annotations.</li>
 </ol>
 
 <h3>Summary of changes from 0.990 to 2019R1</h3>
