@@ -115,7 +115,7 @@ public function fromString(string s) returns xml|error = external;
 public function expandedName(string namespaceUri, string localName) returns string = external;
 
 # Inverse of `expandedName`.
-# Returns [namespaceURI, localName] tuple. Return value is frozen.
+# Returns [namespaceURI, localName] tuple.
 public function splitExpandedName(string xName) returns [string, string] = external;
 
 
