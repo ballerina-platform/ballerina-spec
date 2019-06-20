@@ -1399,7 +1399,7 @@ value of that type using a <code>method-call-expr</code>.
 class="grammar">object-method := method-decl | method-defn
 method-decl :=
    metadata
-   object-visibility-qual [<code>remote</code>]
+   method-defn-quals
    <code>function</code> method-name function-signature <code>;</code>
 method-defn :=
    metadata
@@ -1412,7 +1412,7 @@ method-body := function-body
 <p>
 The names of all the methods of an object must be distinct: there is no method
 overloading. Method names beginning with two underscores are reserved for use
-with semantics defined by this specification, either as an <code>__init</code>
+with semantics defined by this specification, either as the <code>__init</code>
 method or as a method declared by a <a
 href="#built-in_abstract_object_types">built-in abstract object types</a>.
 </p>
@@ -1524,7 +1524,7 @@ is not definitely assigned at that point. It is a compile error if a
 </p>
 <ul>
 <li>accesses a field at a point where it is potentially initialized, or</li>
-<li>at a point where there is any potentially uninitialized value
+<li>at a point where there is any potentially uninitialized field
 <ul>
 <li>returns nil, or</li>
 <li>uses the <code>self</code> variable other than to access or modify the value of a field.</li>
@@ -1850,7 +1850,7 @@ functions in the lang library.
 The FillMember(c, k) operation is defined for a container value c and a key
 value k. It can be performed when c does not have a member with key k; if it
 succeeds, it will result in a member with key k being added to c. It will
-succeeds if the inherent type of c allows the addition of a member with key k
+succeed if the inherent type of c allows the addition of a member with key k
 and there is a way to construct a filler value for the type descriptor that the
 inherent type of c requires for member k. The following table specifies when and
 how a filler value can be constructed for a type descriptor.
@@ -2011,7 +2011,7 @@ and v2 have different basic types, then SameShape(v1, v2) will be false.
 </p>
 <p>
 The possibility of cycles means that SameShape cannot be implemented simply by
-calling SameShape recursively on members. Rather SameShape must maintaom a
+calling SameShape recursively on members. Rather SameShape must maintain a
 mapping that records for each pair of references whether it is already in
 process of comparing those references. When a SameShape operation starts, this
 map is empty. Whenever it starts to compare two references, it should see
@@ -2106,7 +2106,7 @@ value to be assigned to named variable;</li>
 in other words if the basic type of the value is not error; it does not cause
 any assignments to be made;</li>
 <li>a list-binding-pattern with m binding patterns matches a list with n
-members if m is less than or equal to m, and the i-th binding pattern matches
+members if m is less than or equal to n, and the i-th binding pattern matches
 the i-th member of the list for each i in 1 to m, and either m is equal to n or
 the list-binding-pattern includes a rest-binding-pattern; if there is a
 rest-binding-pattern <code>...v</code>, then a successful match causes a new
@@ -2131,7 +2131,7 @@ consisting of all fields other than f<sub>1</sub>, f<sub>2</sub>, ... ,
 f<sub>n</sub> to be assigned to <code>v</code>;</li>
 </ul>
 <p>
-All the variables in a binding-pattern must be distinct e.g. (x, x) is not
+All the variables in a binding-pattern must be distinct e.g. [x, x] is not
 allowed.
 </p>
 <p>
