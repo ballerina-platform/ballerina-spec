@@ -735,41 +735,43 @@ basic types: list and mapping. Second, there are the table, xml and error basic
 types, which are each special in different ways.
 </p>
 <p>
-Values of the container basic types are containers for other values, which are
-called their members.  Containers are mutable: the members contained in a
-particular container can be changed. However, a container value can also be
-frozen at runtime or compile time, which prevents any change to its members. A
-frozen container value can refer only to immutable values: either other frozen
-values or values of basic types that are always immutable. Once frozen, a
-container value remains frozen. Values of basic type xml can also be frozen as
-described below.
+A structured value is either mutable or immutable; whether it is mutable or
+immutable is fixed when the value is constructed and cannot be changed
+thereafter. Immutability is deep: an immutable structured value cannot refer to
+a mutable structured value. The error basic type is inherently immutable: a
+value of the error basic type is always immutable. Structured values of other
+basic types are usually mutable, but can be constructed as immutable in two
+ways. First, a structural value constructed by a compile-time constant
+expression is always immutable. Second, an immutable, deep copy can be made of a
+structure by using the <a href="#ImmutableClone">ImmutableClone</a> abstract
+operation.
 </p>
 <p>
-The shape of the members of a container value contribute to the shape of the
-container. Mutating a member of a container can thus cause the shape of the
-container to change.
+Values of the container basic types are containers for other values, which are
+called their members. The shape of the members of a container value contribute
+to the shape of the container. Mutating a member of a container can thus cause
+the shape of the container to change.
 </p>
 <p>
 A type descriptor for a container basic type describe the shape of the container
-in terms of the shapes of its members.  A container has an inherent type, which
+in terms of the shapes of its members. A container has an inherent type, which
 is a type descriptor which is part of the container's runtime value. At runtime,
 the container prevents any mutation that might lead to the container having a
 shape that is not a member of its inherent type. Thus a container value belongs
-to a type if and only if that type is its inherent type or a subset of its
-inherent type.
+to a type if and only if that its inherent type is a subtype of that type.
 </p>
 <p>
-A frozen container value belongs to a type if and only if the type contains the
-shape of the value. In other words, freezing a container narrows its inherent
-type to a type that consists of just its current shape.
+The inherent type of an immutable container is a singleton type with the
+container's shape as its single member. Thus, an immutable container value
+belongs to a type if and only if the type contains the shape of the value.
 </p>
 <p>
-Each member has a key that uniquely identifies it within the container. The
-<em>member type</em> for a key type K in a container type T consists of all
-shapes v such that there is a shape in T with key in K and shape v. A type K is
-an <em>optional key type</em> for T if there is a shape v in T and a key k in K
-such that v does not have a member k; a type that is not an optional key type is
-a required key type.
+Each member of a container has a key that uniquely identifies it within the
+container. The <em>member type</em> for a key type K in a container type T
+consists of all shapes v such that there is a shape in T with key in K and shape
+v. A type K is an <em>optional key type</em> for T if there is a shape v in T
+and a key k in K such that v does not have a member k; a type that is not an
+optional key type is a required key type.
 </p>
 
 <pre
@@ -1134,8 +1136,8 @@ inherent type of each mapping value will be a closed record type.
 <pre class="grammar">xml-type-descriptor := <code>xml</code>
 </pre>
 <p>
-An XML value represents an immutable sequence of zero or more of the items that
-can occur inside an XML element, specifically:
+An XML value represents a sequence of zero or more of the items that can occur
+inside an XML element, specifically:
 </p>
 <ul>
 <li>elements</li>
@@ -1144,10 +1146,16 @@ can occur inside an XML element, specifically:
 <li>comments</li>
 </ul>
 <p>
-The attributes of an element are represented by a map&lt;string>. The content of
-each element in the sequence is itself a distinct XML value. Although the
-sequence is immutable, an element can be mutated to change its content to be
-another XML value.
+The attributes of an element are represented by a map&lt;string&gt;. The content
+of each element in the sequence is itself a distinct XML value.
+</p>
+<p>
+XML values allow mutation in a different way from containers. Element items can
+be mutated; in particular, an element can be mutated to change its content to be
+another XML value. But other items are immutable. Furthermore, once an XML value
+is constructed, which items comprise the sequence it represents is fixed. Thus
+an XML value consising of only character items is immutable in the same way as a
+string.
 </p>
 <p>
 An XML value is iterable as a sequence of its items, where each character item
@@ -1168,18 +1176,16 @@ inferred-error-type-param := <code>*</code>
 <p>
 An error value belongs to the error basic type, which is a basic type which is
 distinct from other structured types and is used only for representing errors.
-An error value contains the following information:
+The error type is inherently immutable. An error value contains the following
+information:
 </p>
 <ul>
 <li>a reason, which is a string identifier for the category of error</li>
-<li>a detail, which is a frozen mapping providing additional information about
+<li>a detail, which is an immutable mapping providing additional information about
 the error</li>
-<li>a stack trace</li>
+<li>a stack trace, which is an immutable snapshot of the state of the execution
+stack</li>
 </ul>
-<p>
-An error value is immutable, since the detail is frozen and the stack trace
-information cannot be changed.
-</p>
 <p>
 The shape of an error value consists of the shape of the reason and the shape of
 the detail; the stack trace is not part of the shape. A type descriptor
@@ -1943,25 +1949,15 @@ and the filler value for B also belongs to the union</td>
 </tr>
 </table>
 
-<h4>Freeze</h4>
-<p>
-Freeze(v) is defined for any pure value v. The result of Freeze(v) is always v.
-It recursively freezes any structural values and their members, thus maintaining
-the invariant that frozen values can only refer to immutable values. Freeze(v)
-for a value v is already frozen or is of an immutable type (i.e. a simple type
-of error) just returns v without modifying it.  Freeze(v) must terminate for any
-pure value v, even if v has cycles.
-</p>
-<h4>Clone</h4>
+<h4 id="Clone">Clone</h4>
 <p>
 Clone(v) is defined for any pure value v. It performs a deep copy, recursively
-copying all structural values and their members. Clone(v) for a value v that is
-frozen or of an immutable type (ie a simple type or error) returns v. If v is a
-container, Clone(v) has the same inherent type as v.  The graph of references of
-Clone(v) must have the same structure as that of v. This implies that the number
-of distinct references reachable from Clone(v) must be the same as the number of
-distinct references reachable from v.  Clone(v) must terminate for any pure
-value v, even if v has cycles.
+copying all structural values and their members. Clone(v) for a immutable value
+v returns v. If v is a container, Clone(v) has the same inherent type as v. The
+graph of references of Clone(v) must have the same structure as that of v. This
+implies that the number of distinct references reachable from Clone(v) must be
+the same as the number of distinct references reachable from v. Clone(v) must
+terminate for any pure value v, even if v has cycles.
 </p>
 <p>
 Clone(v) cannot be implemented simply by recursively calling Clone on all
@@ -1969,6 +1965,24 @@ members of v. Rather Clone must maintain a map that records the result of
 cloning each reference value. When a Clone operation starts, this map as empty.
 When cloning a reference value, it must use the result recorded in the map if
 there is one.
+</p>
+<p>
+The Clone operation is exposed by the <code>clone</code> function in the
+lang.value module of the lang library.
+</p>
+<h4 id="ImmutableClone">ImmutableClone</h4>
+<p>
+ImmutableClone(v) is defined for any pure value v. It performs a deep copy of v
+similar to Clone(v), except that newly constructed values are constructed as
+immutable. Any immutable value is not copied. 
+</p>
+<p>
+Like Clone, ImmutableClone must preserve graph structure, including cycles.
+Conceptually the whole graph is constructed before being made immutable.
+</p>
+<p>
+The ImmutableClone operation is exposed by the <code>cloneReadOnly</code>
+function in the lang.value module of the lang library.
 </p>
 <h4>SameShape</h4>
 <p>
@@ -2530,9 +2544,10 @@ A <code>constant-reference-expr</code> must reference a constant defined with
 <code>module-const-decl</code>.
 </p>
 <p>
-A <code>const-expr</code> is evaluated at compile-time. The result of a
-<code>const-expr</code> is automatically frozen. Note that the syntax of
-const-expr does not allow for the construction of error values.
+A <code>const-expr</code> is evaluated at compile-time. Constructors called
+within a <code>const-expr</code> construct their values as immutable. Note that
+the syntax of const-expr does not allow for the construction of error values.
+The result of a <code>const-expr</code> is always immutable.
 </p>
 
 <pre
@@ -3206,11 +3221,10 @@ expected type is an error type (rather than a union) with detail type
 defaultable fields of <var>d</var> for which no named-arg was specified.
 </p>
 <p>
-Evaluating the error-constructor-expr creates a new detail record. The result of
-evaluating each named-arg and every defaultable arg is cloned using the Clone
-abstract operation, then frozen using the Freeze abstract operation, before
-being added to the detail record. The detail record is itself frozen after all
-fields have been added.
+Evaluating the error-constructor-expr creates a new detail record. The detail
+record is constructed as immutable, with its members being the result of
+appplying the ImmutableClone abstract operation on the result of evaluating each
+named-arg and every defaultable arg,
 </p>
 
 <h3>Anonymous function expression</h3>
@@ -3304,13 +3318,12 @@ not have any annotations. Each evaluation of <code>typeof</code> with a simple
 value produces a new typedesc value.</li>
 <li>When v is a reference value, each evaluation of <code>typeof</code> with an
 identical reference value produces an identical typedesc value. The type
-descriptor resulting from <code>typeof</code> will be identical to the type
+descriptor resulting from <code>typeof</code> will be the same as the type
 descriptor used to construct the value. For containers, this is the same as the
-inherent type, except in the case where the inherent type of a structured value
-has been changed by freeze or stamp methods. For behavioral values, this is the
-same as the type descriptor used with new. Any annotations that were attached to
-the type descriptor used to construct the value will this be available on the
-constructed value.</li>
+inherent type; when the container is immutable, it will be a singleton type. For
+an object, this is the same as the type descriptor used with new. Any
+annotations that were attached to the type descriptor used to construct the
+value will this be available on the constructed value.</li>
 </ul>
 <p>
 The static type of <code>typeof-expr</code> is typedesc&lt;T>, where T is the
@@ -4559,8 +4572,8 @@ determined by the inherent type of the container.</li>
 allow a member with that specific key. The permissible keys of a container can
 be constrained by closed record types, fixed-length array types, and tuple types
 (with any rest descriptor).</li>
-<li>The container may be frozen. The static type of an lvalue referring to a
-member of a container makes no guaranteees that the container is not frozen.</li>
+<li>The container may be immutable. The static type of an lvalue referring to a
+member of a container makes no guaranteees that the container is not immutable.</li>
 </ol>
 <p>
 The first of these reasons also applies to lvalues that refer to fields of
@@ -5563,7 +5576,7 @@ If the annotation-decl for a tag specifies <code>const</code>, then a
 mapping-constructor-expr in annotations with that tag must be a const-expr and
 is evaluated at compile-time with the semantics of a const-expr. Otherwise, the
 mapping-constructor-expr is evaluated when the annotation is evaluated and the
-resulting value is automatically frozen.
+ImmutableClone abstract operation is applied to the result.
 </p>
 <p>
 An annotation applied to a module-level declaration is evaluated when the module
@@ -5861,6 +5874,7 @@ floating point.</li>
 <li>The ability to define a method outside the object type has been
 removed.</li>
 <li>The UnfrozenClone operation has been removed.</li>
+<li>The Freeze operation has been replaced by the ImmutableClone operation.</li>
 <li>The semantics of field access, member access and assignment are now
 fully specified.</li>
 <li>A <code>?.</code> operator has been added for access to optional fields.</li>

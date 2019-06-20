@@ -31,14 +31,14 @@ type AnydataType = anydata;
 # defined in the Ballerina Language Specification. 
 public function clone(AnydataType v) returns AnydataType = external;
 
-# Freezes `v` and returns it.
-# It corresponds to the Freeze(v) abstract operation,
-# as defined in the Ballerina Language Specification. 
-public function freeze(AnydataType v) returns AnydataType = external;
+# Returns a clone of `v` that is read-only, i.e. immutable.
+# It corresponds to the ImmutableClone(v) abstract operation,
+# defined in the Ballerina Language Specification. 
+public function cloneReadOnly(AnydataType v) returns AnydataType = external;
 
-# Tests whether `v` is frozen
-# Returns true if frozen, false otherwise.
-public function isFrozen(anydata v) returns boolean = external;
+# Tests whether `v` is read-only, i.e. immutable
+# Returns true if read-only, false otherwise.
+public function isReadOnly(anydata v) returns boolean = external;
 
 # Modify the inherent type of a value
 # + v - the value whose type is to be changed
