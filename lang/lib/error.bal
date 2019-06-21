@@ -14,14 +14,21 @@
 // specific language governing permissions and limitations
 // under the License.
 
+# The type to which error record details must belong.
+public type Detail record {|
+   string message?;
+   error cause?;
+   (anydata|error)...;
+|};
+
 @typeParam
-private type RecordType record {};
+private type DetailType Detail;
 @typeParam
 private type StringType string;
 
 # Returns the error's reason string
 public function reason(error<StringType> e) returns StringType = external;
 # Returns the error's detail record as an immutable mapping
-public function detail(error<string,RecordType> e) returns RecordType = external;
+public function detail(error<string,DetailType> e) returns DetailType = external;
 # Returns an object representing the stack trace of the error
 public function stackTrace(error e) returns object { } = external;
