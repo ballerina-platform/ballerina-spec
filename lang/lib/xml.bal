@@ -107,15 +107,4 @@ public function filter(xml x, function(xml|string item) returns boolean func) re
 # This is the inverse of `value:toString` applied to an `xml`.
 public function fromString(string s) returns xml|error = external;
 
-// Expanded name manipulation
-
-# Returns a string combining a namespaceURI and a local name.
-# If namespaceURI is non-empty, the string is `{namespaceURI}localName`.
-# If namespaceURI is empty, the string is just `localName`.
-public function expandedName(string namespaceUri, string localName) returns string = external;
-
-# Inverse of `expandedName`.
-# Returns [namespaceURI, localName] tuple.
-public function splitExpandedName(string xName) returns [string, string] = external;
-
 
