@@ -1700,7 +1700,7 @@ class="grammar">type-descriptor :=
    | json-type-descriptor
    | type-descriptor-reference
    | <code>(</code> type-descriptor <code>)</code>
-type-descriptor-reference := qualified-identifier
+type-descriptor-reference := identifier | qualified-identifier
 </pre>
 <p>
 It is important to understand that the type descriptors specified in this
@@ -2936,7 +2936,7 @@ implicit-new-expr consisting of just <code>new</code> is equivalent to
 
 <pre
 class="grammar">variable-reference-expr := variable-reference
-variable-reference := qualified-identifier
+variable-reference := identifier | qualified-identifier
 </pre>
 <p>
 A variable-reference can refer to a variable, a parameter, a constant (defined
@@ -5255,7 +5255,7 @@ major-num := DecimalNumber
 minor-num := DecimalNumber
 patch-num := DecimalNumber
 
-qualified-identifier := [module-prefix <code>:</code>] identifier
+qualified-identifier := module-prefix <code>:</code> identifier
 </pre>
 <p>
 A <code>module-prefix</code> is a name that is used locally within the source of
@@ -5591,21 +5591,30 @@ type-descriptor is omitted, then the type is <code>true</code>.
 </p>
 
 <pre
-class="grammar">annot-tag-reference := qualified-identifier
+class="grammar">annot-tag-reference := qualified-identifier | identifier
 annot-value := [mapping-constructor-expr]
 </pre>
 <p>
 An annot-tag-reference in an annotation must refer to an annot-tag declared in
-an annotation declaration. If the annotation includes a
-mapping-constructor-expr, then the value of the annotation is the mapping value
-resulting from evaluating the mapping-constructor-expr; otherwise the value is
-the boolean value <code>true</code>.
+an annotation declaration. When an annot-tag-reference is a
+qualified-identifier, then the module-prefix of the qualified-identifier is
+resolved using import declarations into a reference to a module, and that module
+must contain an annotation-decl with the same identifier. An annot-tag-reference
+that is an identifier rather than a qualified-identifier does <em>not</em> refer
+to an annotation defined within the same module. Rather the compilation
+environment determines which identifiers can occur as an
+annotation-tag-reference, and for each such identifier which module defines that
+annotation tag.
 </p>
 <p>
-For every construct that has an annotation with a particular tag, there is an
-effective value for that annotation tag, which is constructed from all the
-annotations with that tag that were attached to that construct. The effective
-value belongs to the type of the annotation tag.
+If the annotation includes a mapping-constructor-expr, then the value of the
+annotation is the mapping value resulting from evaluating the
+mapping-constructor-expr; otherwise the value is the boolean value
+<code>true</code>. For every construct that has an annotation with a particular
+tag, there is an <em>effective value</em> for that annotation tag, which is
+constructed from the values of all annotations with that tag that were attached
+to that construct. The effective value must belong to the type of the annotation
+tag.
 </p>
 <p>
 The type of the annotation tag constrains both the annotation value and the
@@ -5615,8 +5624,8 @@ follows.
 <ul>
 <li>If the type of the annotation tag is T[] for some T, then the
 mapping-constructor-expr must be specified and its static type must be a subtype
-of T; multiple annotations are allowed; the effective value is a list of all
-annotations with the tag in the order specified.</li>
+of T; multiple annotations are allowed; the effective value is a list containing
+the value for each annotation with the tag in the order specified.</li>
 <li>Otherwise, multiple annotations with this tag are not allowed and the
 effective value for the tag is the value of the single annotation with the tag.
 <ul>
