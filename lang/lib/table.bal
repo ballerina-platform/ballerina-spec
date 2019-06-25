@@ -16,12 +16,11 @@
 
 
 # The type bound for a table row.
-# Note that this is equivalent to `map<anydata|error>`.
 @typeParam
-type RowType = record { };
+type RowType = map<anydata|error>;
 
 # Returns number of members in `tbl`.
-public function length(table<record { }> tbl) returns int = external;
+public function length(table<map<anydata|error>> tbl) returns int = external;
 # Returns an iterator over the members of `tbl`.
 public function iterator(table<RowType> tbl) returns abstract object {
     public next() returns record {|
