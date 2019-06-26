@@ -2128,11 +2128,17 @@ field-binding-pattern :=
    field-name <code>:</code> binding-pattern
    | variable-name
 rest-binding-pattern := <code>...</code> variable-name
-error-binding-pattern := <code>error</code> <code>(</code> error-arg-list-binding-pattern <code>)</code>
-error-arg-list-binding-pattern :=
-   simple-binding-pattern (<code>,</code> named-arg-binding-pattern)* [<code>,</code> rest-binding-pattern]
-   | named-arg-binding-pattern (<code>,</code> named-arg-binding-pattern)* [<code>,</code> rest-binding-pattern]
-   | [ rest-binding-pattern ]
+error-binding-pattern := direct-error-binding-pattern | indirect-error-binding-pattern
+direct-error-binding-pattern := <code>error</code> <code>(</code> direct-error-arg-list-binding-pattern <code>)</code>
+indirect-error-binding-pattern := error-type-reference <code>(</code> indirect-error-arg-list-binding-pattern <code>)</code>
+error-type-reference := type-reference
+direct-error-arg-list-binding-pattern :=
+   simple-binding-pattern [<code>,</code> error-field-binding-patterns]
+   | [error-field-binding-patterns]
+indirect-error-arg-list-binding-pattern := [error-field-binding-patterns]
+error-field-binding-patterns :=
+   named-arg-binding-pattern (<code>,</code> named-arg-binding-pattern)* [<code>,</code> rest-binding-pattern]
+   | rest-binding-pattern
 simple-binding-pattern :=
    capture-binding-pattern
    | wildcard-binding-pattern
@@ -2167,7 +2173,7 @@ consisting of all the other fields to be assigned to <code>v</code>; a
 field-binding-pattern consisting of just a variable-name <code>x</code> is
 equivalent to a field-binding-pattern <code>x: x</code>;
 </li>
-<li>an error-binding-pattern error(p<sub>r</sub>, f<sub>1</sub> = p<sub>1</sub>,
+<li>a direct-error-binding-pattern error(p<sub>r</sub>, f<sub>1</sub> = p<sub>1</sub>,
 f<sub>2</sub> = p<sub>2</sub>, ..., f<sub>n</sub> = p<sub>n</sub>, r) matches an
 error value if it has an error reason string that matches p<sub>r</sub> and a
 detail record that has fields f<sub>1</sub>, f<sub>2</sub>, ... , f<sub>n</sub> such
@@ -2175,6 +2181,11 @@ that p<sub>i</sub> matches the value of field f<sub>i</sub> for each i in 1 to
 n; if r is <code>...v</code> then a successful match causes a new mapping value
 consisting of all fields other than f<sub>1</sub>, f<sub>2</sub>, ... ,
 f<sub>n</sub> to be assigned to <code>v</code>;</li>
+<li>an indirect-error-binding-pattern ET(f<sub>1</sub> = p<sub>1</sub>,
+f<sub>2</sub> = p<sub>2</sub>, ..., f<sub>n</sub> = p<sub>n</sub>, r) matches an
+error value e if the direct-error-binding-pattern error(f<sub>1</sub> =
+p<sub>1</sub>, f<sub>2</sub> = p<sub>2</sub>, ..., f<sub>n</sub> =
+p<sub>n</sub>, r) matches e and the shape of e is in ET.</li>
 </ul>
 <p>
 All the variables in a binding-pattern must be distinct e.g. [x, x] is not
@@ -3258,35 +3269,54 @@ method called.
 <h3>Error constructor</h3>
 
 <pre
-class="grammar">error-constructor-expr := <code>error</code> <code>(</code> error-arg-list <code>)</code>
-error-arg-list :=
-   positional-arg (<code>,</code> named-arg)*
-   | [named-arg (<code>,</code> named-arg)*]
+class="grammar">error-constructor-expr := direct-error-constructor-expr | indirect-error-constructor-expr
+direct-error-constructor-expr := <code>error</code> <code>(</code> direct-error-arg-list <code>)</code>
+indirect-error-constructor-expr := error-type-reference <code>(</code> indirect-error-arg-list <code>)</code>
+direct-error-arg-list := positional-arg (<code>,</code> named-arg)*
+indirect-error-arg-list := [named-arg (<code>,</code> named-arg)*]
 </pre>
 <p>
-An error-constructor-expr constructs a new error value. The positional-arg, if
-present, specifies the error reason string. Each named-arg specifies a field of
-the error detail mapping. The static type of positional-arg must be a subtype of
-string; the static type of each named-arg must be a pure type. The stack trace
-describes the stack at the point where the error constructor was evaluated.
+An error constructor constructs a new error value. There are two kinds of error
+constructor: direct and indirect. A direct error constructor specifies the error
+reason string as the first argument to the constructor. An indirect error
+constructor references an error type that determines the reason string.
 </p>
 <p>
-If there is a contextually expected type and the type of the error reason of
-the applicable contextually expected error type is a singleton string type, then
-the positional-arg can be omitted and the error reason will be the single
-string allowed by the type.
+The contextually expected type for the positional-arg in a
+direct-error-constructor-expr is string.
 </p>
 <p>
-If there is a contextually expected type and the applicable contextually
-expected type is an error type (rather than a union) with detail type
-<var>d</var>, then the error detail mapping will also have a field for any
-defaultable fields of <var>d</var> for which no named-arg was specified.
+The error-type-reference in an indirect-error-constructor must refer to an
+identifier named by a type definition whose type descriptor is an error type
+descriptor, whose reason-type-descriptor is a singleton string. An
+indirect-error-constructor-expr
+<code><var>ET</var>(<var>named-args</var>)</code> where
+<code><var>ET</var></code> refers to a type
+<code>error&lt;<var>S</var>,<var>D</var>&gt;</code>, where
+<code><var>S</var></code> is a singleton string, is equivalent to a
+direct-error-constructor-expr <code>&lt;<var>ET</var>&gt;error(<var>S</var>,
+<var>named-args</var>)</code>.
 </p>
 <p>
-Evaluating the error-constructor-expr creates a new detail record. The detail
-record is constructed as immutable, with its members being the result of
-appplying the ImmutableClone abstract operation on the result of evaluating each
-named-arg and every defaultable arg,
+Evaluating the error-constructor-expr creates a new detail mapping. Each
+named-arg specifies a field of the error detail mapping; the static type of each
+named-arg must be a pure type. If there is a contextually-expected-type for a
+direct-error-constructor-expr and the applicable contextually expected type is
+an error type descriptor (rather than a union) with detail type <var>D</var>,
+then the error detail mapping will also have a field for any defaultable fields
+of <var>D</var> for which no named-arg was specified. The contextually expected
+type for each named-arg is determined by the applicable contextually type in the
+same way as for a mapping-constructor-expr. The detail mapping for an
+indirect-error-constructor-expr is constructed as if by the equivalent
+direct-error-constructor-expr, and so in this case there will always be an
+applicable contextually expected type that is an error type descriptor. The
+detail mapping is constructed as immutable, with its members being the result of
+appplying the ImmutableClone abstract operation to the result of evaluating each
+named-arg and every defaultable arg.
+</p>
+<p>
+The stack trace in the constructed error value describes the execution stack at
+the point where the error constructor was evaluated.
 </p>
 
 <h3>Anonymous function expression</h3>
@@ -4991,11 +5021,17 @@ field-match-patterns :=
    | [ rest-match-pattern ] 
 field-match-pattern := field-name <code>:</code> match-pattern
 rest-match-pattern := <code>...</code> <code>var</code> variable-name
-error-match-pattern := <code>error</code> <code>(</code> error-arg-list-match-pattern <code>)</code>
-error-arg-list-match-pattern :=
-   simple-match-pattern (<code>,</code> named-arg-match-pattern)* [<code>,</code> rest-match-pattern]
-   | named-arg-match-pattern (<code>,</code> named-arg-match-pattern)* [<code>,</code> rest-match-pattern]
-   | [ rest-match-pattern]
+error-match-pattern := direct-error-match-pattern | indirect-error-match-pattern
+direct-error-match-pattern := <code>error</code> <code>(</code> direct-error-arg-list-match-pattern <code>)</code>
+indirect-error-match-pattern := error-type-reference <code>(</code> indirect-error-arg-list-match-pattern <code>)</code>
+error-type-reference := type-reference
+direct-error-arg-list-match-pattern :=
+   simple-match-pattern [<code>,</code> error-field-match-patterns]
+   | [error-field-match-patterns]
+indirect-error-arg-list-match-pattern := [error-field-match-patterns]
+error-field-match-patterns :=
+   named-arg-match-pattern (<code>,</code> named-arg-match-pattern)* [<code>,</code> rest-match-pattern]
+   | rest-match-pattern
 simple-match-pattern :=
    wildcard-match-pattern
    | const-pattern
@@ -5009,6 +5045,13 @@ if and only every <code>field-match-pattern</code> matches against a field of
 the value. The variable in the <code>rest-match-pattern</code>, if specified, is
 bound to a new mapping that contains just the fields for which that did not
 match a <code>field-match-pattern</code>.
+</p>
+<p>
+For a match of an <code>indirect-error-match-pattern</code> against an error
+value to succeed, the error type referenced by the error-type-reference must
+contain the shape of the error value; since errors are immutable, this
+requirement is equivalent to requiring that the error value belong to the
+referenced error type.
 </p>
 
 <h3>Foreach statement</h3>
