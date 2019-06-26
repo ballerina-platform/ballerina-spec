@@ -1041,9 +1041,11 @@ every extra field shape is a member of <code>T</code>.</li>
 <p>
 An inclusive-record-type-descriptor, which uses the <code>{</code> and
 <code>}</code> delimiters, allows any mapping value that includes the fields
-described. More precisely, a type descriptor <code>record { F };</code> is
-equivalent to <code>record {| F; T...; |}</code>, where T is the type that
-contains all pure shapes (which can be written as <code>anydata|error</code>).
+described, provided that the other fields are pure and not errors. More
+precisely, a type descriptor <code>record { F };</code> is equivalent to
+<code>record {| F; T...; |}</code>, where T is the type that contains all pure
+shapes other than errors, which can be written as <a
+href="#anydata"><code>anydata</code></a>.
 </p>
 <p>
 A record type descriptor that either is an inclusive-record-type-descriptor or
@@ -1751,7 +1753,7 @@ is not error. Thus all values belong to the type <code>any|error</code>. Note
 that a structure with members that are errors belongs to the <code>any</code>
 type.
 </p>
-<h4>Anydata type</h4>
+<h4 id="anydata">Anydata type</h4>
 
 <pre
 class="grammar">anydata-type-descriptor := <code>anydata</code>
@@ -1762,8 +1764,9 @@ other than errors. The type <code>anydata</code> contains a shape if and only if
 the shape is pure and is not the shape of an error value.
 </p>
 <p>
-Thus the type <code>anydata|error</code> is the supertype of all pure types. The
-type <code>anydata</code> is equivalent to the union
+Note that <code>anydata</code> allows structures whose members are errors. Thus
+the type <code>anydata|error</code> is the supertype of all pure types. The type
+<code>anydata</code> is equivalent to the union
 </p>
 
 <pre
@@ -5971,6 +5974,8 @@ list must allow members to be filled-in has been removed; this is instead caught
 at run-time.</li>
 <li>Parameter names now have public or module-level visibility, which determines
 when a function call can use the parameter name to specify an argument.</li>
+<li>A type descriptor <code>record { }</code> is open to <code>anydata</code>
+rather than <code>anydata|error</code>.</li>
 </ol>
 
 <h3>Summary of changes from 0.990 to 2019R1</h3>
