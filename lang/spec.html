@@ -5201,7 +5201,7 @@ Each source part in a Ballerina module must match the production
 <p>
 The import declarations must come before other declarations; apart from this,
 the order of the definitions and declarations at the top-level of a module is
-not significant.
+not constrained.
 </p>
 
 <pre
@@ -5218,77 +5218,80 @@ other-decl :=
 </pre>
 <h3>Module and program execution</h3>
 <p>
-Creating a Ballerina program from a collection of modules requires that one
-module is identified as the <em>root</em> module. The modules comprising the
-program consist of the root module together with transitive closure of its
-imported modules.
+A Ballerina program consists of one or more modules; one of these modules is
+distinguished as the <em>root</em> module. The source code for a module uses
+import declarations to identify the modules on which it depends directly. At
+compile-time, a root module is specified, and the modules comprising the program
+are inferred to be those that the root module imports directly or indirectly.
+The directed graph of module imports must be acyclic.
 </p>
 <p>
-If the root module of the program has a function called <code>main</code>, then
-it must be public and its return type must both be a subtype of
-<code>error?</code> and contain nil. Any parameters must have a type that is a
-subtype of anydata; they are not restricted to strings.
+Program execution may terminate successfully or unsuccessfully. Unsuccessful
+program termination returns an error value. Program execution consists of two
+consecutive phases: an initialization phase and a listening phase.
 </p>
 <p>
-If the root module does not have a function called <code>main</code>, then there
-must be at least one service declared in at least one of the program's modules.
+Module initialization is performed by calling an initialization function, which
+is synthesized by the compiler for each module. Module initialization can be
+unsuccessful, in which case the initialization function returns an error value.
+The initialization phase of program execution consists of initializing each of
+the program's modules. If the initialization of a module is unsuccessful, then
+program execution immediately terminates unsuccessfully, returning the error
+value returned by the initialization function.
 </p>
 <p>
-When a Ballerina program is executed, the arguments to main come from the
-command line made available by the operating system. The format of the command
-line is operating system dependent, but is typically some sort of string or
-array of strings. The implementation should make use of the declared parameter
-types of main in attempting to convert the supplied command line into an
-argument list acceptable to main. It may also make use of annotations on main.
+The initialization of a program's modules is ordered so that a module will not
+be initialized until all of the modules on which it depends have been
+initialized. (Such an ordering will always be possible, since the graph of
+module imports is required to be acyclic.) The order in which modules are
+initialized follows the order in which modules are imported so far as is
+consistent with the previous constraint.
 </p>
 <p>
-The execution of a program can terminate in one of three ways: success, failure
-or abnormal. In the failure and abnormal cases, there is an associated error
-value. For the failure case, the type of the error value can be determined at
-compile time.
+A module's initialization function performs expression evaluation so as to
+initialize the identifiers declared in the module's declarations; if evaluation
+of an expression completes abruptly, then the module initialization function
+immediately returns the error value associated with the abrupt completion. If a
+module defines a function named <code>__init</code>, then a module's
+initialization function will end by calling this function; if it terminates
+abruptly or returns an error, then the module's initialization function will
+return an error value. Note that the <code>__init</code> function of the root
+module will be the last function called during a program's initialization phase.
 </p>
 <p>
-The execution of a Ballerina has two or three consecutive phases:
-</p>
-<ol>
-<li>init</li>
-<li>main</li>
-<li>listen</li>
-</ol>
-<p>
-There is always an init phase. There must be at least one of the main or listen
-phases, and there may be both.
-</p>
-<p>
-In the init phase, every module comprising the program is initialized, in such
-an order than a module is always initialized after all the modules it imports
-have been initialized. If a module fails to initialize, then the program
-terminates.
+This specification does not define any mechanism for processing the program
+command-line arguments typically provided by an operating system. The Ballerina
+standard library provides a function to retrieve these command-line arguments.
+In addition, the Ballerina platform provides a convenient mechanism for
+processing these arguments. This works by generating a new command-line
+processing module from the specified root module. The <code>__init</code>
+function of the generated module retrieves the command-line arguments, parses
+them, and calls a public function of the specified root module (typically the
+<code>main</code> function). The parsing of the command-line arguments is
+controlled by the declared parameter types, annotations and names of the public
+functions. The generated module, which imports the specified root module,
+becomes the new root module.
 </p>
 <p>
-The main phase happens only if the root module has a main function. In this
-case, the main function is executed with arguments converted from the supplied
-command line. If the main function returns an error, then the program
-terminates.
+If the initialization phase of program execution completes successfully, then
+execution proceeds to the listening phase. The runtime state of each module
+includes a list of listener objects that have been registered with the module. A
+listener object is a <em>registered listener</em> of a running program if it is
+a member of the list of registered listeners of any of the program's modules. If
+at the start of the listening phase of program execution there are no registered
+listeners, then the listening phase immediately terminates successfully.
+Otherwise, the <code>__start</code> method of each registered listener is
+called; if any of these calls returns an error value, then program execution
+terminates unsuccessfully with this error value as its return value.
 </p>
 <p>
-If the main function returns nil and there is no listener registered with any
-module, then the program terminates successfully.
-</p>
-<p>
-Otherwise the listen phase happens. In this phase, all the listeners that have
-been registered with any of the modules are started, by calling their
-<code>__start</code> method. (If there was no main function, then the successful
-initialization of the required service declaration will ensure that at least one
-listener will have been registered.)
-</p>
-<p>
-The listen phase continues to execute until either the program explicitly exits,
-by calling a standard library function, or the user explicitly requests the
-termination the program using an implementation-dependent operating system
-facility (such as a signal on a POSIX system). In the latter case, the program
-will call the <code>__gracefulStop</code> or <code>__immediateStop</code> method
-on each registered listener before terminating.
+The listening phase of program execution continues until either the program
+explicitly exits, by calling a standard library function, or the user explicitly
+requests the termination of the program using an implementation-dependent
+operating system facility (such as a signal on a POSIX system). In the latter
+case, the program will call the <code>__gracefulStop</code> or
+<code>__immediateStop</code> method on each registered listener before
+terminating.
 </p>
 <h3>Import declaration</h3>
 
@@ -5317,6 +5320,10 @@ A <code>module-prefix</code> declared by an <code>import-decl</code> is in the
 same symbol space as a <code>xmlns-namespace-prefix</code> declared by an
 <code>xmlns-decl-stmt</code>. This symbol space is distinct from a module's main
 symbol space used by other declarations.
+</p>
+<p>
+It is an error for a module to directly or indirectly import itself. In other
+words, the directed graph of module imports must be acyclic.
 </p>
 
 <h3>Module type definition</h3>
