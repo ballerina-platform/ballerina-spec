@@ -283,12 +283,18 @@ points.
 </p>
 
 <pre
-class="grammar">identifier := UndelimitedIdentifier | DelimitedIdentifier
-UndelimitedIdentifier :=
+class="grammar">identifier := UnquotedIdentifier | QuotedIdentifier
+UnquotedIdentifier :=
    IdentifierInitialChar IdentifierFollowingChar*
-DelimitedIdentifier := <code>^"</code> StringChar+ <code>"</code>
-IdentifierInitialChar := <code>A</code> .. <code>Z</code> | <code>a</code> .. <code>z</code> | <code>_</code> | UnicodeIdentifierChar
+QuotedIdentifier := <code>'</code> QuotedIdentifierChar+
+QuotedIdentifierChar :=
+  IdentifierFollowingChar
+  | QuotedIdentifierEscape
+  | StringNumericEscape
+IdentifierInitialChar :=  AsciiLetter | <code>_</code> | UnicodeIdentifierChar
 IdentifierFollowingChar := IdentifierInitialChar | Digit
+QuotedIdentifierEscape := <code>\</code> ^ ( AsciiLetter | 0x9 | 0xA | 0xD | UnicodePatternWhiteSpaceChar )
+AsciiLetter := <code>A</code> .. <code>Z</code> | <code>a</code> .. <code>z</code>
 UnicodeIdentifierChar := ^ ( AsciiChar | UnicodeNonIdentifierChar )
 AsciiChar := 0x0 .. 0x7F
 UnicodeNonIdentifierChar :=
@@ -308,6 +314,12 @@ Digit := <code>0</code> .. <code>9</code>
 Note that the set of characters allowed in identifiers follows the requirements
 of Unicode TR31 for immutable identifiers; the set of characters is immutable in
 the sense that it does not change between Unicode versions.
+</p>
+<p>
+The QuotedIdentifier syntax allows an arbitrary non-empty string to be treated
+as an identifier. In particular, a reserved keyword <code><var>K</var></code>
+can be used as an identifier by preceding it with a single quote i.e.
+<code>'<var>K</var></code>.
 </p>
 
 <pre
@@ -6024,6 +6036,8 @@ when a function call can use the parameter name to specify an argument.</li>
 rather than <code>anydata|error</code>.</li>
 <li>Calls using <code>start</code> are treated as actions, and so are not
 allowed within expressions.</li>
+<li>There is a new syntax for allowing arbitrary strings as identifiers to
+replace the old delimited identifier syntax <code>^"<var>s</code>"</code>.</li>
 </ol>
 
 <h3>Summary of changes from 0.990 to 2019R1</h3>

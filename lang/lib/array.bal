@@ -33,8 +33,8 @@ public function enumerate(Type[] arr) returns [int, Type][] = external;
 
 // Functional iteration
 
-// use delimited identifer for function name to avoid conflict with reserved name
-public function ^"map"(Type[] arr, function(Type val) returns Type1 func) returns Type1[] = external;
+// use quoted identifer for function name to avoid conflict with reserved name
+public function 'map(Type[] arr, function(Type val) returns Type1 func) returns Type1[] = external;
 # Applies `func` to each member of `arr`.
 public function forEach(Type[] arr, function(Type val) returns () func) returns () = external;
 public function filter(Type[] arr, function(Type val) returns boolean func) returns Type[] = external;
