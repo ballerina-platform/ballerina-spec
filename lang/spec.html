@@ -3150,7 +3150,7 @@ not a singleton xml value. The result type is <code>map&lt;string>?</code>.
 <h3 id="function_call">Function call expression</h3>
 
 <pre
-class="grammar">function-call-expr := [<code>start</code>] function-reference <code>(</code> arg-list <code>)</code>
+class="grammar">function-call-expr := function-reference <code>(</code> arg-list <code>)</code>
 function-reference := variable-reference
 arg-list :=
    positional-args [<code>,</code> other-args]
@@ -3170,12 +3170,6 @@ function terminates normally, then the result of the function-call-expr is the
 return value of the function; otherwise the function-call-expr completes
 abruptly with a panic. The static type of the function-call-expr is the return
 type of the function type.
-</p>
-<p>
-However, if <code>start</code> is specified, then the called function is
-executed on a new strand, and the result of the <code>function-call-expr</code>
-is a value of type future&lt;T&gt;, where T is the return type of the function
-called.
 </p>
 <p>
 The variable-reference must refer to a variable with function type. The type
@@ -3222,7 +3216,7 @@ the value of the expression in a variable.
 <h3>Method call expression</h3>
 
 <pre
-class="grammar">method-call-expr := [<code>start</code>] expression <code>.</code> method-name <code>(</code> arg-list <code>)</code>
+class="grammar">method-call-expr := expression <code>.</code> method-name <code>(</code> arg-list <code>)</code>
 </pre>
 <p>
 A <code>method-call-expr</code> either calls a method or calls a function in the
@@ -3259,12 +3253,6 @@ listed in the <a href="#lang_library">Lang library</a> section.</li>
 It is a compile-time error if the resulting function call does not satisfy all
 the constraints that would apply if it has been written explicitly as a
 <code>function-call-expr</code>.
-</p>
-<p>
-If <code>start</code> is specified, then the called method or function is
-executed on a new strand, and the result of the <code>method-call-expr</code> is
-a value of type future&lt;T&gt;, where T is the return type of the function or
-method called.
 </p>
 <h3>Error constructor</h3>
 
@@ -3804,6 +3792,7 @@ T|error.</li>
 <pre
 class="grammar">action :=
    remote-method-call-action
+   | start-action
    | worker-receive-action 
    | wait-action
    | flush-action
@@ -4883,17 +4872,24 @@ static type of the call-expr in an call-stmt is not nil.
 <h3>Remote method call action</h3>
 
 <pre
-class="grammar">remote-method-call-action :=
-   [<code>start</code>] expression <code>-></code> method-name <code>(</code> arg-list <code>)</code>
+class="grammar">remote-method-call-action := expression <code>-></code> method-name <code>(</code> arg-list <code>)</code>
 </pre>
 <p>
 Calls a remote method. This works the same as a method call expression, except
 that it is used only for a method with the <code>remote</code> modifier.
 </p>
+
+<h3>Start action</h3>
+
+<pre
+class="grammar">start-action := <code>start</code> (function-call-expr|method-call-expr|remote-method-call-action)
+</pre>
+
 <p>
-If <code>start</code> is specified, then the called method is executed on a new
-strand, and the result of the <code>remote-method-call-expr</code> is a value of type
-future&lt;T&gt;, where T is the return type of the method called.
+The keyword <code>start</code> causes the following function or method call to
+be executed on a new strand. A start-action returns a value of basic type future
+immediately. If the static type of a call <code><var>C</var></code> is T, then
+the static type of <code>start <var>C</var></code> is future&lt;T&gt;.
 </p>
 
 <h3>Conditional statement</h3>
@@ -6026,6 +6022,8 @@ at run-time.</li>
 when a function call can use the parameter name to specify an argument.</li>
 <li>A type descriptor <code>record { }</code> is open to <code>anydata</code>
 rather than <code>anydata|error</code>.</li>
+<li>Calls using <code>start</code> are treated as actions, and so are not
+allowed within expressions.</li>
 </ol>
 
 <h3>Summary of changes from 0.990 to 2019R1</h3>
