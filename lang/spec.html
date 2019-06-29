@@ -3831,6 +3831,45 @@ actions is the same as for expressions.
 A <code>checking-action</code> and <code>trap-action</code> is evaluated in the
 same way as a <code>checking-expr</code> and <code>trap-expr</code> respectively.
 </p>
+
+<h3>Threads and strands</h3>
+
+<p>
+Ballerina's concurrency model supports both threads and coroutines. A Ballerina
+program is executed on one or more threads. A thread may run on a separate core
+simultaneously with other threads, or may be pre-emptively multitasked with
+other threads onto a single core.
+</p>
+<p>
+Each thread is divided into one or more <em>strands</em>. No two strands
+belonging to the same thread can run simultaneously. Instead, all the strands
+belonging to a particular thread are cooperatively multitasked. Strands within
+the same thread thus behave as coroutines relative to each other. A strand
+enables cooeperative multitasking by <em>yielding</em>. When a strand yields,
+the runtime scheduler may suspend execution of the strand, and switch its thread
+to executing another strand. The following actions cause a strand to yield:
+</p>
+<ul>
+<li>worker-receive-action</li>
+<li>wait-action</li>
+<li>flush-action</li>
+<li>synchronous-send-action</li>
+</ul>
+<p>
+In addition, any function with an external-function-body can potentially yield;
+it should only do so if it performs a system call that would block. or calls a
+Ballerina function that itself yields. Functions in the lang library do not
+themselves yield, although if they call a function passed as an argument, that
+function may result in yielding.
+</p>
+<p>
+There are two language constructs whose execution causes the creation of new
+strands: named-worker-decl and start-action. These constructs may use
+annotations to indicate that the newly created strand should be in a separate
+thread from the current strand. In the absence of such annotations, the new
+strand must be part of the same thread as the current strand.
+</p>
+
 <h3>Function and worker execution</h3>
 
 <pre
@@ -3839,11 +3878,11 @@ class="grammar">function-body-block :=
 default-worker-init := sequence-stmt
 default-worker := sequence-stmt
 named-worker-decl :=
-   <code>worker</code> worker-name return-type-descriptor <code>{</code> sequence-stmt <code>}</code>
+   [annots] <code>worker</code> worker-name return-type-descriptor <code>{</code> sequence-stmt <code>}</code>
 worker-name := identifier
 </pre>
 <p>
-A worker represents a thread of control running within a function. A statement
+A worker represents a single strand of a function invocation. A statement
 is always executed in the context of a current worker. A worker is in one of
 three states: active, inactive or terminated. When a worker is in the
 terminated state, it has a termination value. A worker terminates either
@@ -3856,21 +3895,18 @@ distinguished from an error termination value resulting from an abnormal
 termination.
 </p>
 <p>
-A function always has a single default worker, which is unnamed. When a function
-is called, the current worker becomes inactive, and a default worker for the called
-function is started. When the default worker terminates, the function returns to
-its caller, and the caller's worker is reactivated. If the default worker terminates
+A function always has a single default worker, which is unnamed. The strand for the
+default worker is the same as the strand of the worker on which function was called.
+When a function is called, the current worker becomes inactive, and a default worker
+for the called function is started. When the default worker terminates, the function
+returns to its caller, and the caller's worker is reactivated. Thus only one worker
+in each strand is active at any given time. If the default worker terminates
 normally, then its termination value provides the return value of the function.
 If the default worker terminates abnormally, then the evaluation of the function
 call expression completes abruptly with a panic and the default worker's
 termination value provides the associated value for the abrupt completion of the
 function call. The function's return type is the same as the return type of the
 function's default worker.
-</p>
-<p>
-The default worker of a function and the worker that called the function belong
-to the same thread of control, which is called a <em>strand</em>. Only one
-worker in a strand is running at any given time.
 </p>
 <p>
 A function also has zero or more named workers. Each named worker runs on its
@@ -4894,14 +4930,16 @@ that it is used only for a method with the <code>remote</code> modifier.
 <h3>Start action</h3>
 
 <pre
-class="grammar">start-action := <code>start</code> (function-call-expr|method-call-expr|remote-method-call-action)
+class="grammar">start-action := [annots] <code>start</code> (function-call-expr|method-call-expr|remote-method-call-action)
 </pre>
 
 <p>
-The keyword <code>start</code> causes the following function or method call to
-be executed on a new strand. A start-action returns a value of basic type future
-immediately. If the static type of a call <code><var>C</var></code> is T, then
-the static type of <code>start <var>C</var></code> is future&lt;T&gt;.
+The keyword <code>start</code> causes the following function or method
+invocation to be executed on a new strand. The arguments for the function or
+method call are evaluation on the current strand. A start-action returns a value
+of basic type future immediately. If the static type of the call expression or
+action <code><var>C</var></code> is T, then the static type of <code>start
+<var>C</var></code> is future&lt;T&gt;.
 </p>
 
 <h3>Conditional statement</h3>
@@ -5828,6 +5866,11 @@ descriptor</td>
   <tr>
    <td>external</td>
    <td>external-function-body</td>
+   <td>none</td>
+  </tr>
+  <tr>
+   <td>worker</td>
+   <td>named-worker-decl, start-action</td>
    <td>none</td>
   </tr>
 </table>
