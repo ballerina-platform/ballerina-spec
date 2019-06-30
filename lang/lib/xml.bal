@@ -100,7 +100,7 @@ public function strip(xml x) returns xml = external;
 public function elements(xml x) returns xml = external;
 
 // Functional programming methods
-public function map(xml x, function(xml|string item) returns xml|string func) = external;
+public function map(xml x, function(xml|string item) returns xml|string func) returns xml = external;
 public function forEach(xml x, function(xml|string item) returns () func) = external;
 public function filter(xml x, function(xml|string item) returns boolean func) returns xml = external;
 
