@@ -1,0 +1,66 @@
+# Schema for specific subset of XHTML used by the spec
+
+default namespace = "http://www.w3.org/1999/xhtml"
+
+start = element html { head, body }
+
+head = element head { title & meta & style }
+title = element title { text }
+meta = element meta { attribute charset { "utf-8" } }
+style = element style {
+  attribute type { "text/css" },
+  text
+}
+
+body = element body { h1, block* }
+
+# Blocks
+
+block = h2|h3|h4|h5|p|ul|ol|pre|table
+
+# Headings
+
+h1 = element h1 { h.model }
+h2 = element h2 { h.model }
+h3 = element h3 { h.model }
+h4 = element h4 { h.model }
+h5 = element h5 { h.model }
+
+h.model = attribute id { token }?, attribute class { token }?, inline.content
+
+# Paragraphs
+
+p = element p { attribute class { "status" }?, inline.content }
+pre = element pre { attribute class { "grammar" }?, inline.content }
+
+# Lists
+
+ol = element ol { li+ }
+ul = element ul { li+ }
+li = element li { inline.content, (ul|ol)* }
+
+# Tables
+
+table = element table { tr+ }
+tr = element tr { (th|td)* }
+td = element td { tcell.model }
+th = element th { tcell.model }
+tcell.model = attribute rowspan { token }?, inline.content
+
+# Inline
+
+inline = code|var|em|strong|a|sub|sup|br
+inline.content = mixed { inline* }
+
+code = element code { attribute class { "grammar" }?, inline.content }
+var = element var { inline.content }
+em = element em { inline.content }
+strong = element strong { inline.content }
+sub = element sub { inline.content }
+sup = element sup { inline.content }
+br = element br { empty }
+a = element a {
+  attribute href { text },
+  attribute type { text }?,
+  inline.content
+}
