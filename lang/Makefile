@@ -25,7 +25,7 @@ $(BUILDDIR)/spec.html: $(BUILDDIR)/spec.xml spec.xsl
 
 $(BUILDDIR)/spec.xml: spec.html spec.awk
 	test -d $(BUILDDIR) || mkdir $(BUILDDIR)
-	S(AWK) -f spec.awk spec.html >$(BUILDDIR)/spec.xml
+	$(AWK) -f spec.awk spec.html >$(BUILDDIR)/spec.xml
 
 check: $(BUILDDIR)/spec.xml
 #	$(XMLLINT) -noout -relaxng spec.rng $(BUILDDIR)/spec.xml
