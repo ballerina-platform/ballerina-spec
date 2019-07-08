@@ -1,5 +1,9 @@
 # This is intended to be run on POSIX with GNU Make
-XSLT=xsltproc
+XSLTPROC=xsltproc
+# xmllint is a utility included with libxml2 e.g. in libxml2-utils package
+#XMLLINT=xmllint
+AWK=awk
+SH=sh
 BUILDDIR=build
 BUILDFILES=$(BUILDDIR)/spec.html
 
@@ -14,11 +18,18 @@ DISTFILES=spec.html lib/versions.json \
 
 all: $(BUILDFILES)
 
-$(BUILDDIR)/spec.html: spec.html spec.xsl
-	test -d $(BUILDDIR) || mkdir $(BUILDDIR)
+$(BUILDDIR)/spec.html: $(BUILDDIR)/spec.xml spec.xsl 
 	echo '<!DOCTYPE html>' >$(BUILDDIR)/spec.html
-	$(XSLT) spec.xsl spec.html | \
+	$(XSLTPROC) spec.xsl $(BUILDDIR)/spec.xml | \
 	  sed -e '/<meta http-equiv/d' >>$(BUILDDIR)/spec.html
+
+$(BUILDDIR)/spec.xml: spec.html spec.awk
+	test -d $(BUILDDIR) || mkdir $(BUILDDIR)
+	S(AWK) -f spec.awk spec.html >$(BUILDDIR)/spec.xml
+
+check: $(BUILDDIR)/spec.xml
+#	$(XMLLINT) -noout -relaxng spec.rng $(BUILDDIR)/spec.xml
+	$(SH) check-grammar.sh
 
 clean: FORCE
 	-rm -fr $(BUILDDIR)

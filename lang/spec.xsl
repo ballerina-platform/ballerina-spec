@@ -1,5 +1,6 @@
 <!--
 Replace top-level ToC by full ToC.
+Also generate hyperlinks from dfn/abbr elements in the grammar.
 
 The source document explicitly numbers the <h2> elements and has a manually
 maintained top-level ToC that includes just the <h2> elements. This
@@ -19,6 +20,14 @@ numbers for all other levels.
     <xsl:copy-of select="@*"/>
     <xsl:apply-templates select="node()"/>
   </xsl:copy>
+</xsl:template>
+
+<xsl:template match="pre[@class='grammar']/dfn" priority="1">
+  <span class="ntdfn" id="{.}"><xsl:apply-templates/></span>
+</xsl:template>
+
+<xsl:template match="pre[@class='grammar']/abbr" priority="1">
+  <a href="#{.}"><span class="ntref"><xsl:apply-templates/></span></a>
 </xsl:template>
 
 <xsl:template match="section[@class='toc']" priority="1">
