@@ -7,7 +7,7 @@ SH=sh
 BUILDDIR=build
 BUILDFILES=$(BUILDDIR)/spec.html
 
-VERSION:=$(shell sed -n -e '/^<h1[ >]/s/.* \(20[12][0-9]R[0-9][0-9]*\)<.*/\1/p' spec.html)
+VERSION:=$(shell sed -n -e '/^<h1[ >]/s/.* \(20[12][0-9]R[0-9][0-9]*\(-[A-Za-z0-9]*\)\?\)<.*/\1/p' spec.html)
 
 DISTDIR=ballerina-lang-spec-$(VERSION)
 ZIPFILE=$(DISTDIR).zip
