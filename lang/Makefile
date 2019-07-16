@@ -11,11 +11,13 @@ VERSION:=$(shell sed -n -e '/^<h1[ >]/s/.* \(20[12][0-9]R[0-9][0-9]*\(-[A-Za-z0-
 
 DISTDIR=ballerina-lang-spec-$(VERSION)
 ZIPFILE=$(DISTDIR).zip
-LIBFILES=lib/versions.json \
+COPYFILES=lib/versions.json \
   lib/array.bal lib/decimal.bal lib/error.bal lib/float.bal lib/future.bal \
   lib/int.bal lib/map.bal lib/object.bal lib/stream.bal lib/string.bal \
-  lib/table.bal lib/typedesc.bal lib/value.bal lib/xml.bal
-DISTFILES=spec.html $(LIBFILES)
+  lib/table.bal lib/typedesc.bal lib/value.bal lib/xml.bal \
+  style/ballerina-language-specification.css \
+  style/ballerina-language-specification.js
+DISTFILES=spec.html $(COPYFILES)
 
 all: $(BUILDFILES)
 
@@ -23,6 +25,7 @@ $(BUILDDIR)/spec.html: $(BUILDDIR)/spec.xml spec.xsl
 	echo '<!DOCTYPE html>' >$(BUILDDIR)/spec.html
 	$(XSLTPROC) spec.xsl $(BUILDDIR)/spec.xml | \
 	  sed -e '/<meta http-equiv/d' >>$(BUILDDIR)/spec.html
+	tar cf - $(COPYFILES) | (cd $(BUILDDIR)/; tar xf -)
 
 $(BUILDDIR)/spec.xml: spec.html spec.awk
 	test -d $(BUILDDIR) || mkdir $(BUILDDIR)
@@ -39,7 +42,7 @@ dist: $(BUILDDIR)/$(ZIPFILE)
 
 $(BUILDDIR)/$(ZIPFILE): $(DISTFILES) $(BUILDFILES)
 	test -d $(BUILDDIR)/$(DISTDIR) || mkdir $(BUILDDIR)/$(DISTDIR)
-	tar cf - $(LIBFILES) | (cd $(BUILDDIR)/$(DISTDIR)/; tar xf -)
+	tar cf - $(COPYFILES) | (cd $(BUILDDIR)/$(DISTDIR)/; tar xf -)
 	cp -p $(BUILDFILES) $(BUILDDIR)/$(DISTDIR)/
 	cd $(BUILDDIR); zip -q $(ZIPFILE) $(addprefix $(DISTDIR)/,$(DISTFILES))
 
