@@ -13,3 +13,5 @@ https://htmlpreview.github.io/?https://raw.githubusercontent.com/ballerina-platf
 The live version is here:
 
 https://htmlpreview.github.io/?https://raw.githubusercontent.com/ballerina-platform/ballerina-spec/master/lang/spec.html
+
+There is a separate list of [proposals](proposals/README.md) for new language features.
