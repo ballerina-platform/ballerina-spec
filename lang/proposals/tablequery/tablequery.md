@@ -1,5 +1,7 @@
 # Tables and query
 
+Please add comments to the associated issue [#286](https://github.com/ballerina-platform/ballerina-spec/issues/286).
+
 ## Tables
 
 The design goals of the table feature are:
