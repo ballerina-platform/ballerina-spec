@@ -14,11 +14,6 @@ const int EPOCH_YEAR = 2000;
 // Scalar durations
 
 type Seconds decimal;
-function seconds(public int weeks = 0,
-                 public int days = 0,
-                 public int hours = 0,
-                 public decimal|int minutes = 0);
-  returns Seconds;
 
 # Does not count leap seconds
 function toEpochSeconds(timestamp ts) returns Seconds;
@@ -60,27 +55,33 @@ function fromNoLeapSecondsString(string) returns timestamp|error;
 
 // Broken down time
 
-type TimeZoneOffset {
+type TimeZoneOffset {|
   # -00:00 and +00:00 are not the same
   (+1|-1) sign;
-  int hours;
-  int minutes;
-};
-
-type BrokenDown record {
-  int year;
-  int month;
-  int day;
+  # in the range 0...23
   int hour;
+  # in the range 0...59
   int minute;
-  // Should we use decimal instead
-  // of second+nanosecond+secondsPrecision?
-  int second;
-  int nanosecond;
-  # Number of digits after decimal point in seconds field.
-  byte secondsPrecision;
+|};
+
+type BrokenDown record {|
+  # year in the proleptic Gregorian calendar:
+  # * 1 means 1 AD i.e. year 1 of the Common Era
+  # * 0 means 1 BC
+  # * -1 means 2 BC
+  int year;
+  # in the range 1..11
+  int month;
+  # in the range 1..31
+  int day;
+  # in the range 0..23
+  int hour;
+  # in the range 0..59
+  int minute;
+  # in the range 0..<61
+  decimal second;
   TimeZoneOffset timeZone;
-};
+|};
 
 function fromBrokenDown(BrokenDown bd) returns timestamp|error;
 function breakDown(timestamp ts) returns BrokenDown;
