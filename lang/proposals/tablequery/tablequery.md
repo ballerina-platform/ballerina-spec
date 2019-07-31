@@ -1,10 +1,8 @@
 # Tables and query
 
-
 ## Tables
 
 The design goals of the table feature are:
-
 
 
 *   make it easier to deal with tabular data in general, not just from SQL databases, but from non-SQL databases, spreadsheets, CSV files and other existing sources of tabular data
@@ -22,7 +20,6 @@ It is important to be clear about the relationship with SQL:
 See the SQL Interop section below for more about how this would work in practise with SQL.
 
 This document does not address concurrency safety or transactional issues. For the most part, these issues are common to all mutable types.
-
 
 ### Types and values
 
@@ -410,7 +407,6 @@ With this pattern of usage, the implementation of the table value uses code that
 This pattern presents a number of challenges:
 
 
-
 1. When cells contain a value of structured type, it will likely not be practical to implement the specified semantics for as regards identity `===`, which is to do an immutable clone on an insertion, and then return an identical value on each retrieval. It would be more practical to do a clone on each retrieval. The spec could explicitly license this, by saying that program behaviour as regards ===-ness of retrieved values is undefined for tables that were created by extra-linguistic mechanisms (i.e for any table not created by a table constructor). Related to this is dealing with identity vs equality for floating point types.
 2. The inherent type specified by the database scheme may not correspond exactly to a Ballerina type descriptor.  In particular, in many cases the values allowed for a particular table column will be subset of a Ballerina basic type, for example strings up to length N. In general, column type will be mapped on to a Ballerina type together with some additional constraints; the proxy should understand the database schema types and enforce any additional constraints whenever the table is mutated. In addition, it should provide a typedesc for the column, which can be used to test whether a particular value is allowed for a column.
 3. Ballerina queries can potentially contain expressions involving arbitrary function calls, and it will not always be possible to compile these into SQL queries. In order to identify these cases at compile time, the compiler will need information about the expected underlying implementation of a table value; this information could be provided by an annotation. It might sometimes be possible to decompose a query into a part that is translated into SQL and executed on the server and a part that further refines the result and is executed locally.
@@ -422,11 +418,9 @@ The Ballerina platform can define a TableProvider abstract object type that has 
 
 ### Issues
 
-
 #### Rows vs parameter lists
 
 Is there a parallel between table rows and parameter lists. Both are simultaneously named and ordered. Fundamentally ordered, but offer access by name for convenience.
-
 
 #### Singleton types
 
@@ -451,14 +445,12 @@ There several differences from primary keys:
 So it fits into our model of what a type is.
 
 
-
 *   Enforcing a uniqueness constraint just becomes part of the normal process by which a container does not allow a mutation that is inconsistent with the container's inherent type.
 *   When we stamp/convert a value with/to a type, it will cover the uniqueness constraints as well
 *   A dynamic type check with `is` will look at constraints in the inherent type; if the table is immutable, then it  will look at the contents of the table rather than the inherent type.
 *   For many queries, should be able to deduce uniqueness constraints of outputs from uniqueness properties of inputs.
 
      
-
 
 Here's one way to write this:
 
@@ -525,7 +517,6 @@ select-clause := select expression
 This would work as follows:
 
 
-
 *   the foreach-clause works like the existing `foreach` statement
     *   the expression would evaluate to a table value
     *   the typed-binding-pattern gets bound successively to the record representing each row
@@ -540,11 +531,9 @@ The static typing of mapping constructor expr will need to be refined to work as
 
 #### Discussion
 
-
 ##### Comprehensions
 
 An SQL query is in essence a table comprehension. It consists of
-
 
 
 *   iterating over rows
@@ -554,7 +543,6 @@ An SQL query is in essence a table comprehension. It consists of
 *   creating a table from all these rows
 
 We already have constructs in the language to do much of this
-
 
 
 *   foreach iterates over the row
@@ -798,7 +786,7 @@ We want to allow this to do the right i18n thing without building this into the 
 
 This should work for lists and xml as well.
 
-The static type of the expressions in the orderby clause must be _ordered_, where the following rules determine whether a type ordered:
+The static type of the expressions in the orderby clause must be _ordered_, where the following rules determine whether a type is ordered:
 
 
 
@@ -836,7 +824,6 @@ TBD
 ### Aggregation
 
 TBD 
-
 
 
 *   sum, average, count etc
@@ -881,12 +868,8 @@ Or maybe
 
 Or do nothing in which case
 
-
-     (`foreach var employee in employeeTable select employee)`
-
-
 ```
-       .length()
+     (foreach var employee in employeeTable select employee).length()
 ```
 
 
