@@ -446,6 +446,13 @@ This would require adding a new type reference syntax:
 
 Is the `find` function sufficiently important to justify adding this? And would this *T? reference add optionality deeply or just for one level?
 
+### Background
+
+Some other programming languages with a table data type are:
+
+*   [Power Query M](https://docs.microsoft.com/en-us/powerquery-m/power-query-m-language-specification) A functional language from Microsoft (included in Excel) 
+*   [Pyret](https://www.pyret.org/) A language intended particularly for CS education, done by some of the people behind Racket
+
 
 ## Query
 
