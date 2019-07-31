@@ -1,5 +1,7 @@
 # Date and time
 
+Please add comments to the associated issue [#287](https://github.com/ballerina-platform/ballerina-spec/issues/287).
+
 The Ballerina language does not provide any built-in types relating to date and time. Many comparable systems (XML Schema datatypes, SQL, Google protocol buffers) provide support one or more data types relating to date and time.
 
 
