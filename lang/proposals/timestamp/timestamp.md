@@ -45,7 +45,8 @@ There are a number of detailed issues to work out:
 Why call it `timestamp`?
 
 *   Makes it clear what it is
-*   Consistent with main relevant standard (RFC)
+*   Consistent with main relevant standard (RFC 3339)
+*   SQL standard uses `timestamp` to mean the combination date and time, although it provides variants both with and without time zone
 *   Google protobuf uses [timestamp](https://developers.google.com/protocol-buffers/docs/reference/java/com/google/protobuf/Timestamp)
 
 Another possible name would be `datetime`.
