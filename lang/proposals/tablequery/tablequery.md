@@ -310,8 +310,7 @@ We can support this as follows:
 E[x] expression and lvalue uses primary key
 
 
-#### toString {#function toString() { [native code for Object.toString, arity=0] }
-}
+#### toString
 
 Need to define how toString works. Given that we are using spaces to separate lists, we should use newlines to separate rows. So representation should be something like:
 
