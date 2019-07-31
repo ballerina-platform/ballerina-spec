@@ -47,7 +47,7 @@ A table type descriptor consists of
 
 Constraints will be dealt with separately.
 
-If R is a type descriptor for a subtype of map<anydata|error>, then table<R> is a table type descriptor, which describes a type that contains a table shape t if and only if for every row shape r in t, R contains r. Note that R is any type descriptor that describes a type that contains only mapping shapes, which could union type descriptor or an open record type. So if S is a subtype of T, then table<S> is a subtype of table<T>.
+If `R` is a type descriptor for a subtype of `map<anydata|error>`, then `table<R>` is a table type descriptor, which describes a type that contains a table shape t if and only if for every row shape r in t, `R` contains r. Note that `R` is any type descriptor that describes a type that contains only mapping shapes, which could union type descriptor or an open record type. So if `S` is a subtype of `T`, then `table<S>` is a subtype of `table<T>`.
 
 The row type descriptor of a table type descriptor that is the inherent type of a table value must be a closed record type, with the keys of the record type being the same as the column names.
 
