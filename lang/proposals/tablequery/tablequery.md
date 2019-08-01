@@ -236,16 +236,17 @@ A direct table type descriptor will also provide a more convenient syntax for pr
 
 ### Table constructor
 
+In this document, to distinguish literal characters we use double quotes, rather than a different background color.
 
 ```
-table-constructor-expr := table [ [table-header [; table-rows]] ]
+table-constructor-expr := "table" "[" [table-header [";" table-rows]] "]"
 table-header := column-names | list-constructor-expr
-column-names := column-name(, column-name)*
+column-names := column-name ("," column-name)*
 column-name := identifier
-table-rows := table-row (, table-row)*
+table-rows := table-row ("," table-row)*
 table-row := single-table-row | multiple-table-rows
 single-table-row := expression
-multiple-table-rows := ... expression
+multiple-table-rows := "..." expression
 ```
 
 
@@ -405,10 +406,10 @@ Here's one way to write this:
 
 
 ```
-constrained-type-descriptor := type-descriptor where constraints
-constraints := constraint (, constraint)*
+constrained-type-descriptor := type-descriptor "where" constraints
+constraints := constraint ("," constraint)*
 constraint := unique-constraint
-unique-constraint := unique [ column-name (,column-name)* ]
+unique-constraint := "unique" "[" column-name ("," column-name)* "]"
 column-name := identifier
 ```
 
@@ -464,9 +465,9 @@ Basic idea is to take C# LINQ as the starting point.
 
 ```
 query-expr := (foreach-clause [where-clause])+ select-clause
-foreach-clause := foreach typed-binding-pattern in expression	
-where-clause := where expression
-select-clause := select expression
+foreach-clause := "foreach" typed-binding-pattern "in" expression	
+where-clause := "where" expression
+select-clause := "select" expression
 ```
 
 
@@ -661,10 +662,10 @@ An alternative approach is to use a comprehension syntax based on the constructo
 
 ```
 list-comprehension-expr :=
-  [(foreach-clause [where-clause])+ select-clause]
-foreach-clause := foreach typed-binding-pattern in expression
-where-clause := where expression
-select-clause := select expression
+  "[" (foreach-clause [where-clause])+ select-clause "]"
+foreach-clause := "foreach" typed-binding-pattern "in" expression
+where-clause := "where" expression
+select-clause := "select" expression
 ```
 
 
@@ -762,8 +763,8 @@ C# LINQ does this quite nicely:
 
 ```
 join-clause :=
-  join typed-binding-pattern in iterable-expr
-  on left-expr equals right-expr
+  "join" typed-binding-pattern "in" iterable-expr
+  "on" left-expr "equals" right-expr
 ```
 
 
