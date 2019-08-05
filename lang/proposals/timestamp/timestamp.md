@@ -219,35 +219,41 @@ Will not preserve:
 
 *   more than nanosecond precision
 *   use of T vs t to separate date and time (RFC 3339 allows both)
-*   use of Z vs z vs +00:00 to represent a time zone offset of 0 (RFC 3339 says they are equivalent)
 
 Will preserve:
 
 *   time zone offset
 *   precision of seconds component (i.e. number of digits following decimal point) up to 9 (since we already do this for decimal)
 
-Not sure:
+A timestamp always represents a specific instant in UTC. There are two useful meanings for the time zone part
+*   the timestamp is in UTC
+*   the timestamp is in a local time zone with a specific offset to UTC (which might be zero)
 
-*   use -00:00 vs +00:00.
-    *   RFC 3339 says:
+RFC 3339 says that
+*   a time zone of `Z` or `+00:00` means that the timestamp is in a local time, which has an offset of 0 minutes from UTC;
+*   a time zone of `-00:00` means that the timestamp is in UTC
 
-            If the time in UTC is known, but the offset to local time is unknown, this can be represented with an offset of "-00:00".  This differs semantically from an offset of "Z" or "+00:00", which imply that UTC is the preferred reference point for the specified time.
+Unfortunately ISO 8601 (of which RFC 3339 is supposed to be a profile) says something different:
+*   a time zone of `+00:00` means that the timestamp is in a local time, which has an offset of 0 minutes from UTC;
+*   a time zone of `Z` means that the timestamp is in UTC
+*   a time zone 0f `-00:00` is not allowed
 
-    *   Probably should since we distinguish +0 and -0 for binary floating point
+The ISO 8601 approach is also adopted by the [W3C Note on Date and Time Formats](https://www.w3.org/TR/NOTE-datetime).
+
+Given this inconsistency, I think it will introduce to much complexity to preserve the distinction between:
+*   a timestamp that is in UTC
+*   a timestamp that is in a local time that is the same as UTC
 
 The information that affects === but not == can be packed easily in 16 bits:
 
-
-
-*   11 bits for unsigned time zone offset in minutes (60 * 24 = 1440 < 2048 = 2<sup>11</sup>)
-*   1 bit for time zone offset sign
+*   12 bits for signed time zone offset in minutes (60 * 24 = 1440 < 2048 = 2<sup>11</sup>)
 *   4 bits for precision
-
 
 ## Epoch
 
 Epoch is 2000-01-01T00:00:00Z
 
+Alternative: 0000-01-01T00:00:00Z
 
 ### Rationale
 
@@ -265,9 +271,9 @@ Common computer epochs are:
 *   Unix: 1970-01-01T00:00:00Z (the first version of Unix was written in 1970)
 *   NTP: 1900-01-01T00:00:00Z (first version of NTP appeared in 1980)
 *   Win32: 1601-01-01T00:00:00Z (the start of a 400-year cycle of the Gregorian calendar)
+*   Go (zero time instant): 0000-01-01T00:00:00Z
 
 It would be more calendrically elegant to use 2001-01-01T00:00:00Z, but I think it's a bit too obscure.
-
 
 ## Time duration
 
@@ -284,8 +290,6 @@ We could also allow `s` as a floating point suffix with the same meaning as `d`.
 
 Why not a separate duration type?
 
-
-
 *   It is tempting to have a separate duration type and make arithmetic timestamp/duration arithmetic work
     *   timestamp + duration => timestamp
     *   duration + duration => duration
@@ -295,7 +299,6 @@ Why not a separate duration type?
 *   Time measured in seconds is just one of several SI base units (along with length in metres, mass in kilograms, amperes for electrical current). No reason to specially privilege duration. Can have general concept of quantity (number with units), for which one can define a system of arithmetic. 2m / 2s = 1 m/s
 
 Why decimal rather than float/int and why seconds as the unit?
-
 
 
 *   Decimal has enough precision to represent the lifetime of the earth in nanoseconds
@@ -309,62 +312,41 @@ Why decimal rather than float/int and why seconds as the unit?
 *   Ballerina is unlike other languages in having a decimal type from the beginning; so we ought to take advantage of this.
 *   This will not be optimally efficient for a Java-based implementation, particularly one that used BigDecimal for its representation of decimal. However, this can be improved by using an implementing a fixed-size 128-bit implementation of decimal.
 *   XML schema part 2 uses decimal seconds as the value space for timelines
-*   Google protobuf3 represents duration as 64-bit signed sconds
+*   Google protobuf3 represents duration as 64-bit signed seconds
 
-Alternative
+#### Alternative
 
 Google protobuf3 has duration as 64-bit signed seconds plus 32-bit signed nanoseconds
 
 
 ## Range
 
-The number of seconds since the epoch is limited to what is representable by a 64-bit signed integer.
-
+The limit in RFC 3339 is that the year number is four digits i.e. between 0000 and 9999. The timestamp datatype adopts this limit. Any timestamp value will be such that when converted to a string, the year will be representable as four digits. This implies that the range of a timestamp does not correspond exactly to a range of time instants, since the year number in the string representation of a timestamp depends on the time zone offset. 
 
 ### Rationale
 
-We ought to enable a fixed size representation. 64 bits is not viable given nanosecond precision, and the lexical information that we need to preserve. So it makes sense to aim for 128-bits (the same size as decimal).
-
-We should support a range that conveniently fit into a 128-bit representation of timestamp, assuming nanosecond precision e.g.
+We ought to enable a fixed size representation. 64 bits is not viable given nanosecond precision, and the lexical information that we need to preserve. So it makes sense to aim for 128-bits (the same size as decimal). The following representation has a number of advantages:
 
 
 ```
 struct timestamp {
-  // signed seconds since the epoch, excluding leap seconds
-  int64 seconds;
-  // Nanoseconds part of time since the epoch.
-  // Always positive.
-  // Normally this is less than 1,000,000,000
-  // but timestamps during a positive leap second are represented
-  // with a nanoseconds fields that is >= 1,000,000,000
-  // and < 2,000,000,000.
-  // If nanoseconds field is n >= 1,000,000,000 then
-  // n - 999,999,999 nanoseconds of the leap second have elapsed.
-  // A timestamp whose string representation
-  // has a seconds field of "60.000" will have a
-  // nanoseconds field of 1,0000,000,000;
-  // if the string has "60.999999999",
-  // then the nanoseconds field will be 1,999,999,999.
-  // Converting to a scalar value will
-  // use max(nanoseconds, 999999999).
-  unsigned32 nanoseconds;
+  // nanoseconds from start of UTC day
+  // days with a positive leap second have one more seconds thatS usual
+  int64 nanosOfDay;
+  // days epoch to start of UTC day
+  int32 dayNumber;
   // time zone offset that was used to specify the timestamp,
   // in minutes;
-  // the seconds and nanoseconds fields are in UTC
-  short timeZoneOffsetMinutes;
-  // this is non-zero only if timeZoneOffset is zero
-  // it means use -00:00 instead of Z
-  char localTimeZoneOffsetUnknown;
+  // the dayNumber and nanosOfDay fields are in UTC
+  short zoneOffsetMinutes;
   // number of digits after decimal point, in seconds field
   char secondsPrecision;
 };
 ```
 
-
-(This representation is inspired by an [old proposal](https://www.cl.cam.ac.uk/~mgk25/time/c/) for ISO C.)
+This could handle a wider range of years than 0000 to 9999.
 
 Background info:
-
 
 
 *   Java 8 Instant type uses long seconds + int nanoseconds (i.e. 96 bits)
@@ -381,6 +363,7 @@ Background info:
 *   ISO 8601 says proleptic use of Gregorian calendar should only be by agreement between the partners in information interchange
 *   64-bit signed count of nanoseconds can express a range of about ±292 years
 *   Unix signed 32-bit seconds will overflow in year 2038
+*   Google proto3 timestamp restricted to 4 digit years, but does not preserve local time zone.
 
 
 ## Lang library
@@ -395,9 +378,8 @@ See [lang.timestamp module](timestamp.bal).
 Functions to return current values of
 
 
-
-*   monotonic time as a decimal
 *   wall-clock time as a timestamp
+    *   should this be in the lang library?
     *   should have named argument specifying precision, which should default to something reasonable (0 probably); a default of 0 will discourage people from using wall-clock time when they should be using monotonic time
     *   what should the time-zone offset be, or should there be an argument controlling this?
         *   Z time-zone offset (not really correct if this is not in fact the local time-zone offset)
@@ -408,6 +390,7 @@ Functions to return current values of
         *   should there be an optional argument to smooth?
 *   time-zone offset; this is a time duration so it should be returned as a decimal number of seconds
     *   this can presumably change during the execution of a program, for example if daylight saving time comes into effect, or if the computer moves between time zones
+*   monotonic time as a decimal
 
 
 ### Leap second list
@@ -422,6 +405,25 @@ The standard library will have a leap second list, which can be used to provide 
 
 One interesting issue is how to deal with updates to the leap second list, which might potentially happen during a long-lived Ballerina process.
 
+### Time zones
+
+Database of named time zones as described by IANA. 
+
+Time zones are identified by combination of continent (or ocean) plus largest city in the continent.
+
+Each time zone has information for mapping from UTC to local times in that time zone
+*   information about offset of "standard time" from UTC, where standard time means time without any daylight savings time rules; offset changes from time to time according to regulations established by civil authorities
+*    information when daylight saving time is in effect
+In addition, there is information about the time zone designator (abbreviation) of the time zone name both with and without daylight saving time (e.g. EST or EDT).
+
+There are two levels of complexity in dealing with time zone data:
+
+*   dealing with specific instants of time where the offset between UTC and local time changes
+*   dealing with recurrence rules for daylight savings time (e.g. daylight savings time starts at the second Sunday in March)
+
+The latter can be expanded into the former.
+
+RFC 8536 describes a binary format for a time zone, that contains the expanded information together with recurrence rules, which are based on format of [POSIX TZ environment variable](http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap08.html).
 
 ## Alternative approach to leap seconds
 
