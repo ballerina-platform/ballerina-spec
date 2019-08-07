@@ -35,34 +35,34 @@ public const int EPOCH_YEAR = 2000;
 
 # Returns the Instant of `ts` relative to `EPOCH`.
 # So `EPOCH.toInstant()` returns `{ epochDays: 0, utcTimeOfDaySeconds: 0d, localOffsetMinutes: 0 }`
-public function toInstant(timestamp ts) returns Instant;
+public function toInstant(timestamp ts) returns Instant = external;
 
 # Returns the timestamp corresponding to `instant`.
 # Panics if `instant` does not correspond to any timestamp.
 # A positive leap second is allowed for any day that is the last day of a month,
 # on any year >= 1972.
 # `ts === fromInstant(ts.toInstant())` will be true for any timestamp `ts`.
-public function fromInstant(Instant instant) returns timestamp;
+public function fromInstant(Instant instant) returns timestamp = external;
 
 # Same as `ts.toInstant().epochDays`.
-public function epochDays(timestamp ts) returns int;
+public function epochDays(timestamp ts) returns int = external;
 
 # Same as `ts.toInstant().utcTimeOfDaySeconds`.
-public function utcTimeOfDaySeconds(timestamp ts) returns Seconds;
+public function utcTimeOfDaySeconds(timestamp ts) returns Seconds = external;
 
 # Same as `ts.toInstant().localOffsetMinutes`.
-public function localOffsetMinutes(timestamp ts) returns int?;
+public function localOffsetMinutes(timestamp ts) returns int? = external;
 
 # Converts a timestamp to a duration in seconds since the epoch.
 # This ignores leap seconds.
 # More precisely, this is equivalent to
 # `(ts.epochDays() * 86400) - clampUtcTimeOfDaySeconds(ts.utcTimeOfDaySeconds())`.
-function toEpochSeconds(timestamp ts) returns Seconds;
+public function toEpochSeconds(timestamp ts) returns Seconds = external;
 
 # Reduces a time of day in seconds so that it excludes any partial leap seconds.
 # More precisely, if `s` is >= 86400, returns the largest decimal number that is < 86400
 # and has the same precision as `s`.
-public function clampUtcTimeOfDaySeconds(Seconds s) return Seconds = external;
+public function clampUtcTimeOfDaySeconds(Seconds s) returns Seconds = external;
 
 # Converts a duration in seconds since the epoch to a timestamp.
 # The local offset in the result will be 0. 
@@ -75,7 +75,7 @@ public function subtract(timestamp ts1, timestamp ts2) returns Seconds = externa
 # Convert from RFC3339 string
 # Leap seconds allowed at the end of a UTC month only.
 # Allow years that are not four digits
-public function fromString(string) returns timestamp|error;
+public function fromString(string) returns timestamp|error = external;
 
 # Record type representing a calendar date in Gregorian calendar.
 # A date is valid if the year is beteen 0 and 9999
@@ -108,7 +108,7 @@ public type ZoneOffset {|
     int minute;
 |};
 
-const ZoneOffset ZONE_OFFSET_ZERO = { sign: +1, hours: 0, minutes: 0};
+public const ZoneOffset ZONE_OFFSET_ZERO = { sign: +1, hours: 0, minutes: 0};
 
 # Returns the date of `ts` in UTC
 public function utcDate(timestamp ts) returns Date = external;
