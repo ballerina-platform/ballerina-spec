@@ -6,15 +6,14 @@ public type Seconds decimal;
 # A record type representing an instant in time relative to an epoch.
 # It assumes that the epoch occurs at the start of a UTC day (i.e. midnight).
 # This has the same information as a timestamp.
-# All operations on timestamps cane be defined in terms of operations
+# All operations on timestamps can be defined in terms of operations
 # on the corresponding `Instant` record.
-# `epochDays` is the number of days from the epoch to the start of the day
-# on which the instant occurs.
+# `epochDays` is the number of days from the epoch rounded down to the nearest integer.
 # `utcTimeOfDaySeconds` is the duration in seconds from the start of the UTC day.
 # `utcTimeOfDaySeconds` will be < 86,400 except on a day with a positive leap second,
 # when it will be < 86,401.
-# `localZoneOffsetMinutes` is the number of minutes, possibly negative, by which local time is ahead
-# of UTC time.
+# `localOffsetMinutes` says that the Instant should be displayed in a local time
+# that is ahead of UTC by `localOffsetMinutes` minutes.
 # Note that, unlike with the string representation of a timestamp, an
 # `Instant` represents an instant in time relative to UTC, rather than
 # relative to local time.
@@ -24,7 +23,7 @@ public type Seconds decimal;
 public type Instant record {|
     int epochDays;
     Seconds utcTimeOfDaySeconds;
-    int localZoneOffsetMinutes;
+    int localOffsetMinutes;
 |};
 
 # A timestamp for the Ballerina epoch.
@@ -32,6 +31,10 @@ public const timestamp EPOCH = 2000-01-01T00:00:00Z;
 
 # The year of the Ballerina epoch.
 public const int EPOCH_YEAR = 2000;
+
+# The day of week of the EPOCH.
+# This can be used with Instant.epochDays to directly compute the day of the week.
+public const int EPOCH_DAY_OF_WEEK = 6;
 
 # Returns the Instant of `ts` relative to `EPOCH`.
 # So `EPOCH.toInstant()` returns `{ epochDays: 0, utcTimeOfDaySeconds: 0d, localOffsetMinutes: 0 }`
@@ -48,156 +51,90 @@ public function fromInstant(Instant instant) returns timestamp = external;
 public function epochDays(timestamp ts) returns int = external;
 
 # Same as `ts.toInstant().utcTimeOfDaySeconds`.
-public function utcTimeOfDaySeconds(timestamp ts) returns Seconds = external;
+public function utcTimeOfDaySeconds(timestamp ts) returns decimal = external;
 
 # Same as `ts.toInstant().localOffsetMinutes`.
-public function localOffsetMinutes(timestamp ts) returns int? = external;
+public function localOffsetMinutes(timestamp ts) returns int = external;
 
 # Converts a timestamp to a duration in seconds since the epoch.
 # This ignores leap seconds.
-# More precisely, this is equivalent to
-# `(ts.epochDays() * 86400) - clampUtcTimeOfDaySeconds(ts.utcTimeOfDaySeconds())`.
-public function toEpochSeconds(timestamp ts) returns Seconds = external;
-
-# Reduces a time of day in seconds so that it excludes any partial leap seconds.
-# More precisely, if `s` is >= 86400, returns the largest decimal number that is < 86400
-# and has the same precision as `s`.
-public function clampUtcTimeOfDaySeconds(Seconds s) returns Seconds = external;
+# For a timestamp that does not occur during a positive leap second,
+# it is equivalent to
+# `(ts.epochDays() * 86400d) - ts.utcTimeOfDaySeconds()`;
+# for a timestamp that does occur during a positive leap second,
+# it is equivalent to ts.leapSecond().before.toEpochSeconds().
+# Same as `diffSeconds(ts1, EPOCH)`.
+public function toEpochSeconds(timestamp ts) returns decimal = external;
 
 # Converts a duration in seconds since the epoch to a timestamp.
 # The local offset in the result will be 0. 
 # Panics if out of range.
-public function fromEpochSeconds(Seconds seconds) returns timestamp = external;
+public function fromEpochSeconds(decimal seconds) returns timestamp = external;
 
+# Returns difference in seconds between two timestamps.
 # Same as `ts1.toEpochSeconds() - ts2.toEpochSeconds()`.
-public function subtract(timestamp ts1, timestamp ts2) returns Seconds = external;
+public function diffSeconds(timestamp ts1, timestamp ts2) returns decimal = external;
 
 # Same as `fromEpochSeconds(ts1.toEpochSeconds() + seconds)`
-public function add(timestamp ts1, Seconds seconds) returns timestamp = external;
+public function addSeconds(timestamp ts1, decimal seconds) returns timestamp = external;
 
 # Convert from RFC3339 string
 # Leap seconds are allowed at the end of a UTC month, for years from 1972 onwards.
 # Allow years that are not four digits
 public function fromString(string) returns timestamp|error = external;
 
-# Record type representing a calendar date in Gregorian calendar.
-# A date is valid if the year is beteen 0 and 9999
-# and represents a valid date in the proleptic Gregorien calendar.
-# Year 0 means -1 BC.
-# Month if value if it is in the range 1 to 12.
-# A valid day is always between 1 and 31, but must also be a valid
-# day of the month in the Gregorian calendar.
-public type Date record {|
+# Returns a timestamp that refers to the same time instant, but with a different UTC offset.
+public function withOffsetMinutes(timestamp ts, int offsetMinutes) returns timestamp = external;
+
+// Broken down
+
+# This is the same as datetime:DateTime.
+# But we don't want a dependency, so we have a non-public copy here.
+type DateTime record {|
     int year;
     int month;
     int day;
-|};
-
-# Returns if `date` is valid Date, and otherwise returns an error.
-# Other functions that have a `date` parameter have a precondition
-# that the date is value, and panic if it is not.
-public function validDate(Date date) returns Date|error = external;
-
-# Returns the date of `ts` in UTC
-public function utcDate(timestamp ts) returns Date = external;
-
-# Returns the date of the timestamp in the timestamp's local time zone
-# This is the same as the date in the string representation of the timestamp.
-public function localDate(timestamp ts) returns Date = external;
-
-public function dateToString(Date date) returns string = external;
-
-// These values come from ISO 8601
-const int MONDAY = 1;
-const int TUESDAY = 2;
-const int WEDNESDAY = 3;
-const int THURSDAY = 4;
-const int FRIDAY = 5;
-const int SATURDAY = 6;
-const int SUNDAY = 7;
-
-public type DayOfWeek MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY;
-public function validDayOfWeek(int day) returns DayOfWeek|error = external;
-
-public function utcDayOfWeek(timestamp ts) returns DayOfWeek = external;
-public function localDayOfWeek(timestamp ts) returns DayOfWeek = external;
-
-public function dayOfWeekToString(DayOfWeek day) returns string = external;
-
-
-// Using TimeOfDay because Time is so overloaded (e.g. in `timestamp`)
-# Record type representing a time oallows < 61.f day using 24-hour clock.
-# The `second` field is valid if it is >= 0 and < 61.
-public type TimeOfDay record {|
     int hour;
     int minute;
     decimal second;
+    record {|
+        (+1|-1) sign;
+        int hour;
+        int minute;
+    |} offset;
 |};
 
-# Returns `time` if `time` is a valid TimeOfDay, and otherwise returns an error.
-# Other functions that have a `date` parameter have a precondition
-# that the date is value, and panic if it is not.
-public function validTimeOfDay(TimeOfDay time) returns TimeOfDay|error = external;
-
-# Returns the time of `ts` in UTC
-# This can be derived from the `utcTimeOfDaySeconds` of the corresponding Instant.
-public function utcTimeOfDay(timestamp ts) returns TimeOfDay = external;
-
-# Returns the time of day of `ts` in its local time zone.
-# This is the same as the time in the string representation of the timestamp.
-public function localTimeOfDay(timestamp ts) returns TimeOfDay = external;
-
-public function timeOfDayToString(TimeOfDay time) returns string = external;
-
-
-# Offset of a time zone from UTC.
-# This is conceptually a duration, but we use singular `hour` and `minute`
-# since TimeOfDay is also duration from start of the day.
-public type ZoneOffset {|
-    # sign must be `+` if hour and and minute are both 0
-    (+1|-1) sign;
-    # in the range 0...23
-    int hour;
-    # in the range 0...59
-    int minute;
+# This is the same as datetime:FullDateTime.
+# But we don't want a dependency, so we have a non-public copy here.
+type FullDateTime {|
+    *DateTime;
+    (0|1|2|3|4|5|6) dayOfWeek;
 |};
 
-public const ZoneOffset ZONE_OFFSET_ZERO = { sign: +1, hours: 0, minutes: 0};
+public function fromDateTime(record { *DateTime; } dt) returns timestamp = external;
+public function toDateTime(timestamp ts) returns FullDateTime = external;
 
-public function validZoneOffset(ZoneOffset offset) returns ZoneOffset|error = external;
-
-# Returns the offset of local time of `ts` from UTC
-public function localZoneOffset(timestamp ts) returns ZoneOffset = external;
-
-public function zoneOffsetToString(ZoneOffset offset) returns string = external;
-
-# Constructs a timestamp using a date, time of day and time-zone offset.
-# The `date` and `time` are in a time zone that is ahead of UTC by `offset`
-public function fromLocal(Date date, TimeOfDay time, ZoneOffset offset) returns timestamp = external;
-
-public function fromUtc(Date date, TimeOfDay time) returns timestamp = external;
-
-# Returns a timestamp that refers to the same time instant, but with a different zone offset.
-public function withLocalZoneOffset(timestamp ts, ZoneOffset offset) returns timestamp = external;
-
+# Returns a DateTime record in which UTC offset is zero
+public function toDateTimeUtc(timestamp ts) returns FullDateTime = external;
 
 // Leap seconds
 
-# Does this timestamp occur during a positive leap second?
-# Same as `ts.toInstant().utcTimeOfDaySeconds >= 86400d`
-public function inLeapSecond(timestamp ts) returns boolean = external;
+# Information about a timestamp that occurred during a positive leap second.
+# * `before` - timestamp immediately before the leap second
+# * `after` - timestamp immediately after the leap second
+# * `elapsed` - part of the leap second that elapsed before the timestamp
+# `after` will be a timestamp at the start of UTC day (i.e. 00:00:00) following
+# the timestamp.
+# The value of `before` depends on the precision of the underlying timestamp `ts`;
+# it will be the greatest timestamp before `ts` with a second field that is < 60
+# and that has the same precision as `ts`. So if `var leap = ts.leapSecond();`, then
+# `ts.utcTimeOfDaySeconds() === leap.before.utcTimeOfDaySeconds() + leap.elapsed`
+public type LeapSecond record {|
+    timestamp before;
+    timestamp after;
+    decimal elapsed;
+|};
 
-
-// Not sure if we need this: can implement easily with `fromString` and `inLeapSecond`.
-# like fromString, but do not allow seconds field >= 60
-public function fromNoLeapSecondsString(string) returns timestamp|error = external;
-
-// Not sure if we need this: can implement efficiently with `inLeapSecond` and code below.
-# Returns a timestamp that omits a partial leap second.
-# Equivalent to
-# ```
-# Instant instant = ts.toInstant();
-# instant.utcTimeOfDaySeconds = clampUtcTimeOfDaySeconds(instant.utcTimeOfDaySeconds);
-# return fromInstant(instant);
-# ```
-public function withoutLeapSeconds(timestamp ts) returns timestamp = external;
+# Returns information about a timestamp that occurred during a positive leap second.
+# Returns `()` if the timestamp did not occur during a positive leap second.
+public function leapSecond(timestamp ts) returns LeapSecond? = external;
