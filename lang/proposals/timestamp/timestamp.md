@@ -240,9 +240,13 @@ Unfortunately ISO 8601 (of which RFC 3339 is supposed to be a profile) says some
 
 The ISO 8601 approach is also adopted by the [W3C Note on Date and Time Formats](https://www.w3.org/TR/NOTE-datetime).
 
-Given this inconsistency, I think it will introduce to much complexity to preserve the distinction between:
+Given this inconsistency, I think it will introduce too much complexity to preserve the distinction between:
 *   a timestamp that is in UTC
 *   a timestamp that is in a local time that is the same as UTC
+
+Instead
+*   should accept `+00:00`, `-00:00` and `Z` on input
+*   generate `Z` on output
 
 The information that affects === but not == can be packed easily in 16 bits:
 
@@ -372,32 +376,60 @@ See [lang.timestamp module](timestamp.bal).
 
 ## Standard library
 
+### Broken down time
+
+Records representing various components of time
+*  calendar date = year, month, day
+*  local time of day = hour, minute, second
+*  offset of local time from UTC = sign, hour, minute
+*  combinations of the above
+
+Time durations (equivalent to number of seconds, if you ignore leap seconds)
+*  weeks
+*  days
+*  hours
+*  minutes
+*  seconds
+
+Note that time of day is a duration from the start of the day.
 
 ### Current time
 
-Functions to return current values of
+Functions to return current values of wall-clock time as a timestamp
+*   should this be in the lang library?
+*   should have named argument specifying precision, which should default to something reasonable (0 probably); a default of 0 will discourage people from using wall-clock time when they should be using monotonic time
+*   what should the time-zone offset be, or should there be an argument controlling this?
+    *   Z time-zone offset (not really correct if this is not in fact the local time-zone offset)
+    *   local-time zone offset (how useful is this for network distributed applications, where different parts may well be running in different time zones?)
+    *   unspecified/unknown local time-zone (i.e. -00:00)
+*   should there be some control over leap-second handling?
+    *   the default should be whatever the system gives you
+    *   should there be an optional argument to smooth?
 
 
-*   wall-clock time as a timestamp
-    *   should this be in the lang library?
-    *   should have named argument specifying precision, which should default to something reasonable (0 probably); a default of 0 will discourage people from using wall-clock time when they should be using monotonic time
-    *   what should the time-zone offset be, or should there be an argument controlling this?
-        *   Z time-zone offset (not really correct if this is not in fact the local time-zone offset)
-        *   local-time zone offset (how useful is this for network distributed applications, where different parts may well be running in different time zones?)
-        *   unspecified/unknown local time-zone (i.e. -00:00)
-    *   should there be some control over leap-second handling?
-        *   the default should be whatever the system gives you
-        *   should there be an optional argument to smooth?
+### Monotonic time
+
+* Decimal giving elapsed time in seconds from unspecific epoch.
+* Guaranteed monotonically increasing even with clock resets and leap seconds
+* Maximum precision by default?
+* Not interchangeable between address spaces
+* Think about how this works with long-running processes (BPEL, suspend/resume)
+* Go combines monotonic time and wall-clock time into a single value. Should we do this? Poor fit for data vs non-data distinction
+
+
 *   time-zone offset; this is a time duration so it should be returned as a decimal number of seconds
     *   this can presumably change during the execution of a program, for example if daylight saving time comes into effect, or if the computer moves between time zones
 *   monotonic time as a decimal
 
 
-### Leap second list
+### Atomic time
 
-The standard library will have a leap second list, which can be used to provide a number of useful operations. Note that these operations will fail if they are applied to times beyond the expiry of the leap second list.
+There is a group of operations that relate to atomic time and make use a a leap second list.  Note that these operations will fail if they are applied to times beyond the expiry of the leap second list.
 
 
+Whereas the UTC time-scale has leap seconds that result in discontinuities, atomic time (TAI) is a time-scale that does not have discontinuities. Converting between TAI and UTC requires a leap second list.
+
+Operationss include:
 
 *   Convert between timestamps using smoothed time (either the Google/AWS smear, or some other smear) and timestamps that correctly follow the definition of UTC (and RFC 3339)
 *   Convert between UTC and TAI
@@ -414,7 +446,7 @@ Time zones are identified by combination of continent (or ocean) plus largest ci
 Each time zone has information for mapping from UTC to local times in that time zone
 *   information about offset of "standard time" from UTC, where standard time means time without any daylight savings time rules; offset changes from time to time according to regulations established by civil authorities
 *    information when daylight saving time is in effect
-In addition, there is information about the time zone designator (abbreviation) of the time zone name both with and without daylight saving time (e.g. EST or EDT).
+In addition, there is information about the conventional abbreviation of the time zone name both with and without daylight saving time (e.g. EST or EDT).
 
 There are two levels of complexity in dealing with time zone data:
 
@@ -423,7 +455,18 @@ There are two levels of complexity in dealing with time zone data:
 
 The latter can be expanded into the former.
 
+Daylight saving time transition point generally described by record with following members:
+*  month of year (1-12)
+*  day of week (0-6)
+*  which occurrence of the day of the week in the month (0-5), where 5 means last
+*  local hour of day (00-23); sometimes 24 is used 
+*  local minute of day (00-59); usually 0
+
+When the clocks go back, then there will be two instants of time that have the same local time. When converting UTC to a particular time zone that uses daylight savings time, it would be useful to distinguish these two instants. Potentially enumeration with four values: unknown, only occurrence, first occurrence of two, second occurence of two.  Austria has a convention using A/B: if the clocks go back at midnight, then the first occurrence of 23:01 would be 23 A 1 and the second 23 B 1.
+
 RFC 8536 describes a binary format for a time zone, that contains the expanded information together with recurrence rules, which are based on format of [POSIX TZ environment variable](http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap08.html).
+
+Microsoft (Bing) [Time Zone API](https://docs.microsoft.com/en-us/bingmaps/rest-services/timezone/convert-local-time-zone).
 
 ## Alternative approach to leap seconds
 
