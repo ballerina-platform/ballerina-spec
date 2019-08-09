@@ -376,6 +376,8 @@ See [lang.timestamp module](timestamp.bal).
 
 ## Standard library
 
+See [datetime module draft](datetime.bal).
+
 ### Broken down time
 
 Records representing various components of time
@@ -395,13 +397,11 @@ Note that time of day is a duration from the start of the day.
 
 ### Current time
 
-Functions to return current values of wall-clock time as a timestamp
+Functions to return current value of wall-clock time as a timestamp
 *   should this be in the lang library?
 *   should have named argument specifying precision, which should default to something reasonable (0 probably); a default of 0 will discourage people from using wall-clock time when they should be using monotonic time
-*   what should the time-zone offset be, or should there be an argument controlling this?
-    *   Z time-zone offset (not really correct if this is not in fact the local time-zone offset)
-    *   local-time zone offset (how useful is this for network distributed applications, where different parts may well be running in different time zones?)
-    *   unspecified/unknown local time-zone (i.e. -00:00)
+*   way to get timestamp with UTC offset or with local time offset
+    *   how useful is local time offset in a network distributed app?
 *   should there be some control over leap-second handling?
     *   the default should be whatever the system gives you
     *   should there be an optional argument to smooth?
