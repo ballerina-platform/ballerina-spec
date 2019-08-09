@@ -84,7 +84,9 @@ public function addSeconds(timestamp ts1, decimal seconds) returns timestamp = e
 public function fromString(string) returns timestamp|error = external;
 
 # Returns a timestamp that refers to the same time instant, but with a different UTC offset.
-public function withOffsetMinutes(timestamp ts, int offsetMinutes) returns timestamp = external;
+public function withLocalOffsetMinutes(timestamp ts, int offsetMinutes) returns timestamp = external;
+
+// XXX something to change precision
 
 // Broken down
 
