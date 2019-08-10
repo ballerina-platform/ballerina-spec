@@ -462,7 +462,7 @@ Daylight saving time transition point generally described by record with followi
 *  local hour of day (00-23); sometimes 24 is used 
 *  local minute of day (00-59); usually 0
 
-When the clocks go back, then there will be two instants of time that have the same local time. When converting UTC to a particular time zone that uses daylight savings time, it would be useful to distinguish these two instants. Potentially enumeration with four values: unknown, only occurrence, first occurrence of two, second occurence of two.  Austria has a convention using A/B: if the clocks go back at midnight, then the first occurrence of 23:01 would be 23 A 1 and the second 23 B 1.
+When the clocks go back at the end of summertime, then there will be two instants of time that have the same local time. For the first of these, daylight saving time will be in effect; for the second it will not. In order to be able to convert correctly from a broken down local time into UTC using a timezone, the broken down time must accordingly contain an indication of whether daylight saving time is in effect.  Some countries (e.g. Austria) have a convention for distinguihsing these two times using A/B: if the clocks go back at midnight, then the first occurrence of 23:01 would be 23 A 1 and the second 23 B 1.
 
 RFC 8536 describes a binary format for a time zone, that contains the expanded information together with recurrence rules, which are based on format of [POSIX TZ environment variable](http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap08.html).
 
