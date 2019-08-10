@@ -1,5 +1,20 @@
 // Standard library date/time module.
 
+// Current time
+
+# Returns a timestamp for the current time.
+# `precision` gives the number of digits after the decimal point for seconds
+public function now(public int precision = 3) returns timestamp = external;
+
+// Monotonic time
+
+# Returns the number of elapsed seconds since an unspecified epoch
+# Values returned by elapsedSeconds() are guaranteed to be monotonically increasing
+# i.e. each call will return a  value which will be strictly greater than the previous value
+public function elapsedSeconds() returns decimal = external;
+
+// Broken-down time
+
 # Record type representing a calendar date in Gregorian calendar.
 # A date is valid if the year is beteen 0 and 9999
 # and represents a valid date in the proleptic Gregorien calendar.
@@ -100,8 +115,5 @@ public function validTime(TimeSource time) returns TimeSource|error = external;
 public function timeToString(TimeSource time) returns string = external;
 
 // XXX similarly for LocalTime, LocalDateTime, DateTime
-
-public function toTimestamp(DateTimeSource dt) returns timestamp = external;
-
 
 public function combine(Date date, LocalTime localTime, UtcOffset offset) returns DateTime = external;

@@ -7,11 +7,13 @@ The Ballerina language does not provide any built-in types relating to date and 
 
 ## Timestamp type
 
-This document proposes the addition of a new simple basic type, called timestamp, based on [RFC 3339 Date and Time on the Internet: Timestamps](https://tools.ietf.org/html/rfc3339).
+This document proposes the addition of a new simple basic type, called timestamp, that represents an instant of time on the UTC time scale.
+
+The string representation is defined by [RFC 3339 Date and Time on the Internet: Timestamps](https://tools.ietf.org/html/rfc3339).
 
 RFC 3339, which is a profile of ISO 8601, defines a standard format for a string representation of date+time, which uses the Gregorian calendar to specify unambiguously an instant of time on the UTC time scale.
 
-RFC 3339 allows for the use of time zone offsets, with Z meaning +00:00, so the following are all equivalent, in the sense that they refer to the same time:
+RFC 3339 allows for the use of time zone offsets, with Z meaning +00:00, so the following are all equivalent:
 
 ```
 1996-12-19T16:39:57-08:00
@@ -48,7 +50,7 @@ Why call it `timestamp`?
 
 *   Makes it clear what it is
 *   Consistent with main relevant standard (RFC 3339)
-*   SQL standard uses `timestamp` to mean the combination date and time, although it provides variants both with and without time zone
+*   SQL standard uses `timestamp` to mean the combination date and time; it provides variants both with and without time zone
 *   Google protobuf uses [timestamp](https://developers.google.com/protocol-buffers/docs/reference/java/com/google/protobuf/Timestamp)
 
 Another possible name would be `datetime`.
@@ -73,12 +75,7 @@ What about other date/time related types? Mostly they should be done as library 
     *   semantics are not self-contained: only really meaningful w.r.t. some time zone
     *   time zone database will be in standard library, not in lang library
 *   date
-    *   not supported by any RFC
-    *   time zone problem
-        *   if it conceptually refers to a 24 hour time internal, then a time zone is needed to unambiguously specifi
-        *   ISO 8601 date syntax does not include time zone
-        *   XML Schem
-
+    *   inherently relative to some timezone
 
 ## Literal syntax
 
@@ -88,9 +85,8 @@ Constructor
 
 We can use the functional constructor syntax. It would support either
 
-
-
-*   a single positional string argument, same as the literal syntax,
+*   a single positional string argument, same as the literal syntax, or
+*   XXX
 
 
 ## Precision
@@ -147,7 +143,7 @@ Scalar conversion should not include either positive or negative leap seconds. I
 *   do not advance for one second during a positive leap second, and
 *   skip forward one second during a negative leap second.
 
-There would then be a separate operation to return the duration of a partially elapsed leap second.
+There would then be a separate operation to return the duration, including any leap second, since the start of the UTC day.
 
 
 ### UTC and leap seconds
@@ -219,39 +215,15 @@ Will not preserve:
 
 *   more than nanosecond precision
 *   use of T vs t to separate date and time (RFC 3339 allows both)
+*   time zone offset
 
 Will preserve:
 
-*   time zone offset
 *   precision of seconds component (i.e. number of digits following decimal point) up to 9 (since we already do this for decimal)
 
-A timestamp always represents a specific instant in UTC. There are two useful meanings for the time zone part
-*   the timestamp is in UTC
-*   the timestamp is in a local time zone with a specific offset to UTC (which might be zero)
+### Rationale
 
-RFC 3339 says that
-*   a time zone of `Z` or `+00:00` means that the timestamp is in a local time, which has an offset of 0 minutes from UTC;
-*   a time zone of `-00:00` means that the timestamp is in UTC
-
-Unfortunately ISO 8601 (of which RFC 3339 is supposed to be a profile) says something different:
-*   a time zone of `+00:00` means that the timestamp is in a local time, which has an offset of 0 minutes from UTC;
-*   a time zone of `Z` means that the timestamp is in UTC
-*   a time zone 0f `-00:00` is not allowed
-
-The ISO 8601 approach is also adopted by the [W3C Note on Date and Time Formats](https://www.w3.org/TR/NOTE-datetime).
-
-Given this inconsistency, I think it will introduce too much complexity to preserve the distinction between:
-*   a timestamp that is in UTC
-*   a timestamp that is in a local time that is the same as UTC
-
-Instead
-*   should accept `+00:00`, `-00:00` and `Z` on input
-*   generate `Z` on output
-
-The information that affects === but not == can be packed easily in 16 bits:
-
-*   12 bits for signed time zone offset in minutes (60 * 24 = 1440 < 2048 = 2<sup>11</sup>)
-*   4 bits for precision
+A network distributed application may be distributed across multiple time zones. The local time of the machine on which a part of the application is running is not generally important. The right approach is store and interchange timestamps in a neutral form (i.e. relative to UTC), and then use the time zone of the user to convert between UTC and local time. Preserving time zone offsets is not useful with this approach, and introduces complexity and confusion. For example, is the date of a timestamp the date in UTC or in local time?
 
 ## Epoch
 
@@ -325,7 +297,7 @@ Google protobuf3 has duration as 64-bit signed seconds plus 32-bit signed nanose
 
 ## Range
 
-The limit in RFC 3339 is that the year number is four digits i.e. between 0000 and 9999. The timestamp datatype adopts this limit. Any timestamp value will be such that when converted to a string, the year will be representable as four digits. This implies that the range of a timestamp does not correspond exactly to a range of time instants, since the year number in the string representation of a timestamp depends on the time zone offset. 
+The limit in RFC 3339 is that the year number is four digits i.e. between 0000 and 9999. The timestamp datatype adopts this limit. Any timestamp value will be such that when converted to a string, the year will be representable as four digits.
 
 ### Rationale
 
@@ -339,16 +311,12 @@ struct timestamp {
   int64 nanosOfDay;
   // days epoch to start of UTC day
   int32 dayNumber;
-  // time zone offset that was used to specify the timestamp,
-  // in minutes;
-  // the dayNumber and nanosOfDay fields are in UTC
-  short zoneOffsetMinutes;
   // number of digits after decimal point, in seconds field
   char secondsPrecision;
 };
 ```
 
-This could handle a wider range of years than 0000 to 9999.
+The secondsPrecision could be packed into the top bits of the dayNumber.
 
 Background info:
 
