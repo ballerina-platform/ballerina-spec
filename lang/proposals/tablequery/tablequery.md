@@ -775,8 +775,21 @@ There's some SQL-funkiness as regards handling NULL.
 
 ### Grouping
 
-TBD
+```
+group-clause :=
+   "group" construct-expr "by" group-expr "into" typed-binding-pattern
+```
 
+`construct-expr` and `group-expr` are evaluated once for each iteration yielding values c and g.
+For each distinct (using `==`) value of g
+
+*  a list is constructed of all corresponding values of c,
+*  the list is bound to typed-binding-pattern
+*  the following clauses of the query are executed with the variables bound by typed-binding-pattern in scope
+
+TBD: also variant without `into`.
+
+XXX: How to determine the result? Typically with `into` the result will be a list.
 
 ### Aggregation
 
