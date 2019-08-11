@@ -32,7 +32,7 @@ public type Date record {|
 # Record type representing a local time of day using 24-hour clock.
 # The `second` field is valid if it is >= 0 and < 61.
 # Corresponds to SQL TIME type.
-public type LocalTime record {|
+public type Time record {|
     int hour;
     int minute;
     decimal second;
@@ -40,9 +40,9 @@ public type LocalTime record {|
 
 # Record type representing a combination of date and local time.
 # Corresponds to SQL TIMESTAMP type.
-public type DateLocalTime record {|
+public type DateTime record {|
     *Date;
-    *LocalTime;
+    *Time;
 |};
 
 # Offset of local time from UTC.
@@ -53,7 +53,7 @@ public type DateLocalTime record {|
 # This will be positive is local time is ahead of UTC,
 # and negative if local time is behind UTC.
 # This type should generally be treated as immutable.
-public type UtcOffset record {|
+public type Offset record {|
     (+1|-1) sign;
     int hour;
     int minute;
@@ -61,16 +61,16 @@ public type UtcOffset record {|
 
 # Local time of day together with offset from UTC.
 # Corresponds to SQL TIME WITH TIMEZONE type.
-public type Time record {|
-    *LocalTime;
-    UtcOffset offset;
+public type TimeWithOffset record {|
+    *Time;
+    Offset offset;
 |};
 
 # Date, local time of day and offset from UTC.
 # Corresponds to SQL TIMESTAMP WITH TIMEZONE type.
-public type DateTime record {|
+public type DateTimeWithOffset record {|
    *Date;
-   *Time;
+   *TimeWithOffset;
 |};
 
 # ISO 8601 has MONDAY as day 1 and SUNDAY as day 7
@@ -86,34 +86,68 @@ public const int SATURDAY = 6;
 public type DayOfWeek SUNDAY|MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY;
 
 # DateTime together with day of week.
-public type FullDateTime record {|
+public type FullDateTimeWithOffset record {|
     *DateTime;
     DayOfWeek dayOfWeek;
 |};
 
 public const UtcOffset UTC_OFFSET_ZERO = { sign: +1, hours: 0, minutes: 0};
 
-// These are defined so that FullDateTime is a subtype.
-public type DateSource record { *Date; };
-public type LocalTimeSource record { *LocalTime; };
-public type TimeSource record { *Time; };
-public type DateLocalTimeSource record { *DateLocalTime; };
-public type DateTimeSource record { *DateTime; };
+// These are defined so that FullDateTimeWithOffset is a subtype.
+public type OpenDate record { *Date; };
+public type OpenTime record { *Time; };
+public type OpenTimeWithOffset record { *TimeWithOffset; };
+public type OpenDateTime record { *DateTime; };
+public type OpenDateTimeWithOffset record { *DateTimeWithOffset; };
 
 # Returns if `date` is valid Date, and otherwise returns an error.
 # Other functions that have a `date` parameter have a precondition
 # that the date is value, and panic if it is not.
-public function validDate(DateSource date) returns DateSource|error = external;
-public function dateToString(DateSource date) returns string = external;
+public function validDate(OpenDate date) returns OpenDate|error = external;
+public function dateToString(OpenDate date) returns string = external;
 # Set the date fields in date1 from date2.
-public function setDate(DateSource date1, DateSource date2) = external;
+public function setDate(OpenDate date1, OpenDate date2) = external;
 
 # Returns `time` if `time` is a valid Time, and otherwise returns an error.
 # Other functions that have a `date` parameter have a precondition
 # that the date is value, and panic if it is not.
-public function validTime(TimeSource time) returns TimeSource|error = external;
-public function timeToString(TimeSource time) returns string = external;
+public function validTime(OpenTime time) returns OpenTime|error = external;
+public function timeToString(OpenTime time) returns string = external;
 
-// XXX similarly for LocalTime, LocalDateTime, DateTime
+// XXX similarly for DateTime, TimeWithOffset, DateTimeWithOffset
 
-public function combine(Date date, LocalTime localTime, UtcOffset offset) returns DateTime = external;
+public function combine(Date date, Time time, Offset offset) returns DateTime = external;
+
+// Conversion to and from local time in a time-zone
+
+# The `which` field deals with the case where the local time is ambiguous, in the sense
+# that there are two timestamps with the same local time.
+# The common case of this is when clocks go back at the end of daylight saving time.
+# When there are two instants with the same local time, a value for 1 for `which` means that
+# the local time refers to the first of them, and a value of 2 means that it refers to the
+# second. If the `which` field is missing or `()`, it means that the local time corresponds
+# to only one instance. On input, it is allowed for `which` to be non-nil for unambiguous
+# local times, in which case it is ignored. However, it is an error for `which` to be `()`
+# or missing in ambiguous cases.
+public type LocalDateTime {|
+    *DateTime;
+    (1|2)? which?;
+|};
+
+public function breakDown(timestamp ts, TimeZone tz) returns LocalDateTime;
+public function makeTimestamp(LocalDateTime dt, TimeZone tz) returns error|timestamp;
+
+// Time zones
+
+public type LocalTimeState record {|
+    int standardOffsetMinutes;
+    int dstOffsetMinutes; // in addition to standard
+    string abbrev;
+|};
+
+public type TimeZone abstract object {
+    public localTimeState(timestamp ts) returns LocalTimeState;
+    # Return discontinuities in local time in the time zone
+    # that occur between `begin` and `end` inclusive.
+    public findTransitions(timestamp begin, timestamp end) returns timestamp[];
+};
