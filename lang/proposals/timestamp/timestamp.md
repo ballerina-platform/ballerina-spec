@@ -430,11 +430,24 @@ Daylight saving time transition point generally described by record with followi
 *  local hour of day (00-23); sometimes 24 is used 
 *  local minute of day (00-59); usually 0
 
-When the clocks go back at the end of summertime, then there will be two instants of time that have the same local time. For the first of these, daylight saving time will be in effect; for the second it will not. In order to be able to convert correctly from a broken down local time into UTC using a timezone, the broken down time must accordingly contain an indication of whether daylight saving time is in effect.  Some countries (e.g. Austria) have a convention for distinguihsing these two times using A/B: if the clocks go back at midnight, then the first occurrence of 23:01 would be 23 A 1 and the second 23 B 1.
+
 
 RFC 8536 describes a binary format for a time zone, that contains the expanded information together with recurrence rules, which are based on format of [POSIX TZ environment variable](http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap08.html).
 
 Microsoft (Bing) [Time Zone API](https://docs.microsoft.com/en-us/bingmaps/rest-services/timezone/convert-local-time-zone).
+
+### Local time diambiguation
+
+When the clocks go back at the end of summertime, then there will be two instants of time that have the same local time. In order to convert correctly from a broken down local time into UTC using a timezone, there must be a way to distinguish between them.
+
+For the first of these, daylight saving time will be in effect; for the second it will not. So one way to disanbiguate to to rely on this. Another way is to have a field that explicitly distinguishes between the two.
+
+Python [PEP 495](https://www.python.org/dev/peps/pep-0495/) has a good discussion of this.
+
+Some countries (e.g. Austria) have a convention for distinguihsing these two times using A/B: if the clocks go back at midnight, then the first occurrence of 23:01 would be 23 A 1 and the second 23 B 1.
+
+A related problem is what to do with gaps in local time that occur when clocks go forward. In particular, what happens if you try to convert a local time that the clocks have skipped past?
+
 
 ## Alternative approach to leap seconds
 
