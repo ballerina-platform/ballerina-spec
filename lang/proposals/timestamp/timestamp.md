@@ -348,20 +348,100 @@ See [datetime module draft](datetime.bal).
 
 ### Broken down time
 
-Records representing various components of time
-*  calendar date = year, month, day
-*  local time of day = hour, minute, second
-*  offset of local time from UTC = sign, hour, minute
-*  combinations of the above
+The basic idea is to define record types that contain various combinations of fields describing a date and time.
 
-Time durations (equivalent to number of seconds, if you ignore leap seconds)
-*  weeks
-*  days
-*  hours
-*  minutes
-*  seconds
+The fields are:
 
-Note that time of day is a duration from the start of the day.
+```
+    int year;
+    int month;
+    int day;
+    int hour;
+    int minute;
+    decimal second;
+    record {|
+        (+1|-1) sign;
+        int hour;
+        int minute;
+    |} offset;
+```
+
+This shows a number of design choices:
+*  represent fractional seconds using decimal
+*  don't make date and time be separate records
+*  use the word offset to describe the difference between UTC and local time 
+*  make the fields relating to offset be a separate record
+*  use singular rather than plural for the date, time and components of offset fields
+*  use a sign field rather than signed values of `hour` and `minute` 
+*  use values of +1 and -1 to present the sign
+
+Considerations that motivate the above choices:
+*  SQL uses year/month/day/hour/minute/second 
+*  a time-zone is not the same thing as a UTC-local offset; a time-zone is a region of the world where clocks show the same time; a single time-zone may have different offsets at different times of year (because of daylight savings time)
+*  there is a parallel between time of day and offset
+    *  the combination of hour/minute/second represents the time duration from the start of the day
+    *  the offset is also a time duration, without any fraction of a minute, together with a sign (duration itself is quantity, so not signed)
+       * not really true for local time, because of discontinuities within a day (leap seconds and daylight savings time)
+    *  using a `sign` field makes the constraints on hour/minute in the offset the same as on hour/minute in the time of day
+*  without a `sign` field, an offset of `-02:30` can be confusing; logically it would be `{ hour: -2, minute: -30 }` (although there are very few such time zones)
+*  fields should be accessed in a uniform way: for example, I want to access the `hour` field of a record `x` as `x.hour`, regardless of whether `x` represents a time, a date+time, a time+offset or a date+time+offset
+
+Not confident about following points:
+* day vs dayOfMonth: if we have derived field dayOfWeek, then perhaps it should be dayOfMonth
+* singular vs plural
+   * year/month/day should be singular since they are ordinals: when month is 2, it is saying it is month number 2
+   * in UTC, hour and minute can be seen as specifying durations (how many hours and minutes from the start of the day)
+   * in local time, hour and minute are not durations, because of daylight savings time
+   * second is decimal allowing for fractions, so it is saying how many seconds since start of minute; this is true in local time as well as UTC, since daylight savings time adjustments are always whole minutes
+   * time zone offsets are always whole minutes, so a leap second is always the last second of a minute, so even with leap seconds, the seconds field is measuring the number of seconds from the start of a minute
+   * the second field has a different datatype from the other field
+   * given all the above, would it be better to make `second` alone be plural?
+   * we could make second field be an int and fractionOfSecond be a decimal
+
+
+For discussion purposes we will use single letters to refer to combinations of fields:
+* D for year/month/day
+* T for hour/minute/second
+* O for offset
+
+We need names for at least the following combinations, which all have corresponding SQL types:
+* D - DATE
+* T - TIME
+* DT - TIMESTAMP
+* TO - TIME WITH TIMEZONE
+* DTO - TIMESTAMP WITH TIMEZONE
+
+Design choices are:
+* What word to use for T? Choices of `Time` and `TimeOfDay`? `Time` is concise but is a rather overloaded choice.
+* How to deal with variant with and without offset?
+   * Do we use the unqualified word (e.g. Time) for one variant and, if so, which?
+   * Which word to we use for the qualified variant?
+      * Possibilities for qualifying the version with offset include `TimeOffset`, `OffsetTime`, `TimeWithOffset`
+      * Possibilities for qualifying the version without offset include `LocalTime`
+* What word to use for combination of date and time? Possibilties include `DateTime` and `Timestamp`?
+
+My current preferred choices are:
+* Date
+* Time
+* DateTime
+* TimeWithOffset
+* DateTimeWithOffset
+
+There are two other, related issues:
+* How to deal with openness?
+* How to deal with derived fields?
+
+When a Date (or something including a date) os returned as the output of an operation, for example as the output of breaking down a timestamp, it is convenient for it to include information derivable from the date, most importantly the day of the week. However, you don't want the user to have to specify the day of the week when using a date as the input to some operation.
+
+There are also fields that make sense when date/time is relative to a time-zone (not an offset):
+* whether daylight saving time is in effect
+* some way to disambiguate the case where two instants have the same local time, because of clocks going back at the end of daylight saving time (see section below); daylight savings time can be used for this, but is perhaps better separated
+* the conventional abbreviation (e.g. EDT/EST)?
+
+
+There are also fields for time durations, in addition to hour/minute/second, which are equivalent to number of seconds (if you ignore leap seconds)
+*  week
+*  day (which is ambiguous with day in date)
 
 ### Current time
 
