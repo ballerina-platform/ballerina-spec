@@ -254,6 +254,7 @@ single-table-row is an expression returning a tuple; the expression in multiple-
 
 The inherent type of the constructed table comes from the contextually expected type if there is one. Otherwise, it comes from the static types of the subexpressions (i.e. table-row), as with list and mapping constructors. Note that in this case, the single-table-row needs to get a contextually expected type whose type descriptor is a tuple type (if there was no contextually expected type, the static type of a single-table-row that was a list constructor would be an array type, which is not what is wanted).
 
+We could also allow the expression in a table-row to return a record as an alternative to a tuple.
 
 #### Discussion
 
@@ -453,13 +454,15 @@ The changes relative to 2019R2 can be divided up as follows:
 
 1. Table rows are ordered
 1. Storing a value in a table does an immutable clone; iteration yields immutable records
+1. Remove restriction on primary key
 1. Change table constructor syntax/semantics
    * Outer brackets are square rather than curly
-   * Each row is a list constructor expr, so uses square rather than curly bracket
-   * Different way of distinguishing header row from other rows
-   * Allow column names to be specified by expression
+   * Rows use expressions (typically list constructors), rather than special syntax
+   * Different syntax for istinguishing header row from other rows
+   * Allow column names in header row to be specified by expression
    * Get rid of auto-increment
-   * Get rid of unique 
+   * Get rid of unique
+   * Primary key can come from contextually expected type
 1. Primary keys
    * Allow 2nd type parameter for primary key record type.
    * E[x] works for table specifying value of primary key as record, both as expression and lvalue
