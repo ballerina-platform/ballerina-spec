@@ -3,7 +3,7 @@
 # Non-termimal references are wrapped with <abbr>
 # For portability, we avoid using any GNU awk extensions
 
-/^(<pre +)?class *= *"grammar" *>/,/^<[/]pre>/ {
+/^(<pre +)?class *= *"grammar" *>/,/^<\/pre>/ {
     if (/(<pre)?[^<>]*"grammar" *>/) {
 	i = index($0, ">");
 	result = substr($0, 1, i - 1);
@@ -18,7 +18,7 @@
 	# - start-tag plus following text up to, but not including, next tag
 	# - end-tag
 	# - alphanumeric string including - with optional following :=
-	i = match(rest, /<[a-z]+>[^<]*|[A-Za-z0-9-]+( *:=)?|<[/][a-z]+>/)
+	i = match(rest, /<[a-z]+>[^<]*|[A-Za-z0-9-]+( *:=)?|<\/[a-z]+>/)
 	if (i == 0) {
 	    result = (result rest)
 	    break
