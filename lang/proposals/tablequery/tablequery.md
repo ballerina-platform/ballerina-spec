@@ -447,6 +447,25 @@ This would require adding a new type reference syntax:
 
 Is the `find` function sufficiently important to justify adding this? And would this *T? reference add optionality deeply or just for one level?
 
+### Changes
+
+The changes relative to 2019R2 can be divided up as follows:
+
+1. Table rows are ordered
+1. Storing a value in a table does an immutable clone; iteration yields immutable records
+1. Change table constructor syntax/semantics
+   * Outer brackets are square rather than curly
+   * Each row is a list constructor expr, so uses square rather than curly bracket
+   * Different way of distinguishing header row from other rows
+   * Allow column names to be specified by expression
+   * Get rid of auto-increment
+   * Get rid of unique 
+1. Primary keys
+   * Allow 2nd type parameter for primary key record type.
+   * E[x] works for table specifying value of primary key as record, both as expression and lvalue
+1. Define how toString works for table
+1. More extensive lang.table module
+
 ### Background
 
 Some other programming languages with a table data type are:
