@@ -428,10 +428,38 @@ My current preferred choices are:
 * DateTimeWithOffset
 
 There are two other, related issues:
+*  How to deal with derived fields?
 * How to deal with openness?
-* How to deal with derived fields?
 
 When a Date (or something including a date) os returned as the output of an operation, for example as the output of breaking down a timestamp, it is convenient for it to include information derivable from the date, most importantly the day of the week. However, you don't want the user to have to specify the day of the week when using a date as the input to some operation.
+
+Both open and closed variants of records types make sense. Input parameters should typically be open, but return results may sometimes be closed.
+
+There is also a complication in the interaction between openness and optionality. Suppose we have
+
+```
+type ClosedDate record {|
+   int year;
+   int month;
+   int day;
+|};
+
+type ExClosedDate record {|
+   *ClosedDate;
+   int dayOfWeek?;
+|};
+
+type OpenDate record {
+   *ClosedDate;
+};
+
+type ExOpenDate record {
+   *ExClosedDate;
+};
+```
+
+Then `ClosedDate` is a proper subtype of `ExClosedDate`, but `ExOpenDate` is a proper subtype of `OpenDate`. It feels rather unintuitive that the subtyping relationship gets swapped in this way.
+
 
 There are also fields that make sense when date/time is relative to a time-zone (not an offset):
 * whether daylight saving time is in effect
