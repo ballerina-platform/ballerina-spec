@@ -435,30 +435,6 @@ When a Date (or something including a date) os returned as the output of an oper
 
 Both open and closed variants of records types make sense. Input parameters should typically be open, but return results may sometimes be closed.
 
-There is also a complication in the interaction between openness and optionality. Suppose we have
-
-```
-type ClosedDate record {|
-   int year;
-   int month;
-   int day;
-|};
-
-type ExClosedDate record {|
-   *ClosedDate;
-   int dayOfWeek?;
-|};
-
-type OpenDate record {
-   *ClosedDate;
-};
-
-type ExOpenDate record {
-   *ExClosedDate;
-};
-```
-
-Then `ClosedDate` is a proper subtype of `ExClosedDate`, but `ExOpenDate` is a proper subtype of `OpenDate`. It feels rather unintuitive that the subtyping relationship gets swapped in this way.
 
 
 There are also fields that make sense when date/time is relative to a time-zone (not an offset):
