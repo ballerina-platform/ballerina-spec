@@ -301,7 +301,7 @@ The limit in RFC 3339 is that the year number is four digits i.e. between 0000 a
 
 ### Rationale
 
-We ought to enable a fixed size representation. 64 bits is not viable given nanosecond precision, and the lexical information that we need to preserve. So it makes sense to aim for 128-bits (the same size as decimal). The following representation has a number of advantages:
+We ought to enable a fixed size representation. 64 bits is not viable given nanosecond precision, and the lexical information that we need to preserve. So it makes sense to aim for 128-bits (the same size as decimal). The following representation (in C syntax) has a number of advantages:
 
 
 ```
