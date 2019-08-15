@@ -59,6 +59,8 @@ public type Offset record {|
     int minute;
 |};
 
+public const Offset UTC_OFFSET_ZERO = { sign: +1, hours: 0, minutes: 0};
+
 # Local time of day together with offset from UTC.
 # Corresponds to SQL TIME WITH TIMEZONE type.
 public type TimeWithOffset record {|
@@ -85,15 +87,6 @@ public const int SATURDAY = 6;
 
 public type DayOfWeek SUNDAY|MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY;
 
-# DateTime together with day of week.
-public type FullDateTimeWithOffset record {|
-    *DateTime;
-    DayOfWeek dayOfWeek;
-|};
-
-public const UtcOffset UTC_OFFSET_ZERO = { sign: +1, hours: 0, minutes: 0};
-
-// These are defined so that FullDateTimeWithOffset is a subtype.
 public type OpenDate record { *Date; };
 public type OpenTime record { *Time; };
 public type OpenTimeWithOffset record { *TimeWithOffset; };
@@ -105,6 +98,10 @@ public type OpenDateTimeWithOffset record { *DateTimeWithOffset; };
 # that the date is value, and panic if it is not.
 public function validDate(OpenDate date) returns OpenDate|error = external;
 public function dateToString(OpenDate date) returns string = external;
+
+# Return the day of the week of a calendar date.
+public function dayOfWeek(OpenDate date) returns DayOfWeek = external;
+
 # Set the date fields in date1 from date2.
 public function setDate(OpenDate date1, OpenDate date2) = external;
 
@@ -113,10 +110,12 @@ public function setDate(OpenDate date1, OpenDate date2) = external;
 # that the date is value, and panic if it is not.
 public function validTime(OpenTime time) returns OpenTime|error = external;
 public function timeToString(OpenTime time) returns string = external;
+# Returns a DateTimeOffset representing the same instant as `dto` bit
+public function dateTimeOffsetMove(DateTimeOffset dto, Offset to) returns DateTimeOffset = external;
 
 // XXX similarly for DateTime, TimeWithOffset, DateTimeWithOffset
 
-public function combine(Date date, Time time, Offset offset) returns DateTime = external;
+public function combine(Date date, Time time, Offset offset) returns DateTimeOffset = external;
 
 // Conversion to and from local time in a time-zone
 
@@ -134,20 +133,59 @@ public type LocalDateTime {|
     (1|2)? which?;
 |};
 
+// XXX this should return offset also
 public function breakDown(timestamp ts, TimeZone tz) returns LocalDateTime;
 public function makeTimestamp(LocalDateTime dt, TimeZone tz) returns error|timestamp;
 
-// Time zones
-
-public type LocalTimeState record {|
+# A steady state of a time-zone.
+# A steady state is a period of time in which the clocks in the time-zone run
+# continuously without needing to be put forward or back.
+# In other words the steady state is the period between two transitions.
+# `standardOffsetMinutes + dstOffsetMinutes` is the offset during this period
+# between UTC and local time; if `dstOffsetMinutes` is non-zero, then daylight
+# saving time (DST) is in effect during this period, and the offset between standard
+# time (non-DST time) and DST is `dstOffsetMinutes`.
+# `startInclusive` is the first instant when this steady state applies.
+# `endExclusive` is the first instant when this steady state ceases to apply.
+# `abbrev` is the abbreviation for the time being observed in the time zone
+# Time zones with daylight savings time typically have an abbreviation for
+# standard time (i.e. the non-daylight saving time), and an abbreviation
+# for daylight saving time
+public type TimeZoneSteadyState record {|
     int standardOffsetMinutes;
     int dstOffsetMinutes; // in addition to standard
     string abbrev;
+    timestamp startInclusive;
+    timestamp endExclusive;
 |};
 
 public type TimeZone abstract object {
-    public localTimeState(timestamp ts) returns LocalTimeState;
-    # Return discontinuities in local time in the time zone
-    # that occur between `begin` and `end` inclusive.
-    public findTransitions(timestamp begin, timestamp end) returns timestamp[];
+    public function steadyState(timestamp ts) returns TimeZoneSteadyState;
+    # If this time zone is always a fixed offset in minutees from UTC,
+    # then return that offset in minutes, otherwise return `()`.
+    public function fixedOffsetMinutes() returns int?;
+    public function localDateTime(timestamp ts) returns LocalDateTime;
 };
+
+# Returns the TimeZone for the place where the program is running.
+public function timeZoneLocal() returns TimeZone = external;
+
+# Returns time zone for a fixed offset from GMT.
+public function timeZoneFromOffset(Offset offset) returns TimeZone = external;
+
+# Create a TimeZone from TZIF data as defined by RFC 8536.
+public function timeZonefromTzifBytes(byte[] tzifBytes) returns TimeZone|error = external;
+
+# Create a TimeZone from a POSIX TZ string.
+# This is the format that POSIX.1 (IEEE Std 1003.1-2017) defines for the TZ environment variable.
+# POSIX TZ strings are also used with RFC 8536.
+public function timeZoneFromPosixTzString(string tzString) returns TimeZone|error = external;
+
+# Creates a TimeZone for the time zone whose identifier in the IANA Time Zone Database is `id`.
+# These identifiers have the form `Area/City` where `Area` is a continent and `City` is the
+# largest city in the time zone, e.g. `America/New_York`.
+public function timeZoneFromIanaId(string id) returns TimeZone|error = external;
+
+// XXX something to give all available IANA identifiers, perhaps with mapping to
+// preferred identifier for the zone.
+
