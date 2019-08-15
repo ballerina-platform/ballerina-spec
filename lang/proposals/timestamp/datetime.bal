@@ -174,7 +174,7 @@ public function timeZoneLocal() returns TimeZone = external;
 public function timeZoneFromOffset(Offset offset) returns TimeZone = external;
 
 # Create a TimeZone from TZIF data as defined by RFC 8536.
-public function timeZonefromTzifBytes(byte[] tzifBytes) returns TimeZone|error = external;
+public function timeZoneFromTzifBytes(byte[] tzifBytes) returns TimeZone|error = external;
 
 # Create a TimeZone from a POSIX TZ string.
 # This is the format that POSIX.1 (IEEE Std 1003.1-2017) defines for the TZ environment variable.
