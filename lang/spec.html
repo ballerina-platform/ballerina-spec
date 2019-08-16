@@ -5958,12 +5958,14 @@ time-scale := <code>seconds</code> | <code>minutes</code> | <code>hours</code> |
 sq-pattern := [<code>every</code>] sp-input [sp-within-clause]
 sp-within-clause := <code>within</code> expression
 sp-input :=
-   sp-edge-input (<code>followed</code> <code>by</code>) | <code>,</code> streaming-pattern-input
-   | <code>not</code> sp-edge-input (<code>and</code> sp-edge-input) | (<code>for</code> simple-literal)
+   sp-edge-input ((<code>followed</code> <code>by</code>) | <code>,</code>) sp-input
+   | <code>not</code> sp-edge-input (<code>and</code> sp-edge-input) | (<code>for</code> int-literal time-scale)
    | [sp-edge-input ( <code>and</code> | <code>or</code> ) ] sp-edge-input
    | <code>(</code> sp-input <code>)</code>
 sp-edge-input :=
-   identifier [query-where] [int-range-expr] [<code>as</code> identifier]
+   identifier [query-where] [sp-int-range-expr] [<code>as</code> identifier]
+sp-int-range-expr :=
+   <code>[</code> expression <code>..</code> [expression] <code>]</code>
 </pre>
 <p>
 The forever statement is used to execute a set of streaming queries against some
