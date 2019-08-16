@@ -410,6 +410,13 @@ that the variable will only ever contain a value that belongs to the type.
 Ballerina also provides mechanisms that take a value that looks like a type and
 use it to create a value that belongs to a type.
 </p>
+<pre
+class="grammar">type-descriptor :=
+   simple-type-descriptor
+   | structured-type-descriptor
+   | behavioral-type-descriptor
+   | other-type-descriptor
+</pre>
 <p>
 Ballerina provides a rich variety of type descriptors, which programs use to
 describe types. For example, there is a type descriptor for each simple basic
@@ -418,18 +425,6 @@ there is a type descriptor that uses a single value to describe a type that
 contains a single shape. This means that values can look like and belong to
 arbitrarily many types, even though they look like or belong to exactly one
 <em>basic</em> type.
-</p>
-<p>
-In addition to describing a type, a type descriptor may also include information
-used to construct a value of the type, as well as metadata. Whereas the type
-described by a type descriptor is known at compile time, this additional
-information may need to be resolved at runtime. The typedesc basic type
-represents a type descriptor that has been resolved.
-</p>
-<p>
-Most basic types of structured values (along with one basic type of simple
-value) are iterable, meaning that a value of the type can be accessed as a
-sequence of simpler values.
 </p>
 <p>
 The following table summarizes the type descriptors provided by Ballerina.
@@ -558,6 +553,19 @@ type</td>
 values are, recursively, json</td>
   </tr>
 </table>
+<p>
+In addition to describing a type, a type descriptor may also include information
+used to construct a value of the type, as well as metadata. Whereas the type
+described by a type descriptor is known at compile time, this additional
+information may need to be resolved at runtime. The typedesc basic type
+represents a type descriptor that has been resolved.
+</p>
+<p>
+Most basic types of structured values (along with one basic type of simple
+value) are iterable, meaning that a value of the type can be accessed as a
+sequence of simpler values.
+</p>
+
 <section>
 <h3>Simple values</h3>
 <p>
@@ -1775,12 +1783,12 @@ A value belongs to a type <code>handle</code> if it has a basic type of handle.
 </section>
 </section>
 <section>
-<h3>Type descriptors</h3>
+<h3>Other type descriptors</h3>
+
 <pre
-class="grammar">type-descriptor :=
-   simple-type-descriptor
-   | structured-type-descriptor
-   | behavioral-type-descriptor
+class="grammar">other-type-descriptor :=
+   type-reference
+   | <code>(</code> type-descriptor <code>)</code>
    | singleton-type-descriptor
    | union-type-descriptor
    | optional-type-descriptor
@@ -1788,8 +1796,6 @@ class="grammar">type-descriptor :=
    | anydata-type-descriptor
    | byte-type-descriptor
    | json-type-descriptor
-   | type-reference
-   | <code>(</code> type-descriptor <code>)</code>
 type-reference := identifier | qualified-identifier
 </pre>
 <p>
