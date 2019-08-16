@@ -2365,7 +2365,7 @@ will never fail at runtime.
 </p>
 </section>
 <section>
-<h4>Variable scoping</h4>
+<h4>Variable and identifier scoping</h4>
 <p>
 For every variable, there is place in the program that creates it. Variables are
 lexically scoped: every variable has a scope which determines the region of the
@@ -2378,6 +2378,18 @@ scope are used to identify not only variables but other module-level entities
 such as functions.
 </p>
 <p>
+Within module scope, identifiers are separated into three symbol spaces:
+</p>
+<ul>
+<li>the <em>main</em> symbol space includes identifiers for variables,
+constants, types, functions and other identifiers that do not belong to any of
+the other two symbol spaces;</li>
+<li>the <em>prefix</em> symbol space contains prefixes declared by import
+declarations and XML namespace declaration statements;</li>
+<li>the <em>annotation tag</em> symbol space contains annotation tags declared
+by annotation declarations.</li>
+</ul>
+<p>
 A variable with block scope can be referenced only within a particular block
 (always delimited with curly braces). Block-scope variables are created by a
 variety of different constructs, many of which use a typed-binding-pattern.
@@ -2389,6 +2401,11 @@ scope; the former variable will hide the latter variable while the former
 variable is in scope. However, it is a compile error if a variable with block
 scope has the same name as another variable with block scope and the two scopes
 overlap.
+</p>
+<p>
+Block scope is divided into symbol spaces in the same way as module scope,
+except that block scope does not have a symbol space for annotation tags, since
+annotation tags cannot be declared with block scope.
 </p>
 </section>
 </section>
@@ -3240,7 +3257,7 @@ field-name.</li>
 class="grammar">annot-access-expr := expression <code>.@</code> annot-tag-reference
 </pre>
 <p>
-The annot-tag-reference must refer to an annotation tag declared with an
+The annot-tag-reference must refer to an annotation tag0 declared with an
 annotation declaration. The static type of expression must be a subtype of
 <code>typedesc</code>.
 </p>
