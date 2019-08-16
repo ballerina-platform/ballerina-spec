@@ -83,7 +83,7 @@ public function toJsonString(json v) returns string = external;
 public function fromJsonString(string str) returns json|error = external;
 
 # Return the result of merging json value `j1` with `j2`.
-# If the merge fails, the return an error.
+# If the merge fails, then return an error.
 # The merge of j1 with j2 is defined as follows:
 # - if j1 is (), then the result is j2
 # - if j2 is nil, then the result is j1
@@ -93,4 +93,5 @@ public function fromJsonString(string str) returns json|error = external;
 #     - if any merge fails, then the merge of j1 with j2 fails
 #     - otherwise, the result is j1.
 # - otherwise, the merge fails
+# If the merge fails, then j1 is unchanged.
 public function mergeJson(json j1, json j2) returns json|error = external;
