@@ -3634,12 +3634,18 @@ as the static type of the operand. The semantics for each basic type are as
 follows:
 </p>
 <ul>
-<li>int: negation for int is the same as subtraction from zero; an exception is
-thrown on overflow, which happens when the operand is -2<sup>63</sup></li>
+<li>int: negation for int is the same as subtraction from zero; a panic will
+occur on overflow, which happens when the operand is -2<sup>63</sup>)</li>
 <li>float, decimal: negation for floating point types corresponds to the negate
 operation as defined by IEEE 754-2008 (this is not the same as subtraction from
-zero); no exceptions are thrown</li>
+zero);</li>
 </ul>
+<p>
+If the contextually expected type for a <code>-</code> expression is T, then the
+contextualy expected type for the operand expressions is T', where a value v is
+in T' if it belongs to int, decimal or float, and T contains a value with the
+same basic type as v.
+</p>
 <p>
 The unary + operator returns the value of its operand expression. The static
 type of the operand must be a number, and the static type of the result is the
@@ -3669,50 +3675,63 @@ The <code>*</code> operator performs multiplication; the <code>/</code> operator
 performs division; the <code>%</code> operator performs remainder.
 </p>
 <p>
-The static type of both operand expressions is required to be the same basic
-type; this basic type will be the static type of the result. The following basic
-types are allowed:
+The static type of both operand expressions is required to be a subtype of the
+same basic type; this basic type will be the static type of the result. The
+following basic types are allowed:
 </p>
 <ul>
 <li>int
 <ul>
-<li>* performs integer multiplication; an exception will be thrown on overflow</li>
-<li>/ performs integer division, with any fractional part discarded ie with
-truncation towards zero; an exception will be thrown on division by zero or on
-overflow (which happens if the first operand is -2<sup>63</sup> and the second
-operand is -1)</li>
-<li>% performs integer remainder consistent with integer division, so that if
-x/y does not throw an exception, then (x/y)*y + (x%y) is equal to x; an
-exception will be thrown if the second operand is zero; if the first operand is
+<li><code>*</code> performs integer multiplication; a panic will occur on overflow</li>
+<li><code>/</code> performs integer division, with any fractional part discarded
+ie with truncation towards zero; a panic will occur on division by zero or
+overflow, which happens if the first operand is -2<sup>63</sup> and the second
+operand is -1</li>
+<li><code>%</code> performs integer remainder consistent with integer division,
+so that if <code><var>x</var>/<var>y</var></code> does not result in a panic,
+then <code>(<var>x</var>/<var>y</var>)*<var>y</var> +
+(<var>x</var>%<var>y</var>)</code> is equal to <code><var>x</var></code>; a
+panic will occur if the second operand is zero; if the first operand is
 -2<sup>63</sup> and the second operand is -1, then the result is 0</li>
 </ul>
 </li>
 <li>float, decimal
 <ul>
 <li><code>*</code> performs the multiplication operation with the destination
-format being the same as the source format, as defined by IEEE 754-2008; no
-exceptions are thrown</li>
+format being the same as the source format, as defined by IEEE 754-2008; this
+never causes a panic to occur</li>
 <li><code>/</code> performs the division operation with the destination format
-being the same as the source format, as defined by IEEE 754-2008; no exceptions
-are thrown</li>
+being the same as the source format, as defined by IEEE 754-2008; this never
+causes a panic to occur</li>
 <li><code>%</code> performs a remainder operation; the remainder is not the
 IEEE-defined remainder operation but is instead a remainder operation analogous
 to integer remainder; more precisely,
 <ul>
-<li>if x is NaN or y is NaN or x is an infinity or y is a zero, then x % y is
-NaN</li>
-<li>for finite x, and infinite y, x % y is x</li>
-<li>for finite x and finite non-zero y, x % y is equal to the result of rounding
-x - (y × n) to the nearest representable value using the roundTiesToEven
-rounding mode, where n is the integer that is nearest to the mathematical
-quotient of x and y without exceeding it in magnitude; if the result is zero,
-then its sign is that of x</li>
+<li>if <code><var>x</var></code> is NaN or <code><var>y</var></code> is NaN or
+<code><var>x</var></code> is an infinity or <code><var>y</var></code> is a zero,
+then <code><var>x</var> % <var>y</var></code> is NaN</li>
+<li>for finite <code>x</code>, and infinite <code>y</code>, <code><var>x</var> %
+<var>y</var></code> is <code><var>x</var></code></li>
+<li>for finite <code><var>x</var></code> and finite non-zero
+<code><var>y</var></code>, <code><var>x</var> % <var>y</var></code> is equal to
+the result of rounding <code><var>x</var> - (<var>y</var> × <var>n</var>)</code>
+to the nearest representable value using the roundTiesToEven rounding mode,
+where <code><var>n</var></code> is the integer that is nearest to the
+mathematical quotient of <code><var>x</var></code> and <code><var>y</var></code>
+without exceeding it in magnitude; if the result is zero, then its sign is that
+of <code><var>x</var></code></li>
 <li>no exceptions are thrown</li>
 </ul>
 </li>
 </ul>
 </li>
 </ul>
+<p>
+If the contextually expected type for a multiplicative-expr is T, then the
+contextualy expected type for both operand expressions is T', where a value v is
+in T' if it belongs to int, decimal or float, and T contains a value with the
+same basic type as v.
+</p>
 </section>
 <section>
 <h3>Additive expression</h3>
@@ -3730,11 +3749,12 @@ The <code>+</code> operator is used for both addition and concatenation; the
 It is required that either
 </p>
 <ul>
-<li>the static type of both operand expressions is the same basic type, in which
-case this basic type will be the static type of the result, or</li>
-<li>the static type of one operand expression must be xml and of the other
-operand expression must be string, in which case the static type of the result
-is xml</li>
+<li>the static type of both operand expressions is a subtype of the same basic
+type, in which case this basic type will be the static type of the result,
+or</li>
+<li>the static type of one operand expression must be a subtype of xml and of
+the other operand expression must be a subtype of string, in which case the
+static type of the result is xml</li>
 </ul>
 <p>
 The semantics for each basic type is as follows:
@@ -3742,16 +3762,20 @@ The semantics for each basic type is as follows:
 <ul>
 <li>int
 <ul>
-<li>+ performs integer addition; an exception will be thrown on overflow</li>
-<li>- peforns integer subtraction; an exception will be thrown on overflow</li>
+<li><code>+</code> performs integer addition; a panic will occur on
+overflow</li>
+<li><code>-</code> performs integer subtraction; a panic will occur on
+overflow</li>
 </ul>
 </li>
 <li>float, decimal
 <ul>
-<li>+ performs the addition operation with the destination format being the same
-as the source format, as defined by IEEE 754-2008; no exceptions are thrown</li>
-<li> - performs the subtraction operation with the destination format being the
-same as the source format, as defined by IEEE 754-2008; no exceptions are thrown</li>
+<li><code>+</code> performs the addition operation with the destination format
+being the same as the source format, as defined by IEEE 754-2008; this never
+causes a panic to occur</li>
+<li><code>-</code> performs the subtraction operation with the destination
+format being the same as the source format, as defined by IEEE 754-2008; this
+never causes a panic to occur</li>
 </ul>
 </li>
 <li>string, xml
@@ -3767,6 +3791,13 @@ were an xml sequence with one character item for each code point in the string</
 </ul>
 </li>
 </ul>
+<p>
+If the contextually expected type for a multiplicative-expr is T, then the
+contextualy expected type for both operand expressions is T', where a value v is
+in T' if it belongs to int, decimal, float, string or xml and T contains a value
+with the same basic type as v.
+</p>
+
 </section>
 <section>
 <h3>Shift expression</h3>
