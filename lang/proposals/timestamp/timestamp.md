@@ -61,6 +61,7 @@ Why a built-in type?
     *   support widely used RFC3339/ISO8601 syntax for time
     *   support equality/ordering operation
     *   support scalar conversion
+*   Timestamps are a fundamental part of streaming query (which can be seen as querying tables with timestamp column)
 *   Timestamps are important for distributed computing
 *   Most systems of data types include this type
 
@@ -257,10 +258,39 @@ A duration of time is represented using a decimal value containing a number of s
 
 This should be used not just in conjunction with the timestamp type, but throughout the standard library. In particular, the standard library will need to support a concept of monotonic time, which is a duration of time since an epoch which may be different between invocations of a Ballerina program, but which is guaranteed to be monotonically increasing even in the presence of system clock changes. Monotonic time would be represented by a decimal, giving the duration in seconds from the epoch.
 
-We can also support int as a representation for when only whole numbers of seconds are involved and the range is guaranteed to fit in an int.
+### Alternate
 
-We could also allow `s` as a floating point suffix with the same meaning as `d`. So when writing a duration, you can write e.g. write 10 seconds as `10s` instead of `10d`.
+Define
 
+```
+type SecondsDuration record {|
+   decimal seconds;
+|};
+```
+
+Then functions that return a result representing a duration in seconds would return a `SecondsDuration`. Functions that
+accept a duration as input could accept:
+
+```
+type TimeDuration record {|
+   int weeks?;
+   int days?;
+   int hours?;
+   int minutes?;
+   decimal seconds?;
+|};
+```
+
+In this case, the range of each field would not be limited to what cannot be expressed in previous fields, e.g. you can specify `{ minutes: 120 }`; a `TimeDuration` would be convered to an equivalent `SecondsDuration` by converting each field into seconds and adding them together. No fields would be equivalent to 0.
+
+We could then provide sugar for e.g. `{ seconds: 10.5 }` (if we feel we need to). Possibilities
+
+* `10.5s` (doing this for units other than seconds runs into the problem that `7d` means decimal 7)
+* `10.5 seconds` can we make it work generally that `42 foo` turns into `{foo: 42}`
+
+Two advantages of this approach:
+* the meaning of the value of clear without further context. With a bare decimal, additional clues are needed from the context (for example by including `Seconds` in the name of the function or field)
+* it makes it convenient to write duration values in programs (even without additional sugar)
 
 ### Rationale
 
@@ -290,10 +320,12 @@ Why decimal rather than float/int and why seconds as the unit?
 *   XML schema part 2 uses decimal seconds as the value space for timelines
 *   Google protobuf3 represents duration as 64-bit signed seconds
 
-#### Alternative
+There are a number of use cases where it would be convenient to have a nice syntax for durations, including:
 
-Google protobuf3 has duration as 64-bit signed seconds plus 32-bit signed nanoseconds
+* streaming query
+* timeouts
 
+ISO syntax for durations is e.g. `P10DT5H` but that is a valid (albeit strange) identifier.
 
 ## Range
 
