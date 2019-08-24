@@ -14,8 +14,9 @@
 // specific language governing permissions and limitations
 // under the License.
 
-# Sets the cancellation flag in the future `f`.
-# This will cause the worker to terminate abnormally
-# as soon as the execution reaches a point
-# when it checks the cancellation flag.
+# Requests cancellation of a future.
+# + f - the future to be cancelled
+# This sets the cancellation flag in the strand corresponding to `f`.
+# Each time that a strand yields, it will check the cancellation flag
+# and terminate abnormally if the flag is set.
 public function cancel(future f) returns () = external;
