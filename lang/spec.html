@@ -4075,9 +4075,9 @@ class="grammar">action :=
    remote-method-call-action
    | start-action
    | receive-action 
+   | send-action
    | wait-action
    | flush-action
-   | sync-send-action
    | checking-action
    | trap-action
    | <code>(</code> action <code>)</code>
@@ -4124,7 +4124,7 @@ to executing another strand. The following actions cause a strand to yield:
 <li>worker-receive-action</li>
 <li>wait-action</li>
 <li>flush-action</li>
-<li>synchronous-send-action</li>
+<li>sync-send-action</li>
 </ul>
 <p>
 In addition, any function with an external-function-body can potentially yield;
@@ -4260,7 +4260,6 @@ class="grammar">statement :=
    | continue-stmt
    | fork-stmt
    | panic-stmt
-   | async-send-stmt
    | return-stmt
    | forever-stmt
 </pre>
@@ -4456,38 +4455,35 @@ added to the queue.
 <h4>Send action and send statement</h4>
 
 <pre
-class="grammar">sync-send-action := expression <code>->></code> peer-worker
-async-send-stmt := expression <code>-></code> peer-worker <code>;</code>
+class="grammar">send-action := sync-send-action | async-send-action
+sync-send-action := expression <code>-&gt;&gt;</code> peer-worker
+async-send-action := expression <code>-&gt;</code> peer-worker <code>;</code>
 </pre>
 <p>
-The sync-send-action and async-send-stmt send a message to another worker. In
-both cases, the message is the result of applying the Clone abstract operation
-to the result of evaluating expr. The message is sent to the worker identified
-by peer-worker.
+A send-action sends a message to the worker that is identified by peer-worker. A
+send-action starts by evaluating the expression, resulting in a value
+<code><var>v</var></code>; the Clone abstract operation to
+<code><var>v</var></code> resulting in value <code><var>c</var></code>. This
+value <code><var>c</var></code> is added to the message queue maintained by the
+sending worker for messages to be sent to the sending worker;this queue
+continues to exist even if the receiving worker has already terminated.
 </p>
 <p>
-In both cases, the message is added to the message queue maintained by the
-sending worker for messages to be sent to the sending worker. Conceptually, the
-message is added to the queue even if the receiving worker has already
-terminated.
+For each send-action S, the compiler determines a unique corresponding
+receive-action R, such that a message sent by S will be received by R, unless
+R's worker has terminated abnormally or with failure. It is a compile-time error
+if this cannot be done. The compiler determines a <em>failure type</em> for the
+corresponding receive-action. If the receive-action was not executed and its
+worker terminated normally, then the termination value of the worker will belong
+to the failure type. The failure type will be a (possibly empty) subtype of
+error.
 </p>
 <p>
-For each async-send-stmt and sync-send-action S, the compiler determines a
-unique corresponding receive-action R, such that a message sent by S will be
-received by R, unless R's worker has terminated abnormally or with failure. It
-is a compile-time error if this cannot be done. The compiler determines a
-<em>failure type</em> for the corresponding receive-action. If the
-receive-action was not executed and its worker terminated normally, then the
-termination value of the worker will belong to the failure type. The failure
-type will be a (possibly empty) subtype of error.
-</p>
-<p>
-The execution of the async-send-stmt completes as soon as the message is added
-to the queue. A subsequent flush action can be used to check whether the message
-was received.
-</p>
-<p>
-The sync-send-action is evaluated by waiting until the receiving worker either
+The difference between async-send-action and sync-send-action is in what happens
+after the message is added to the queue. The evaluation of async-send-action
+completes immediately after this, and the result is always <code>()</code>. A
+subsequent flush action can be used to check whether the message was received.
+With sync-send-action, evaluation waits until the receiving worker either
 executes a receive action that receives the queued message or terminates. The
 evaluation of sync-send-action completes as follows:
 </p>
@@ -4513,14 +4509,14 @@ The contextually expected type used to interpret <code>expression</code> is the
 contextually expected type from the corresponding receive-action.
 </p>
 <p>
-If the receive-action corresponding to an async-send-stmt has a non-empty
+If the receive-action corresponding to an async-send-action has a non-empty
 failure type, then it is a compile-time error unless it can be determined that a
 sync-send-action or a flush-action will be executed before the sending worker
 terminates with success.
 </p>
 <p>
 If a worker W is about to terminate normally and there are messages still to be
-sent in a queue (which must be the result of executing an async-send-stmt), then
+sent in a queue (which must be the result of executing an async-send-action), then
 the worker waits until the messages have been received or some receiving worker
 terminates. If a receiving worker R terminates without the message being
 received, R must have terminated abnormally, because the rule in the preceding
@@ -4546,7 +4542,7 @@ A single-receive-action receives a message from a single worker.
 <p>
 For each single-receive-action R receiving from worker W, the compiler
 determines a <em>corresponding send set</em>. The corresponding send set S is a
-set of sync-send-actions and async-send-stmts in W, such that
+set of send actions in W, such that
 </p>
 <ul>
 <li>in any execution of W that terminates successfully, exactly one member of S
@@ -4556,10 +4552,10 @@ unless W has terminated abnormally or with failure.</li>
 </ul>
 <p>
 The compiler terminates a failure type for the corresponding send set. If no
-member of the corresponding send set was executed/evaluated and the sending
-worker terminated normally, then the termination value of the sending worker
-will belong to the failure type. The failure type will be a (possibly empty)
-subtype of error.
+member of the corresponding send set was evaluated and the sending worker
+terminated normally, then the termination value of the sending worker will
+belong to the failure type. The failure type will be a (possibly empty) subtype
+of error.
 </p>
 <p>
 A single-receive-action is evaluated by waiting until there is a message
@@ -4657,7 +4653,7 @@ If peer-worker is specified, then flush waits until the queue of messages to be
 received by peer-worker is empty or until the peer-worker terminates.
 </p>
 <p>
-Send-receive correspondence for async-send-stmt implies that the queue will
+Send-receive correspondence for async-send-action implies that the queue will
 eventually become empty, unless the peer-worker terminates abnormally or with
 failure. The evaluation of flush-action completes as follows:
 </p>
@@ -4673,10 +4669,10 @@ the associated value being the termination value of the peer-worker.</li>
 </li>
 </ul>
 <p>
-If the flush-action has a preceding async-send-stmt without any intervening
+If the flush-action has a preceding async-send-action without any intervening
 sync-send-action or other flush-action, then the static type of the flush-action
 is F|(), where F is the failure type of the receive-action corresponding to that
-async-send-stmt. Otherwise, the static type of the flush-action is nil.
+async-send-action. Otherwise, the static type of the flush-action is nil.
 </p>
 <p>
 If peer-worker is omitted, then the flush-action flushes the queues to all other
