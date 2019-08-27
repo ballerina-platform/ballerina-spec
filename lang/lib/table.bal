@@ -17,7 +17,7 @@
 
 # The type bound for a table row.
 @typeParam
-type RowType = map<anydata|error>;
+type RowType map<anydata|error>;
 
 # Returns number of members in `tbl`.
 public function length(table<map<anydata|error>> tbl) returns int = external;

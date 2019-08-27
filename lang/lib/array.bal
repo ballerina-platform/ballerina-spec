@@ -15,11 +15,11 @@
 // under the License.
 
 @typeParam
-type Type = any|error;
+type Type any|error;
 @typeParam
-type Type1 = any|error;
+type Type1 any|error;
 @typeParam
-type PureType = anydata|error;
+type PureType anydata|error;
 
 # Returns number of members in `arr`.
 public function length((any|error)[] arr) returns int = external;
