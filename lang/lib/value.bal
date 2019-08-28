@@ -40,7 +40,13 @@ public function cloneReadOnly(AnydataType v) returns AnydataType = external;
 # Returns true if read-only, false otherwise.
 public function isReadOnly(anydata v) returns boolean = external;
 
-# Returns a simple, human-readable representation of `v` as a string.
+# Performs a minimal conversion of a value to a string.
+# The conversion is minimal in particular in the sense
+# that the conversion applied to a value that is already
+# a string does nothing.
+# + v - the value to be converted to a string
+# + return - a string
+# The result of `toString(v)` is as follows:
 # - if `v` is a string, then returns `v`
 # - if `v` is `()`, then returns an empty string
 # - if `v` is boolean, then the string `true` or `false`
