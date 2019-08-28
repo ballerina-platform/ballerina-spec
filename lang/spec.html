@@ -1692,9 +1692,9 @@ the T<sub>o</sub> must be in the same module.
 class="grammar">future-type-descriptor := <code>future</code> [type-parameter]
 </pre>
 <p>
-A future value represents a value to be returned by a named worker.  A future
-value belongs to a type <code>future&lt;T&gt;</code> if the value to be returned
-belongs to T.
+A future value refers to a named worker, which will return a value. A future
+value belongs to a type <code>future&lt;T&gt;</code> if the return type of the
+named worker is a subtype of T.
 </p>
 <p>
 A value belongs to a type <code>future</code> (without the type-parameter)
@@ -4176,8 +4176,7 @@ own new strand. The termination of a function is independent of the termination
 of its named workers. The termination of a named worker does not automatically
 result in the termination of its function. When a default worker terminates
 causing the function to terminate, the function does not automatically wait for
-the termination of its named workers. There is a wait-action that allows one
-worker to explicitly wait for the termination of another worker.
+the termination of its named workers.
 </p>
 <p>
 A named worker has a return type. If the worker terminates normally, the
@@ -4218,10 +4217,22 @@ They are implicitly final: they can be read but not modified. They are in scope
 for named workers as well as for the default worker.
 </p>
 <p>
-The name of a worker is in-scope as a final local variable. The scope is the
-function-body-block with the exception of the default-worker-init. When the
-worker name is accessed using a variable-reference-expr, it has type
-future&lt;T&gt;, where T is the return type of the worker.
+The scope of a worker-name in a named-worker-decl that is part of a
+function-body-block is the entire function-body-block with the exception of the
+default-worker-init. When a worker-name is in scope, it can be used in a
+variable-reference-expr. The result of evaluating such a variable reference is a
+future value that refers to the value to be returned by that named worker. The
+static type of the result is future&lt;T&gt;, where T is the return type of the
+worker.
+</p>
+<p>
+A strand can initiate a wait on another strand by using a wait-action with a
+value of type future. Only one wait on a strand can succeed; this wait receives
+the value returned by the strand. Any other waits on that strand fail. It is a
+compile-time error if for any named worker it is possible for the name of that
+worker to be evaluated as a variable-reference more than once for any execution
+of that worker. This ensures that wait operations that use just a worker-name to
+identify the strand to wait on cannot fail at runtime.
 </p>
 <p>
 In the above, function includes method, and function call includes method call.
@@ -4293,17 +4304,18 @@ workers (similar to the situation with parameters and workers in a function
 body).
 </p>
 <p>
-The scope of the worker name declared in a named-worker-decl includes both other
-workers in the same fork-stmt and the block containing the fork-stmt starting
-from the point immediately after the fork-stmt. When a worker-name is in scope
-it can be accessed using a variable-reference-expr, resulting in a value of type
-future&lt;T&gt;, where T is the return type of that worker.
+The scope of the worker-name in a named-worker-decl that is part of a fork-stmt
+consists of both other workers in the same fork-stmt and the block containing
+the fork-stmt starting from the point immediately after the fork-stmt. Within
+its scope, the worker-name can be used in a variable-reference-expr in the same
+way as the worker-name of a named-worker-decl that is part of a
+function-body-block.
 </p>
 </section>
 <section>
 <h3>Wait action</h3>
 <p>
-A wait-action waits for one or more workers to terminate, and gives access to
+A wait-action waits for one or more strands to terminate, and gives access to
 their termination values.
 </p>
 
@@ -4317,10 +4329,30 @@ wait-future-expr := expression <em>but not</em> mapping-constructor-expr
 </pre>
 <p>
 A wait-future-expr is used by a wait-action to refer to the worker to be waited
-for. Its static type must be future&lt;T&gt; for some T. It can use a variable
-reference to refer to an in-scope named-worker-decl, which will be treated as a
-reference to a variable of type future&lt;T&gt; where T is the return value of the
-worker.
+for. Its static type must be future&lt;T&gt; for some T. As elsewhere, a
+wait-future-expr can use an in-scope worker-name in a variable-reference-expr to
+refer to named worker.
+</p>
+<p>
+Evaluation of a wait-action performs a wait operation on the future value that
+results from evaluating a wait-future-expr. This wait operation may complete
+normally or abruptly. The wait operation initiates a wait for the strand that
+the future refers to. If the wait fails, then the wait operation completes
+normally and the result is an error. If the wait succeeds, and the strand
+completed normally, then the wait operation completes normally, and the result
+is the termination value of the strand. If the wait succeeds, but the strand
+completed abnormally, then the wait operation completes abruptly with a panic
+and the associated value is the termination value of the strand.
+</p>
+<p>
+In addition to a static type, a wait-future-expr has a compile-time <em>eventual
+type</em>. If a wait-future-expr is a variable-reference-expr referring to the
+worker-name of a named worker with return type T, then the eventual type of the
+wait-future-expr is T. Otherwise, the eventual of a wait-future-expr with static
+type future&lt;T&gt; is T|error. The result of a wait operation that completes
+normally will belong to the eventual type of the wait-future-expr, since the
+compiler ensures that a wait for a wait-future-expr that is a variable reference
+to a named worker cannot fail.
 </p>
 <p>
 Note that it is only possible to wait for a named worker, which will start its
@@ -4341,17 +4373,13 @@ class="grammar">single-wait-action := <code>wait</code> wait-future-expr
 A single-wait-action waits for a single future.
 </p>
 <p>
-A single-wait-action is evaluated by evaluating wait-future-expr resulting in a
-value f, which must be of basic type future. It then waits until the strand of
-the future has terminated. If the strand terminates normally, the
-single-wait-action completes normally with the termination value of the strand
-as the result. Otherwise, the single-wait-action completes abruptly with a
-panic, with the associated value being the termination value of the strand,
-which will be an error.
+A single-wait-action is evaluated by first evaluating wait-future-expr resulting
+in a value f of basic type future; the single-wait-action then performs a wait
+operation on f.
 </p>
 <p>
-If the static type of the wait-future-expr is future&lt;T&gt; , then the static
-type of the single-wait-action is then T.
+The static type of the single-wait-action is the eventual type of the
+wait-future-expr.
 </p>
 </section>
 <section>
@@ -4373,11 +4401,17 @@ wait-field <code>v: v</code>, where <code>v</code> must be the name of an
 in-scope named worker.
 </p>
 <p>
-A multiple-wait-action is evaluated by evaluating all of the wait-future-exprs
-resulting in a value of type future for each wait-field. It then waits for all
-of these futures. If all the futures complete normally, then it constructs a
-record with a field for each wait-field, whose name is the field-name and whose
-value is the completion value of the strand.
+A multiple-wait-action is evaluated by evaluating each wait-future-expr
+resulting in a value of type future for each wait-field. The
+multiple-wait-action then performs a wait operation on all of these futures. If
+all the wait operations complete normally, then it constructs a record with a
+field for each wait-field, whose name is the field-name and whose value is the
+result of the wait operation. If any of the wait operations complete abruptly,
+then the multiple-wait-action completes abruptly.
+</p>
+<p>
+The static type of the multiple-wait-action is a record where the static type of
+each field is the eventual type of the corresponding wait-future-expr.
 </p>
 </section>
 <section>
@@ -4390,19 +4424,19 @@ class="grammar">alternate-wait-action := <code>wait</code> wait-future-expr (<co
 An alternate-wait-action waits for one of multiple futures to terminate.
 </p>
 <p>
-An alternate-wait-action is evaluated by first evaluating all of the
-wait-future-exprs, resulting in a set of future values. It then starts waiting
-for all of the futures. As soon as one of the futures completes normally with a
-non-error value v, the alternate-wait-action completes normally with result v.
-If all of the futures complete normally with an error, then it completes
-normally with result e, where e is the termination value of the last future to
-complete.
+An alternate-wait-action is evaluated by first evaluating each wait-future-expr,
+resulting in a set of future values. The alternate-wait-action then performs a
+wait operation on all of these members of this set. As soon as one of the wait
+operations completes normally with a non-error value v, the
+alternate-wait-action completes normally with result v. If all of the wait
+operations complete normally with an error, then it completes normally with
+result e, where e is the result of the last wait operation to complete. If any
+of the wait operations completely abruptly before the alternate-wait-action
+completes, then the alternate-wait-action completes abruptly.
 </p>
 <p>
-If the static type of the wait-future-exprs is future&lt;T<sub>1</sub>&gt;,
-future&lt;T<sub>2</sub>&gt;, ..., future&lt;T<sub>n</sub>&gt;, then the static
-type of the alternative-wait action is
-T<sub>1</sub>|T<sub>2</sub>|...T<sub>n</sub>.
+The static type of the alternate-wait-action is the union of the eventual type
+of all of its wait-future-exprs.
 </p>
 </section>
 </section>
