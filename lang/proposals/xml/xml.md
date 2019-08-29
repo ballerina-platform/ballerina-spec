@@ -779,7 +779,7 @@ x/(a|b|text())
 
 ### Better integration with types
 
-In the syntax x.<N> and x/<N>,  N is in effect a special kind of type descriptor for describing a subtype of string, specifically strings that are expanded names. (Thinking of it as a type descriptor also works well with the use of angle brackets.) This special kind of type descriptor is generally useful and should not be restricted to just navigation. In particular, it should be possible to use it with the `is` operator, and to turn it into a value (of type typedesc<string>) so it can be passed to functions (e.g. xml:elements).
+In the syntax `x.<N>` and `x/<N>`,  N is in effect a special kind of type descriptor for describing a subtype of string, specifically strings that are expanded names. (Thinking of it as a type descriptor also works well with the use of angle brackets.) This special kind of type descriptor is generally useful and should not be restricted to just navigation. In particular, it should be possible to use it with the `is` operator, and to turn it into a value (of type `typedesc<string>`) so it can be passed to functions (e.g. xml:elements).
 
 The difference between this and normal type descriptors is that an identifier stands for a particular string rather than being a reference to a type definition.  This suggests using a single quote as follows:
 
