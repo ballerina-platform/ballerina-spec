@@ -880,7 +880,7 @@ Rejected alternatives
 
 ## Features for future releases
 
-These are beyond the scope of 2019R4, but it is important to have some idea how they might work in order to design the core features.
+These should be left to a future release, but it is important to have some idea how they might work in order to design the core features.
 
 
 ### Element typing
@@ -1047,8 +1047,9 @@ The two approaches are as follows:
 
 
 2. take Twide as fundamental, and provide a way to construct Tnarrow from Twide
-    4. sequence [head, body] means Twide
-    5. we can provide an intersection operator (which TypeScript calls &) to describe Tnarrow as (Twide & Significant)
+
+    1. sequence [head, body] means Twide
+    2. we can provide an intersection operator (which TypeScript calls &) to describe Tnarrow as (Twide & Significant)
 
 I suspect we will want an intersection operator elsewhere.
 
