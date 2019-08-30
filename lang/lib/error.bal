@@ -14,7 +14,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 # The type to which error detail records must belong.
 public type Detail record {|
     string message?;
@@ -40,8 +39,8 @@ type StringType string;
 # + return - error reason
 public function reason(error<StringType> e) returns StringType = external;
 
-# Returns the error's detail record as an immutable mapping.
-#
+# Returns the error's detail record.
+# The returned value will be immutable.
 # + e - the error value
 # + return - error detail value
 public function detail(error<string,DetailType> e) returns DetailType = external;
@@ -49,6 +48,6 @@ public function detail(error<string,DetailType> e) returns DetailType = external
 # Returns an object representing the stack trace of the error.
 #
 # + e - the error value
-# + return - stack trace of the error value
+# + return - a new object representing the stack trace of the error value
 public function stackTrace(error e) returns object { } = external;
 

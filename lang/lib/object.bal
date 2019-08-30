@@ -20,27 +20,27 @@ public type Listener abstract object {
     #
     # + s - the service to attach
     # + name - optionally a name associated with the service
-    # + return - `error` if attachment fails, `()` otherwise
+    # + return - `()` if no error occurred, and an error otherwise
     public function __attach(service s, string? name = ()) returns error?;
 
     # Handle service detachment from the listener.
     #
     # + s - the service to detach
-    # + return - `error` if detachment fails, `()` otherwise
+    # + return - `()` if no error occurred, and an error otherwise
 
     public function __detach(service s) returns error?;
     # Handle listener start.
     #
-    # + return - `error` if `__start()` fails, `()` otherwise
+    # + return - `()` if no error occurred, and an error otherwise
     public function __start() returns error?;
 
     # Handle listener graceful stop.
     #
-    # + return - `error` if `__gracefulStop` fails, `()` otherwise
+    # + return - `()` if no error occurred, and an error otherwise
     public function __gracefulStop() returns error?;
 
     # Handle listener immediate stop.
     #
-    # + return - `error` if `__immediateStop` fails, `()` otherwise
+    # + return - `()` if no error occurred, and an error otherwise
     public function __immediateStop() returns error?;
 };

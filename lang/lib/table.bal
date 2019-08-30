@@ -20,10 +20,16 @@
 @typeParam
 type RowType map<anydata|error>;
 
-# Returns the number of members in `tbl`.
+# Returns the length of a table.
+# The length of a table is the number of rows it has.
+# + tbl - table to operate on
+# + return - the length of `tbl`
 public function length(table<map<anydata|error>> tbl) returns int = external;
 
 # Returns an iterator over the members of `tbl`.
+# The iterator will iterate over the rows of the table in order.
+# + tbl - table to operate on
+# + return - an iterator over `tbl`
 public function iterator(table<RowType> tbl) returns abstract object {
     public next() returns record {|
         RowType value;

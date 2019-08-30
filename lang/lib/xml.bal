@@ -17,7 +17,7 @@
 const string XML_NAMESPACE_URI = "http://www.w3.org/XML/1998/namespace";
 const string XMLNS_NAMESPACE_URI = "http://www.w3.org/2000/xmlns/";
 
-# Returns number of XML items in `x`.
+# Returns number of xml items in `x`.
 #
 # + x - xml item
 # + return - number of XML items in `x`
@@ -33,34 +33,35 @@ public function iterator(xml x) returns abstract object {
     public next() returns record {| (xml|string) value; |}?;
 } = external;
 
-# Concatenate all the `xs`. Empty xml sequence if empty.
+# Concatenates xml and string values.
 #
-# + xs - xml or string items to concat
-# + return - xml sequence containing `xs`
+# + xs - xml or string items to concatenate
+# + return - an xml sequence that is the concatenation of all the `xs`;
+#    an empty xml sequence if the `xs` are empty
 public function concat((xml|string)... xs) returns xml = external;
 
-# Returns true if `x` is a singleton xml sequence consisting of an element item.
+# Tests whether an xml value is a singleton consisting of only an element item.
 #
 # + x - xml value
-# + return - true if `x` is an xml element item
+# + return - true if `x` consists of only an element item; false otherwise
 public function isElement(xml x) returns boolean = external;
 
-# Returns true if `x` is a singleton xml sequence consisting of a processing instruction item.
+# Tests whether an xml value is a singleton consisting of only a processing instruction item.
 #
 # + x - xml value
-# + return - true if `x` is a xml processing instruction
+# + return - true if `x` consists of only a processing instruction item; false otherwise
 public function isProcessingInstruction(xml x) returns boolean = external;
 
-# Returns true if `x` is a singleton xml sequence consisting of a comment item.
+# Tests whether an xml value is a singleton consisting of only a comment item.
 #
 # + x - xml value
-# + return - true if `x` is a xml comment item
+# + return - true if `x` consists of only a comment item; false other
 public function isComment(xml x) returns boolean = external;
 
-# Returns true if `x` is an xml sequence consisting of one or more character items.
+# Tests whether an xml sequence consists of zero or more character items.
 #
 # + x - xml value
-# + return - true if `x` is a sequence containing any charactor items
+# + return - true if `x` is a sequence containing only character items; false otherwise
 public function isText(xml x) returns boolean = external;
 
 # Represents a parameter for which isElement must be true.
@@ -78,10 +79,10 @@ type Text xml;
 # + return - element name
 public function getName(Element elem) returns string = external;
 
-# Change the name of element `elmem` to `xName`.
+# Change the name of element `elem` to `xName`.
 #
 # + elem - xml element
-# + xName - new name
+# + xName - new expanded name
 public function setName(Element elem, string xName) = external;
 
 # Returns the children of `elem`.
@@ -100,9 +101,8 @@ public function setChildren(Element elem, xml|string children) = external;
 
 # Returns the map representing the attributes of `elem`.
 # This includes namespace attributes.
-# The keys in the map are the expanded name of the attribute.
+# The keys in the map are the expanded names of the attributes.
 # Panics if `isElement(elem)` is not true.
-# There is no setAttributes function.
 #
 # + x - xml element
 # + return - attributes of `x`
@@ -111,90 +111,92 @@ public function getAttributes(Element x) returns map<string> = external;
 # Returns the target part of the processing instruction.
 #
 # + x - xml processing instruction item
-# + return - target potion of `x`
+# + return - target part of `x`
 public function getTarget(ProcessingInstruction x) returns string = external;
 
 # Returns the content of a text or processing instruction or comment item.
 #
 # + x - xml item
-# + return - content of `x`
+# + return - the content of `x`
 public function getContent(Text|ProcessingInstruction|Comment x) returns string = external;
 
-# Creates an element with the specified children
-# The attributes are empty initially
+# Constructs an xml sequence consisting of only a new element item.
 #
-# + name - element name
-# + children - children of element
-# + return - new xml element
+# + name - the name of the new element
+# + children - the children of the new element
+# + return - an xml sequence consisting of only a new xml element with name `name`,
+#   no attributes, and children `children` 
 public function createElement(string name, xml children = concat()) returns Element = external;
 
-# Creates a processing instruction with the specified `target` and `content`.
+# Constructs an xml sequence consisting of only a processing instruction item.
 #
-# + target - target potion of xml processing instruction
-# + content - content potion of xml processing instruction
-# + return - new xml processing instruction element
+# + target - the target part of the processing instruction to be constructed
+# + content - the content part of the processing instruction to be constructed
+# + return - an xml sequence consisting of a processing instruction with target `target`
+#     and content `content`
 public function createProcessingInstruction(string target, string content) returns ProcessingInstruction
  = external;
 
-# Creates a comment with the specified `content`.
+# Constructs an xml sequence consisting of only a comment item.
 #
-# + content - comment content
-# + return - xml comment element
+# + content - the content of the comment to be constructed.
+# + return - an xml sequence consisting of a comment with content `content`
 public function createComment(string content) returns Comment = external;
 
-# Returns a subsequence of x.
+# Returns a subsequence of an xml value.
 #
-# + x - The xml source
-# + startIndex - Start index, inclusive
-# + endIndex - End index, exclusive
-# + return - Sliced sequence
+# + x - the xml value
+# + startIndex - start index, inclusive
+# + endIndex - end index, exclusive
+# + return - a subsequence of `x` consisting of items with index >= startIndex and < endIndex
 public function slice(xml x, int startIndex, int endIndex = x.length()) returns xml = external;
 
-# Strips any text items from an XML sequence that are all whitespace.
-# Removes comments, processing instructions and text chunks that are all white space.
+# Strips the insignificant parts of the an xml value.
+# Comment items, processing instruction items are considered insignificant.
 # After removal of comments and processing instructions, the text is grouped into
 # the biggest possible chunks (i.e. only elements cause division into multiple chunks)
-# and a chunk is removed only if the entire chunk is whitespace.
+# and a chunk is considered insignificant if the entire chunk is whitespace.
 #
-# + x - The xml source
-# + return - Striped sequence
+# + x - the xml value
+# + return - `x` with insignificant parts removed
 public function strip(xml x) returns xml = external;
 
-# Returns a new xml sequence that contains just the element items of `x`
+# Selects the elements from an xml value.
 # 
-# + x - The xml source
-# + return - All the elements-type items in the given XML sequence
+# + x - the xml value
+# + return - an xml sequence consisting of all the element items in `x`
 public function elements(xml x) returns xml = external;
 
 // Functional programming methods
 
-# For xml sequence returns the result of applying function `func` to each member of sequence `item`.
-# For xml element returns the result of applying function `funct` to `item`.
+# Applies a function to each item in an xml sequence, and returns an xml sequence of the results.
+# This represents each item in the same way as the `iterator` function.
 #
-# + arr - the x
+# + x - the xml value
 # + func - a function to apply to each child or `item`
 # + return - new xml value containing result of applying function `func` to each child or `item`
 public function map(xml x, function(xml|string item) returns xml|string func) returns xml = external;
 
-# For xml sequence apply the `func` to children of `item`.
-# For xml element apply the `func` to `item`.
+# Applies a function to each item in an xml sequence.
+# This represents each item in the same way as the `iterator` function.
 #
 # + x - the xml value
-# + func - a function to apply to each child or `item`
+# + func - a function to apply to each item in `x`
 public function forEach(xml x, function(xml|string item) returns () func) = external;
 
-# For xml sequence returns a new xml sequence constructed from children of `x` for which `func` returns true.
-# For xml element returns a new xml sequence constructed from `x` if `x` applied to `funct` returns true, else
-# returns an empty sequence.
+# Selects the items from an xml sequence for which a function returns true.
+# This represents each item in the same way as the `iterator` function.
 #
 # + x - xml value
-# + func - a predicate to apply to each child to determine if it should be included
-# + return - new xml sequence containing filtered children
+# + func - a predicate to apply to each item to test whether it should be selected
+# + return - new xml sequence containing items in `x` for which `func` evaluates to true
 public function filter(xml x, function(xml|string item) returns boolean func) returns xml = external;
 
-# This is the inverse of `value:toString` applied to an `xml`.
+# Constructs an xml value from a string.
+# This parses the string using the `content` production of the
+# XML 1.0 Recommendation.
 #
-# + s - string representation of xml
-# + return - parsed xml value or error
+# + s - a string in XML format
+# + return - xml value resulting from parsing `s`, or an error
 public function fromString(string s) returns xml|error = external;
 
