@@ -30,7 +30,7 @@ public function length(xml x) returns int = external;
 # A character item is represented by a string of length 1.
 # Other items are represented by xml singletons.
 public function iterator(xml x) returns abstract object {
-    public next() returns record {| (xml|string) value; |}?;
+    public function next() returns record {| (xml|string) value; |}?;
 } = external;
 
 # Concatenates xml and string values.

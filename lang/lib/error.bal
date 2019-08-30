@@ -15,6 +15,9 @@
 // under the License.
 
 # The type to which error detail records must belong.
+#
+# + message - the error message
+# + cause - the error cause
 public type Detail record {|
     string message?;
     error cause?;
