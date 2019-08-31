@@ -26,7 +26,7 @@ public function length(string str) returns int = external;
 # + str - the string to be iterated over
 # + return - a new iterator object
 public function iterator(string str) returns abstract object {
-    public next() returns record {| string value; |}?;
+    public function next() returns record {| string value; |}?;
 } = external;
 
 # Concatenates zero or more strings.
