@@ -31,7 +31,7 @@ public function length(table<map<anydata|error>> tbl) returns int = external;
 # + tbl - table to operate on
 # + return - an iterator over `tbl`
 public function iterator(table<RowType> tbl) returns abstract object {
-    public next() returns record {|
+    public function next() returns record {|
         RowType value;
     |}?;
 } = external;

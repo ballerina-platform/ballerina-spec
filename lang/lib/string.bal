@@ -63,7 +63,7 @@ public function codePointCompare(string str1, string str2) returns int = externa
 
 # Joins zero or more strings together with a separator.
 #
-# + seperator - separator string
+# + separator - separator string
 # + strs - strings to be joined
 # + return - a string consisting of all of `strs` concatenated in order
 #     with `separator` in between them

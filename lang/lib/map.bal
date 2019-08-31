@@ -40,7 +40,7 @@ public function length(map<any|error> m) returns int = external;
 # + m - the map
 # + return - a new iterator object that will iterate over the members of `m`
 public function iterator(map<Type> m) returns abstract object {
-    public next() returns record {|
+    public function next() returns record {|
         Type value;
     |}?;
 } = external;

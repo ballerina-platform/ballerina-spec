@@ -57,7 +57,7 @@ public function fromString(string s) returns int|error = external;
 # Negative numbers will have a `-` prefix. No sign for
 # non-negative numbers.
 #
-# + x - int value
+# + n - int value
 # + return - hexadecimal string representation of int value
 public function toHexString(int n) returns string = external;
 
