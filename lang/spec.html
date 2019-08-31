@@ -4060,12 +4060,12 @@ T|error.</li>
 
 <pre
 class="grammar">action :=
-   remote-method-call-action
-   | start-action
-   | receive-action 
-   | send-action
+   start-action
    | wait-action
+   | send-action
+   | receive-action 
    | flush-action
+   | remote-method-call-action
    | checking-action
    | trap-action
    | <code>(</code> action <code>)</code>
@@ -4310,6 +4310,23 @@ its scope, the worker-name can be used in a variable-reference-expr in the same
 way as the worker-name of a named-worker-decl that is part of a
 function-body-block.
 </p>
+</section>
+<section>
+<h3>Start action</h3>
+
+<pre
+class="grammar">start-action := [annots] <code>start</code> (function-call-expr|method-call-expr|remote-method-call-action)
+</pre>
+
+<p>
+The keyword <code>start</code> causes the following function or method
+invocation to be executed on a new strand. The arguments for the function or
+method call are evaluation on the current strand. A start-action returns a value
+of basic type future immediately. If the static type of the call expression or
+action <code><var>C</var></code> is T, then the static type of <code>start
+<var>C</var></code> is future&lt;T&gt;.
+</p>
+
 </section>
 <section>
 <h3>Wait action</h3>
@@ -4735,6 +4752,24 @@ success before it has executed one member from every send set.</li>
 </ul>
 </section>
 </section>
+
+<section>
+<h3>Remote interaction</h3>
+
+<p>
+XXX
+</p>
+
+<pre
+class="grammar">remote-method-call-action := expression <code>-></code> method-name <code>(</code> arg-list <code>)</code>
+</pre>
+<p>
+Calls a remote method. This works the same as a method call expression, except
+that it is used only for a method with the <code>remote</code> modifier.
+</p>
+
+</section>
+
 <section>
 <h3>Local variable declaration statements</h3>
 
@@ -5260,35 +5295,6 @@ static type of the call-expr in an call-stmt is not nil.
 </p>
 </section>
 <section>
-<h3>Remote method call action</h3>
-
-<pre
-class="grammar">remote-method-call-action := expression <code>-></code> method-name <code>(</code> arg-list <code>)</code>
-</pre>
-<p>
-Calls a remote method. This works the same as a method call expression, except
-that it is used only for a method with the <code>remote</code> modifier.
-</p>
-
-</section>
-<section>
-<h3>Start action</h3>
-
-<pre
-class="grammar">start-action := [annots] <code>start</code> (function-call-expr|method-call-expr|remote-method-call-action)
-</pre>
-
-<p>
-The keyword <code>start</code> causes the following function or method
-invocation to be executed on a new strand. The arguments for the function or
-method call are evaluation on the current strand. A start-action returns a value
-of basic type future immediately. If the static type of the call expression or
-action <code><var>C</var></code> is T, then the static type of <code>start
-<var>C</var></code> is future&lt;T&gt;.
-</p>
-
-</section>
-<section>
 <h3>Conditional statement</h3>
 
 <pre
@@ -5599,15 +5605,59 @@ not constrained.
 <pre
 class="grammar">module-part := import-decl* other-decl*
 other-decl :=
-   module-type-defn
+   listener-decl
+   | service-decl
+   | function-defn
+   | module-type-defn
    | module-const-decl
    | module-var-decl
    | module-xmlns-decl
-   | listener-decl
-   | function-defn
-   | service-decl
    | annotation-decl
 </pre>
+<section>
+<h3>Import declaration</h3>
+
+<pre
+class="grammar">import-decl := 
+   <code>import</code> [org-name <code>/</code>] module-name [<code>version</code> sem-ver] 
+   [<code>as</code> import-prefix] <code>;</code>
+import-prefix := module-prefix | <code>_</code>
+module-prefix := identifier
+org-name := identifier
+module-name := identifier (<code>.</code> identifier)*
+sem-ver := major-num [<code>.</code> minor-num [<code>.</code> patch-num]]
+major-num := DecimalNumber
+minor-num := DecimalNumber
+patch-num := DecimalNumber
+
+qualified-identifier := module-prefix <code>:</code> identifier
+</pre>
+<p>
+A <code>module-prefix</code> is a name that is used locally within the source of
+a module to refer to another module. A <code>module-prefix</code> in a
+qualified-identifier must refer to a <code>module-prefix</code> specified in an
+import-declaration in the same source part.
+</p>
+<p>
+An import-prefix of <code>_</code> causes the module to be imported without
+making its symbols available via a module-prefix. In this case, the effect of
+importing the module will be just to cause the module to be included in the
+program and initialized. It is an error for a source-part to import a module
+using a module-prefix and then not to use that module-prefix.
+</p>
+<p>
+A <code>module-prefix</code> declared by an <code>import-decl</code> is in the
+same symbol space as a <code>xmlns-namespace-prefix</code> declared by an
+<code>xmlns-decl-stmt</code>. This symbol space is distinct from a module's main
+symbol space used by other declarations.
+</p>
+<p>
+It is an error for a module to directly or indirectly import itself. In other
+words, the directed graph of module imports must be acyclic.
+</p>
+
+</section>
+
 <section>
 <h3>Module and program execution</h3>
 <p>
@@ -5667,15 +5717,28 @@ becomes the new root module.
 </p>
 <p>
 If the initialization phase of program execution completes successfully, then
-execution proceeds to the listening phase. The runtime state of each module
-includes a list of listener objects that have been registered with the module. A
-listener object is a <em>registered listener</em> of a running program if it is
-a member of the list of registered listeners of any of the program's modules. If
-at the start of the listening phase of program execution there are no registered
-listeners, then the listening phase immediately terminates successfully.
-Otherwise, the <code>__start</code> method of each registered listener is
-called; if any of these calls returns an error value, then program execution
-terminates unsuccessfully with this error value as its return value.
+execution proceeds to the listening phase, which is described in the next
+section. The termination of the listening phase, which may be successful or
+unsuccessful, terminates the program execution.
+</p>
+</section>
+
+<section>
+<h3>Listeners and services</h3>
+
+<p>
+XXX
+</p>
+<p>
+The runtime state of each module includes a list of listener objects that have
+been registered with the module. A listener object is a <em>registered
+listener</em> of a running program if it is a member of the list of registered
+listeners of any of the program's modules. If at the start of the listening
+phase of program execution there are no registered listeners, then the listening
+phase immediately terminates successfully. Otherwise, the <code>__start</code>
+method of each registered listener is called; if any of these calls returns an
+error value, then the listening phase terminates unsuccessfully with this error
+value as its return value.
 </p>
 <p>
 The listening phase of program execution continues until either the program
@@ -5686,50 +5749,94 @@ case, the program will call the <code>__gracefulStop</code> or
 <code>__immediateStop</code> method on each registered listener before
 terminating.
 </p>
-</section>
+
 <section>
-<h3>Import declaration</h3>
+<h4>Listener declaration</h4>
 
 <pre
-class="grammar">import-decl := 
-   <code>import</code> [org-name <code>/</code>] module-name [<code>version</code> sem-ver] 
-   [<code>as</code> import-prefix] <code>;</code>
-import-prefix := module-prefix | <code>_</code>
-module-prefix := identifier
-org-name := identifier
-module-name := identifier (<code>.</code> identifier)*
-sem-ver := major-num [<code>.</code> minor-num [<code>.</code> patch-num]]
-major-num := DecimalNumber
-minor-num := DecimalNumber
-patch-num := DecimalNumber
-
-qualified-identifier := module-prefix <code>:</code> identifier
+class="grammar">listener-decl :=
+   metadata
+   [<code>public</code>] <code>listener</code> [type-descriptor] identifier <code>=</code> expression <code>;</code>
 </pre>
 <p>
-A <code>module-prefix</code> is a name that is used locally within the source of
-a module to refer to another module. A <code>module-prefix</code> in a
-qualified-identifier must refer to a <code>module-prefix</code> specified in an
-import-declaration in the same source part.
+A <code>listener-decl</code> defines a module listener.
 </p>
 <p>
-An import-prefix of <code>_</code> causes the module to be imported without
-making its symbols available via a module-prefix. In this case, the effect of
-importing the module will be just to cause the module to be included in the
-program and initialized. It is an error for a source-part to import a module
-using a module-prefix and then not to use that module-prefix.
+A module listener is an object value that belongs to the Listener abstract
+object type and is managed as part of the module's lifecycle. A module may have
+multiple listeners.
 </p>
 <p>
-A <code>module-prefix</code> declared by an <code>import-decl</code> is in the
-same symbol space as a <code>xmlns-namespace-prefix</code> declared by an
-<code>xmlns-decl-stmt</code>. This symbol space is distinct from a module's main
-symbol space used by other declarations.
+A module-listener can be referenced by a variable-reference, but cannot be
+modified. It is this similar to a final variable declaration, except that it
+also registers the value with the module as a listener.
 </p>
 <p>
-It is an error for a module to directly or indirectly import itself. In other
-words, the directed graph of module imports must be acyclic.
+A module listener has a static type, which must be a subtype of the Listener
+type. If the type-descriptor is present it specifies the module listener's
+static type; if it is not present, the the static type of the listener is the
+static type of <code>expression</code>.
+</p>
+</section>
+<section>
+<h4>Service declaration</h4>
+
+<pre
+class="grammar">service-decl :=
+  metadata
+  <code>service</code> [identifier] <code>on</code> expression-list service-body-block
+expression-list := expression (<code>,</code> expression)*
+</pre>
+<p>
+Creates a service and attaches it to one or more listeners.
+</p>
+<p>
+This works as follows:
+</p>
+<ul>
+<li>service-body is the same as what goes inside a service constructor</li>
+<li>expression is evaluated to an object obj that matches the Listener interface
+or an error; if its an error then module initialization panics</li>
+<li>obj is registered with the module as one of its endpoints (registering the
+same object multiple times is the same as registering it once)</li>
+<li>service-body-block is evaluated as in a service-constructor to get a service
+value s;  the parameter type of obj.__attach determines the contextually
+expected type</li>
+<li>identifier, if present, works as a final variable whose value is s</li>
+<li>s is attached to obj using obj.__attach; the identifier is supplied as an
+argument to obj.attach along with s (nil if not present)</li>
+<li>if __attach returns an error, then module initialization panics</li>
+</ul>
+</section>
+</section>
+
+<section>
+<h3>Function definition</h3>
+
+<pre
+class="grammar">function-defn := 
+   metadata
+   [<code>public</code>]
+   <code>function</code> identifier function-signature function-body
+function-body := function-body-block | external-function-body
+external-function-body := <code>=</code> [annots] <code>external</code> <code>;</code>
+</pre>
+<p>
+An <code>external-function-body</code> means that the implementation of the
+function is not provided in the Ballerina source module.
+</p>
+<p>
+If a module has a function-defn with an identifier of <code>__init</code>, it is
+called called automatically by the system at the end of the initialization of
+that module; if this call returns an error, then initialization of the module
+fails. The following special requirements apply to the <code>__init</code>
+function of a module: it must not be declared <code>public</code>; its return
+type must both be a subtype of <code>error?</code> and contain <code>()</code>;
+it must have no parameters.
 </p>
 
 </section>
+
 <section>
 <h3>Module type definition</h3>
 
@@ -5801,90 +5908,6 @@ scope.
 </p>
 </section>
 
-<section>
-<h3>Listener declaration</h3>
-
-<pre
-class="grammar">listener-decl :=
-   metadata
-   [<code>public</code>] <code>listener</code> [type-descriptor] identifier <code>=</code> expression <code>;</code>
-</pre>
-<p>
-A <code>listener-decl</code> defines a module listener.
-</p>
-<p>
-A module listener is an object value that belongs to the Listener abstract
-object type and is managed as part of the module's lifecycle. A module may have
-multiple listeners.
-</p>
-<p>
-A module-listener can be referenced by a variable-reference, but cannot be
-modified. It is this similar to a final variable declaration, except that it
-also registers the value with the module as a listener.
-</p>
-<p>
-A module listener has a static type, which must be a subtype of the Listener
-type. If the type-descriptor is present it specifies the module listener's
-static type; if it is not present, the the static type of the listener is the
-static type of <code>expression</code>.
-</p>
-</section>
-<section>
-<h3>Function definition</h3>
-
-<pre
-class="grammar">function-defn := 
-   metadata
-   [<code>public</code>]
-   <code>function</code> identifier function-signature function-body
-function-body := function-body-block | external-function-body
-external-function-body := <code>=</code> [annots] <code>external</code> <code>;</code>
-</pre>
-<p>
-An <code>external-function-body</code> means that the implementation of the
-function is not provided in the Ballerina source module.
-</p>
-<p>
-If a module has a function-defn with an identifier of <code>__init</code>, it is
-called called automatically by the system at the end of the initialization of
-that module; if this call returns an error, then initialization of the module
-fails. The following special requirements apply to the <code>__init</code>
-function of a module: it must not be declared <code>public</code>; its return
-type must both be a subtype of <code>error?</code> and contain <code>()</code>;
-it must have no parameters.
-</p>
-
-</section>
-<section>
-<h3>Service declaration</h3>
-
-<pre
-class="grammar">service-decl :=
-  metadata
-  <code>service</code> [identifier] <code>on</code> expression-list service-body-block
-expression-list := expression (<code>,</code> expression)*
-</pre>
-<p>
-Creates a service and attaches it to one or more listeners.
-</p>
-<p>
-This works as follows:
-</p>
-<ul>
-<li>service-body is the same as what goes inside a service constructor</li>
-<li>expression is evaluated to an object obj that matches the Listener interface
-or an error; if its an error then module initialization panics</li>
-<li>obj is registered with the module as one of its endpoints (registering the
-same object multiple times is the same as registering it once)</li>
-<li>service-body-block is evaluated as in a service-constructor to get a service
-value s;  the parameter type of obj.__attach determines the contextually
-expected type</li>
-<li>identifier, if present, works as a final variable whose value is s</li>
-<li>s is attached to obj using obj.__attach; the identifier is supplied as an
-argument to obj.attach along with s (nil if not present)</li>
-<li>if __attach returns an error, then module initialization panics</li>
-</ul>
-</section>
 </section>
 <section>
 <h2 id="metadata">9. Metadata</h2>
