@@ -506,7 +506,7 @@ type</td>
   </tr>
   <tr>
    <td>service</td>
-   <td>a combination of named resources and named methods</td>
+   <td>a collection of named methods, including resource methods</td>
   </tr>
   <tr>
    <td>typedesc</td>
@@ -1708,10 +1708,17 @@ if it has basic type future.
 class="grammar">service-type-descriptor := <code>service</code>
 </pre>
 <p>
-A service value contains resources and methods. A service method is similar to
-an object method. A resource is a special kind of method, with associated
-configuration data, that is invoked in response to network input received by a
-Listener.
+A service is like an object, but differs in the following respects:
+</p>
+<ul>
+<li>a method of a service can be declared as a resource method, but cannot be
+declared as a remote method</li>
+<li>a service is stateless and does not have fields</li>
+</ul>
+<p>
+A resource method is a special kind of method, with associated configuration
+data, that is invoked in response to network messages received by a Listener. A
+service can be thought of as the dual of a client object.
 </p>
 <p>
 All service values belong to the type <code>service</code>.
@@ -2995,9 +3002,9 @@ service-method-defn-quals :=
 <p>
 A <code>service-constructor-expr</code> constructs a service value. The result
 of evaluating a service-constructor-expr is a value of type service. If a
-service-method-defn contains a resource qualifier, then it defines a resource,
-otherwise it defines a method. The self variable can be used in a method-body of
-a service-method-defn in the same way as for objects.
+service-method-defn contains a <code>resource</code> qualifier, then it defines
+a resource method. The self variable can be used in a method-body of a
+service-method-defn in the same way as for objects.
 </p>
 <p>
 Each service value has a distinct type descriptor. (Evaluating a service
@@ -5684,10 +5691,10 @@ consecutive phases: an initialization phase and a listening phase.
 </p>
 <p>
 Module initialization is performed by calling an initialization function, which
-is synthesized by the compiler for each module. Module initialization can be
-unsuccessful, in which case the initialization function returns an error value.
-The initialization phase of program execution consists of initializing each of
-the program's modules. If the initialization of a module is unsuccessful, then
+is synthesized by the compiler for each module. Module initialization can fail,
+in which case the initialization function returns an error value. The
+initialization phase of program execution consists of initializing each of the
+program's modules. If the initialization of a module is unsuccessful, then
 program execution immediately terminates unsuccessfully, returning the error
 value returned by the initialization function.
 </p>
@@ -5736,27 +5743,48 @@ unsuccessful, terminates the program execution.
 <h3>Listeners and services</h3>
 
 <p>
-XXX
+Services have resource methods, which are the network entry points of a
+Ballerina program. Listeners provide the interface between the network and
+services. A listener object receives network messages from a remote process
+according to some protocol and translates the received messages into calls on
+the resource methods of service values that have been attached to the listener
+object. It is up to the listener object to determine how this translation
+happens; the type of the listener object thus constrains the type of a service
+that can be attached to the listener. (This constraint is not yet enforced by
+Ballerina's type system.)
 </p>
 <p>
-The runtime state of each module includes a list of listener objects that have
-been registered with the module. A listener object is a <em>registered
-listener</em> of a running program if it is a member of the list of registered
-listeners of any of the program's modules. If at the start of the listening
-phase of program execution there are no registered listeners, then the listening
-phase immediately terminates successfully. Otherwise, the <code>__start</code>
-method of each registered listener is called; if any of these calls returns an
-error value, then the listening phase terminates unsuccessfully with this error
-value as its return value.
+The return type of a resource method represents whether the method successfully
+handled the protocol message. The listener typically calls a resource method
+with a client object as a parameter. The remote methods on the client object
+correspond to the distinct network messages defined by the protocol as possible
+responses to the message that the resource method is handling. A resource method
+called by a listener as a result of a network message received from a remote
+process can then use the client object to send a response message back to that
+remote process.
+</p>
+<p>
+The methods defined by the Listener abstract object type allow for the
+management of the lifecycle of a listener object and its attached services. A
+listener declaration registers a listener object with a module, so that it can
+be managed by the module. The runtime state of each module includes a list of
+listener objects that have been registered with the module. A listener object
+that has been registered with a module is called a <em>module listener</em>
+</p>
+<p>
+If at the start of the listening phase of program execution there are no module
+listeners, then the listening phase immediately terminates successfully.
+Otherwise, the <code>__start</code> method of each module listener is called; if
+any of these calls returns an error value, then the listening phase terminates
+unsuccessfully with this error value as its return value.
 </p>
 <p>
 The listening phase of program execution continues until either the program
 explicitly exits, by calling a standard library function, or the user explicitly
 requests the termination of the program using an implementation-dependent
 operating system facility (such as a signal on a POSIX system). In the latter
-case, the program will call the <code>__gracefulStop</code> or
-<code>__immediateStop</code> method on each registered listener before
-terminating.
+case, the <code>__gracefulStop</code> or <code>__immediateStop</code> method of
+each registered listener will be called before termination.
 </p>
 
 <section>
@@ -5765,57 +5793,76 @@ terminating.
 <pre
 class="grammar">listener-decl :=
    metadata
-   [<code>public</code>] <code>listener</code> [type-descriptor] identifier <code>=</code> expression <code>;</code>
+   [<code>public</code>] <code>listener</code> [type-descriptor] variable-name <code>=</code> expression <code>;</code>
 </pre>
 <p>
-A <code>listener-decl</code> defines a module listener.
+A <code>listener-decl</code> declares a module listener. A module listener
+declares a variable in a similar way to a final variable declaration, but the
+type of the variable is always a subtype of the Listener abstract object type,
+and it has the additional semantic of registering the variable's value with the
+module as a listener. As with a variable declared in a final variable
+declaration, the variable can be referenced by a variable-reference, but cannot
+be assigned to. A module may have multiple multiple listeners.
 </p>
 <p>
-A module listener is an object value that belongs to the Listener abstract
-object type and is managed as part of the module's lifecycle. A module may have
-multiple listeners.
+If the type-descriptor is present it specifies the static type of the variable;
+if it is not present, the the static type is the static type of
+<code>expression</code>. In both cases, the static type is constrained to be a
+subtype of the Listener abstract object type.
 </p>
 <p>
-A module-listener can be referenced by a variable-reference, but cannot be
-modified. It is this similar to a final variable declaration, except that it
-also registers the value with the module as a listener.
+When a listener-decl is initialized as part of module initialization, its
+expression is evaluated. If expression evaluation completes abruptly, then
+module initialization fails. Otherwise the variable is initialized with the
+result of the evaluation.
 </p>
-<p>
-A module listener has a static type, which must be a subtype of the Listener
-type. If the type-descriptor is present it specifies the module listener's
-static type; if it is not present, the the static type of the listener is the
-static type of <code>expression</code>.
-</p>
+
 </section>
+
 <section>
 <h4>Service declaration</h4>
 
 <pre
 class="grammar">service-decl :=
   metadata
-  <code>service</code> [identifier] <code>on</code> expression-list service-body-block
+  <code>service</code> [variable-name] <code>on</code> expression-list service-body-block
 expression-list := expression (<code>,</code> expression)*
 </pre>
 <p>
-Creates a service and attaches it to one or more listeners.
+A <code>service-decl</code> creates a service and attaches it to one or more
+listeners. If a variable-name is specified, it also declares a variable; as with
+a variable declared in a final variable declaration, the variable can be
+referenced by a variable-reference, but cannot be assigned to.
 </p>
 <p>
-This works as follows:
+The service-body-block has the same semantics as in a service-constructor-expr.
+The static type of each expression in the expression list must be a subtype of
+the union of error with the Listener abstract object type. If an implementation
+is using annotations to provide more precise typing of services, then any
+annotations on the service type that is the first parameter of the
+<code>__attach</code> method in the object type of each expression in expression
+list will constrain the type of the service value constructed by the
+service-body-block.
 </p>
-<ul>
-<li>service-body is the same as what goes inside a service constructor</li>
-<li>expression is evaluated to an object obj that matches the Listener interface
-or an error; if its an error then module initialization panics</li>
-<li>obj is registered with the module as one of its endpoints (registering the
-same object multiple times is the same as registering it once)</li>
-<li>service-body-block is evaluated as in a service-constructor to get a service
-value s;  the parameter type of obj.__attach determines the contextually
-expected type</li>
-<li>identifier, if present, works as a final variable whose value is s</li>
-<li>s is attached to obj using obj.__attach; the identifier is supplied as an
-argument to obj.attach along with s (nil if not present)</li>
-<li>if __attach returns an error, then module initialization panics</li>
-</ul>
+<p>
+A service-decl is initialized as part of module initialization as follows. The
+service-body-block is evaluated as in a service-constructor resulting in a
+service value <code><var>s</var></code>. If variable-name is specified, then the
+variable is initialized to <code><var>s</var></code>. Then for each expression
+in expression-list:
+</p>
+<ol>
+<li>the expression is evaluated resulting in a value which is either an error or
+an object <code><var>obj</var></code> that is a subtype of Listener;</li>
+<li>if it is an error, module initialization fails;</li>
+<li>otherwise, <code><var>obj</var></code> is registered as a module listener
+(registering the same object multiple times is the same as registering it
+once);</li>
+<li><code><var>s</var></code> is then attached to <code><var>obj</var></code>
+using <code><var>obj</var></code>'s <code>__attach</code> method;</li>
+<li>if the call to <code>__attach</code> fails, then module initialization
+fails.</li>
+</ol>
 </section>
 </section>
 
