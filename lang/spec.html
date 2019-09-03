@@ -3010,10 +3010,8 @@ class="grammar">service-constructor-expr := [annots] <code>service</code> servic
 service-body-block := <code>{</code> service-method-defn* <code>}</code>
 service-method-defn :=
    metadata
-   service-method-defn-quals
+   [<code>resource</code>]
    <code>function</code> identifier function-signature method-body
-service-method-defn-quals :=
-   [explicit-visibility-qual | <code>resource</code>]
 </pre>
 <p>
 A <code>service-constructor-expr</code> constructs a service value. The result
@@ -3028,7 +3026,7 @@ constructor thus has an effect analogous to defining an anonymous object type
 and then creating a value of that type.)
 </p>
 <p>
-The return type of a resource must be a subtype of <code>error?</code> and must contain
+The return type of a resource method must be a subtype of <code>error?</code> and must contain
 nil.
 </p>
 </section>
@@ -3420,15 +3418,17 @@ lang library. The evaluation of the method-call-expr starts by evaluating
 contextually expected type for <code>expression</code>.
 </p>
 <p>
-If the static type of <code>expression</code> is a subtype of object or a
-subtype of service, and the object type or service type includes a method named
-<code>method-name</code>, then the <code>method-call-expr</code> is executed by
-calling that method on <var>v</var>. The <code>arg-list</code> is used to
-construct an argument list that is passed to the method in the same way as with
-a <code>function-call-expr</code>. A <code>method-call-expr</code> cannot be
-used to call a remote method; it can only be called by a
-<code>remote-method-call-action</code>. A <code>method-call-expr</code> cannot
-be used to invoke a resource.
+If the static type of <code>expression</code> is a subtype of object, and the
+object type includes a method named <code>method-name</code>, then the
+<code>method-call-expr</code> is executed by calling that method on
+<var>v</var>. A <code>method-call-expr</code> can be used within a method of a
+service to call another method of that service other than a resource method; in
+this case, <code>expression</code> must be <code>self</code>. The
+<code>arg-list</code> is used to construct an argument list that is passed to
+the method in the same way as with a <code>function-call-expr</code>. A
+<code>method-call-expr</code> cannot be used to call a remote method; it can
+only be called by a <code>remote-method-call-action</code>. A
+<code>method-call-expr</code> cannot be used to call a resource method.
 </p>
 <p>
 Otherwise, the <code>method-call-expr</code> will be turned into a call to a
