@@ -17,7 +17,7 @@ COPYFILES=lib/versions.json \
   lib/table.bal lib/typedesc.bal lib/value.bal lib/xml.bal \
   style/ballerina-language-specification.css \
   style/ballerina-language-specification.js
-DISTFILES=spec.html $(COPYFILES)
+DISTFILES=spec.html experimental.html $(COPYFILES)
 
 all: $(BUILDFILES)
 
