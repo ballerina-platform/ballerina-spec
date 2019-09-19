@@ -336,8 +336,6 @@ A lot of this is very similar to lang.map and lang.array.
 
 The most fundamental pattern of usage of the table data type is to rely entirely on the semantics defined by the Ballerina language specification:
 
-
-
 *   table values are constructed using table constructor expressions
 *   the inherent type of a table is specified by a Ballerina table type descriptor
 *   the lifetime of table values does not extend beyond the execution of the program
@@ -346,14 +344,12 @@ With this pattern of usage, the implementation of the table data type will live 
 
 But there is another possible pattern of usage:
 
-
-
-*   the Ballerina table value refers to a table that exists independently of a Ballerina program, for example a table in a persistent SQL database;
+*   the Ballerina table value refers to a table that is stored outside the Ballerina program and can persist after the Ballerina program terminates, for example a table in a persistent SQL database;
 *   a Ballerina program obtains the table value by calling a function with an external body, rather than by using a table descriptor;
 *   the implementation of the table translates operations on the Ballerina table value into operations on the underlying persistent database;
 *   the inherent type of the table, which represents the constraints on the values that the table can contain, is specified by the database schema, rather than by a Ballerina type descriptor.
 
-With this pattern of usage, the implementation of the table value uses code that is part of the Ballerina program to act as a proxy for the underlying SQL database. This code translates queries expressed in Ballerina into queries expressed in SQL and then sends those queries to the database for execution.
+With this pattern of usage, the implementation of the table value uses code that is part of the Ballerina program to act as a proxy for a table in the underlying persistent database. This code translates queries expressed in Ballerina into queries expressed in the database's query language and then sends those queries to the database for execution. We will call this kind of table a *persistent* table.
 
 This pattern presents a number of challenges:
 
