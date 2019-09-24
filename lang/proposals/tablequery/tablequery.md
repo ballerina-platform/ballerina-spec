@@ -302,6 +302,8 @@ We can support this as follows:
 12. A member-access-expr E[x] can used with a table that has a primary key; E must be a table with a primary key, and x must belong to the record type for that
 13. E[x] can also be used as an lvalue; the RHS would be a record representing the entire row;
 
+TODO
+* In a direct table type descriptor, there should be a way to reference a record type, then make one or more of the fields it declares be part of the primary key.
 
 ### Operations
 
