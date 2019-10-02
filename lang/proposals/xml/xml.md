@@ -1091,3 +1091,7 @@ Datatyping for attributes is both easier and more generally useful:
 XXX
 
 
+## Related changes
+
+
+*   function on typedesc to test whether a value belongs to the type (or would it be better to do this with is-expr?)

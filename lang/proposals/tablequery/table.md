@@ -463,6 +463,12 @@ The changes relative to 2019R2 can be divided up as follows:
 1. Define how toString works for table
 1. More extensive lang.table module
 
+
+## Related changes
+
+*   be able to construct data immutably at runtime without relying on immutable clone
+*   refine static typing for list and mapping constructors to allow the contextually expected type to be a record or tuple type descriptor rather than just mapping or list type
+
 ## Background
 
 Some other programming languages with a table data type are:

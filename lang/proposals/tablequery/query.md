@@ -431,12 +431,7 @@ This is different from the filter function in that it mutates the table. Syntact
 ## Related changes
 
 
-
-*   pure functions (which can only access data through parameters, module-level consts and other pure functions)
-*   be able to construct data immutably at runtime without relying on immutable clone
 *   refine static typing for list and mapping constructors to allow the contextually expected type to be a record or tuple type descriptor rather than just mapping or list type
 *   allow `foreach` statements to have a `where` clause
 *   abbreviated form of mapping constructor (where field is just an identifier), analogous to abbreviated form of mapping binding pattern
-*   function on typedesc to test whether a value belongs to the type (or would it be better to do this with is-expr?)
-
 
