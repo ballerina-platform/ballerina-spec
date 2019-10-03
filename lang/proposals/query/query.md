@@ -1,5 +1,7 @@
 # Query
 
+Please add comments to the associated issue [#355](https://github.com/ballerina-platform/ballerina-spec/issues/355).
+
 There is an [experimental](https://ballerina.io/spec/lang/2019R3/experimental.html#section_3.1) implementation of a query facility for Ballerina, which builds on the table and stream features.
 
 [List comprehensions](https://en.wikipedia.org/wiki/List_comprehension) are a well-established feature of [many programming languages](https://en.wikipedia.org/wiki/Comparison_of_programming_languages_(list_comprehension)). At a high level, queries can be viewed as a kind of comprehension. They consist of:
