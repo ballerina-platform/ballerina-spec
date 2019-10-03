@@ -1,10 +1,26 @@
 # Query
 
-Basic idea is to take C# LINQ as the starting point.
+There is an [experimental](https://ballerina.io/spec/lang/2019R3/experimental.html#section_3.1) implementation of a query facility for Ballerina, which builds on the table and stream features.
 
+[List comprehensions](https://en.wikipedia.org/wiki/List_comprehension) are a well-established feature of [many programming languages](https://en.wikipedia.org/wiki/Comparison_of_programming_languages_(list_comprehension)). At a high level, queries can be viewed as a kind of comprehension. They consist of:
 
-## Table query basics
+*  iterating over some kind of collection
+*  for each member of the collection
+      * binding variables
+      * using those variables to perform a boolean test
+      * if the test succeeds, using those variables to produce some new values
+*  constructing a new collection using the values produced in the iteration
 
+An SQL select statement is a kind of comprehension that iterates over the rows of a table.
+The XQuery FLWOR statement is a kind of comprehension that iterates over XML sequences.
+
+C# provides a sophisticated language-integrated query (LINQ) facility, with an SQL-like syntax, which is a generalized and sophisticated kind of list comprehension.
+
+This document proposes a simple form of language-integrated query for Ballerina, with a syntax similar to C#.
+
+## Query basics
+
+In its simplest form, a query has the following syntax:
 
 ```
 query-expr := (foreach-clause [where-clause])+ select-clause
@@ -13,57 +29,31 @@ where-clause := "where" expression
 select-clause := "select" expression
 ```
 
+A `query-expr` is a kind of comprehension that builds on existing Ballerina language elements:
 
-This would work as follows:
-
-
-*   the foreach-clause works like the existing `foreach` statement
-    *   the expression would evaluate to a table value
-    *   the typed-binding-pattern gets bound successively to the record representing each row
-    *   the typed-binding-pattern would often include a mapping-binding-pattern
+*   the `foreach-clause` iterates and binds variables
+    *   it works like the existing `foreach` statement
+    *   the `in` expression must result in an iterable value, which is used to create an iterator object
+    *   an iterator object is created from the iterable value
+    *   the typed-binding-pattern can use destructuring to bind multiple variables
     *   any variables bound by the typed-binding-pattern are in scope in the where-clause and the select-clause
     *   multiple foreach clauses are similar to a join 
-*   the where-clause would use a boolean expression
+*   the `where` clause uses a boolean expression to filter
+*   the `select` clause produces values, which become members of the constructed collection
+
+A common case is to query some kind of collection of records, where the collection might be a list, a table or a stream. In this case:
+
+*   the typed-binding-pattern would often include a mapping-binding-pattern
 *   the expression in the select-clause would typically be a mapping constructor expression
 
-The static typing of mapping constructor expr will need to be refined to work as expected in the select-clause, since the spec currently makes the contextually expected type of a mapping constructor expr be map<T> if there is no contextually expected type.
+A `query-expr` is not restricted to constructing lists. The type of value constructed is determined as follows:
 
+1. If there is a contextually expected type that allows only one basic type of structure, then the contextually expected type determines what is constructed.
+2. Otherwise, it constructs the same kind of thing it is iterating over. In other words the type of the `in` expression in the foreach-clause determines what is constructed. To make this work in an extensible way with objects representing collections, we will need a richer `Queryable` interface similar to `Iteratable` that allows for construction. This could also support queries that mutate collections (see below)
 
-### Discussion
+In the first case, the contextually expected type for the `query-expr` will determine the contextually expected type for the expression in the select clause. For the second case, the static typing of mapping constructor expr will need to be refined to work as expected in the select-clause, since the spec currently makes the contextually expected type of a mapping constructor expr be `map<T>` if there is no contextually expected type.
 
-#### Comprehensions
-
-An SQL query is in essence a table comprehension. It consists of
-
-
-*   iterating over rows
-*   for each row binding variables to columns of the row
-*   filtering out some rows using a condition that uses a bound variables
-*   creating a new row using bound variables for each remaining row 
-*   creating a table from all these rows
-
-We already have constructs in the language to do much of this
-
-
-*   foreach iterates over the row
-*   record binding pattern binds variable
-*   if with boolean condition expresses condition (in if statement and match clause)
-*   a record constructor can create a new row
-*   a table constructor creates a table from a number of rows
-
-
-#### C# LINQ syntax
-
-The syntax proposed above (including the exact choice of keywords is inspired from the C# LINQ syntax, but is adapted to use constructs that already exists in the language. C# also provides more clauses, which we can incorporate:
-
-
-
-*   join
-*   group
-*   orderby
-
-
-#### Examples
+### Examples
 
 Assuming
 
@@ -74,7 +64,7 @@ type Person record {|
    string lastName;
    string country;
 |};
-table<Person> peopleTable;
+Person[] personList;
 ```
 
 
@@ -83,7 +73,7 @@ We could write
 
 ```
 var x =
-   foreach var person in peopleTable
+   foreach var person in personList
    where person.country == "UK"
    select {
        firstName: person.firstName,
@@ -97,7 +87,7 @@ or
 
 ```
 var x =
-   foreach var { firstName: nm1, lastName: nm2, country: c } in peopleTable
+   foreach var { firstName: nm1, lastName: nm2, country: c } in personList
    where c == "UK"
    select { firstName: nm1, lastName: nm2 };
 ```
@@ -108,7 +98,7 @@ This can be shortened to:
 
 ```
 var x =
-   foreach var { firstName, lastName, country } in peopleTable
+   foreach var { firstName, lastName, country } in personList
    where country == "UK"
    select { firstName: firstName, lastName: lastName };
 ```
@@ -119,7 +109,7 @@ but we should also have a shortcut mapping constructor syntax to parallel the sh
 
 ```
 var x =
-   foreach var { firstName, lastName, country } in peopleTable
+   foreach var { firstName, lastName, country } in personList
    where country == "UK"
    select { firstName, lastName };
 ```
@@ -129,7 +119,7 @@ The inferred type of x would be:
 
 
 ```
-table<record {| string firstName; string lastName; |}>
+record {| string firstName; string lastName; |}[]
 ```
 
 
@@ -138,69 +128,51 @@ We also should make spread operator work in mapping constructors:
 
 ```
 var x =
-   foreach var { country, ...rest } in peopleTable
+   foreach var { country, ...rest } in personList
       where country == "UK"
       select { country, ...rest }
 ```
 
+### Discussion
 
+#### Keyword syntax
 
-#### Keywords
-
-C# uses `from` instead of `foreach` presumably following SQL. However I don't think `from` reads well when it is before the `select`, as it must be to ensure that declarations always lexically precede their usage.
+The syntax proposed above is inspired by C# LINQ (which was in turn inspired by SQL). C# uses `from` instead of `foreach` presumably following SQL. However I don't think `from` reads well when it is before the `select`, as it must be to ensure that declarations always lexically precede their usage.
 
 
 ```
 var x =
-   from var { firstName, lastName, country } in peopleTable
+   from var { firstName, lastName, country } in personList
      where country == "UK"
      select { firstName, lastName };
 ```
 
 
-More importantly, foreach in a query is conceptually doing exactly the same thing as foreach in the existing foreach statement, i.e. binding a variable to successive members of an iteration.
+More importantly, `foreach` in a query is conceptually doing exactly the same thing as foreach in the existing `foreach` statement, i.e. binding a variable to successive members of an iteration.
 
 For uniformity, we could also allow our existing `foreach` statement to have a where clause.
 
 The reason to stick with `select` rather a keyword that suggests addition (e.g. `add` or `insert`) is to avoid making it seem that this mutates an existing table, particularly if we have keywords `update` and `delete` that do mutate (see below).
 
+A keyword-based syntax enables adding more clauses to provide richer query functionality. For example, C# provides `join`, `group` and `orderby` clauses.
 
-## Query for other structured types
+#### What to construct?
 
-The expression in the from-clause can be anything iterable (as with foreach).
+The proposed SQL-like syntax creates an important design problem. What type of structure does the `query-expr` construct?
 
-A query-expr can construct not only tables but values of other structured types, specifically lists and xml. The type of thing constructed depends on the contextually expected type and the type of the expression in the from clause
+The proposed rule that a query-expr should by default create a collection of the same kind as it is iterating over is motivated by consistency with the map/filter functions, which always construct a result of the same basic type as their first argument.
 
-
-
-*   if the contextually expected type allows only one of list, xml and table, then that is what is constructed
-*   otherwise, the type of the from clause determines what is constructed.
-
-
-### Discussion
-
-In C# the query syntax is sugar that maps onto a variety of complex method calls making sophisticated use of parameterized types. The result will be an IEnumerable<T> for some T. In our case, we want the query syntax to simply produce a table. However, the comprehension concept (and indeed syntax) works just as well for lists (and other iterable collections) as it does for tables. [List comprehensions](https://en.wikipedia.org/wiki/List_comprehension) are a well-established feature of [many programming languages](https://en.wikipedia.org/wiki/Comparison_of_programming_languages_(list_comprehension)). The key XQuery feature (the FLWOR statement) is essentially just a comprehension over XML sequences.
+In C# the query syntax is sugar that maps onto a variety of complex method calls making sophisticated use of parameterized types. The result will be an `IEnumerable<T>` for some T. In our case, we want the query syntax to simply produce a table. However, the comprehension concept (and indeed syntax) works just as well for lists (and other iterable collections) as it does for tables. 
 
 With a comprehension, you have a source collection type and a result collection type. These do not have to be the same. It is straightforward to allow the expression in the from clause to be anything iterable, just as with foreach. The problem is how to decide what the type of the result collection should be.
 
-The second part of the rule given above is motivated by consistency with the map/filter functions, which always construct a result of the same basic type as their first argument.
+An alternative would be use a keyword other than select when constructing xml or list values.
 
-An alternative would be to use the type of the select clause:
+Note that the type of `<T>E` is the intersection of T and the static type of E. So you can use `<table>query-expr` to construct a table from a list, without having to specify the precise type of the table.
 
+#### Constructor-based syntax
 
-
-*   if the type is record, construct a table
-*   if the type is xml, construct and xml sequence
-*   otherwise, construct a list
-
-Another alternative would be use a keyword other than select when constructing xml or list values.
-
-Note that the type of <T>E is the intersection of T and the static type of E. So you can use <table>query-expr to construct a table from a list, without having to specify the precise type of the table.
-
-
-#### Constructor syntax
-
-An alternative approach is to use a comprehension syntax based on the constructor syntax. This is the usual syntactic approach for list comprehensions e.g. [Python](https://docs.python.org/3/tutorial/datastructures.html#list-comprehensions). Applying this approach to lists for Ballerina, would give something like
+There is an alternative syntactic approach based on constructor syntax, which makes explicit the kind of thing that is explicit. This is the usual syntactic approach for list comprehensions e.g. [Python](https://docs.python.org/3/tutorial/datastructures.html#list-comprehensions). Applying this approach to lists for Ballerina, would give something like
 
 
 ```
@@ -220,21 +192,13 @@ var list = [foreach var i in 1 ..< 10 where i % 2 = 0 select i]
 ```
 
 
-We could use add instead of select
-
-
-```
-var list = [foreach var i in 1 ..< 10 where i % 2 = 0 add i]
-```
-
-
-Applying this to tables would give us something like this:
+Applying this to tables might give us something like this:
 
 
 ```
 var x =
    table [
-      foreach var { firstName, lastName, country } in peopleTable
+      foreach var { firstName, lastName, country } in personList
       where country == "UK"
       add { firstName, lastName }
     ]
@@ -247,15 +211,14 @@ I'm not sure if I like this better.  It feels a little better to me with curly b
 ```
 var x =
    table {
-      foreach var { firstName, lastName, country } in peopleTable
+      foreach var { firstName, lastName, country } in personList
       where country == "UK"
       select { firstName, lastName }
     }
 ```
 
 
-Problems with this:
-
+Problems with this approach:
 
 
 *   does not extend to update/delete
@@ -269,14 +232,14 @@ We want something like this to work:
 
 
 ```
-foreach var { firstName, lastName, country } in peopleTable
+foreach var { firstName, lastName, country } in personList
    where country == "UK"
    orderby firstName, lastName
-   select { firstName, lastName };
+   select { firstName, lastName }
 
-foreach var person in peopleTable
+foreach var person in personList
   orderby person.firstName, person.lastName
-  select person;
+  select person
 ```
 
 
@@ -344,7 +307,7 @@ TBD
 *   not in C# LINQ syntax
 *   not a comprehension
 
-For things that are using the value of a field, this feels natural to me:
+Something like this would be possible:
 
 
 ```
@@ -353,9 +316,8 @@ For things that are using the value of a field, this feels natural to me:
 ```
 
 
-i.e. use an aggregating keyword instead of select (we don't want to reserve these as keywords in expressions generally).
-
-But for count this would mean:
+i.e. use an aggregating keyword instead of select, but it's not very extensible,
+and it would be weird for `count`.
 
 
 ```
@@ -363,75 +325,79 @@ But for count this would mean:
 ```
 
 
-which feels a bit weird. You could just do:
-
-
-```
-    foreach var employee in employeeTable sum 1
-```
-
-
-Or maybe
+An alternative would be too put the aggregation up front:
 
 
 ```
     count foreach var employee in employeeTable
 ```
 
-
-Or do nothing in which case
+Then `sum` might become
 
 ```
-     (foreach var employee in employeeTable select employee).length()
+     sum foreach var employee in employeeTable select employee.salary
 ```
 
+More thought is needed on this.
 
-would work.
+## Insert into
 
+SQL has an INSERT INTO statement that allows rows to be added to a table.
 
-## Update
-
-SQL has update statement (which mutates a table). I think we can make something similar work, e.g:
+We can provide similar functionality via a query statement that does not use the values produced to construct a new structure, but instead adds them to an existing structure. For example:
 
 
 ```
     foreach var employee in employeeTable
     where employee.rating >= 5
-    update { salary: employee.salary + 1000 }
+    insert employee into goodEmployeeTable;
 ```
 
+
+## Mutation
+
+SQL provides statements that mutate the table being iterated over. This cannot be supported by Ballerina's existing iterator interface; a richer interface would be needed.
+
+### Update
+
+SQL has update statement (which mutates a table). We could do something similar, e.g.:
+
+```
+    foreach var employee in employeeTable
+    where employee.rating >= 5
+    update { salary: salary + "1000" };
+```
 
 Semantics are that the row is replaced by a row with the specified fields changed. For this to work the expression after `in` has to evaluate to a table.
 
+### Delete
 
-## Delete
-
-SQL has a delete statement. I think we can make something similar work, e.g.
+SQL has a delete statement. We could do something similar, e.g.:
 
 
 ```
     foreach var employee in employeeTable
-    where employee.rating >= 5
-    delete
+    where employee.rating < 2
+    delete;
 ```
-
 
 or
 
-
 ```
     delete foreach var employee in employeeTable
-    where employee.rating >= 5
+    where employee.rating < 2;
 ```
-
 
 This is different from the filter function in that it mutates the table. Syntactically, this has some similarities with `count`.
 
+## Streaming query
 
-## Related changes
+XXX
+
+## Related language changes
 
 
 *   refine static typing for list and mapping constructors to allow the contextually expected type to be a record or tuple type descriptor rather than just mapping or list type
 *   allow `foreach` statements to have a `where` clause
 *   abbreviated form of mapping constructor (where field is just an identifier), analogous to abbreviated form of mapping binding pattern
-
+*   make spread operator work in mapping constructor
