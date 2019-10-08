@@ -393,7 +393,32 @@ This is different from the filter function in that it mutates the table. Syntact
 
 ## Streaming query
 
-XXX
+For streaming query, there needs to be a way to group things into *windows* based on a timestamp-valued field in each value being iterated over.
+
+Something like this:
+
+```
+window-clause :=
+   "window" binding-pattern
+   ["sliding"|"fixed"] duration-expression
+   "on" timestamp-expression
+```
+
+Sketch of semantics:
+*  timestamp-expression evaluates to a timestamp which is used to compute the windows
+*  duration-expression gives the duration of the window
+*  binding-pattern gets bound to a record `{start: t1, end: t2 }` where t1 and t2 are the start and end timestamps of the window
+
+A group-clause can then be used to group together rows using the variables bound in the binding-pattern of a window-clause.
+
+```
+foreach var r in tab
+window w fixed 10 minutes on r.timestamp
+group r by w.start into var grp
+...
+```
+
+See [One SQL to rule them all](https://arxiv.org/abs/1905.12133).
 
 ## Related language changes
 
