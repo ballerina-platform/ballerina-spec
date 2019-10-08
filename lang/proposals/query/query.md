@@ -50,10 +50,9 @@ A common case is to query some kind of collection of records, where the collecti
 
 A `query-expr` is not restricted to constructing lists. The type of value constructed is determined as follows:
 
-1. If there is a contextually expected type that allows only one basic type of structure, then the contextually expected type determines what is constructed.
-2. Otherwise, it constructs the same kind of thing it is iterating over. In other words the type of the `in` expression in the foreach-clause determines what is constructed. To make this work in an extensible way with objects representing collections, we will need a richer `Queryable` interface similar to `Iteratable` that allows for construction. This could also support queries that mutate collections (see below)
-
-In the first case, the contextually expected type for the `query-expr` will determine the contextually expected type for the expression in the select clause. For the second case, the static typing of mapping constructor expr will need to be refined to work as expected in the select-clause, since the spec currently makes the contextually expected type of a mapping constructor expr be `map<T>` if there is no contextually expected type.
+1. If there is a contextually expected type that allows only one basic type of structure, then the contextually expected type determines what is constructed. In this case,
+the contextually expected type for the `query-expr` will determine the contextually expected type for the expression in the select clause. 
+2. Otherwise, the basic type of the value cthat is constructed comes from the basic type of the value being iterated over. In other words the static type of the `in` expression in the foreach-clause determines the basic type of what is constructed. The static type of the `select` expression determines the member type of what is constructed. The static typing of mapping constructor expr will need to be refined to work as expected in the select-clause, since the spec currently makes the static type of a mapping constructor expr be `map<T>` if there is no contextually expected type; instead we would want to say that when the query-expr has no contextually expected type, the contextually expected type for the select-expr consists of only a preference for a specific record/tuple type rather than a broader map/list. To make this work in an extensible way with objects representing collections, we will need a richer `Queryable` interface similar to `Iteratable` that allows for construction. This could also support queries that mutate collections (see below).
 
 ### Examples
 
