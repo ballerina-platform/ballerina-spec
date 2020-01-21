@@ -4307,6 +4307,7 @@ class="grammar">statement :=
    | fork-stmt
    | panic-stmt
    | return-stmt
+   | lock-stmt
 </pre>
 <p>
 The execution of any statement may involve the evaluation of actions and
@@ -5642,6 +5643,29 @@ evaluating the action-or-expr provides the termination value of the worker. If
 action-or-expr is omitted, then the termination value is nil.
 </p>
 </section>
+
+<section>
+<h3>Lock statement</h3>
+<pre
+class="grammar">lock-stmt := <code>lock</code> block-stmt
+</pre>
+
+<p>
+A lock-stmt executes as if there is a global, recursive mutex that is acquired
+before its block-stmt executes and released after the execution of its
+block-stmt completes. All lock statements acquire the same mutex.
+</p>
+<p>
+The execution of a lock statement in a strand is <em>outermost</em> if the
+strand is not in the process of executing another lock statement. The semantics
+of a lock statement are then that the outermost executions of lock statements
+are not interleaved: there is a single, total order in which they are executed.
+The execution of a lock statement that is not outermost just executes its block
+statement.
+</p>
+
+</section>
+
 </section>
 <section>
 <h2 id="module_level">8. Module-level declarations</h2>
@@ -6405,6 +6429,7 @@ a future version of this specification.
 <code>\u[<em>CodePoint</em>]</code> to <code>\u{<em>CodePoint</em>}</code> so as
 to align with ECMAScript. Although this is an incompatible change, the previous
 syntax was not implemented.</li>
+<li>The <code>lock</code> statement has been added.</li>
 </ol>
 </section>
 <section>
