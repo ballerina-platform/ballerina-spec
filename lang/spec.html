@@ -5704,17 +5704,17 @@ class="grammar">lock-stmt := <code>lock</code> block-stmt
 </pre>
 
 <p>
-A lock-stmt executes as if there is a global, recursive mutex that is acquired
-before its block-stmt executes and released after the execution of its
-block-stmt completes. All lock statements acquire the same mutex.
+A lock-stmt executing in the context of some strand must execute its block-stmt
+in such a way that the effect on the state of the program is consistent with the
+execution of the block-stmt not being interleaved with the execution of a
+lock-stmt on any other strand.
 </p>
 <p>
-The execution of a lock statement in a strand is <em>outermost</em> if the
-strand is not in the process of executing another lock statement. The semantics
-of a lock statement are then that the outermost executions of lock statements
-are not interleaved: there is a single, total order in which they are executed.
-The execution of a lock statement that is not outermost just executes its block
-statement.
+A naive implementation can simply acquire a single, program-wide, recursive mutex
+before executing a lock statement, and release the mutex after completing the
+execution of the lock statement. A more sophisticated implementation can perform
+compile-time analysis to infer a more fine-grained locking strategy that will
+have the same effects as the naive implementation.
 </p>
 
 </section>
