@@ -1514,10 +1514,10 @@ method-decl :=
 method-defn :=
    metadata
    method-defn-quals
-   <code>function</code> method-name function-signature method-body
+   <code>function</code> method-name function-signature method-defn-body
 method-defn-quals := object-visibility-qual [<code>remote</code>]
 method-name := identifier
-method-body := function-body
+method-defn-body := function-defn-body
 </pre>
 <p>
 The names of all the methods of an object must be distinct: there is no method
@@ -1527,7 +1527,7 @@ method or as a method declared by a <a
 href="#built-in_abstract_object_types">built-in abstract object types</a>.
 </p>
 <p>
-Within a <code>method-body</code>, the fields and methods of the object are not
+Within a <code>method-defn-body</code>, the fields and methods of the object are not
 implicitly in-scope; instead the keyword <code>self</code> is bound to the
 object and can be used to access fields and methods of the object.
 </p>
@@ -2439,7 +2439,6 @@ class="grammar">expression :=
    | method-call-expr
    | error-constructor-expr
    | anonymous-function-expr
-   | arrow-function-expr
    | type-cast-expr
    | typeof-expr
    | unary-expr
@@ -3022,13 +3021,13 @@ service-body-block := <code>{</code> service-method-defn* <code>}</code>
 service-method-defn :=
    metadata
    [<code>resource</code>]
-   <code>function</code> identifier function-signature method-body
+   <code>function</code> identifier function-signature method-defn-body
 </pre>
 <p>
 A <code>service-constructor-expr</code> constructs a service value. The result
 of evaluating a service-constructor-expr is a value of type service. If a
 service-method-defn contains a <code>resource</code> qualifier, then it defines
-a resource method. The self variable can be used in a method-body of a
+a resource method. The self variable can be used in a method-defn-body of a
 service-method-defn in the same way as for objects.
 </p>
 <p>
@@ -3531,36 +3530,46 @@ the point where the error constructor was evaluated.
 <h3>Anonymous function expression</h3>
 
 <pre
-class="grammar">anonymous-function-expr :=
-  [annots] <code>function</code> function-signature function-body-block
+class="grammar">anonymous-function-expr := explicit-anonymous-function-expr | infer-anonymous-function-expr
+explicit-anonymous-function-expr := [annots] <code>function</code> function-signature (block-function-body|expr-function-body)
 </pre>
 <p>
 Evaluating an anonymous-function-expr creates a closure, whose basic type is
-function. If function-body-block refers to a block-scope variable defined
-outside of the function-body-block, the closure will capture a reference to that
+function. With an explicit-anonymous-function-expr, the type of the function is
+specified explicitly as usual with a function-signature. With an
+infer-anonymous-function-expr, the type of the function is inferred.
+</p>
+<p>
+If block-function-body refers to a block-scope variable defined
+outside of the block-function-body, the closure will capture a reference to that
 variable; the captured reference will refer to the same storage as the original
 reference not a copy.
 </p>
-</section>
-<section>
-<h3>Arrow function expression</h3>
 
 <pre
-class="grammar">arrow-function-expr := arrow-param-list <code>=></code> expression
-arrow-param-list :=
+class="grammar">expr-function-body := <code>=></code> expression
+</pre>
+<p>
+An expr-function-body of the form <code>=> <var>E</var></code> is short for a
+block-function-body <code>{ return <var>E</var >}</code>.
+</p>
+
+<pre
+class="grammar">infer-anonymous-function-expr := infer-param-list expr-function-body
+infer-param-list :=
    identifier
    | <code>(</code>[identifier (<code>,</code> identifier)*]<code>)</code>
 </pre>
 <p>
-Arrow functions provide a convenient alternative to anonymous function
-expressions that can be used for many simple cases. An arrow function can only
-be used in a context where a function type is expected. The types of the
-parameters are inferred from the expected function type. The scope of the
-parameters is <code>expression</code>. The static type of the arrow function
-expression will be a function type whose return type is the static type of
-<code>expression</code>. If the contextually expected type for the
-<code>arrow-function-expr</code> is a function type with return type T, then the
-contextually expected type for <code>expression</code> is T.
+An infer-anonymous-function-expr can only be used in a context where a function
+type is expected. The types of the parameters are inferred from the expected
+function type. The scope of the parameters is <code>expr-function-body</code>.
+The static type of the infer-anonymous-function-expr will be a function type
+whose return type is the static type of the <code>expression</code> in
+<code>expr-function-body</code>. If the contextually expected type for the
+<code>anonymous-function-expr</code> is a function type with return type T, then
+the contextually expected type for <code>expression</code> in
+<code>expr-function-body</code> is T.
 </p>
 </section>
 <section>
@@ -4181,7 +4190,7 @@ strand must be part of the same thread as the current strand.
 <h3>Function and worker execution</h3>
 
 <pre
-class="grammar">function-body-block :=
+class="grammar">block-function-body :=
    <code>{</code> [default-worker-init named-worker-decl+] default-worker <code>}</code>
 default-worker-init := sequence-stmt
 default-worker := sequence-stmt
@@ -4258,13 +4267,13 @@ words, falling off the end of a worker is equivalent to <code>return;</code>,
 which is in turn equivalent to <code>return ();</code>.
 </p>
 <p>
-The parameters declared for a function are in scope in the function-body-block.
+The parameters declared for a function are in scope in the block-function-body.
 They are implicitly final: they can be read but not modified. They are in scope
 for named workers as well as for the default worker.
 </p>
 <p>
 The scope of a worker-name in a named-worker-decl that is part of a
-function-body-block is the entire function-body-block with the exception of the
+block-function-body is the entire block-function-body with the exception of the
 default-worker-init. When a worker-name is in scope, it can be used in a
 variable-reference-expr. The result of evaluating such a variable reference is a
 future value that refers to the value to be returned by that named worker. The
@@ -4355,7 +4364,7 @@ consists of both other workers in the same fork-stmt and the block containing
 the fork-stmt starting from the point immediately after the fork-stmt. Within
 its scope, the worker-name can be used in a variable-reference-expr in the same
 way as the worker-name of a named-worker-decl that is part of a
-function-body-block.
+block-function-body.
 </p>
 </section>
 <section>
@@ -5934,9 +5943,12 @@ fails.</li>
 class="grammar">function-defn := 
    metadata
    [<code>public</code>]
-   <code>function</code> identifier function-signature function-body
-function-body := function-body-block | external-function-body
-external-function-body := <code>=</code> [annots] <code>external</code> <code>;</code>
+   <code>function</code> identifier function-signature function-defn-body
+function-defn-body :=
+   block-function-body
+   | expr-function-body <code>;</code>
+   | external-function-body <code>;</code>
+external-function-body := <code>=</code> [annots] <code>external</code> 
 </pre>
 <p>
 An <code>external-function-body</code> means that the implementation of the
