@@ -2439,6 +2439,7 @@ class="grammar">expression :=
    | method-call-expr
    | error-constructor-expr
    | anonymous-function-expr
+   | let-expr
    | type-cast-expr
    | typeof-expr
    | unary-expr
@@ -2589,9 +2590,14 @@ associativity.
    <td>right</td>
   </tr>
   <tr>
-   <td><code>(x) => y</code></td>
+   <td>
+<code>(x) => y</code>
+<br />
+<code>let x = y in z</code>
+   </td>
    <td>right</td>
   </tr>
+
 </table>
 <section>
 <h3>Expression evaluation</h3>
@@ -3572,6 +3578,44 @@ the contextually expected type for <code>expression</code> in
 <code>expr-function-body</code> is T.
 </p>
 </section>
+
+<section>
+<h3>Let expression</h3>
+
+<pre
+class="grammar">let-expr := <code>let</code> let-var-decl [<code>,</code> let-var-decl]* <code>in</code> expression
+let-var-decl := [annots] typed-binding-pattern <code>=</code> expression
+</pre>
+
+<p>
+A let-expr binds variables and then evaluates an expression with those variables in scope.
+</p>
+<p>
+A let-expr <code>let T B = E<sub>1</sub> in E<sub>2</sub></code> is evaluated as
+follows. E<sub>1</sub> is evaluated resulting in a value v. The typed binding
+pattern T B is matched to v, causing assignments to the variables occuring in B.
+Then E<sub>2</sub> is evaluated with those variables in scope; the resulting
+value is the result of the let-expr.
+</p>
+<p>
+A let-expr <code>let D<sub>1</sub>, D<sub>2</sub>,...,D<sub>n</sub> in E</code>
+is transformed into <code>let D<sub>1</sub> in let D<sub>2</sub> in ... let
+D<sub>n</sub> in E</code>.
+</p>
+<p>
+The typed-binding-pattern is used unconditionally, meaning that it is a compile
+error if the static types do not guarantee the success of the match. If the
+typed-binding-pattern uses <code>var</code>, then the type of the variable is
+inferred from the precise static type of the expression following
+<code>=</code>.
+</p>
+<p>
+Since expressions cannot modify variables, the variables bound in a let-var-decl
+are implicitly final.
+</p>
+
+</section>
+
 <section>
 <h3>Type cast expression</h3>
 
@@ -6233,7 +6277,7 @@ descriptor</td>
   </tr>
   <tr>
    <td>var</td>
-   <td>module-var-decl, local-var-decl-stmt</td>
+   <td>module-var-decl, local-var-decl-stmt, let-var-decl</td>
    <td>none</td>
   </tr>
   <tr>
@@ -6437,11 +6481,12 @@ a future version of this specification.
 <section>
 <h3>Summary of changes from 2019R3 to 2020R1</h3>
 <ol>
+<li>Let expressions have been added.</li>
+<li>The <code>lock</code> statement has been added.</li>
 <li>The syntax for Unicode escapes in strings has changed from
 <code>\u[<em>CodePoint</em>]</code> to <code>\u{<em>CodePoint</em>}</code> so as
 to align with ECMAScript. Although this is an incompatible change, the previous
 syntax was not implemented.</li>
-<li>The <code>lock</code> statement has been added.</li>
 </ol>
 </section>
 <section>
