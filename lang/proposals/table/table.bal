@@ -14,7 +14,7 @@ public function iterator(table<RowType> tbl)
    returns abstract object {
       public next() returns record {|
          RowType value;
-      |}
+      |}?
    } = external;
 
 public function 'map(table<RowType> tbl, function(RowType row) returns RowType1 func)
