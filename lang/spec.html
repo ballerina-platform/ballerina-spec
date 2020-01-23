@@ -2455,6 +2455,7 @@ class="grammar">expression :=
    | conditional-expr
    | checking-expr
    | trap-expr
+   | query-expr
    | <code>(</code> expression <code>)</code>
 </pre>
 <p>
@@ -4151,6 +4152,153 @@ result of trap-exp is e</li>
 <li>If type of <code>expr</code> is T, then type of <code>trap expr</code> is
 T|error.</li>
 </ul>
+</section>
+
+<section>
+<h3>Query expression</h3>
+<p>
+A query expression provides a language-integrated query feature using SQL-like
+syntax. In this version of Ballerina, the functionality is similar to a list
+comprehensions; future versions will provided richer functionality.
+</p>
+
+<pre class="grammar">query-expr := query-pipeline select-clause
+query-pipeline := from-clause intermediate-clause*
+intermediate-clause :=
+   from-clause
+   | where-clause
+   | let-clause
+</pre>
+<p>
+A query expression consists of a sequence of clauses. The semantics of clauses
+is specified in terms of transforming a sequence of frames, where a frame is a
+binding of variables to values. The input to each clause is a sequence of
+frames. As each clause is executed, it iterates over its input frames and emits
+output: the final clause, which is a <code>select</code> clause, emits output
+<em>values</em>; the other clauses emit output <em>frames</em>. When a
+query-expr is evaluated, its clauses are executed in a pipeline by making the
+sequence of frames emitted by one clause be the input to the next clause. Each
+clause in the pipeline is executed lazily, pulling input from its preceding
+clause. The input to the first clause is a single empty frame.
+</p>
+<p>
+The result of evaluating a query expression is a single value, which is
+constructed from the sequence of values emitted by the last clause. The result
+must be one of the following basic types:
+</p>
+<ul>
+<li>list - the constructed list has a member for each emitted value; every
+emitted value must beloing to type T, where T[] is the type of the constructed
+value</li>
+<li>table - the constructed table has a row for each emitted value;
+every emitted value must belong to type T, where the constructed value belongs
+to type table&lt;T&gt;</li>
+<li>string - the constructed string is the concatenation of the emitted values;
+every emitted value must be of type string</li>
+<li>xml - the constructed xml value is the concatenation of the emitted values;
+every emitted value must be of type xml</li>
+</ul>
+<p>
+The applicable contextually expected type determines which basic type is
+constructed. If there is no contextually expected type, then it is determined
+from the static type of the expression in the initial <code>from</code> clause;
+it is a compile-time error if this static type is not a subtype of one of the
+basic types that a query expression can construct.
+</p>
+<!-- only relevant with query actions
+<p>
+Variables bound by the clauses of a query expression are implicitly final, and
+cannot be modified.
+</p>
+-->
+
+<section>
+<h4>From clause</h4>
+<pre class="grammar">from-clause := <code>from</code> typed-binding-expr <code>in</code> expression
+</pre>
+<p>
+A <code>from</code> clause is executed as follows:
+</p>
+<ul>
+<li>for each input frame <var>f</var>
+<ul>
+<li>evaluate the <code>in</code> expression with <var>f</var> in scope resulting
+in an iterable value <var>c</var>;</li>
+<li>create an Iterator object <var>i</var> from <var>c</var></li>
+<li>do the following in a loop <var>L</var>
+<ul>
+<li>call <code><var>i</var>.next()</code> resulting in a value <var>r</var>;</li>
+<li>if <var>r</var> is <code>()</code>, stop loop <var>L</var>;</li>
+<li>let <var>v</var> be <code><var>r</var>.value</code>;</li>
+<li>emit a frame consisting of <var>f</var> augmented with the variables
+resulting from binding typed-binding-pattern to <var>v</var>.</li>
+</ul>
+</li>  
+</ul>
+</li>  
+</ul>
+</section>
+
+<section>
+<h4>Where clause</h4>
+<pre class="grammar">where-clause := <code>where</code> expression
+</pre>
+<p>
+A <code>where</code> clause is executed as follows:
+</p>
+<ul>
+<li>for each input frame <var>f</var> 
+<ul>
+<li>execute the <code>expression</code> with <var>f</var> in scope resulting in
+value <var>b</var>;</li>
+<li>if <var>b</var> is true, emit <var>f</var>.</li>
+</ul>
+</li> 
+</ul>
+</section>
+
+<section>
+<h4>Let clause</h4>
+<pre class="grammar">let-clause := <code>let</code> let-var-decl [<code>,</code> let-var-decl]* 
+</pre>
+<p>
+A <code>let</code> clause consisting of a single let-var-decl is executed as follows:
+</p>
+<ul>
+<li>for each input frame <var>f</var> 
+<ul>
+<li>evaluate the expression with <var>f</var> in scope resulting in a value <var>v</var>;</li>
+<li>emit a frame consisting of <var>f</var> augmented with the result of binding
+type-binding-pattern to <var>v</var>.</li>
+</ul>
+</li> 
+</ul>
+<p>
+A <code>let</code> clause with more than one <code>let-var-decl</code> is
+transformed into multiple <code>let</code> clauses: <code>let x<sub>1</sub> =
+E<sub>1</sub>, x<sub>2</sub> = E<sub>2</sub></code> is transformed into
+<code>let x<sub>1</sub> = E<sub>1</sub> let x<sub>2</sub> =
+E<sub>2</sub></code>.
+</p>
+</section>
+
+<section>
+<h4>Select clause</h4>
+<pre class="grammar">
+select-clause := <code>select</code> expression
+</pre>
+<p>
+A <code>select</code> clause is executed as follows:
+</p>
+<ul>
+<li>for each input frame <var>f</var> 
+<ul>
+<li>evaluate the expression with <var>f</var> in scope resulting in value <var>v</var></li>
+<li>emit <var>v</var></li> 
+</ul>
+</li> 
+</ul>
+</section>
 </section>
 </section>
 <section>
@@ -6481,6 +6629,8 @@ a future version of this specification.
 <section>
 <h3>Summary of changes from 2019R3 to 2020R1</h3>
 <ol>
+<li>Query expressions have been added. This is the first stage of
+language-integrated query.</li>
 <li>Let expressions have been added.</li>
 <li>The <code>lock</code> statement has been added.</li>
 <li>The syntax for Unicode escapes in strings has changed from
@@ -6792,8 +6942,6 @@ functionality covers the following areas.
 </p>
 
 <ul>
-<li><em>Language-integrated query</em> will provide a convenient SQL-like syntax
-for expressing queries on tables, and perhaps on other types.</li>
 <li><em>Transactions</em> will provide language support both local and
 distributed transactions.</li>
 <li><em>Event stream processing</em> will allow queries over timestamped
