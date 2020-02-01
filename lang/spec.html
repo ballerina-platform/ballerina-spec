@@ -344,49 +344,64 @@ is partitioned into a number of <em>basic types</em>; every value belongs to
 exactly one basic type.
 </p>
 <p>
-Values are of three kinds, each corresponding to a kind of basic type:
+Values are of four kinds, each corresponding to a kind of basic type:
 </p>
 <ul>
 <li>simple values, like booleans and floating point numbers, which are not
 constructed from other values;</li>
 <li>structured values, like mappings and lists, which create structures from
 other values;</li>
+<li>sequence values, which combine aspects of simple values and structured
+values;</li>
 <li>behavioral values, like functions, which allow parts of Ballerina programs
 to be handled in a uniform way with other values</li>
 </ul>
 <p>
-Values can be stored in variables or as members of structures. A simple value is
-stored directly in the variable or structure. However, for other types of value,
-what is stored in the variable or member is a reference to the value; the value
-itself has its own separate storage. Non-simple types (i.e. structured types and
-behavioral types) are thus collectively called reference types. A reference
-value has an identity determined by its storage location. References make it
-possible for distinct members of a structure to refer to values that are
-identical, in the sense that they are stored in the same location. Thus values
-in Ballerina represent not just trees but graphs.
+There is a fundamental distinction between values that have a <em>storage
+identity</em> and values that do not. A value that has storage identity has an
+identity that comes from the location where the value is stored. All structural
+and behavioural values have a storage identity, whereas all simple values do
+not. Storage identity for sequences is more complicated and will be explained in
+the section on sequence values.
 </p>
 <p>
-Simple values are inherently immutable because they have no identity distinct
-from their value. All basic types of structural values, with the exception of
-XML, are mutable, meaning the value referred to by a particular reference
-can be changed. Whether a behavioral value is mutable depends on its basic
-type: some of the behavioral basic types allow mutation, and some do not.
-Mutation cannot change the basic type of a value. Mutation makes it possible for
-the graphs of references between values to have cycles.
+Values can be stored in variables or as members of structures. When a value has
+no storage identity, it can be stored directly in the variable or structure.
+However, when a value has storage identity, what is stored in the variable or
+member is a reference to the location where the value is stored rather than the
+value itself. Storage identity allows values in Ballerina to represent not just
+trees but graphs.
+</p>
+<p>
+Ballerina provides the ability to test whether two values have the same storage
+identity, but does not expose the specific storage location of a value. For
+values with storage identity, there is the concept of creating a <em>new</em>
+value: this means creating a value that has a storage identity that is different
+from any existing value. For values with storage identity, there is also the
+concept of <em>copying</em>: it means to create a value that is the same, except
+for having a new storage identity. The concept of having storage identity is
+similar to the concept of a reference type in some other programming languages,
+but also accomodates the concept of a sequence.
+</p>
+<p>
+Storage identity is tied to mutability. Mutation is only well-defined for values
+with storage identity. When a value stored in some storage location is mutated,
+the change will be visible through all variables referring to the value in that
+location. But not all values with storage identity can be mutated: a value may
+not support mutation even though it has a storage identity.
 </p>
 <p>
 Ballerina programs use types to categorize values both at compile-time and
-runtime. Types deal with an abstraction of values, which does not consider
-storage location or mutability. This abstraction is called a <em>shape</em>. A
-type denotes a set of shapes. Subtyping in Ballerina is <em>semantic</em>: a
-type S is a subtype of type T if the set of shapes denoted by S is a subset of
-the set of shapes denoted by T. Every value has a corresponding shape. A shape
-is specific to a basic type: if two values have different basic types, then they
-have different shapes. Since shapes do not deal with storage location, they have
-no concept of identity; shapes therefore represent trees rather graphs. For
-simple values, there is no difference between a shape and a value, with the
-exception of floating point values where the shape does not consider
-representation details that do not affect the mathematical value being
+runtime. Types deal with an abstraction of values that does not consider storage
+identity. This abstraction is called a <em>shape</em>. A type denotes a set of
+shapes. Subtyping in Ballerina is <em>semantic</em>: a type S is a subtype of
+type T if the set of shapes denoted by S is a subset of the set of shapes
+denoted by T. Every value has a corresponding shape. A shape is specific to a
+basic type: if two values have different basic types, then they have different
+shapes. Since shapes do not deal with storage identity, they represent trees
+rather graphs. For simple values, there is no difference between a shape and a
+value, with the exception of floating point values where the shape does not
+consider representation details that do not affect the mathematical value being
 represented. There are two important relations between a value and a type:
 </p>
 <ul>
@@ -409,6 +424,7 @@ use it to create a value that belongs to a type.
 <pre
 class="grammar">type-descriptor :=
    simple-type-descriptor
+   | sequence-type-descriptor
    | structured-type-descriptor
    | behavioral-type-descriptor
    | other-type-descriptor
@@ -432,7 +448,7 @@ The following table summarizes the type descriptors provided by Ballerina.
    <td><strong>Set of values denoted by type descriptor</strong></td>
   </tr>
   <tr>
-   <td rowspan="6" >basic, simple</td>
+   <td rowspan="5" >basic, simple</td>
    <td>nil</td>
    <td>()</td>
   </tr>
@@ -453,14 +469,20 @@ The following table summarizes the type descriptors provided by Ballerina.
    <td>decimal floating point numbers</td>
   </tr>
   <tr>
+   <td rowspan="2" >basic, sequence</td>
    <td>string</td>
-   <td>sequences of Unicode scalar values</td>
+   <td>a sequence of Unicode scalar values</td>
   </tr>
   <tr>
-   <td rowspan="7" >basic, structured</td>
+   <td>XML</td>
+   <td>a sequence of zero or more characters, XML elements, processing
+instructions or comments</td>
+  </tr>
+  <tr>
+   <td rowspan="6" >basic, structured</td>
    <td>array</td>
    <td>an ordered list of values, optionally with a specific length, where a
-single type is specified for all members of the list,</td>
+single type is specified for all members of the list</td>
   </tr>
   <tr>
    <td>tuple</td>
@@ -480,11 +502,6 @@ terms of names of fields (required keys) and value for each field</td>
   <tr>
    <td>table</td>
    <td>a two-dimensional collection of immutable values</td>
-  </tr>
-  <tr>
-   <td>XML</td>
-   <td>a sequence of zero or more characters, XML elements, processing
-instructions or comments</td>
   </tr>
   <tr>
    <td>error</td>
@@ -556,9 +573,9 @@ information may need to be resolved at runtime. The typedesc basic type
 represents a type descriptor that has been resolved.
 </p>
 <p>
-Most basic types of structured values (along with one basic type of simple
-value) are iterable, meaning that a value of the type can be accessed as a
-sequence of simpler values.
+All sequence values and all but one basic type of structured values are
+iterable, meaning that a value of the type can be accessed as a sequence of
+simpler values.
 </p>
 
 <section>
@@ -572,7 +589,6 @@ A simple value belongs to exactly one of the following basic types:
 <li>int</li>
 <li>float</li>
 <li>decimal</li>
-<li>string</li>
 </ul>
 <p>
 The type descriptor for each simple basic type contains all the values of the
@@ -585,7 +601,6 @@ class="grammar">simple-type-descriptor :=
    | boolean-type-descriptor
    | int-type-descriptor
    | floating-point-type-descriptor
-   | string-type-descriptor
 </pre>
 <section>
 <h4>Nil</h4>
@@ -739,6 +754,68 @@ do so using different exponents.
 </p>
 </section>
 </section>
+</section>
+<section>
+<h3>Sequence values</h3>
+<p>
+A sequence value belongs to one of the following two basic types:
+</p>
+<ul>
+<li>string</li>
+<li>xml</li>
+</ul>
+<p>
+A sequence value consists of an ordered sequence of zero or more constituent
+items, where the constituent items belong to the same basic type as the sequence
+value itself. The <em>length</em> of a sequence is the number of its constituent
+items. A sequence is a <em>singleton</em> if its length is 1. For each sequence
+basic type, there is an <em>empty</em> value, which has length 0. As with other
+basic types, the sequence basic types are disjoint with themselves and with
+other basic types. Thus the empty value for string is distinct from the empty
+value for xml, and these are both distinct from nil.
+</p>
+<p>
+The values belonging to a sequence basic type B can be defined in terms of its
+singleton values and a concatenation operation, by the following rules:
+</p>
+<ul>
+<li>
+the singleton values of B belong to B;
+</li>
+<li>
+the empty value of B belongs to B;
+</li>
+<li>
+if v<sub>1</sub> and v<sub>2</sub> belong to B, then the concatenation of
+v<sub>1</sub> and v<sub>2</sub> belongs to B.
+</li>
+</ul>
+<p>
+The concatenation of any value v belonging to B with the empty sequence of B in
+either order is v.
+</p>
+<p>
+Note that for a sequence consisting of a single item v is the same thing as v. A
+single item <em>is a</em> sequence. The type of the constituent items of a
+sequence of basic type B is thus a subtype of B. This is a fundamental
+difference between sequences and lists.
+</p>
+<p>
+Only singleton values of a sequence can have storage identity. When a
+constituent of a sequence has storage identity, what is stored in the sequence
+is a reference to the location where the constituent is stored rather than the
+value itself.
+</p>
+<p>
+A sequence value is iterable as a sequence of its constituent values.
+</p>
+
+<pre
+class="grammar">sequence-type-descriptor :=
+   string-type-descriptor
+   | xml-type-descriptor
+</pre>
+
 <section>
 <h4>Strings</h4>
 
@@ -753,7 +830,8 @@ StringNumericEscape := <code>\u{</code> CodePoint <code>}</code>
 CodePoint := HexDigit+
 </pre>
 <p>
-A string is an immutable sequence of zero or more Unicode scalar values, where a
+A string is an sequence of zero or more Unicode characters. More precisely, it
+is a sequence whose singleton values represent Unicode scalar values, where a
 Unicode scalar value is any code point in the Unicode range of 0x0 to 0x10FFFF
 inclusive, other than surrogate code points, which are 0xD800 to 0xDFFF
 inclusive. Note that a string may include Unicode noncharacters, such as 0xFFFE
@@ -766,16 +844,83 @@ integer <em>n</em> where 0 &lt;= <em>n</em> &lt; 0xD800 or 0xDFFF &lt; n &lt;=
 0x10FFFF.
 </p>
 <p>
-A string is iterable as a sequence of its single code point substrings. String
-is the only simple type that is iterable.
+String values do not have storage identity and so are immutable.
 </p>
 </section>
+<section>
+<h4>[Preview] XML</h4>
+
+<pre class="grammar">xml-type-descriptor := <code>xml</code>
+</pre>
+<p>
+An XML value is a sequence representing parsed XML, such as occurs in the
+content of an XML element. The singleton values are of the following types:
+</p>
+<ul>
+<li>element</li>
+<li>processing instruction</li>
+<li>comment</li>
+<li>text</li>
+</ul>
+<p>
+The element, processing instruction and comment singletons correspond directly
+to information items in the XML Information Set. A text singleton corresponds to
+one or more character information items. When an XML value is constructed,
+consecutive text singletons are merged, so that an XML value never contains
+consecutive text singletons.
+</p>
+<p>
+The attributes of an element are represented by a value of type
+<code>map&lt;string&gt;</code>. The content of an element is represented by an
+XML value.
+</p>
+<p>
+The name of an XML element or attribute, which in the XML Information Set is
+represented by a combination of the [namespace name] and [local name]
+properties, is represented by a single string. If the [namespace name] property
+has no value, then the string consists of just the value of the [local name]
+property; otherwise, the string is of the form:
+</p>
+<pre>
+   {<var>namespace-name</var>}<var>local-name</var>
+</pre>
+<p>
+where <code><var>namespace-name</var></code> and
+<code><var>local-name</var></code> are the values of the [namespace name] and
+[local name] properties respectively. The attributes of an XML element include
+attributes that appear as members of the [namespace attributes] property of an
+element information item, as well as those that appear as members of the
+[attributes] property.
+</p>
+<p>
+Singleton element, processing instruction and comment values have storage
+identity. Other XML values do not.
+</p>
+<p>
+An XML value is immutable if and only if all its constituent singletons are
+immutable. A text singleton is inherently immutable, since it does not have
+storage identity. The other singleton types are usually mutable, but can be
+constructed as immutable in two ways. First, an XML value constructed by a
+compile-time constant expression is immutable. Second, an immutable, deep copy
+can be made of a structure by using the <a
+href="#ImmutableClone">ImmutableClone</a> abstract operation. Element
+immutability is deep: the content of an immutable XML element is always
+immutable.
+</p>
+<p>
+Note that although the mutable constituents of mutable XML value can be mutated,
+the number and the storage identity of the constituents of a XML value are fixed
+when the value is constructed. The storage identity of the attributes map of an
+element are also fixed when the element is constructed.
+</p>
+</section>
+
 </section>
 <section>
 <h3>Structured values</h3>
 <p>
-There are five basic types of structured value. First, there are two container
-basic types: list and mapping. Second, there are the table, xml and error basic
+There are four basic types of structured value. First, there are two container
+basic types: list and mapping. Second, there are the table and error basic
 types, which are each special in different ways.
 </p>
 <p>
@@ -823,7 +968,6 @@ class="grammar">structured-type-descriptor :=
    list-type-descriptor
    | mapping-type-descriptor
    | table-type-descriptor
-   | xml-type-descriptor
    | error-type-descriptor
 </pre>
 <p>
@@ -1191,59 +1335,6 @@ A table is iterable as a sequence of mapping values, one for each row; the
 inherent type of each mapping value will be a closed record type.
 </p>
 
-</section>
-<section>
-<h4>[Preview] XML</h4>
-
-<pre class="grammar">xml-type-descriptor := <code>xml</code>
-</pre>
-<p>
-An XML value represents a sequence of zero or more of the items that can occur
-inside an XML element, specifically:
-</p>
-<ul>
-<li>elements</li>
-<li>characters</li>
-<li>processing instructions</li>
-<li>comments</li>
-</ul>
-<p>
-A single XML item, such as an element, is represented by a sequence consisting
-of just that item; these are called <em>singleton</em> xml values. The
-attributes of an element are represented by a map&lt;string&gt;. The content of
-each element in the sequence is itself a distinct XML value.
-</p>
-<p>
-The name of an XML element or attribute, which in the XML Information Set is
-represented by a combination of the [namespace name] and [local name]
-properties, is represented by a single string. If the [namespace name] property
-has no value, then the string consists of just the value of the [local name]
-property; otherwise, the string is of the form:
-</p>
-<pre>
-   {<var>namespace-name</var>}<var>local-name</var>
-</pre>
-<p>
-where <code><var>namespace-name</var></code> and
-<code><var>local-name</var></code> are the values of the [namespace name] and
-[local name] properties respectively. The attributes of an XML element include
-attributes that appear as members of the [namespace attributes] property of an
-element information item, as well as those that appear as members of the
-[attributes] property.
-</p>
-<p>
-XML values allow mutation in a different way from containers. Element items can
-be mutated; in particular, an element can be mutated to change its content to be
-another XML value. But other items are immutable. Furthermore, once an XML value
-is constructed, which items comprise the sequence it represents is fixed. Thus
-an XML value consising of only character items is immutable in the same way as a
-string.
-</p>
-<p>
-An XML value is iterable as a sequence of its items, where each character item
-is represented by a string of length one and other items are represented by a
-singleton XML value.
-</p>
 </section>
 <section>
 <h4>Error</h4>
@@ -2126,12 +2217,13 @@ and the filler value for B also belongs to the union</td>
 <h4 id="Clone">Clone</h4>
 <p>
 Clone(v) is defined for any pure value v. It performs a deep copy, recursively
-copying all structural values and their members. Clone(v) for a immutable value
-v returns v. If v is a container, Clone(v) has the same inherent type as v. The
-graph of references of Clone(v) must have the same structure as that of v. This
-implies that the number of distinct references reachable from Clone(v) must be
-the same as the number of distinct references reachable from v. Clone(v) must
-terminate for any pure value v, even if v has cycles.
+copying all structural values and their members and recursively copy all
+sequence values and their constituents. Clone(v) for an immutable value v returns
+v. If v is a container, Clone(v) has the same inherent type as v. The graph of
+references of Clone(v) must have the same structure as that of v. This implies
+that the number of distinct references reachable from Clone(v) must be the same
+as the number of distinct references reachable from v. Clone(v) must terminate
+for any pure value v, even if v has cycles.
 </p>
 <p>
 Clone(v) cannot be implemented simply by recursively calling Clone on all
@@ -4000,14 +4092,29 @@ is a compile time error if the intersection of the static types of the operands
 is empty.
 </p>
 <p>
-The === operator tests for exact equality.  The !== operator results in the
-negation of the result of the === operator.  Two values are exactly equal if
-they have the same basic type T and
+The === operator tests for exact equality. The !== operator results in the
+negation of the result of the === operator. Two values v<sub>1</sub> and
+v<sub>2</sub> are exactly equal if they have the same basic type T and
 </p>
 <ul>
-<li>if T is simple type, the values are identical values within the set of
-values allowed for T</li>
-<li>if T is a reference type, the values refer to the same storage</li>
+<li>T is simple type, and  v<sub>1</sub> and v<sub>2</sub> are identical values
+within the possible of values allowed for T;</li>
+<li>T is a sequence type, and the length of v<sub>1</sub> is the same as the length of v<sub>2</sub> and
+<ul>
+<li>the length is 1, and either
+<ul>
+<li>v<sub>1</sub> and v<sub>2</sub> both have storage identity and that storage
+identity is the same, or</li>
+<li>v<sub>1</sub> and v<sub>2</sub> both do not have storage identity and the
+shape of v<sub>1</sub> is the same as the shape of v<sub>2</sub></li>
+</ul>
+</li>
+<li>the length is not 1, and every constituent of v<sub>1</sub> is exactly equal
+as the corresponding constituent of v<sub>2</sub>;</li>
+</ul>
+</li>
+<li>T is a structural or behavioural type, and the storage identity of
+v<sub>1</sub> is the same as the storage identity of v<sub>2</sub>.</li>
 </ul>
 <p>
 The == operator tests for deep equality. The != operator results in the negation
@@ -6643,6 +6750,9 @@ language-integrated query.</li>
 <code>\u[<em>CodePoint</em>]</code> to <code>\u{<em>CodePoint</em>}</code> so as
 to align with ECMAScript. Although this is an incompatible change, the previous
 syntax was not implemented.</li>
+<li>Improved XML design, with new treatment of identity. Characters in XML
+content are merged into a single text item. Iteration over XML values exposes
+characters as text items.</li>
 </ol>
 </section>
 <section>

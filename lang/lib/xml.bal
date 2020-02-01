@@ -27,10 +27,9 @@ public function length(xml x) returns int = external;
 #
 # + x - xml item to iterate
 # + return - iterator object
-# A character item is represented by a string of length 1.
-# Other items are represented by xml singletons.
+# Each item is represented by an xml singleton.
 public function iterator(xml x) returns abstract object {
-    public function next() returns record {| (xml|string) value; |}?;
+    public function next() returns record {| xml value; |}?;
 } = external;
 
 # Concatenates xml and string values.
@@ -58,10 +57,10 @@ public function isProcessingInstruction(xml x) returns boolean = external;
 # + return - true if `x` consists of only a comment item; false other
 public function isComment(xml x) returns boolean = external;
 
-# Tests whether an xml sequence consists of zero or more character items.
+# Tests whether an xml sequence is either empty or consists only of a text item.
 #
 # + x - xml value
-# + return - true if `x` is a sequence containing only character items; false otherwise
+# + return - true if `x` is empty or consists only of a text item
 public function isText(xml x) returns boolean = external;
 
 # Represents a parameter for which isElement must be true.
@@ -170,27 +169,27 @@ public function elements(xml x) returns xml = external;
 // Functional programming methods
 
 # Applies a function to each item in an xml sequence, and returns an xml sequence of the results.
-# This represents each item in the same way as the `iterator` function.
+# Each item is represented as a singleton value.
 #
 # + x - the xml value
 # + func - a function to apply to each child or `item`
 # + return - new xml value containing result of applying function `func` to each child or `item`
-public function map(xml x, function(xml|string item) returns xml|string func) returns xml = external;
+public function map(xml x, function(xml item) returns xml func) returns xml = external;
 
 # Applies a function to each item in an xml sequence.
-# This represents each item in the same way as the `iterator` function.
+# Each item is represented as a singleton value.
 #
 # + x - the xml value
 # + func - a function to apply to each item in `x`
-public function forEach(xml x, function(xml|string item) returns () func) = external;
+public function forEach(xml x, function(xml item) returns () func) = external;
 
 # Selects the items from an xml sequence for which a function returns true.
-# This represents each item in the same way as the `iterator` function.
+# Each item is represented as a singleton value.
 #
 # + x - xml value
 # + func - a predicate to apply to each item to test whether it should be selected
 # + return - new xml sequence containing items in `x` for which `func` evaluates to true
-public function filter(xml x, function(xml|string item) returns boolean func) returns xml = external;
+public function filter(xml x, function(xml item) returns boolean func) returns xml = external;
 
 # Constructs an xml value from a string.
 # This parses the string using the `content` production of the
