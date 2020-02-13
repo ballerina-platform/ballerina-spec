@@ -6733,6 +6733,110 @@ type is an upper bound on the type parameter.
 a future version of this specification.
 </p>
 
+<section>
+<h3>Built-in subtypes</h3>
+<p>
+A module in the lang library can provide types that are <em>built-in</em> in the
+sense that their meaning is defined by this specification. Each such built-in
+type is a subtype of a single basic type; a built-in type that is a subtype of a
+basic type <code><var>B</var></code> is provided by the module
+<code>lang.<var>B</var></code>.
+</p>
+<p>
+The built-types provided by lang library modules are described in the following
+table.
+</p>
+
+<table>
+<tr>
+<th>Basic type</th>
+<th>Type name</th>
+<th>Criteria for <em>v</em> to belong to type</th>
+</tr>
+<tr>
+<td rowspan="6">int</td>
+<td>Unsigned8</td>
+<td>0 &#x2264; <em>v</em> &#x2264; 255</td>
+</tr>
+<tr>
+<td>Signed8</td>
+<td>-128 &#x2264; <em>v</em> &#x2264; 127</td>
+</tr>
+<tr>
+<td>Unsigned16</td>
+<td>0 &#x2264; <em>v</em> &#x2264; 65,535</td>
+</tr>
+<tr>
+<td>Signed16</td>
+<td>-32,768 &#x2264; <em>v</em> &#x2264; 32,767</td>
+</tr>
+<tr>
+<td>Unsigned32</td>
+<td>0 &#x2264; <em>v</em> &#x2264; 4,294,967,295</td>
+</tr>
+<tr>
+<td>Signed32</td>
+<td>-2,147,483,648‬ &#x2264; <em>v</em> &#x2264; 2,147,483,6487</td>
+</tr>
+<tr>
+<td>string</td>
+<td>Char</td>
+<td><em>v</em> has length 1</td>
+</tr>
+<tr>
+<td rowspan="4">xml</td>
+<td>Element</td>
+<td><em>v</em> is an element singleton</td>
+</tr>
+<tr>
+<td>ProcessingInstruction</td>
+<td><em>v</em> is a processing instruction singleton</td>
+</tr>
+<tr>
+<td>Comment</td>
+<td><em>v</em> is a comment singleton</td>
+</tr>
+<tr>
+<td>Text</td>
+<td><em>v</em> is either the empty sequence or a text singleton</td>
+</tr>
+</table>
+<p>
+Each built-in type has a type definition in the module that provides it. The
+type descriptor of the type definition is the corresponding basic type. The type
+definition has a <code>@builtinSubtype</code> annotation, which indicates that
+the meaning of the type name is built-in, as specified in the above table,
+rather than coming from its type descriptor. It is an error to use the
+<code>@builtinSubtype</code> annotation except in a lang library module.
+</p>
+<p>
+So, for example, the <code>lang.int</code> module would include the definition:
+</p>
+<pre>
+@builtinSubtype
+type Signed32 int;
+</pre>
+<p>
+Semantically, these types behave like a predefined type that can be referenced
+by an unqualified name, such as <code>byte</code>. Syntactically, these types
+are referenced by a <code>type-reference</code> in the same way as if their
+definitions were not built-in. A built-in type <code>T</code> which is a subtype
+of basic type <code>B</code> can be referenced by a type-reference
+<code>M:T</code>, where <code>M</code> is a module-prefix referring to module
+<code>ballerina/lang.B</code>.
+</p>
+<p>
+For convenience, this specification refers to the built-in subtype T provided by
+the module for basic type B as B:T. For example, in this specification
+<code>int:Signed32</code> refers to the <code>Signed32</code> built-in subtype
+of <code>int</code>, which is provided by the <code>lang.int</code> module.
+</p>
+<p>
+The <code>int:Unsigned8</code> type is equivalent to the predefined
+<code>byte</code> type.
+</p>
+</section>
+
 </section>
 <section class="appendix">
 <h2 id="references">A. References</h2>
