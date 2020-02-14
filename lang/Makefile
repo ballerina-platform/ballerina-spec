@@ -1,8 +1,9 @@
 # This is intended to be run on POSIX with GNU Make
 XSLTPROC=xsltproc
 # xmllint is a utility included with libxml2 e.g. in libxml2-utils package
-#XMLLINT=xmllint
+XMLLINT=xmllint
 AWK=awk
+SHELL=/bin/bash -o pipefail
 SH=sh
 BUILDDIR=build
 BUILDFILES=$(BUILDDIR)/spec.html $(BUILDDIR)/experimental.html
