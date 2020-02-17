@@ -874,8 +874,8 @@ subtypes</a> <code>xml:Element</code>, <code>xml:ProcessingInstruction</code>,
 <code>xml:Comment</code> and <code>xml:Text</code> corresponding to the above
 singletons; <code>xml:Text</code> also allows the empty XML sequence.
 </p>
-<pre class="grammar"
->xml-type-descriptor := <code>xml</code> [type-parameter]
+<pre
+class="grammar">xml-type-descriptor := <code>xml</code> [type-parameter]
 type-parameter := <code>&lt;</code> type-descriptor <code>&gt;</code>
 </pre>
 <p>
@@ -2574,6 +2574,7 @@ class="grammar">expression :=
    | checking-expr
    | trap-expr
    | query-expr
+   | xml-navigate-expr
    | <code>(</code> expression <code>)</code>
 </pre>
 <p>
@@ -4438,6 +4439,47 @@ A <code>select</code> clause is executed as follows:
 </ul>
 </li> 
 </ul>
+</section>
+</section>
+<section>
+<h3>XML navigation expression</h3>
+<pre
+class="grammar">xml-navigate-expr :=
+   xml-filter-expr
+   | xml-step-expr
+</pre>
+<section>
+<h4>XML name pattern</h4>
+<pre
+class="grammar">xml-name-pattern := xml-atomic-name-pattern [<code>|</code> xml-atomic-name-pattern]*
+
+xml-atomic-name-pattern :=
+  <code>*</code>
+  | identifier
+  | xml-namespace-prefix <code>:</code> identifier
+  | xml-namespace-prefix <code>:</code> <code>*</code>
+</pre>
+</section>
+<section>
+<h4>XML filter expression</h4>
+<pre
+class="grammar">xml-filter-expr := expression <code>.&lt;</code> xml-name-pattern <code>&gt;</code>
+</pre>
+</section>
+<section>
+<h4>XML step expression</h4>
+<pre
+class="grammar">xml-step-expr := expression xml-step-start xml-step-extend*
+
+xml-step-start := xml-element-children-step | xml-all-children-step
+xml-element-children-step := <code>/&lt;</code> xml-name-pattern <code>&gt;</code>
+xml-all-children-step := <code>/*</code>
+
+xml-step-extend :=
+   <code>.&lt;</code> xml-name-pattern <code>&gt;</code>
+   | <code>[</code> expression <code>]</code>
+   | <code>.</code> method-name <code>(</code> arg-list <code>)</code>
+</pre>
 </section>
 </section>
 </section>
