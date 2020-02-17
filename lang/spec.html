@@ -4443,10 +4443,13 @@ A <code>select</code> clause is executed as follows:
 </section>
 <section>
 <h3>XML navigation expression</h3>
+<p>
+XML navigation expressions allow for convenient navigation of XML element structure,
+in a similar way to XPath.
+</p>
+
 <pre
-class="grammar">xml-navigate-expr :=
-   xml-filter-expr
-   | xml-step-expr
+class="grammar">xml-navigate-expr := xml-filter-expr | xml-step-expr
 </pre>
 <section>
 <h4>XML name pattern</h4>
@@ -4459,12 +4462,29 @@ xml-atomic-name-pattern :=
   | xml-namespace-prefix <code>:</code> identifier
   | xml-namespace-prefix <code>:</code> <code>*</code>
 </pre>
+
+<p>
+An XML name pattern matches a string specifying the name of an XML element.
+</p>
+<p>
+An xml-atomic-name-pattern that is <code>*</code> matches any name.
+</p>
+<p>
+An xml-namespace-prefix in an xml-atomic-name-pattern must be declared by an
+xmlns-decl-stmt. If there is an in-scope default namespace (declared by an
+xmlns-decl-stmt), an xml-atomic-pattern that is just an identifier specifies a
+name in that default namespace.
+</p>
 </section>
 <section>
 <h4>XML filter expression</h4>
 <pre
 class="grammar">xml-filter-expr := expression <code>.&lt;</code> xml-name-pattern <code>&gt;</code>
 </pre>
+<p>
+An xml-filter-expr selects constituents of a sequence that are elements with a
+name matching a specified name pattern.
+</p>
 </section>
 <section>
 <h4>XML step expression</h4>
@@ -4484,6 +4504,51 @@ xml-step-extend :=
    | <code>[</code> expression <code>]</code>
    | <code>.</code> method-name <code>(</code> arg-list <code>)</code>
 </pre>
+<p>
+An xml-step-expr that starts with an xml-all-children-step
+</p>
+<pre>
+   <var>E</var> /* <var>X</var>
+</pre>
+<p>
+is equivalent to
+</p>
+<pre>
+   xml:map(xml:elements(<var>E</var>), v => xml:getChildren(v) <var>X</var>)
+</pre>
+<p>
+where <code>v</code> is a variable name not used in <code><var>X</var></code>.
+</p>
+<p>
+An xml-step-expr that starts with an xml-element-children-step
+</p>
+<pre>
+   <var>E</var> /&lt; <var>NP</var> &gt; <var>X</var>
+</pre>
+<p>
+is equivalent to
+</p>
+<pre>
+   xml:map(xml:elements(<var>E</var>), v => xml:getChildren(v) .&lt;<var>NP</var>&gt; <var>X</var>)
+</pre>
+<p>
+where <code>v</code> is a variable name not used in <code><var>X</var></code>.
+</p>
+<p>
+An xml-step-expr that starts with an xml-element-descendants-step
+</p>
+<pre>
+   <var>E</var> /**/&lt; <var>NP</var> &gt; <var>X</var>
+</pre>
+<p>
+is equivalent to
+</p>
+<pre>
+   xml:map(xml:elements(<var>E</var>), v => xml:getDescendants(v) .&lt;<var>NP</var>&gt; <var>X</var>)
+</pre>
+<p>
+where <code>v</code> is a variable name not used in <code><var>X</var></code>.
+</p>
 </section>
 </section>
 </section>
