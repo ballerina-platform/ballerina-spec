@@ -92,6 +92,8 @@ public function setName(Element elem, string xName) = external;
 public function getChildren(Element elem) returns xml = external;
 
 # Sets the children of `elem` to `children`.
+# This panics if it would result in the element structure
+# becoming cyclic.
 #
 # + elem - xml element
 # + children - xml or string to set as children
