@@ -768,7 +768,8 @@ A sequence value belongs to one of the following two basic types:
 A sequence value consists of an ordered sequence of zero or more constituent
 items, where the constituent items belong to the same basic type as the sequence
 value itself. The <em>length</em> of a sequence is the number of its constituent
-items. A sequence is a <em>singleton</em> if its length is 1. For each sequence
+items. Each constituent of a sequence has an integer index &#x2265; 0 and &lt;
+length. A sequence is a <em>singleton</em> if its length is 1. For each sequence
 basic type, there is an <em>empty</em> value, which has length 0. As with other
 basic types, the sequence basic types are disjoint with themselves and with
 other basic types. Thus the empty value for string is distinct from the empty
@@ -3433,14 +3434,14 @@ key-expression := expression
 </pre>
 <p>
 A member-access-expr accesses a member of a container value using its key,
-or a character of a string using its index.
+or a constituent of a sequence using its index.
 </p>
 <p>
 The requirements on the static type of container-expr and key-expression are as
 follows:
 </p>
 <ul>
-<li>if container-expr is a subtype of string or is a subtype of basic
+<li>if container-expr is a subtype of string or of xml or of basic
 type list, then the contextually expected type for key-expression is int and
 the static type of key-expression must be a subtype of int;</li>
 <li>otherwise container-expr must be a subtype of the union of nil and basic
@@ -3459,6 +3460,10 @@ A member-access-expr is evaluated as follows:
 <var>c</var>, then the evaluation completes abruptly with a panic; otherwise,
 the result is a string of length 1 containing the character with index
 <var>k</var> in <var>c</var>;</li>
+<li>if it is xml, and <var>k</var> is &lt; 0, then the evaluation completes
+abruptly with a panic; if <var>k</var> is &gt;= the length of <var>c</var>, then
+the result is an empty xml sequence; otherwise, the result is a singleton xml
+value containing the item with index <var>k</var> in <var>c</var>;</li>
 <li>if it is list, and <var>k</var> is &lt; 0 or &gt;= the length of
 <var>c</var>, then the evaluation completes abruptly with a panic; otherwise,
 the result is the member of <var>c</var> with index <var>k</var>;</li>
@@ -3472,11 +3477,13 @@ does not contain a member with key <var>k</var>, then the result is
 <p>
 Let T the static type of container-expression. If T is a subtype of string, then
 the static type of the member-access-expr is <a
-href="#built-in_subtypes"><code>string:Char</code></a>, that is the subtype of strings
-containing strings of length 1. Otherwise, let K be the static type of
-key-expression and let M be the member type of K in T; if T contains nil, or T
-is a subtype of mapping and K is an optional key type for T, then the static
-type of the member-access-expr is M?, otherwise the static type is M.
+href="#built-in_subtypes"><code>string:Char</code></a>, that is the subtype of
+strings containing strings of length 1. If T is a subtype of xml&lt;M&gt;, then
+the static type of the member-access-expr is M|E, where E is the type of the
+empty XML sequence. Otherwise, let K be the static type of key-expression and
+let M be the member type of K in T; if T contains nil, or T is a subtype of
+mapping and K is an optional key type for T, then the static type of the
+member-access-expr is M?, otherwise the static type is M.
 </p>
 
 </section>
@@ -6992,11 +6999,19 @@ language-integrated query.</li>
 <code>\u[<em>CodePoint</em>]</code> to <code>\u{<em>CodePoint</em>}</code> so as
 to align with ECMAScript. Although this is an incompatible change, the previous
 syntax was not implemented.</li>
-<li>Improved XML design, with new treatment of identity. Characters in XML
-content are merged into a single text item. Iteration over XML values exposes
-characters as text items. The various kinds of xml item (e.g. element and text)
-are subtyppes of the <code>xml</code> type. The <code>xml</code> type can have a
-type parameter specifying the item types.</li>
+<li>Improved XML design.
+<ul>
+<li>The various kinds of xml item (e.g. element and text) are subtypes of the
+<code>xml</code> type.</li>
+<li>The <code>xml</code> type can have a type parameter specifying the item
+types.</li>
+<li>Iteration over XML values exposes characters as text items.</li>
+<li>Characters in XML content are merged into a single text item.</li>
+<li>New treatment of identity.</li>
+<li>The item of an XML sequence x with index i can be accessed using an
+expression x[i].</li>
+</ul>
+</li>
 <li>Lang library modules can now provide built-in subtypes of existing basic
 types.</li>
 </ol>
