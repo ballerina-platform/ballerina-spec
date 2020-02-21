@@ -59,12 +59,21 @@ type XmlType xml;
 
 # Returns an iterator over the xml items of `x`
 #
-# + x - xml item to iterate
+# + x - xml sequence to iterate over
 # + return - iterator object
 # Each item is represented by an xml singleton.
 public function iterator(xml<ItemType> x) returns abstract object {
     public function next() returns record {| ItemType value; |}?;
 } = external;
+
+# Returns the item of `x` with index `i`.
+# This differs from `x[i]` in that it panics if
+# `x` does not have an item with index `i`.
+#
+# + x - the xml sequence 
+# + k - the index
+# + return - the item with index `i` in `x`
+public function get(xml<ItemType> x, int i) returns ItemType = external;
 
 # Concatenates xml and string values.
 #
