@@ -361,8 +361,8 @@ There is a fundamental distinction between values that have a <em>storage
 identity</em> and values that do not. A value that has storage identity has an
 identity that comes from the location where the value is stored. All structural
 and behavioural values have a storage identity, whereas all simple values do
-not. Storage identity for sequences is more complicated and will be explained in
-the section on sequence values.
+not. Storage identity for sequence values is more complicated and will be
+explained in the section on sequence values.
 </p>
 <p>
 Values can be stored in variables or as members of structures. When a value has
@@ -381,7 +381,7 @@ from any existing value. For values with storage identity, there is also the
 concept of <em>copying</em>: it means to create a value that is the same, except
 for having a new storage identity. The concept of having storage identity is
 similar to the concept of a reference type in some other programming languages,
-but also accomodates the concept of a sequence.
+but also accomodates the concept of a sequence value.
 </p>
 <p>
 Storage identity is tied to mutability. Mutation is only well-defined for values
@@ -475,8 +475,8 @@ The following table summarizes the type descriptors provided by Ballerina.
   </tr>
   <tr>
    <td>XML</td>
-   <td>a sequence of zero or more characters, XML elements, processing
-instructions or comments</td>
+   <td>a sequence of zero or more elements, processing instructions, comments or
+text items</td>
   </tr>
   <tr>
    <td rowspan="6">basic, structured</td>
@@ -757,6 +757,12 @@ do so using different exponents.
 </section>
 <section>
 <h3>Sequence values</h3>
+
+<pre
+class="grammar">sequence-type-descriptor :=
+   string-type-descriptor
+   | xml-type-descriptor
+</pre>
 <p>
 A sequence value belongs to one of the following two basic types:
 </p>
@@ -767,13 +773,14 @@ A sequence value belongs to one of the following two basic types:
 <p>
 A sequence value consists of an ordered sequence of zero or more constituent
 items, where the constituent items belong to the same basic type as the sequence
-value itself. The <em>length</em> of a sequence is the number of its constituent
-items. Each constituent of a sequence has an integer index &#x2265; 0 and &lt;
-length. A sequence is a <em>singleton</em> if its length is 1. For each sequence
-basic type, there is an <em>empty</em> value, which has length 0. As with other
-basic types, the sequence basic types are disjoint with themselves and with
-other basic types. Thus the empty value for string is distinct from the empty
-value for xml, and these are both distinct from nil.
+value itself. The <em>length</em> of a sequence value is the number of its
+constituent items. Each constituent of a sequence value has an integer index
+&#x2265; 0 and &lt; length. A sequence value is a <em>singleton</em> if its
+length is 1. For each sequence basic type, there is an <em>empty</em> value,
+which has length 0. As with other basic types, the sequence basic types are
+disjoint with themselves and with other basic types. Thus the empty value for
+string is distinct from the empty value for xml, and these are both distinct
+from nil.
 </p>
 <p>
 The values belonging to a sequence basic type B can be defined in terms of its
@@ -802,20 +809,14 @@ sequence of basic type B is thus a subtype of B. This is a fundamental
 difference between sequences and lists.
 </p>
 <p>
-Only singleton values of a sequence can have storage identity. When a
-constituent of a sequence has storage identity, what is stored in the sequence
-is a reference to the location where the constituent is stored rather than the
-value itself.
+Only singleton values of a sequence type can have storage identity. When a
+constituent of a sequence value has storage identity, what is stored in the
+sequence value is a reference to the location where the constituent value is
+stored rather than the constituent value itself.
 </p>
 <p>
 A sequence value is iterable as a sequence of its constituent values.
 </p>
-
-<pre
-class="grammar">sequence-type-descriptor :=
-   string-type-descriptor
-   | xml-type-descriptor
-</pre>
 
 <section>
 <h4>Strings</h4>
@@ -873,7 +874,7 @@ consecutive text singletons are merged, so that an XML value never contains
 consecutive text singletons. There are <a href="#built-in_subtypes">built-in
 subtypes</a> <code>xml:Element</code>, <code>xml:ProcessingInstruction</code>,
 <code>xml:Comment</code> and <code>xml:Text</code> corresponding to the above
-singletons; <code>xml:Text</code> also allows the empty XML sequence.
+singletons; <code>xml:Text</code> also allows the empty xml value.
 </p>
 <pre
 class="grammar">xml-type-descriptor := <code>xml</code> [type-parameter]
@@ -884,7 +885,7 @@ A shape belongs to type <code>xml</code> if its basic type is <code>xml</code>.
 A type parameter of an xml-type-descriptor must be a subtype of
 <code>xml</code>. A shape belongs to type <code>xml&lt;T&gt;</code> if all of
 its constituent items belong to <code>T</code>. So, for example,
-<code>xml&lt;xml:Element&gt;</code> is the type for xml sequences containing
+<code>xml&lt;xml:Element&gt;</code> is the type for xml values containing
 only elements. Note that <code>xml&lt;xml&lt;<var>T</var>&gt;&gt;</code> is the
 same as <code>xml&lt;<var>T</var>&gt;</code> and that
 <code>xml&lt;xml:Text&gt;</code> is the same as <code>xml:Text</code>.
@@ -3434,7 +3435,7 @@ key-expression := expression
 </pre>
 <p>
 A member-access-expr accesses a member of a container value using its key,
-or a constituent of a sequence using its index.
+or a constituent of a sequence value using its index.
 </p>
 <p>
 The requirements on the static type of container-expr and key-expression are as
@@ -3462,7 +3463,7 @@ the result is a string of length 1 containing the character with index
 <var>k</var> in <var>c</var>;</li>
 <li>if it is xml, and <var>k</var> is &lt; 0, then the evaluation completes
 abruptly with a panic; if <var>k</var> is &#x2265; the length of <var>c</var>, then
-the result is an empty xml sequence; otherwise, the result is a singleton xml
+the result is an empty xml value; otherwise, the result is a singleton xml
 value containing the item with index <var>k</var> in <var>c</var>;</li>
 <li>if it is list, and <var>k</var> is &lt; 0 or &#x2265; the length of
 <var>c</var>, then the evaluation completes abruptly with a panic; otherwise,
@@ -3480,7 +3481,7 @@ the static type of the member-access-expr is <a
 href="#built-in_subtypes"><code>string:Char</code></a>, that is the subtype of
 strings containing strings of length 1. If T is a subtype of xml&lt;M&gt;, then
 the static type of the member-access-expr is M|E, where E is the type of the
-empty XML sequence. Otherwise, let K be the static type of key-expression and
+empty xml value. Otherwise, let K be the static type of key-expression and
 let M be the member type of K in T; if T contains nil, or T is a subtype of
 mapping and K is an optional key type for T, then the static type of the
 member-access-expr is M?, otherwise the static type is M.
@@ -3990,12 +3991,14 @@ never causes a panic to occur</li>
 <ul>
 <li>if both operands are a string, then the result is a string that is the
 concatenation of the operands</li>
-<li>if both operands are xml, then the result is a new xml sequence that is the
-concatenation of the operands; the new xml sequence contains a shallow copy of
-both operands; this operation does not perform a copy of the content or
-attributes of any elements in sequence</li>
-<li>if one operand is a string and one is xml, the string is treated as if it
-were an xml sequence with one character item for each code point in the string</li>
+<li>if both operands are xml, then the result is a new xml value that is the
+concatenation of the operands; this does not perform a copy on
+the constituents of the operand values</li>
+<li>if one operand is an empty string and one is xml, then
+the result is the xml value operand</li>
+<li>if one operand is a non-empty string and one is xml, then the string is
+treated as if it were an xml singleton text value whose characters are the same
+as the characters of the string;</li>
 </ul>
 </li>
 </ul>
@@ -6935,7 +6938,7 @@ table.
 </tr>
 <tr>
 <td>Text</td>
-<td><em>v</em> is either the empty sequence or a text singleton</td>
+<td><em>v</em> is either the empty xml value or a text singleton</td>
 </tr>
 </table>
 <p>
@@ -7005,10 +7008,10 @@ syntax was not implemented.</li>
 <code>xml</code> type.</li>
 <li>The <code>xml</code> type can have a type parameter specifying the item
 types.</li>
-<li>Iteration over XML values exposes characters as text items.</li>
-<li>Characters in XML content are merged into a single text item.</li>
-<li>New treatment of identity.</li>
-<li>The item of an XML sequence x with index i can be accessed using an
+<li>Iteration over xml values exposes characters as text items rather than strings</li>
+<li>Adjacent characters in XML content are chunked into a single text item.</li>
+<li>The meaning of <code>===</code> for xml has changed.</li>
+<li>The item of an xml sequence value x with index i can be accessed using an
 expression x[i].</li>
 </ul>
 </li>
