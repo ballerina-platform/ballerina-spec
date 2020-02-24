@@ -6125,6 +6125,16 @@ execution of the lock statement. A more sophisticated implementation can perform
 compile-time analysis to infer a more fine-grained locking strategy that will
 have the same effects as the naive implementation.
 </p>
+<p>
+It is not allowed to start a new strand within a lock. More precisely, when a
+strand has started but not yet completed the execution of a lock-stmt, the
+execution of a named-worker-decl or a start-action on that strand will result in
+a panic. It is a compile-time error for a named-worker-decl or start-action to
+occur lexically within a lock-stmt. The compiler may also give a compile-time
+error if a function definition contains a named-worker-decl or start-action, and
+there is a function call lexically within the lock-stmt that might result
+directly or indirectly in a call to that defined function.
+</p>
 
 </section>
 
