@@ -1,4 +1,4 @@
-// Copyright (c) 2018, 2019 WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+// Copyright (c) 2020 WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
 //
 // WSO2 Inc. licenses this file to you under the Apache License,
 // Version 2.0 (the "License"); you may not use this file except
@@ -14,22 +14,74 @@
 // specific language governing permissions and limitations
 // under the License.
 
-# A type parameter that is a subtype of `anydata|error`.
+
+# A type parameter that is a subtype of `any|error`.
 # Has the special semantic that when used in a declaration
 # all uses in the declaration must refer to same type.
 @typeParam
-type PureType anydata|error;
+type Type any|error;
 
-# Publishes data to the stream.
-#
-# + strm - the stream to publish to
-# + data - data to be published to the stream
-#
-# Each subscriber receives a separate clone of the data.
-public function publish(stream<PureType> strm, PureType data) = external;
+# A type parameter that is a subtype of `error`.
+# Has the special semantic that when used in a declaration
+# all uses in the declaration must refer to same type.
+@typeParam
+type ErrorType error;
 
-# Subscribes to data from the stream.
+# A type parameter that is a subtype of `any|error`.
+# Has the special semantic that when used in a declaration
+# all uses in the declaration must refer to same type.
+@typeParam
+type Type1 any|error;
+
+# Returns an iterator over a stream.
 #
-# + strm - the stream to subscribe to
-# + func - the function pointer for the subscription, which will be invoked with data published to the stream
-public function subscribe(stream<PureType> strm, function (PureType) func) = external;
+# + stm - the stream
+# + return - a new iterator object that will iterate over the members of `stm`.
+public function iterator(stream<Type,ErrorType> stm) returns abstract object {
+    public function next() returns record {|
+        Type value;
+    |}|ErrorType?;
+} = external;
+
+# Closes a stream.
+# This releases any system resources being used by the stream.
+#
+# + stm - the stream to close
+# + return - () if the close completed successfully, otherwise an error
+public function close(stream<Type,ErrorType> stm) returns ErrorType? = external;
+
+// Functional iteration
+
+# Applies a function to each member of a stream and returns a stream of the results.
+#
+# + stm - the stream
+# + func - a function to apply to each member
+# + return - new stream containing result of applying `func` to each member of `stm` in order
+public function 'map(stream<Type,ErrorType> stm, function(Type val) returns Type1 func)
+   returns stream<Type1,ErrorType> = external;
+
+# Applies a function to each member of a stream.
+# The function `func` is applied to each member of stream `stm` in order.
+#
+# + stm - the stream
+# + func - a function to apply to each member
+public function forEach(stream<Type,ErrorType> stm, function(Type val) returns () func) returns ErrorType? = external;
+
+# Selects the members from a stream for which a function returns true.
+#
+# + stm - the stream
+# + func - a predicate to apply to each member to test whether it should be selected
+# + return - new stream only containing members of `stm` for which `func` evaluates to true
+public function filter(stream<Type,ErrorType> stm, function(Type val) returns boolean func)
+   returns stream<Type,ErrorType> = external;
+
+# Combines the members of a stream using a combining function.
+# The combining function takes the combined value so far and a member of the stream,
+# and returns a new combined value.
+#
+# + stm - the stream
+# + func - combining function
+# + initial - initial value for the first argument of combining function `func`
+# + return - result of combining the members of `stm` using `func`
+public function reduce(stream<Type,ErrorType> stm, function(Type1 accum, Type val) returns Type1 func, Type1 initial)
+   returns Type1|ErrorType = external;
