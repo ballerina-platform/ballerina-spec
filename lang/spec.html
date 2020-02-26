@@ -907,10 +907,10 @@ has no value, then the string consists of just the value of the [local name]
 property; otherwise, the string is of the form:
 </p>
 <pre>
-   {<var>namespace-name</var>}<var>local-name</var>
+   {<var>namespace-uri</var>}<var>local-name</var>
 </pre>
 <p>
-where <code><var>namespace-name</var></code> and
+where <code><var>namespace-uri</var></code> and
 <code><var>local-name</var></code> are the values of the [namespace name] and
 [local name] properties respectively. The attributes of an XML element include
 attributes that appear as members of the [namespace attributes] property of an
@@ -2573,6 +2573,7 @@ class="grammar">expression :=
    | variable-reference-expr
    | field-access-expr
    | optional-field-access-expr
+   | xml-attribute-access-expr
    | annot-access-expr
    | member-access-expr
    | function-call-expr
@@ -3420,6 +3421,60 @@ the result is <code>()</code></li>
 <li>otherwise, the result is the member of <var>v</var> whose key is
 field-name.</li>
 </ol>
+
+</section>
+
+<section>
+<h3>XML attribute access expression</h3>
+
+<pre
+class="grammar">xml-attribute-access-expr := xml-required-attribute-access-expr | xml-optional-attribute-access-expr
+xml-required-attribute-access-expr := expression <code>.</code> xml-qualified-name
+xml-optional-attribute-access-expr := expression <code>?.</code> xml-qualified-name
+xml-qualified-name := xml-namespace-prefix <code>:</code> identifier 
+</pre>
+
+<p>
+An XML attribute access expression provides convenient access to a
+namespace-qualified attribute.
+</p>
+<p>
+It is a compile-time requirement that the static type of the expression is a
+subtype of xml.
+</p>
+<p>
+The xml-namespace-prefix must be declared using an xmlns-decl-stmt. The
+xml-qualified-name is expanded at compile-time into a string of the form
+</p>
+<pre>
+   {<var>namespace-uri</var>}<var>local-name</var>
+</pre>
+<p>
+where the namespace-uri comes from xml-namespace-uri specified in the
+xmlns-decl-stmt, and the local-name comes from the identifier following the
+colon.
+</p>
+<p>
+An xml-optional-attribute-access-expr is evaluated as follows. The expression is
+evaluated resulting in an xml value <var>v</var>. If <var>v</var> is an empty
+xml value, the result is <code>()</code>. Otherwise, if <var>v</var> is not a
+singleton element, the result is an error. Otherwise, let <var>m</var> be that
+element's attribute map. Let <var>k</var> be the string that results from
+expanding the xml-qualified-name, as described in the previous paragraph. If
+<var>m</var> has a member <var>s</var> with key <code>k</code>, the the result
+is <var>s</var>. Otherwise, the result is <code>()</code>.
+</p>
+<p>
+An xml-required-attribute-access-expr is evaluated the same as an
+xml-optional-attribute-expr, except that for cases where the result of the
+xml-optional-attribute-expr would be <code>()</code>, the result of the
+xml-required-attribute-access-expr is an error.
+</p>
+<p>
+The static type of an xml-required-attribute-access-expr is
+<code>string|error</code> The static type of an
+xml-optional-attribute-access-expr is <code>string|error|()</code>.
+</p>
 
 </section>
 <section>
