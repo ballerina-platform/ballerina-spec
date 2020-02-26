@@ -6,7 +6,7 @@ AWK=awk
 SHELL=/bin/bash -o pipefail
 SH=sh
 BUILDDIR=build
-BUILDFILES=$(BUILDDIR)/spec.html $(BUILDDIR)/experimental.html
+BUILDFILES=$(BUILDDIR)/spec.html
 
 VERSION:=$(shell sed -n -e '/^<h1[ >]/s/.* \(20[12][0-9]R[0-9][0-9]*\(-[A-Za-z0-9]*\)\?\)<.*/\1/p' spec.html)
 
@@ -18,7 +18,7 @@ COPYFILES=lib/versions.json \
   lib/string.bal lib/table.bal lib/typedesc.bal lib/value.bal lib/xml.bal \
   style/ballerina-language-specification.css \
   style/ballerina-language-specification.js
-DISTFILES=spec.html experimental.html $(COPYFILES)
+DISTFILES=spec.html $(COPYFILES)
 
 all: $(BUILDFILES)
 
@@ -31,12 +31,6 @@ $(BUILDDIR)/spec.html: $(BUILDDIR)/spec.xml spec.xsl
 $(BUILDDIR)/spec.xml: spec.html spec.awk
 	test -d $(BUILDDIR) || mkdir $(BUILDDIR)
 	$(AWK) -f spec.awk spec.html >$(BUILDDIR)/spec.xml
-
-
-$(BUILDDIR)/experimental.html: experimental.html spec.xsl 
-	$(XSLTPROC) spec.xsl experimental.html | \
-	  sed -e '/<meta http-equiv/d' >$(BUILDDIR)/experimental.html
-
 
 check: $(BUILDDIR)/spec.xml
 #	$(XMLLINT) -noout -relaxng spec.rng $(BUILDDIR)/spec.xml
