@@ -1,6 +1,6 @@
 # Improved support for immutability
 
-This is issue #[338](https://github.com/ballerina-platform/ballerina-spec/issues/338).
+This is issues #[189](https://github.com/ballerina-platform/ballerina-spec/issues/189) and #[338](https://github.com/ballerina-platform/ballerina-spec/issues/338).
 
 ## Problem
 
