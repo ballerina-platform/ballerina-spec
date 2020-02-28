@@ -20,17 +20,17 @@ const string XMLNS_NAMESPACE_URI = "http://www.w3.org/2000/xmlns/";
 # Type for singleton elements.
 # Built-in subtype of xml.
 @builtinSubtype
-type Element xml;
+public type Element xml;
 
 # Type for singleton processing instructions.
 # Built-in subtype of xml.
 @builtinSubtype
-type ProcessingInstruction xml;
+public type ProcessingInstruction xml;
 
 # Type for singleton comments.
 # Built-in subtype of xml.
 @builtinSubtype
-type Comment xml;
+public type Comment xml;
 
 # Type for zero or more text characters.
 # Built-in subtype of xml.
@@ -38,7 +38,7 @@ type Comment xml;
 # so an xml sequence belongs to this type if it is a singleton test sequence
 # or the empty sequence.
 @builtinSubtype
-type Text xml;
+public type Text xml;
 
 # Returns number of xml items in `x`.
 #

@@ -18,61 +18,61 @@
 # This allows an int between -2^31 and 2^31 - 1 inclusive.
 # i.e. between -2,147,483,648 and 2,147,483,647 inclusive.
 @builtinSubtype
-type Signed32 int;
+public type Signed32 int;
 
 # Built-in subtype that allows non-negative integers that can be represented in 16 bits using two's complement.
 # This allows an int between -2^15 and 2^15 - 1 inclusive.
 # i.e. between -32,768 and 32,767 inclusive.
 @builtinSubtype
-type Signed16 int;
+public type Signed16 int;
 
 # Built-in subtype that allows non-negative integers that can be represented in 8 bits using two's complement.
 # This allows an int between -2^7 and 2^7 - 1 inclusive.
 # i.e. between -128 and 127 inclusive.
 @builtinSubtype
-type Signed8 int;
+public type Signed8 int;
 
 # Built-in subtype that allows non-negative integers that can be represented in 32 bits.
 # This allows an int between 0 and 2^32 - 1 inclusive,
 # i.e. between 0 and 4,294,967,295 inclusive.
 @builtinSubtype
-type Unsigned32 int;
+public type Unsigned32 int;
 
 # Built-in subtype that allows non-negative integers that can be represented in 16 bits.
 # This allows an int between 0 and 2^16 - 1 inclusive,
 # i.e. between 0 and 65,535 inclusive.
 @builtinSubtype
-type Unsigned16 int;
+public type Unsigned16 int;
 
 # Built-in subtype that allows non-negative integers that can be represented in 8 bits.
 # This allows an int between 0 and 2^8 - 1 inclusive,
 # i.e. between 0 and 255 inclusive.
 # This is the same as `byte`.
 @builtinSubtype
-type Unsigned8 int;
+public type Unsigned8 int;
 
 # Maximum value of type `int`.
-const MAX_VALUE = 9223372036854775807;
+public const MAX_VALUE = 9223372036854775807;
 # Minimum value of type `int`.
-const MIN_VALUE = -9223372036854775807 - 1; // -9223372036854775808 would overflow
+public const MIN_VALUE = -9223372036854775807 - 1; // -9223372036854775808 would overflow
 # Maximum value of type `Signed32`.
-const SIGNED32_MAX_VALUE = 2147483647;
+public const SIGNED32_MAX_VALUE = 2147483647;
 # Minimum value of type `Signed32`.
-const SIGNED32_MIN_VALUE = -2147483648;
+public const SIGNED32_MIN_VALUE = -2147483648;
 # Maximum value of type `Signed16`.
-const SIGNED16_MAX_VALUE = 32767;
+public const SIGNED16_MAX_VALUE = 32767;
 # Minimum value of type `Signed16`.
-const SIGNED16_MIN_VALUE = -32768;
+public const SIGNED16_MIN_VALUE = -32768;
 # Maximum value of type `Signed8`.
-const SIGNED8_MAX_VALUE = 127;
+public const SIGNED8_MAX_VALUE = 127;
 # Minimum value of type `Signed8`.
-const SIGNED8_MIN_VALUE = -128;
+public const SIGNED8_MIN_VALUE = -128;
 # Maximum value of type `Unsigned32`.
-const UNSIGNED32_MAX_VALUE = 4294967295;
+public const UNSIGNED32_MAX_VALUE = 4294967295;
 # Maximum value of type `Unsigned16`.
-const UNSIGNED16_MAX_VALUE = 65535;
+public const UNSIGNED16_MAX_VALUE = 65535;
 # Maximum value of type `Unsigned8`.
-const UNSIGNED8_MAX_VALUE = 255;
+public const UNSIGNED8_MAX_VALUE = 255;
 
 // XXX this will panic for the most negative value (-2^63 is an int but +2^63 isn't)
 // consistent with policy on integer overflow
