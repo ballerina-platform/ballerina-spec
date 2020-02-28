@@ -1,4 +1,4 @@
-# Immutable types without storage identity
+# Improved support for immutability
 
 This is issue #[338](https://github.com/ballerina-platform/ballerina-spec/issues/338).
 
