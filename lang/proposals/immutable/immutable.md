@@ -46,7 +46,6 @@ The goal therefore to have structured types (lists, mappings) with "value" seman
 Typical examples would be:
 
 
-
 *   `byte[]` representing binary data
 *   `record {| int year; int month; int day; |}` representing calendar date
 
@@ -73,7 +72,7 @@ D has [immutable](https://dlang.org/spec/const3.html#immutable_type) types, whic
 Joe Duffy wrote an interesting [blog](http://joeduffyblog.com/2016/11/30/15-years-of-concurrency/) on Midori concurrency, in which he observed:
 
 
-    I should also note that, for convenience, you could mark a type as immutable to indicate “all instances of this type are immutable.” This was actually one of the most popular features of all of this. At the end of the day, I’d estimate that 1/4-1/3 of all types in the system were marked as immutablel
+>    I should also note that, for convenience, you could mark a type as immutable to indicate “all instances of this type are immutable.” This was actually one of the most popular features of all of this. At the end of the day, I’d estimate that 1/4-1/3 of all types in the system were marked as immutable
 
 C# has structs, which are records with value semantics. In Swift, the equivalent of maps and lists have value semantics. In C# and Swift, they are not immutable but rather assignment (including parameter passing) makes a copy (Swift does reference counting and COW IIRC).
 
@@ -114,7 +113,7 @@ Issue:
 
 *   Should we switch to immutable? The problem is that the most natural interpretation of a parameter being readonly is that you will only read a value through this parameter.
 
-There is a new type descriptor `readonly&lt;T>`, which is a type operator (transforming one set of shapes to another): 
+There is a new type descriptor `readonly<T>`, which is a type operator (transforming one set of shapes to another): 
 
 
 
@@ -135,7 +134,7 @@ So for example, given
 ```
 
 
-The type of `head.next` is <code>readonly&lt;IntList?> <em>not</em> IntList?</code>. This is because the readonly operator transforms IntList so that its members are also readonly.
+The type of `head.next` is `readonly<IntList?>` *not* `IntList?`. This is because the readonly operator transforms IntList so that its members are also readonly.
 
 When the contextually expected type is readonly, a list or mapping constructor will create an immutable value. Note that the members will not cloned, but rather the typing ensures it will be a compile-time type error if they are not immutable. For example:
 
@@ -213,7 +212,6 @@ Can we have immutable objects? Prerequisite is immutable functions.
 Previously impossible because
 
 
-
 *   the only way to construct object was by cloning
 *   thing that can be cloned is anydata
 *   object is not anydata
@@ -243,7 +241,7 @@ I think this can be made to work with the semantics that:
 
 
 *   fields are final meaning assignments to the fields are allowed only in the __init method 
-*   field declared as  T is readonly&lt;T>
+*   field declared as  T is readonly<T>
 
 
 ### Error and anydata
@@ -284,7 +282,7 @@ But step 4 of the reasoning no longer holds. We can instead say:
 
 *   if a behavioural basic type is inherently immutable, then it is a subtype of readonly
 *   error is an inherently immutable basic type
-*   for a type error&lt;S,R>, the members of R must be a subtype of `anydata|readonly` (the two arms of the union are not mutually exclusive, but that is perfectly OK in Ballerina's type system)
+*   for a type error<S,R>, the members of R must be a subtype of `anydata|readonly` (the two arms of the union are not mutually exclusive, but that is perfectly OK in Ballerina's type system)
 *   the error constructor only clones values that are anydata but not readonly
 *   similarly we can state that inter-worker message send
     *   allows anydata|readonly and
@@ -292,10 +290,8 @@ But step 4 of the reasoning no longer holds. We can instead say:
 
 Regardless of the above change to error, with readonly the error detail method returns readonly type.
 
- `  function detail(error&lt;string,DetailType> e)`
-
-
 ```
+  function detail(error<string,DetailType> e)
      returns readonly<DetailType>;
 ```
 
@@ -331,15 +327,17 @@ How then should syntax distinguish interning from new construction?
 
 For readonly types, interning construction should be the default. If you have declared a type to be always readonly, you typically do not want storage identity to be significant. So a mapping or list constructor should do interning construction when the contextually expected type is readonly.
 
+```
 type X record { int i; }
 
 type Y record { X x; }
 
 X rw = { i: 1 };
 
-readonly&lt;X> ro = rw.cloneReadOnly();
+readonly<X> ro = rw.cloneReadOnly();
 
-readonly&lt;Y> y  = { x: ro }; // y interned, but ro not interned
+readonly<Y> y  = { x: ro }; // y interned, but ro not interned
+```
 
 In particular, typedef:constructFrom with a readonly type will do interning construction.
 
