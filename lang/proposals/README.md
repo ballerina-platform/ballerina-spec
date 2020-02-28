@@ -6,4 +6,4 @@ This is a list of in-process proposals for major language features. Each proposa
   * [Query](query/query.md) language-integrated query (issue [#355](https://github.com/ballerina-platform/ballerina-spec/issues/355))
   * [Timestamp](timestamp/timestamp.md) a new `timestamp` basic type (issue [#287](https://github.com/ballerina-platform/ballerina-spec/issues/287))
   * [XML](xml/xml.md) the `xml` basic type and operations (issue [#288](https://github.com/ballerina-platform/ballerina-spec/issues/288))
-  
+  * {Immutable](immutable/immutable.md) improved treatement of immutability (issue [#338](https://github.com/ballerina-platform/ballerina-spec/issues/338))
