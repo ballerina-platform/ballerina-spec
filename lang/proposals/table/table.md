@@ -1,4 +1,5 @@
 # Tables
+**This proposal is obsolete.**
 
 Please add comments to the associated issue [#354](https://github.com/ballerina-platform/ballerina-spec/issues/354).
 
