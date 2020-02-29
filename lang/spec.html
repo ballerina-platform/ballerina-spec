@@ -3061,10 +3061,10 @@ single list type descriptor, which is then used as the inherent type. The static
 type of the list-constructor-expr will be the same as the inherent type.
 </p>
 <p>
-If there is no contextually expected type, then the inherent type will be
-<code>T[]</code>, where T is the union of the broad types of the expressions in
-<code>expr-list</code>. It is an compile-time error if <code>expr-list</code> is
-empty and there is no contextually expected type.
+If there is no contextually expected type, then the inherent type will be a
+tuple-type-descriptor with a member-type-descriptor for each expression in the
+expr-list; the type of each member-type-descriptor will be the broad type of the
+corresponding expression in the expr-list.
 </p>
 <p>
 If there is a contextually expected type, then the type that the inherent type
@@ -3115,10 +3115,13 @@ inherent type. The static type of the mapping-constructor-expr will be the same
 as the inherent type.
 </p>
 <p>
-If there is no contextually expected type, then the inherent type will be
-<code>map&lt;T&gt;</code>, where T is the union of the broad type of every
-value-expr in the mapping-constructor-expr. It is an compile-time error if there
-is both no value-expr and no contextually expected type.
+If there is no contextually expected type, then the inherent type will be an
+exclusive-record-type-descriptor with an individual-field-descriptor for each
+field specified with a literal-field-name; the type of each field-descriptor
+will be the broad type of the value-expr in the field. If there are fields
+specified with a computed-field-name, then there will also be a
+record-rest-descriptor <code>T...</code>, where <code>T</code> is the union of
+the broad types of the value-expr in all such fields.
 </p>
 <p>
 If the inherent type descriptor is a record type descriptor and a field is
@@ -7104,6 +7107,9 @@ The <code>int:Unsigned8</code> type is equivalent to the predefined
 <ol>
 <li>Query expressions have been added. This is the first stage of
 language-integrated query.</li>
+<li>When a list constructor or mapping constructor is used without a
+contextually expected type, we now infer a tuple or record type rather than an
+array or map type.</li>
 <li>Let expressions have been added.</li>
 <li>The <code>lock</code> statement has been added.</li>
 <li>The syntax for Unicode escapes in strings has changed from
