@@ -577,10 +577,65 @@ information may need to be resolved at runtime. The typedesc basic type
 represents a type descriptor that has been resolved.
 </p>
 <p>
-All sequence values and all but one basic type of structured values are
-iterable, meaning that a value of the type can be accessed as a sequence of
-simpler values.
+Values of some basic types are <em>iterable</em>. An iterable value supports an
+iteration operation, which treats the iterable value as consisting of a sequence
+of zero or more simpler values, which are in some sense a part of the iterable
+value; the iteration operation provides the values in the sequence, one after
+another. The sequence of values that an iteration operation on a value provides
+is the <em>iteration sequence</em> of the value. Each iterable basic type
+defines the iteration sequence for a value of that basic type. The iteration
+operation as a whole has a result, which is nil if the iteration was successful
+and an error otherwise. The iteration operation thus determines two associated
+types for an iterable type: the type of the values in the iteration sequence and
+the type of the iteration result.
 </p>
+<p>
+The following tables summarizes the iterable basic types.
+</p>
+<table>
+<tr>
+<th>Basic type</th>
+<th>Iteration sequence</th>
+<th>Type descriptor</th>
+<th>Type of values in iteration sequence</th>
+<th>Typeof result</th>
+</tr>
+<tr>
+<td>string</td>
+<td>length 1 substrings</td>
+<td><code>string</code></td>
+<td><code>string:Char</code></td>
+<td><code>()</code></td>
+</tr>
+<tr>
+<td>xml</td>
+<td>singleton xml values</td>
+<td><code>xml&lt;T&gt;</code></td>
+<td><code>T</code></td>
+<td><code>()</code></td>
+</tr>
+<tr>
+<td>list</td>
+<td>members in order</td>
+<td><code>T[]</code></td>
+<td><code>T</code></td>
+<td><code>()</code></td>
+</tr>
+<tr>
+<td>mapping</td>
+<td>members</td>
+<td><code>map&lt;T&gt;</code></td>
+<td><code>T</code></td>
+<td><code>()</code></td>
+</tr>
+<tr>
+<td>stream</td>
+<td>items</td>
+<td><code>stream&lt;T,E&gt;</code></td>
+<td><code>T</code></td>
+<td><code>E|()</code></td>
+</tr>
+</table>
 
 <section>
 <h3>Simple values</h3>
@@ -819,7 +874,8 @@ sequence value is a reference to the location where the constituent value is
 stored rather than the constituent value itself.
 </p>
 <p>
-A sequence value is iterable as a sequence of its constituent values.
+A sequence value is iterable: the iteration sequence consists of the singleton
+items of the sequence value in order and the iteration result is always nil.
 </p>
 
 <section>
@@ -1043,7 +1099,8 @@ list, with the index of the first member being 0. For a list of length
 shapes of its members.
 </p>
 <p>
-A list is iterable as a sequence of its members.
+A list is iterable: the iteration sequence consists of the members of the
+list in order and the iteration result is always nil.
 </p>
 <p>
 The type of list values can be described by two kinds of type descriptors.
@@ -1099,8 +1156,8 @@ subtype of <code>T[]</code>; this is a consequence of the definition of
 subtyping in terms of subset inclusion of the corresponding sets of shapes.
 </p>
 <p>
-An array <code>T[]</code> is iterable as a sequence of values of type
-<code>T</code>.
+The type of the values in the iteration sequence of a value belonging
+<code>T[]</code> is <code>T</code>.
 </p>
 </section>
 <section>
@@ -1153,9 +1210,10 @@ each field. The field shape for a field f has a name, which is the same as the
 name of f, and a shape, which is the shape of the value of f.
 </p>
 <p>
-A mapping is iterable as a sequence of its members. The order of the members is
-implementation-dependent, but implementations are encouraged to preserve and use
-the order in which the fields were added.
+A mapping is iterable: the iteration sequence consists of the members of the
+mapping and the iteration result is always nil. The order of the iteration
+sequence is implementation-dependent, but implementations are encouraged to
+preserve and use the order in which the fields were added.
 </p>
 
 <p>
@@ -1192,8 +1250,8 @@ A type <code>map&lt;T&gt;</code> contains a mapping shape <em>m</em> if every fi
 shape in <em>m</em> has a value shape that is in <code>T</code>.
 </p>
 <p>
-A value belonging to type <code>map&lt;T&gt;</code> is iterable as a sequence of
-values of type <code>T</code>.
+The type of the values in the iteration sequence of a value belonging
+<code>map&lt;T&gt;</code> is <code>T</code>.
 </p>
 <p>
 If a type descriptor T has <a href="#lax_static_typing">lax static typing</a>,
@@ -1355,8 +1413,9 @@ Note that a table type T' will be a subtype of a table type T if and only if:
 that column in T.</li>
 </ul>
 <p>
-A table is iterable as a sequence of mapping values, one for each row; the
-inherent type of each mapping value will be a closed record type.
+A table is iterable: the iteration sequence consists of mapping values, one for
+each row and the iteration result is always nil. The inherent type of a mapping
+value in the iteration sequence will be a closed record type.
 </p>
 
 </section>
@@ -1897,7 +1956,12 @@ if it has basic type stream.
 <p>
 A new stream can be constructed using a <code>new</code> expression.
 </p>
-
+<p>
+A value with basic type stream is iterable. The iteration result type is
+determined by the second type parameter: if the second type parameter is
+missing, then the iteration result type is nil; if the second type parameter is
+<code>E</code>, then the iteration result type is <code>E?</code>.
+</p>
 </section>
 
 
@@ -2063,20 +2127,21 @@ types that are built-in; the names of these types are not built-in.
 <section>
 <h4>Iterator</h4>
 <p>
-A value that is iterable as a sequence of values of type T provides a way of
-creating an iterator object that matches the type
+A iterable value that has an iteration sequence with values belonging to type T
+and with result belonging to type R provides a way of creating an iterator
+object that belongs to the object type
 </p>
 
 <pre
 >    abstract object {
-       public next() returns record {| T value; |}?;
+       public next() returns record {| T value; |}|R;
     }
 </pre>
 <p>
-In this specification, we refer to this type as Iterator&lt;T&gt;.
+In this specification, we refer to this type as Iterator&lt;T,R&gt;.
 </p>
 <p>
-Conceptually an iterator represents a position between members of the sequence.
+Conceptually an iterator is at a position between members of the iteration sequence. 
 Possible positions are at the beginning (immediately before the first member if
 any), between members and at the end (immediately after the last member if any).
 A newly created iterator is at the beginning position. For an empty sequence,
@@ -2087,7 +2152,9 @@ end.
 The <code>next()</code> method behaves as follows:
 </p>
 <ul>
-<li>if the iterator is currently at the end position, return nil</li>
+<li>if the iteration has encountered an error, return an error value</li>
+<li>otherwise, if the iterator has completed successfully by reaching the end
+position without an error, return nil</li>
 <li>otherwise
 <ul>
 <li>move the iterator to next position, and</li>
@@ -2110,17 +2177,19 @@ the point when <code>next()</code> is called.
 </p>
 <p>
 Note that it is not possible for the <code>next()</code> method simply to return
-a member of the sequence, since a nil member would be indistinguishable from the
-return value for the end position.
+the values in the iteration sequence, since there would be no way to distinguish
+a nil or error value that is part of the iteration sequence from a nil or error
+value that represents the result of the iteration.
 </p>
 </section>
 <section>
 <h4>Iterable</h4>
 <p>
-An object can make itself be iterable as a sequence of values of type T by
-providing a method named <code>__iterator</code> which returns a value that is a
-subtype of Iterator&lt;T&gt;. In this specification, we refer to this type as
-Iterable&lt;T&gt;.
+An object belongs to the abstract object type Iterable&lt;T,R&gt; if it has a
+method named <code>__iterator</code> with no arguments and a return type that is
+subtype of Iterator&lt;T,R&gt;. An object that belongs to Iterable&lt;T,R&gt; is
+iterable: the object returned by the <code>__iterator</code> method determines
+the iteration sequence and iteration result.
 </p>
 </section>
 <!--
@@ -4139,7 +4208,7 @@ class="grammar">range-expr :=
 </pre>
 <p>
 The result of a range-expr is a new object belonging to the abstract object type
-Iterable&lt;int&gt; that will iterate over a sequence of integers in increasing
+Iterable&lt;int,()&gt; that will iterate over a sequence of integers in increasing
 order, where the sequence includes all integers n such that
 </p>
 <ul>
@@ -4422,9 +4491,11 @@ clause in the pipeline is executed lazily, pulling input from its preceding
 clause. The input to the first clause is a single empty frame.
 </p>
 <p>
-The result of evaluating a query expression is a single value, which is
-constructed from the sequence of values emitted by the last clause. The result
-must be one of the following basic types:
+The execution of a clause may terminate early with an error value, in which case
+this error value is the result of the query. Otherwise, the result of evaluating
+a query expression is a single value, which is constructed from the sequence of
+values emitted by the last clause. The result must be one of the following basic
+types:
 </p>
 <ul>
 <li>list - the constructed list has a member for each emitted value; every
@@ -4468,6 +4539,8 @@ in an iterable value <var>c</var>;</li>
 <li>do the following in a loop <var>L</var>
 <ul>
 <li>call <code><var>i</var>.next()</code> resulting in a value <var>r</var>;</li>
+<li>if <var>r</var> is an error, then terminate execution of the from-clause
+early with error <var>r</var>;</li>
 <li>if <var>r</var> is <code>()</code>, stop loop <var>L</var>;</li>
 <li>let <var>v</var> be <code><var>r</var>.value</code>;</li>
 <li>emit a frame consisting of <var>f</var> augmented with the variables
@@ -6076,8 +6149,9 @@ class="grammar">foreach-stmt :=
    <code>foreach</code> typed-binding-pattern <code>in</code> action-or-expr block-stmt
 </pre>
 <p>
-A foreach statement iterates over a sequence, executing a block statement once
-for each member of the sequence.
+A foreach statement iterates over an iterable value, executing a block statement
+once for each value in the iterable value's iteration sequence. The static type
+of action-or-expr must be an iterable type with a result type of nil.
 </p>
 <p>
 The scope of any variables created in typed-binding-pattern is block-stmt. These
@@ -6087,12 +6161,12 @@ variables are implicitly final.
 In more detail, a foreach statement executes as follows:
 </p>
 <ol>
-<li>evaluate the expression resulting in a value c</li>
+<li>evaluate the action-or-expr resulting in a value c</li>
 <li>create an iterator object i from c as follows
 <ol>
 <li>if c is a basic type that is iterable, then i is the result of calling
 c.iterator()</li>
-<li>if c is an object and c belongs to Iterable&lt;T&gt; for some T, then i is the
+<li>if c is an object and c belongs to Iterable&lt;T,()&gt; for some T, then i is the
 result of calling c.__iterator()</li>
 </ol>
 </li>
@@ -6118,7 +6192,7 @@ not suitable for 2a or 2b.
 In step 5, the typed-binding-pattern is used unconditionally, and the compiler
 will check that the static types guarantee that the match will succeed. If the
 typed-binding-pattern uses var, then the type will be inferred from the type of
-<code>expression</code>.
+<code>action-or-expr</code>.
 </p>
 </section>
 <section>
