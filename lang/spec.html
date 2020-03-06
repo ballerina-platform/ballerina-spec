@@ -4516,12 +4516,10 @@ from the static type of the expression in the initial <code>from</code> clause;
 it is a compile-time error if this static type is not a subtype of one of the
 basic types that a query expression can construct.
 </p>
-<!-- only relevant with query actions
 <p>
-Variables bound by the clauses of a query expression are implicitly final, and
+Variables bound by the clauses of a query-pipeline are implicitly final, and
 cannot be modified.
 </p>
--->
 
 <section>
 <h4>From clause</h4>
@@ -4746,6 +4744,7 @@ class="grammar">action :=
    | receive-action 
    | flush-action
    | remote-method-call-action
+   | query-action
    | checking-action
    | trap-action
    | <code>(</code> action <code>)</code>
@@ -5453,6 +5452,26 @@ class="grammar">remote-method-call-action := expression <code>-&gt;</code> metho
 <p>
 Calls a remote method. This works the same as a method call expression, except
 that it is used only for a method with the <code>remote</code> modifier.
+</p>
+
+</section>
+
+<section>
+<h3>Query action</h3>
+<pre
+class="grammar">query-action := query-pipeline do-clause
+do-clause := <code>do</code> block-stmt
+</pre>
+<p>
+The clauses in the query-pipeline of query-action are executed in the same way
+as the clauses in the query-pipeline of a query-expr.
+</p>
+<p>
+The query-action is executed as follows. For each input frame <var>f</var>
+emitted by the query-pipeline, execute the block-stmt with <var>f</var> in
+scope. If a clause in the query-pipeline terminates early with error
+<var>e</var>, the result of the query-action is <var>e</var>. Otherwise, the
+result of the query-action is nil.
 </p>
 
 </section>
@@ -7208,8 +7227,8 @@ The <code>int:Unsigned8</code> type is equivalent to the predefined
 <section>
 <h3>Summary of changes from 2019R3 to 2020R1</h3>
 <ol>
-<li>Query expressions have been added. This is the first stage of
-language-integrated query.</li>
+<li>Query expressions and query actions have been added. This is the first stage
+of language-integrated query.</li>
 <li>When a list constructor or mapping constructor is used without a
 contextually expected type, we now infer a tuple or record type rather than an
 array or map type.</li>
