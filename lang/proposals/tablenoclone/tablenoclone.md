@@ -307,7 +307,7 @@ Issue:
 *   in a query expression when source type is table and there is no contextually expected type, result type is table; result type will have key qualifier if statically known that there are readonly keys with no duplicates
 *   member access t[k] works for table (not allowed when key type is never)
 *   definition of anydata allows table<map<anydata>>> not arbitrary table
-
+*   need to define how `value:toString` works for tables
 
 ### Lang library
 
