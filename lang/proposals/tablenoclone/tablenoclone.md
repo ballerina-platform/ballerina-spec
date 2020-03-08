@@ -11,7 +11,7 @@ The table type is useful whenever an application wants to represent a collection
 The existing structural data types (list and mapping) don't work well in this case:
 
 *   map doesn't work well when the key isn't just a string
-*   map work well with query because the key and the value are separate
+*   map doesn't work well with query because the key and the value are separate
 *   list doesn't work well because you don't have efficient access using the key
 *   list and map aren't enough to make query join work with reasonable performance
 
