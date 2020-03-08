@@ -159,10 +159,10 @@ function forEach(table<Type> table,
    returns ();
 function 'map(table<Type> tab,
               function(Type val) returns Type1 func)
-   returns table<Type1> key<never> = external;
+   returns table<Type1> key<never>;
 function filter(table<Type> key<KeyType> tab,
                 function(Type val) returns boolean func)
-   returns table<Type> key<KeyType> = external;
+   returns table<Type> key<KeyType>;
 ```
 
 A query-expr can specify the key fields like a table constructor
