@@ -198,12 +198,60 @@ This relates to the issue of how we are going to use immutability to achieve con
 Note that type descriptor for records refers to closure when there is a default value. So functions being inherently immutable is a prerequisite to type descriptors being immutable.
 
 
-#### Final record fields
+#### Readonly record fields
 
-Final record fields can be seen as a kind of partial immutability. If the mapping value is immutable, then it's fields are automatically final.
+It is useful for a type to be able to make just certain fields be readonly. This means that not only are the values of the fields immutable, but the fields themselves are immutable and cannot be assigned to. When a mapping value is a member of a table, the primary key fields need to be readonly. The syntax for this is to put `readonly` before the field descriptor e.g.
 
-When a mapping value is a member of a table, the primary key fields need to be final and the values of those fields need to be immutable.
+```
+   type Person record {|
+      readonly int id;
+      string name;
+   |};
+```
 
+A mapping constructor can also use `readonly` to create a readonly field:
+
+```
+  { readonly id: 1, name: "Fred" }
+```
+
+This should also work with the short form of mapping constructor:
+
+
+```
+   int id = 1;
+   string name = "Fred";
+   var m = { readonly x, name};
+```
+
+Note that the following two types are equivalent:
+
+```
+    record {| readonly T1 x; readonly T2 y; |}
+    readonly<record {| T1 x; T2 y; |}>
+```
+
+but this is different:
+
+```
+    record {| readonly<T1> x; readonly<T2> y; |}
+```
+
+I chose the syntax:
+
+    ` readonly T x;`
+
+rather than:
+
+     `final readonly<T> x;`
+
+because:
+
+*   final is for variables not members, and members of values are different from variables
+    *   with a variable you declare it and potentially initialize it later
+    *   with a member, you construct a structure which has a member with a given value 
+*   readonly for members is connected to readonly types in a way that final is not
+*   the important and useful case is when both the member and its value are immutable, so this case should be simple
 
 #### Object
 

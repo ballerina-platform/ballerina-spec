@@ -1,6 +1,6 @@
 # Non-cloning tables
 
-lease add comments to the associated issue [#47](https://github.com/ballerina-platform/ballerina-spec/issues/47).
+Please add comments to the associated issue [#47](https://github.com/ballerina-platform/ballerina-spec/issues/47).
 
 ## Goals
 
@@ -18,7 +18,6 @@ The existing structural data types (list and mapping) don't work well in this ca
 Query joins are important, because one of the key scenarios for doing query in Ballerina rather than in the database is when you want to combine data from multiple data sources.
 
 The main difference in this proposal for tables, as compared to the [previous proposal](https://github.com/ballerina-platform/ballerina-spec/blob/master/lang/proposals/table/table.md), is to make tables behave in a more uniform way to lists and mappings. Specifically:
-
 
 *   a table value has members, where each member is a mapping value representing a row of the table
 *   adding a row to a table and getting a row from a table does not require the mapping to be cloned
@@ -41,8 +40,7 @@ type Customer record {
 };
 ```
 
-To use this in a table, the first step is to make the id field readonly:
-
+To use this in a table, the first step is to make the id field readonly (as described in the Immutability proposal):
 
 ```
 type Customer record {
@@ -55,7 +53,6 @@ type Customer record {
 This means that not only is the the type of the value of the field readonly (i.e. the value cannot be mutated), but the field itself cannot be mutated (i.e. you cannot assign a value to the id field).
 
 A table type can then be declared like this:
-
 
 ```
 type CustomerTable table<Customer> key(id);
@@ -152,9 +149,7 @@ In the above example `KeyType` would be `[string,int]`.
 
 A type `table<T>` without any following key qualifier means a table with member type T, and provides no information about which fields are keys. Like map<T> and T[] it is covariant in T i.e. `table<S>` is a subtype of `table<T>` if S is a subtype of T.
 
-A table can also have no keys. The type of such a table is `table<T> key()`. Both `table<T> key ()` and `table<T> key(f)` are subtypes of `table<T>`. The type table<T> is abstract in the sense that it cannot be the inherent type of a table:
-
-the inherent type of a table also has a specific (possible empty) sequence of keys. Note that `table<T> key ()` is equivalent to `table<T> key<never>`, so t.get(x) will not compile (since there is no value x that belongs to type `never`).
+A table can also have no keys. The type of such a table is `table<T> key()`. Both `table<T> key ()` and `table<T> key(f)` are subtypes of `table<T>`. The type `table<T>` is abstract in the sense that it cannot be the inherent type of a table: for a table type to be non-abstract, it must also have a specific (possible empty) sequence of keys. Note that `table<T> key ()` is equivalent to `table<T> key<never>`, so `t.get(x)` will not compile (since there is no value x that belongs to type `never`).
 
 The types of the built-in functions illustrate the differences between the above cases. Note that filter preserves the "keyness" of its argument.
 
@@ -190,13 +185,6 @@ var tab2 =
 
 In the absence of a contextually expected type, a query-expr whose source type is table will create a table (as with other basic types).
 
-A mapping constructor can use readonly to make a field readonly, e.g.
-
-```
-  { readonly id: 1, name: "John Smith" }
-  { readonly id, name }
-```
-
 When the readonly fields in a select clause come from a table that has those fields as its keys, a query-expr can infer a key qualifier for the type of the constructed table (similar to filter). As a trivial example, in the following:
 
 ```
@@ -220,37 +208,6 @@ Conversion of a table to json produces a list of mappings.
 *   simple syntax that reuses syntactic constructs that already exist
 *   key descriptor used uniformly in type descriptor, constructor and query
 *   a single record can be a member of multiple tables with different keys in each; we can provide the functionality of a database table with both a primary key and a unique constraint by using two tables with the same members
-
-### Readonly fields
-
-Note that the following two types are equivalent:
-
-```
-    record {| readonly T1 x; readonly T2 y; |}
-    readonly<record {| T1 x; T2 y; |}>
-```
-
-but this is different:
-
-```
-    record {| readonly<T1> x; readonly<T2> y; |}
-```
-
-I chose the syntax:
-
-    ` readonly T x;`
-
-rather than:
-
-     `final readonly<T> x;`
-
-because:
-
-*   final is for variables not members, and members of values are different from variables
-    *   with a variable you declare it and potentially initialize it later
-    *   with a member, you construct a structure which has a member with a given value 
-*   readonly for members is connected to readonly types in a way that final is not
-*   the important and useful case is when both the member and its value are immutable, so this case should be simple
 
 ## Specification
 
@@ -305,8 +262,8 @@ Issue:
 *   mapping constructor allows field to be readonly
 *   table join uses lookup rather than iteration for tables
 *   in a query expression when source type is table and there is no contextually expected type, result type is table; result type will have key qualifier if statically known that there are readonly keys with no duplicates
-*   member access t[k] works for table (not allowed when key type is never)
-*   definition of anydata allows table<map<anydata>>> not arbitrary table
+*   member access `t[k]` works for table (not allowed when key type is never)
+*   definition of anydata allows `table<map<anydata>>>` not arbitrary table
 *   need to define how `value:toString` works for tables
 
 ### Lang library
