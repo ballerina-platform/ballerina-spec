@@ -8,6 +8,6 @@ This is a list of in-process proposals for major language features. Each proposa
   * [Immutable](immutable/immutable.md) improved treatement of immutability (issue [#338](https://github.com/ballerina-platform/ballerina-spec/issues/338))
   * [Non-cloning tables](tablenoclone/tablenoclone.md) an approach to tables which does not require a table to clone its members
 
-Obsolete proposals:
+Inactive proposals:
   * [Tables](table/table.md) Earlier approach to tables, in which the members of rows were cloned
 
