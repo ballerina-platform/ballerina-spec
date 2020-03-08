@@ -1,5 +1,7 @@
 # Non-cloning tables
 
+lease add comments to the associated issue [#47](https://github.com/ballerina-platform/ballerina-spec/issues/47).
+
 ## Goals
 
 A table is a collection of records where each record is uniquely identified in the collection by one or more fields. It can be thought of as a general-purpose hash table, where the keys are "inline" i.e. the keys are part of the values being stored in the hash table. A key design principal of Ballerina is to make extensive use of a few, built-in general-purpose collection data types, rather than use a large number of special purpose, library-defined collection types. Table is designed to be an addition to this set of built-in collection types, which complements the existing list and mapping types.
