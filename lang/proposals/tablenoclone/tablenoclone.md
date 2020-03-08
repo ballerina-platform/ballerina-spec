@@ -142,7 +142,7 @@ c = tab.get(["GB", 1]);
 We also allow `key<T>` in order to enable us to write the type of `get` in lang.table:
 
 ```
-public function get(table<Type> key<KeyType> tab) returns KeyType;
+public function get(table<Type> key<KeyType> tab, KeyType key) returns Type;
 ```
 
 In the above example `KeyType` would be `[string,int]`.
