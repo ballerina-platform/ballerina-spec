@@ -65,6 +65,9 @@ Object members with public visibility:
 - `object-method`
 - `object-field-descriptor`
 
+### Deprecation warning 
+The Ballerina compiler must issue a warning when a deprecated API element is used, except in following cases:
+- A deprecated API element is used within another deprecated API element.
 
 ## Human-readable information
 Specify deprecated API element details in the documentation string as a separate section.
