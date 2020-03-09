@@ -14,4 +14,6 @@ The live version is here:
 
 https://htmlpreview.github.io/?https://raw.githubusercontent.com/ballerina-platform/ballerina-spec/master/lang/spec.html
 
+There is a separate list of [specifications](langext/README.md) of languge extensions.
+
 There is a separate list of [proposals](lang/proposals/README.md) for new language features.
