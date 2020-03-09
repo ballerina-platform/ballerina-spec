@@ -268,30 +268,9 @@ Issue:
 
 ### Lang library
 
-These all have analogues in lang.map:
+See [lang.table module](table.bal).
 
-*   length
-*   iterator
-*   get
-*   map
-*   forEach
-*   filter
-*   reduce
-*   remove
-*   removeIfHasKey
-*   removeAll
-*   hasKey
-*   keys
-*   toArray
-
-
-```
-# When the key is an int, find the next available key.
-# This is maximum used key value + 1, or 0 if no key used
-# XXX should it be 0, if the maximum used key value is < 0?
-# Provides similar functionality to auto-increment
-function nextKey(table<Type> key<IntType> tab) returns int;
-```
+This is mostly similar to lang.map.
 
 ## Ideas (not yet stable)
 
