@@ -707,8 +707,15 @@ NonZeroDigit := <code>1</code> .. <code>9</code>
 <p>
 The int type consists of integers between -9,223,372,036,854,775,808 and
 9,223,372,036,854,775,807 (i.e. signed integers than can fit into 64 bits using
-a two's complement representation)
+a two's complement representation).
 </p>
+<p>
+The <a href="#byte_type"><code>byte</code> type</a> is a subtype of
+<code>int</code>. The <code>lang.int</code> lang library module are also
+provides <a href="#built-in_subtypes">built-in subtypes</a> for signed and
+unsigned integers representable in 8, 16 and 32 bits.
+</p>
+
 </section>
 <section>
 <h4>Floating point types</h4>
@@ -2076,13 +2083,14 @@ constituents, i.e. the empty xml value.
 </p>
 </section>
 <section>
-<h4>Byte type</h4>
+<h4 id="byte_type">Byte type</h4>
 
 <pre class="grammar">byte-type-descriptor := <code>byte</code>
 </pre>
 <p>
-The byte type is a built-in name for a union of the int values in the range 0 to
-255 inclusive.
+The byte type is a predefined name for a union of the int values in the range 0
+to 255 inclusive. It is equivalent to the <a href="#built-in_subtypes">built-in
+subtype</a> <code>int:Unsigned8</code>.
 </p>
 </section>
 <section>
@@ -4193,9 +4201,12 @@ left are the same as the most significant bit</li>
 left are zero</li>
 </ul>
 <p>
-If the operator is &gt;&gt; or &gt;&gt;&gt; and the left hand operand is a subtype of byte,
-then the static type of the result is byte; otherwise the static type of the
-result is int.
+If the operator is &gt;&gt; or &gt;&gt;&gt; and the left hand operand is a
+subtype of <code>int:Unsigned<var>K</var></code> when <code><var>K</var></code>
+is 8, 16 or 32, then the static type of the result is
+<code>int:Unsigned<var>N</var></code> where <code><var>N</var></code> is the
+smallest such <code><var>K</var></code>; otherwise, the static type of the
+result is <code>int</code>.
 </p>
 </section>
 <section>
@@ -4352,14 +4363,21 @@ bitwise-or-expr := expression <code>|</code> expression
 A binary-bitwise-expr does a bitwise AND, XOR, or OR operation on its operands.
 </p>
 <p>
-The static type of both operands must be a subtype of int.  The static type of
+The static type of both operands must be a subtype of int. The static type of
 the result is as follows:
 </p>
 <ul>
-<li>for AND, if the type of one operand is a subtype of byte, then the result
-has type byte; otherwise, the result has type int;</li>
-<li>for XOR or OR, if the type of both operands have a type that is a subtype of byte,
-then the result has type byte; otherwise, the result has type int.</li>
+<li>for AND, if the type of either operand is a subtype of
+<code>int:Unsigned<var>K</var></code> when <code><var>K</var></code> is 8, 16 or
+32, then the static type of the result is <code>int:Unsigned<var>N</var></code>
+where <code><var>N</var></code> is the smallest such <code><var>K</var></code>;
+otherwise, the static type of the result is <code>int</code>;</li>
+<li>for XOR or OR, if the type of both operands is a
+subtype of <code>int:Unsigned<var>K</var></code> when <code><var>K</var></code>
+is 8, 16 or 32, then the static type of the result is
+<code>int:Unsigned<var>N</var></code> where <code><var>N</var></code> is the
+smallest such <code><var>K</var></code>; otherwise, the static type of the result
+is <code>int</code>.</li>
 </ul>
 </section>
 
