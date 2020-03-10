@@ -1957,20 +1957,53 @@ class="grammar">stream-type-descriptor := <code>stream</code> [stream-type-param
 stream-type-parameters := <code>&lt;</code> type-descriptor [<code>,</code> type-descriptor]<code>&gt;</code>
 </pre>
 <p>
-A value belongs to a type <code>stream</code> (without the type-parameter)
-if it has basic type stream.
+A stream is an object-like value that can generate a sequence of values. The
+generation of the sequence may either be successful or may fail at some point
+with an error. A stream belongs to type <code>stream&lt;T,E&gt;</code> if the
+values in the generated sequence all belong to T and if any error on failure
+belongs to E. A stream belongs to type <code>stream&lt;T&gt;</code> if the
+values in the generated sequence all belong to T and the generation of the
+sequence never fails. Thus stream&lt;T&gt; is equivalent to
+<code>stream&lt;T,never&gt;</code>, where <code>never</code> is the type to
+which no values belong. A value belongs to a type <code>stream</code> (without
+the type-parameter) if it has basic type stream.
 </p>
 <p>
-A new stream can be constructed using a <code>new</code> expression.
+A stream supports two primitive operations: a next operation and a close
+operation. The next operation has the same semantics as the next method on the
+Iterator abstract object type. The close operation informs the stream that there
+will be no more next operations and thus allows the stream to release resources
+used by the stream; the close operation on a <code>stream&lt;T,E&gt;</code> may
+return an error of type <code>E</code>.
 </p>
 <p>
-A value with basic type stream is iterable. The iteration result type is
-determined by the second type parameter: if the second type parameter is
-missing, then the iteration result type is nil; if the second type parameter is
-<code>E</code>, then the iteration result type is <code>E?</code>.
+The normal implementation of a <code>stream&lt;T,E&gt;</code> is a wrapper
+around an object belonging to <a href="#StreamImplementor">abstract object type
+<code>StreamImplementor&lt;T,E?&gt;</code></a>. The next and close operations on
+the stream delegate to the next and close methods on the StreamImplementor. Note
+that nil is implicitly included in the second type parameter of stream, but is
+explicit in the second parameter of StreamImplementor.
+</p>
+<p>
+The stream module of the <a href="#lang_library">lang library</a> provides
+additional operations on stream that can be implemented in terms of the
+primitive next and close operations.
+</p>
+<p>
+A stream is iterable. The type of the values The type of the values in the
+iteration sequence of a value belonging <code>stream&lt;T,E&gt;</code> is
+<code>T</code> and the type of the iterations result is <code>E?</code>. Calling
+the next method on the iterator created for an iteration has the same effect as
+performing the next operation on the stream. The stream does not keep a copy of
+the sequence of values returned by the next operation. Any subsequent iteration
+operation on the same stream will not generate further values, so the iteration
+sequence for iterations other than the first will be the empty sequence.
+</p>
+<p>
+Note that in this version of Ballerina the stream type is not an object type
+because Ballerina does not yet support parameterized object types.
 </p>
 </section>
-
 
 </section>
 <section>
@@ -2080,6 +2113,10 @@ This can be useful to describe for the return type of a function, if the
 function never returns. It can also be useful as a type parameter. For example,
 <code>xml&lt;never&gt;</code> describes the an xml type that has no
 constituents, i.e. the empty xml value.
+</p>
+<p>
+Note that for anytype <code>T</code>, the type <code>T|never</code> is the same
+as <code>T</code>.
 </p>
 </section>
 <section>
@@ -2200,6 +2237,34 @@ iterable: the object returned by the <code>__iterator</code> method determines
 the iteration sequence and iteration result.
 </p>
 </section>
+<section>
+<h4 id="StreamImplementor">StreamImplementor</h4>
+<p>
+An object belongs to the abstract object type StreamImplementor&lt;T,R&gt; if it
+belongs to Iterator&lt;T,R&gt; and also optionally has a method
+<code>close()</code> with return value R. This is equivalent to belonging to the
+following type.
+</p>
+
+<pre
+>    abstract object {
+       public next() returns record {| T value; |}|R;
+    }
+    | abstract object {
+       public next() returns record {| T value; |}|R;
+       public close() returns R;
+    }
+</pre>
+
+<p>
+The close method says that there will be no more calls to the next method. Any
+call to a next method after the close method has been called must result in a
+panic. A missing close method behaves like a close method that puts the object
+into a closed state, in which calls to next will result in a panic, and then
+immediately returns <code>()</code>.
+</p>
+
+</section>
 <!--
 <section>
 <h4>Collection</h4>
@@ -2312,6 +2377,11 @@ how a filler value can be constructed for a type descriptor.
 <td>if this is valid and its static type does not include error, where
 <code>T</code> is the object type descriptor (an abstract object type will not
 have a filler value)</td>
+</tr>
+<tr>
+<td>stream</td>
+<td>empty stream</td>
+<td></td>
 </tr>
 <tr>
 <td><code>xml</code></td>
@@ -3378,20 +3448,31 @@ class="grammar">new-expr := explicit-new-expr | implicit-new-expr
 explicit-new-expr := <code>new</code> type-descriptor <code>(</code> arg-list <code>)</code>
 </pre>
 <p>
-A new-expr constructs a new object.</p>
+A new-expr constructs a new object or stream. The type-descriptor in an
+explicit-new-expr must specify an object type or a stream type.
+</p>
 <p>
-An explicit-new-expr allocates storage for the object and initializes it,
-passing the supplied arg-list to the object's <code>__init</code> method. It is
-a compile error if the type-descriptor does not specify an object type or if the
-arg-list does not match the signature of the object type's <code>__init</code>
-method. If the result of calling the <code>__init</code> method is an error
-value e, then the result of evaluating the explicit-new-expr is e; otherwise the
-result is the newly initialized object.
+When the type-descriptor is an object type, the explicit-new-expr allocates
+storage for the object and initializes it, passing the supplied arg-list to the
+object's <code>__init</code> method. It is a compile error if the
+type-descriptor if the arg-list does not match the signature of the object
+type's <code>__init</code> method. If the result of calling the
+<code>__init</code> method is an error value e, then the result of evaluating
+the explicit-new-expr is e; otherwise the result is the newly initialized
+object.
+</p>
+<p>
+When the type-descriptor is a stream type <code>stream&lt;T,E&gt;</code>, the
+arg-list must either be empty or be a single argument belonging to abstract
+object type StreamImplementor&lt;T,E?&gt;. When the arg-list is empty, the
+result will be an empty stream (i.e. a stream whose next method returns nil).
+When the arg-list evaluates to a StreamImplementor object, the result will be a
+stream that wraps that object.
 </p>
 <p>
 An explicit-type-expr specifying a type descriptor T has static type T, except
-that if the type of the <code>__init</code> method is E?, where E is a subtype
-of error, then it has static type T|E.
+that if T is an object type and the type of the <code>__init</code> method is
+E?, where E is a subtype of error, then it has static type T|E.
 </p>
 <pre
 class="grammar">implicit-new-expr := <code>new</code> [<code>(</code> arg-list <code>)</code>]
