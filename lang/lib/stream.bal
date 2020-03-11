@@ -27,6 +27,13 @@ type Type any|error;
 @typeParam
 type ErrorType error;
 
+# A type parameter that is a subtype of `error?`.
+# Has the special semantic that when used in a declaration
+# all uses in the declaration must refer to same type.
+# This represents the result type of an iterator.
+@typeParam
+type ResultType error?;
+
 # A type parameter that is a subtype of `any|error`.
 # Has the special semantic that when used in a declaration
 # all uses in the declaration must refer to same type.
@@ -37,10 +44,10 @@ type Type1 any|error;
 #
 # + stm - the stream
 # + return - a new iterator object that will iterate over the members of `stm`.
-public function iterator(stream<Type,ErrorType> stm) returns abstract object {
+public function iterator(stream<Type,ResultType> stm) returns abstract object {
     public function next() returns record {|
         Type value;
-    |}|ErrorType?;
+    |}|ResultType;
 } = external;
 
 # Closes a stream.
@@ -48,7 +55,7 @@ public function iterator(stream<Type,ErrorType> stm) returns abstract object {
 #
 # + stm - the stream to close
 # + return - () if the close completed successfully, otherwise an error
-public function close(stream<Type,ErrorType> stm) returns ErrorType? = external;
+public function close(stream<Type,ResultType> stm) returns ResultType? = external;
 
 // Functional iteration
 
@@ -57,23 +64,23 @@ public function close(stream<Type,ErrorType> stm) returns ErrorType? = external;
 # + stm - the stream
 # + func - a function to apply to each member
 # + return - new stream containing result of applying `func` to each member of `stm` in order
-public function 'map(stream<Type,ErrorType> stm, function(Type val) returns Type1 func)
-   returns stream<Type1,ErrorType> = external;
+public function 'map(stream<Type,ResultType> stm, function(Type val) returns Type1 func)
+   returns stream<Type1,ResultType> = external;
 
 # Applies a function to each member of a stream.
 # The function `func` is applied to each member of stream `stm` in order.
 #
 # + stm - the stream
 # + func - a function to apply to each member
-public function forEach(stream<Type,ErrorType> stm, function(Type val) returns () func) returns ErrorType? = external;
+public function forEach(stream<Type,ResultType> stm, function(Type val) returns () func) returns ResultType = external;
 
 # Selects the members from a stream for which a function returns true.
 #
 # + stm - the stream
 # + func - a predicate to apply to each member to test whether it should be selected
 # + return - new stream only containing members of `stm` for which `func` evaluates to true
-public function filter(stream<Type,ErrorType> stm, function(Type val) returns boolean func)
-   returns stream<Type,ErrorType> = external;
+public function filter(stream<Type,ResultType> stm, function(Type val) returns boolean func)
+   returns stream<Type,ResultType> = external;
 
 # Combines the members of a stream using a combining function.
 # The combining function takes the combined value so far and a member of the stream,
@@ -83,5 +90,5 @@ public function filter(stream<Type,ErrorType> stm, function(Type val) returns bo
 # + func - combining function
 # + initial - initial value for the first argument of combining function `func`
 # + return - result of combining the members of `stm` using `func`
-public function reduce(stream<Type,ErrorType> stm, function(Type1 accum, Type val) returns Type1 func, Type1 initial)
+public function reduce(stream<Type,ErrorType?> stm, function(Type1 accum, Type val) returns Type1 func, Type1 initial)
    returns Type1|ErrorType = external;
