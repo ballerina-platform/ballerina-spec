@@ -583,11 +583,12 @@ of zero or more simpler values, which are in some sense a part of the iterable
 value; the iteration operation provides the values in the sequence, one after
 another. The sequence of values that an iteration operation on a value provides
 is the <em>iteration sequence</em> of the value. Each iterable basic type
-defines the iteration sequence for a value of that basic type. The iteration
-operation as a whole has a result, which is nil if the iteration was successful
-and an error otherwise. The iteration operation thus determines two associated
-types for an iterable type: the type of the values in the iteration sequence and
-the type of the iteration result.
+defines the iteration sequence for a value of that basic type. There is also a
+value associated with the completion of the iteration operation, which is nil if
+the iteration completed successfully and an error otherwise. The iteration
+operation thus determines two associated types for an iterable type: the value
+type, which is the type of the values in the iteration sequence, and the
+completion type, which is the type of the iteration completion value.
 </p>
 <p>
 The following tables summarizes the iterable basic types.
@@ -597,8 +598,8 @@ The following tables summarizes the iterable basic types.
 <th>Basic type</th>
 <th>Iteration sequence</th>
 <th>Type descriptor</th>
-<th>Type of values in iteration sequence</th>
-<th>Type of result</th>
+<th>Value type</th>
+<th>Completion type</th>
 </tr>
 <tr>
 <td>string</td>
@@ -631,9 +632,9 @@ The following tables summarizes the iterable basic types.
 <tr>
 <td>stream</td>
 <td>items</td>
-<td><code>stream&lt;T,R&gt;</code></td>
+<td><code>stream&lt;T,C&gt;</code></td>
 <td><code>T</code></td>
-<td><code>R</code></td>
+<td><code>C</code></td>
 </tr>
 </table>
 
@@ -882,7 +883,8 @@ stored rather than the constituent value itself.
 </p>
 <p>
 A sequence value is iterable: the iteration sequence consists of the singleton
-items of the sequence value in order and the iteration result is always nil.
+items of the sequence value in order and the iteration completion value is
+always nil.
 </p>
 
 <section>
@@ -1107,7 +1109,7 @@ shapes of its members.
 </p>
 <p>
 A list is iterable: the iteration sequence consists of the members of the
-list in order and the iteration result is always nil.
+list in order and the iteration completion value is always nil.
 </p>
 <p>
 The type of list values can be described by two kinds of type descriptors.
@@ -1218,7 +1220,7 @@ name of f, and a shape, which is the shape of the value of f.
 </p>
 <p>
 A mapping is iterable: the iteration sequence consists of the members of the
-mapping and the iteration result is always nil. The order of the iteration
+mapping and the iteration completion value is always nil. The order of the iteration
 sequence is implementation-dependent, but implementations are encouraged to
 preserve and use the order in which the fields were added.
 </p>
@@ -1421,8 +1423,8 @@ that column in T.</li>
 </ul>
 <p>
 A table is iterable: the iteration sequence consists of mapping values, one for
-each row and the iteration result is always nil. The inherent type of a mapping
-value in the iteration sequence will be a closed record type.
+each row and the iteration completion value is always nil. The inherent type of
+a mapping value in the iteration sequence will be a closed record type.
 </p>
 
 </section>
@@ -1957,14 +1959,15 @@ class="grammar">stream-type-descriptor := <code>stream</code> [stream-type-param
 stream-type-parameters := <code>&lt;</code> type-descriptor [<code>,</code> type-descriptor]<code>&gt;</code>
 </pre>
 <p>
-A stream is an object-like value that can generate a sequence of values. The
-generation of the sequence has a result value, which is either nil, indicating
-the sequence was generated successfully, or an error. A stream belongs to type
-<code>stream&lt;T,R&gt;</code> if the values in the generated sequence all
-belong to T and if the result value belongs to R. The type
+A stream is an object-like value that can generate a sequence of values. There
+is also a value associated with the completion of the generation of the
+sequence, which is either nil, indicating the generation of the sequence completed
+successfully, or an error. A stream belongs to type
+<code>stream&lt;T,C&gt;</code> if the values in the generated sequence all
+belong to T and if the completion value belongs to C. The type
 <code>stream&lt;T&gt;</code> is equivalent to <code>stream&lt;T,()&gt;</code>. A
 value belongs to a type <code>stream</code> (without the type-parameter) if it
-has basic type stream. A type <code>stream&lt;T,R&gt;</code> where R does not
+has basic type stream. A type <code>stream&lt;T,C&gt;</code> where C does not
 include nil represents an unbounded stream.
 </p>
 <p>
@@ -1972,14 +1975,14 @@ A stream supports two primitive operations: a next operation and a close
 operation. The next operation has the same semantics as the next method on the
 Iterator abstract object type. The close operation informs the stream that there
 will be no more next operations and thus allows the stream to release resources
-used by the stream; the close operation on a <code>stream&lt;T,R&gt;</code> has
-a result of type <code>R?</code>, where nil means that the close operation was
+used by the stream; the close operation on a <code>stream&lt;T,C&gt;</code> has
+a result of type <code>C?</code>, where nil means that the close operation was
 successful.
 </p>
 <p>
-The normal implementation of a <code>stream&lt;T,R&gt;</code> is a wrapper
+The normal implementation of a <code>stream&lt;T,C&gt;</code> is a wrapper
 around an object belonging to <a href="#StreamImplementor">abstract object type
-<code>StreamImplementor&lt;T,R&gt;</code></a>. The next and close operations on
+<code>StreamImplementor&lt;T,C&gt;</code></a>. The next and close operations on
 the stream delegate to the next and close methods on the StreamImplementor.
 </p>
 <p>
@@ -1988,14 +1991,13 @@ additional operations on stream that can be implemented in terms of the
 primitive next and close operations.
 </p>
 <p>
-A stream is iterable. The type of the values The type of the values in the
-iteration sequence of a value belonging <code>stream&lt;T,R&gt;</code> is
-<code>T</code> and the type of the iteration's result is <code>R</code>. Calling
-the next method on the iterator created for an iteration has the same effect as
-performing the next operation on the stream. The stream does not keep a copy of
-the sequence of values returned by the next operation. Any subsequent iteration
-operation on the same stream will not generate further values, so the iteration
-sequence for iterations other than the first will be the empty sequence.
+A stream is iterable. A stream of type <code>stream&lt;T,C&gt;</code> has value
+type <code>T</code> and completion type <code>C</code>. Calling the next method
+on the iterator created for an iteration has the same effect as performing the
+next operation on the stream. The stream does not keep a copy of the sequence of
+values returned by the next operation. Any subsequent iteration operation on the
+same stream will not generate further values, so the iteration sequence for
+iterations other than the first will be the empty sequence.
 </p>
 <p>
 Note that in this version of Ballerina the stream type is not an object type
@@ -2170,18 +2172,18 @@ types that are built-in; the names of these types are not built-in.
 <section>
 <h4>Iterator</h4>
 <p>
-A iterable value that has an iteration sequence with values belonging to type T
-and with result belonging to type R provides a way of creating an iterator
-object that belongs to the object type
+A value of iterable type with iteration value type T and iteration completion
+type C provides a way of creating an iterator object that belongs to the object
+type
 </p>
 
 <pre
 >    abstract object {
-       public next() returns record {| T value; |}|R;
+       public next() returns record {| T value; |}|C;
     }
 </pre>
 <p>
-In this specification, we refer to this type as Iterator&lt;T,R&gt;.
+In this specification, we refer to this type as Iterator&lt;T,C&gt;.
 </p>
 <p>
 Conceptually an iterator is at a position between members of the iteration sequence. 
@@ -2228,29 +2230,29 @@ value that represents the result of the iteration.
 <section>
 <h4>Iterable</h4>
 <p>
-An object belongs to the abstract object type Iterable&lt;T,R&gt; if it has a
+An object belongs to the abstract object type Iterable&lt;T,C&gt; if it has a
 method named <code>__iterator</code> with no arguments and a return type that is
-subtype of Iterator&lt;T,R&gt;. An object that belongs to Iterable&lt;T,R&gt; is
+subtype of Iterator&lt;T,C&gt;. An object that belongs to Iterable&lt;T,C&gt; is
 iterable: the object returned by the <code>__iterator</code> method determines
-the iteration sequence and iteration result.
+the iteration sequence and iteration completion value.
 </p>
 </section>
 <section>
 <h4 id="StreamImplementor">StreamImplementor</h4>
 <p>
-An object belongs to the abstract object type StreamImplementor&lt;T,R&gt; if it
-belongs to Iterator&lt;T,R&gt; and also optionally has a method
-<code>close()</code> with return value <code>R?</code>. This is equivalent to
+An object belongs to the abstract object type StreamImplementor&lt;T,C&gt; if it
+belongs to Iterator&lt;T,C&gt; and also optionally has a method
+<code>close()</code> with return value <code>C?</code>. This is equivalent to
 belonging to the following type.
 </p>
 
 <pre
 >    abstract object {
-       public next() returns record {| T value; |}|R;
+       public next() returns record {| T value; |}|C;
     }
     | abstract object {
-       public next() returns record {| T value; |}|R;
-       public close() returns R?;
+       public next() returns record {| T value; |}|C;
+       public close() returns C?;
     }
 </pre>
 
@@ -4588,7 +4590,7 @@ clause in the pipeline is executed lazily, pulling input from its preceding
 clause. The input to the first clause is a single empty frame.
 </p>
 <p>
-The execution of a clause may terminate early with an error value, in which case
+The execution of a clause may complete early with an error value, in which case
 this error value is the result of the query. Otherwise, the result of evaluating
 a query expression is a single value, which is constructed from the sequence of
 values emitted by the last clause. The result must be one of the following basic
@@ -4634,7 +4636,7 @@ in an iterable value <var>c</var>;</li>
 <li>do the following in a loop <var>L</var>
 <ul>
 <li>call <code><var>i</var>.next()</code> resulting in a value <var>r</var>;</li>
-<li>if <var>r</var> is an error, then terminate execution of the from-clause
+<li>if <var>r</var> is an error, then complete execution of the from-clause
 early with error <var>r</var>;</li>
 <li>if <var>r</var> is <code>()</code>, stop loop <var>L</var>;</li>
 <li>let <var>v</var> be <code><var>r</var>.value</code>;</li>
@@ -5566,7 +5568,7 @@ as the clauses in the query-pipeline of a query-expr.
 <p>
 The query-action is executed as follows. For each input frame <var>f</var>
 emitted by the query-pipeline, execute the block-stmt with <var>f</var> in
-scope. If a clause in the query-pipeline terminates early with error
+scope. If a clause in the query-pipeline completes early with error
 <var>e</var>, the result of the query-action is <var>e</var>. Otherwise, the
 result of the query-action is nil.
 </p>
@@ -6267,7 +6269,8 @@ class="grammar">foreach-stmt :=
 <p>
 A foreach statement iterates over an iterable value, executing a block statement
 once for each value in the iterable value's iteration sequence. The static type
-of action-or-expr must be an iterable type with a result type of nil.
+of action-or-expr must be an iterable type with an iteration completion type of
+nil.
 </p>
 <p>
 The scope of any variables created in typed-binding-pattern is block-stmt. These
