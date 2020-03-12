@@ -3235,19 +3235,36 @@ each <var>i</var> from <var>k</var> + 1 up to the fixed length of the list, the
 
 <pre
 class="grammar">mapping-constructor-expr := <code>{</code> [field (<code>,</code> field)*] <code>}</code>
-field :=
-  (literal-field-name | computed-field-name) <code>:</code> value-expr
-  | variable-name
-literal-field-name := field-name | string-literal
-computed-field-name := <code>[</code> expression <code>]</code>
+field := 
+  specific-field
+  | computed-name-field
+  | spread-field
+specific-field :=
+   (field-name | string-literal) <code>:</code> value-expr
+   | variable-name
 value-expr := expression
+computed-name-field := <code>[</code> field-name-expr <code>]</code> <code>:</code> value-expr
+field-name-expr := expression
+spread-field := <code>...</code> expression
 </pre>
 <p>
 A mapping-constructor-expr creates a new mapping value. 
 </p>
 <p>
-A field that consists of just a variable name <code><var>x</var></code> is
-equivalent to a field <code><var>x</var>: <var>x</var></code>.
+A specific-field specifies a single field, where the field name is known at
+compile-time. A specific-field that consists of just a variable name
+<code><var>x</var></code> is equivalent to a field <code><var>x</var>:
+<var>x</var></code>.
+</p>
+<p>
+The static type of the expression in a spread-field must allow only mapping
+values, i.e. must be a subtype of <code>map&lt;any|error&gt;</code>. All the
+fields of the mapping value that results from evaluating that expression are
+included in the mapping value being constructed. It is a compile-time error if
+the static type of the expression in a spread-field allows a field that
+duplicates a specific-field or that could also occur in another spread-field.
+Note that a spread-field with an inclusive record type of <code>record { never
+x?; }</code> cannot duplicate a specific field for <code>x</code>.
 </p>
 <p>
 If there is a contextually expected type, then the inherent type of the newly
@@ -3255,7 +3272,7 @@ created mapping is derived from the applicable contextually expected type. If
 the applicable contextually expected type is a mapping type descriptor, then
 that used as the inherent type. If the applicable contextually expected type is
 a union type descriptor, then any members of the union that are inconsistent
-with the field names specified as a literal-field-name in the
+with the field names specified in a specific-field in the
 mapping-constructor-expr will be ignored; it is a compile-time error if this
 does not leave a single mapping type descriptor, which is then used as the
 inherent type. The static type of the mapping-constructor-expr will be the same
@@ -3264,17 +3281,17 @@ as the inherent type.
 <p>
 If there is no contextually expected type, then the inherent type will be an
 exclusive-record-type-descriptor with an individual-field-descriptor for each
-field specified with a literal-field-name; the type of each field-descriptor
-will be the broad type of the value-expr in the field. If there are fields
-specified with a computed-field-name, then there will also be a
-record-rest-descriptor <code>T...</code>, where <code>T</code> is the union of
-the broad types of the value-expr in all such fields.
+specific-field; the type of each field-descriptor will be the broad type of the
+value-expr in the field. The static type of the expression in every spread-field
+will also be added to the inherent type. If there are fields specified as a
+computed-name-field, then there will also be a record-rest-descriptor
+<code>T...</code>, where <code>T</code> is the union of the broad types of the
+value-expr in all such fields.
 </p>
 <p>
-If the inherent type descriptor is a record type descriptor and a field is
-specified using a field-name rather than a string-literal or expression, then
-the record type descriptor must include that field-name as an
-individual-type-descriptor.
+If a specific-field does not use a string-literal for the name of the field and
+the inherent type descriptor is a record type descriptor, then the record type
+descriptor must include an individual-type-descriptor for that field.
 </p>
 <p>
 If the inherent type descriptor is a record type descriptor, a field will be
@@ -3285,20 +3302,21 @@ that has a default value.
 <p>
 If there is a contextually expected type, then the type that the inherent type
 requires for each field provides the contextually expected type for the
-value-expr for that field; otherwise there is no contextually expected type for
-the value-expr forfields. The contextually expected type for a
-computed-field-name is string.
+value-expr in a field; otherwise there is no contextually expected type for the
+value-expr for fields. If there is a contextually expected type, the
+contextually expected type for the expression in a spread-field is map&lt;T&gt;,
+where the T is the smallest type such that the inherent type is a subtype of
+map&lt;T&gt;. The contextually expected type for a field-name-expr is string.
 </p>
 <p>
-A field can have a computed field name, where the name of the field is specified
-by an expression enclosed in square brackets. A mapping-constructor-expr first
-constructs a mapping value without considering any fields with a computed field
-name. The effect of a field with a computed fieldname is to modify the member of
-the mapping with that name after the mapping has been constructed. If the
-modification is incompatible with the inherent type, then the
-mapping-constructor-expr will panic. The modifications are performed in the
-order in which the fields with computed field names occur in the
-mapping-constructor-expr.
+A computed-name-field specifies a single field, where the name of the field is
+specified by an expression enclosed in square brackets. A
+mapping-constructor-expr first constructs a mapping value without considering
+any computed-name-field. The effect of a computed-name-field is to modify the
+member of the mapping with the specified name after the mapping has been
+constructed. If the modification is incompatible with the inherent type, then
+the mapping-constructor-expr will panic. The modifications are performed in the
+order in which the computed-name-fields occur in the mapping-constructor-expr.
 </p>
 
 </section>
