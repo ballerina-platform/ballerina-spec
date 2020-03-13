@@ -3632,7 +3632,9 @@ field-name.</li>
 class="grammar">xml-attribute-access-expr := xml-required-attribute-access-expr | xml-optional-attribute-access-expr
 xml-required-attribute-access-expr := expression <code>.</code> xml-qualified-name
 xml-optional-attribute-access-expr := expression <code>?.</code> xml-qualified-name
-xml-qualified-name := xml-namespace-prefix <code>:</code> identifier 
+xml-qualified-name :=
+   xml-namespace-prefix <code>:</code> identifier
+   | qualified-identifier
 </pre>
 
 <p>
@@ -3644,8 +3646,9 @@ It is a compile-time requirement that the static type of the expression is a
 subtype of xml.
 </p>
 <p>
-The xml-namespace-prefix must be declared using an xmlns-decl-stmt. The
-xml-qualified-name is expanded at compile-time into a string of the form
+Normally, the prefix of the xml-qualified-name is an xml-namespace-prefix
+declared using an xmlns-decl-stmt. In this case, the xml-qualified-name is
+expanded at compile-time into a string of the form
 </p>
 <pre>
    {<var>namespace-uri</var>}<var>local-name</var>
@@ -3653,7 +3656,11 @@ xml-qualified-name is expanded at compile-time into a string of the form
 <p>
 where the namespace-uri comes from xml-namespace-uri specified in the
 xmlns-decl-stmt, and the local-name comes from the identifier following the
-colon.
+colon. It is also allowed for the prefix of the xml-qualified-name to be
+declared as a module-prefix, in which case the qualified-identifier must refer
+to a module-const-decl of type string, and the expansion of the
+xml-qualified-name is the value of the referenced constant; this allows for e.g.
+<code>xml:lang</code> to work.
 </p>
 <p>
 An xml-optional-attribute-access-expr is evaluated as follows. The expression is
