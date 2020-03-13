@@ -14,8 +14,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-const string XML_NAMESPACE_URI = "http://www.w3.org/XML/1998/namespace";
-const string XMLNS_NAMESPACE_URI = "http://www.w3.org/2000/xmlns/";
+public const string XML_NAMESPACE_URI = "http://www.w3.org/XML/1998/namespace";
+public const string XMLNS_NAMESPACE_URI = "http://www.w3.org/2000/xmlns/";
 
 # Type for singleton elements.
 # Built-in subtype of xml.
