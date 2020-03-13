@@ -923,7 +923,7 @@ There is a <a href="#built-in_subtypes">built-in subtype</a>
 </p>
 </section>
 <section>
-<h4>XML</h4>
+<h4 id="XML">XML</h4>
 
 <p>
 An XML value is a sequence representing parsed XML, such as occurs in the
@@ -977,10 +977,33 @@ property; otherwise, the string is of the form:
 <p>
 where <code><var>namespace-uri</var></code> and
 <code><var>local-name</var></code> are the values of the [namespace name] and
-[local name] properties respectively. The attribute map for an element includes
+[local name] properties respectively.
+</p>
+<p>
+The attributes map for an element includes an entry for each attribute
+information item in the [attributes] and [namespace attributes] properties of
+the element information item. The key of the entry is the string representing
+the name of the attribute, constructed from the attribute information item as
+described in the previous paragraph. The name of every namespace attribute will
+thus start with the string <code>{http://www.w3.org/2000/xmlns/}</code>. The
+attributes map can also contain entries representing namespace attributes
+synthesized from the [in-scope namespaces] property. There will be a synthesized
+namespace attribute for every prefix other than <code>xml</code> that occurs as
+a prefix of the element information item or of an attribute information item in
+the element's [attributes] property and for which there is no declaration in the
+[namespace attributes] property. No namespace attribute will be synthesized for
+the default namespace.
+</p>
+<p>
+The attributes map for an element includes
 entries for attributes that appear as members of the [namespace attributes]
 property of an element information item, as well as those that appear as members
-of the [attributes] property.
+of the [attributes] property. In addition, the attributes map includes an entry
+representing a namespace declaration for each prefix <var>p</var>, where
+<var>p</var> is used as a prefix of the element information item or of an
+attribute information item in the element's [attributes] property, and there is
+no declaration for <var>p</var> in the [namespace attributes] property and
+<var>p</var> is not <code>xml</code>.
 </p>
 <p>
 Singleton element, processing instruction and comment values have storage
@@ -3443,10 +3466,10 @@ consisting of an ordered list of information items such as could occur as the
 expressions may occur as Character Information Item or in the [normalized value]
 of an Attribute Information Item. Interpolated expressions are not allowed in
 the value of a namespace attribute.</li>
-<li>This infoset is then converted to an XML value, together with an ordered
-list of interpolated expressions, and for each interpolated expression a
-position within the XML value at which the value of the expression is to be
-inserted.</li>
+<li>This infoset is then converted to an XML value, as described in the <a
+href="#XML">XML type</a> section, together with an ordered list of interpolated
+expressions, and for each interpolated expression a position within the XML
+value at which the value of the expression is to be inserted.</li>
 <li>The static type of an expression occurring in an attribute value must be a
 simple type and must not be nil. The static type type of an expression occurring
 in content can either be xml or a non-nil simple type.</li>
