@@ -3620,7 +3620,8 @@ class="grammar">field-access-expr := expression <code>.</code> field-name
 </pre>
 <p>
 A field-access-expr accesses a field of an object or a member of a mapping. The
-semantics depends on the static type T of expression.
+semantics depends on the static type T of expression. A field-access-expr where
+T is a subtype of xml is interpreted as an xml-required-attribute-access-expr.
 </p>
 <p>
 If T is a subtype of the object basic type, then T must have a field field-name
@@ -3674,6 +3675,10 @@ An optional-field-access-expr accesses a possibly undefined mapping member,
 returning <code>()</code> if the member does not exist.
 </p>
 <p>
+An optional-field-access-expr where the static type of <code>expression</code> is
+a subtype of xml is interpreted as an xml-optional-attribute-access-expr.
+</p>
+<p>
 Let T be the static type of expression, let T' be the intersection of T and
 basic type list, let K be the singleton type containing just the string
 field-name and let M be the member type of K in T'. The compile-time
@@ -3724,22 +3729,22 @@ field-name.</li>
 class="grammar">xml-attribute-access-expr := xml-required-attribute-access-expr | xml-optional-attribute-access-expr
 xml-required-attribute-access-expr := expression <code>.</code> xml-attribute-name
 xml-optional-attribute-access-expr := expression <code>?.</code> xml-attribute-name
-xml-attribute-name := xml-qualified-name | qualified-identifier
+xml-attribute-name := xml-qualified-name | qualified-identifier | identifier
 </pre>
 
 <p>
-An XML attribute access expression provides convenient access to a
-namespace-qualified attribute.
+An XML attribute access expression provides convenient access to an attribute of
+an XML element. It is a compile-time requirement that the static type of the
+expression is a subtype of xml.
 </p>
 <p>
-It is a compile-time requirement that the static type of the expression is a
-subtype of xml.
-</p>
-<p>
-Normally, an xml-attribute-name is specified as an xml-qualified-name, in which
+A string representing the name of the attribute is computed at compile-time from
+the xml-attribute-name. When the xml-attribute-name is an identifier without a
+prefix, the attribute name string is the identifier. When the xml-attribute-name
+has a prefix, normally the xml-attribute-name is an xml-qualified-name, in which
 the prefix is an xml-namespace-prefix declared using an xmlns-decl. In this
-case, the xml-qualified-name is expanded at compile-time into a string of the
-form
+case, the xml-qualified-name is expanded at compile-time into an attribute name
+string of the form
 </p>
 <pre>
    {<var>namespace-uri</var>}<var>local-name</var>
@@ -3752,19 +3757,18 @@ xmlns-decl, and the local-name comes from the identifier following the colon.
 It is also allowed for the xml-attribute-name to be specified as a
 qualified-identifier, in which the prefix is a module-prefix declared using an
 import-decl. In this case the qualified-identifier must refer to a
-module-const-decl of type string, and the expansion of the xml-qualified-name is
-the value of the referenced constant. This allows e.g. <code>xml:lang</code> to
-work.
+module-const-decl of type string, and the attribute name string is the value of
+the referenced constant. This allows e.g. <code>xml:lang</code> to work.
 </p>
 <p>
 An xml-optional-attribute-access-expr is evaluated as follows. The expression is
 evaluated resulting in an xml value <var>v</var>. If <var>v</var> is an empty
 xml value, the result is <code>()</code>. Otherwise, if <var>v</var> is not a
 singleton element, the result is an error. Otherwise, let <var>m</var> be that
-element's attribute map. Let <var>k</var> be the string that results from
-expanding the xml-qualified-name, as described in the previous paragraph. If
-<var>m</var> has a member <var>s</var> with key <code>k</code>, the the result
-is <var>s</var>. Otherwise, the result is <code>()</code>.
+element's attribute map and let <var>k</var> be the attribute name string
+computed at compile-time from the xml-attribute-name. If <var>m</var> has a
+member <var>s</var> with key <var>k</var>, the the result is <var>s</var>.
+Otherwise, the result is <code>()</code>.
 </p>
 <p>
 An xml-required-attribute-access-expr is evaluated the same as an
