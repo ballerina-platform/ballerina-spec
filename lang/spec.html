@@ -351,8 +351,7 @@ Values are of four kinds, each corresponding to a kind of basic type:
 <ul>
 <li>simple values, like booleans and floating point numbers, which are not
 constructed from other values;</li>
-<li>structured values, like mappings and lists, which create structures from
-other values;</li>
+<li>structured values, like mappings and lists, which contain other values;</li>
 <li>sequence values, which combine aspects of simple values and structured
 values;</li>
 <li>behavioral values, like functions, which allow parts of Ballerina programs
@@ -400,11 +399,13 @@ shapes. Subtyping in Ballerina is <em>semantic</em>: a type S is a subtype of
 type T if the set of shapes denoted by S is a subset of the set of shapes
 denoted by T. Every value has a corresponding shape. A shape is specific to a
 basic type: if two values have different basic types, then they have different
-shapes. Since shapes do not deal with storage identity, they represent trees
-rather graphs. For simple values, there is no difference between a shape and a
-value, with the exception of floating point values where the shape does not
-consider representation details that do not affect the mathematical value being
-represented. There are two important relations between a value and a type:
+shapes. The shape of the values contained in a structured value are part of the
+shape of the structured value. Since shapes do not deal with storage identity,
+they represent trees rather graphs. For simple values, there is no difference
+between a shape and a value, with the exception of floating point values where
+the shape does not consider representation details that do not affect the
+mathematical value being represented. There are two important relations between
+a value and a type:
 </p>
 <ul>
 <li>a value <em>looks like</em> a type at a particular point in the execution of
@@ -413,15 +414,35 @@ a program if its shape at that point is a member of the type;</li>
 necessarily continue to look like the type no matter how the value is mutated.</li>
 </ul>
 <p>
-For an immutable value, looking like a type and belonging to a type are the same
-thing.
-</p>
-<p>
 When a Ballerina program declares a variable to have a compile-time type, this
 means that the Ballerina compiler together with the runtime system will ensure
 that the variable will only ever contain a value that belongs to the type.
 Ballerina also provides mechanisms that take a value that looks like a type and
 use it to create a value that belongs to a type.
+</p>
+<p>
+If a value cannot be mutated, looking like a type and belonging to a type are
+the same thing.
+</p>
+<p>
+Every value has a read-only bit. If the read-only bit is set, it means that the
+value is not mutable. A value's read-only bit cannot be changed after the value
+is constructed. Some basic types are inherently immutable: the read-only bit is
+always set for a value that belongs to an inherently immutable basic type. All
+simple types are inherently immutable. Other basic types are selectively
+immutable: a type is selectively immutable if it is possible to construct both
+values of the type that have the read-only bit set and values that do not have
+the read-only bit set. All structured types are selectively immutable. Finally,
+some basic types are inherently mutable: the read-only bit is never set for a
+value belonging to an inherently mutable basic type.
+</p>
+<p>
+A shape is divided into two <em>aspects</em>: the <em>primary aspect</em> and
+the <em>read-only aspect</em>. A value's read-only bit is a part of the
+<em>read-only aspect</em> of the value's shape. The read-only bit of values
+contained in a structured value is part of the read-only aspect of those values
+and of the read-only aspectof the structured value. Everything about a shape
+except the read-only bits constitutes the primary aspect of the shape.
 </p>
 </section>
 <section>
@@ -579,7 +600,7 @@ values are, recursively, json</td>
   </tr>
   <tr>
    <td>readonly</td>
-   <td>the union of all inherently immutable basic types</td>
+   <td>any value whose read-only bit is set</td>
   </tr>
 </table>
 <p>
@@ -933,7 +954,8 @@ integer <em>n</em> where 0 &#x2264; <em>n</em> &lt; 0xD800 or 0xDFFF &lt; n &#x2
 0x10FFFF.
 </p>
 <p>
-String values do not have storage identity and so are immutable.
+String values do not have storage identity and so the string basic type is
+inherently immutable.
 </p>
 <p>
 There is a <a href="#built-in_subtypes">built-in subtype</a>
@@ -2253,8 +2275,11 @@ href="#lax_static_typing">lax static typing</a>.
 class="grammar">readonly-type-descriptor := <code>readonly</code>
 </pre>
 <p>
-The <code>readonly</code> type is a predefined name for the union of all basic types
-that are inherently immutable. These are:
+A shape belongs to the type <code>readonly</code> if its read-only bit is set.
+</p>
+<p>
+A value belonging to an inherently immutable basic type will always have its
+read-only bit set. These basic types are:
 </p>
 <ul>
 <li>all simple types
@@ -2272,6 +2297,16 @@ that are inherently immutable. These are:
 <li>service</li>
 <li>typedesc</li>
 <li>handle</li>
+</ul>
+<p>
+A value belonging to a selectively immutable basic type may have its read-only
+bit set. These basic types are:
+</p>
+<ul>
+<li>xml</li>
+<li>list</li>
+<li>mapping</li>
+<li>table</li>
 </ul>
 
 </section>
