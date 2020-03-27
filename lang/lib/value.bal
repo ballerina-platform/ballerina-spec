@@ -20,6 +20,13 @@
 @typeParam
 type AnydataType anydata;
 
+# A type parameter that is a subtype of `anydata|readonly`.
+# Has the special semantic that when used in a declaration
+# all uses in the declaration must refer to same type.
+@typeParam
+type CloneableType anydata|readonly;
+
+
 # Returns a clone of `v`.
 # A clone is a deep copy that does not copy immutable subtrees.
 # A clone can therefore safely be used concurrently with the original.
@@ -28,7 +35,7 @@ type AnydataType anydata;
 #
 # + v - source value
 # + return - clone of `v`
-public function clone(AnydataType v) returns AnydataType = external;
+public function clone(CloneableType v) returns CloneableType = external;
 
 # Returns a clone of `v` that is read-only, i.e. immutable.
 # It corresponds to the ImmutableClone(v) abstract operation,
@@ -36,7 +43,7 @@ public function clone(AnydataType v) returns AnydataType = external;
 #
 # + v - source value
 # + return - immutable clone of `v`
-public function cloneReadOnly(AnydataType v) returns AnydataType = external;
+public function cloneReadOnly(CloneableType v) returns CloneableType = external;
 
 # Tests whether `v` is read-only, i.e. immutable
 # Returns true if read-only, false otherwise.

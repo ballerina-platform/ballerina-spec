@@ -21,7 +21,7 @@
 public type Detail record {|
     string message?;
     error cause?;
-    (anydata|error)...;
+    (anydata|readonly)...;
 |};
 
 # A type parameter that is a subtype of error `Detail` record type.
