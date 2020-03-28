@@ -428,21 +428,23 @@ the same thing.
 <p>
 Every value has a read-only bit. If the read-only bit is set, it means that the
 value is not mutable. A value's read-only bit cannot be changed after the value
-is constructed. Some basic types are inherently immutable: the read-only bit is
-always set for a value that belongs to an inherently immutable basic type. All
-simple types are inherently immutable. Other basic types are selectively
-immutable: a type is selectively immutable if it is possible to construct both
-values of the type that have the read-only bit set and values that do not have
-the read-only bit set. All structured types are selectively immutable. Finally,
-some basic types are inherently mutable: the read-only bit is never set for a
-value belonging to an inherently mutable basic type.
+is constructed. Immutability is deep: the values contained in a structured value
+that has its read-only bit set will all have their read-only bits set. Some
+basic types are inherently immutable: the read-only bit is always set for a
+value that belongs to an inherently immutable basic type. All simple types are
+inherently immutable. Other basic types are selectively immutable: a type is
+selectively immutable if it is possible to construct both values of the type
+that have the read-only bit set and values that do not have the read-only bit
+set. All structured types are selectively immutable. Finally, some basic types
+are inherently mutable: the read-only bit is never set for a value belonging to
+an inherently mutable basic type.
 </p>
 <p>
 A shape is divided into two <em>aspects</em>: the <em>primary aspect</em> and
 the <em>read-only aspect</em>. A value's read-only bit is a part of the
 <em>read-only aspect</em> of the value's shape. The read-only bit of values
 contained in a structured value is part of the read-only aspect of those values
-and of the read-only aspectof the structured value. Everything about a shape
+and of the read-only aspect of the structured value. Everything about a shape
 except the read-only bits constitutes the primary aspect of the shape.
 </p>
 <p>
@@ -620,6 +622,13 @@ values are, recursively, json</td>
   </tr>
 </table>
 <p>
+Type descriptors other than <code>readonly</code> describes types using only the
+primary aspect of shape: whether a value belongs to the type is not affected by
+the read-only aspect of the value's shape. The <code>readonly</code> type uses
+only the read-only aspect: whether a value belongs to the <code>readonly</code>
+type depends only on the read-only aspect of the value's shape.
+</p>
+<p>
 In addition to describing a type, a type descriptor may also include information
 used to construct a value of the type, as well as metadata. Whereas the type
 described by a type descriptor is known at compile time, this additional
@@ -708,6 +717,9 @@ A simple value belongs to exactly one of the following basic types:
 <p>
 The type descriptor for each simple basic type contains all the values of the
 basic type.
+</p>
+<p>
+All simple basic types are inherently immutable.
 </p>
 
 <pre
@@ -1017,7 +1029,7 @@ same as <code>xml&lt;<var>T</var>&gt;</code> and that
 </p>
 <p>
 The name of an element is represented by a string. The attributes of an element
-are represented by a value of type <code>map&lt;string&gt;</code>. The content
+are represented by a value of type <code>map&lt;string&gt;</code>. The children
 of an element is represented by a value of type <code>xml</code>.
 </p>
 <p>
@@ -1025,15 +1037,15 @@ Singleton element, processing instruction and comment values have storage
 identity. Other xml values do not.
 </p>
 <p>
-An xml value is immutable if and only if all its constituent singletons are
-immutable. A text singleton is inherently immutable, since it does not have
-storage identity. The other singleton types are usually mutable, but can be
-constructed as immutable in two ways. First, an xml value constructed by a
-compile-time constant expression is immutable. Second, an immutable, deep copy
-can be made of a structure by using the <a
-href="#ImmutableClone">ImmutableClone</a> abstract operation. Element
-immutability is deep: the content of an immutable XML element is always
-immutable.
+The <code>xml:Text</code> type is inherently immutable. This implies that both
+text singletons and empty xml values always have their read-only bits set. The
+<code>xml:Element</code>, <code>xml:ProcessingInstruction</code> and
+<code>xml:Comment</code> types are selectively immutable. The read-only bit of a
+xml value with length greater than one is set if and only if the read-only bit
+of all its constituent items is set. Immutability of xml values is deep: if the
+read-only bit an <code>xml:Element</code> is set, then the read-only bits of the
+mapping representing its attributes and of the xml value representing its
+children are also set.
 </p>
 <p>
 Note that although the mutable constituents of mutable xml value can be mutated,
@@ -1144,38 +1156,32 @@ namespaces.</li>
 <section>
 <h3>Structured values</h3>
 <p>
-There are three basic types of structured value: list, mapping and table.
+Structured values are containers for other values, which are called their
+members. The shape of the members of a structured value contributes to the shape
+of the structured value. A structured type descriptor describe the shape of the
+structured value in terms of the shapes of its members. There are three basic
+types of structured value: list, mapping and table.
 </p>
 <p>
-A structured value is either mutable or immutable; whether it is mutable or
-immutable is fixed when the value is constructed and cannot be changed
-thereafter. Immutability is deep: an immutable structured value cannot refer to
-a mutable structured value. The error basic type is inherently immutable: a
-value of the error basic type is always immutable. Structured values of other
-basic types are usually mutable, but can be constructed as immutable in two
-ways. First, a structural value constructed by a compile-time constant
-expression is always immutable. Second, an immutable, deep copy can be made of a
-structure by using the <a href="#ImmutableClone">ImmutableClone</a> abstract
-operation.
+Structured values are usually mutable. Mutating a structured value changes which
+values it contains. Structured values can also be constructed as immutable.
+Immutability is deep: immutable structured values cannot contain mutable
+structured values; if the read-only bit of a structured value is set, then the
+read-only bit of each of its members is set.
 </p>
 <p>
-Values of the container basic types are containers for other values, which are
-called their members. The shape of the members of a container value contribute
-to the shape of the container. Mutating a member of a container can thus cause
-the shape of the container to change.
+Mutating a member of a structured value can cause the shape of the structured
+value to change. A structured value has an inherent type, which is a type
+descriptor which is part of the structured values's runtime value. At runtime,
+the structured value prevents any mutation that might lead to the structured
+value having a shape that is not a member of its inherent type. Thus a
+structured value belongs to a type if and only if that its inherent type is a
+subtype of that type.
 </p>
 <p>
-A type descriptor for a container basic type describe the shape of the container
-in terms of the shapes of its members. A container has an inherent type, which
-is a type descriptor which is part of the container's runtime value. At runtime,
-the container prevents any mutation that might lead to the container having a
-shape that is not a member of its inherent type. Thus a container value belongs
-to a type if and only if that its inherent type is a subtype of that type.
-</p>
-<p>
-The inherent type of an immutable container is a singleton type with the
-container's shape as its single member. Thus, an immutable container value
-belongs to a type if and only if the type contains the shape of the value.
+The inherent type of an immutable structured value is a singleton type with the
+structured value's shape as its single member. Thus, an immutable structured
+value belongs to a type if and only if the type contains the shape of the value.
 </p>
 <p>
 Each member of a container has a key that uniquely identifies it within the
@@ -1346,7 +1352,6 @@ mapping and the iteration completion value is always nil. The order of the itera
 sequence is implementation-dependent, but implementations are encouraged to
 preserve and use the order in which the fields were added.
 </p>
-
 <p>
 The type of mapping values can be described by two kinds of type descriptors.
 </p>
@@ -1577,9 +1582,11 @@ detail-type-descriptor := type-descriptor
 inferred-error-type-param := <code>*</code>
 </pre>
 <p>
-An error value belongs to the error basic type, which is used only for
-representing errors. The error type is inherently immutable. An error value
-contains the following information:
+An error value is used to represent an error. Errors are a distinct basic type:
+a value belongs to the error basic type if and only if it is an error. This
+means that errors are clearly distinguished from other values. Many constructs
+in Ballerina give special treatment to error values. The error type is
+inherently immutable. An error value contains the following information:
 </p>
 <ul>
 <li>a reason, which is a string identifier for the category of error</li>
@@ -2618,8 +2625,9 @@ lang.value module of the lang library.
 <p>
 ImmutableClone(v) is defined for any value v that belongs to the type
 <code>anydata|readonly</code>. It performs a deep copy of v similar to Clone(v),
-except that newly constructed values are constructed as immutable. Any immutable
-value is not copied.
+except that newly constructed values will be constructed as immutable and so
+have their read-only bit set. Any immutable value is not copied. So the result
+of Immutable always has its read-only bit set.
 </p>
 <p>
 Like Clone, ImmutableClone must preserve graph structure, including cycles.
@@ -3267,7 +3275,7 @@ precise type is used. However, in a few situations, using the precise type would
 be inconvenient, and so Ballerina uses the broad type. In particular, the broad
 type is used for inferring the type of an implicitly typed non-final variable.
 Similarly, the broad type is used when it is necessary to infer the member type
-of the inherent type of a container.
+of the inherent type of a structured value.
 </p>
 <p>
 In most cases, the precise type and the broad type of an expression are the
@@ -3339,6 +3347,10 @@ class="grammar">const-expr :=
    | conditional-expr
    | <code>(</code> const-expr <code>)</code>
 </pre>
+<p>
+A value resulting from the evaluation of a <code>const-expr</code> always has
+its read-only bit set.
+</p>
 <p>
 Within a <code>const-expr</code>, any nested expression must also be a
 const-expr. A <code>functional-constructor-expr</code> within a
@@ -3480,6 +3492,10 @@ constructor may specify only the first <var>k</var> members, provided that for
 each <var>i</var> from <var>k</var> + 1 up to the fixed length of the list, the
 <var>i</var>-th member can be filled in automatically.
 </p>
+<p>
+An list-constructor-expr occurring within a const-expr will construct a list value
+that has its read-only bit set.
+</p>
 
 </section>
 <section>
@@ -3570,6 +3586,10 @@ constructed. If the modification is incompatible with the inherent type, then
 the mapping-constructor-expr will panic. The modifications are performed in the
 order in which the computed-name-fields occur in the mapping-constructor-expr.
 </p>
+<p>
+An mapping-constructor-expr occurring within a const-expr will construct a mapping value
+that has its read-only bit set.
+</p>
 
 </section>
 <section>
@@ -3608,6 +3628,11 @@ For example,
   ]
 }
 </pre>
+<p>
+A table-constructor-expr occurring within a const-expr will construct a table
+value that has its read-only bit set.
+</p>
+
 </section>
 <section>
 <h3>Service constructor</h3>
@@ -3680,7 +3705,7 @@ interpolation <code>${"`"}</code>.
 class="grammar">xml-template-expr := <code>xml</code> BacktickString
 </pre>
 <p>
-An XML template expression creates an xml value as follows:
+An XML template expression constructs an xml value as follows:
 </p>
 <ol>
 <li>The backtick string is parsed to produce a string of literal characters with
@@ -3709,6 +3734,10 @@ result of the expression evaluations are inserted into the corresponding
 position in the newly created xml value. This xml value is the result of the
 evaluation.</li>
 </ol>
+<p>
+An xml-template-expr occurring within a const-expr will construct an xml value
+that has its read-only bit set.
+</p>
 </section>
 <section>
 <h3>New expression</h3>
@@ -3988,11 +4017,11 @@ container-expression := expression
 key-expression := expression
 </pre>
 <p>
-A member-access-expr accesses a member of a container value using its key,
+A member-access-expr accesses a member of a structured value using its key,
 or a constituent of a sequence value using its index.
 </p>
 <p>
-The requirements on the static type of container-expr and key-expression are as
+The requirements on the static type of container-expression and key-expression are as
 follows:
 </p>
 <ul>
@@ -4187,6 +4216,10 @@ constructor was evaluated. Any fields of the detail record that were not
 specified by a named argument can be defaulted using the defaults specified in
 the detail record type.
 </p>
+<p>
+A functional-constructor-expr occurring within a const-expr will construct a
+value with its read-only bit set.
+</p>
 
 </section>
 <section>
@@ -4313,9 +4346,17 @@ with its numeric shapes transformed to take account to the possibility of the
 numeric conversion specified in the previous paragraph.
 </p>
 <p>
-The <code>type-descriptor</code> provides the contextually expected type for
-<code>expression</code>.
+The contextually expected type for <code>expression</code> is the intersection
+of the contextually expected type of the <code>type-cast-expr</code> and the
+type described by the <code>type-descriptor</code>.
 </p>
+<p>
+Note that a <code>type-cast-expr</code> of <code>&lt;readonly&gt;</code> can be
+used both to cause constructors withing the <code>expression</code> to construct
+values with the read-only bit set and to verify that the value resulting from
+the evaluation of <code>expression</code> has its read-only bit set.
+</p>
+
 </section>
 <section>
 <h3>Typeof expression</h3>
@@ -7048,9 +7089,10 @@ value that is known at compile-time, such as in a type-descriptor or in a
 match-pattern.
 </p>
 <p>
-The type of the constant is the singleton type containing just the shape of the
-value named by the constant. The type of the constant determines the static type
-of a variable-reference-expr that references this constant.
+The type of the constant is the intersection of <code>readonly</code> and the
+singleton type containing just the shape of the value named by the constant. The
+type of the constant determines the static type of a variable-reference-expr
+that references this constant.
 </p>
 <p>
 If type-descriptor is present, then it provides the contextually expected type
