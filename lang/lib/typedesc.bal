@@ -37,6 +37,7 @@ type AnydataType anydata;
 # the following respects:
 # - the inherent type of any structural values constructed comes from the specified
 #   type descriptor rather than the value being constructed
+# - the read-only bit of values and fields comes from the specified type descriptor
 # - the graph structure of `v` is not preserved; the result will always be a tree;
 #   an error will be returned if `v` has cycles
 # - immutable structural values are copied rather being returned as is; all
