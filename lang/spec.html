@@ -426,18 +426,18 @@ If a value cannot be mutated, looking like a type and belonging to a type are
 the same thing.
 </p>
 <p>
-Every value has a read-only bit. If the read-only bit is set, it means that the
-value is not mutable. A value's read-only bit cannot be changed after the value
-is constructed. Immutability is deep: the values contained in a structured value
-that has its read-only bit set will all have their read-only bits set. Some
-basic types are inherently immutable: the read-only bit is always set for a
-value that belongs to an inherently immutable basic type. All simple types are
-inherently immutable. Other basic types are selectively immutable: a type is
-selectively immutable if it is possible to construct both values of the type
-that have the read-only bit set and values that do not have the read-only bit
-set. All structured types are selectively immutable. Finally, some basic types
-are inherently mutable: the read-only bit is never set for a value belonging to
-an inherently mutable basic type.
+Every value has a read-only bit. If the read-only bit is on, it means that the
+value is not mutable. A value's read-only bit is fixed when the value is
+constructed, and cannot be changed thereafter. Immutability is deep: the values
+contained in a structured value that has its read-only bit on will all have
+their read-only bits on. Some basic types are inherently immutable: the
+read-only bit is always on for a value that belongs to an inherently immutable
+basic type. All simple types are inherently immutable. Other basic types are
+selectively immutable: a type is selectively immutable if it is possible to
+construct both values of the type that have the read-only bit on and values
+that do not have the read-only bit on. All structured types are selectively
+immutable. Finally, some basic types are inherently mutable: the read-only bit
+is never on for a value belonging to an inherently mutable basic type.
 </p>
 <p>
 A shape is divided into two <em>aspects</em>: the <em>primary aspect</em> and
@@ -618,7 +618,7 @@ values are, recursively, json</td>
   </tr>
   <tr>
    <td>readonly</td>
-   <td>any value whose read-only bit is set</td>
+   <td>any value whose read-only bit is on</td>
   </tr>
 </table>
 <p>
@@ -1038,14 +1038,14 @@ identity. Other xml values do not.
 </p>
 <p>
 The <code>xml:Text</code> type is inherently immutable. This implies that both
-text singletons and empty xml values always have their read-only bits set. The
+text singletons and empty xml values always have their read-only bits on. The
 <code>xml:Element</code>, <code>xml:ProcessingInstruction</code> and
 <code>xml:Comment</code> types are selectively immutable. The read-only bit of a
-xml value with length greater than one is set if and only if the read-only bit
-of all its constituent items is set. Immutability of xml values is deep: if the
-read-only bit an <code>xml:Element</code> is set, then the read-only bits of the
+xml value with length greater than one is on if and only if the read-only bit
+of all its constituent items is on. Immutability of xml values is deep: if the
+read-only bit an <code>xml:Element</code> is on, then the read-only bits of the
 mapping representing its attributes and of the xml value representing its
-children are also set.
+children are also on.
 </p>
 <p>
 Note that although the mutable constituents of mutable xml value can be mutated,
@@ -1166,8 +1166,8 @@ types of structured value: list, mapping and table.
 Structured values are usually mutable. Mutating a structured value changes which
 values it contains. Structured values can also be constructed as immutable.
 Immutability is deep: immutable structured values cannot contain mutable
-structured values; if the read-only bit of a structured value is set, then the
-read-only bit of each of its members is set.
+structured values; if the read-only bit of a structured value is on, then the
+read-only bit of each of its members is on.
 </p>
 <p>
 Mutating a member of a structured value can cause the shape of the structured
@@ -1347,6 +1347,16 @@ each field. The field shape for a field f has a name, which is the same as the
 name of f, and a shape, which is the shape of the value of f.
 </p>
 <p>
+Each field also has a read-only bit. This is in addition to the read-only bit of
+the mapping value. If a mapping value's field has its read-only bit on, then
+that field cannot be assigned to nor removed. If the mapping value's read-only
+bit is on, then the read-only bit of every field is also on. A field's read-only
+bit is fixed when the mapping value is constructed, and cannot be changed
+thereafter. If a field's read-only bit is on, the read-only bit of the value of
+the field is also on. The read-only bit of a field is part of the read-only
+aspect of the field's shape.
+</p>
+<p>
 A mapping is iterable: the iteration sequence consists of the members of the
 mapping and the iteration completion value is always nil. The order of the iteration
 sequence is implementation-dependent, but implementations are encouraged to
@@ -1411,7 +1421,7 @@ exclusive-record-type-descriptor :=
 field-descriptor :=
    individual-field-descriptor | record-type-reference
 individual-field-descriptor :=
-   metadata type-descriptor field-name [<code>?</code> | default-value] <code>;</code>
+   metadata [<code>readonly</code>] type-descriptor field-name [<code>?</code> | default-value] <code>;</code>
 field-name := identifier
 default-value := <code>=</code> expression
 record-type-reference := <code>*</code> type-reference <code>;</code>
@@ -2276,11 +2286,11 @@ href="#lax_static_typing">lax static typing</a>.
 class="grammar">readonly-type-descriptor := <code>readonly</code>
 </pre>
 <p>
-A shape belongs to the type <code>readonly</code> if its read-only bit is set.
+A shape belongs to the type <code>readonly</code> if its read-only bit is on.
 </p>
 <p>
 A value belonging to an inherently immutable basic type will always have its
-read-only bit set. These basic types are:
+read-only bit on. These basic types are:
 </p>
 <ul>
 <li>all simple types
@@ -2301,7 +2311,7 @@ read-only bit set. These basic types are:
 </ul>
 <p>
 A value belonging to a selectively immutable basic type may have its read-only
-bit set. These basic types are:
+bit on. These basic types are:
 </p>
 <ul>
 <li>xml</li>
@@ -2626,8 +2636,8 @@ lang.value module of the lang library.
 ImmutableClone(v) is defined for any value v that belongs to the type
 <code>anydata|readonly</code>. It performs a deep copy of v similar to Clone(v),
 except that newly constructed values will be constructed as immutable and so
-have their read-only bit set. Any immutable value is not copied. So the result
-of Immutable always has its read-only bit set.
+have their read-only bit on. Any immutable value is not copied. So the result
+of Immutable always has its read-only bit on.
 </p>
 <p>
 Like Clone, ImmutableClone must preserve graph structure, including cycles.
@@ -3349,7 +3359,7 @@ class="grammar">const-expr :=
 </pre>
 <p>
 A value resulting from the evaluation of a <code>const-expr</code> always has
-its read-only bit set.
+its read-only bit on.
 </p>
 <p>
 Within a <code>const-expr</code>, any nested expression must also be a
@@ -3494,7 +3504,7 @@ each <var>i</var> from <var>k</var> + 1 up to the fixed length of the list, the
 </p>
 <p>
 An list-constructor-expr occurring within a const-expr will construct a list value
-that has its read-only bit set.
+that has its read-only bit on.
 </p>
 
 </section>
@@ -3508,8 +3518,8 @@ field :=
   | computed-name-field
   | spread-field
 specific-field :=
-   (field-name | string-literal) <code>:</code> value-expr
-   | variable-name
+   [<code>readonly</code>] (field-name | string-literal) <code>:</code> value-expr
+   | [<code>readonly</code>] [variable-name]
 value-expr := expression
 computed-name-field := <code>[</code> field-name-expr <code>]</code> <code>:</code> value-expr
 field-name-expr := expression
@@ -3588,7 +3598,7 @@ order in which the computed-name-fields occur in the mapping-constructor-expr.
 </p>
 <p>
 An mapping-constructor-expr occurring within a const-expr will construct a mapping value
-that has its read-only bit set.
+that has its read-only bit on.
 </p>
 
 </section>
@@ -3630,7 +3640,7 @@ For example,
 </pre>
 <p>
 A table-constructor-expr occurring within a const-expr will construct a table
-value that has its read-only bit set.
+value that has its read-only bit on.
 </p>
 
 </section>
@@ -3736,7 +3746,7 @@ evaluation.</li>
 </ol>
 <p>
 An xml-template-expr occurring within a const-expr will construct an xml value
-that has its read-only bit set.
+that has its read-only bit on.
 </p>
 </section>
 <section>
@@ -4218,7 +4228,7 @@ the detail record type.
 </p>
 <p>
 A functional-constructor-expr occurring within a const-expr will construct a
-value with its read-only bit set.
+value with its read-only bit on.
 </p>
 
 </section>
@@ -4353,8 +4363,8 @@ type described by the <code>type-descriptor</code>.
 <p>
 Note that a <code>type-cast-expr</code> of <code>&lt;readonly&gt;</code> can be
 used both to cause constructors withing the <code>expression</code> to construct
-values with the read-only bit set and to verify that the value resulting from
-the evaluation of <code>expression</code> has its read-only bit set.
+values with the read-only bit on and to verify that the value resulting from
+the evaluation of <code>expression</code> has its read-only bit on.
 </p>
 
 </section>
