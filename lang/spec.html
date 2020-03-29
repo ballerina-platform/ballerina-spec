@@ -2649,27 +2649,29 @@ function in the lang.value module of the lang library.
 </p>
 </section>
 <section>
-<h4>SameShape</h4>
+<h4>DeepEquals</h4>
 <p>
-SameShape(v1, v2) is defined for any values v1, v2 that belong to type anydata.
-It returns true or false depending of whether v1 and v2 have the same shape.
-SameShape(v1, v2) must terminate for any values v1 and v2 of type anydata, even
-if v1 or v2 have cycles. SameShape(v1, v2) returns true if v1 and v2 have the
+DeepEquals(v1, v2) is defined for any values v1, v2 that belong to type anydata.
+It returns true or false depending of whether the primary aspect of the shape v1
+and of v2 are the same. In other words, DeepEquals returns true if and only if
+the values are the same ignoring whether read-only bits are on or off.
+DeepEquals(v1, v2) must terminate for any values v1 and v2 of type anydata, even
+if v1 or v2 have cycles. DeepEquals(v1, v2) returns true if v1 and v2 have the
 same shape, even if the graphs of references of v1 and v2 have different
 structures. If two values v1 and v2 have different basic types, then
-SameShape(v1, v2) will be false.
+DeepEquals(v1, v2) will be false.
 </p>
 <p>
-The possibility of cycles means that SameShape cannot be implemented simply by
-calling SameShape recursively on members. Rather SameShape must maintain a
+The possibility of cycles means that DeepEquals cannot be implemented simply by
+calling DeepEquals recursively on members. Rather DeepEquals must maintain a
 mapping that records for each pair of references whether it is already in
-process of comparing those references. When a SameShape operation starts, this
+process of comparing those references. When a DeepEquals operation starts, this
 map is empty. Whenever it starts to compare two references, it should see
 whether it has already recorded that pair (in either order), and, if it has,
 proceed on the assumption that they compare equal.
 </p>
 <p>
-SameShape(Clone(x), x) is guaranteed to be true for any value of type anydata.
+DeepEquals(Clone(x), x) is guaranteed to be true for any value of type anydata.
 </p>
 </section>
 <section>
@@ -4736,7 +4738,7 @@ v<sub>1</sub> is the same as the storage identity of v<sub>2</sub>.</li>
 The == operator tests for deep equality. The != operator results in the negation
 of the result of the == operator. For both == and !=, both operands must have a
 static type that is a subtype of anydata. Two values v1, v2 are deeply equal if
-SameShape(v1, v2) is true.
+DeepEquals(v1, v2) is true.
 </p>
 <p>
 Note that === and == are the same for simple values except for floating point types.
@@ -6539,7 +6541,7 @@ class="grammar">const-pattern := simple-const-expr
 </pre>
 <p>
 A const-pattern denotes a single value. Matching a const-pattern denoting a
-value p against a value v succeeds if SameShape(p,v) is true. A
+value p against a value v succeeds if DeepEquals(p,v) is true. A
 variable-reference in a const-pattern must refer to a constant. Successfully
 matching a const-pattern does not cause any variables to be created.
 </p>
