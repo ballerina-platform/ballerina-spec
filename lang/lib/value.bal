@@ -70,7 +70,7 @@ public function isReadOnly(anydata v) returns boolean = external;
 #   return `NaN`, `Infinity` for positive infinity, and `-Infinity` for negative infinity
 # - if `v` is a list, then returns the results toString on each member of the list
 #   separated by a space character
-# - if `v` is a map, then returns key=value for each member separated by a space character
+# - if `v` is a mapping, then returns key=value for each member separated by a space character
 # - if `v` is xml, then returns `v` in XML format (as if it occurred within an XML element)
 # - if `v` is table, TBD
 # - if `v` is an error, then a string consisting of the following in order
