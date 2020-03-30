@@ -458,7 +458,9 @@ More precisely, a value is defined to be <em>plain data</em> if it is
 <li>a structured value, all of whose members are also plain data.</li>
 </ul>
 <p>
-Plain data values can be compared for equality.
+Plain data values can in general contain cycles of references, but in some
+contexts are restricted to be acyclic. Plain data values, including values with
+cycles, can be compared for equality.
 </p>
 
 </section>
@@ -544,7 +546,8 @@ terms of names of fields (required keys) and value for each field</td>
   </tr>
   <tr>
    <td>table</td>
-   <td>a two-dimensional collection of immutable values</td>
+   <td>a ordered collection of mappings, where a mapping is uniquely identified
+within the table by a key derived from the mapping</td>
   </tr>
   <tr>
    <td rowspan="8">basic, behavioral</td>
@@ -688,6 +691,13 @@ The following tables summarizes the iterable basic types.
 <td>mapping</td>
 <td>members</td>
 <td><code>map&lt;T&gt;</code></td>
+<td><code>T</code></td>
+<td><code>()</code></td>
+</tr>
+<tr>
+<td>table</td>
+<td>members in order</td>
+<td><code>table&lt;T&gt;</code></td>
 <td><code>T</code></td>
 <td><code>()</code></td>
 </tr>
@@ -1157,10 +1167,8 @@ namespaces.</li>
 <h3>Structured values</h3>
 <p>
 Structured values are containers for other values, which are called their
-members. The shape of the members of a structured value contributes to the shape
-of the structured value. A structured type descriptor describe the shape of the
-structured value in terms of the shapes of its members. There are three basic
-types of structured value: list, mapping and table.
+members. There are three basic types of structured value: list, mapping and
+table.
 </p>
 <p>
 Structured values are usually mutable. Mutating a structured value changes which
@@ -1170,18 +1178,25 @@ structured values; if the read-only bit of a structured value is on, then the
 read-only bit of each of its members is on.
 </p>
 <p>
-Mutating a member of a structured value can cause the shape of the structured
-value to change. A structured value has an inherent type, which is a type
-descriptor which is part of the structured values's runtime value. At runtime,
-the structured value prevents any mutation that might lead to the structured
-value having a shape that is not a member of its inherent type. Thus a
-structured value belongs to a type if and only if that its inherent type is a
-subtype of that type.
+The shape of the members of a structured value contributes to the shape of the
+structured value. A structured type descriptor describe the shape of the
+structured value in terms of the shapes of its members. Mutating a member of a
+structured value can cause the shape of the structured value to change. A
+structured value has an inherent type, which is a type descriptor which is part
+of the structured values's runtime value. At runtime, the structured value
+prevents any mutation that might lead to the structured value having a shape
+that is not a member of its inherent type. Thus a structured value belongs to a
+type if and only if its inherent type is a subtype of that type.
 </p>
 <p>
 The inherent type of an immutable structured value is a singleton type with the
 structured value's shape as its single member. Thus, an immutable structured
 value belongs to a type if and only if the type contains the shape of the value.
+</p>
+<p>
+Every structured value has a length, which is the number of its members.
+All structured values are iterable: the iteration sequence consists of the
+members of the structure and the completion type is always nil.
 </p>
 <p>
 Each member of a container has a key that uniquely identifies it within the
@@ -1228,7 +1243,7 @@ The following table summarizes the type descriptors for structured types.
 <h4>Lists</h4>
 <p>
 A list value is a container that keeps its members in an ordered list. The
-number of members of the list is called the <em>length </em>of the list. The key
+number of members of the list is called the <em>length</em> of the list. The key
 for a member of a list is the integer index representing its position in the
 list, with the index of the first member being 0. For a list of length
 <em>n</em>, the indices of the members of the list, from first to last, are
@@ -1502,65 +1517,79 @@ explicit <code>record-rest-descriptor</code>.
 </section>
 </section>
 <section>
-<h4>[Preview] Tables</h4>
+<h4>Tables</h4>
 <p>
-A table is intended to be similar to the table of relational database table. A
-table value contains an immutable set of column names and a mutable bag of rows.
-Each column name is a string; each row is a mapping that associates a value with
-every column name; a bag of rows is a collection of rows that is unordered and
-allows duplicates.
+A table is a structural value, whose members are mapping values. A table
+provides access to its members using a key that comes from the read-only fields
+of the member. It keeps its members in order, but does not provide random access
+to a member using its position in this order.
 </p>
 <p>
-A table value also contains a boolean flag for each column name saying whether
-that column is a primary key for the table; this flag is immutable. If no
-columns have this flag, then the table does not have a primary key. Otherwise
-the value for all primary keys together must uniquely identify each row in the
-table; in other words, a table cannot have two rows where for every column
-marked as a primary key, that value of that column in both rows is the same.
-</p>
-
-<pre
-class="grammar">table-type-descriptor := direct-table-type-descriptor | indirect-table-type-descriptor
-direct-table-type-descriptor := <code>table</code> <code>{</code> column-type-descriptor+ <code>}</code>
-indirect-table-type-descriptor := <code>table</code> type-parameter
-
-column-type-descriptor :=
-   individual-column-type-descriptor
-   | column-record-type-reference
-individual-column-type-descriptor :=
-   [<code>key</code>] type-descriptor column-name <code>;</code>
-column-record-type-reference :=
-   <code>*</code> type-reference [key-specifier (<code>,</code> key-specifier)*] <code>;</code>
-key-specifier := <code>key</code> column-name
-column-name := identifier
-</pre>
-<p>
-A direct-table-type-descriptor has a descriptor for each column, which specifies the
-name of the column, whether that column is part of a primary key and the type
-that values in that column must belong to. The type descriptor for the column
-must be a plain data type. If a column is part of a primary key, then the type
-descriptor for the column must also allow only non-nil simple values.
+Every table value has, in addition to its members, a key sequence, which is used
+to provide keyed access to its members. The key sequence is an ordered sequence
+of the field names. The key sequence of a table is fixed when a table is
+constructed and cannot be changed thereafter. For each field name in the key
+sequence, every member of the table must have a read-only field with that name
+and the value of the field must be acyclic plain data. A table's key sequence
+determines a key value for each member of the table: if the key sequence
+consists of a single field name f, then the key value of a member is that value
+of field f of that member. If the key sequence consists of multiple field names
+f<sub>1</sub>,f<sub>2</sub>,...,f<sub>n</sub> where n is &#x2265; 2, then the
+key value for a member r is a tuple with members
+v<sub>1</sub>,v<sub>2</sub>,...,v<sub>n</sub> where v<sub>i</sub> is the value
+of field f<sub>i</sub> of r. A table constrains its membership so that a key
+value uniquely identifies a member within the table. More precisely, for every
+two rows r<sub>i</sub> and r<sub>j</sub> in a table with i not equal to j, the
+key value for r<sub>i</sub> must not be equal to the key value for
+r<sub>j</sub>. Key values are compared for equality using the <a
+href="#DeepEquals">DeepEquals</a> abstract operation. This constraint is
+enforced by the table both when the table is constructed and when the table is
+mutated. As a special case, a table's key sequence may be empty; this represents
+a keyless table, whose members are not uniquely identified by a key.
 </p>
 <p>
-An indirect-table-type-descriptor describes a table type in terms of the shape
-of the the rows of the table. A type <code>table&lt;T&gt;</code> contains a
-table shape if <code>T</code> contains the mapping shape of every member of the
-table shape. If <code>T</code> is a closed record type, then
-<code>table&lt;T&gt;</code> is equivalent to <code>table { *T; }</code>.
-</p>
-<p>
-Note that a table type T' will be a subtype of a table type T if and only if:
+The shape of a table value is a triple consisting of
 </p>
 <ul>
-<li>T and T' have the same set of column names;</li>
-<li>T and T' have the same set of primary keys; and</li>
-<li>for each column, the type for that column in T' is a subtype of the type of
-that column in T.</li>
+<li>an ordered list containing for each table member, the shape of that member</li>
+<li>the table's key sequence, and</li>
+<li>a set containing for each table member, the shape of the key value of that
+member (derived from the table members and the key sequence)</li>
 </ul>
+
+<pre
+class="grammar">table-type-descriptor := <code>table</code> row-type-parameter [key-constraint]
+row-type-parameter := type-parameter
+key-constraint := key-specifier | key-type-constraint
+key-specifier := <code>key</code> <code>(</code> [ field-name (<code>,</code> field-name)* ] <code>)</code>
+key-type-constraint := <code>key</code> type-parameter
+</pre>
 <p>
-A table is iterable: the iteration sequence consists of mapping values, one for
-each row and the iteration completion value is always nil. The inherent type of
-a mapping value in the iteration sequence will be a closed record type.
+The row-type-parameter specifies the shape of the table's members. A table type
+<code>table&lt;<var>R</var>&gt; <var>KC</var> </code> contains a table shape if
+and only if every table member shape belongs to <code><var>R</var></code> and
+the table shape satisfies the key constraint <code><var>KC</var></code>. The
+type specified by a row-type-parameter must be a subtype of
+<code>map&lt;any|error&gt;</code>
+</p>
+<p>
+In a table-type-descriptor <code>table&lt;<var>R</var>
+key(<var>ks</var>)</code>, for each field name f<sub>i</sub> in
+<code><var>ks</var></code>, f<sub>i</sub> must be a required, read-only field of
+<code><var>R</var></code> with a type that is a subtype of anydata. A table
+shape satisfies a key-constraint <code>key(<var>ks</var>)</code> if its key
+sequence is <code><var>ks</var></code>. A table shape satisfies a key-constraint
+<code>key&lt;K&gt;</code> if and and only if its set of key value shapes are a
+subset of <code><var>K</var></code>.
+</p>
+<p>
+As with other structured values, a table value has an inherent type. The
+inherent type of a table value must be a table-type-descriptor that includes a
+key-specifier.
+</p>
+<p>
+A table is iterable: the iteration sequence consists of the members of the
+table in order and the iteration completion value is always nil.
 </p>
 
 </section>
@@ -2649,7 +2678,7 @@ function in the lang.value module of the lang library.
 </p>
 </section>
 <section>
-<h4>DeepEquals</h4>
+<h4 id="DeepEquals">DeepEquals</h4>
 <p>
 DeepEquals(v1, v2) is defined for any values v1, v2 that belong to type anydata.
 It returns true or false depending of whether the primary aspect of the shape v1
@@ -3605,24 +3634,10 @@ that has its read-only bit on.
 
 </section>
 <section>
-<h3>[Preview] Table constructor</h3>
+<h3>Table constructor</h3>
 
 <pre
-class="grammar">table-constructor-expr :=
-   <code>table</code> <code>{</code> [column-descriptors [<code>,</code> table-rows]] <code>}</code>
-column-descriptors := <code>{</code> column-descriptor (<code>,</code> column-descriptor)* <code>}</code>
-column-descriptor := column-constraint* column-name
-column-constraint :=
-   <code>key</code>
-   | <code>unique</code>
-   | <code>auto</code> auto-kind 
-auto-kind := auto-kind-increment
-auto-kind-increment := <code>increment</code> [<code>(</code>seed<code>,</code> increment<code>)</code>]
-seed := int-const-expr
-increment := int-const-expr
-int-const-expr := [Sign] int-literal
-table-rows :=  <code>[</code> table-row (<code>,</code> table-row)* <code>]</code>
-table-row := <code>{</code> expression (<code>,</code> expression)* <code>}</code>
+class="grammar">table-constructor-expr := <code>table</code> [key-specifier] <code>[</code> [expr-list] <code>]</code>
 </pre>
 <p>
 The contextually expected type of the table-constructor-expr determines the
@@ -3632,13 +3647,10 @@ inherent type of the constructed value.
 For example,
 </p>
 
-<pre>table {
-  { key firstName, key lastName, position },
-  [ 
-    {"Sanjiva", "Weerawarana", "lead" },
-    {"James", "Clark", "design co-lead" }
-  ]
-}
+<pre>table key(email) [
+   { email: "sanjiva@weerawarana.org", firstName: "Sanjiva", lastName: "Weerawarana" },
+   { email: "jjc@jclark.com", firstName: "James", lastName: "Clark" }
+]
 </pre>
 <p>
 A table-constructor-expr occurring within a const-expr will construct a table
@@ -7674,6 +7686,7 @@ The <code>int:Unsigned8</code> type is equivalent to the predefined
 <h3>Summary of changes from 2020R1 to 2020R2</h3>
 <ol>
 <li>The <code>readonly</code> type has been added.</li>
+<li>The design of the table type has been refined and it no longer has preview status.</li>
 <li>The XML item-specific subtypes can be used as constructors, both in
 expressions and in binding patterns.</li>
 </ol>
