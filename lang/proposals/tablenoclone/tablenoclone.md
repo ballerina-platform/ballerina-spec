@@ -232,7 +232,7 @@ In `table<R>`, R must be a subtype of `map<any|error>`. Furthermore, in a concre
 *   type of f<sub>i</sub> is a subtype of anydata
 *   f<sub>i</sub> is a readonly member
 
-A table value has a "key sequence", which is  an ordered sequence of the names of the fields that together uniquely identify each member of the table. The key sequence is part of the shape, but is not part of the primary aspect of the shape and so does not affect `==`.
+A table value has a "key sequence", which is  an ordered sequence of the names of the fields that together uniquely identify each member of the table. The key sequence is part of the shape.
 
 When a mapping is added to a table and the value of any of the key fields has a cycle, it should be a panic. If a value has been entirely constructed as readonly, then the implementation knows that it does not have cycles; only if cloneReadOnly has been used can cycles occur. The implementation will need to hash the keys. When it does so, it needs to check for cycles coming from cloneReadOnly and panic rather than blow up. 
 
