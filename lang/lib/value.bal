@@ -68,11 +68,12 @@ public function isReadOnly(anydata v) returns boolean = external;
 # - if `v` is a float or decimal, then return `v` represented as a decimal string,
 #   with a decimal point only if necessary, but without any suffix indicating the type of `v`;
 #   return `NaN`, `Infinity` for positive infinity, and `-Infinity` for negative infinity
-# - if `v` is a list, then returns the results toString on each member of the list
+# - if `v` is a list, then returns the results of toString on each member of the list
 #   separated by a space character
 # - if `v` is a mapping, then returns key=value for each member separated by a space character
 # - if `v` is xml, then returns `v` in XML format (as if it occurred within an XML element)
-# - if `v` is table, TBD
+# - if `v` is table, then returns the results of toString on each member of the table
+    separate by a newline character
 # - if `v` is an error, then a string consisting of the following in order
 #     1. the string `error`
 #     2. a space character
