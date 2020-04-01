@@ -1517,7 +1517,7 @@ explicit <code>record-rest-descriptor</code>.
 </section>
 </section>
 <section>
-<h4>Tables</h4>
+<h4 id="tables">Tables</h4>
 <p>
 A table is a structural value, whose members are mapping values. A table
 provides access to its members using a key that comes from the read-only fields
@@ -1574,13 +1574,15 @@ type specified by a row-type-parameter must be a subtype of
 </p>
 <p>
 In a table-type-descriptor <code>table&lt;<var>R</var>&gt;
-key(<var>ks</var>)</code>, for each field name f<sub>i</sub> in
-<code><var>ks</var></code>, f<sub>i</sub> must be a required, read-only field of
-<code><var>R</var></code> with a type that is a subtype of <code>anydata</code>.
-A table shape satisfies a key-constraint <code>key(<var>ks</var>)</code> if and
-only if its key sequence is <code><var>ks</var></code>. A table shape satisfies
-a key-constraint <code>key&lt;K&gt;</code> if and and only if its set of key
-value shapes are a subset of <code><var>K</var></code>.
+key(<var>ks</var>)</code>, <code><var>R</var></code> and
+<code><var>ks</var></code> must be consistent in the following sense: for each
+field name f<sub>i</sub> in <code><var>ks</var></code>, f<sub>i</sub> must be a
+required, read-only field of <code><var>R</var></code> with a type that is a
+subtype of <code>anydata</code>. A table shape satisfies a key-constraint
+<code>key(<var>ks</var>)</code> if and only if its key sequence is
+<code><var>ks</var></code>. A table shape satisfies a key-constraint
+<code>key&lt;K&gt;</code> if and and only if its set of key value shapes are a
+subset of <code><var>K</var></code>.
 </p>
 <p>
 As with other structured values, a table value has an inherent type. The
@@ -3597,7 +3599,7 @@ class="grammar">list-constructor-expr := <code>[</code> [ expr-list ] <code>]</c
 expr-list := expression (<code>,</code> expression)*
 </pre>
 <p>
-Creates a new list value. The members of the list come from evaluating each
+A list-constructor-expr creates a new list value. The members of the list come from evaluating each
 expression in the expr-list in order.
 </p>
 <p>
@@ -3641,8 +3643,8 @@ each <var>i</var> from <var>k</var> + 1 up to the fixed length of the list, the
 class="grammar">table-constructor-expr := <code>table</code> [key-specifier] <code>[</code> [expr-list] <code>]</code>
 </pre>
 <p>
-The contextually expected type of the table-constructor-expr determines the
-inherent type of the constructed value.
+A table-constructor-expr creates a new table value. The members of the table
+come from evaluating each of the expressions in the expr-list in order.
 </p>
 <p>
 For example,
@@ -3653,6 +3655,38 @@ For example,
    { email: "jjc@jclark.com", firstName: "James", lastName: "Clark" }
 ]
 </pre>
+<p>
+The inherent type of the constructed table is a table type descriptor including
+a key-specifier <code>table&lt;<var>T</var>&gt; key(<var>ks</var>)</code>, where
+<code><var>T</var></code> is the member type and <code><var>ks</var></code> is
+the key sequence. The inherent type is determined from the contextually expected
+type togther with the table-constructor-expr. The static type of the
+table-constructor-expr will be the same as this inherent type.
+</p>
+<p>
+If there is a contextually expected type, then the member type of inherent type
+of the newly created table is derived from the applicable contextually expected
+type, which must be a table-type-descriptor. If there is no contextually
+expected type, then the member type of the inherent type is derived from the the
+static type of the expressions for the members: the member type will be the
+smallest record type that is a supertype of the static types of all the
+expressions in the expr-list.
+</p>
+<p>
+The key-sequence of the inherent type comes from the key-specifier of applicable
+contextually expected type or the key-specifier in the table-constructor-expr.
+If both of these are present, then they must be the same. If neither of them are
+present, then the key-sequence is empty. The key-sequence of the table value is
+the same as that of its inherent type. The key-sequence and member type must
+meet the same consistency requirements as if they were specified together in a
+<a href="#tables">table type descriptor</a>.
+</p>
+<p>
+If there is a contextually expected type, then the type that the inherent type
+requires for each table member provides the contextually expected type for the
+expressions in the expr-list; otherwise there is no contextually expected type
+for these expressions.
+</p>
 
 </section>
 <section>
