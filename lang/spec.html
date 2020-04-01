@@ -4104,10 +4104,15 @@ The requirements on the static type of container-expression and key-expression a
 follows:
 </p>
 <ul>
-<li>if container-expr is a subtype of string or of xml or of basic
+<li>if container-expression is a subtype of string or of xml or of basic
 type list, then the contextually expected type for key-expression is int and
 the static type of key-expression must be a subtype of int;</li>
-<li>otherwise container-expr must be a subtype of the union of nil and basic
+<li>if container-expression is a subtype of table, then the contextually
+expected type for key-expression is <code><var>K</var></code> and the static
+type of key-expression must be a subtype of <code><var>K</var></code>, where the
+static type of container-expression is <code>table&lt;<var>R</var>&gt;
+key&lt;<var>K</var>&gt;</code>;</li>
+<li>otherwise container-expression must be a subtype of the union of nil and basic
 type map; in this case the contextually expected type for key-expression is
 string and the static type of key-expression must be a subtype of string.</li>
 </ul>
@@ -4130,10 +4135,12 @@ value containing the item with index <var>k</var> in <var>c</var>;</li>
 <li>if it is list, and <var>k</var> is &lt; 0 or &#x2265; the length of
 <var>c</var>, then the evaluation completes abruptly with a panic; otherwise,
 the result is the member of <var>c</var> with index <var>k</var>;</li>
+<li>if it is table, then if <var>c</var> does not contain a member with key
+<var>k</var>, the result is <code>()</code>; otherwise, the result is the member
+of <var>c</var> with key <var>k</var>.</li>
 <li>if it is mapping, then if <var>c</var> is <code>()</code> or <var>c</var>
-does not contain a member with key <var>k</var>, then the result is
-<code>()</code>; otherwise, the result is the member of <var>c</var> with key
-<var>k</var>.</li>
+does not contain a member with key <var>k</var>, the result is <code>()</code>;
+otherwise, the result is the member of <var>c</var> with key <var>k</var>.</li>
 </ul>
 </li>
 </ol>
@@ -4143,8 +4150,9 @@ the static type of the member-access-expr is <a
 href="#built-in_subtypes"><code>string:Char</code></a>, that is the subtype of
 strings containing strings of length 1. If T is a subtype of xml&lt;M&gt;, then
 the static type of the member-access-expr is M|E, where E is the type of the
-empty xml value. Otherwise, let K be the static type of key-expression and
-let M be the member type of K in T; if T contains nil, or T is a subtype of
+empty xml value. If T is a subtype of table&lt;R&gt;, then the static type of
+member-access-expr is R?. Otherwise, let K be the static type of key-expression
+and let M be the member type of K in T; if T contains nil, or T is a subtype of
 mapping and K is an optional key type for T, then the static type of the
 member-access-expr is M?, otherwise the static type is M.
 </p>
