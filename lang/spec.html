@@ -3031,13 +3031,11 @@ same identifier in the same symbol space also with block-scope.
 <pre
 class="grammar">expression := 
    literal
-   | list-constructor-expr
-   | mapping-constructor-expr
-   | table-constructor-expr
-   | service-constructor-expr
    | string-template-expr
    | xml-template-expr
+   | structural-constructor-expr
    | new-expr
+   | service-constructor-expr
    | variable-reference-expr
    | field-access-expr
    | optional-field-access-expr
@@ -3367,11 +3365,9 @@ different types of number; there are no implicit conversions.
 <pre
 class="grammar">const-expr := 
    literal
-   | list-constructor-expr
-   | mapping-constructor-expr
-   | table-constructor-expr
    | string-template-expr
    | xml-template-expr
+   | structural-constructor-expr
    | functional-constructor-expr
    | constant-reference-expr
    | type-cast-expr
@@ -3491,7 +3487,110 @@ of the array value created is also <code>byte[N]</code>.
 </p>
 </section>
 <section>
-<h3>List constructor</h3>
+<h3>Template expressions</h3>
+<p>
+Template expressions make use of strings enclosed in backticks with interpolated
+expressions.
+</p>
+<pre
+class="grammar">BacktickString :=
+  <code>`</code> BacktickItem* Dollar* <code>`</code>
+BacktickItem :=
+   BacktickSafeChar
+   | BacktickDollarsSafeChar
+   | Dollar* interpolation
+interpolation := <code>${</code> expression <code>}</code>
+BacktickSafeChar := ^ ( <code>`</code> | <code>$</code> )
+BacktickDollarsSafeChar :=  <code>$</code>+ ^ ( <code>{</code> | <code>`</code> | <code>$</code>)
+Dollar := <code>$</code>
+</pre>
+
+<section>
+<h4>String template expression</h4>
+
+<pre
+class="grammar">string-template-expr := <code>string</code> BacktickString
+</pre>
+<p>
+A <code>string-template-expr</code> interpolates the results of evaluating
+expressions into a literal string. The static type of the expression in each
+interpolation must be a simple type and must not be nil. Within a
+<code>BacktickString</code>, every character that is not part of an
+<code>interpolation</code> is interpreted as a literal character. A
+string-template-expr is evaluated by evaluating the expression in each
+interpolation in the order in which they occur, and converting the result of the
+each evaluation to a string as if using by <code>toString</code> function of the
+<code>lang.value</code> module of the lang library. The result
+of evaluating the <code>string-template-expr</code> is a string comprising the
+literal characters and the results of evaluating and converting the
+interpolations, in the order in which they occur in the
+<code>BacktickString</code>.
+</p>
+<p>
+A literal <code>`</code> can be included in string template by using an
+interpolation <code>${"`"}</code>.
+</p>
+</section>
+<section>
+<h4>XML template expression</h4>
+
+<pre
+class="grammar">xml-template-expr := <code>xml</code> BacktickString
+</pre>
+<p>
+An XML template expression constructs an xml value as follows:
+</p>
+<ol>
+<li>The backtick string is parsed to produce a string of literal characters with
+interpolated expressions</li>
+<li>The result of the previous step is parsed as XML content. More precisely, it
+is parsed using the production <code>content</code> in the W3C XML
+Recommendation. For the purposes of parsing as XML, each interpolated expression
+is interpreted as if it were an additional character allowed by the CharData and
+AttValue productions but no other. The result of this step is an XML Infoset
+consisting of an ordered list of information items such as could occur as the
+[children] property of an element information item, except that interpolated
+expressions may occur as Character Information Item or in the [normalized value]
+of an Attribute Information Item. Interpolated expressions are not allowed in
+the value of a namespace attribute.</li>
+<li>This infoset is then converted to an xml value, as described in the <a
+href="#XML">XML type</a> section, together with an ordered list of interpolated
+expressions, and for each interpolated expression a position within the XML
+value at which the value of the expression is to be inserted.</li>
+<li>The static type of an expression occurring in an attribute value must be a
+simple type and must not be nil. The static type type of an expression occurring
+in content can either be xml or a non-nil simple type.</li>
+<li>When the xml-template-expr is evaluated, the interpolated expressions are evaluated
+in the order in which they occur in the <code>BacktickString</code>, and
+converted to strings if necessary. A new copy is made of the xml value and the
+result of the expression evaluations are inserted into the corresponding
+position in the newly created xml value. This xml value is the result of the
+evaluation.</li>
+</ol>
+<p>
+An xml-template-expr occurring within a const-expr will construct an xml value
+that has its read-only bit on.
+</p>
+</section>
+</section>
+
+<section>
+<h3>Structural constructors</h3>
+<p>
+Each basic type of structure has its own expression syntax for constructing a
+value of the type.
+</p>
+<pre
+class="grammar">structural-constructor-expr := list-constructor-expr | table-constructor-expr | mapping-constructor-expr
+</pre>
+
+<p>
+An structural-constructor-expr occurring within a const-expr will construct a
+structural value that has its read-only bit on.
+</p>
+
+<section>
+<h4>List constructor</h4>
 
 <pre
 class="grammar">list-constructor-expr := <code>[</code> [ expr-list ] <code>]</code>
@@ -3533,14 +3632,31 @@ constructor may specify only the first <var>k</var> members, provided that for
 each <var>i</var> from <var>k</var> + 1 up to the fixed length of the list, the
 <var>i</var>-th member can be filled in automatically.
 </p>
-<p>
-An list-constructor-expr occurring within a const-expr will construct a list value
-that has its read-only bit on.
-</p>
 
 </section>
 <section>
-<h3>Mapping constructor</h3>
+<h4>Table constructor</h4>
+
+<pre
+class="grammar">table-constructor-expr := <code>table</code> [key-specifier] <code>[</code> [expr-list] <code>]</code>
+</pre>
+<p>
+The contextually expected type of the table-constructor-expr determines the
+inherent type of the constructed value.
+</p>
+<p>
+For example,
+</p>
+
+<pre>table key(email) [
+   { email: "sanjiva@weerawarana.org", firstName: "Sanjiva", lastName: "Weerawarana" },
+   { email: "jjc@jclark.com", firstName: "James", lastName: "Clark" }
+]
+</pre>
+
+</section>
+<section>
+<h4>Mapping constructor</h4>
 
 <pre
 class="grammar">mapping-constructor-expr := <code>{</code> [field (<code>,</code> field)*] <code>}</code>
@@ -3632,142 +3748,12 @@ If the applicable contextually expected type is a subtype of readonly, then the
 mapping will be constructed with its read-only bit on. If the inherent type
 makes a specific field readonly, then that field will be constructed with its
 read-only bit on. A specific-field that starts with <code>readonly</code> will
-also be constructed with its read-only bit on. An mapping-constructor-expr
-occurring within a const-expr will construct a mapping value that has its
-read-only bit on.
+also be constructed with its read-only bit on.
 </p>
 
 </section>
-<section>
-<h3>Table constructor</h3>
-
-<pre
-class="grammar">table-constructor-expr := <code>table</code> [key-specifier] <code>[</code> [expr-list] <code>]</code>
-</pre>
-<p>
-The contextually expected type of the table-constructor-expr determines the
-inherent type of the constructed value.
-</p>
-<p>
-For example,
-</p>
-
-<pre>table key(email) [
-   { email: "sanjiva@weerawarana.org", firstName: "Sanjiva", lastName: "Weerawarana" },
-   { email: "jjc@jclark.com", firstName: "James", lastName: "Clark" }
-]
-</pre>
-<p>
-A table-constructor-expr occurring within a const-expr will construct a table
-value that has its read-only bit on.
-</p>
-
 </section>
-<section>
-<h3>Service constructor</h3>
 
-<pre
-class="grammar">service-constructor-expr := [annots] <code>service</code> service-body-block
-service-body-block := <code>{</code> service-method-defn* <code>}</code>
-service-method-defn :=
-   metadata
-   [<code>resource</code>]
-   <code>function</code> identifier function-signature method-defn-body
-</pre>
-<p>
-A <code>service-constructor-expr</code> constructs a service value. The result
-of evaluating a service-constructor-expr is a value of type service. If a
-service-method-defn contains a <code>resource</code> qualifier, then it defines
-a resource method. The self variable can be used in a method-defn-body of a
-service-method-defn in the same way as for objects.
-</p>
-<p>
-Each service value has a distinct type descriptor. (Evaluating a service
-constructor thus has an effect analogous to defining an anonymous object type
-and then creating a value of that type.)
-</p>
-<p>
-The return type of a resource method must be a subtype of <code>error?</code> and must contain
-nil.
-</p>
-</section>
-<section>
-<h3>String template expression</h3>
-
-<pre
-class="grammar">string-template-expr := <code>string</code> BacktickString
-BacktickString :=
-  <code>`</code> BacktickItem* Dollar* <code>`</code>
-BacktickItem :=
-   BacktickSafeChar
-   | BacktickDollarsSafeChar
-   | Dollar* interpolation
-interpolation := <code>${</code> expression <code>}</code>
-BacktickSafeChar := ^ ( <code>`</code> | <code>$</code> )
-BacktickDollarsSafeChar :=  <code>$</code>+ ^ ( <code>{</code> | <code>`</code> | <code>$</code>)
-Dollar := <code>$</code>
-</pre>
-<p>
-A <code>string-template-expr</code> interpolates the results of evaluating
-expressions into a literal string. The static type of the expression in each
-interpolation must be a simple type and must not be nil. Within a
-<code>BacktickString</code>, every character that is not part of an
-<code>interpolation</code> is interpreted as a literal character. A
-string-template-expr is evaluated by evaluating the expression in each
-interpolation in the order in which they occur, and converting the result of the
-each evaluation to a string as if using by <code>toString</code> function of the
-<code>lang.value</code> module of the lang library. The result
-of evaluating the <code>string-template-expr</code> is a string comprising the
-literal characters and the results of evaluating and converting the
-interpolations, in the order in which they occur in the
-<code>BacktickString</code>.
-</p>
-<p>
-A literal <code>`</code> can be included in string template by using an
-interpolation <code>${"`"}</code>.
-</p>
-</section>
-<section>
-<h3>XML template expression</h3>
-
-<pre
-class="grammar">xml-template-expr := <code>xml</code> BacktickString
-</pre>
-<p>
-An XML template expression constructs an xml value as follows:
-</p>
-<ol>
-<li>The backtick string is parsed to produce a string of literal characters with
-interpolated expressions</li>
-<li>The result of the previous step is parsed as XML content. More precisely, it
-is parsed using the production <code>content</code> in the W3C XML
-Recommendation. For the purposes of parsing as XML, each interpolated expression
-is interpreted as if it were an additional character allowed by the CharData and
-AttValue productions but no other. The result of this step is an XML Infoset
-consisting of an ordered list of information items such as could occur as the
-[children] property of an element information item, except that interpolated
-expressions may occur as Character Information Item or in the [normalized value]
-of an Attribute Information Item. Interpolated expressions are not allowed in
-the value of a namespace attribute.</li>
-<li>This infoset is then converted to an xml value, as described in the <a
-href="#XML">XML type</a> section, together with an ordered list of interpolated
-expressions, and for each interpolated expression a position within the XML
-value at which the value of the expression is to be inserted.</li>
-<li>The static type of an expression occurring in an attribute value must be a
-simple type and must not be nil. The static type type of an expression occurring
-in content can either be xml or a non-nil simple type.</li>
-<li>When the xml-template-expr is evaluated, the interpolated expressions are evaluated
-in the order in which they occur in the <code>BacktickString</code>, and
-converted to strings if necessary. A new copy is made of the xml value and the
-result of the expression evaluations are inserted into the corresponding
-position in the newly created xml value. This xml value is the result of the
-evaluation.</li>
-</ol>
-<p>
-An xml-template-expr occurring within a const-expr will construct an xml value
-that has its read-only bit on.
-</p>
-</section>
 <section>
 <h3>New expression</h3>
 
@@ -3810,6 +3796,34 @@ An implicit-new-expr is equivalent to an explicit-new-expr that specifies the
 applicable contextually expected type as the type descriptor. An
 implicit-new-expr consisting of just <code>new</code> is equivalent to
 <code>new()</code>.
+</p>
+</section>
+<section>
+<h3>Service constructor</h3>
+
+<pre
+class="grammar">service-constructor-expr := [annots] <code>service</code> service-body-block
+service-body-block := <code>{</code> service-method-defn* <code>}</code>
+service-method-defn :=
+   metadata
+   [<code>resource</code>]
+   <code>function</code> identifier function-signature method-defn-body
+</pre>
+<p>
+A <code>service-constructor-expr</code> constructs a service value. The result
+of evaluating a service-constructor-expr is a value of type service. If a
+service-method-defn contains a <code>resource</code> qualifier, then it defines
+a resource method. The self variable can be used in a method-defn-body of a
+service-method-defn in the same way as for objects.
+</p>
+<p>
+Each service value has a distinct type descriptor. (Evaluating a service
+constructor thus has an effect analogous to defining an anonymous object type
+and then creating a value of that type.)
+</p>
+<p>
+The return type of a resource method must be a subtype of <code>error?</code> and must contain
+nil.
 </p>
 </section>
 <section>
