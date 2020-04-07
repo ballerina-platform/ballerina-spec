@@ -3643,11 +3643,12 @@ each <var>i</var> from <var>k</var> + 1 up to the fixed length of the list, the
 <h4>Table constructor</h4>
 
 <pre
-class="grammar">table-constructor-expr := <code>table</code> [key-specifier] <code>[</code> [expr-list] <code>]</code>
+class="grammar">table-constructor-expr := <code>table</code> [key-specifier] <code>[</code> [row-list] <code>]</code>
+row-list := mapping-constructor-expr (<code>,</code> mapping-constructor-expr)*
 </pre>
 <p>
 A table-constructor-expr creates a new table value. The members of the table
-come from evaluating each of the expressions in the expr-list in order.
+come from evaluating each mapping-constructor-expr in the row-list in order.
 </p>
 <p>
 For example,
@@ -3676,13 +3677,16 @@ smallest record type that is a supertype of the static types of all the
 expressions in the expr-list.
 </p>
 <p>
-The key-sequence of the inherent type comes from the key-specifier of applicable
+The key sequence of the inherent type comes from the key-specifier of applicable
 contextually expected type or the key-specifier in the table-constructor-expr.
 If both of these are present, then they must be the same. If neither of them are
-present, then the key-sequence is empty. The key-sequence of the table value is
-the same as that of its inherent type. The key-sequence and member type must
+present, then the key sequence is empty. The key sequence of the table value is
+the same as that of its inherent type. The key sequence and member type must
 meet the same consistency requirements as if they were specified together in a
-<a href="#tables">table type descriptor</a>.
+<a href="#tables">table type descriptor</a>. For every field-name in the key
+sequence of the inherent type every mapping-constructor-expr in the row-list
+must include a specific-field that has a value-expr that is a const-expr. It is
+a compile-time error if two or more rows of the table have the same key value.
 </p>
 <p>
 If there is a contextually expected type, then the type that the inherent type
