@@ -99,7 +99,7 @@ public function reduce(map<Type> m, function(Type1 accum, Type val) returns Type
 # + m - the map
 # + k - the key
 # + return - the member of `m` that had key `k`
-# This removed the member of `m` with key `k` and returns it.
+# This removes the member of `m` with key `k` and returns it.
 # It panics if there is no such member.
 public function remove(map<Type> m, string k) returns Type = external;
 
