@@ -6885,8 +6885,9 @@ other-decl :=
    | service-decl
    | function-defn
    | module-type-defn
-   | module-const-decl
    | module-var-decl
+   | module-const-decl
+   | module-enum-decl
    | module-xmlns-decl
    | annotation-decl
 </pre>
@@ -7222,6 +7223,50 @@ be a subtype of the type specified by the type-descriptor.
 </section>
 
 <section>
+<h3>Module enumeration declaration</h3>
+
+<pre
+class="grammar">module-enum-decl :=
+   metadata
+   [<code>public</code>] <code>enum</code> identifier <code>{</code> enum-member (<code>,</code> enum-member)* <code>}</code>
+enum-member := metadata identifier [<code>=</code> const-expr]
+</pre>
+<p>
+A module-enum-decl provides a convenient syntax for declaring a union of string constants.
+</p>
+<p>
+Each enum-member is defined as compile-time constant in the same way as if it
+had been defined using a module-const-decl. The result of evaluating the
+const-expr must be a string. If the const-expr is omitted, it defaults to be the
+same as the identifier.
+</p>
+<p>
+The identifier is defined as a type in the same was as if it had been defined by
+a module-type-defn, with the type-descriptor being the union of the constants
+defined by the members.
+</p>
+<p>
+So for example:
+</p>
+<pre>
+enum Color {
+  RED,
+  GREEN,
+  BLUE
+}
+</pre>
+<p>
+is exactly equivalent to:
+</p>
+<pre>
+const RED = "RED";
+const GREEN = "GREEN";
+const BLUE = "BLUE";
+type Color RED|GREEN|BLUE;
+</pre>
+</section>
+
+<section>
 <h3>Module XML namespace declaration</h3>
 <pre
 class="grammar">module-xmlns-decl := xmlns-decl
@@ -7397,7 +7442,7 @@ The available attachment points are described in the following table.
   </tr>
   <tr>
    <td>type</td>
-   <td>module-type-defn, local-type-defn-stmt, type-cast-expr</td>
+   <td>module-type-defn, local-type-defn-stmt, module-enum-decl, type-cast-expr</td>
    <td>defined type</td>
   </tr>
   <tr>
@@ -7463,7 +7508,7 @@ descriptor</td>
   </tr>
   <tr>
    <td>const</td>
-   <td>module-const-decl</td>
+   <td>module-const-decl, enum-member</td>
    <td>none</td>
   </tr>
   <tr>
@@ -7781,6 +7826,7 @@ The <code>int:Unsigned8</code> type is equivalent to the predefined
 <li>The <code>readonly</code> type has been added.</li>
 <li>The table type has been redesigned to be more consistent with other
 structural types and no longer has preview status.</li>
+<li>Enum declarations have been added.</li>
 <li>The XML item-specific subtypes can be used as constructors, both in
 expressions and in binding patterns.</li>
 </ol>
