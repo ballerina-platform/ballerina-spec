@@ -2533,13 +2533,13 @@ functions in the lang library.
 <section>
 <h4 id="FillMember">FillMember</h4>
 <p>
-The FillMember(c, k) operation is defined for a container value c and a key
-value k. It can be performed when c does not have a member with key k; if it
-succeeds, it will result in a member with key k being added to c. It will
-succeed if the inherent type of c allows the addition of a member with key k
-and there is a way to construct a filler value for the type descriptor that the
-inherent type of c requires for member k. The following table specifies when and
-how a filler value can be constructed for a type descriptor.
+The FillMember(s, k) operation is defined for a structured value s and an
+out-of-line key value k. It can be performed when s does not have a member with
+key k; if it succeeds, it will result in a member with key k being added to s.
+It will succeed if the inherent type of s allows the addition of a member with
+key k and there is a way to construct a filler value for the type descriptor
+that the inherent type of s requires for member k. The following table specifies
+when and how a filler value can be constructed for a type descriptor.
 </p>
 <table>
 <tr>
@@ -6256,9 +6256,13 @@ refers to a storage location which is one of the following:
 <ul>
 <li>a variable;</li>
 <li>a specific named field of an object;</li>
-<li>the member of a container having a specific key, which will be either an
-integer or a string according as the container is a list or a mapping.</li>
+<li>the member of a structured value having a specific out-of-line key, which
+will be either an integer or a string according as the structured value is a
+list or a mapping.</li>
 </ul>
+<p>
+Note that an lvalue cannot refer to a member of a table.
+</p>
 
 <p>
 An lvalue that is both defined and initialized refers to a storage location that
@@ -6269,10 +6273,10 @@ holds a value:
 uninitialized;</li>
 <li>an lvalue referring to a specific named field of an object is always defined
 but may not be initialized until the <code>__init</code> method returns</li>
-<li>an lvalue referring to member of a container having a specific key is
-undefined if the container does not have a member with that key; if such an
+<li>an lvalue referring to member of a structured value having a specific key is
+undefined if the structured value does not have a member with that key; if such an
 lvalue is defined, it is also initialized; note that an lvalue always refers to
-a container that is already constructed.</li>
+a structured value that is already constructed.</li>
 </ul>
 
 <pre
@@ -6305,26 +6309,26 @@ An lvalue supports three operations: store, read and filling-read.
 The fundamental operation on an lvalue is to store a value in the storage
 location it refers to. This operation does not required the lvalue to be defined
 or initialized; a successful store operation on an undefined lvalue will result
-in the addition of a member to the container; a store on an uninitialized lvalue
+in the addition of a member to the structured value; a store on an uninitialized lvalue
 will initialize it. When an lvalue refers to a variable, it is possible to
 determine at compile-time whether the store of a value is permissible based on
 the declaration of the variable and the static type of the value to be stored.
-However, when the lvalue refers to a member of a container, this is not in
+However, when the lvalue refers to a member of a structured value, this is not in
 general possible for three reasons.
 </p>
 <ol>
 <li>The guarantee provided by an lvalue having a static type T is not that the
 referenced storage location can hold every value that belongs to type T; rather
 the guarantee is that every value that the referenced storage location can hold
-belongs to type T. This is because of container types are covariant in their
+belongs to type T. This is because structured types are covariant in their
 member types. The values that the storage location can actually hold are
-determined by the inherent type of the container.</li>
-<li>The member may not be defined and the inherent type of the container may not
-allow a member with that specific key. The permissible keys of a container can
+determined by the inherent type of the structured value.</li>
+<li>The member may not be defined and the inherent type of the structured value may not
+allow a member with that specific key. The permissible keys of a structured value can
 be constrained by closed record types, fixed-length array types, and tuple types
 (with any rest descriptor).</li>
-<li>The container may be immutable. The static type of an lvalue referring to a
-member of a container makes no guaranteees that the container is not immutable.</li>
+<li>The structured value may be immutable. The static type of an lvalue referring to a
+member of a structured value makes no guaranteees that the structured value is not immutable.</li>
 </ol>
 <p>
 The first of these reasons also applies to lvalues that refer to fields of
@@ -6352,7 +6356,7 @@ uninitialized.
 <p>
 Finally, a lvalue supports a filling-read operation, which is used to support
 chained assignment. A filling-read is performed only an lvalue with a static
-type that is a container type. It differs from a read operation only when it is
+type that is a structured type. It differs from a read operation only when it is
 performed on a potentially undefined lvalue. If the lvalue is undefined at
 runtime, then the filling-read will use the FillMember abstract operation on the
 member that the lvalue refers to. If the FillMember operation fails, then the
