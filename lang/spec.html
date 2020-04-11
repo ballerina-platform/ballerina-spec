@@ -5005,7 +5005,9 @@ comprehensions; future versions will provided richer functionality.
 </p>
 
 <pre class="grammar">query-expr := [query-construct-type] query-pipeline select-clause
-query-construct-type := <code>table</code> key-specifier
+query-construct-type :=
+  <code>table</code> key-specifier
+  | <code>stream</code>
 query-pipeline := from-clause intermediate-clause*
 intermediate-clause :=
    from-clause
@@ -5026,10 +5028,10 @@ clause. The input to the first clause is a single empty frame.
 </p>
 <p>
 The execution of a clause may complete early with an error value, in which case
-this error value is the result of the query. Otherwise, the result of evaluating
-a query expression is a single value, which is constructed from the sequence of
-values emitted by the last clause. The result must be one of the following basic
-types:
+this error value is the result of the query, except when constructing a stream.
+Otherwise, the result of evaluating a query expression is a single value, which
+is constructed from the sequence of values emitted by the last clause. The
+result must be one of the following basic types:
 </p>
 <ul>
 <li>list - the constructed list has a member for each emitted value; every
@@ -5042,7 +5044,23 @@ constructed value</li>
 every emitted value must be of type string</li>
 <li>xml - the constructed xml value is the concatenation of the emitted values;
 every emitted value must be of type xml</li>
+<li>stream - the stream generates the emitted values</li>
 </ul>
+<p>
+A query-expr that constructs a stream must start with the <code>stream</code>
+keyword and is evaluated differently from a query-expr that constructs a value
+of other basic types. The clauses in the query-expr are executed lazily: clauses
+in the query-expr becomes closures, which are called as a result of next
+operations being performed on the stream. If a next operation causes the
+execution of a clause that completes early with an error value, then the error
+value is returned by the next operation; the evaluation of the query-expr will
+already have resulted in a stream value. If the next operation results in the
+evaluation of an expression within the query-expr completing abruptly with a
+check-fail, the associated error value will be returned as the result of the
+next operation. If the next operation results in the evaluation of an expression
+within the query-expr completely abruptly with a panic, then the next operation
+will complete abruptly with a panic.
+</p>
 <p>
 If the query-expr starts with <code>table</code>, then the query-expr will
 construct a table; the key-specifier specifies the key sequence of the
