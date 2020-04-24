@@ -1446,12 +1446,12 @@ inclusive-record-type-descriptor :=
 exclusive-record-type-descriptor :=
    <code>record</code> <code>{|</code> field-descriptor* [record-rest-descriptor] <code>|}</code>
 field-descriptor :=
-   individual-field-descriptor | record-type-reference
+   individual-field-descriptor | record-type-inclusion
 individual-field-descriptor :=
    metadata [<code>readonly</code>] type-descriptor field-name [<code>?</code> | default-value] <code>;</code>
 field-name := identifier
 default-value := <code>=</code> expression
-record-type-reference := <code>*</code> type-reference <code>;</code>
+record-type-inclusion := <code>*</code> type-reference <code>;</code>
 record-rest-descriptor := type-descriptor <code>...</code> <code>;</code>
 </pre>
 <p>
@@ -1513,15 +1513,15 @@ mapping value. The default value does not affect the type described by the type
 descriptor.
 </p>
 <p>
-A <code>record-type-reference</code> pulls in fields from a named record type.
+A <code>record-type-inclusion</code> includes fields from a named record type.
 The <code>type-reference</code> must reference a type described by a
 <code>record-type-descriptor</code>. The <code>field-descriptor</code>s and any
-<code>record-rest-descriptor</code> are copied into the type being defined; the
+<code>record-rest-descriptor</code> are included the type being defined; the
 meaning is the same as if they had been specified explicitly. For default
 values, the closure rather than the expression is copied in. A
-<code>record-rest-descriptor</code> in the referencing type overrides any
-<code>record-rest-descriptor</code> in the referenced type. For the purposes of
-resolving a <code>record-type-reference</code>, a referenced or referencing type
+<code>record-rest-descriptor</code> in the including type overrides any
+<code>record-rest-descriptor</code> in the included type. For the purposes of
+resolving a <code>record-type-reference</code>, a including or included type
 that is an <code>inclusive-record-type-descriptor</code> is treated as if it
 were the equivalent <code>exclusive-record-type-descriptor</code> with an
 explicit <code>record-rest-descriptor</code>.
@@ -1840,7 +1840,7 @@ object-type-quals :=
 object-member-descriptor :=
    object-field-descriptor
    | object-method
-   | object-type-reference
+   | object-type-inclusion
 </pre>
 <p>
 If <code>object-type-quals</code> contains the keyword <code>abstract</code>,
@@ -2030,20 +2030,20 @@ preceding the <code>.</code> is <code>self</code>.
 </p>
 </section>
 <section>
-<h5>Object type references</h5>
+<h5>Object type inclusion</h5>
 
 <pre
-class="grammar">object-type-reference :=
+class="grammar">object-type-inclusion :=
    <code>*</code> type-reference <code>;</code>
 </pre>
 <p>
-The <code>type-reference</code> in an
-<code>object-type-reference</code> must reference an abstract object type. The
-object-member-descriptors from the referenced type are copied into the type
-being defined; the meaning is the same as if they had been specified explicitly.
+The <code>type-reference</code> in an <code>object-type-inclusion</code> must
+reference an abstract object type. The object-member-descriptors from the
+referenced type are included in the type being defined; the meaning is the same
+as if they had been specified explicitly.
 </p>
 <p>
-If a non-abstract object type T<sub>o</sub> has a type reference to an abstract
+If a non-abstract object type T<sub>o</sub> includes an abstract
 object type T<sub>a</sub>, then each method declared in T<sub>a</sub> must be
 defined in T<sub>o</sub> using a <code>method-defn</code> with the same
 visibility. If T<sub>a</sub> has a method or field with module-level visibility,
