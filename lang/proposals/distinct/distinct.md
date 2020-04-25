@@ -1,6 +1,6 @@
 # Distinct types
 
-This document describes a feature that provides the functionality of nominal typing just for the object and error basic types. For error values, this feature replaces the error reason string. This addresses issues #[413](https://github.com/ballerina-platform/ballerina-spec/issues/413), #[459](https://github.com/ballerina-platform/ballerina-spec/issues/459), #[75](https://github.com/ballerina-platform/ballerina-spec/issues/75).
+This document describes a feature that provides the functionality of nominal typing just for the object and error basic types. For error values, this feature replaces the error reason string. This addresses issues #[413](https://github.com/ballerina-platform/ballerina-spec/issues/413), #[459](https://github.com/ballerina-platform/ballerina-spec/issues/459), #[75](https://github.com/ballerina-platform/ballerina-spec/issues/75). Please add any comments to issue #[413](https://github.com/ballerina-platform/ballerina-spec/issues/413).
 
 This feature adds a new type-descriptor
 
