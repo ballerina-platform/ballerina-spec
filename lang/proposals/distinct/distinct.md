@@ -151,3 +151,5 @@ An error error type `error<R>` means that the detail record must belong to the t
 ```
     readonly & record {| *R; (anydata|readonly)...; |}
 ```
+
+In a match-statement, a error-match-pattern with a user-defined error type should match only if the shape of the value belongs to type.
