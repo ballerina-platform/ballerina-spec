@@ -39,7 +39,7 @@ public function cause(error e) returns error? = external;
 # The returned value will be immutable.
 # + e - the error value
 # + return - error detail value
-public function detail(error<DetailType> e) returns DetailType = external;
+public function detail(error<DetailType> e) returns readonly & DetailType = external;
 
 # Returns an object representing the stack trace of the error.
 #
