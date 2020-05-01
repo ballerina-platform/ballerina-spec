@@ -590,16 +590,24 @@ type</td>
    <td>a single value described by a literal</td>
   </tr>
   <tr>
-   <td>union</td>
-   <td>the union of the component types</td>
+   <td>readonly</td>
+   <td>any value whose read-only bit is on</td>
+  </tr>
+  <tr>
+   <td>any</td>
+   <td>any value other than an error</td>
+  </tr>
+  <tr>
+   <td>never</td>
+   <td>no value</td>
   </tr>
   <tr>
    <td>optional</td>
    <td>the underlying type and ()</td>
   </tr>
   <tr>
-   <td>any</td>
-   <td>any value other than an error</td>
+   <td>union</td>
+   <td>the union of the component types</td>
   </tr>
   <tr>
    <td>anydata</td>
@@ -607,21 +615,13 @@ type</td>
    does not contain behavioral members at any depth)</td>
   </tr>
   <tr>
-   <td>never</td>
-   <td>no value</td>
-  </tr>
-  <tr>
-   <td>byte</td>
-   <td>int in the range 0 to 255 inclusive</td>
-  </tr>
-  <tr>
    <td>json</td>
    <td>the union of (), int, float, decimal, string, and maps and arrays whose
 values are, recursively, json</td>
   </tr>
   <tr>
-   <td>readonly</td>
-   <td>any value whose read-only bit is on</td>
+   <td>byte</td>
+   <td>int in the range 0 to 255 inclusive</td>
   </tr>
 </table>
 <p>
@@ -2191,17 +2191,17 @@ because Ballerina does not yet support parameterized object types.
 
 <pre
 class="grammar">other-type-descriptor :=
-   singleton-type-descriptor
+   | type-reference
+   | singleton-type-descriptor
+   | readonly-type-descriptor
+   | any-type-descriptor
+   | never-type-descriptor
    | optional-type-descriptor
    | union-type-descriptor
    | intersection-type-descriptor
-   | any-type-descriptor
    | anydata-type-descriptor
-   | never-type-descriptor
-   | byte-type-descriptor
    | json-type-descriptor
-   | readonly-type-descriptor
-   | type-reference
+   | byte-type-descriptor
    | <code>(</code> type-descriptor <code>)</code>
 </pre>
 <p>
@@ -2209,6 +2209,18 @@ It is important to understand that the type descriptors specified in this
 section do not add to the universe of values. They are just adding new ways to
 describe subsets of this universe.
 </p>
+<section>
+<h4>Type reference</h4>
+<pre
+class="grammar">type-reference := identifier | qualified-identifier
+</pre>
+
+<p>
+A type descriptor can use a type-reference to refer to a type definition in the
+same module or another module.
+</p>
+
+</section>
 <section>
 <h4>Singleton types</h4>
 
@@ -2223,6 +2235,80 @@ contains the shape of that value. Note that it is possible for the
 variable-reference within the simple-const-expr to reference a structured value;
 in this case, the value will have its read-only bit set; a value without its
 read-only bit set will thus not belong to any singleton type.
+</p>
+</section>
+<section>
+<h4>Readonly type</h4>
+<pre
+class="grammar">readonly-type-descriptor := <code>readonly</code>
+</pre>
+<p>
+A shape belongs to the type <code>readonly</code> if its read-only bit is on.
+</p>
+<p>
+A value belonging to an inherently immutable basic type will always have its
+read-only bit on. These basic types are:
+</p>
+<ul>
+<li>all simple types
+<ul>
+<li>nil</li>
+<li>boolean</li>
+<li>int</li>
+<li>float</li>
+<li>decimal</li>
+</ul>
+</li>
+<li>string</li>
+<li>error</li>
+<li>function</li>
+<li>service</li>
+<li>typedesc</li>
+<li>handle</li>
+</ul>
+<p>
+A value belonging to a selectively immutable basic type may have its read-only
+bit on. These basic types are:
+</p>
+<ul>
+<li>xml</li>
+<li>list</li>
+<li>mapping</li>
+<li>table</li>
+</ul>
+
+</section>
+<section>
+<h4>Any type</h4>
+
+<pre class="grammar">any-type-descriptor := <code>any</code>
+</pre>
+<p>
+The type descriptor <code>any</code> describes the type consisting of all values
+other than errors. A value belongs to the any type if and only if its basic type
+is not error. Thus all values belong to the type <code>any|error</code>. Note
+that a structure with members that are errors belongs to the <code>any</code>
+type.
+</p>
+</section>
+<section>
+<h4>Never type</h4>
+
+<pre class="grammar">never-type-descriptor := <code>never</code>
+</pre>
+<p>
+The type descriptor <code>never</code> describes the type that does not contain
+any shapes. No value ever belongs to the <code>never</code>.
+</p>
+<p>
+This can be useful to describe for the return type of a function, if the
+function never returns. It can also be useful as a type parameter. For example,
+<code>xml&lt;never&gt;</code> describes the an xml type that has no
+constituents, i.e. the empty xml value.
+</p>
+<p>
+Note that for anytype <code>T</code>, the type <code>T|never</code> is the same
+as <code>T</code>.
 </p>
 </section>
 <section>
@@ -2268,19 +2354,6 @@ contains a shape if and only if the types denoted by <code>T1</code> and
 </p>
 </section>
 <section>
-<h4>Any type</h4>
-
-<pre class="grammar">any-type-descriptor := <code>any</code>
-</pre>
-<p>
-The type descriptor <code>any</code> describes the type consisting of all values
-other than errors. A value belongs to the any type if and only if its basic type
-is not error. Thus all values belong to the type <code>any|error</code>. Note
-that a structure with members that are errors belongs to the <code>any</code>
-type.
-</p>
-</section>
-<section>
 <h4 id="anydata">Anydata type</h4>
 
 <pre
@@ -2297,37 +2370,6 @@ value that is plain data. The <code>anydata</code> type can thus be defined as:
     | string | xml
     | anydata[] | map&lt;anydata&gt; | table&lt;map&lt;anydata&gt;&gt;
 </pre>
-</section>
-<section>
-<h4>Never type</h4>
-
-<pre class="grammar">never-type-descriptor := <code>never</code>
-</pre>
-<p>
-The type descriptor <code>never</code> describes the type that does not contain
-any shapes. No value ever belongs to the <code>never</code>.
-</p>
-<p>
-This can be useful to describe for the return type of a function, if the
-function never returns. It can also be useful as a type parameter. For example,
-<code>xml&lt;never&gt;</code> describes the an xml type that has no
-constituents, i.e. the empty xml value.
-</p>
-<p>
-Note that for anytype <code>T</code>, the type <code>T|never</code> is the same
-as <code>T</code>.
-</p>
-</section>
-<section>
-<h4 id="byte_type">Byte type</h4>
-
-<pre class="grammar">byte-type-descriptor := <code>byte</code>
-</pre>
-<p>
-The byte type is a predefined name for a union of the int values in the range 0
-to 255 inclusive. It is equivalent to the <a href="#built-in_subtypes">built-in
-subtype</a> <code>int:Unsigned8</code>.
-</p>
 </section>
 <section>
 <h4>JSON types</h4>
@@ -2347,60 +2389,19 @@ href="#lax_static_typing">lax static typing</a>.
 </p>
 
 </section>
-<section>
-<h4>Readonly type</h4>
-<pre
-class="grammar">readonly-type-descriptor := <code>readonly</code>
-</pre>
-<p>
-A shape belongs to the type <code>readonly</code> if its read-only bit is on.
-</p>
-<p>
-A value belonging to an inherently immutable basic type will always have its
-read-only bit on. These basic types are:
-</p>
-<ul>
-<li>all simple types
-<ul>
-<li>nil</li>
-<li>boolean</li>
-<li>int</li>
-<li>float</li>
-<li>decimal</li>
-</ul>
-</li>
-<li>string</li>
-<li>error</li>
-<li>function</li>
-<li>service</li>
-<li>typedesc</li>
-<li>handle</li>
-</ul>
-<p>
-A value belonging to a selectively immutable basic type may have its read-only
-bit on. These basic types are:
-</p>
-<ul>
-<li>xml</li>
-<li>list</li>
-<li>mapping</li>
-<li>table</li>
-</ul>
-
-</section>
 
 <section>
-<h4>Type reference</h4>
-<pre
-class="grammar">type-reference := identifier | qualified-identifier
+<h4 id="byte_type">Byte type</h4>
+
+<pre class="grammar">byte-type-descriptor := <code>byte</code>
 </pre>
-
 <p>
-A type descriptor can use a type-reference to refer to a type definition in the
-same module or another module.
+The byte type is a predefined name for a union of the int values in the range 0
+to 255 inclusive. It is equivalent to the <a href="#built-in_subtypes">built-in
+subtype</a> <code>int:Unsigned8</code>.
 </p>
-
 </section>
+
 </section>
 <section>
 <h3 id="built-in_abstract_object_types">Built-in abstract object types</h3>
