@@ -1632,65 +1632,42 @@ class="grammar">behavioral-type-descriptor :=
 </pre>
 
 <section>
-<h4>Error</h4>
+<h4>Errors</h4>
 
 <pre
-class="grammar">error-type-descriptor := <code>error</code> [error-type-params]
-error-type-params := <code>&lt;</code> (explicit-error-type-params | inferred-error-type-param) <code>&gt;</code>
-explicit-error-type-params := reason-type-descriptor [<code>,</code> detail-type-descriptor]
-reason-type-descriptor := type-descriptor
+class="grammar">error-type-descriptor := <code>error</code> [error-type-param]
+error-type-param := <code>&lt;</code> (detail-type-descriptor | inferred-type-descriptor) <code>&gt;</code>
 detail-type-descriptor := type-descriptor
-inferred-error-type-param := <code>*</code>
+inferred-type-descriptor := <code>*</code>
 </pre>
 <p>
-An error value is used to represent an error. Errors are a distinct basic type:
-a value belongs to the error basic type if and only if it is an error. This
-means that errors are clearly distinguished from other values. Many constructs
-in Ballerina give special treatment to error values. The error type is
-inherently immutable. An error value contains the following information:
+An error value provides information about an error that has occurred. Error
+values belong to a separate basic type; this makes it possible for language
+constructs to handle errors differently from other values.
+</p>
+<p>
+The error type is inherently immutable. An error value contains the following
+information:
 </p>
 <ul>
-<li>a reason, which is a string identifier for the category of error</li>
+<li>a message, which is a string containing a human-readable message describing
+the error</li>
+<li>a cause, which is either nil or another error value that was the cause of
+this error</li>
 <li>a detail, which is an immutable mapping providing additional information about
 the error</li>
 <li>a stack trace, which is an immutable snapshot of the state of the execution
 stack</li>
 </ul>
 <p>
-A <em>module-qualified reason</em> string is a string that has the form
-</p>
-<pre>
-   {<var>org-name</var>/<var>module-name</var>}<var>identifier</var>
-</pre>
-<p>
-where <code><var>org-name</var></code>, <code><var>module-name</var></code> and
-<code><var>identifier</var></code> are as defined by the grammar in this
-specification, but with no whitespace allowed between tokens. Any reason string
-that starts with a <code>{</code> should be a module-qualified reason string.
-Any error value that is constructed as the associated value of a panic will use
-a module-qualified reason with an org-name of <code>ballerina</code> and a
-module-name that starts with <code>lang.</code>, as will any error value
-constructed by a function in the lang library.
+The detail mapping must be a subtype of <code>map&lt;anydata|readonly&gt;</code>.
 </p>
 <p>
-The detail mapping must belong to the following type, which is provided as type
-<code>Detail</code> in the <code>lang.error</code> module of the lang library:
-</p>
-<pre>record {|
-   string message?;
-   error cause?;
-   (anydata|readonly)...;
-|};
-</pre>
-<p>
-The shape of an error value consists of the shape of the reason and the shape of
-the detail; the stack trace is not part of the shape. A type descriptor
-error&lt;<var>r</var>, <var>d</var>&gt; contains an error shape if <var>r</var>
-contains the shape's reason, and <var>d</var>, if present, contains the shape's
-detail. The bare type error contains all error shapes. The
-reason-type-descriptor must be a subtype of string. The detail-type-descriptor
-must be a subtype of the <code>Detail</code> type, and defaults to the
-<code>Detail</code> type if omitted.
+The shapes of the message, cause and detail record are part of the shape of the
+error; the stack trace is not part of the shape. A type descriptor
+<code>error&lt;<var>T</var>&gt;</code> contains an error shape if
+<code><var>T</var></code> contains the shape of the detail. The type
+<code>error</code> contains a shape if its basic type is error.
 </p>
 <p>
 A type of <code>error&lt;*&gt;</code> means that the type is a subtype of error,
@@ -2888,15 +2865,21 @@ argument for a parameter when a value is constructed.
 <td>defaults to empty string</td>
 </tr>
 <tr>
-<td rowspan="2"><code>error&lt;<var>R</var>,<var>D</var>&gt;</code></td>
+<td rowspan="3"><code>error&lt;<var>T</var>&gt;</code></td>
 <td>Position 1</td>
-<td><code><var>R</var></code>, which will be a subtype of <code>string</code></td>
-<td>reason string</td>
-<td>default to <code><var>R</var></code> if it is a singleton; otherwise, not allowed</td>
+<td><code>string</code></td>
+<td>message</td>
+<td>not allowed</td>
+</tr>
+<tr>
+<td>Position 2</td>
+<td><code>error?</code></td>
+<td>cause</td>
+<td>defaults to nil</td>
 </tr>
 <tr>
 <td>Name <var>k</var></td>
-<td>type of field <var>k</var> of <code><var>D</var></code>, which will be a
+<td>type of field <var>k</var> of <code><var>T</var></code>, which will be a
 subtype of <code>anydata|readonly</code></td>
 <td>field <var>k</var> of detail record</td>
 <td>detail record has no field <var>k</var></td>
@@ -7928,8 +7911,13 @@ The <code>int:Unsigned8</code> type is equivalent to the predefined
 <ol>
 <li>The <code>readonly</code> type has been added.</li>
 <li>Intersection types have been added.</li>
-<li>Distinct types have been added; these provide the functionality
-of nominal types with the framework of a structural type system.</li>
+<li>Distinct types have been added; these provide the functionality of nominal
+types with the framework of a structural type system.</li>
+<li>The error type has been revised to take advantage of distinct types. Instead
+an error value having a reason string for categorizing the error and separate
+message string in the detail record, an error value has a message string in the
+error and distinct types are used for categorizing. The cause has also moved
+from the detail record into the error value.</li>
 <li>The table type has been redesigned to be more consistent with other
 structural types and no longer has preview status.</li>
 <li>Enum declarations have been added.</li>

@@ -104,7 +104,7 @@ public function isReadOnly(anydata v) returns boolean = external;
 # - if `v` is an error, then a string consisting of the following in order
 #     1. the string `error`
 #     2. a space character
-#     3. the reason string
+#     3. the message string
 #     4. if the detail record is non-empty
 #         1. a space character
 #         2. the result of calling toString on the detail record
