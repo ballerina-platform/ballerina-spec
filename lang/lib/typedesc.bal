@@ -1,4 +1,4 @@
-// Copyright (c) 2019 WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+// Copyright (c) 2020 WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
 //
 // WSO2 Inc. licenses this file to you under the Apache License,
 // Version 2.0 (the "License"); you may not use this file except
@@ -13,3 +13,36 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+
+# A record representing an identifier for a module.
+# This uniquely identifies a module within a program.
+public type ModuleId readonly & record {|
+    # the organization
+    string organization;
+    # the module name
+    string name;
+    # the version string
+    string version;
+|};
+
+# A record representing a type-id.
+# A type-id uniquely identifies an occurrence of a distinct type descriptor
+# within a program.
+public type TypeId readonly & record {|
+    # An identifier for the module.
+    ModuleId moduleId;
+    # An identifier within the module identified by `moduleId`.
+    # If it is a string, then it is the name of a type defined in the module.
+    # If it is an integer, then it is compiler-generated.
+    (string|int) localId;
+|};
+
+# Returns the type-ids of a typedesc.
+# + t - the typedesc
+# + primaryOnly - if true, only the primary type-ids will be returned; otherwise,
+    all type-ids will be returned
+# return - an array containing the type-ids
+# If `t` does not belong to `typedesc<object{}|error>`,
+# an empty array will be returned.
+public typeIds(typedesc t, public boolean primaryOnly = false) returns readonly & TypeId[]
+    = external;
