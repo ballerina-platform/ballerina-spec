@@ -37,12 +37,10 @@ public type TypeId readonly & record {|
     (string|int) localId;
 |};
 
-# Returns the type-ids of a typedesc.
+# Returns the type-ids induced by a typedesc value.
 # + t - the typedesc
 # + primaryOnly - if true, only the primary type-ids will be returned; otherwise,
     all type-ids will be returned
-# return - an array containing the type-ids
-# If `t` does not belong to `typedesc<object{}|error>`,
-# an empty array will be returned.
-public typeIds(typedesc t, public boolean primaryOnly = false) returns readonly & TypeId[]
+# + return - an array containing the type-ids induced by `t` or nil if `t` is not definite
+public typeIds(typedesc t, public boolean primaryOnly = false) returns readonly & TypeId[]?
     = external;

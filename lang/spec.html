@@ -651,28 +651,36 @@ represents a type descriptor that has been resolved.
 <p>
 Ballerina has a feature, called <em>distinct types</em>, which provides
 functionality similar to that provided by nominal types, but which works within
-Ballerina's structural type system. These are similar to branded types, found in
-some other structurally types languages, such as Modula-3.
+Ballerina's structural type system. Distinct types are similar to the branded
+types found in some other structurally typed languages, such as Modula-3.
 </p>
 <p>
 The semantics of distinct types are based on type-ids. These are similar to the
-brands used by branded types. A distinct type is created by a
-distinct-type-descriptor. Each occurrence of a distinct-type-descriptor in a
-source module has a distinct type-id, which uniquely identifies it within a
-Ballerina program. A type-id has two parts:
+brands used by branded types. A distinct type is created by a <a
+href="#distinct-types">distinct-type-descriptor</a>. Each occurrence of a
+distinct-type-descriptor in a source module has a distinct type-id, which
+uniquely identifies it within a Ballerina program. A type-id has three parts:
 </p>
 <ol>
-<li>an identifier for the module within which the distinct-type-descriptor
-occurs; this consists of an organization, a module name, and a version
-number;</li>
-<li>an identifier that uniquely identifies the occurrence of the
-distinct-type-descriptor within the module; this is either a named, in which
-case it consists of a string, or anonymous, in which case it consists of a
-compiler-generated integer.</li>
+<li>a module id, which identifies the module within which the
+distinct-type-descriptor occurs; this consists of an organization, a module
+name, and a version number;</li>
+<li>a local id, which identifies the occurrence of the
+distinct-type-descriptor within the module; this takes one of two forms:
+<ul>
+<li>named - if a distinct-type-descriptor is the only distinct-type-descriptor
+occurring within a module-type-defn, then the local id is the name of the type
+defined by the module-type-defn</li>
+<li>anonymous - otherwise, the local id is a compiler-generated integer;</li>
+</ul>
+</li>
+<li>a boolean flag saying whether the type-id is public; this flag is on if and
+only if the local id part is named and is the name of a module-type-defn that is
+public.</li>
 </ol>
 <p>
 Distinct types can be used with only the object or error basic types. An object
-value or error value includes a set of type-ids. These type-ids are fixed at the
+value or error value has a set of type-ids. These type-ids are fixed at the
 time of construction and are immutable thereafter. A value's set of type-ids may
 be empty. The type-ids of a value are part of the value's shape and so can
 affect when an object belongs to a type. The set of type-ids of an object or
@@ -683,10 +691,15 @@ program's source.
 <p>
 An object or error value is always constructed using a specific type descriptor.
 A type descriptor for objects and errors thus performs a dual role: it denotes a
-type and it defines a mechanism to construct a value of the type. The primary
-and secondary type-ids of an object or error value come from the type-descriptor
-used to construct it. This is specified in detail in the section on the <a
-href="#distinct-types">distinct type descriptor</a>.
+type and it defines a mechanism to construct a value of the type. A type
+descriptor is <em>definite</em> if it induces a specific set of type-ids. The
+set of type-ids of an object or error value are those induced by the
+type-descriptor used to construct it; such a type descriptor must therefore be
+definite. A type descriptor that denotes a type that does not allow object or
+error values induces an empty set of type-ids and so is vacuously definite. For
+other type descriptors, the section that specifies that type descriptor will say
+when it is definite, the set of type-ids that it induces when it is, and which
+of those are primary.
 </p>
 
 </section>
@@ -1719,6 +1732,11 @@ where the precise subtype is to be inferred from the context. This is allowed
 only within type descriptors occurring in a context that is specified to be
 inferable.
 </p>
+<p>
+An error-type-descriptor is always definite and induces an empty set of
+type-ids. An intersecion type can be used to describe an error type that induces
+a non-empty set of type-ids.
+</p>
 </section>
 
 <section>
@@ -2058,11 +2076,10 @@ preceding the <code>.</code> is <code>self</code>.
 </p>
 </section>
 <section>
-<h5>Object type inclusion</h5>
+<h5>Inclusion and type-ids</h5>
 
 <pre
-class="grammar">object-type-inclusion :=
-   <code>*</code> type-reference <code>;</code>
+class="grammar">object-type-inclusion := <code>*</code> type-reference <code>;</code>
 </pre>
 <p>
 The <code>type-reference</code> in an <code>object-type-inclusion</code> must
@@ -2076,6 +2093,14 @@ object type T<sub>a</sub>, then each method declared in T<sub>a</sub> must be
 defined in T<sub>o</sub> using a <code>method-defn</code> with the same
 visibility. If T<sub>a</sub> has a method or field with module-level visibility,
 the T<sub>o</sub> must be in the same module.
+</p>
+<p>
+An object-type-descriptor is always definite. The set of type-ids induced by an
+object-type-descriptor is the union of the set of type-ids induced by the type
+descriptors that it includes. An induced typeid is primary in an
+object-type-descriptor if and only if it is primary in any of the included type
+descriptors. It is an error if the induced set of type-ids includes a non-public
+type-id from another module.
 </p>
 </section>
 </section>
@@ -2248,6 +2273,13 @@ class="grammar">type-reference := identifier | qualified-identifier
 A type descriptor can use a type-reference to refer to a type definition in the
 same module or another module.
 </p>
+<p>
+A type-reference referring to a type descriptor <var>T</var> is definite if and
+only if <var>T</var>. If it is, the type-ids induced by are the same as those
+induced by <var>T</var> and a type-id is primary in <var>t</var> if and only if
+it is primary in <var>T</var>. It is an error if the induced set of type-ids
+includes a non-public type-id from another module.
+</p>
 
 </section>
 <section>
@@ -2319,6 +2351,9 @@ is not error. Thus all values belong to the type <code>any|error</code>. Note
 that a structure with members that are errors belongs to the <code>any</code>
 type.
 </p>
+<p>
+The any-type-descriptor is not definite.
+</p>
 </section>
 <section>
 <h4>Never type</h4>
@@ -2362,7 +2397,15 @@ The set of shapes denoted by an union type <code>T1|T2</code> is the union of
 the set of shapes denoted by <code>T1</code> and the set of shapes denoted by
 <code>T2</code>. Thus, the type <code>T1|T2</code> contains a shape if and only
 if either the type denoted by <code>T1</code> contains the shape or the type
-denoted by <code>T2</code> contains the shape. Thus,
+denoted by <code>T2</code> contains the shape.
+</p>
+<p>
+A union type <code>T1|T2</code> is definite if and only if both <code>T1</code>
+and <code>T2</code> are definite and the set of type-ids induced by
+<code>T1</code> and <code>T2</code> are the same. If it is definite, then it
+induces the same set of type-ids as <code>T1</code> and <code>T2</code>, and a
+type-id is primary if it is primary in either <code>T1</code> or
+<code>T2</code>.
 </p>
 <p>
 The type <code>T?</code> is exactly equivalent to <code>T|()</code>.
@@ -2382,6 +2425,13 @@ contains a shape if and only if the types denoted by <code>T1</code> and
 <code>T2</code> both contain the shape.
 </p>
 <p>
+An intersection type <code>T1&amp;T2</code> is definite if and only if both
+<code>T1</code> and <code>T2</code> are definite. If it is definite, then it
+induces the union of the set of type-ids induced by <code>T1</code> and
+<code>T2</code>, and a type-id is primary if it is primary in either
+<code>T1</code> or <code>T2</code>.
+</p>
+<p>
 Intersection types are particularly useful in conjunction with
 <code>readonly</code>. A set of readonly shapes can be described by
 <code>readonly&amp;T</code>, where <code>T</code> describes the primary aspect
@@ -2391,10 +2441,28 @@ of the shape.
 
 <section>
 <h4 id="distinct_types">Distinct types</h4>
-
 <pre
 class="grammar">distinct-type-descriptor := <code>distinct</code> type-descriptor
 </pre>
+<p>
+Each occurrence of a distinct-type-descriptor describes a type that is distinct
+from any other occurrence of a distinct-type-descriptor. Only object and error
+values can belong to a type described by a distinct-type-descriptor.
+</p>
+<p>
+The type denoted by a distinct-type-descriptor <code><var>D</var></code>, where
+<code><var>D</var></code> is <code>distinct <var>T</var></code>, and
+<var>d</var> is the type-id of this occurrence of <code><var>D</var></code>,
+contains a shape <var>s</var> of an object or error value if and only if both
+<code><var>T</var></code> contains <var>s</var> and the set of type-ids of
+<var>s</var> contains <var>d</var>. The set of type-ids induced by
+<code><var>D</var></code> consists of <var>d</var> as the primary type-id and
+the type-ids induced by <code><var>T</var></code> as the secondary type-ids. The
+type <code><var>T</var></code> must be definite and must be a subtype of object
+or a subtype of error. The type <code><var>D</var></code> is always definite.
+Note that <code><var>D</var></code> is always a proper subtype of
+<code><var>T</var></code>.
+</p>
 
 </section>
 <section>
@@ -4583,8 +4651,9 @@ identical reference value produces an identical typedesc value. The type
 descriptor resulting from <code>typeof</code> will be the same as the type
 descriptor used to construct the value. For containers, this is the same as the
 inherent type; when the container is immutable, it will be a singleton type. For
-an object, this is the same as the type descriptor used with new. Any
-annotations that were attached to the type descriptor used to construct the
+an object, this is the same as the type descriptor used with new. For an error,
+this is the same as the type descriptor used in the functional-constructor-expr.
+Any annotations that were attached to the type descriptor used to construct the
 value will this be available on the constructed value.</li>
 </ul>
 <p>
