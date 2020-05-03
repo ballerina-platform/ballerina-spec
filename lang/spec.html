@@ -647,6 +647,50 @@ represents a type descriptor that has been resolved.
 </p>
 </section>
 <section>
+<h4>Type-ids</h4>
+<p>
+Ballerina has a feature, called <em>distinct types</em>, which provides
+functionality similar to that provided by nominal types, but which works within
+Ballerina's structural type system. These are similar to branded types, found in
+some other structurally types languages, such as Modula-3.
+</p>
+<p>
+The semantics of distinct types are based on type-ids. These are similar to the
+brands used by branded types. A distinct type is created by a
+distinct-type-descriptor. Each occurrence of a distinct-type-descriptor in a
+source module has a distinct type-id, which uniquely identifies it within a
+Ballerina program. A type-id has two parts:
+</p>
+<ol>
+<li>an identifier for the module within which the distinct-type-descriptor
+occurs; this consists of an organization, a module name, and a version
+number;</li>
+<li>an identifier that uniquely identifies the occurrence of the
+distinct-type-descriptor within the module; this is either a named, in which
+case it consists of a string, or anonymous, in which case it consists of a
+compiler-generated integer.</li>
+</ol>
+<p>
+Distinct types can be used with only the object or error basic types. An object
+value or error value includes a set of type-ids. These type-ids are fixed at the
+time of construction and are immutable thereafter. A value's set of type-ids may
+be empty. The type-ids of a value are part of the value's shape and so can
+affect when an object belongs to a type. The set of type-ids of an object or
+error value are divided into primary type-ids and secondary type-ids: the
+secondary type-ids could be inferred from the primary type-ids using the
+program's source.
+</p>
+<p>
+An object or error value is always constructed using a specific type descriptor.
+A type descriptor for objects and errors thus performs a dual role: it denotes a
+type and it defines a mechanism to construct a value of the type. The primary
+and secondary type-ids of an object or error value come from the type-descriptor
+used to construct it. This is specified in detail in the section on the <a
+href="#distinct-types">distinct type descriptor</a>.
+</p>
+
+</section>
+<section>
 <h4>Iterability</h4>
 <p>
 Values of some basic types are <em>iterable</em>. An iterable value supports an
@@ -2346,7 +2390,7 @@ of the shape.
 </section>
 
 <section>
-<h4>Distinct types</h4>
+<h4 id="distinct_types">Distinct types</h4>
 
 <pre
 class="grammar">distinct-type-descriptor := <code>distinct</code> type-descriptor
