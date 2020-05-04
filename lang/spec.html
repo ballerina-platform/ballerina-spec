@@ -2246,13 +2246,13 @@ because Ballerina does not yet support parameterized object types.
 class="grammar">other-type-descriptor :=
    | type-reference
    | singleton-type-descriptor
-   | readonly-type-descriptor
    | any-type-descriptor
    | never-type-descriptor
-   | optional-type-descriptor
+   | readonly-type-descriptor
+   | distinct-type-descriptor
    | union-type-descriptor
    | intersection-type-descriptor
-   | distinct-type-descriptor
+   | optional-type-descriptor
    | anydata-type-descriptor
    | json-type-descriptor
    | byte-type-descriptor
@@ -2299,6 +2299,42 @@ read-only bit set will thus not belong to any singleton type.
 </p>
 </section>
 <section>
+<h4>Any type</h4>
+
+<pre class="grammar">any-type-descriptor := <code>any</code>
+</pre>
+<p>
+The type descriptor <code>any</code> describes the type consisting of all values
+other than errors. A value belongs to the any type if and only if its basic type
+is not error. Thus all values belong to the type <code>any|error</code>. Note
+that a structure with members that are errors belongs to the <code>any</code>
+type.
+</p>
+<p>
+The any-type-descriptor is not definite.
+</p>
+</section>
+<section>
+<h4>Never type</h4>
+
+<pre class="grammar">never-type-descriptor := <code>never</code>
+</pre>
+<p>
+The type descriptor <code>never</code> describes the type that does not contain
+any shapes. No value ever belongs to the <code>never</code>.
+</p>
+<p>
+This can be useful to describe for the return type of a function, if the
+function never returns. It can also be useful as a type parameter. For example,
+<code>xml&lt;never&gt;</code> describes the an xml type that has no
+constituents, i.e. the empty xml value.
+</p>
+<p>
+Note that for anytype <code>T</code>, the type <code>T|never</code> is the same
+as <code>T</code>.
+</p>
+</section>
+<section>
 <h4>Readonly type</h4>
 <pre
 class="grammar">readonly-type-descriptor := <code>readonly</code>
@@ -2340,51 +2376,30 @@ bit on. These basic types are:
 
 </section>
 <section>
-<h4>Any type</h4>
-
-<pre class="grammar">any-type-descriptor := <code>any</code>
-</pre>
-<p>
-The type descriptor <code>any</code> describes the type consisting of all values
-other than errors. A value belongs to the any type if and only if its basic type
-is not error. Thus all values belong to the type <code>any|error</code>. Note
-that a structure with members that are errors belongs to the <code>any</code>
-type.
-</p>
-<p>
-The any-type-descriptor is not definite.
-</p>
-</section>
-<section>
-<h4>Never type</h4>
-
-<pre class="grammar">never-type-descriptor := <code>never</code>
-</pre>
-<p>
-The type descriptor <code>never</code> describes the type that does not contain
-any shapes. No value ever belongs to the <code>never</code>.
-</p>
-<p>
-This can be useful to describe for the return type of a function, if the
-function never returns. It can also be useful as a type parameter. For example,
-<code>xml&lt;never&gt;</code> describes the an xml type that has no
-constituents, i.e. the empty xml value.
-</p>
-<p>
-Note that for anytype <code>T</code>, the type <code>T|never</code> is the same
-as <code>T</code>.
-</p>
-</section>
-<section>
-<h4>Optional types</h4>
-
+<h4 id="distinct_types">Distinct types</h4>
 <pre
-class="grammar">optional-type-descriptor := type-descriptor <code>?</code>
+class="grammar">distinct-type-descriptor := <code>distinct</code> type-descriptor
 </pre>
 <p>
-A type <code>T?</code> means T or nil. A type <code>T?</code> contains a shape
-if and only if <code>T</code> contains the shape or the shape is nil.
+Each occurrence of a distinct-type-descriptor describes a type that is distinct
+from any other occurrence of a distinct-type-descriptor. Only object and error
+values can belong to a type described by a distinct-type-descriptor.
 </p>
+<p>
+The type denoted by a distinct-type-descriptor <code><var>D</var></code>, where
+<code><var>D</var></code> is <code>distinct <var>T</var></code>, and
+<var>d</var> is the type-id of this occurrence of <code><var>D</var></code>,
+contains a shape <var>s</var> of an object or error value if and only if both
+<code><var>T</var></code> contains <var>s</var> and the set of type-ids of
+<var>s</var> contains <var>d</var>. The set of type-ids induced by
+<code><var>D</var></code> consists of <var>d</var> as the primary type-id and
+the type-ids induced by <code><var>T</var></code> as the secondary type-ids. The
+type <code><var>T</var></code> must be definite and must be a subtype of object
+or a subtype of error. The type <code><var>D</var></code> is always definite.
+Note that <code><var>D</var></code> is always a proper subtype of
+<code><var>T</var></code>.
+</p>
+
 </section>
 <section>
 <h4>Union types</h4>
@@ -2440,31 +2455,17 @@ of the shape.
 </section>
 
 <section>
-<h4 id="distinct_types">Distinct types</h4>
+<h4>Optional types</h4>
+
 <pre
-class="grammar">distinct-type-descriptor := <code>distinct</code> type-descriptor
+class="grammar">optional-type-descriptor := type-descriptor <code>?</code>
 </pre>
 <p>
-Each occurrence of a distinct-type-descriptor describes a type that is distinct
-from any other occurrence of a distinct-type-descriptor. Only object and error
-values can belong to a type described by a distinct-type-descriptor.
+A type <code>T?</code> means T or nil. A type <code>T?</code> contains a shape
+if and only if <code>T</code> contains the shape or the shape is nil.
 </p>
-<p>
-The type denoted by a distinct-type-descriptor <code><var>D</var></code>, where
-<code><var>D</var></code> is <code>distinct <var>T</var></code>, and
-<var>d</var> is the type-id of this occurrence of <code><var>D</var></code>,
-contains a shape <var>s</var> of an object or error value if and only if both
-<code><var>T</var></code> contains <var>s</var> and the set of type-ids of
-<var>s</var> contains <var>d</var>. The set of type-ids induced by
-<code><var>D</var></code> consists of <var>d</var> as the primary type-id and
-the type-ids induced by <code><var>T</var></code> as the secondary type-ids. The
-type <code><var>T</var></code> must be definite and must be a subtype of object
-or a subtype of error. The type <code><var>D</var></code> is always definite.
-Note that <code><var>D</var></code> is always a proper subtype of
-<code><var>T</var></code>.
-</p>
-
 </section>
+
 <section>
 <h4 id="anydata">Anydata type</h4>
 
