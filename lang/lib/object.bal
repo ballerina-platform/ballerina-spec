@@ -44,3 +44,16 @@ public type Listener distinct abstract object {
     # + return - `()` if no error occurred, and an error otherwise
     public function immediateStop() returns error?;
 };
+
+
+# Distinct Iterable type.
+# An object can make itself iterable by using `*object:Iterable;`,
+# and then defining an `iterator` method.
+public type Iterable distinct abstract object {
+    # Create a new iterator.
+    #
+    # + return - a new iterator object
+    public function iterator() returns abstract object {
+        public function next() returns record {| any|error value; |}|error?;
+    }
+}
