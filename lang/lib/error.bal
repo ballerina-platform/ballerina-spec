@@ -15,7 +15,9 @@
 // under the License.
 
 # The type to which error detail records must belong.
-public type Detail map<anydata|readonly>;
+public type Detail record {|
+   ...(anydata|readonly);
+|};
 
 # A type parameter that is a subtype of error `Detail` record type.
 # Has the special semantic that when used in a declaration
