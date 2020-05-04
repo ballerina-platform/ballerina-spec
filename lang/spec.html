@@ -1932,10 +1932,8 @@ method-defn-body := function-defn-body
 </pre>
 <p>
 The names of all the methods of an object must be distinct: there is no method
-overloading. Method names beginning with two underscores are reserved for use
-with semantics defined by this specification, either as the <code>__init</code>
-method or as a method declared by a <a
-href="#built-in_abstract_object_types">built-in abstract object types</a>.
+overloading. The method name <code>init</code> is used for initialization and
+treated specially.
 </p>
 <p>
 Within a <code>method-defn-body</code>, the fields and methods of the object are not
@@ -2034,20 +2032,20 @@ An object is initialized by:
 <li>allocating storage for the object</li>
 <li>initializing each field with its default value, if it has one</li>
 <li>initializing the methods of the object using the type's method definitions</li>
-<li>calling the object's <code>__init</code> method, if there is one</li>
+<li>calling the object's <code>init</code> method, if there is one</li>
 </ol>
 <p>
-The return type of the <code>__init</code> method must be a subtype of the union
-of error and nil, and must contain nil; if <code>__init</code> returns an error,
-it means that initialization of the object failed. The <code>__init</code>
+The return type of the <code>init</code> method must be a subtype of the union
+of error and nil, and must contain nil; if <code>init</code> returns an error,
+it means that initialization of the object failed. The <code>init</code>
 method can declare parameters in the same way as any other method.
 </p>
 <p>
-At any point in the body of a <code>__init</code> method, the compiler
+At any point in the body of a <code>init</code> method, the compiler
 determines which fields are potentially uninitialized. A field is potentially
 uninitialized at some point if that field does not have a default value and it
 is not definitely assigned at that point. It is a compile error if a
-<code>__init</code> method:
+<code>init</code> method:
 </p>
 <ul>
 <li>accesses a field at a point where it is potentially initialized, or</li>
@@ -2059,18 +2057,18 @@ is not definitely assigned at that point. It is a compile error if a
 </li>
 </ul>
 <p>
-An object must have an <code>__init</code> method unless all its fields have a
-default value. An object without an <code>__init</code> method behaves as it had
-an <code>__init</code> method with no parameters and an empty body (which will
+An object must have an <code>init</code> method unless all its fields have a
+default value. An object without an <code>init</code> method behaves as it had
+an <code>init</code> method with no parameters and an empty body (which will
 always return nil).
 </p>
 <p>
-The visibility of the <code>__init</code> method cannot be <code>private</code>.
+The visibility of the <code>init</code> method cannot be <code>private</code>.
 </p>
 <p>
-Any <code>__init</code> method is not part of the shape of an object, and so
+Any <code>init</code> method is not part of the shape of an object, and so
 does not affect when an object value belongs to a type. An abstract object type
-must not declare an <code>__init</code> object. The <code>__init</code> method
+must not declare an <code>init</code> object. The <code>init</code> method
 can be called in a <code>method-call-expr</code> only when the expression
 preceding the <code>.</code> is <code>self</code>.
 </p>
@@ -3976,10 +3974,10 @@ explicit-new-expr must specify an object type or a stream type.
 <p>
 When the type-descriptor is an object type, the explicit-new-expr allocates
 storage for the object and initializes it, passing the supplied arg-list to the
-object's <code>__init</code> method. It is a compile error if the
+object's <code>init</code> method. It is a compile error if the
 type-descriptor if the arg-list does not match the signature of the object
-type's <code>__init</code> method. If the result of calling the
-<code>__init</code> method is an error value e, then the result of evaluating
+type's <code>init</code> method. If the result of calling the
+<code>init</code> method is an error value e, then the result of evaluating
 the explicit-new-expr is e; otherwise the result is the newly initialized
 object.
 </p>
@@ -3993,7 +3991,7 @@ stream that wraps that object.
 </p>
 <p>
 An explicit-type-expr specifying a type descriptor T has static type T, except
-that if T is an object type and the type of the <code>__init</code> method is
+that if T is an object type and the type of the <code>init</code> method is
 E?, where E is a subtype of error, then it has static type T|E.
 </p>
 <pre
@@ -6449,7 +6447,7 @@ holds a value:
 <li>an lvalue referring to a variable is always defined but may be
 uninitialized;</li>
 <li>an lvalue referring to a specific named field of an object is always defined
-but may not be initialized until the <code>__init</code> method returns</li>
+but may not be initialized until the <code>init</code> method returns</li>
 <li>an lvalue referring to member of a structured value having a specific key is
 undefined if the structured value does not have a member with that key; if such an
 lvalue is defined, it is also initialized; note that an lvalue always refers to
@@ -7173,10 +7171,10 @@ A module's initialization function performs expression evaluation so as to
 initialize the identifiers declared in the module's declarations; if evaluation
 of an expression completes abruptly, then the module initialization function
 immediately returns the error value associated with the abrupt completion. If a
-module defines a function named <code>__init</code>, then a module's
+module defines a function named <code>init</code>, then a module's
 initialization function will end by calling this function; if it terminates
 abruptly or returns an error, then the module's initialization function will
-return an error value. Note that the <code>__init</code> function of the root
+return an error value. Note that the <code>init</code> function of the root
 module will be the last function called during a program's initialization phase.
 </p>
 <p>
@@ -7185,7 +7183,7 @@ command-line arguments typically provided by an operating system. The Ballerina
 standard library provides a function to retrieve these command-line arguments.
 In addition, the Ballerina platform provides a convenient mechanism for
 processing these arguments. This works by generating a new command-line
-processing module from the specified root module. The <code>__init</code>
+processing module from the specified root module. The <code>init</code>
 function of the generated module retrieves the command-line arguments, parses
 them, and calls a public function of the specified root module (typically the
 <code>main</code> function). The parsing of the command-line arguments is
@@ -7347,10 +7345,10 @@ An <code>external-function-body</code> means that the implementation of the
 function is not provided in the Ballerina source module.
 </p>
 <p>
-If a module has a function-defn with an identifier of <code>__init</code>, it is
+If a module has a function-defn with an identifier of <code>init</code>, it is
 called called automatically by the system at the end of the initialization of
 that module; if this call returns an error, then initialization of the module
-fails. The following special requirements apply to the <code>__init</code>
+fails. The following special requirements apply to the <code>init</code>
 function of a module: it must not be declared <code>public</code>; its return
 type must both be a subtype of <code>error?</code> and contain <code>()</code>;
 it must have no parameters.
@@ -8031,6 +8029,8 @@ an error value having a reason string for categorizing the error and separate
 message string in the detail record, an error value has a message string in the
 error and distinct types are used for categorizing. The cause has also moved
 from the detail record into the error value.</li>
+<li>The <code>__init</code> method of object and the <code>__init</code> function
+of modules have been renamed to <code>init</code>.</li>
 <li>The table type has been redesigned to be more consistent with other
 structural types and no longer has preview status.</li>
 <li>Enum declarations have been added.</li>
