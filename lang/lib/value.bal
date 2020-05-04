@@ -100,21 +100,44 @@ public function isReadOnly(anydata v) returns boolean = external;
 # - if `v` is a mapping, then returns key=value for each member separated by a space character
 # - if `v` is xml, then returns `v` in XML format (as if it occurred within an XML element)
 # - if `v` is table, then returns the results of toString on each member of the table
-    separate by a newline character
+#    separate by a newline character
 # - if `v` is an error, then a string consisting of the following in order
 #     1. the string `error`
 #     2. a space character
-#     3. the message string
-#     4. if the detail record is non-empty
+#     3. if the set of type-ids of the error is not empty
+#         1. a space character
+          2. a string representing the primary type-ids as described below
+#     4. the message string
+#     5. if the detail record is non-empty
 #         1. a space character
 #         2. the result of calling toString on the detail record
 # - if `v` is an object, then
 #     - if `v` provides a `toString` method with a string return type and no required methods,
 #       then the result of calling that method on `v`
-#     - otherwise, `object` followed by some implementation-dependent string
+#     - otherwise, a string consisting of the following in order
+#         1. the string `object`
+#         2. a space character
+#	  3. if the set of type-ids of the object is not empty
+#            1. a space character
+#            2. a string representing the primary type-ids as described below
+#	  4. a string representing the storage identity of the object in an
+#	     implementation-dependent way
+# - if `v` is a typedesc, then
+#     1. the string `typedesc`
+#     2. a space character
+#     3. if the type descriptor is definite and the induced set of type-ids is not empty
+#         1. a space character
+#         2. a string representing the primary type-ids as described below
+#     4. an implementation-dependent string
 # - if `v` is any other behavioral type, then the identifier for the behavioral type
-#   (`function`, `future`, `service`, `typedesc` or `handle`)
+#   (`function`, `future`, `service` or `handle`)
 #   followed by some implementation-dependent string
+#
+# The string describing a set of type-ids consists of strings describing each type-id
+# separated by `&`. A string describing each primary type-id consists of a string of the
+# form `{M}L` where M describes the module id and L describes the local id. M is of
+# form `o/m` where o is the organization and m is the module name. If the local id is
+# named, then L consists of the name; otherwise, L consists of `$` followed by an integer.
 #
 # Note that `toString` may produce the same string for two Ballerina values
 # that are not equal (in the sense of the `==` operator).
