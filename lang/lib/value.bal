@@ -112,7 +112,7 @@ public function isReadOnly(anydata v) returns boolean = external;
 #         1. a space character
 #         2. the result of calling toString on the detail record
 # - if `v` is an object, then
-#     - if `v` provides a `toString` method with a string return type and no required methods,
+#     - if `v` provides a `toString` method with a string return type and no required parameters,
 #       then the result of calling that method on `v`
 #     - otherwise, a string consisting of the following in order
 #         1. the string `object`
