@@ -7,7 +7,7 @@ A Ballerina project helps you to manage a complex ballerina program in a modular
 
 
 
-# Single source files {#single-source-files}
+# Single source files
 
 You can write a ballerina program in a single source file and it needs to have the following two requirements to be a ballerina program.
 
@@ -31,7 +31,7 @@ When you build the program it will create an executable file in the current dire
 If a ballerina file is part of a ballerina module it is not considered as a single source file and you will not be able to run or build it directly.
 
 
-# Ballerina Module {#ballerina-module}
+# Ballerina Module
 
 When you write large programs often you would want to organize your code into shareable units. In Ballerina, you can divide your program into such units which are called Ballerina modules. 
 
@@ -40,7 +40,7 @@ A Ballerina module is a collection of source parts (ie. functions, objects, serv
 A Ballerina module is a directory containing Ballerina files that reside in a Ballerina project. You need to create a Ballerina project in order to create a Ballerina module. 
 
 
-# Ballerina Project {#ballerina-project}
+# Ballerina Project
 
 A Ballerina project allows you to define and manage one or many Ballerina modules. If you want to create a library (sharable Ballerina module) or a complex program you should start by creating a Ballerina project. 
 
@@ -53,7 +53,7 @@ You need to pass the project directory name as the first argument, the new comma
 Ballerina project cannot reside in another ballerina project. If you run ballerina new inside a ballerina project directory or in a subpath of a ballerina project it will give an error.
 
 
-## Creating a module in a project {#creating-a-module-in-a-project}
+## Creating a module in a project
 
 Once you initialize a project to create a module simply create a directory inside the source ( src ) directory. The name of the directory should be the name of the module. Inside the module directory you can create ballerina files which belong to the module. 
 
@@ -68,7 +68,7 @@ project-root/src/moduleName$ touch order_service.bal
 Ballerina also allows you to create modules with a predefined set of templates which will help you to scaffold your project quickly. 
 
 
-## Create modules from predefined templates {#create-modules-from-predefined-templates}
+## Create modules from predefined templates
 
 You can use a ballerina add tool to quickly create a purposeful module. Let's look at an example command. 
 
@@ -91,7 +91,7 @@ project-root$ ballerina add moduleName -t service
 The above command will add a new module with an HTTP service.
 
 
-## Ballerina Project Structure {#ballerina-project-structure}
+## Ballerina Project Structure
 
 Let's check out what the new command generated for us.
 
@@ -173,7 +173,7 @@ target
 Apart from above, a project root directory can contain any other files. For example, if the project root is considered as the git root you can keep files such as Readme.md and other git related config files. 
 
 
-## Compiling a Ballerina Module {#compiling-a-ballerina-module}
+## Compiling a Ballerina Module
 
 A ballerina module can be compiled into a library. When you compile a module into a library you can share it with other programs via a ballerina repository. To compile a module you can use the ballerina compile command. 
 
@@ -226,7 +226,7 @@ project-name/
 You can use -o | --offline flag to compile the modules offline. This will search balo’s from the local cache instead of fetching from central. If the dependency is not found it will result in an error specifying the missing dependencies. 
 
 
-## Publishing a Ballerina Module {#publishing-a-ballerina-module}
+## Publishing a Ballerina Module
 
 A compiled module can be shared via Ballerina Central. Ballerina Central is a module registry where you can publish your ballerina modules. These published modules can then be imported and used in other ballerina programs. 
 
@@ -266,12 +266,12 @@ If the modules are not compiled already and no balo files are found in the targe
 If you have compiled the modules and the source has changed after the compile, if you issue a push command it will give an error mentioning “Source has changed since the last compile. Please rebuild and push or use --skip-source-check to push anyway”. And users can ignore the warning and push by using --skip-source-check flag. 
 
 
-## Importing a Module {#importing-a-module}
+## Importing a Module
 
 A library module can be imported in other ballerina programs. When you import a module all the public constructs will become available in the current program scope.
 
 
-### Importing a module from central {#importing-a-module-from-central}
+### Importing a module from central
 
 To import a module from central you can use the import statement followed by organization name and the module name like below.
 
@@ -303,7 +303,7 @@ import wso2/twitter version 2.3.0;
 
 
 
-### Importing modules in the project directory. {#importing-modules-in-the-project-directory}
+### Importing modules in the project directory.
 
 If you want to import a module which is in the same project you do not need to specify the org name. But even if you specify the organization name in Ballerina.toml it will work. 
 
@@ -314,7 +314,7 @@ import bar;
 Specifying a version for modules in the same project will result in an error since all the time it will use the latest compiled version of the specific module.
 
 
-## Running & Building a ballerina module. {#running-&-building-a-ballerina-module}
+## Running & Building a ballerina module.
 
 If a ballerina module has an entry point we consider it as a ballerina program which you can either run directly or build into a binary program. 
 
@@ -347,24 +347,24 @@ project-dir$ ballerina run [<module_name>]
 The above command will first build the given module and then execute the generated executable. If the project only has one module with an entry point you omit the module name. 
 
 
-## Dependency management. {#dependency-management}
+## Dependency management.
 
 When you have a lot of dependencies in a program it becomes challenging to manage them and keep them up to date. Ballerina comes with a set of features that will help you to manage dependencies easily.
 
 
-### Imports without versions {#imports-without-versions}
+### Imports without versions
 
 If a ballerina program imports other modules and does not specify a version, the Ballerina compile or build command will always download the latest version of the specific module. Here the latest version can be a major minor or patch version of the module.
 
 
-### Versioned Imports {#versioned-imports}
+### Versioned Imports
 
 If you import a specific version of a module ballerina will fetch the corresponding versions from the repository to build or compile. 
 
 If you build a library module with specific version dependencies the version information will be preserved in the balo. When you import this module and use it in another program and compile the specific versions of the transitive dependencies will be fetched.
 
 
-### Managing dependency versions in a Ballerina Project {#managing-dependency-versions-in-a-ballerina-project}
+### Managing dependency versions in a Ballerina Project
 
 If you are working with a ballerina project with multiple modules often you would want to manage the dependency versions at a single place instead of specifying the versions inside each module. Ballerina supports the above by allowing you to specify the dependency versions in the Ballerina.toml file. 
 
@@ -381,7 +381,7 @@ In the Ballerina.toml file you can specify the import module versions as follows
 In Ballerina.toml `dependencies` will be a map of dependent modules.  Here the key will be the module name with the organization and the value will be a version range.
 
 
-### Path Dependency.  {#path-dependency}
+### Path Dependency.
 
 Often you would want to depend on a module of another project which you haven’t pushed to the central. The above can be achieved using a path dependency. Following is an example of a path dependency. 
 
@@ -402,7 +402,7 @@ It is not possible to push a module to central when there are dependencies resol
 Version is ignored when the path is given to the balo.
 
 
-### How to get a repeatable build  {#how-to-get-a-repeatable-build}
+### How to get a repeatable build
 
 As mentioned above ballerina will download the latest versions of dependencies before the build. But sometimes your program might break with the new version of a dependency ( ie. due to API changes ). This will lead to some complications like the build might pass locally in your machine but fails in CICD due to a new library version. 
 
@@ -425,7 +425,7 @@ If you want to update the dependencies in a lock file simply delete the `balleri
 If you have a lock file and you change the versions in the Ballerina.toml or in Ballerina source, compile or build command will update the lock file automatically. 
 
 
-## Running Tests {#running-tests}
+## Running Tests
 
 If you have written tests in a module the tests will be run by default when you compile/build a module. If you want to skip running tests you can use the `--skip-test` flag. Here the compiler will first compile the module and run the test against the compiled artifact. 
 
@@ -434,7 +434,7 @@ If you build or compile the full project ballerina will run integration tests de
 If you are writing a single source bal file you can define the test in the same file. 
 
 
-# Caches {#caches}
+# Caches
 
 Ballerina will maintain several caches to speed up the compile and build process. Following artifacts will be cached by Ballerina.
 
@@ -444,7 +444,7 @@ Ballerina will maintain several caches to speed up the compile and build process
 Here the balo cache will be common across any version of ballerina and BIR and JAR cache will be ballerina version specific.  
 
 
-### Balo cache {#balo-cache}
+### Balo cache
 
 Balo cache is responsible for keeping BALOs of dependent modules. And in ballerina BALOs will be cached in two main locations.
 
@@ -463,7 +463,7 @@ Balo cache is responsible for keeping BALOs of dependent modules. And in balleri
         ```
 
 
-### BIR Cache {#bir-cache}
+### BIR Cache
 
 
 
@@ -473,13 +473,13 @@ Balo cache is responsible for keeping BALOs of dependent modules. And in balleri
 *   BIRs created by the language server will also be kept at the same cache location.
 
 
-# Ballerina Module Repository. {#ballerina-module-repository}
+# Ballerina Module Repository.
 
 Ballerina module repository is a collection of compiled ballerina modules. Ballerina central is the main module repository for Ballerina developers. Ballerina central will be the only hosted module repository that ballerina supports as of now.
 
 
 
-# Ballerina Manifest File {#ballerina-manifest-file}
+# Ballerina Manifest File
 
 Ballerina Manifest Type Definition
 
@@ -557,7 +557,7 @@ target = "java8"
 
 
 
-# Module Template {#module-template}
+# Module Template
 
 A template is used by ballerina add command to create a new module. You can define your custom template and share through Ballerina central. A module template is a Ballerina module that we tag as a template.
 
