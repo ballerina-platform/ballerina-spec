@@ -3,10 +3,6 @@
 A Ballerina project helps you to manage a complex ballerina program in a modular way. This specification will define how to structure and configure a Ballerina project. Also the specification will define the functionality of the CLI tools ships with ballerina distribution.
 
 
-[TOC]
-
-
-
 # Single source files
 
 You can write a ballerina program in a single source file and it needs to have the following two requirements to be a ballerina program.
@@ -46,7 +42,7 @@ A Ballerina project allows you to define and manage one or many Ballerina module
 
 To create a Ballerina project you can use the ballerina new command.
 ```
-$ ballerina new &lt;project-name>
+$ ballerina new <project-name>
 ```
 You need to pass the project directory name as the first argument, the new command will create a project directory with the given name. 
 
@@ -80,7 +76,7 @@ project-root$ ballerina add [-t | --template <tname>] <modulename>
 
 The above command will create a new module with a main in it. It will also create a module structure including test files.
 
-By default the scaffold tool will generate a module with a main function. If you want you can use a different template to create a module. You can use the `-t `,` --template `option to pass in the module template you want to use. 
+By default the add tool will generate a module with a main function. If you want you can use a different template to create a module. You can use the `-t `,` --template `option to pass in the module template you want to use. 
 
 
 ```
@@ -308,8 +304,9 @@ import wso2/twitter version 2.3.0;
 If you want to import a module which is in the same project you do not need to specify the org name. But even if you specify the organization name in Ballerina.toml it will work. 
 
 Let's say we have two modules named foo and bar in the project inside the foo module you can import module bar as follows. 
-
+```ballerina
 import bar;
+```
 
 Specifying a version for modules in the same project will result in an error since all the time it will use the latest compiled version of the specific module.
 
