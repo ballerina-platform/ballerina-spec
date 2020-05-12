@@ -173,10 +173,29 @@ public function toJsonString(anydata v) returns string = external;
 # All numbers in the JSON will be represented as float values.
 # Returns an error if the string cannot be parsed.
 #
-# + str - string representation of json
+# + str - string in JSON format
 # + return - `str` parsed to json or error
 public function fromJsonString(string str) returns json|error = external;
 
+# Converts a value of type json to a user-specified type.
+# This works the same as `cloneWithType`,
+# except that it also does the inverse of the conversions done by `toJson`.
+#
+# + v - json value
+# + t - type to convert to
+# + return - value belonging to type `t` or error if this cannot be done
+public function fromJsonWithType(json v, typedesc<anydata> t)
+    returns t|error = external;
+
+# Converts a string in JSON format to a user-specified type.
+# This is a combination of `fromJsonString` followed by
+# `fromJsonWithType`.
+# + str - string in JSON format
+# + t - type to convert to
+# + return - value belonging to type `t` or error if this cannot be done
+public function fromJsonStringWithType(string str, typedesc<anydata> t)
+    returns t|error = external;
+    
 # Merges two json values.
 #
 # + j1 - json value
