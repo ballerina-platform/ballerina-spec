@@ -70,7 +70,7 @@ public function cloneReadOnly(CloneableType v) returns CloneableType = external;
 # - numeric values can be converted using the NumericConvert abstract operation
 # - if a record type descriptor specifies default values, these will be used
 #   to supply any missing members
-public function cloneWithType(anydata v, typedesc<AnydataType> t) returns AnydataType|error = external;
+public function cloneWithType(anydata v, typedesc<AnydataType> t) returns t|error = external;
 
 # Tests whether `v` is read-only, i.e. immutable
 # Returns true if read-only, false otherwise.

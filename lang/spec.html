@@ -1856,6 +1856,18 @@ return-type-descriptor. An empty return-type-descriptor is equivalent to
 <code>returns ()</code>.
 </p>
 <p>
+A return-type-descriptor may be depend on the param-list in the following way. A
+type-reference occurring in a return-type-descriptor can refer to a parameter
+name if the type of the parameter is a subtype of <code>typedesc</code>. If p is
+such a parameter, then a reference to p in the return-type-descriptor denotes
+the type that is the value of p. The return-type-descriptor thus denotes a
+distinct set of shapes for each invocation of the function. A function-signature
+with a return-type-descriptor that uses a type-reference to refer to a parameter
+name in this way is said to be <em>dependently-typed</em>. Functions with
+dependently-types signatures can be declared and used within Ballerina, but
+Ballerina does not yet provide a mechanism to define such functions.
+</p>
+<p>
 Function types are covariant in their return types and contravariant in the type
 of their parameter lists. More precisely, a function type with return type R and
 parameter list type P is a subtype of a function type with return type R' and
@@ -7356,7 +7368,9 @@ external-function-body := <code>=</code> [annots] <code>external</code>
 </pre>
 <p>
 An <code>external-function-body</code> means that the implementation of the
-function is not provided in the Ballerina source module.
+function is not provided in the Ballerina source module. A function-defn-body
+with a function-signature that is dependently-typed must be an
+external-function-body.
 </p>
 <p>
 If a module has a function-defn with an identifier of <code>init</code>, it is
@@ -8050,6 +8064,8 @@ of modules have been renamed to <code>init</code>.</li>
 <li>The table type has been redesigned to be more consistent with other
 structural types and no longer has preview status.</li>
 <li>Enum declarations have been added.</li>
+<li>The return type of a function with an external body can depend on the value
+of a parameter of typedesc type.</li>
 <li>The XML item-specific subtypes can be used as constructors, both in
 expressions and in binding patterns.</li>
 </ol>
