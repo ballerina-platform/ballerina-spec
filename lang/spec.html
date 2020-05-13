@@ -431,7 +431,7 @@ constructed, and cannot be changed thereafter. Immutability is deep: the values
 contained in a structured value that has its read-only bit on will all have
 their read-only bits on. Some basic types are inherently immutable: the
 read-only bit is always on for a value that belongs to an inherently immutable
-basic type. All simple types are inherently immutable. Other basic types are
+basic type. All simple types are inherently immutable. Some basic types are
 selectively immutable: a type is selectively immutable if it is possible to
 construct both values of the type that have the read-only bit on and values
 that do not have the read-only bit on. All structured types are selectively
@@ -1445,7 +1445,7 @@ bit is on, then the read-only bit of every field is also on. A field's read-only
 bit is fixed when the mapping value is constructed, and cannot be changed
 thereafter. If a field's read-only bit is on, the read-only bit of the value of
 the field is also on. The read-only bit of a field is part of the read-only
-aspect of the field's shape.
+aspect of the mapping value's shape.
 </p>
 <p>
 A mapping is iterable: the iteration sequence consists of the members of the
@@ -1934,11 +1934,21 @@ methods; other objects types must not.
 
 <pre
 class="grammar">object-field-descriptor :=
-   metadata object-visibility-qual type-descriptor field-name [default-value]<code>;</code>
+   metadata object-visibility-qual [<code>readonly</code>] type-descriptor field-name [default-value]<code>;</code>
 </pre>
 <p>
 An <code>object-field-descriptor</code> specifies a field of the object. The
 names of all the fields of an object must be distinct.
+</p>
+<p>
+The object basic type is selectively immutable. Each field has a read-only bit,
+which is on if and only if <code>object-field-descriptor</code> includes
+<code>readonly</code>. If the read-only bit of a field is on, it means the field
+cannot be assigned to after it has been constructed. The read-only bit of an
+object value is on if and only if the read-only bit of all its fields is on.
+When an <code>object-field-descriptor</code> includes readonly, the type of the
+field is the intersection of <code>readonly</code> and the type specified by the
+type-descriptor.
 </p>
 </section>
 <section>
@@ -2052,6 +2062,10 @@ and</li>
 visibility, then it is possible to define another object type descriptor that is
 a subtype of T only within the same module as T.</li>
 </ul>
+<p>
+The read-only bit of a field is part of the read-only aspect of the object's
+shape.
+</p>
  
 </section>
 <section>
@@ -2402,6 +2416,7 @@ bit on. These basic types are:
 <li>list</li>
 <li>mapping</li>
 <li>table</li>
+<li>object</li>
 </ul>
 
 </section>
@@ -8062,7 +8077,8 @@ The <code>int:Unsigned8</code> type is equivalent to the predefined
 <section>
 <h3>Summary of changes from 2020R1 to 2020R2</h3>
 <ol>
-<li>The <code>readonly</code> type has been added.</li>
+<li>The <code>readonly</code> type has been added. Fields of records and objects
+can also be declared as <code>readonly</code>.</li>
 <li>Intersection types have been added.</li>
 <li>Distinct types have been added; these provide the functionality of nominal
 types with the framework of a structural type system.</li>

@@ -47,5 +47,5 @@ public function detail(error<DetailType> e) returns readonly & DetailType = exte
 #
 # + e - the error value
 # + return - a new object representing the stack trace of the error value
-public function stackTrace(error e) returns object { } = external;
+public function stackTrace(error e) returns readonly & object { } = external;
 
