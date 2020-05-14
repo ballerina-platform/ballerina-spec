@@ -2133,18 +2133,25 @@ preceding the <code>.</code> is <code>self</code>.
 class="grammar">object-type-inclusion := <code>*</code> type-reference <code>;</code>
 </pre>
 <p>
-The <code>type-reference</code> in an <code>object-type-inclusion</code> must
-reference an abstract object type; this can be either an
-<code>object-type-descriptor</code> or an intersection of
-<code>object-type-descriptor</code>s. The <code>object-field-descriptor</code>s
-and <code>object-method</code>s from the referenced type are included in the
-type being defined; the meaning is the same as if they had been specified
-explicitly. An <code>object-field-descriptor</code> or
-<code>object-method</code> in a <code>object-type-descriptor</code> can override
-an <code>object-field-descriptor</code> or <code>object-method</code> of the
-same name in an included <code>object-type-descriptor</code>, provided the type
+Every type descriptor referenced directly or indirectly by a
+<code>type-reference</code> in an <code>object-type-inclusion</code> must be an
+<code>object-type-descriptor</code>, <code>distinct-type-descriptor</code> or
+<code>intersection-type-descriptor</code>; the referenced type descriptor will
+thus necessarily be definite and a subtype of object. The
+<code>object-field-descriptor</code>s and <code>object-method</code>s from the
+referenced type are included in the type being defined; the meaning is the same
+as if they had been specified explicitly, except that the method definitions are
+not copied. More precisely, if an <code>object-method</code> is a
+<code>method-defn</code>, then a <code>method-decl</code> declaring the
+<code>method-defn</code> is included instead of the <code>method-defn</code>. An
+<code>object-field-descriptor</code> or <code>object-method</code> in a
+<code>object-type-descriptor</code> can override an
+<code>object-field-descriptor</code> or <code>object-method</code> of the same
+name in an included <code>object-type-descriptor</code>, provided the type
 declared for the field or method in the overriding descriptor is a subtype of
-the type declared in the overridden descriptor. It is an error for an
+the type declared in the overridden descriptor. If the including object type is
+not abstract, then each included <code>method-decl</code>, must be overridden by
+a <code>method-defn</code>. It is an error for an
 <code>object-type-descriptor</code> to directly or indirectly include itself.
 </p>
 <p>
