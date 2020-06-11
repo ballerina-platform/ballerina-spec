@@ -1,4 +1,4 @@
-name: Sync live spec with ballerina.io
+name: Sync spec in master with ballerina.io
 
 on: 
   push:
@@ -8,7 +8,7 @@ on:
       - '.github/**'
 
 jobs:
-  sync_live_spec:
+  sync_master_spec:
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.BAL_BOT_PAT }}
@@ -32,7 +32,7 @@ jobs:
           make all
           mv build/spec.html build/index.html
 
-      - name: Sync ballerina live spec with ballerina-dev-website
+      - name: Sync spec in master with ballerina-dev-website
         run: |
           cd ballerina-dev-website
           git pull origin master
@@ -40,12 +40,12 @@ jobs:
           git config --global user.email "ballerina-bot@ballerina.org"
           git config --global user.name "ballerina-bot"
 
-          git rm -r spec/lang/live/
-          cp -r ../lang/build/ spec/lang/live/
-          git add spec/lang/live/
-          git commit --allow-empty -m "[Automated] Update live spec"
+          git rm -r spec/lang/master/
+          cp -r ../lang/build/ spec/lang/master/
+          git add spec/lang/master/
+          git commit --allow-empty -m "[Automated] Update spec in master"
 
-      - name: Sync ballerina live spec with ballerina-prod-website
+      - name: Sync spec in master with ballerina-prod-website
         run: |
           cd ballerina-platform.github.io
           git pull origin master
@@ -53,10 +53,10 @@ jobs:
           git config --global user.email "ballerina-bot@ballerina.org"
           git config --global user.name "ballerina-bot"
 
-          git rm -r spec/lang/live/
-          cp -r ../lang/build/ spec/lang/live/
-          git add spec/lang/live/
-          git commit --allow-empty -m "[Automated] Update live spec"
+          git rm -r spec/lang/master/
+          cp -r ../lang/build/ spec/lang/master/
+          git add spec/lang/master/
+          git commit --allow-empty -m "[Automated] Update spec in master"
           
       - name: Push new changes to ballerina-dev-website
         shell: bash
