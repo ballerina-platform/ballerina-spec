@@ -6,6 +6,7 @@ This is a list of in-process proposals for major language features. Each proposa
   * [Immutable](immutable/immutable.md) improved treatement of immutability (issue [#338](https://github.com/ballerina-platform/ballerina-spec/issues/338))
   * [Non-cloning tables](tablenoclone/tablenoclone.md) an approach to tables which does not require a table to clone its members (issue [#47](https://github.com/ballerina-platform/ballerina-spec/issues/47))
   * [Distinct types](distinct/distinct.md) adds nominal typing for the object and error basic types (issue [#413](https://github.com/ballerina-platform/ballerina-spec/issues/413))
+  * [Transactions](transaction/transaction.md) adds language support for transactions (issue [#267](https://github.com/ballerina-platform/ballerina-spec/issues/267))
 
 Inactive proposals:
   * [XML](xml/xml.md) revised design for `xml` basic type; mostly included in 2020R1 release

@@ -1,22 +1,12 @@
-
 <h1>Transactions proposal</h1>
-
-
-<p>2020-05
-
-
-[TOC]
-
 
 <h2 id="introduction">Introduction</h2>
 
-
-This document proposes Ballerina language features that are designed to make it easier and more convenient to write robust applications that use transactions, including distributed transactions. It is not a design for a complete distributed transaction processing system.
+This document proposes Ballerina language features that are designed to make it easier and more convenient to write robust applications that use transactions, including distributed transactions. It is not a design for a complete distributed transaction processing system. Please add any comments to issue #[267](https://github.com/ballerina-platform/ballerina-spec/issues/267).
 
 Ballerina does not provide transactional memory. If in-memory data structures need to be updated depending on how a transaction completes, then it is the responsibility of the user to do so explicitly. A [commit/rollback handler feature](#commit-rollback-handlers) is provided to make this easier.
 
 <h2 id="transaction-manager">Transaction manager</h2>
-
 
 A running instance of a Ballerina program includes a transaction manager. This may run in the same process as the Ballerina program or in a separate process. It should not be connected over an unreliable network.
 
@@ -25,7 +15,6 @@ The transaction manager maintains a mapping from each strand to a stack of trans
 Ballerina also has the concept that a transaction may be part of a sequence of retries, where the last transaction can complete with either a rollback or commit, and the preceding transactions all completed with a rollback.
 
 The transaction manager supports the following abstract operations. We will explain the semantics of the transactional language features in terms of these abstract operations. These operations are modelled after the X/Open [TX Specification](https://pubs.opengroup.org/onlinepubs/009649599/toc.pdf) and Java's [UserTransaction](https://docs.oracle.com/javaee/7/api/javax/transaction/UserTransaction.html) interface. These cover only the interface between the application and the transaction manager, not the interface between the resource manager and the application. These operations are all performed by a Ballerina program in the context of a strand (this is a Ballerina term which means roughly thread or coroutine).
-
 
 
 *   Begin(t)
@@ -66,11 +55,9 @@ The above operations may result in the transaction manager getting into an error
 
 <h2 id="static-typing">Static typing</h2>
 
-
 The central concept is that a lexical scope can be transactional. This means that within the region of the program source code corresponding to the scope, the compiler guarantees that the strand is in transaction mode.
 
 A function or method can be declared with the qualifier `transactional`. This means that
-
 
 
 *   the scope of its default worker is transactional
@@ -80,9 +67,7 @@ This is similar to `MANDATORY` in JEE, except that it is checked at compile-time
 
 <h2 id="statement-evaluation-semantics">Statement evaluation semantics</h2>
 
-
 Evaluation/execution semantics in Ballerina are currently as follows:
-
 
 
 *   The evaluation of an expression either
@@ -105,14 +90,11 @@ To handle transactions, we can make this more flexible, but in a way that is con
 
 We will use the following notation to describe the three possible, mutually exclusive outcomes of the execution of a statement:
 
-
-
 *   panic(e) - panic with error value e
 *   fail(e) - fail with error value e (from a failed check expression)
 *   success
 
 <h2 id="transaction-statement">Transaction statement</h2>
-
 
 A transaction is performed using a transaction statement. The semantics of the transaction statement guarantees that every Begin() operation will be paired with a corresponding Rollback() or Commit() operation.
 
@@ -121,14 +103,11 @@ A transaction is performed using a transaction statement. The semantics of the t
 transaction-stmt := "transaction" block-stmt
 ```
 
-
 The block-stmt is a transactional scope. It is a compile-time error for it to occur in transactional scope. It is required at compile time that the block-stmt lexically contain at least one commit action:
-
 
 ```
 commit-action := "commit"
 ```
-
 
 A commit-action can only occur lexically in a transaction statement. The commit-action performs the transaction manager Commit() operation; if the result of the Commit() operation is an error, then the result of the commit-action is an error; otherwise, the result is nil.
 
@@ -136,13 +115,11 @@ Since the result of a commit action is not always nil, Ballerina's usual rules e
 
 The block-stmt can also contain rollback statements:
 
-
 ```
 rollback-stmt := "rollback" [expression] ";"
 ```
 
-
-The rollback-stmt performs the transaction manager Rollback() operation. The expression, if specified, must be a subtype of error?; if it's an error, it specifies the cause of the rollback and is passed as a parameter to the transaction manager's Rollback() operation. Note that like the commit action, the rollback statement does not change the flow of control. (If we add a fail expression, then it could be used to change the flow of control and thus cause a rollback.) 
+The rollback-stmt performs the transaction manager Rollback() operation. The expression, if specified, must be a subtype of `error?`; if it's an error, it specifies the cause of the rollback and is passed as a parameter to the transaction manager's Rollback() operation. Note that like the commit action, the rollback statement does not change the flow of control. (If we add a fail expression, then it could be used to change the flow of control and thus cause a rollback.) 
 
 It is a compile-time requirement that any exit out of the block-stmt that is neither a panic nor a failure must have executed a commit action or rollback statement.
 
@@ -172,11 +149,9 @@ Note that this also would be an error:
     }
 ```
 
-
 i.e. the scope in which bar() occurs ins non-transactional rather than in the outer transaction.
 
 The semantics of a transaction statement are as follows:
-
 
 
 *   Perform the transaction manager Begin() operation. If the outcome of this is panic(e), then the execution of the transaction statement terminates with outcome panic(e).
@@ -190,7 +165,7 @@ Issue
 
 *   The following case is tricky. I think we can say it should be a compile-time error if you try to flow into a transactional code path from a non-transactional code path.
 
-        ```
+```
         transaction {
           fooTx();
           if something() {
@@ -203,7 +178,7 @@ Issue
           check commit;
         }
 
-        ```
+```
 
 
 <h2 id="retry-statement">Retry statement</h2>
@@ -218,7 +193,7 @@ retry-spec :=  [type-parameter] [ "(" arg-list ")" ]
 ```
 
 
-The type-parameter must refer to a non-abstract object type that must be a subtype of the following abstract object type, called a RetryManager<E>, where E is a subtype of error.
+The type-parameter must refer to a non-abstract object type that must be a subtype of the following abstract object type, called a `RetryManager<E>`, where E is a subtype of error.
 
 
 ```
@@ -228,7 +203,7 @@ The type-parameter must refer to a non-abstract object type that must be a subty
 ```
 
 
-RetryManager<E> is contravariant in E i.e. RetryManager<E> is a subtype of RetryManager<E'> iff E' is a subtype of E. If the failure type of the block-stmt is F, then the retry manager must be a subtype of RetryManager<F>, which requires that F must be a subtype of the first parameter type. 
+`RetryManager<E>` is contravariant in E i.e. `RetryManager<E>` is a subtype of `RetryManager<E'>` iff E' is a subtype of E. If the failure type of the block-stmt is F, then the retry manager must be a subtype of `RetryManager<F>`, which requires that F must be a subtype of the first parameter type. 
 
 The arg-list specifies parameters to the object type's initializer. As with `new`, the arg-list can be omitted if the object type's initializer has no required arguments.
 
@@ -241,7 +216,7 @@ A retry-stmt is executed as follows:
 3. If o is fail(e), then call r.shouldRetry(e). If the result is true, go back to step 2.
 4. Terminate the execution of the retry-stmt with outcome o.
 
-A retry without a type-param is equivalent to `retry<DefaultRetryManager`>, where `DefaultRetryManager` is defined in langlib as follows:
+A retry without a type-param is equivalent to `retry<DefaultRetryManager>`, where `DefaultRetryManager` is defined in langlib as follows:
 
 
 ```
@@ -292,18 +267,15 @@ A RetryManager can implement arbitrarily complex logic. For example, it could ha
 
 A retry transaction statement combines the retry statement and the transaction statement, but with the additional semantics that each transaction is part of a sequence of retries.
 
-
 ```
 retry-transaction-stmt := "retry" retry-spec transaction-stmt
 ```
-
 
 Semantics of a retry-transaction-stmt differ from wrapping a retry-stmt around a transaction-stmt in the following ways.
 
 First, when the transaction is retried, information about the previous transaction is passed to the Begin() operation, so that it can be available through the Info() operation.
 
 Second, if the outcome of the transaction attempt was error(e), but the transaction was committed successfully, the transaction will not be retried; in this case, the outcome of the transaction-stmt will be fail(e).  The exceptional case would happen, for example, in the following, if `bar()`, which is non-transaction, returned an error:
-
 
 ```
 retry(3) transaction {
@@ -312,7 +284,6 @@ retry(3) transaction {
    check bar();
 }
 ```
-
 
 The various possibilities for the block statement outcome are described in the following table. The rows are whether a commit-action or rollback-stmt was executed and what the result was. The columns are what the outcome of executing the block was. The table cell says what the attempt does after the block has been executed and what the outcome of the attempt is.
 
@@ -384,19 +355,15 @@ panic(e)
   </tr>
 </table>
 
-
 Third, the rollback handler (described below) will get a willRetry argument, indicating whether the function will be retried.
 
 <h2 id="testing-for-transaction-mode">Testing for transaction mode</h2>
 
-
 We also have a boolean expression that evaluates to true if the current strand is in transaction mode.
-
 
 ```
 transactional-expr := "transactional"
 ```
-
 
 We can then do something like what we do with an `is` expression and type narrowing with conditional statements, e.g.
 
@@ -414,9 +381,7 @@ else {
 }
 ```
 
-
 <h2 id="langlib-transaction-module">Langlib transaction module</h2>
-
 
 Operations on the current transaction that do not affect the transaction mode are provided by functions in a langlib lang.transaction module. These are declared as transactional, so they are allowed only in a transactional scope. An important function is be one that provides information about the current transaction:
 
@@ -453,26 +418,20 @@ Operations on the current transaction that do not affect the transaction mode ar
       = external;
 ```
 
-
 Note that this langlib module only defines the interface between the application and the transaction manager. It doesn't provide the interface between the resource manager and the transaction manager (such as is defined by the XA spec).
 
 In a future version, we can add functions to control isolation levels.
 
 Issues
 
-
-
 *   Decide on the exact set of functions.
 *   Should we separate information about transaction that is fixed after the transaction is created and information that can change during the lifetime of a transaction?
 
 <h2 id="distributed-transactions">Distributed transactions</h2>
 
-
 With distributed transactions, a global transaction consists of multiple transaction branches, where a branch corresponds to work done by one strand of a Ballerina program that is part of the global transaction. Every transaction branch is uniquely identified by an XID, which consists of an identifier of the global transaction and an identifier of a branch with the global transaction. A strand's stack of transactions is actually a stack of transaction branches.
 
 A global transaction involving two Ballerina programs, A and B, works like this:
-
-
 
 *   program A uses the transaction statement to create a new global transaction
 *   program A creates a client object that is transaction-aware
@@ -494,8 +453,6 @@ A global transaction involving two Ballerina programs, A and B, works like this:
 
 Requirements for making all of the above work include:
 
-
-
 1. a network protocol for program A and B to communicate about the transaction, such as the Ballerina Micro Transaction Protocol
 2. a library API that allows a Ballerina Listener or client object to communicate with the program's transaction manager
 
@@ -503,13 +460,10 @@ Neither of these are defined by the Ballerina _language_, but eventually both of
 
 Note that:
 
-
-
 *   it is not necessary for program A and program B to both be in Ballerina, provided program A and program B agree on the network protocol
 *   the library API would initially be a Java API; eventually it should be possible to write a Listener completely in Ballerina, which would require a Ballerina API.
 
 <h2 id="commit-rollback-handlers">Commit/rollback handlers</h2>
-
 
 An application may want to take different actions depending on whether a transaction committed or was rolled back. In a non-distributed scenario, it can simply use the result of the commit action to decide what to do. However, this is rather inconvenient from a modularity perspective. In a distributed scenario, it becomes much more inconvenient, because, in the absence of some built-in support, it would require a separate application-level network interaction.
 
@@ -527,7 +481,6 @@ public transactional function onRollback(RollbackHandler handler)
     = external;
 ```
 
-
 These functions register handlers with the transaction manager, which are associated with a transaction branch. They can be used not just within the scope of a transaction statement, but anywhere in a transactional scope. Multiple handlers can be registered: they will all be called in reverse of the order in which they were registered.
 
 The handlers are called by the transaction manager as part of the Commit() and Rollback() operations. The Commit() operation will call a handler registered with onCommit only if the result of the first phase is a decision to commit; if the decision is to rollback, then any handlers registered with onRollback will be called instead. The Rollback() operation will always call the handlers registered with onRollback. Handlers are always called on the strand on which they were registered. If the transaction branch was the root branch, i.e. it was created using the transaction statement, then the handlers will be called as part of the execution of the transaction statement, commit action or rollback statement.
@@ -535,7 +488,6 @@ The handlers are called by the transaction manager as part of the Commit() and R
 In the case of a transaction branch created by a Listener for a resource method, it works like this. Handlers that have been registered for a transaction branch during the execution of a resource method will be executed after the resource method returns and a decision has been made whether to commit or rollback the global transaction to which the branch belongs. For any registered handlers h1 and h2, the strands used to execute h1 and h2 must be distinct if and only if the strands used to register h1 and h2 were distinct.
 
 A RollbackHandler has a  `willRetry` parameter, which allows an application to perform some actions only if the transaction is not going to be retried. We need to adjust the semantics of transaction-stmt and of the Commit() and Rollback () operations as follows to allow the willRetry parameter to get the RollbackHandler:
-
 
 
 *   A RetryManager can be provided to the Commit() and Rollback() abstract operations as an optional parameter.
@@ -555,8 +507,6 @@ A RollbackHandler has a  `willRetry` parameter, which allows an application to p
 
 Issues
 
-
-
 1. If shouldRetry sleeps in order to force a delay before retrying, then the transaction manager won't be able to use the sleep time to communicate with remote transaction managers, because they will want to know the willRetry value in order to call handlers registered with them. Could instead have shouldRetry return a number saying how long to sleep before retrying. 
 
 <h2 id="new-strands">New strands</h2>
@@ -572,13 +522,7 @@ So, for example, if `barTx` is a function declared as `transactional`, this woul
 ```
 transactional function fooTx() {
    worker X {
-```
-
-
-`     barTx()`;
-
-
-```
+     barTx();
    }
 }
 ```
@@ -590,13 +534,7 @@ but  this  would be allowed:
 ```
 transactional function fooTx() {
    transactional worker X {
-```
-
-
-`     barTx()`;
-
-
-```
+     barTx();
    }
 }
 ```
