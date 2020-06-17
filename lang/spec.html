@@ -5271,6 +5271,7 @@ intermediate-clause :=
    from-clause
    | where-clause
    | let-clause
+   | join-clause
 </pre>
 <p>
 A query expression consists of a sequence of clauses. The semantics of clauses
@@ -5410,6 +5411,71 @@ E<sub>1</sub>, x<sub>2</sub> = E<sub>2</sub></code> is transformed into
 <code>let x<sub>1</sub> = E<sub>1</sub> let x<sub>2</sub> =
 E<sub>2</sub></code>.
 </p>
+</section>
+
+<section>
+<h4>Join clause</h4>
+<pre class="grammar">join-clause := <code>join</code> typed-binding-pattern <code>in</code> expression join-on-condition
+join-on-condition := <code>on</code> expression <code>equals</code> expression
+</pre>
+<p>
+A join clause performs an inner equijoin.
+</p>
+<p>
+A <code>join</code> clause is executed as follows:
+</p>
+<ul>
+<li>compute a mapping for the right side of the join; during this computation
+variable bindings from input frames are not in scope:
+<ul>
+<li>create an empty mapping <var>m</var> that maps from keys to lists of frames
+(using <a href="#DeepEquals">DeepEquals</a> to compare keys);</li>
+<li>evaluate the expression following <code>in</code> resulting in an iterable
+value <var>c</var>;</li>
+<li>create an Iterator object <var>i</var> from <var>c</var>;</li>
+<li>do the following in a loop <var>L</var>
+<ul>
+<li>call <code><var>i</var>.next()</code> resulting in a value <var>r</var>;</li>
+<li>if <var>r</var> is an error, then complete execution of the join-clause
+early with error <var>r</var>;</li>
+<li>if <var>r</var> is <code>()</code>, stop loop <var>L</var>;</li>
+<li>let <var>v</var> be <code><var>r</var>.value</code>;</li>
+<li>let <var>f</var> be a frame with the result of binding the
+typed-binding-pattern to <var>v</var>;</li>
+<li>evaluate the expression to right of <code>equals</code> with <var>f</var>
+in scope resulting in a value <var>k</var>;</li>
+<li>add an entry to <var>m</var> with key <var>k</var> and and frame <var>f</var>;</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>for each input frame <var>f</var>
+<ul>
+<li>evaluate the expression to the left of <code>equals</code> with frame <var>f</var>
+in scope resulting in a value <var>k</var>;</li>
+<li>let <var>fs</var> be the list of frames for key <var>k</var> in <var>m</var>;</li>
+<li>for each frame <var>f'</var> in <var>fs</var>
+<ul>
+<li>emit a frame consisting of <var>f</var> augmented with <var>f'</var>.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>
+In the above, if <var>c</var> evaluates to a table, and the result of evaluating
+the expression to the right of <code>equals</code> for a member of the table
+will always be the key value for that member of the table, then the above can be
+optimized by using the table instead of creating a new mapping.
+</p>
+<p>
+Variables bound by previous clauses are not in scope for the expression
+following <code>in</code>, nor for the expression on the right of
+<code>equals</code>. Variables bound by the typed-binding-pattern are not in
+scope for the expression following <code>in</code>, nor for the expression on
+the left of <code>equals</code>.
+</p>
+
 </section>
 
 <section>
@@ -8153,6 +8219,7 @@ structural types and no longer has preview status.</li>
 of a parameter of typedesc type.</li>
 <li>The XML item-specific subtypes can be used as constructors, both in
 expressions and in binding patterns.</li>
+<li>Query expressions can have a <code>join</code> clause.</li>
 </ol>
 </section>
 <section>
