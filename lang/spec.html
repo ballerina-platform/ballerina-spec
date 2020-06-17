@@ -5274,6 +5274,7 @@ intermediate-clause :=
    | where-clause
    | let-clause
    | join-clause
+   | limit-clause
 </pre>
 <p>
 A query expression consists of a sequence of clauses. The semantics of clauses
@@ -5476,6 +5477,35 @@ following <code>in</code>, nor for the expression on the right of
 <code>equals</code>. Variables bound by the typed-binding-pattern are not in
 scope for the expression following <code>in</code>, nor for the expression on
 the left of <code>equals</code>.
+</p>
+
+</section>
+
+<section>
+<h4>Limit clause</h4>
+<pre class="grammar">
+limit-clause := <code>limit</code> expression
+</pre>
+<p>
+A <code>limit</code> clause limits the number of frames emitted by a query pipeline.
+</p>
+<p>
+A <code>limit</code> clause is executed as follows:
+</p>
+<ul>
+<li>evaluate expression resulting in a value <var>n</var>; variable bindings
+from input frames are not in scope for this evaluation;</li>
+<li>if <var>n</var> is less than zero, then panic;</li>
+<li>for each input frame <var>f</var>, while <var>n</var> is greater than 0
+<ul>
+<li>decrement <var>n</var>;</li>
+<li>emit <var>f</var>.</li> 
+</ul>
+</li> 
+</ul>
+
+<p>
+The static type of expression must be a subtype of <code>int</code>.
 </p>
 
 </section>
@@ -8222,6 +8252,7 @@ of a parameter of typedesc type.</li>
 <li>The XML item-specific subtypes can be used as constructors, both in
 expressions and in binding patterns.</li>
 <li>Query expressions can have a <code>join</code> clause.</li>
+<li>Query expressions can have a <code>limit</code> clause.</li>
 </ol>
 </section>
 <section>
