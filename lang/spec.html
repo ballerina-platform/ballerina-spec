@@ -5264,7 +5264,7 @@ syntax. In this version of Ballerina, the functionality is similar to a list
 comprehensions; future versions will provided richer functionality.
 </p>
 
-<pre class="grammar">query-expr := [query-construct-type] query-pipeline select-clause
+<pre class="grammar">query-expr := [query-construct-type] query-pipeline select-clause [on-conflict-clause]
 query-construct-type :=
   <code>table</code> key-specifier
   | <code>stream</code>
@@ -5337,7 +5337,8 @@ basic types that a query expression can construct.
 When during the construction of a table, an emitted value is added as a new
 member, it replaces any existing member with the same key value; when a new
 member replaces an existing member, it will have the same position in the order
-of members as the existing member.
+of members as the existing member. This behavior may be controlled by an
+<code>on conflict</code> clause.
 </p>
 <p>
 Variables bound by the clauses of a query-pipeline are implicitly final, and
@@ -5527,6 +5528,31 @@ A <code>select</code> clause is executed as follows:
 </li> 
 </ul>
 </section>
+
+<section>
+<h4>On conflict clause</h4>
+<pre class="grammar">
+on-conflict-clause := <code>on</code> <code>conflict</code> expression
+</pre>
+<p>
+An <code>on conflict</code> clause is allowed only for a query expression that
+constructs a table with a key sequence. The expression is evaluated when the
+<code>select</code> clause emits a value that conflicts with a previous value,
+in the sense that both values have the same key value in the table. The
+expression is evaluated with the same frame in scope as the select clause that
+emitted the value that conflicts with the previous value. The static type of the
+expression must be a subtype of <code>error?</code>. If the result of evaluating
+the expression is an error <var>e</var>, then the result of evaluating the
+query-expr is <var>e</var>. Otherwise, the result must be nil, and the earlier
+new value replaces the earlier conflicting value, in the same way as if there
+not been an <code>on conflict</code> clause.
+</p>
+<p>
+Note that the expression may have side-effects; for example, it may call a
+function that logs an error.
+</p>
+</section>
+
 </section>
 <section>
 <h3>XML navigation expression</h3>
@@ -8251,8 +8277,8 @@ structural types and no longer has preview status.</li>
 of a parameter of typedesc type.</li>
 <li>The XML item-specific subtypes can be used as constructors, both in
 expressions and in binding patterns.</li>
-<li>Query expressions can have a <code>join</code> clause.</li>
-<li>Query expressions can have a <code>limit</code> clause.</li>
+<li>Query expressions support some new clauses: <code>join</code> clause,
+<code>limit</code> clause and <code>on conflict</code> clause.</li>
 </ol>
 </section>
 <section>
