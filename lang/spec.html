@@ -1736,7 +1736,7 @@ the error</li>
 stack</li>
 </ul>
 <p>
-The detail mapping must be a subtype of <code>map&lt;anydata|readonly&gt;</code>.
+The detail mapping must be a subtype of <code>map&lt;Cloneable&gt;</code>.
 </p>
 <p>
 The shapes of the message, cause and detail record are part of the shape of the
@@ -2879,10 +2879,24 @@ and the filler value for B also belongs to the union</td>
 
 </section>
 <section>
-<h4 id="Clone">Clone</h4>
+<h4 id="Cloning">Cloning</h4>
+<p>
+There are two cloning operations. Both of these operate on values belonging to the
+Cloneable type defined as follows:
+</p>
+<pre>
+public type Cloneable readonly|xml|Cloneable[]|map&lt;Cloneable&gt;|table&lt;map&lt;Cloneable&gt;&gt;;
+</pre>
+<p>
+This type is defined in the lang.value module of the lang library. In this document,
+the type will be referred to as <code>value:Cloneable</code>.
+</p>
+
+<section>
+<h5 id="Clone">Clone</h5>
 <p>
 Clone(v) is defined for any value v that belongs to the type
-<code>anydata|readonly</code>. It performs a deep copy, recursively copying all
+<code>value:Cloneable</code>. It performs a deep copy, recursively copying all
 structural values and their members and recursively copying all sequence values
 and their constituents. Clone(v) for an immutable value v returns v. If v is of
 a basic type that has an inherent type, Clone(v) has the same inherent type as
@@ -2904,10 +2918,10 @@ lang.value module of the lang library.
 </p>
 </section>
 <section>
-<h4 id="ImmutableClone">ImmutableClone</h4>
+<h5 id="ImmutableClone">ImmutableClone</h5>
 <p>
 ImmutableClone(v) is defined for any value v that belongs to the type
-<code>anydata|readonly</code>. It performs a deep copy of v similar to Clone(v),
+<code>value:Cloneable</code>. It performs a deep copy of v similar to Clone(v),
 except that newly constructed values will be constructed as immutable and so
 have their read-only bit on. Any immutable value is not copied. So the result
 of Immutable always has its read-only bit on.
@@ -2920,6 +2934,7 @@ Conceptually the whole graph is constructed before being made immutable.
 The ImmutableClone operation is exposed by the <code>cloneReadOnly</code>
 function in the lang.value module of the lang library.
 </p>
+</section>
 </section>
 <section>
 <h4 id="DeepEquals">DeepEquals</h4>
@@ -3073,7 +3088,7 @@ argument for a parameter when a value is constructed.
 <tr>
 <td>Name <var>k</var></td>
 <td>type of field <var>k</var> of <code><var>T</var></code>, which will be a
-subtype of <code>anydata|readonly</code></td>
+subtype of <code>value:Cloneable</code></td>
 <td>field <var>k</var> of detail record</td>
 <td>detail record has no field <var>k</var></td>
 </tr>
@@ -6037,7 +6052,7 @@ equivalent to ().
 </p>
 <p>
 The static type of the <code>expression</code> must be a subtype of
-<code>anydata|readonly</code>. The contextually expected type used to interpret
+<code>value:Cloneable</code>. The contextually expected type used to interpret
 <code>expression</code> is the contextually expected type from the corresponding
 receive-action.
 </p>
@@ -7622,8 +7637,8 @@ symbol space used by module prefixes and XML namespace prefixes.
 <p>
 The type-descriptor specifies the type of the annotation tag. The type must be a
 subtype of one of the following three types: <code>true</code>,
-<code>map&lt;anydata|readonly&gt;</code>,
-<code>map&lt;anydata|readonly&gt;[]</code>. If the type-descriptor is omitted,
+<code>map&lt;value:Cloneable&gt;</code>,
+<code>map&lt;value:Cloneable&gt;[]</code>. If the type-descriptor is omitted,
 then the type is <code>true</code>.
 </p>
 
