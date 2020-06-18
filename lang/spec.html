@@ -2767,6 +2767,19 @@ precise service type that is used to the first argument to
 <code>attach</code>.
 </p>
 </section>
+<section>
+<h4>RawTemplate</h4>
+<p>
+The RawTemplate type describes the type of object constructed by a raw template
+expression. The type is defined in <code>lang.object</code> as follows.
+</p>
+<pre>distinct abstract object {
+    public (readonly &amp; string[]) strings;
+    public (any|error)[] insertions;
+}
+</pre>
+
+</section>
 </section>
 <section>
 <h3>Abstract operations</h3>
@@ -3334,6 +3347,7 @@ class="grammar">expression :=
    literal
    | string-template-expr
    | xml-template-expr
+   | raw-template-expr
    | structural-constructor-expr
    | new-expr
    | service-constructor-expr
@@ -3675,6 +3689,7 @@ class="grammar">const-expr :=
    literal
    | string-template-expr
    | xml-template-expr
+   | raw-template-expr
    | structural-constructor-expr
    | functional-constructor-expr
    | constant-reference-expr
@@ -3879,6 +3894,51 @@ evaluation.</li>
 An xml-template-expr occurring within a const-expr will construct an xml value
 that has its read-only bit on.
 </p>
+</section>
+
+<section>
+<h4>Raw template expression</h4>
+
+<pre
+class="grammar">raw-template-expr := BacktickString
+</pre>
+<p>
+A raw-template-expr constructs an object belonging to the abstract RawTemplate
+object type.
+</p>
+<p>
+A raw-template-expr is evaluated by
+</p>
+<ul>
+<li>constructing an array <var>v</var> whose members are the result of
+evaluating each interpolation's expression in the order in which they occur in
+the BacktickString;</li>
+<li>constructing an object with two fields
+<ul>
+<li>an <code>insertions</code> field with value <var>v</var></li>
+<li>a <code>strings</code> field consisting of a read-only array of strings
+containing the characters in BacktickString outside of interpolations, split at
+the interpolation points; the length of the this array is one more than the
+length of <var>v</var>.</li>
+</ul>
+</li>
+</ul>
+<p>
+The result of the raw-template-expr is the newly constructed object.
+</p>
+<p>
+For each raw-template-expr there is a separate non-abstract object type, which
+is a subtype of the RawTemplate type. The objects constructed by a
+raw-template-expr belong to this non-abstract object type. The type of the
+<code>insertions</code> field is determined from the contextually expected type
+or the static type of the expressions in the BacktickString in the same way as
+with a list-constructor-expr. The <code>strings</code> and
+<code>insertions</code> fields will be read-only if required by the contextually
+expected type. The value of the <code>strings</code> field is constructed once
+by the non-abstract object type. The value of the <code>insertions</code> is
+constructed once for each evaluation of the raw-template-expr.
+</p>
+
 </section>
 </section>
 
@@ -8322,6 +8382,7 @@ of a parameter of typedesc type.</li>
 expressions and in binding patterns.</li>
 <li>Query expressions support some new clauses: <code>join</code> clause,
 <code>limit</code> clause and <code>on conflict</code> clause.</li>
+<li>Raw template expressions have been added.</li>
 </ol>
 </section>
 <section>
