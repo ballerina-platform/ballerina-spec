@@ -3688,7 +3688,12 @@ mutate the input value.
 </p>
 <p>
 Ballerina always requires programmers to make conversions explicit, even between
-different types of number; there are no implicit conversions.
+different types of number. There is only one exception: a value of type
+<code>xml:Text</code> can be implicitly converted to a string. If a value of
+type <code>xml:Text</code> is the empty xml value, then it is implicitly
+converted to the empty string; otherwise the value is implicitly converted to a
+string that has a constituent character for each singleton item in the
+<code>xml:Text</code> sequence.
 </p>
 </section>
 <section>
@@ -4657,6 +4662,11 @@ type with identifier B, and the module lang.B contains a function
 <code>method-name</code> then M is B. The identifier for a basic type is the
 reserved identifier used in type descriptors for subtypes of that basic type, as
 listed in the <a href="#lang_library">Lang library</a> section.</li>
+<li>Otherwise, if the static type of <code>expression</code> is
+<code>xml:Text</code> and the module lang.string contains a function
+<code>method-name</code>, then M is <code>string</code>, and the result of
+evaluating <code>expression</code> is implicitly converted to a string before
+the function is called.</li>
 <li>Otherwise, M is <code>value</code>.</li>
 </ul>
 <p>
@@ -4803,13 +4813,16 @@ type-descriptor.
 <p>
 A <code>type-cast-expr</code> casts the value resulting from evaluating
 <code>expression</code> to the type described by the type-descriptor, performing
-a numeric conversion if required.
+an implicit conversion or numeric conversion if required.
 </p>
 <p>
 A type-cast-expr is evaluated by first evaluating <code>expression</code>
 resulting in a value v. Let T be the type described by
 <code>type-descriptor</code>. If v belongs T, then the result of the
-type-cast-expr is v. Otherwise, if T includes shapes from exactly one basic
+type-cast-expr is v. Otherwise, if v belongs to <code>xml:Text</code> and T
+includes shapes from basic type string, then let s be the result of implicitly
+converting v to a string; if s belongs to T, then the result of the
+type-cast-expr is s. Otherwise, if T includes shapes from exactly one basic
 numeric type N and v is belongs to another basic numeric type, then let n be
 NumericConvert(N, v); if n is not an error and n belongs to T, then the result
 of the type-cast-expr is n. Otherwise, the evaluation of the type-cast-expr
@@ -4819,8 +4832,9 @@ completes abruptly with a panic.
 Let T be the static type described by <code>type-descriptor</code>, and let TE
 be the static type of <code>expression</code>. Then the static type of the
 <code>type-cast-expr</code> is the intersection of T and TE', where TE' is TE
-with its numeric shapes transformed to take account to the possibility of the
-numeric conversion specified in the previous paragraph.
+with its xml shapes and numeric shapes transformed to take account to the
+possibility of the implicit conversion and numeric conversion specified in the
+previous paragraph.
 </p>
 <p>
 The contextually expected type for <code>expression</code> is the intersection
@@ -8393,6 +8407,8 @@ expressions and in binding patterns.</li>
 <li>Query expressions support some new clauses: <code>join</code> clause,
 <code>limit</code> clause and <code>on conflict</code> clause.</li>
 <li>Raw template expressions have been added.</li>
+<li>A value of type <code>xml:Text</code> can be implicitly converted to a
+string.</li>
 </ol>
 </section>
 <section>
@@ -8790,7 +8806,4 @@ alphabetical order):
 <li>Mohanadarshan Vivekanandalingam, <a href="mailto:mohan@wso2.com">mohan@wso2.com</a></li>
 <li>Lakmal Warusawithana, <a href="mailto:lakmal@wso2.com">lakmal@wso2.com</a></li>
 <li>Ayoma Wijethunga, <a href="mailto:ayoma@wso2.com">ayoma@wso2.com</a></li>
-</ul>
-</section>
-</body>
-</html>
+</ul> </section> </body> </html>
