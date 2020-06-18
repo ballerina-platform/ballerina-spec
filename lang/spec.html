@@ -1953,8 +1953,7 @@ class="grammar">object-type-descriptor :=
    object-type-quals <code>object</code> <code>{</code>
       object-member-descriptor*
    <code>}</code>
-object-type-quals :=
-   [<code>abstract</code>] [<code>client</code>] | [<code>client</code>] <code>abstract</code>
+object-type-quals := (<code>abstract</code> | <code>client</code> | <code>readonly</code>)*
 object-member-descriptor :=
    object-field-descriptor
    | object-method
@@ -1969,6 +1968,11 @@ If <code>object-type-quals</code> contains the keyword <code>client</code>, then
 the object type is a client object type. A client object type may have remote
 methods; other objects types must not.
 </p>
+<p>
+It is an error for a keyword to appear more than once in
+<code>object-type-quals</code>
+</p>
+
 <section>
 <h5>Fields</h5>
 
@@ -1982,7 +1986,8 @@ names of all the fields of an object must be distinct.
 </p>
 <p>
 The object basic type is selectively immutable. Each field has a read-only bit,
-which is on if and only if <code>object-field-descriptor</code> includes
+which is on if and only if <code>object-type-quals</code> contains
+<code>readonly</code> or <code>object-field-descriptor</code> includes
 <code>readonly</code>. If the read-only bit of a field is on, it means the field
 cannot be assigned to after it has been constructed. The read-only bit of an
 object value is on if and only if the read-only bit of all its fields is on.
@@ -2105,7 +2110,9 @@ a subtype of T only within the same module as T.</li>
 </ul>
 <p>
 The read-only bit of a field is part of the read-only aspect of the object's
-shape.
+shape. An object-type-descriptor whose object-type-quals contains
+<code>readonly</code> denotes a type to which an object shape belongs only it
+has the read-only bit set.
 </p>
  
 </section>
