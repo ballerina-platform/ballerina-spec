@@ -42,7 +42,7 @@ An object or error value is always constructed using a type descriptor. When a t
 *   If T is an error-type-descriptor, then T has no type-ids
 *   If T is an object-type-descriptor that includes types T1, T2,...,Tn (using the `*Ti;` syntax), then the primary type-ids of T are the union of the primary type-ids of the Ti and the secondary type-ids of T are the union of the secondary type-ids of the Ti; it is an error if this results in T including a non-public type-id from another module; if T does not include any types, then it has no type-ids;
 *   If T is an intersection type `T1 & T2`, then the primary type-ids of T are the union of the primary type-ids of T1 and T2, and the secondary type-ids of T are union of the secondary type-ids of T1 and T2.
-*   If T is a union T1 | T2, then it is a compile-time error if type-is of T1 or T2 are non-empty (such a type descriptor T only results in a compile-time error if it is used to construct a value)
+*   If T is a union T1 | T2, then it is a compile-time error if type-ids of T1 or T2 are non-empty (such a type descriptor T only results in a compile-time error if it is used to construct a value)
 *   If T is a reference to a type descriptor T1, then primary and secondary type-ids of T are the same as those of T1; it is an error if this results in T including a non-public type-id from another module
 
 The typeof operator applied to an error or object value returns a typedesc value representing the type descriptor used to construct the error or object value. The primary and secondary type-ids of a type-descriptor are available from this typedesc.
