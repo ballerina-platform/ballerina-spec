@@ -44,7 +44,7 @@ type Type1 any|error;
 #
 # + stm - the stream
 # + return - a new iterator object that will iterate over the members of `stm`.
-public function iterator(stream<Type,CompletionType> stm) returns abstract object {
+public function iterator(stream<Type,CompletionType> stm) returns object {
     public function next() returns record {|
         Type value;
     |}|CompletionType;

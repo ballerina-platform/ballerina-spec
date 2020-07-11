@@ -1937,40 +1937,21 @@ associated with the object when the object is constructed and cannot be changed
 thereafter. The fields and methods of an object are in separate symbol spaces, so
 it is possible for an object to have a field and a method with the same name.
 </p>
-<p>
-An object type descriptor, in addition to describing the object type, also
-defines a way to construct an object of this type, in particular it provides the
-method definitions that are associated with the object when it is constructed.
-</p>
-<p>
-It is also possible to have an object type descriptor that only describes an
-object type and cannot be used to construct an object; this is called an
-abstract object type descriptor.
-</p>
 
 <pre
 class="grammar">object-type-descriptor :=
-   object-type-quals <code>object</code> <code>{</code>
+   [<code>client</code>] <code>object</code> <code>{</code>
       object-member-descriptor*
    <code>}</code>
-object-type-quals := (<code>abstract</code> | <code>client</code> | <code>readonly</code>)*
 object-member-descriptor :=
    object-field-descriptor
-   | object-method
+   | method-decl
    | object-type-inclusion
 </pre>
 <p>
-If <code>object-type-quals</code> contains the keyword <code>abstract</code>,
-then the object type descriptor is an abstract object type descriptor.
-</p>
-<p>
-If <code>object-type-quals</code> contains the keyword <code>client</code>, then
+If the <code>object-type-descriptor</code> specifies <code>client</code>, then
 the object type is a client object type. A client object type may have remote
 methods; other objects types must not.
-</p>
-<p>
-It is an error for a keyword to appear more than once in
-<code>object-type-quals</code>
 </p>
 
 <section>
@@ -1978,17 +1959,15 @@ It is an error for a keyword to appear more than once in
 
 <pre
 class="grammar">object-field-descriptor :=
-   metadata object-visibility-qual [<code>readonly</code>] type-descriptor field-name [default-value]<code>;</code>
+   metadata [<code>public</code>] [<code>readonly</code>] type-descriptor field-name <code>;</code>
 </pre>
 <p>
 An <code>object-field-descriptor</code> specifies a field of the object. The
 names of all the fields of an object must be distinct.
 </p>
 <p>
-The object basic type is selectively immutable. Each field has a read-only bit,
-which is on if and only if <code>object-type-quals</code> contains
-<code>readonly</code> or <code>object-field-descriptor</code> includes
-<code>readonly</code>. If the read-only bit of a field is on, it means the field
+The object basic type is selectively immutable. Each field has a read-only bit.
+If the read-only bit of a field is on, it means the field
 cannot be assigned to after it has been constructed. The read-only bit of an
 object value is on if and only if the read-only bit of all its fields is on.
 When an <code>object-field-descriptor</code> includes readonly, the type of the
@@ -2004,36 +1983,22 @@ value of that type using a <code>method-call-expr</code>.
 </p>
 
 <pre
-class="grammar">object-method := method-decl | method-defn
-method-decl :=
+class="grammar">method-decl :=
    metadata
-   method-defn-quals
+   [<code>public</code>][remote-qual]
    <code>function</code> method-name function-signature <code>;</code>
-method-defn :=
-   metadata
-   method-defn-quals
-   <code>function</code> method-name function-signature method-defn-body
-method-defn-quals := object-visibility-qual [<code>remote</code>]
 method-name := identifier
-method-defn-body := function-defn-body
 </pre>
 <p>
 The names of all the methods of an object must be distinct: there is no method
-overloading. The method name <code>init</code> is used for initialization and
-treated specially.
+overloading. The <code>method-name</code> in a <code>method-decl</code> must not
+be <code>init</code>.
 </p>
+<pre
+class="grammar">remote-qual := <code>remote</code>
+</pre>
 <p>
-Within a <code>method-defn-body</code>, the fields and methods of the object are not
-implicitly in-scope; instead the keyword <code>self</code> is bound to the
-object and can be used to access fields and methods of the object.
-</p>
-<p>
-If an object type is abstract, every method must be specified using a
-<code>method-decl</code>. Otherwise every method must be specified using a
-<code>method-defn</code>.
-</p>
-<p>
-A method that is declared or defined with the remote qualifier is a remote
+A method that is declared with the <code>remote</code> qualifier is a remote
 method. A remote method is allowed only in a client object. A remote method is
 invoked using a different syntax from a non-remote method.
 </p>
@@ -2041,28 +2006,13 @@ invoked using a different syntax from a non-remote method.
 </section>
 <section>
 <h5>Visibility</h5>
-
-<pre
-class="grammar">object-visibility-qual := [explicit-visibility-qual]
-explicit-visibility-qual := <code>public</code> | <code>private</code>
-</pre>
 <p>
-Each field and method of an object type is visible within and can be accessed
-from a specific region of code, which is specified by its object-visibility-qual
-as follows:
-</p>
-<ul>
-<li>if the object-visibility qual is <code>private</code>, then the visibility
-region consists of the methods defined by this object type descriptor;</li>
-<li>if the object-visibility-qual is empty, then the visibility region is the
-entire module containing this object type descriptor; this is called
-module-level visibility;</li>
-<li>if the object-visibility-qual is <code>public</code>, then the visibility region
-contains all modules.</li>
-</ul>
-<p>
-The visibility of a method or field of an abstract object type cannot be
-<code>private</code>.
+Each field and method of an object has a <em>visibility region</em>, which is
+the region of code within which the field or method is visible and can be
+accessed. If an <code>object-field-descriptor</code> or <code>method-decl</code>
+includes the keyword <code>public</code>, then its visibility region consists of
+all the modules of the program. Otherwise the visibility region is the module
+containing this object type descriptor; this is called module-level visibility.
 </p>
 </section>
 <section>
@@ -2095,77 +2045,16 @@ belongs to type T.
 Thus an object type T' is a subtype of an object type T only if for each field
 or method f of T there is a corresponding field or method f' of T such that the
 type of f' in T' is a subtype of the type of f in T and the visibility region of
-f' in T' is the same as the visibility region of f in T.
+f' in T' is the same as the visibility region of f in T. This implies that if an
+object type descriptor T has fields or methods with module-level visibility,
+then it is possible to define another object type descriptor that is a subtype
+of T only within the same module as T.
 </p>
-<p>
-This implies that:
-</p>
-<ul>
-<li>if an object type descriptor T has private fields or methods, then it is not
-possible to define another object type descriptor that is a subtype of T,
-and</li>
-<li>if an object type descriptor T has fields or methods with module-level
-visibility, then it is possible to define another object type descriptor that is
-a subtype of T only within the same module as T.</li>
-</ul>
 <p>
 The read-only bit of a field is part of the read-only aspect of the object's
-shape. An object-type-descriptor whose object-type-quals contains
-<code>readonly</code> denotes a type to which an object shape belongs only it
-has the read-only bit set.
+shape.
 </p>
  
-</section>
-<section>
-<h5>Initialization</h5>
-<p>
-A non-abstract object type provides a way to initialize an object of the type.
-An object is initialized by:
-</p>
-<ol>
-<li>allocating storage for the object</li>
-<li>initializing each field with its default value, if it has one</li>
-<li>initializing the methods of the object using the type's method definitions</li>
-<li>calling the object's <code>init</code> method, if there is one</li>
-</ol>
-<p>
-The return type of the <code>init</code> method must be a subtype of the union
-of error and nil, and must contain nil; if <code>init</code> returns an error,
-it means that initialization of the object failed. The <code>init</code>
-method can declare parameters in the same way as any other method.
-</p>
-<p>
-At any point in the body of a <code>init</code> method, the compiler
-determines which fields are potentially uninitialized. A field is potentially
-uninitialized at some point if that field does not have a default value and it
-is not definitely assigned at that point. It is a compile error if a
-<code>init</code> method:
-</p>
-<ul>
-<li>accesses a field at a point where it is potentially initialized, or</li>
-<li>at a point where there is any potentially uninitialized field
-<ul>
-<li>returns nil, or</li>
-<li>uses the <code>self</code> variable other than to access or modify the value of a field.</li>
-</ul>
-</li>
-</ul>
-<p>
-An object must have an <code>init</code> method unless all its fields have a
-default value. An object without an <code>init</code> method behaves as it had
-an <code>init</code> method with no parameters and an empty body (which will
-always return nil).
-</p>
-<p>
-The visibility of the <code>init</code> method cannot be <code>private</code>.
-</p>
-<p>
-Any <code>init</code> method is not part of the shape of an object, and so
-does not affect when an object value belongs to a type. An abstract object type
-must not declare an <code>init</code> method. The <code>init</code> method
-can be called in a <code>method-call-expr</code> only when the expression
-preceding the <code>.</code> is <code>self</code>.
-</p>
 </section>
 <section>
 <h5>Inclusion and type-ids</h5>
@@ -2176,39 +2065,31 @@ class="grammar">object-type-inclusion := <code>*</code> type-reference <code>;</
 <p>
 Every type descriptor referenced directly or indirectly by a
 <code>type-reference</code> in an <code>object-type-inclusion</code> must be an
-<code>object-type-descriptor</code>, <code>distinct-type-descriptor</code> or
-<code>intersection-type-descriptor</code>; the referenced type descriptor will
-thus necessarily be definite and a subtype of object. The
-<code>object-field-descriptor</code>s and <code>object-method</code>s from the
-referenced type are included in the type being defined; the meaning is the same
-as if they had been specified explicitly, except that the method definitions are
-not copied. More precisely, if an <code>object-method</code> is a
-<code>method-defn</code>, then a <code>method-decl</code> declaring the
-<code>method-defn</code> is included instead of the <code>method-defn</code>. An
+<code>object-type-descriptor</code>, <code>distinct-type-descriptor</code>,
+<code>intersection-type-descriptor</code> or a class; the referenced type
+descriptor will thus necessarily be definite and a subtype of object. The
+<code>object-field-descriptor</code>s and <code>method-decl</code>s from the
+referenced type are included in the type being defined. A type-reference to a
+class is treated as a reference to the class's type; only the types of the
+methods and fields are copied from the referenced type. An
 <code>object-field-descriptor</code> or <code>object-method</code> in a
 <code>object-type-descriptor</code> can override an
 <code>object-field-descriptor</code> or <code>object-method</code> of the same
 name in an included <code>object-type-descriptor</code>, provided the type
 declared for the field or method in the overriding descriptor is a subtype of
-the type declared in the overridden descriptor. If the including object type is
-not abstract, then each included <code>method-decl</code>, must be overridden by
-a <code>method-defn</code>. It is an error for an
-<code>object-type-descriptor</code> to directly or indirectly include itself.
-</p>
-<p>
-If a non-abstract object type T<sub>o</sub> includes an abstract
-object type T<sub>a</sub>, then each method declared in T<sub>a</sub> must be
-defined in T<sub>o</sub> using a <code>method-defn</code> with the same
-visibility. If T<sub>a</sub> has a method or field with module-level visibility,
-the T<sub>o</sub> must be in the same module.
+the type declared in the overridden descriptor.
 </p>
 <p>
 An object-type-descriptor is always definite. The set of type-ids induced by an
 object-type-descriptor is the union of the set of type-ids induced by the type
-descriptors that it includes. An induced typeid is primary in an
+descriptors that it includes. An induced type-id is primary in an
 object-type-descriptor if and only if it is primary in any of the included type
 descriptors. It is an error if the induced set of type-ids includes a non-public
 type-id from another module.
+</p>
+<p>
+It is an error for an <code>object-type-descriptor</code> to directly or
+indirectly include itself.
 </p>
 </section>
 </section>
@@ -2314,7 +2195,7 @@ include nil represents an unbounded stream.
 <p>
 A stream supports two primitive operations: a next operation and a close
 operation. The next operation has the same semantics as the next method on the
-Iterator abstract object type. The close operation informs the stream that there
+Iterator object type. The close operation informs the stream that there
 will be no more next operations and thus allows the stream to release resources
 used by the stream; the close operation on a <code>stream&lt;T,C&gt;</code> has
 a result of type <code>C?</code>, where nil means that the close operation was
@@ -2322,7 +2203,7 @@ successful.
 </p>
 <p>
 The normal implementation of a <code>stream&lt;T,C&gt;</code> is a wrapper
-around an object belonging to <a href="#StreamImplementor">abstract object type
+around an object belonging to <a href="#StreamImplementor">object type
 <code>StreamImplementor&lt;T,C&gt;</code></a>. The next and close operations on
 the stream delegate to the next and close methods on the StreamImplementor.
 </p>
@@ -2630,11 +2511,11 @@ subtype</a> <code>int:Unsigned8</code>.
 
 </section>
 <section>
-<h3 id="built-in_abstract_object_types">Built-in abstract object types</h3>
+<h3 id="built-in_object_types">Built-in object types</h3>
 <p>
-There are several abstract object types that are built-in in the sense that the
+There are several object types that are built-in in the sense that the
 language treats objects with these types specially. There are two kinds of
-abstract object type:
+object type:
 </p>
 <ul>
 <li>purely structural types; the name of the type is internal to this
@@ -2652,7 +2533,7 @@ type
 </p>
 
 <pre
->    abstract object {
+>    object {
        public next() returns record {| T value; |}|C;
     }
 </pre>
@@ -2705,7 +2586,7 @@ value that represents the result of the iteration.
 <section>
 <h4>Iterable</h4>
 <p>
-An object belongs to the abstract object type Iterable&lt;T,C&gt; if it has a
+An object belongs to the object type Iterable&lt;T,C&gt; if it has a
 method named <code>iterator</code> with no arguments and a return type that is
 subtype of Iterator&lt;T,C&gt; and it belongs to the distinct type
 <code>Iterable</code> defined in <code>lang.object</code>. An object that
@@ -2717,17 +2598,17 @@ completion value.
 <section>
 <h4 id="StreamImplementor">StreamImplementor</h4>
 <p>
-An object belongs to the abstract object type StreamImplementor&lt;T,C&gt; if it
+An object belongs to the object type StreamImplementor&lt;T,C&gt; if it
 belongs to Iterator&lt;T,C&gt; and also optionally has a method
 <code>close()</code> with return value <code>C?</code>. This is equivalent to
 belonging to the following type.
 </p>
 
 <pre
->    abstract object {
+>    object {
        public next() returns record {| T value; |}|C;
     }
-    | abstract object {
+    | object {
        public next() returns record {| T value; |}|C;
        public close() returns C?;
     }
@@ -2762,7 +2643,7 @@ MutableCollection&lt;T&gt;.
 The Listener type is defined in <code>lang.object</code> as follows.
 </p>
 
-<pre>distinct abstract object {
+<pre>distinct object {
    public function attach(service s, string? name = ()) returns error?;
    public function detach(service s) returns error?;
    public function start() returns error?;
@@ -2783,7 +2664,7 @@ precise service type that is used to the first argument to
 The RawTemplate type describes the type of object constructed by a raw template
 expression. The type is defined in <code>lang.object</code> as follows.
 </p>
-<pre>distinct abstract object {
+<pre>distinct object {
     public (readonly &amp; string[]) strings;
     public (any|error)[] insertions;
 }
@@ -3359,6 +3240,7 @@ class="grammar">expression :=
    | xml-template-expr
    | raw-template-expr
    | structural-constructor-expr
+   | object-constructor-expr
    | new-expr
    | service-constructor-expr
    | variable-reference-expr
@@ -3706,6 +3588,7 @@ class="grammar">const-expr :=
    | xml-template-expr
    | raw-template-expr
    | structural-constructor-expr
+   | object-constructor-expr
    | functional-constructor-expr
    | constant-reference-expr
    | type-cast-expr
@@ -4176,37 +4059,120 @@ for these expressions.
 </section>
 
 <section>
-<h3>New expression</h3>
+<h3>Object construction</h3>
+<p>
+There are two kinds of expression that can be used to construct an object: with
+an object constructor expression, the methods and fields of the constructed
+object are defined within the expression; with a new expression, the methods and
+fields come from a separate, named class definition.
+</p>
+
+<section>
+<h4>Object constructor</h4>
+
+<pre
+class="grammar">object-constructor-expr :=
+   [annots] [<code>client</code>] <code>object</code> <code>{</code>
+      object-member*
+   <code>}</code>
+object-member :=
+   object-field
+   | method-defn
+   | object-type-inclusion
+</pre>
+<p>
+The resulting of evaluating an <code>object-constructor-expr</code> is an
+object. The <code>object-constructor-expr</code> must specify
+<code>client</code> if any <code>method-defn</code> includes a
+<code>remote-qual</code>.
+</p>
+<p>
+The annotations applying to the <code>object-constructor-expr</code> and its
+members are evaluated when the <code>object-constructor-expr</code> is
+evaluated. This means that every object resulting from the evaluation of an
+<code>object-constructor-expr</code> has its own type descriptor.
+</p>
+<p>
+The type-ids of the constructed object are determined from the included object
+types in the same was as the type-ids of an object-type-descriptor.
+</p>
+
+<pre
+class="grammar">object-field :=
+   metadata [object-visibility-qual] [<code>readonly</code>]
+   type-descriptor field-name <code>=</code> expression <code>;</code>
+</pre>
+<p>
+An <code>object-field</code> declares and initializes a field of the object.
+</p>
+<p>
+If <code>readonly</code> is present, the read-only bit of the field will be set.
+An object-constructor-expr occurring within a const-expr will construct a
+structural value that has the read-only bit of all its fields on.
+</p>
+
+<pre
+class="grammar">method-defn :=
+   metadata [object-visibility-qual] [remote-qual]
+   <code>function</code> method-name function-signature method-defn-body
+method-defn-body := function-defn-body
+</pre>
+<p>
+A <code>method-defn</code> defines a method of an object.
+</p>
+<p>
+The <code>method-name</code> in a <code>method-defn</code> in an
+<code>object-constructor-expr</code> must not be <code>init</code>.
+</p>
+<p>
+Within a <code>method-defn-body</code>, the fields and methods of the object are
+not implicitly in-scope; instead the keyword <code>self</code> is bound to the
+object and can be used to access fields and methods of the object.
+</p>
+
+<pre
+class="grammar">object-visibility-qual := <code>public</code>|<code>private</code>
+</pre>
+<p>
+A visibility qualifier of <code>private</code> can be used within an
+<code>object-constructor-expr</code> expression; this means that the visibility
+region consists of all method definitions in the object-constructor-expr.
+</p>
+
+</section>
+<section>
+<h4>New expression</h4>
 
 <pre
 class="grammar">new-expr := explicit-new-expr | implicit-new-expr
-explicit-new-expr := <code>new</code> type-descriptor <code>(</code> arg-list <code>)</code>
+explicit-new-expr := <code>new</code> class-descriptor <code>(</code> arg-list <code>)</code>
+class-descriptor := identifier | qualified-identifier | stream-type-descriptor
 </pre>
 <p>
-A new-expr constructs a new object or stream. The type-descriptor in an
-explicit-new-expr must specify an object type or a stream type.
+A new-expr constructs a new object or stream. The class-descriptor in an
+explicit-new-expr must refer to a class or a stream type.
 </p>
 <p>
-When the type-descriptor is an object type, the explicit-new-expr allocates
-storage for the object and initializes it, passing the supplied arg-list to the
-object's <code>init</code> method. It is a compile error if the
-type-descriptor if the arg-list does not match the signature of the object
-type's <code>init</code> method. If the result of calling the
-<code>init</code> method is an error value e, then the result of evaluating
-the explicit-new-expr is e; otherwise the result is the newly initialized
-object.
+When the class-descriptor refers to a class, the explicit-new-expr allocates
+storage for an object of the type defined by the class and initializes it by
+passing the supplied arg-list to the <code>init</code> method defined by the
+class. It is a compile error if the type-descriptor if the arg-list does not
+match the signature of the class's <code>init</code> method. If the result of
+calling the <code>init</code> method is an error value e, then the result of
+evaluating the explicit-new-expr is e; otherwise the result is the newly
+initialized object.
 </p>
 <p>
-When the type-descriptor is a stream type <code>stream&lt;T,E&gt;</code>, the
-arg-list must either be empty or be a single argument belonging to abstract
-object type StreamImplementor&lt;T,E?&gt;. When the arg-list is empty, the
-result will be an empty stream (i.e. a stream whose next method returns nil).
-When the arg-list evaluates to a StreamImplementor object, the result will be a
-stream that wraps that object.
+When the class-reference refers to a stream type <code>stream&lt;T,E&gt;</code>,
+the arg-list must either be empty or be a single argument belonging to object
+type StreamImplementor&lt;T,E?&gt;. When the arg-list is empty, the result will
+be an empty stream (i.e. a stream whose next method returns nil). When the
+arg-list evaluates to a StreamImplementor object, the result will be a stream
+that wraps that object.
 </p>
 <p>
-An explicit-type-expr specifying a type descriptor T has static type T, except
-that if T is an object type and the type of the <code>init</code> method is
+An explicit-type-expr specifying a class-descriptor T has static type T, except
+that if T is an class type and the type of the <code>init</code> method is
 E?, where E is a subtype of error, then it has static type T|E.
 </p>
 <pre
@@ -4214,10 +4180,12 @@ class="grammar">implicit-new-expr := <code>new</code> [<code>(</code> arg-list <
 </pre>
 <p>
 An implicit-new-expr is equivalent to an explicit-new-expr that specifies the
-applicable contextually expected type as the type descriptor. An
+applicable contextually expected type as the class-descriptor. An
 implicit-new-expr consisting of just <code>new</code> is equivalent to
-<code>new()</code>.
+<code>new()</code>. It is an error if the applicable contextually expected type
+is not a class or stream type.
 </p>
+</section>
 </section>
 <section>
 <h3>Service constructor</h3>
@@ -4238,7 +4206,7 @@ a resource method. The self variable can be used in a method-defn-body of a
 service-method-defn in the same way as for objects.
 </p>
 <p>
-Each service value has a distinct type descriptor. (Evaluating a service
+Each service value has its own type descriptor. (Evaluating a service
 constructor thus has an effect analogous to defining an anonymous object type
 and then creating a value of that type.)
 </p>
@@ -5109,7 +5077,7 @@ class="grammar">range-expr :=
    | expression <code>..&lt;</code> expression
 </pre>
 <p>
-The result of a range-expr is a new object belonging to the abstract object type
+The result of a range-expr is a new object belonging to the object type
 Iterable&lt;int,()&gt; that will iterate over a sequence of integers in increasing
 order, where the sequence includes all integers n such that
 </p>
@@ -7424,6 +7392,7 @@ other-decl :=
    | service-decl
    | function-defn
    | module-type-defn
+   | module-class-defn
    | module-var-decl
    | module-const-decl
    | module-enum-decl
@@ -7574,7 +7543,7 @@ process can then use the client object to send a response message back to that
 remote process.
 </p>
 <p>
-The methods defined by the Listener abstract object type allow for the
+The methods defined by the Listener object type allow for the
 management of the lifecycle of a listener object and its attached services. A
 listener declaration registers a listener object with a module, so that it can
 be managed by the module. The runtime state of each module includes a list of
@@ -7608,7 +7577,7 @@ class="grammar">listener-decl :=
 <p>
 A <code>listener-decl</code> declares a module listener. A module listener
 declares a variable in a similar way to a final variable declaration, but the
-type of the variable is always a subtype of the Listener abstract object type,
+type of the variable is always a subtype of the Listener object type,
 and it has the additional semantic of registering the variable's value with the
 module as a listener. As with a variable declared in a final variable
 declaration, the variable can be referenced by a variable-reference, but cannot
@@ -7618,7 +7587,7 @@ be assigned to. A module may have multiple multiple listeners.
 If the type-descriptor is present it specifies the static type of the variable;
 if it is not present, the the static type is the static type of
 <code>expression</code>. In both cases, the static type is constrained to be a
-subtype of the Listener abstract object type.
+subtype of the Listener object type.
 </p>
 <p>
 When a listener-decl is initialized as part of module initialization, its
@@ -7647,7 +7616,7 @@ referenced by a variable-reference, but cannot be assigned to.
 <p>
 The service-body-block has the same semantics as in a service-constructor-expr.
 The static type of each expression in the expression list must be a subtype of
-the union of error with the Listener abstract object type. If an implementation
+the union of error with the Listener object type. If an implementation
 is using annotations to provide more precise typing of services, then any
 annotations on the service type that is the first parameter of the
 <code>__attach</code> method in the object type of each expression in expression
@@ -7717,6 +7686,118 @@ class="grammar">module-type-defn :=
    [<code>public</code>] <code>type</code> identifier type-descriptor <code>;</code>
 </pre>
 </section>
+
+
+<section>
+<h3>Module class definition</h3>
+<p>
+A class is a type descriptor that in addition to describing an object type also
+defines a way to construct an object belonging to the type; in particular it
+provides the method definitions that are associated with the object when it is
+constructed.
+</p>
+
+<pre
+class="grammar">module-class-defn :=
+   metadata
+   [<code>public</code>] class-type-quals <code>class</code> identifier <code>{</code>
+      class-member*
+  <code>}</code>
+class-type-quals := (<code>distinct</code> | <code>client</code> | <code>readonly</code>)*
+class-member :=
+   class-field
+   | method-defn
+   | object-type-inclusion
+
+class-field :=
+   metadata [object-visibility-qual] [<code>readonly</code>]
+   type-descriptor field-name [<code>=</code> field-initializer ] <code>;</code>
+field-initializer := expression
+</pre>
+<p>
+It is an error for a keyword to appear more than once in
+<code>class-type-quals</code>
+</p>
+<p>
+As in an object constructor expression, a visibility qualifier of
+<code>private</code> can be used within a class definition; this means that the
+visibility region consists of all method definitions in the class definition. If
+class has private fields or methods, then it is not possible to define another
+object type descriptor that is a subtype of the class's type.
+</p>
+<p>
+If <code>class-type-quals</code> contains <code>readonly</code>, then an object
+constructed using the class and all its fields will have their read-only bits
+set; furthermore, an object shape belongs to the class's type only of it has the
+read-only bit set.
+</p>
+<p>
+If an object-type-inclusion references a type-descriptor that is a class, then
+only the type of the class is included: the definitions of the methods and any
+initializers for the fields are not included. If a class uses an
+object-type-inclusion to include an object type T, then each method declared in
+T must be defined in the class using a <code>method-defn</code> with the same
+visibility. If T has a method or field with module-level visibility, then C must
+be in the same module.
+</p>
+
+<section>
+<h4>Initialization</h4>
+<p>
+A class provides a way to initialize an object of the type.
+In a class definition, a method-defn with a method-name of <code>init</code>
+is used for initialization and treated specially.
+</p>
+
+<p>
+An object is initialized by:
+</p>
+<ol>
+<li>allocating storage for the object</li>
+<li>initializing each field with its initializer, if it has one</li>
+<li>initializing the methods of the object using the type's method definitions</li>
+<li>calling the class's <code>init</code> method, if there is one</li>
+</ol>
+<p>
+The return type of the <code>init</code> method must be a subtype of the union
+of error and nil, and must contain nil; if <code>init</code> returns an error,
+it means that initialization of the object failed. The <code>init</code>
+method can declare parameters in the same way as any other method.
+</p>
+<p>
+At any point in the body of a <code>init</code> method, the compiler
+determines which fields are potentially uninitialized. A field is potentially
+uninitialized at some point if that field does not have an initializer and it
+is not definitely assigned at that point. It is a compile error if a
+<code>init</code> method:
+</p>
+<ul>
+<li>accesses a field at a point where it is potentially initialized, or</li>
+<li>at a point where there is any potentially uninitialized field
+<ul>
+<li>returns nil, or</li>
+<li>uses the <code>self</code> variable other than to access or modify the value of a field.</li>
+</ul>
+</li>
+</ul>
+<p>
+A class must have an <code>init</code> method unless all its fields have an
+initializer. A class without an <code>init</code> method behaves as it had an
+<code>init</code> method with no parameters and an empty body (which will always
+return nil).
+</p>
+<p>
+The visibility of the <code>init</code> method cannot be <code>private</code>.
+</p>
+<p>
+Any <code>init</code> method is not part of the shape of an object, and so does
+not affect when an object value belongs to a type. The <code>init</code> method
+can be called in a <code>method-call-expr</code> only when the expression
+preceding the <code>.</code> is <code>self</code>.
+</p>
+</section>
+</section>
+
 <section>
 <h3>Module variable declaration</h3>
 
@@ -8381,6 +8462,11 @@ The <code>int:Unsigned8</code> type is equivalent to the predefined
 <section>
 <h3>Summary of changes from 2020R1 to Swan Lake</h3>
 <ol>
+<li>There has been a major change to how objects works. All object type
+descriptors are what was previously called <em>abstract</em>: they declare
+methods but do not define them. Objects are now created either by using an
+object constructor expression, which includes method definitions, or by applying
+<code>new</code> to the name of a class defined by a class definition.</li>
 <li>The <code>readonly</code> type has been added. Fields of records and objects
 can also be declared as <code>readonly</code>.</li>
 <li>Intersection types have been added.</li>

@@ -15,7 +15,7 @@
 // under the License.
 
 # Represents the shape expected from all listeners.
-public type Listener distinct abstract object {
+public type Listener distinct object {
     # Handle service attachment to the listener.
     #
     # + s - the service to attach
@@ -49,7 +49,7 @@ public type Listener distinct abstract object {
 # Distinct Iterable type.
 # An object can make itself iterable by using `*object:Iterable;`,
 # and then defining an `iterator` method.
-public type Iterable distinct abstract object {
+public type Iterable distinct object {
     # Create a new iterator.
     #
     # + return - a new iterator object
@@ -60,7 +60,7 @@ public type Iterable distinct abstract object {
 
 # Distinct RawTemplate type.
 # A raw template expression constructs an object belonging to this type.
-public type RawTemplate distinct abstract object {
+public type RawTemplate distinct object {
     # An array of the strings containing the characters in BacktickString
     # outside of interpolations, split at the interpolation points.
     # The length of this array is one greater than
