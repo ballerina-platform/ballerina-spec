@@ -1931,11 +1931,30 @@ is a subtype of T.
 <section>
 <h4>Objects</h4>
 <p>
-Objects are a combination of fields along with a set of associated functions,
-called methods, which can be used to manipulate them. An object's methods are
-associated with the object when the object is constructed and cannot be changed
-thereafter. The fields and methods of an object are in separate symbol spaces, so
-it is possible for an object to have a field and a method with the same name.
+An object value contains fields and methods. A field of an object stores a
+value. A method of an object is a function that can be invoked on the object
+using a <code>method-call-expr</code>; when a method is invoked on an object,
+the function can access the object using the <code>self</code> variable. An
+object's methods are associated with the object when the object is constructed
+and cannot be changed thereafter. Fields and methods have names that uniqely
+identify them within their object; An object has separate symbol spaces for its
+fields and its methods; the name of a field or method is unique in its symbol
+space, but it is possible for an object to have a field and a method with the
+same name.
+</p>
+<p>
+The type of object values can be described using an
+<code>object-type-descriptor</code>, as specified in this section. It can also
+be described using a <em>class</em>. A class both describes an object type and
+provides a way to construct an object belonging to the type; in particular, it
+provides the method definitions that are associated with the object when it is
+constructed. A class is defined using a module-level class definition.
+</p>
+<p>
+The object basic type is selectively immutable. Each field has a read-only bit.
+If the read-only bit of a field is on, it means the field cannot be assigned to
+after the object has been constructed. The read-only bit of an object value is
+on if and only if the read-only bit of all its fields is on.
 </p>
 
 <pre
@@ -1962,25 +1981,15 @@ class="grammar">object-field-descriptor :=
    metadata [<code>public</code>] [<code>readonly</code>] type-descriptor field-name <code>;</code>
 </pre>
 <p>
-An <code>object-field-descriptor</code> specifies a field of the object. The
-names of all the fields of an object must be distinct.
-</p>
-<p>
-The object basic type is selectively immutable. Each field has a read-only bit.
-If the read-only bit of a field is on, it means the field
-cannot be assigned to after it has been constructed. The read-only bit of an
-object value is on if and only if the read-only bit of all its fields is on.
-When an <code>object-field-descriptor</code> includes readonly, the type of the
-field is the intersection of <code>readonly</code> and the type specified by the
-type-descriptor.
+An <code>object-field-descriptor</code> describes a field of the object. It is
+an error for an object-type-descriptor to have two fields with the same
+field-name. When an <code>object-field-descriptor</code> includes
+<code>readonly</code>, the type of the field is the intersection of
+<code>readonly</code> and the type specified by the type-descriptor.
 </p>
 </section>
 <section>
 <h5>Methods</h5>
-<p>
-Methods are functions that are associated to the object and are called via a
-value of that type using a <code>method-call-expr</code>.
-</p>
 
 <pre
 class="grammar">method-decl :=
@@ -7692,7 +7701,7 @@ class="grammar">module-type-defn :=
 <h3>Module class definition</h3>
 <p>
 A class is a type descriptor that in addition to describing an object type also
-defines a way to construct an object belonging to the type; in particular it
+defines a way to construct an object belonging to the type; in particular, it
 provides the method definitions that are associated with the object when it is
 constructed.
 </p>
