@@ -4107,19 +4107,28 @@ evaluated. This means that every object resulting from the evaluation of an
 The type-ids of the constructed object are determined from the included object
 types in the same was as the type-ids of an object-type-descriptor.
 </p>
+<p>
+An <code>object-constructor-expr</code> will construct an object with its
+read-only bit set if it occurs within a <code>const-expr</code> or if the the
+applicable contextually expected type is a subtype of readonly. In this case,
+the read-only bit of every field will also be set and the contextually expected
+type for a field-initializer will be the intersection of readonly and the type
+specified in the type-descriptor of the object-field. Conversely, if every field
+is specified to be <code>readonly</code>, then the read-only bit of the
+constructed object will be set.
+</p>
 
 <pre
 class="grammar">object-field :=
    metadata [object-visibility-qual] [<code>readonly</code>]
-   type-descriptor field-name <code>=</code> expression <code>;</code>
+   type-descriptor field-name <code>=</code> field-initializer <code>;</code>
+field-initializer := expression
 </pre>
 <p>
 An <code>object-field</code> declares and initializes a field of the object.
 </p>
 <p>
 If <code>readonly</code> is present, the read-only bit of the field will be set.
-An object-constructor-expr occurring within a const-expr will construct a
-structural value that has the read-only bit of all its fields on.
 </p>
 
 <pre
@@ -7723,7 +7732,6 @@ class-member :=
 class-field :=
    metadata [object-visibility-qual] [<code>readonly</code>]
    type-descriptor field-name [<code>=</code> field-initializer ] <code>;</code>
-field-initializer := expression
 </pre>
 <p>
 It is an error for a keyword to appear more than once in
