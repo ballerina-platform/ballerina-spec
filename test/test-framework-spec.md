@@ -6,7 +6,7 @@ Joseph Fonseka, Asma Jabir, Aquib Zulfikar, Fathima Dilhasha
 
 # Introduction
 
-Ballerina Language has a robust testing framework that allows the user to test their code and verify that the module is behaving correctly. The test framework covers unit testing, integration testing and end-to-end testing with the building blocks that the framework provides. The test framework also provides code coverage and test report generation. 
+Ballerina Language has a robust testing framework, which allows the user to test their code and verify that the module is behaving correctly. The test framework covers unit testing, integration testing, and end-to-end testing with the building blocks that the framework provides. The test framework also provides code coverage and test report generation. 
 
 
 # Defining Tests
@@ -31,12 +31,12 @@ project-name/
 
 
 The Ballerina test framework will only execute tests defined inside the `tests/` directory of a module. Tests defined
- outside the test directory will not get executed when building the Ballerina project. Test files can be put into subdirectories within the tests folder much like a Ballerina module.
+ outside the test directory will not get executed when building the Ballerina project. Test files can be put into sub directories within the tests folder much like a Ballerina module.
 
 
 ### Visibility
 
-The symbols defined in a module are accessible from within the test files. This includes globally defined objects and variables. Hence, redefining a symbol in a test file is not allowed if it is already declared in the module. Instead they can be reassigned in test files. It must be noted that symbols defined in the test files will not be visible inside the module source files. 
+The symbols defined in a module are accessible from within the test files. This includes globally-defined objects and variables. Hence, redefining a symbol in a test file is not allowed if it is already declared in the module. Instead, they can be reassigned in the test files. It must be noted that symbols defined in the test files will not be visible inside the module source files. 
 
 ### Test Resources
 
@@ -60,26 +60,26 @@ function test1() {
 
 ### Annotations
 
-Ballerina tests are defined using a set of annotations. Following are the annotations available in the test module
+Ballerina tests are defined using a set of annotations. The following are the annotations available in the test module
  along with their attributes.
  
 <table>
   <tr>
    <td>@test:BeforeSuite {}
    </td>
-   <td>Function specified will be run once before any of the tests in the test suite is run
+   <td>Function specified will be run once before any of the tests in the test suite is run.
    </td>
   </tr>
   <tr>
    <td>@test:BeforeEach {}
    </td>
-   <td>Function specified will be run before every test when the test suite is run
+   <td>Function specified will be run before every test when the test suite is run.
    </td>
   </tr>
   <tr>
    <td>@test:Config {}
    </td>
-   <td>Function specified is considered as a test function
+   <td>Function specified is considered as a test function.
 <p>
 Annotation value fields :
 <ul>
@@ -87,7 +87,7 @@ Annotation value fields :
 <li>enable : { true | false } 
 <ul>
  
-<li>Enable or disable test
+<li>Enable or disable the test
  
 <li>Default : true
 </li> 
@@ -96,7 +96,7 @@ Annotation value fields :
 <li>before : “&lt;function name&gt;” 
 <ul>
  
-<li>Name of function to run before the test is run
+<li>Name of the function to run before the test is run
 </li> 
 </ul>
 
@@ -124,7 +124,7 @@ Annotation value fields :
 <li>groups : [“&lt;test group name&gt;”, ...] 
 <ul>
  
-<li>List of group names, one or more, that this test belongs to
+<li>List of group names one or more that this test belongs to
 </li> 
 </ul>
 </li> 
@@ -134,14 +134,14 @@ Annotation value fields :
   <tr>
    <td>@test:AfterSuite {}
    </td>
-   <td>The function specified in the following annotation will be run once after all the tests in the test suite is run.
+   <td>The function specified in the following annotation will be run once after all the tests in the test suite are run.
    </td>
   </tr>
 </table>
 
 ### Assertions
 
-The Ballerina test framework has built-in assertions that enable users to verify an actual  output against an expected output. 
+The Ballerina test framework has built-in assertions, which enable users to verify an actual output against an expected output. 
 
 The following are the list of available assertions available in the test framework.
 
@@ -149,31 +149,31 @@ The following are the list of available assertions available in the test framewo
   <tr>
    <td>@test:assertEquals
    </td>
-   <td>Checks if the specified value is equal to the expected value
+   <td>Checks if the specified value is equal to the expected value.
    </td>
   </tr>
   <tr>
    <td>@test:assertNotEquals
    </td>
-   <td>Checks if the specified value is not equal to the expected value
+   <td>Checks if the specified value is not equal to the expected value.
    </td>
   </tr>
   <tr>
    <td>@test:assertTrue
    </td>
-   <td>Checks if the specified value is true
+   <td>Checks if the specified value is true.
    </td>
   </tr>
   <tr>
    <td>@test:assertFalse
    </td>
-   <td>Checks if the specified value is false
+   <td>Checks if the specified value is false.
    </td>
   </tr>
   <tr>
    <td>@test:assertFail
    </td>
-   <td>Forces a test case to fail
+   <td>Forces a test case to fail.
    </td>
   </tr>
 </table>
@@ -226,8 +226,8 @@ When a test case is disabled, before and after functions specified in the test c
 
 ### Order of Execution
 
-The depends on attribute allows the user to define a list of function names that the test function depends on. These
-functions will be executed before the test execution. The order in which the comma separated list of functions appears
+The `depends on` attribute allows the user to define a list of function names that the test function depends on. These
+functions will be executed before the test execution. The order in which the comma-separated list of functions appears
 has no prominence and thus will be executed in an arbitrary manner. This attribute can be used to ensure that the
 tests are being executed in the expected order.
 
@@ -256,7 +256,7 @@ The mocking feature can be used to control the behavior of functions and objects
 
 Initializing a function mock needs a preceding annotation in order to identify and replace the occurrence of the original function during compilation.
 
-This annotation is only required when mocking functions since a part of function mocking is handled in compile time. Mocking an object is completely handled in the runtime and therefore, this annotation is not required when initializing a mock for an object.
+This annotation is only required when mocking functions since a part of function mocking is handled during the compile time. Mocking an object is completely handled in the runtime, and thereby, this annotation is not required when initializing a mock for an object.
 
 <table>
   <tr>
@@ -272,7 +272,7 @@ Annotation value fields :
  
 <li>Default : Uses the current module
  
-<li>Name of the module where the function to be mocked resides in
+<li>Name of the module where the function to be mocked resides in.
 </li> 
 </ul>
 
@@ -321,31 +321,31 @@ Using the available features, the user can stub with preferred behaviors for fun
 **Basic Cases**
 
 
-1. Provide a replacement mock object defined by the user at initialization
+1. Provide a replacement mock object defined by the user at initialization.
 
     ```ballerina
     http:Client mockClient = <http:Client> test:mock (http:Client, mockClient);
     ```
 
-2. If function doesn't have a return type or has an optional return type then do nothing 
+2. If the function doesn't have a return type or has an optional return type, then do nothing. 
     
     ```ballerina
     test:prepare(mockClient).when("functionName").doNothing();
     ```
 
-3. Provide a return value
+3. Provide a return value.
 
     ```ballerina
     test:prepare(mockClient).when("functionName").thenReturn(5);
     ```
 
-4. Provide return value based on input
+4. Provide a return value based on the input.
 
     ```ballerina
     test:prepare(mockClient).when("functionName").withArguments(anydata...).thenReturn(5);
     ```
    
-5. Mock member variables of an object
+5. Mock the member variables of an object.
 
     ```ballerina
     test:prepare(mockClient).getMember("member").thenReturn(5);
@@ -353,31 +353,31 @@ Using the available features, the user can stub with preferred behaviors for fun
 
 #### Case B : Features available in function mocking 
 
-1. Provide a replacement function body
+1. Provide a replacement function body.
 
     ```ballerina
     test:when(mockFunc1).call("mockFuncName");
     ```
 
-2. If function doesn't have a return type do nothing 
+2. If the function doesn't have a return type, do nothing. 
 
     ```ballerina
     test:when(mockFunc1).doNothing();
     ```
 
-3. Provide a return value
+3. Provide a return value.
 
     ```ballerina
     test:when(mockFunc1).thenReturn(5);
     ```
 
-4. Provide return value based on input
+4. Provide a return value based on the input.
 
     ```ballerina
     test:when(mockFunc1).withArguments(any...).thenReturn(5);
     ```
 
-5. If mocking should not take place, call the real function
+5. If mocking should not take place, call the real function.
 
     ```ballerina
     test:when(mockFunc1).callRealFunction();
@@ -386,7 +386,7 @@ Using the available features, the user can stub with preferred behaviors for fun
 
 **Advance Cases**
 
-6. Provide generalized inputs to accept any value for certain arguments
+6. Provide generalized inputs to accept any value for certain arguments.
     
    ```ballerina
    test:prepare(mockClient).when("functionName").withArguments("/pets", test:ANY, ...).thenReturn(5);
@@ -403,24 +403,24 @@ Using the available features, the user can stub with preferred behaviors for fun
 
 #### Errors
 
-The cases can throw errors at the runtime for following reasons:
+The cases can throw errors at the runtime for the following reasons:
 
-*   All Cases - If the function is not available in the mocked type
+*   All Cases - If the function is not available in the mocked type:
 *   Case A1
-    *   If function signatures are not equal
-    *   If corresponding functions are not found
+    *   If the function signatures are not equal
+    *   If the corresponding functions are not found
 *   Case A2, Case B2
-    *   If the function has a return type specified
+    *   If the function has a return type specified in it
 *   Case A3, Case B3
-    *   If the the return value does not match the function return type
+    *   If the return value does not match the function return type
 *   Case A4, Case B4
-    *   If the number/type of arguments provided does not match the function return type
+    *   If the number/type of arguments provided do not match the function return type
     *   If the the return value does not match the function signature
 *   Case A5
-    *   If the object does not have a member variable of specified name
+    *   If the object does not have a member variable of the specified name
     *   If the variable type does not match the return value
 *   Case B1
-    *   If function signatures are not equal
+    *   If the function signatures are not equal
     *   If the replacing mock function is not found
 
 #### Examples
