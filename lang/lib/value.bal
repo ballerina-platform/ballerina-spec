@@ -46,7 +46,7 @@ public function clone(CloneableType v) returns CloneableType = external;
 #
 # + v - source value
 # + return - immutable clone of `v`
-public function cloneReadOnly(CloneableType v) returns CloneableType = external;
+public function cloneReadOnly(CloneableType v) returns CloneableType & readonly = external;
 
 # Constructs a value with a specified type by cloning another value.
 # + v - the value to be cloned
