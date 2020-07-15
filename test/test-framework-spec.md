@@ -1,9 +1,5 @@
 # Ballerina Test Framework Specification
 
-**Contributors** :
-Joseph Fonseka, Asma Jabir, Aquib Zulfikar, Fathima Dilhasha
-
-
 # Introduction
 
 Ballerina Language has a robust testing framework, which allows the user to test their code and verify that the module is behaving correctly. The test framework covers unit testing, integration testing, and end-to-end testing with the building blocks that the framework provides. The test framework also provides code coverage and test report generation. 
@@ -45,7 +41,7 @@ The test resources folder is meant to contain any files or resources that are re
 
 ## Writing Test Cases
 
-A test case is a Ballerina function preceded by a test annotation which is provided by the _ballerina/test_ module. The
+A test case is a Ballerina function preceded by a test annotation which is provided by the `ballerina/test` module. The
  purpose of a test case is to test a particular functionality of the code. 
 
 **Example**
@@ -427,7 +423,7 @@ The cases can throw errors at the runtime for the following reasons:
 
 **Case A**
 
-The mocking examples are written to mock the http calls of the following _main.bal_ file.
+The mocking examples are written to mock the HTTP calls of the following *main.bal* file.
 
 
 ```ballerina
