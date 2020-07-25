@@ -2951,6 +2951,117 @@ according to the following table.
   </tr>
 </table>
 </section>
+<section>
+<h4 id="ordering">Ordering</h4>
+<p>
+There are three abstract operations related to ordering: Compare(x, y),
+CompareA(x, y), CompareD(x, y). CompareA(x, y) and CompareD(x, y), which are
+used to define sorting, return one of the values LT, EQ, GT representing the
+cases where x is less than, equal to or greater than y. Compare(x, y), which is
+used to define the relational operators, can also return the value UN to
+represent the case where x is unordered with respect to y; this is used to deal
+with NaN.
+</p>
+<p>
+The three operations are related as follows: Compare(x, y) is the same as
+CompareA(x, y) and CompareD(x, y) unless Compare(x, y) is UN.
+</p>
+<p>
+A type is ordered if all the values that belong to the type can be compared to
+each other using the above three abstract operations. Thus each of the abstract
+operations are defined when there is an ordered type to which both arguments
+belong.
+</p>
+<p>
+If C is any of the three abstract operations, and there is an ordered type to
+which both x and belong, then:
+</p>
+<ul>
+<li>C(x, y) is LT if and only if C(y, x) is GT</li>
+<li>C(x, y) is EQ if and only if C(y, x) is EQ</li>
+<li>C(x, y) is UN if and only if C(y, x) is UN</li>
+</ul>
+<p>
+The most straightforward ordered types are basic types where all the values of
+the type can be put into an order. These types are boolean, int, string. For
+each of these three types, for any pair of values x, y belonging to the type
+</p>
+<ul>
+<li>Compare(x, y) is EQ if x and y are the same value</li>
+
+<li>Compare(x, y) is LT in the following cases: 
+<ul>
+<li>for int, if x is mathematically less than y</li>
+<li>for boolean, if x is false and y is true</li>
+<li>for string, if x is lexicographically less than y in Unicode code point
+order, more precisely, if
+<ul>
+<li>x is an proper initial substring of y, or</li>
+<li>for the first index at which x and y differ, the code point at that index in
+x is less than the code point at that index in y</li>  
+</ul>
+</li>  
+</ul>
+</li>
+<li>CompareA(x,y), and CompareD(x,y) have the same value as Compare(x, y)</li>
+</ul>
+<p>
+The basic type decimal is ordered. The abstract operations are defined the same
+as for int, except that Compare(x, y) is EQ if x and y have the same shape. In
+other words, the compare operations ignore precision.
+</p>
+<p>
+The basic type float is also ordered. Compare(x,y) is as defined by IEEE
+754-2008 clause 5.11. In particular:
+</p>
+<ul>
+<li>the Compare operation does not distinguish +0 from -0 i.e.
+Compare(-0.0,+0.0) is EQ</li>
+<li>Compare(x, y) is UN if x or y or both is NaN</li>
+</ul>
+<p>
+When x and y belong to type float, CompareA(x, y) and CompareD(x, y) differ from
+Compare(x, y) as follows:
+</p>
+<ul>
+<li>CompareA(NaN,NaN) and CompareD(NaN, NaN) are EQ</li>
+<li>CompareA(x, NaN) is LT if x is not NaN</li>
+<li>CompareD(NaN, x) is LT if x is not NaN</li>
+</ul>
+<p>
+If type T is ordered, then type T? Is also ordered. Comparison operations
+involving nil are defined as follows:
+</p>
+<ul>
+<li>Compare((),()), CompareA((),()) and CompareD((),()) are all EQ</li>
+<li>Compare(x,()) is UN if x is not ()</li>
+<li>CompareA(x,()) is LT if x is not ()</li>
+<li>CompareA((), x) is LT if x is not ()</li>
+</ul>
+<p>
+The CompareA operation is used for sorting in ascending order; the CompareB
+operation is used in reverse for sorting in descending order. The net effect of
+the above rules is thus that both () and NaN will appear at the end of a sorted
+list, with NaN before (), in both ascending and descending order.
+</p>
+<p>
+The following rules determine when a subtype of list is ordered:
+</p>
+<ul>
+<li>[T...]  is ordered, if T is ordered;</li>
+<li>[] is ordered;</li>
+<li>[T, rest] is ordered if T is ordered and [rest] is ordered.</li>
+</ul>
+<p>
+Each of the three abstract operations C are extended to apply to lists as
+follows:
+</p>
+<ul>
+<li>C([], []) is EQ;</li>
+<li>C([], [y1,...]) is LT;</li>
+<li>C([x1,x2,...],[y1, y2...]) is r unless r is EQ and otherwise C([x2,...],[y2,...]), where r is C(x1, y1).</li>
+</ul>
+</section>
 </section>
 <section>
 <h3 id="functionally_constructible_types">Functionally constructible types</h3>
@@ -3282,7 +3393,7 @@ class="grammar">expression :=
    | additive-expr
    | shift-expr
    | range-expr
-   | numerical-comparison-expr
+   | relational-expr
    | is-expr
    | equality-expr
    | binary-bitwise-expr
@@ -3618,7 +3729,7 @@ class="grammar">const-expr :=
    | additive-expr
    | shift-expr
    | range-expr
-   | numerical-comparison-expr
+   | relational-expr
    | is-expr
    | equality-expr
    | binary-bitwise-expr
@@ -5168,29 +5279,34 @@ elsewhere.
 </p>
 </section>
 <section>
-<h3>Numerical comparison expression</h3>
+<h3>Relational expression</h3>
 
 <pre
-class="grammar">numerical-comparison-expr :=
+class="grammar">relational-expr :=
    expression <code>&lt;</code> expression
-   | expression <code>></code> expression
+   | expression <code>&gt;</code> expression
    | expression <code>&lt;=</code> expression
-   | expression <code>>=</code> expression
+   | expression <code>&gt;=</code> expression
 </pre>
 <p>
-A numerical-comparison-expr compares two numbers.
+A relational-expr tests the relative order of two values. There must be an <a
+href="#ordered">ordered</a> type to which the static type of both operands
+belong. The static type of the result is boolean.
 </p>
 <p>
-The static type of both operands must be of the same basic type, which must be
-int, float or decimal. The static type of the result is boolean.
-</p>
-<p>
-Floating point comparisons follow IEEE, 754-2008, so
+A relational-expr is evaluated by first evaluating the two expressions,
+resulting in values x and y. The result of relational-expr is true if and only
+if the result of the Compare(x,y) operation is
 </p>
 <ul>
-<li>if either operand is NaN, the result is false</li>
-<li>positive and negative zero compare equal</li>
+<li>LT, if the operator is <code>&lt;</code></li>
+<li>GT, if the operator is <code>&gt;</code></li>
+<li>LT or EQ, if the operator is <code>&lt;=</code></li>
+<li>GT or EQ, if the operator is <code>&gt;=</code></li>
 </ul>
+<p>
+and otherwise false.
+</p>
 </section>
 <section>
 <h3>Type test expression</h3>
@@ -5632,6 +5748,70 @@ the left of <code>equals</code>.
 
 </section>
 
+<section>
+<h4>Order by clause</h4>
+<pre class="grammar">
+order-by-clause := <code>order</code> <code>by</code> order-key [<code>,</code> order-key]*
+order-key := expression [order-direction]
+order-direction := <code>ascending</code> | <code>descending</code>
+</pre>
+<p>
+The static type of the expression in an order-key must be an <a
+href="#ordered">ordered</a> type. The order-direction is <code>ascending</code>
+if not explicitly specified.
+</p>
+<p>
+An <code>order-by</code> clause is executed by constructing a list
+of entries, where each entry consists of:
+</p>
+<ul>
+<li>a frame</li>
+<li>a list of keys, one for each order-key in the order-by-clause, and</li>
+<li>an integer index</li>
+</ul>
+<p>
+In order to define the correct ordering of the list, we first define a CompareK
+operation that compares two keys with a specified direction: CompareK(x,y,d) is
+CompareA(x,y) if d is ascending and otherwise (d is descending) is
+Reverse(CompareD(x,y)), where Reverse applied to LT, EQ, GT is GT, EQ, LT
+respectively. Now define an operation CompareKL(x,y,d) applying to two lists of
+keys and a list of directions as follows. Let x be
+[x<sub>1</sub>,x<sub>2</sub>,...,x<sub>n</sub>], y be
+[y<sub>1</sub>,y<sub>2</sub>,...,y<sub>n</sub>], and d be [d<sub>1</sub>,
+d<sub>2</sub>,...,d<sub>n</sub>]. Then let r be
+CompareK(x<sub>1</sub>,y<sub>1</sub>,d<sub>1</sub>). Then the result of
+CompareKL(x,y,d) is:
+</p>
+<ul>
+<li>r, if r is not EQ</li>
+<li>otherwise, EQ, if n is 1</li>
+<li>otherwise,
+CompareKL([x<sub>2</sub>,...,x<sub>n</sub>],[y<sub>2</sub>,...,y<sub>n</sub>],[d<sub>2</sub>,...,d<sub>n</sub>]).</li>
+</ul>
+<p>
+Then in a correct ordering of the list of entries when the list of directions is
+d, an entry with keys with keys x and index i is before an entry with keys y and
+index j if CompareKL(x,y,d) is LT or if CompareKL(x,y,d) is EQ and i is less
+than j.
+</p>
+<p>
+An <code>order-by</code> clause is executed as follows:
+</p>
+<ul>
+<li>create an empty list <var>E</var> of entries</li>
+<li>for each input frame <var>f</var> add an entry to <var>E</var> in which
+<ul>
+<li>the frame is <var>f</var></li>
+<li>the list of keys is a list of the results of evaluating each order-key's
+expression with <var>f</var> in scope</li>
+<li>the index is the length of <var>E</var></li>
+</ul>
+</li>
+<li>sort <var>E</var> so that it is ordered correctly as described above</li>
+<li>for each entry in <var>E</var>, emit the entry's frame</li>
+</ul>
+
+</section>
 <section>
 <h4>Limit clause</h4>
 <pre class="grammar">
@@ -8511,7 +8691,10 @@ of a parameter of typedesc type.</li>
 <li>The XML item-specific subtypes can be used as constructors, both in
 expressions and in binding patterns.</li>
 <li>Query expressions support some new clauses: <code>join</code> clause,
-<code>limit</code> clause and <code>on conflict</code> clause.</li>
+<code>order by</code> clause, <code>limit</code> clause and <code>on
+conflict</code> clause.</li>
+<li>The relational operators (<code>&lt; &lt;= &gt; &gt;=</code>) have been
+extended to apply to more than just numeric types.</li>
 <li>Raw template expressions have been added.</li>
 <li>A value of type <code>xml:Text</code> can be implicitly converted to a
 string.</li>
