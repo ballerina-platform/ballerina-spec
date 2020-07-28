@@ -1,0 +1,114 @@
+name: Sync draft spec with ballerina.io
+
+on:
+  push:
+    tags:    
+      - '*'
+jobs:
+  sync_draft_spec:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.BAL_BOT_PAT }}
+
+    steps:       
+      - name: Checkout ballerina-spec
+        uses: actions/checkout@v2
+
+      - name: Clone ballerina-dev-website
+        run: git clone https://ballerina-bot:$GITHUB_TOKEN@github.com/ballerina-platform/ballerina-dev-website.git
+
+      - name: Clone ballerina-prod-website
+        run: git clone https://ballerina-bot:$GITHUB_TOKEN@github.com/ballerina-platform/ballerina-platform.github.io.git
+
+      - name: Make new folder location in ballerina-dev-website
+        run: |
+          cd ballerina-dev-website/spec/lang/draft
+          array=($(echo $GITHUB_REF | tr "/" "\n"))
+          len=${#array[@]}
+          echo "${array[len-1]}"
+          mkdir "${array[len-1]}"
+          echo "::set-env name=NEW_FOLDER::${array[len-1]}"
+
+      - name: Make new folder location in ballerina-prod-website
+        run: |
+          cd ballerina-platform.github.io/spec/lang/draft
+          mkdir "${NEW_FOLDER}"
+
+      - name: Update the latest to new url in ballerina-dev-website
+        run: |
+          cd ballerina-dev-website/spec/lang/draft/latest
+          echo -e "---\nredirect_to: /spec/lang/draft/$NEW_FOLDER/\n---" > index.md
+
+      - name: Update the latest to new url in ballerina-prod-website
+        run: |
+          cd ballerina-platform.github.io/spec/lang/draft/latest
+          echo -e "---\nredirect_to: /spec/lang/draft/$NEW_FOLDER/\n---" > index.md
+
+      - name: Install xsltproc
+        run: sudo apt-get install -y xsltproc
+
+      - name: Make
+        run: |
+          git checkout $GITHUB_REF -b tmp
+          cd lang
+          make all
+          
+      - name: Copy new spec to ballerina-dev-website
+        run: |
+          cp -r lang/build/lib/ ballerina-dev-website/spec/lang/draft/$NEW_FOLDER
+          cp -r lang/build/style/ ballerina-dev-website/spec/lang/draft/$NEW_FOLDER
+          cp -r lang/build/spec.html ballerina-dev-website/spec/lang/draft/$NEW_FOLDER/index.html
+
+      - name: Copy new spec to ballerina-prod-website
+        run: |
+          cp -r lang/build/lib/ ballerina-platform.github.io/spec/lang/draft/$NEW_FOLDER
+          cp -r lang/build/style/ ballerina-platform.github.io/spec/lang/draft/$NEW_FOLDER
+          cp -r lang/build/spec.html ballerina-platform.github.io/spec/lang/draft/$NEW_FOLDER/index.html
+
+      - name: Update the list of draft specs in ballerina-dev-website
+        run: python3 .github/scripts/append.py ballerina-dev-website/_data/draft_spec.json $NEW_FOLDER
+
+      - name: Update the list of draft specs in ballerina-prod-website
+        run: python3 .github/scripts/append.py ballerina-platform.github.io/_data/draft_spec.json $NEW_FOLDER
+
+      - name: Sync ballerina-spec with ballerina-dev-website
+        run: |
+          cd ballerina-dev-website
+          git pull origin master
+
+          git config --global user.email "ballerina-bot@ballerina.org"
+          git config --global user.name "ballerina-bot"
+
+          git add _data/draft_spec.json
+          git add spec/lang/draft/
+          git commit --allow-empty -m "[Automated] Sync new spec-tag with ballerina dev site"
+
+      - name: Sync ballerina-spec with ballerina-prod-website
+        run: |
+          cd ballerina-platform.github.io
+          git pull origin master
+
+          git config --global user.email "ballerina-bot@ballerina.org"
+          git config --global user.name "ballerina-bot"
+
+          git add _data/draft_spec.json
+          git add spec/lang/draft/
+          git commit --allow-empty -m "[Automated] Sync new spec-tag with ballerina prod site"
+          
+      - name: Push new changes to ballerina-dev-website
+        shell: bash
+        run: |
+          cd ballerina-dev-website
+          curl -fsSL https://github.com/github/hub/raw/master/script/get | bash -s 2.14.1
+          bin/hub push
+        env:
+          GITHUB_TOKEN: ${{ secrets.BAL_BOT_PAT }}
+          
+      - name: Push new changes to ballerina-prod-website
+        shell: bash
+        run: |
+          cd ballerina-platform.github.io
+          curl -fsSL https://github.com/github/hub/raw/master/script/get | bash -s 2.14.1
+          bin/hub push
+        env:
+          GITHUB_TOKEN: ${{ secrets.BAL_BOT_PAT }}

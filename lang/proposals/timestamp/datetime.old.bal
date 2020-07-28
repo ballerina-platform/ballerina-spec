@@ -1,0 +1,1 @@
+type TimeOfDay ts:TimeOfDay;

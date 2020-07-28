@@ -45,7 +45,7 @@ public function length(table<any|error> t) returns int = external;
 # 
 # + t - the table
 # + return - a new iterator object that will iterate over the members of `t`
-public function iterator(table<Type> t) returns object {
+public function iterator(table<Type> t) returns abstract object {
     public function next() returns record {|
         Type value;
     |}?;
@@ -60,18 +60,6 @@ public function iterator(table<Type> t) returns object {
 # + return - member with key `k`
 public function get(table<Type> key<KeyType> t, KeyType k) returns KeyType = external;
 
-# Adds a member `val` to table `t`, replacing any member with the same key value.
-# If `val` replaces an existing member, it will have the same position
-# in the order of the members as the existing member;
-# otherwise, it will be added as the last member.
-# It panics if `val` is inconsistent with the inherent type of `t`.
-public function put(table<Type> t, Type val) = external;
-
-# Adds a member `val` to table `t`.
-# It will be added as the last member.
-# It panics if `val` has the same key as an existing member of `t`,
-# or if `val` is inconsistent with the inherent type of `t`.
-public function add(table<Type> t, Type val) = external;
 
 // Functional iteration
 

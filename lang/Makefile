@@ -1,20 +1,21 @@
 # This is intended to be run on POSIX with GNU Make
 XSLTPROC=xsltproc
 # xmllint is a utility included with libxml2 e.g. in libxml2-utils package
-#XMLLINT=xmllint
+XMLLINT=xmllint
 AWK=awk
+SHELL=/bin/bash -o pipefail
 SH=sh
 BUILDDIR=build
-BUILDFILES=$(BUILDDIR)/spec.html $(BUILDDIR)/experimental.html
+BUILDFILES=$(BUILDDIR)/spec.html
 
 VERSION:=$(shell sed -n -e '/^<h1[ >]/s/.* \(20[12][0-9]R[0-9][0-9]*\(-[A-Za-z0-9]*\)\?\)<.*/\1/p' spec.html)
 
 DISTDIR=ballerina-lang-spec-$(VERSION)
 ZIPFILE=$(DISTDIR).zip
 COPYFILES=lib/versions.json \
-  lib/array.bal lib/decimal.bal lib/error.bal lib/float.bal lib/future.bal \
-  lib/int.bal lib/map.bal lib/object.bal lib/stream.bal lib/string.bal \
-  lib/table.bal lib/typedesc.bal lib/value.bal lib/xml.bal \
+  lib/array.bal lib/boolean.bal lib/decimal.bal lib/error.bal lib/float.bal \
+  lib/future.bal lib/int.bal lib/map.bal lib/object.bal lib/stream.bal \
+  lib/string.bal lib/table.bal lib/typedesc.bal lib/value.bal lib/xml.bal \
   style/ballerina-language-specification.css \
   style/ballerina-language-specification.js
 DISTFILES=spec.html $(COPYFILES)
@@ -29,13 +30,7 @@ $(BUILDDIR)/spec.html: $(BUILDDIR)/spec.xml spec.xsl
 
 $(BUILDDIR)/spec.xml: spec.html spec.awk
 	test -d $(BUILDDIR) || mkdir $(BUILDDIR)
-	$(AWK) -f spec.awk spec.html >$(BUILDDIR)/spec.xml
-
-
-$(BUILDDIR)/experimental.html: experimental.html spec.xsl 
-	$(XSLTPROC) spec.xsl experimental.html | \
-	  sed -e '/<meta http-equiv/d' >$(BUILDDIR)/experimental.html
-
+	$(AWK) -f spec.awk -v date=`date -u -I` spec.html >$(BUILDDIR)/spec.xml
 
 check: $(BUILDDIR)/spec.xml
 #	$(XMLLINT) -noout -relaxng spec.rng $(BUILDDIR)/spec.xml

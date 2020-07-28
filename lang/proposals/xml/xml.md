@@ -540,6 +540,8 @@ Namespace declarations also need to work for accessing the documents. In particu
 
 then `ns:foo` will behave as a string constant <code>"{[http://example.com/ns}foo](http://example.com/ns}foo)"</code>. This is important for using with the results of getName and getAttributes.
 
+Namespace declarations should be in scope only in the source part in which they occur, as with import declarations.
+
 
 ### Maintaining prefixes with namespace attributes
 
@@ -1091,3 +1093,7 @@ Datatyping for attributes is both easier and more generally useful:
 XXX
 
 
+## Related changes
+
+
+*   function on typedesc to test whether a value belongs to the type (or would it be better to do this with is-expr?)

@@ -14,14 +14,15 @@
 // specific language governing permissions and limitations
 // under the License.
 
+
+# Type for value that can be cloned.
+# This is the same as in lang.value, but is copied here to avoid a dependency.
+
+type Cloneable readonly|xml|Cloneable[]|map<Cloneable>|table<map<Cloneable>>;
+
 # The type to which error detail records must belong.
-#
-# + message - the error message
-# + cause - the error cause
 public type Detail record {|
-    string message?;
-    error cause?;
-    (anydata|error)...;
+   ...Cloneable;
 |};
 
 # A type parameter that is a subtype of error `Detail` record type.
@@ -30,27 +31,27 @@ public type Detail record {|
 @typeParam
 type DetailType Detail;
 
-# A type parameter that is a subtype of `string` type.
-# Has the special semantic that when used in a declaration
-# all uses in the declaration must refer to same type.
-@typeParam
-type StringType string;
-
-# Returns the error's reason string.
+# Returns the error's message.
 #
 # + e - the error value
-# + return - error reason
-public function reason(error<StringType> e) returns StringType = external;
+# + return - error message
+public function message(error e) returns string = external;
+
+# Returns the error's cause.
+#
+# + e - the error value
+# + return - error cause
+public function cause(error e) returns error? = external;
 
 # Returns the error's detail record.
 # The returned value will be immutable.
 # + e - the error value
 # + return - error detail value
-public function detail(error<string,DetailType> e) returns DetailType = external;
+public function detail(error<DetailType> e) returns readonly & DetailType = external;
 
 # Returns an object representing the stack trace of the error.
 #
 # + e - the error value
 # + return - a new object representing the stack trace of the error value
-public function stackTrace(error e) returns object { } = external;
+public function stackTrace(error e) returns readonly & object { } = external;
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2019 WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+// Copyright (c) 2019, 2020 WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
 //
 // WSO2 Inc. licenses this file to you under the Apache License,
 // Version 2.0 (the "License"); you may not use this file except
@@ -42,7 +42,7 @@ public function length((any|error)[] arr) returns int = external;
 #
 # + arr - the array
 # + return - a new iterator object that will iterate over the members of `arr`.
-public function iterator(Type[] arr) returns abstract object {
+public function iterator(Type[] arr) returns object {
     public function next() returns record {|
         Type value;
     |}?;
@@ -123,14 +123,24 @@ public function removeAll((any|error)[] arr) returns () = external;
 public function setLength((any|error)[] arr, int length) returns () = external;
 
 # Returns the index of first member of `arr` that is equal to `val` if there is one.
-# Returns `()` if not found
-# Equality is tested using `==`
+# Returns `()` if not found.
+# Equality is tested using `==`.
 #
 # + arr - the array
 # + val - member to search for
 # + startIndex - index to start the search from
 # + return - index of the member if found, else `()`
 public function indexOf(PureType[] arr, PureType val, int startIndex = 0) returns int? = external;
+
+# Returns the index of last member of `arr` that is equal to `val` if there is one.
+# Returns `()` if not found.
+# Equality is tested using `==`.
+#
+# + arr - the array
+# + val - member to search for
+# + startIndex - index to start searching backwards from
+# + return - index of the member if found, else `()`
+public function lastIndexOf(PureType[] arr, PureType val, int startIndex = arr.length() - 1) returns int? = external;
 
 # Reverses the order of the members of an array.
 #

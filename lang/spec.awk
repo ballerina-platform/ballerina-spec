@@ -42,5 +42,11 @@
     print result
     next
 }
+
+/preview<\/h1>/ {
+    gsub(/preview<\/h1>/, "preview " date "</h1>")
+    print
+    next
+}
 	
 { print }
