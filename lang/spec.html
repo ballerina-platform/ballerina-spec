@@ -3058,113 +3058,6 @@ follows:
 </section>
 </section>
 <section>
-<h3 id="functionally_constructible_types">Functionally constructible types</h3>
-<p>
-A type that is <em>functionally constructible</em> allows values of the type to
-be destructured and constructed using a functional syntax. A functionally
-constructible type has a list of construction parameters, where each parameter
-is identified either by a position or by a name, and defines a decomposition
-that maps a value of the type into an argument list, with one member for each
-construction parameter.
-</p>
-<pre
-class="grammar">functionally-constructible-type-reference := <code>error</code> | type-reference
-</pre>
-<p>
-A functionally-constructible-type-reference must refer to a type that is functionally constructible.
-</p>
-<p>
-The following table describes the functionally constructible types and their
-construction parameters. The last column specifies what happens if there is no
-argument for a parameter when a value is constructed.
-</p>
-
-<table>
-<tr>
-<td>Constructed type</td>
-<td>Parameter id</td>
-<td>Parameter type</td>
-<td>Parameter description</td>
-<td>Parameter missing</td>
-</tr>
-<tr>
-<td rowspan="3"><code>xml:Element</code></td>
-<td>Position 1</td>
-<td><code>string</code></td>
-<td>name</td>
-<td>not allowed</td>
-</tr>
-<tr>
-<td>Position 2</td>
-<td><code>map&lt;string&gt;</code></td>
-<td>attribute map</td>
-<td>defaults to empty map</td>
-</tr>
-<tr>
-<td>Position 3</td>
-<td><code>xml</code></td>
-<td>children</td>
-<td>defaults to empty xml value</td>
-</tr>
-<tr>
-<td rowspan="2"><code>xml:ProcessingInstruction</code></td>
-<td>Position 1</td>
-<td><code>string</code></td>
-<td>target</td>
-<td>not allowed</td>
-</tr>
-<tr>
-<td>Position 2</td>
-<td><code>string</code></td>
-<td>content</td>
-<td>defaults to empty string</td>
-</tr>
-<tr>
-<td><code>xml:Comment</code></td>
-<td>Position 1</td>
-<td><code>string</code></td>
-<td>content</td>
-<td>defaults to empty string</td>
-</tr>
-<tr>
-<td><code>xml:Text</code></td>
-<td>Position 1</td>
-<td><code>string</code></td>
-<td>characters</td>
-<td>defaults to empty string</td>
-</tr>
-<tr>
-<td rowspan="3"><code>error&lt;<var>T</var>&gt;</code></td>
-<td>Position 1</td>
-<td><code>string</code></td>
-<td>message</td>
-<td>not allowed</td>
-</tr>
-<tr>
-<td>Position 2</td>
-<td><code>error?</code></td>
-<td>cause</td>
-<td>defaults to nil</td>
-</tr>
-<tr>
-<td>Name <var>k</var></td>
-<td>type of field <var>k</var> of <code><var>T</var></code>, which will be a
-subtype of <code>value:Cloneable</code></td>
-<td>field <var>k</var> of detail record</td>
-<td>detail record has no field <var>k</var></td>
-</tr>
-</table>
-<p>
-In the above table, argument position 1 refers to the first positional argument.
-</p>
-<p>
-A type descriptor that is a subtype of <code>error</code> is functionally
-constructible only if it is definite. In particular, it may be an
-intersection-type-descriptor.
-</p>
-</section>
-
-<section>
 <h3>Binding patterns and variables</h3>
 <section>
 <h4>Binding patterns</h4>
@@ -3180,7 +3073,7 @@ class="grammar">binding-pattern :=
    | wildcard-binding-pattern
    | list-binding-pattern
    | mapping-binding-pattern
-   | functional-binding-pattern
+   | error-binding-pattern
 capture-binding-pattern := variable-name
 variable-name := identifier
 wildcard-binding-pattern := <code>_</code>
@@ -3196,16 +3089,20 @@ field-binding-pattern :=
    field-name <code>:</code> binding-pattern
    | variable-name
 rest-binding-pattern := <code>...</code> variable-name
-functional-binding-pattern := functionally-constructible-type-reference <code>(</code> arg-list-binding-pattern <code>)</code>
-arg-list-binding-pattern :=
-   positional-arg-binding-patterns [<code>,</code> other-arg-binding-patterns]
-   | other-arg-binding-patterns
-positional-arg-binding-patterns := positional-arg-binding-pattern (<code>,</code> positional-arg-binding-pattern)*
-positional-arg-binding-pattern := binding-pattern
-other-arg-binding-patterns :=
-   named-arg-binding-patterns [<code>,</code> rest-binding-pattern]
-   | [rest-binding-pattern]
-named-arg-binding-patterns := named-arg-binding-pattern (<code>,</code> named-arg-binding-pattern)*
+error-binding-pattern := direct-error-binding-pattern | indirect-error-binding-pattern
+direct-error-binding-pattern := <code>error</code> <code>(</code> direct-error-arg-list-binding-pattern <code>)</code>
+indirect-error-binding-pattern := error-type-reference <code>(</code> indirect-error-arg-list-binding-pattern <code>)</code>
+error-type-reference := type-reference
+direct-error-arg-list-binding-pattern :=
+   simple-binding-pattern [<code>,</code> error-field-binding-patterns]
+   | [error-field-binding-patterns]
+indirect-error-arg-list-binding-pattern := [error-field-binding-patterns]
+error-field-binding-patterns :=
+   named-arg-binding-pattern (<code>,</code> named-arg-binding-pattern)* [<code>,</code> rest-binding-pattern]
+   | rest-binding-pattern
+simple-binding-pattern :=
+   capture-binding-pattern
+   | wildcard-binding-pattern
 named-arg-binding-pattern := arg-name <code>=</code> binding-pattern
 </pre>
 <p>
@@ -3237,17 +3134,19 @@ consisting of all the other fields to be assigned to <code>v</code>; a
 field-binding-pattern consisting of just a variable-name <code>x</code> is
 equivalent to a field-binding-pattern <code>x: x</code>;
 </li>
-<li>a functional-binding-pattern T(p<sub>1</sub>,
-p<sub>1</sub>,...,p<sub>m</sub>, arg<sub>1</sub> = p<sub>m + 1</sub>,
-arg<sub>2</sub> = p<sub>m + 2</sub>, ..., arg<sub>m + n</sub> = p<sub>n</sub>,
-r) matches a value if the shape of the value belongs to T and the decomposition
-of the value has m or more positional arguments and for each i in 1 to m,
-p<sub>i</sub> matches the i-th positional argument, and for each j in 1 to n,
-the decomposition has a named argument arg<sub>j</sub> and p<sub>m + j</sub>
-matches the value of that named argument; if r is <code>...v</code> then a
-successful match causes a new mapping value consisting of all named arguments in
-the decomposition other than arg<sub>1</sub>, arg<sub>2</sub>, ... ,
-arg<sub>n</sub> to be assigned to <code>v</code>;</li>
+<li>a direct-error-binding-pattern error(p<sub>r</sub>, f<sub>1</sub> = p<sub>1</sub>,
+f<sub>2</sub> = p<sub>2</sub>, ..., f<sub>n</sub> = p<sub>n</sub>, r) matches an
+error value if it has an error reason string that matches p<sub>r</sub> and a
+detail record that has fields f<sub>1</sub>, f<sub>2</sub>, ... , f<sub>n</sub> such
+that p<sub>i</sub> matches the value of field f<sub>i</sub> for each i in 1 to
+n; if r is <code>...v</code> then a successful match causes a new mapping value
+consisting of all fields other than f<sub>1</sub>, f<sub>2</sub>, ... ,
+f<sub>n</sub> to be assigned to <code>v</code>;</li>
+<li>an indirect-error-binding-pattern ET(f<sub>1</sub> = p<sub>1</sub>,
+f<sub>2</sub> = p<sub>2</sub>, ..., f<sub>n</sub> = p<sub>n</sub>, r) matches an
+error value e if the direct-error-binding-pattern error(f<sub>1</sub> =
+p<sub>1</sub>, f<sub>2</sub> = p<sub>2</sub>, ..., f<sub>n</sub> =
+p<sub>n</sub>, r) matches e and the shape of e is in ET.</li>
 </ul>
 <p>
 All the variables in a binding-pattern must be distinct e.g. [x, x] is not
@@ -3377,7 +3276,7 @@ class="grammar">expression :=
    | member-access-expr
    | function-call-expr
    | method-call-expr
-   | functional-constructor-expr
+   | error-constructor-expr
    | anonymous-function-expr
    | let-expr
    | type-cast-expr
@@ -3715,7 +3614,7 @@ class="grammar">const-expr :=
    | raw-template-expr
    | structural-constructor-expr
    | object-constructor-expr
-   | functional-constructor-expr
+   | error-constructor-expr
    | constant-reference-expr
    | type-cast-expr
    | unary-expr
@@ -3737,8 +3636,7 @@ its read-only bit on.
 </p>
 <p>
 Within a <code>const-expr</code>, any nested expression must also be a
-const-expr. A <code>functional-constructor-expr</code> within a
-<code>const-expr</code> must not construct an error value.
+const-expr.
 </p>
 
 <pre
@@ -4718,10 +4616,6 @@ abruptly with a panic. The static type of the function-call-expr is the return
 type of the function type.
 </p>
 <p>
-A function-call-expr where the function-reference refers to a type is interpreted
-as a functional-constructor-expr.
-</p>
-<p>
 The variable-reference must refer to a variable with function type. The type
 descriptor of that function type is used to construct an argument list from the
 specified arg-list. Note that it is the type descriptor of the declared type of
@@ -4813,32 +4707,57 @@ the constraints that would apply if it has been written explicitly as a
 </p>
 </section>
 <section>
-<h3>Functional constructor</h3>
+<h3>Error constructor</h3>
 
 <pre
-class="grammar">functional-constructor-expr := functionally-constructible-type-reference <code>(</code> arg-list <code>)</code>
+class="grammar">error-constructor-expr := direct-error-constructor-expr | indirect-error-constructor-expr
+direct-error-constructor-expr := <code>error</code> <code>(</code> direct-error-arg-list <code>)</code>
+indirect-error-constructor-expr := error-type-reference <code>(</code> indirect-error-arg-list <code>)</code>
+direct-error-arg-list := positional-arg (<code>,</code> named-arg)*
+indirect-error-arg-list := [named-arg (<code>,</code> named-arg)*]
 </pre>
 <p>
-A functional constructor uses functional syntax to construct a new value of a <a
-href="#functionally_constructible_types">functionally constructible type</a>. The
-functionally-constructible-type-reference identifies the type of value to be
-constructed.
+An error constructor constructs a new error value. There are two kinds of error
+constructor: direct and indirect. A direct error constructor specifies the error
+reason string as the first argument to the constructor. An indirect error
+constructor references an error type that determines the reason string.
 </p>
 <p>
-An argument list consisting of positional and named argument values is
-constructed by evaluating the expressions in the <code>arg-list</code>. The
-construction parameter types determine the contextually expected type of each of
-the expressions. If there is no argument for a construction parameter that can
-be defaulted, then an argument for that parameter is added to the argument list
-with the default value.
+The contextually expected type for the positional-arg in a
+direct-error-constructor-expr is string.
 </p>
 <p>
-When constructing an error value, the ImmutableClone abstract operation is
-applied to each named argument. The detail record is constructed as immutable.
-The stack trace describes the execution stack at the point where the functional
-constructor was evaluated. Any fields of the detail record that were not
-specified by a named argument can be defaulted using the defaults specified in
-the detail record type.
+The error-type-reference in an indirect-error-constructor must refer to an
+identifier named by a type definition whose type descriptor is an error type
+descriptor, whose reason-type-descriptor is a singleton string. An
+indirect-error-constructor-expr
+<code><var>ET</var>(<var>named-args</var>)</code> where
+<code><var>ET</var></code> refers to a type
+<code>error&lt;<var>S</var>,<var>D</var>&gt;</code>, where
+<code><var>S</var></code> is a singleton string, is equivalent to a
+direct-error-constructor-expr <code>&lt;<var>ET</var>&gt;error(<var>S</var>,
+<var>named-args</var>)</code>.
+</p>
+<p>
+Evaluating the error-constructor-expr creates a new detail mapping. Each
+named-arg specifies a field of the error detail mapping; the static type of each
+named-arg must be a pure type. If there is a contextually-expected-type for a
+direct-error-constructor-expr and the applicable contextually expected type is
+an error type descriptor (rather than a union) with detail type <var>D</var>,
+then the error detail mapping will also have a field for any defaultable fields
+of <var>D</var> for which no named-arg was specified. The contextually expected
+type for each named-arg is determined by the applicable contextually type in the
+same way as for a mapping-constructor-expr. The detail mapping for an
+indirect-error-constructor-expr is constructed as if by the equivalent
+direct-error-constructor-expr, and so in this case there will always be an
+applicable contextually expected type that is an error type descriptor. The
+detail mapping is constructed as immutable, with its members being the result of
+appplying the ImmutableClone abstract operation to the result of evaluating each
+named-arg and every defaultable arg.
+</p>
+<p>
+The stack trace in the constructed error value describes the execution stack at
+the point where the error constructor was evaluated.
 </p>
 <p>
 A functional-constructor-expr occurring within a const-expr will construct a
@@ -7242,7 +7161,7 @@ binding-pattern-not-variable-reference :=
    wildcard-binding-pattern
    | list-binding-pattern
    | mapping-binding-pattern
-   | functional-binding-pattern
+   | error-binding-pattern
 </pre>
 <p>
 A destructuring assignment is executed by evaluating the action-or-expr
@@ -7364,7 +7283,7 @@ class="grammar">match-pattern :=
    | const-pattern
    | list-match-pattern
    | mapping-match-pattern
-   | functional-match-pattern
+   | error-match-pattern
 </pre>
 <p>
 A match-pattern combines the destructuring done by a binding-pattern with the
@@ -7412,16 +7331,20 @@ field-match-patterns :=
    | [ rest-match-pattern ] 
 field-match-pattern := field-name <code>:</code> match-pattern
 rest-match-pattern := <code>...</code> <code>var</code> variable-name
-functional-match-pattern := functionally-constructible-type-reference <code>(</code> arg-list-match-pattern <code>)</code>
-arg-list-match-pattern :=
-   positional-arg-match-patterns [<code>,</code> other-arg-match-patterns]
-   | other-arg-match-patterns
-positional-arg-match-patterns := positional-arg-match-pattern (<code>,</code> positional-arg-match-pattern)*
-positional-arg-match-pattern := match-pattern
-other-arg-match-patterns :=
-   named-arg-match-patterns [<code>,</code> rest-match-pattern]
-   | [rest-match-pattern]
-named-arg-match-patterns := named-arg-match-pattern (<code>,</code> named-arg-match-pattern)*
+error-match-pattern := direct-error-match-pattern | indirect-error-match-pattern
+direct-error-match-pattern := <code>error</code> <code>(</code> direct-error-arg-list-match-pattern <code>)</code>
+indirect-error-match-pattern := error-type-reference <code>(</code> indirect-error-arg-list-match-pattern <code>)</code>
+direct-error-arg-list-match-pattern :=
+   simple-match-pattern [<code>,</code> error-field-match-patterns]
+   | [error-field-match-patterns]
+indirect-error-arg-list-match-pattern := [error-field-match-patterns]
+error-field-match-patterns :=
+   named-arg-match-pattern (<code>,</code> named-arg-match-pattern)* [<code>,</code> rest-match-pattern]
+   | rest-match-pattern
+simple-match-pattern :=
+   wildcard-match-pattern
+   | const-pattern
+   | <code>var</code> variable-name
 named-arg-match-pattern := arg-name <code>=</code> match-pattern
 </pre>
 
@@ -7433,11 +7356,11 @@ bound to a new mapping that contains just the fields for which that did not
 match a <code>field-match-pattern</code>.
 </p>
 <p>
-For a match of a <code>functional-match-pattern</code> against a value to
-succeed, the type referenced by the functionally-constructible-type-reference
-must contain the shape of the value; because of the limited mutability of the
-xml and error basic types, this requirement is equivalent to requiring that the
-value belong to the referenced type.
+For a match of an <code>indirect-error-match-pattern</code> against an error
+value to succeed, the error type referenced by the error-type-reference must
+contain the shape of the error value; since errors are immutable, this
+requirement is equivalent to requiring that the error value belong to the
+referenced error type.
 </p>
 
 </section>
