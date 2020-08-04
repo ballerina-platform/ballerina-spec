@@ -140,10 +140,13 @@ public function getContent(Text|ProcessingInstruction|Comment x) returns string 
 # Constructs an xml sequence consisting of only a new element item.
 #
 # + name - the name of the new element
+# + attributes - the attributes of the new element
 # + children - the children of the new element
 # + return - an xml sequence consisting of only a new xml element with name `name`,
-#   no attributes, and children `children` 
-public function createElement(string name, xml children = concat())
+#   attributes `attributes`, and children `children`
+# The element's attribute map is a newly created map, into which any attributes specified
+# by the `attributes` map are copied.
+public function createElement(string name, map<string> attributes = {}, xml children = xml``)
     returns Element = external;
 
 # Constructs an xml sequence consisting of only a processing instruction item.
@@ -160,6 +163,13 @@ public function createProcessingInstruction(string target, string content)
 # + content - the content of the comment to be constructed.
 # + return - an xml sequence consisting of a comment with content `content`
 public function createComment(string content) returns Comment = external;
+
+# Constructs an xml sequence representing zero of more parsed characters.
+#
+# + chars - the characters
+# + return - an xml sequence that is either empty or consists of one text item
+# The constructed sequence will be empty when the length of `chars` is zero.
+public function createText(string chars) returns Text = external;
 
 # Returns a subsequence of an xml value.
 #
