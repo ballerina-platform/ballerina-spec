@@ -73,6 +73,8 @@ There are some complications to be dealt with in specifying exactly how the conc
 
 ## Isolated functions feature
 
+The basic idea of an isolated function is that it access mutable storage only through its parameters. A caller of an isolated function can ensure that a call is concurrency safe by ensuring that it is safe to access the parameters for the duration of the call.  So, in particular, a call to an isolated function is guaranted safe if all its arguments are read-only.
+
 Define
 
 *   the _mutable storage graph_ of a value v as the storage locations reachable from v but not readonly. Reachable here means the same as in the requirement that value reachable from readonly value is readonly, i.e. you can get to it by a sequence of read operations.
@@ -94,24 +96,13 @@ A function can be declared as isolated, by using the `isolated` keyword before t
 
 A function can be declared as isolated if:
 
-
 *   all functions that it calls are declared as isolated
 *   it does not create new strands using either named workers or `start`
-*   the compiler can verify that,  in any invocation of the function, all mutable storage that is accessed in the function's body is part of its invocation's local mutable storage graph (this implies that the return value is also part of its local storage graph).
+*   the compiler can verify that, in any invocation of the function, all mutable storage that is accessed in the function's body is part of its invocation's local mutable storage graph (this implies that the return value is also part of its local storage graph).
 
 Whether a function is isolated is part of a function's type. A function declared as isolated is a subtype of an equivalent function that is not declared as isolated. Type-casting a function to a pure function type will work as casting usually does: it will succeed if the function was in fact declared as isolated.
 
-Within a lock statement in an isolated function, additional rules apply. The idea is that mutable storage outside the local mutable storage graph can be accessed, but storage allocated within the lock is not part of the local mutable storage graph and must avoid creating references into that graph. The rules are:
-
-
-*   a module-level variable can be read or written, provided that all uses of that module-level variable are within a lock statement (the compiler can check this since module-level variables are not allowed to be public)
-*   any local variable defined outside the lock statement can be read or written, provided that the value fetched or stored is read-only; as a special exception, you can apply value:cloneReadOnly to a local variable that is not read-only
-
-Functions called within the lock statement are still required to be isolated, but they can do more because they can be passed the values of module-level variables.
-
 External functions can be declared as isolated, and external makes no difference for how the function is called. The implementation of the external function is responsible for ensuring that it is isolated. What does isolated mean for external functions?
-
-
 
 *   in terms of accessing Ballerina program state, it should have the same constraints as if it were implemented in Ballerina
 *   D does not allow isolated functions to perform IO, but I think that is too restrictive for us (it would be too limiting to say that a service that cannot do IO) and would not really be practical (D has an escape hatch explicitly for debug printing)
@@ -121,6 +112,73 @@ When compiling a module, the compiler can infer that some or all of the function
 
 The langlib functions that meet the requirements for isolated will need to be declared as such. (I believe they all do.)
 
+### Isolated objects
+
+The purpose of an isolated object is to be an object that is guaranteed to be safe for concurrent access from multiple threads. A call to an isolated function whose arguments are all either isolated objects or readonly is guaranteed safe.
+
+Whereas writing an isolated _function_ is straightforward and many functions will be isolated without extra work, this is not the case with isolated objects. Making an object isolated requires that the programmer makes appropriate use of the `lock` statement.
+
+An object's _mutable storage graph_ are the non-readonly storage locations reachable from its fields. An isolated object guarantees thread safety by ensuring that its mutable storage graph is always accessed within a `lock` statement.
+Specifically, the following requiements apply to an isolated object:
+
+1. all mutable fields of the object are  private
+2. all methods only access mutable fields of the object within a `lock` statement
+3. it maintains an invariant that there are no references into the object's mutable storage graph from outside the object, except through other isolated objects
+
+The third point is the difficult one. There are two parts:
+ * `init` must establish the requirement
+ * all other methods must maintain it
+
+#### init method
+
+Define an expression to be unique if it is known at compile-time that either the result is readonly or the result is the unique reference to the value.
+We can define rules for when an expression is unique, e.g.
+* a string literal is unique
+* a list constructor expression is unique if all its subexpressions are unique
+* a call to the clone or cloneReadOnly method is always unique
+* a function-call-expression to an isolated function is unique if the expressions for all its arguments are unique
+* a variable reference is unique if there is only one reference to the variable and the variable was assigned or initialized with a unique expression
+* etc, etc
+
+We can then require that every field whose type is neither readonly nor an isolated object is initialized with a unique expression.
+
+#### Other methods
+
+We need to ensure that the invariant is maintained by every lock statement that contains accesses to the object's fields, i.e. if it applies at entry to the lock statement, it also applies at exit. We maintain the invariant by controlling how values are transferred in and out of the lock statement. Values are transferred in by reading from a variable or parameter defined outside the lock statement. Values are transferred out by writing to a variable defined outside the lock statement or by a return statement. A value can only be transferred in or out if it is readonly or the result of a calling the `clone` method or is an isolated object. In addition, within the lock statement only isolated functions can be called.
+
+For example:
+
+```
+type Pair record {
+    int x;
+    int y;
+};
+
+isolated class X {
+    private Pair[] x = []; // unique
+    isolated function set(int i, Pair p) {
+        lock {
+            self.x[i] = p.clone(); // copy in
+        }
+    }
+    isolated function get(int i) returns Pair {
+        lock {
+            return self.x[i].clone(); // copy out
+        }
+    }
+}
+```
+
+### isolated functions vs isolated objects
+
+An isolated object allows simultaneously access by
+* one thread that can all methods, both isolated and non-isolated, and
+* multiple other threads calling only isolated methods
+
+This is what you need to ensure automatic safe parallelization: you can safely schedule a strand that makes isolated methods calls on an isolated object on a separate thread.
+
+It makes sense to have non-isolated methods of isolated objects: they are constrained only to behave "well" as regards the object's state.
+
 
 ## Standard library implications
 
@@ -129,16 +187,17 @@ For this to be useful, many of the functions in the standard library will need t
 
 ## Further work
 
+### Access to module-level state
+
+We can extend allow safe access to module-level state by using a similar approach to isolated objects:
+
+* allow a module-level variable to be defined as `isolated`
+* initialization requirements are the same as for the fields of an isolated object
+* the requirements that apply to the methods of an isolated object as regards access to the object's fields apply to the functions defined in the module as regards access to each isolated variable
+* each isolated variable has its own isolated graph 
+
 
 ### Escape hatch
 
 There probably needs to be some way for the user to force the compiler to treat a call as isolated even though it does not meet the compiler's requirements for being isolated. Note that a type-cast does not do this.
 
-
-### Isolated objects
-
-The idea here is that an object is isolated if its mutable state is isolated. You can then safely call two isolated methods on the same isolated object concurrently.
-
-An isolated method of an isolated object accesses the self variable in the same way as a regular isolated method accesses module-level variables i.e. within a lock and keeping the graph separate from the local mutable storage graph.
-
-TODO What does a non-isolated method of an isolated object do? Or should all methods of isolated objects be treated as isolated. This needs more thought.
