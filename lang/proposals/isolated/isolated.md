@@ -169,7 +169,7 @@ isolated class X {
 }
 ```
 
-### isolated functions vs isolated objects
+### isolated objects vs isolated methods 
 
 An isolated object allows simultaneously access by
 * one thread that can all methods, both isolated and non-isolated, and
@@ -179,6 +179,9 @@ This is what you need to ensure automatic safe parallelization: you can safely s
 
 It makes sense to have non-isolated methods of isolated objects: they are constrained only to behave "well" as regards the object's state.
 
+### Bound methods
+
+With the proposed fix to #[574](https://github.com/ballerina-platform/ballerina-spec/issues/574), you can get a method bound to a particular object by accessing the method name like a field name. Since isolated methods treats the self variable like a special parameter, the bound method will be isolated only if the method and the object are isolated.
 
 ## Standard library implications
 
