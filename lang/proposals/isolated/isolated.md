@@ -73,7 +73,7 @@ There are some complications to be dealt with in specifying exactly how the conc
 
 ## Isolated functions feature
 
-The basic idea of an isolated function is that it access mutable storage only through its parameters. A caller of an isolated function can ensure that a call is concurrency safe by ensuring that it is safe to access the parameters for the duration of the call.  So, in particular, a call to an isolated function is guaranted safe if all its arguments are read-only.
+The basic idea of an isolated function is that it access mutable storage only through its parameters. A caller of an isolated function can ensure that a call is concurrency-safe by ensuring that it is safe to access the parameters for the duration of the call.  So, in particular, a call to an isolated function is guaranteed safe if all its arguments are read-only.
 
 Define
 
@@ -82,10 +82,9 @@ Define
     *   the mutable storage graphs of its parameters
     *   storage locations allocated during the function invocation
 
-In a method call, the self parameter is treated as a parameter, and the object's fields are thus part of the local mutable storage graph of the method call.
+In a method call, `self` is treated as a parameter, and the object's fields are thus part of the local mutable storage graph of the method call.
 
 A function can be declared as isolated, by using the `isolated` keyword before the function keyword in the following syntactic constructs:
-
 
 *   function-type-descriptor
 *   function-defn
@@ -114,9 +113,9 @@ The langlib functions that meet the requirements for isolated will need to be de
 
 ### Isolated objects
 
-The purpose of an isolated object is to be an object that is guaranteed to be safe for concurrent access from multiple threads. A call to an isolated function whose arguments are all either isolated objects or readonly is guaranteed safe.
+The purpose of an isolated object is to be an object that is guaranteed to be safe for concurrent access from multiple threads. A call to an isolated function whose arguments are all either isolated objects or readonly is thus guaranteed safe.
 
-Whereas writing an isolated _function_ is straightforward and many functions will be isolated without extra work, this is not the case with isolated objects. Making an object isolated requires that the programmer makes appropriate use of the `lock` statement.
+Whereas writing an isolated _function_ is straightforward and many functions will be isolated without extra work, this is not the case with isolated _objects_. Making an object isolated requires that the programmer make appropriate use of the `lock` statement.
 
 An object's _mutable storage graph_ are the non-readonly storage locations reachable from its fields. An isolated object guarantees thread safety by ensuring that its mutable storage graph is always accessed within a `lock` statement.
 Specifically, the following requiements apply to an isolated object:
@@ -128,6 +127,7 @@ Specifically, the following requiements apply to an isolated object:
 The third point is the difficult one. There are two parts:
  * `init` must establish the requirement
  * all other methods must maintain it
+
 
 #### init method
 
@@ -199,6 +199,7 @@ We can extend allow safe access to module-level state by using a similar approac
 * the requirements that apply to the methods of an isolated object as regards access to the object's fields apply to the functions defined in the module as regards access to each isolated variable
 * each isolated variable has its own isolated graph 
 
+ Within a module, we can potentially infer particular variables to be isolated.
 
 ### Escape hatch
 
