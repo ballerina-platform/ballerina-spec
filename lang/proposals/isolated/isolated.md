@@ -1,4 +1,4 @@
-# Isolated functions
+# Isolated functions and objects
 
 This is issue #[145](https://github.com/ballerina-platform/ballerina-spec/issues/145): please add comments there.
 
@@ -9,8 +9,6 @@ The main point of the current readonly feature is to help with concurrency safet
 
 There are three operations on storage in the Ballerina runtime environment: read, write, execute.  The readonly feature relates to the read and write operations:
 
-
-
 *   readonly means that any attempted write operation will not succeed
 *   readonly is deep, which means a write applied to the result of any number of reads will not succeed
 
@@ -19,8 +17,6 @@ However, readonly by itself doesn't get very far in enabling reasoning about con
 At a high-level, the goal of the isolated functions feature is to go the last mile with readonly, to allow users to get the maximum value out of the existing language support readonly.
 
 The problem is to design the semantics of the property of a function:
-
-
 
 1. we need to design the semantics of the property along along with a set of restrictions on functions so that we can prove that a function f that calls only functions that have this property can be proved itself to have this property provided that f satisfies the restrictions
 2. if we make the property too restrictive, then it won't be useful because functions that people want to write won't have the property
@@ -44,7 +40,6 @@ Doing 1, 2 and 3 is already hard, so we need to focus on designing the property 
 A good starting point is the D language, which like Ballerina has deep immutability. It has a [concept of pure functions](https://dlang.org/spec/function.html#pure-functions). D's concept of pure function is a function that only accesses mutable state through its parameters. Such a function is _conditionally_ safe: concurrent calls to the function are safe provided the caller ensures that the callee has exclusive access to any mutable storage accessible from the parameters for the duration of the call.
 
 The term “pure” does not seem a good fit for this concept: it suggests something more like a mathematically pure function. The concept here is of a function that is well-behaved and "keeps to its lane".  Instead we use the term "isolated". Other names we considered were
-
 
 
 *   confined
@@ -186,7 +181,6 @@ With the proposed fix to #[574](https://github.com/ballerina-platform/ballerina-
 ## Standard library implications
 
 For this to be useful, many of the functions in the standard library will need to be declared as isolated. It would be good if the compiler can help with this.
-
 
 ## Further work
 
