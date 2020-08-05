@@ -1,5 +1,5 @@
 # Ballerina packages
-This is issue #230: please add comments there.
+This is issue #[230](https://github.com/ballerina-platform/ballerina-spec/issues/230): please add comments there.
 ## Background
 When you are learning Ballerina or building a simple program, you usually start with a single .bal file. But when your code grows, you want to structure your code properly. Otherwise, you’ll end up with a messy, unstructured codebase. Such codebases are hard to navigate and understand. 
 
