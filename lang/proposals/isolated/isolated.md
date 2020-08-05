@@ -71,7 +71,7 @@ There are some complications to be dealt with in specifying exactly how the conc
 4. there probably needs to be an escape hatch of some kind: the programmer needs to be able to tell the compiler that the programmer knows that something is OK even if the compiler cannot prove it
 
 
-## Isolated functions feature
+## Isolated functions
 
 The basic idea of an isolated function is that it access mutable storage only through its parameters. A caller of an isolated function can ensure that a call is concurrency-safe by ensuring that it is safe to access the parameters for the duration of the call.  So, in particular, a call to an isolated function is guaranteed safe if all its arguments are read-only.
 
@@ -111,7 +111,7 @@ When compiling a module, the compiler can infer that some or all of the function
 
 The langlib functions that meet the requirements for isolated will need to be declared as such. (I believe they all do.)
 
-### Isolated objects
+## Isolated objects
 
 The purpose of an isolated object is to be an object that is guaranteed to be safe for concurrent access from multiple threads. A call to an isolated function whose arguments are all either isolated objects or readonly is thus guaranteed safe.
 
@@ -129,7 +129,7 @@ The third point is the difficult one. There are two parts:
  * all other methods must maintain it
 
 
-#### init method
+### init method
 
 Define an expression to be unique if it is known at compile-time that either the result is readonly or the result is the unique reference to the value.
 We can define rules for when an expression is unique, e.g.
@@ -142,7 +142,7 @@ We can define rules for when an expression is unique, e.g.
 
 We can then require that every field whose type is neither readonly nor an isolated object is initialized with a unique expression.
 
-#### Other methods
+### Other methods
 
 We need to ensure that the invariant is maintained by every lock statement that contains accesses to the object's fields, i.e. if it applies at entry to the lock statement, it also applies at exit. We maintain the invariant by controlling how values are transferred in and out of the lock statement. Values are transferred in by reading from a variable or parameter defined outside the lock statement. Values are transferred out by writing to a variable defined outside the lock statement or by a return statement. A value can only be transferred in or out if it is readonly or the result of a calling the `clone` method or is an isolated object. In addition, within the lock statement only isolated functions can be called.
 
