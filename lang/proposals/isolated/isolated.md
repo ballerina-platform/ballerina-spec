@@ -110,7 +110,9 @@ The langlib functions that meet the requirements for isolated will need to be de
 
 The purpose of an isolated object is to be an object that is guaranteed to be safe for concurrent access from multiple threads. A call to an isolated function whose arguments are all either isolated objects or readonly is thus guaranteed safe.
 
-Whereas writing an isolated _function_ is straightforward and many functions will be isolated without extra work, this is not the case with isolated _objects_. Making an object isolated requires that the programmer make appropriate use of the `lock` statement.
+A important special case of an isolated object is a stateless object. An object without fields or an object all of whose fields are readonly is inherently isolated. This is particularly important for service objects, since the Listener will need to ensure that its used of threads does not cause problems for service objects that are not isolated.
+
+Whereas writing an isolated _function_ is straightforward and many functions will be isolated without extra work, this is not the case with isolated _objects_. Writing an isolated stateful object requires that the programmer make appropriate use of the `lock` statement.
 
 An object's _mutable storage graph_ are the non-readonly storage locations reachable from its fields. An isolated object guarantees thread safety by ensuring that its mutable storage graph is always accessed within a `lock` statement.
 Specifically, the following requiements apply to an isolated object:
@@ -123,6 +125,7 @@ The third point is the difficult one. There are two parts:
  * `init` must establish the requirement
  * all other methods must maintain it
 
+For module-level classes and service objects, we should infer when they are isolated. Note that point 3 means that an isolated object can have final fields (or resources) that reference  isolated objects.
 
 ### init method
 
