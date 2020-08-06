@@ -168,8 +168,8 @@ public function toJson(anydata v) returns json = external;
 # Returns the string that represents `v` in JSON format.
 # `v` is first converted to `json` as if by the `toJson` function.
 #
-# + v - json value
-# + return - string representation of `v`
+# + v - anydata value
+# + return - string representation of `v` converted to `json`
 public function toJsonString(anydata v) returns string = external;
 
 # Parses a string in JSON format and returns the the value that it represents.
