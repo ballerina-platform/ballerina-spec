@@ -2,7 +2,6 @@
 
 This is issue #[145](https://github.com/ballerina-platform/ballerina-spec/issues/145): please add comments there.
 
-
 ## Motivation
 
 The main point of the current readonly feature is to help with concurrency safety: if a value is readonly, then it is safe for it to be used simultaneously by two functions running in different threads. The way to think about Ballerina's readonly is that it is saying something about the data, i.e. that the data is safe for concurrent access.  This is very different from something like C's concept of const, which is more like a permission: you do not have permission to mutate data through a pointer to const.
@@ -25,8 +24,6 @@ The problem is to design the semantics of the property of a function:
 Balancing 2 and 3 is key to getting something useful.
 
 In previous discussions, we have talked about this as being pure functions.  We should not be  overinfluenced by the word "pure": we need to design the semantics and then choose a word that is appropriate to the semantics. As well as concurrency safety, there are many other concepts that are relevant to "purity":
-
-
 
 *   no side-effects
 *   result depends only on arguments
@@ -58,7 +55,6 @@ An additional argument in favour of the term _isolated_ is that for Ballerina th
 For Ballerina, perhaps the most important case is that the Listener can ensure that a call to a service method/resource can safely be run on a separate thread by controlling the parameters that are passed to it.  This is a good fit for _function as a service_ concept: service function provides logic; state is separated out and passed as a parameter, so it can be managed externally,
 
 There are some complications to be dealt with in specifying exactly how the concept works:
-
 
 1. return values: a pure function needs to be able to not only call other pure functions but also use the values they return
 2. the pure concept should interact usefully with the lock statement, since the lock mechanism is our current mechanism for concurrency control
@@ -134,9 +130,10 @@ We can define rules for when an expression is unique, e.g.
 * a string literal is unique
 * a list constructor expression is unique if all its subexpressions are unique
 * a call to the clone or cloneReadOnly method is always unique
-* a function-call-expression to an isolated function is unique if the expressions for all its arguments are unique
 * a variable reference is unique if there is only one reference to the variable and the variable was assigned or initialized with a unique expression
 * etc, etc
+
+The crucial rule is this: function call expression that calls an isolated function is unique if the expressions for all its arguments are unique. This means that the uniqueness analysis is done only within a function.
 
 We can then require that every field whose type is neither readonly nor an isolated object is initialized with a unique expression.
 
@@ -193,10 +190,12 @@ We can extend allow safe access to module-level state by using a similar approac
 
 * allow a module-level variable to be defined as `isolated`
 * initialization requirements are the same as for the fields of an isolated object
+* can only assign something known unique to an isolated module-level variable (often the variable will be final)
 * the requirements that apply to the methods of an isolated object as regards access to the object's fields apply to the functions defined in the module as regards access to each isolated variable
-* each isolated variable has its own isolated graph 
+* an isolated function is allowed to access an isolated module-level variable, provided does so within a lock following the above requirements
+* each isolated variable has its own isolated graph
 
- Within a module, we can potentially infer particular variables to be isolated.
+Within a module, we can potentially infer particular variables to be isolated.
 
 ### Escape hatch
 
@@ -206,4 +205,11 @@ There probably needs to be a way for the user to force the compiler to treat som
 * an object
 
  Note that a type-cast does not do this.
+
+ ### More uniqueness support
+
+ The uniqueness support described above is intended to be just enough to support initialization. There are some other primitives that are useful when dealing with uniqueness, in particular, a swap statement `x <=> y;` that swaps two lvalues, without temporarily violating uniqueness.
+ 
+
+
 
