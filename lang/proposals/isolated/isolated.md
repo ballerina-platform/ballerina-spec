@@ -142,7 +142,7 @@ We can then require that every field whose type is neither readonly nor an isola
 
 ### Other methods
 
-We need to ensure that the invariant is maintained by every lock statement that contains accesses to the object's fields, i.e. if it applies at entry to the lock statement, it also applies at exit. We maintain the invariant by controlling how values are transferred in and out of the lock statement. Values are transferred in by reading from a variable or parameter defined outside the lock statement. Values are transferred out by writing to a variable defined outside the lock statement or by a return statement. A value can only be transferred in or out if it is readonly or the result of a calling the `clone` method or is an isolated object. In addition, within the lock statement only isolated functions can be called.
+We need to ensure that the invariant is maintained by every lock statement that contains accesses to the object's mutable fields, i.e. if it applies at entry to the lock statement, it also applies at exit. We maintain the invariant by controlling how values are transferred in and out of the lock statement. Values are transferred in by reading from a variable or parameter defined outside the lock statement. Values are transferred out by writing to a variable defined outside the lock statement or by a return statement. A value can only be transferred in or out only if it is readonly, is the result of a calling the `clone` method or is an isolated object. In addition, within the lock statement only isolated functions can be called.
 
 For example:
 
@@ -200,5 +200,10 @@ We can extend allow safe access to module-level state by using a similar approac
 
 ### Escape hatch
 
-There probably needs to be some way for the user to force the compiler to treat a call as isolated even though it does not meet the compiler's requirements for being isolated. Note that a type-cast does not do this.
+There probably needs to be a way for the user to force the compiler to treat something as isolated even though it does not meet the compiler's requirements for being isolated. This could apply to:
+* a function call
+* module level variable
+* an object
+
+ Note that a type-cast does not do this.
 
