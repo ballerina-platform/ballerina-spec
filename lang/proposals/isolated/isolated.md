@@ -197,6 +197,12 @@ We can extend allow safe access to module-level state by using a similar approac
 
 Within a module, we can potentially infer particular variables to be isolated.
 
+Note that a destructuring assignment statement can be used to swap two isolated module-level variables, without temporarily violating uniqueness:
+
+```
+x, y = y, x
+```
+
 ### Escape hatch
 
 There probably needs to be a way for the user to force the compiler to treat something as isolated even though it does not meet the compiler's requirements for being isolated. This could apply to:
@@ -206,9 +212,6 @@ There probably needs to be a way for the user to force the compiler to treat som
 
  Note that a type-cast does not do this.
 
- ### More uniqueness support
-
- The uniqueness support described above is intended to be just enough to support initialization. There are some other primitives that are useful when dealing with uniqueness, in particular, a swap statement `x <=> y;` that swaps two lvalues, without temporarily violating uniqueness.
  
 
 
