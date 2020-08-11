@@ -58,7 +58,7 @@ public function cloneReadOnly(CloneableType v) returns CloneableType & readonly 
 # member of the union to use for the inherent type by following the same rules
 # that are used by list constructor expressions and mapping constructor expressions
 # with the contextually expected type. If not, then an error is returned.
-# The `constructFrom` operation is recursively applied to each member of `v` using
+# The `cloneWithType` operation is recursively applied to each member of `v` using
 # the type descriptor that the inherent type requires for that member.
 # 
 # Like the Clone abstract operation, this does a deep copy, but differs in
