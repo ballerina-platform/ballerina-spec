@@ -155,6 +155,18 @@ The following are the list of available assertions available in the test framewo
    </td>
   </tr>
   <tr>
+     <td>@test:assertExactEquals
+     </td>
+     <td>Checks if the specified entity is exactly equal to the expected entity.
+     </td>
+    </tr>
+    <tr>
+     <td>@test:assertExactNotEquals
+     </td>
+     <td>Checks if the specified entity is not exactly equal to the expected entity.
+     </td>
+    </tr>
+  <tr>
    <td>@test:assertTrue
    </td>
    <td>Checks if the specified value is true.
