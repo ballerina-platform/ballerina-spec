@@ -162,7 +162,7 @@ The following are the list of available assertions available in the test framewo
      </td>
     </tr>
     <tr>
-     <td>@test:assertExactNotEquals
+     <td>@test:assertNotExactEquals
      </td>
      <td>Checks if the specified value is not exactly equal to the expected value
      i.e. both do not refer to the same entity.
