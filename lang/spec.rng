@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="">
+  <!-- Schema for specific subset of XHTML used by the spec -->
+  <start>
+    <element name="html">
+      <attribute name="lang">
+        <data type="token"/>
+      </attribute>
+      <ref name="head"/>
+      <ref name="body"/>
+    </element>
+  </start>
+  <define name="head">
+    <element name="head">
+      <interleave>
+        <ref name="title"/>
+        <ref name="meta"/>
+        <ref name="style"/>
+      </interleave>
+    </element>
+  </define>
+  <define name="title">
+    <element name="title">
+      <text/>
+    </element>
+  </define>
+  <define name="meta">
+    <element name="meta">
+      <attribute name="charset">
+        <value>utf-8</value>
+      </attribute>
+    </element>
+  </define>
+  <define name="style">
+    <element name="style">
+      <attribute name="type">
+        <value>text/css</value>
+      </attribute>
+      <text/>
+    </element>
+  </define>
+  <define name="body">
+    <element name="body">
+      <ref name="h1"/>
+      <zeroOrMore>
+        <ref name="block"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <ref name="section2"/>
+      </zeroOrMore>
+    </element>
+  </define>
+  <!-- Blocks -->
+  <define name="block">
+    <choice>
+      <ref name="p"/>
+      <ref name="ul"/>
+      <ref name="ol"/>
+      <ref name="pre"/>
+      <ref name="pre.grammar"/>
+      <ref name="table"/>
+    </choice>
+  </define>
+  <!-- Headings -->
+  <define name="h1">
+    <element name="h1">
+      <ref name="h.model"/>
+    </element>
+  </define>
+  <define name="section2">
+    <element name="section">
+      <optional>
+        <ref name="section2.class"/>
+      </optional>
+      <ref name="h2"/>
+      <zeroOrMore>
+        <ref name="block"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <ref name="section3"/>
+      </zeroOrMore>
+    </element>
+  </define>
+  <define name="section2.class">
+    <attribute name="class">
+      <choice>
+        <value>toc</value>
+        <value>appendix</value>
+      </choice>
+    </attribute>
+  </define>
+  <define name="h2">
+    <element name="h2">
+      <ref name="h.model"/>
+    </element>
+  </define>
+  <define name="section3">
+    <element name="section">
+      <ref name="h3"/>
+      <zeroOrMore>
+        <ref name="block"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <ref name="section4"/>
+      </zeroOrMore>
+    </element>
+  </define>
+  <define name="h3">
+    <element name="h3">
+      <ref name="h.model"/>
+    </element>
+  </define>
+  <define name="section4">
+    <element name="section">
+      <ref name="h4"/>
+      <zeroOrMore>
+        <ref name="block"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <ref name="section5"/>
+      </zeroOrMore>
+    </element>
+  </define>
+  <define name="h4">
+    <element name="h4">
+      <ref name="h.model"/>
+    </element>
+  </define>
+  <define name="section5">
+    <element name="section">
+      <ref name="h5"/>
+      <zeroOrMore>
+        <ref name="block"/>
+      </zeroOrMore>
+    </element>
+  </define>
+  <define name="h5">
+    <element name="h5">
+      <ref name="h.model"/>
+    </element>
+  </define>
+  <define name="h.model">
+    <optional>
+      <attribute name="id">
+        <data type="token"/>
+      </attribute>
+    </optional>
+    <ref name="inline.content"/>
+  </define>
+  <!-- Paragraphs -->
+  <define name="p">
+    <element name="p">
+      <optional>
+        <attribute name="class">
+          <value>status</value>
+        </attribute>
+      </optional>
+      <ref name="inline.content"/>
+    </element>
+  </define>
+  <define name="pre">
+    <element name="pre">
+      <ref name="inline.content"/>
+    </element>
+  </define>
+  <define name="pre.grammar">
+    <element name="pre">
+      <attribute name="class">
+        <value>grammar</value>
+      </attribute>
+      <mixed>
+        <zeroOrMore>
+          <element>
+            <choice>
+              <name>code</name>
+              <name>em</name>
+              <name>dfn</name>
+              <name>abbr</name>
+            </choice>
+            <text/>
+          </element>
+        </zeroOrMore>
+      </mixed>
+    </element>
+  </define>
+  <!-- Lists -->
+  <define name="ol">
+    <element name="ol">
+      <oneOrMore>
+        <ref name="li"/>
+      </oneOrMore>
+    </element>
+  </define>
+  <define name="ul">
+    <element name="ul">
+      <oneOrMore>
+        <ref name="li"/>
+      </oneOrMore>
+    </element>
+  </define>
+  <define name="li">
+    <element name="li">
+      <ref name="inline.content"/>
+      <zeroOrMore>
+        <choice>
+          <ref name="ul"/>
+          <ref name="ol"/>
+        </choice>
+      </zeroOrMore>
+    </element>
+  </define>
+  <!-- Tables -->
+  <define name="table">
+    <element name="table">
+      <oneOrMore>
+        <ref name="tr"/>
+      </oneOrMore>
+    </element>
+  </define>
+  <define name="tr">
+    <element name="tr">
+      <zeroOrMore>
+        <choice>
+          <ref name="th"/>
+          <ref name="td"/>
+        </choice>
+      </zeroOrMore>
+    </element>
+  </define>
+  <define name="td">
+    <element name="td">
+      <ref name="tcell.model"/>
+    </element>
+  </define>
+  <define name="th">
+    <element name="th">
+      <ref name="tcell.model"/>
+    </element>
+  </define>
+  <define name="tcell.model">
+    <optional>
+      <attribute name="rowspan">
+        <data type="token"/>
+      </attribute>
+    </optional>
+    <ref name="inline.content"/>
+  </define>
+  <!-- Inline -->
+  <define name="inline">
+    <choice>
+      <ref name="code"/>
+      <ref name="var"/>
+      <ref name="em"/>
+      <ref name="strong"/>
+      <ref name="a"/>
+      <ref name="sub"/>
+      <ref name="sup"/>
+      <ref name="br"/>
+    </choice>
+  </define>
+  <define name="inline.content">
+    <mixed>
+      <zeroOrMore>
+        <ref name="inline"/>
+      </zeroOrMore>
+    </mixed>
+  </define>
+  <define name="code">
+    <element name="code">
+      <optional>
+        <attribute name="class">
+          <value>grammar</value>
+        </attribute>
+      </optional>
+      <ref name="inline.content"/>
+    </element>
+  </define>
+  <define name="var">
+    <element name="var">
+      <ref name="inline.content"/>
+    </element>
+  </define>
+  <define name="em">
+    <element name="em">
+      <ref name="inline.content"/>
+    </element>
+  </define>
+  <define name="strong">
+    <element name="strong">
+      <ref name="inline.content"/>
+    </element>
+  </define>
+  <define name="sub">
+    <element name="sub">
+      <ref name="inline.content"/>
+    </element>
+  </define>
+  <define name="sup">
+    <element name="sup">
+      <ref name="inline.content"/>
+    </element>
+  </define>
+  <define name="br">
+    <element name="br">
+      <empty/>
+    </element>
+  </define>
+  <define name="a">
+    <element name="a">
+      <attribute name="href"/>
+      <optional>
+        <attribute name="type"/>
+      </optional>
+      <ref name="inline.content"/>
+    </element>
+  </define>
+</grammar>
