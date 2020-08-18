@@ -5991,10 +5991,10 @@ strand must be part of the same thread as the current strand.
 <pre
 class="grammar">block-function-body :=
    <code>{</code> [default-worker-init named-worker-decl+] default-worker <code>}</code>
-default-worker-init := sequence-stmt
-default-worker := sequence-stmt
+default-worker-init := statement*
+default-worker := statement*
 named-worker-decl :=
-   [annots] <code>worker</code> worker-name return-type-descriptor <code>{</code> sequence-stmt <code>}</code>
+   [annots] <code>worker</code> worker-name return-type-descriptor statement-block
 worker-name := identifier
 </pre>
 <p>
@@ -6048,7 +6048,7 @@ as follows:
 <ol>
 <li>The statements in default-worker-init are executed.</li>
 <li>All the named workers are started. Each named worker executes its
-sequence-stmt on its strand.</li>
+statement-block on its strand.</li>
 <li>The statements in default-worker are executed. This happens without waiting
 for the termination of the named workers started in stage 2.</li>
 </ol>
@@ -6057,10 +6057,10 @@ Variables declared in default-worker-init are in scope within named workers,
 whereas variables declared in default-worker are not.
 </p>
 <p>
-The execution of a worker's sequence-stmt may result in the execution of a
+The execution of a worker's statements may result in the execution of a
 statement that causes the worker to terminate. For example, a return statement
 causes the worker to terminate. If this does not happen, then the worker
-terminates as soon as it has finished executing its sequence-stmt. In this case,
+terminates as soon as it has finished executing its statements. In this case,
 the worker terminates normally, and the termination value is nil. In other
 words, falling off the end of a worker is equivalent to <code>return;</code>,
 which is in turn equivalent to <code>return ();</code>.
@@ -6098,7 +6098,6 @@ In the above, function includes method, and function call includes method call.
 <pre
 class="grammar">statement := 
    action-stmt
-   | block-stmt
    | local-var-decl-stmt
    | xmlns-decl-stmt
    | assignment-stmt
@@ -6106,15 +6105,21 @@ class="grammar">statement :=
    | destructuring-assignment-stmt
    | call-stmt
    | if-else-stmt
-   | match-stmt
-   | foreach-stmt
-   | while-stmt
-   | break-stmt
+   | regular-compound-stmt
    | continue-stmt
-   | fork-stmt
+   | break-stmt
+   | stmt-with-on-fail
+   | fail-stmt
    | panic-stmt
    | return-stmt
-   | lock-stmt
+   | fork-stmt
+
+regular-compound-stmt :=
+  do-stmt
+  | match-stmt
+  | foreach-stmt
+  | while-stmt
+  | lock-stmt
 </pre>
 <p>
 The execution of any statement may involve the evaluation of actions and
@@ -6133,14 +6138,17 @@ execution of the statement terminates at that point.
 </p>
 
 <pre
-class="grammar">sequence-stmt := statement*
-block-stmt := <code>{</code> sequence-stmt <code>}</code>
+class="grammar">
+statement-block := <code>{</code> statement* <code>}</code>
 </pre>
 <p>
-A <code>sequence-stmt</code> executes its statements sequentially. A
-<code>block-stmt</code> is executed by executing its <code>sequence-stmt</code>.
+A <code>statement-block</code> is a syntactic grouping of statements, which are
+executed sequentially.
 </p>
+
 </section>
+
+
 <section>
 <h3>Fork statement</h3>
 
@@ -6637,7 +6645,7 @@ that it is used only for a method with the <code>remote</code> modifier.
 <h3>Query action</h3>
 <pre
 class="grammar">query-action := query-pipeline do-clause
-do-clause := <code>do</code> block-stmt
+do-clause := <code>do</code> statement-block
 </pre>
 <p>
 The clauses in the query-pipeline of query-action are executed in the same way
@@ -6645,7 +6653,7 @@ as the clauses in the query-pipeline of a query-expr.
 </p>
 <p>
 The query-action is executed as follows. For each input frame <var>f</var>
-emitted by the query-pipeline, execute the block-stmt with <var>f</var> in
+emitted by the query-pipeline, execute the statement-block with <var>f</var> in
 scope. If a clause in the query-pipeline completes early with error
 <var>e</var>, the result of the query-action is <var>e</var>. Otherwise, the
 result of the query-action is nil.
@@ -6669,7 +6677,7 @@ that is local to the block in which they occur.
 </p>
 <p>
 The scope of variables declared in a <code>local-var-decl-stmt</code> starts
-immediately after the statement and continues to the end of the block statement
+immediately after the statement and continues to the end of the statement block
 in which it occurs.
 </p>
 <p>
@@ -7177,19 +7185,25 @@ type of the call-expr in an call-stmt is not a subtype of nil. Note that
 
 <pre
 class="grammar">if-else-stmt :=
-   <code>if</code> expression block-stmt 
-   [ <code>else</code> <code>if</code> expression block-stmt ]* 
-   [ <code>else</code> block-stmt ]
+   <code>if</code> expression statement-block 
+   [ <code>else</code> <code>if</code> expression statement-block ]* 
+   [ <code>else</code> statement-block ]
 </pre>
 <p>
 The if-else statement is used for conditional execution.
 </p>
 <p>
 The static type of the expression following <code>if</code> must be boolean.
-When an expression is true then the corresponding block statement is executed
+When an expression is true then the corresponding statement block is executed
 and the if statement completes. If no expression is true then, if the else block
-is present, the corresponding block statement is executed.
+is present, the corresponding statement block is executed.
 </p>
+</section>
+<section>
+<h3>Do statement</h3>
+<pre
+class="grammar">do-stmt := <code>do</code> statement-block
+</pre>
 </section>
 <section>
 <h3>Match statement</h3>
@@ -7197,11 +7211,11 @@ is present, the corresponding block statement is executed.
 <pre
 class="grammar">match-stmt := <code>match</code> action-or-expr <code>{</code> match-clause+ <code>}</code>
 match-clause :=
-  match-pattern-list [match-guard] <code>=></code> block-stmt
+  match-pattern-list [match-guard] <code>=></code> statement-block
 match-guard := <code>if</code> expression
 </pre>
 <p>
-A match statement selects a block statement to execute based on which patterns a
+A match statement selects a statement block to execute based on which patterns a
 value matches.
 </p>
 <p>
@@ -7220,14 +7234,14 @@ created</li>
 resulting in a value b</li>
 <li>if b is false, then the execution of the match-stmt continues to the next
 match-clause</li>
-<li>otherwise, the block-stmt in the match-clause is executed</li>
+<li>otherwise, the statement-block in the match-clause is executed</li>
 <li>execution of the match-stmt completes</li>
 </ol>
 </li>
 </ol>
 <p>
 The scope of any variables created in a match-pattern-list of a match-clause is
-both the match-guard, if any, and the block-stmt in that match-clause. The
+both the match-guard, if any, and the statement-block in that match-clause. The
 static type of the expression in match-guard must be a subtype of boolean.
 </p>
 
@@ -7337,16 +7351,16 @@ belong to the referenced error type.
 
 <pre
 class="grammar">foreach-stmt :=
-   <code>foreach</code> typed-binding-pattern <code>in</code> action-or-expr block-stmt
+   <code>foreach</code> typed-binding-pattern <code>in</code> action-or-expr statement-block
 </pre>
 <p>
-A foreach statement iterates over an iterable value, executing a block statement
+A foreach statement iterates over an iterable value, executing a statement block
 once for each value in the iterable value's iteration sequence. The static type
 of action-or-expr must be an iterable type with an iteration completion type of
 nil.
 </p>
 <p>
-The scope of any variables created in typed-binding-pattern is block-stmt. These
+The scope of any variables created in typed-binding-pattern is statement-block. These
 variables are implicitly final.
 </p>
 <p>
@@ -7366,7 +7380,7 @@ result of calling c.iterator()</li>
 <li>if n is nil, then terminate execution of the foreach statement</li>
 <li>match typed-binding-pattern to n.value causing assignments to any variables
 that were created in typed-binding-pattern</li>
-<li>execute block-stmt with the variable bindings from step 5 in scope; in the
+<li>execute statement-block with the variable bindings from step 5 in scope; in the
 course of so doing
 <ol>
 <li>the execution of a break-stmt terminates execution of the foreach statement</li>
@@ -7391,10 +7405,10 @@ typed-binding-pattern uses var, then the type will be inferred from the type of
 <h3>While statement</h3>
 
 <pre
-class="grammar">while-stmt := <code>while</code> expression block-stmt
+class="grammar">while-stmt := <code>while</code> expression statement-block
 </pre>
 <p>
-A while statement repeatedly executes a block statement so long as a
+A while statement repeatedly executes a statement block so long as a
 boolean-valued expression evaluates to true.
 </p>
 <p>
@@ -7404,7 +7418,7 @@ In more detail, a while statement executes as follows:
 <li>evaluate expression;</li>
 <li>if expression evaluates to false, terminate execution of the while
 statement;</li>
-<li>execute block-stmt; in the course of so doing
+<li>execute statement-block; in the course of so doing
 <ol>
 <li>the execution of a break-stmt results in termination of execution of the
 while statement</li>
@@ -7428,7 +7442,7 @@ class="grammar">continue-stmt := <code>continue</code> <code>;</code>
 A continue statement is only allowed if it is lexically enclosed within a
 while-stmt or a foreach-stmt. Executing a continue statement causes execution of
 the nearest enclosing while-stmt or foreach-stmt to jump to the end of the
-outermost block-stmt in the while-stmt or foreach-stmt.
+outermost statement-block in the while-stmt or foreach-stmt.
 </p>
 </section>
 <section>
@@ -7442,43 +7456,17 @@ while-stmt or a foreach-stmt. Executing a break statement causes the nearest
 enclosing while-stmt or foreach-stmt to terminate.
 </p>
 </section>
-<section>
-<h3>Panic statement</h3>
-
-<pre
-class="grammar">panic-stmt := <code>panic</code> expression <code>;</code>
-</pre>
-<p>
-A panic statement terminates the current worker abnormally. The result of
-evaluating <code>expression</code> provides the termination value of the worker.
-</p>
-<p>
-The static type of <code>expression</code> must be a subtype of error.
-</p>
-</section>
-<section>
-<h3>Return statement</h3>
-
-<pre
-class="grammar">return-stmt := <code>return</code> [ action-or-expr ] <code>;</code>
-</pre>
-<p>
-A return statement terminates the current worker normally.The result of
-evaluating the action-or-expr provides the termination value of the worker. If
-action-or-expr is omitted, then the termination value is nil.
-</p>
-</section>
 
 <section>
 <h3>Lock statement</h3>
 <pre
-class="grammar">lock-stmt := <code>lock</code> block-stmt
+class="grammar">lock-stmt := <code>lock</code> statement-block
 </pre>
 
 <p>
-A lock-stmt executing in the context of some strand must execute its block-stmt
+A lock-stmt executing in the context of some strand must execute its statement-block
 in such a way that the effect on the state of the program is consistent with the
-execution of the block-stmt not being interleaved with the execution of a
+execution of the statement-block not being interleaved with the execution of a
 lock-stmt on any other strand.
 </p>
 <p>
@@ -7499,6 +7487,49 @@ there is a function call lexically within the lock-stmt that might result
 directly or indirectly in a call to that defined function.
 </p>
 
+</section>
+
+<section>
+<h3>On fail clause</h3>
+<pre
+class="grammar">stmt-with-on-fail := regular-compound-stmt on-fail-clause
+on-fail-clause := <code>on</code> <code>fail</code> typed-binding-pattern statement-block
+</pre>
+</section>
+
+<section>
+<h3>Fail statement</h3>
+<pre
+class="grammar">fail-stmt := <code>fail</code> expression <code>;</code>
+</pre>
+</section>
+
+<section>
+<h3>Panic statement</h3>
+
+<pre
+class="grammar">panic-stmt := <code>panic</code> expression <code>;</code>
+</pre>
+<p>
+A panic statement terminates the current worker abnormally. The result of
+evaluating <code>expression</code> provides the termination value of the worker.
+</p>
+<p>
+The static type of <code>expression</code> must be a subtype of error.
+</p>
+</section>
+
+<section>
+<h3>Return statement</h3>
+
+<pre
+class="grammar">return-stmt := <code>return</code> [ action-or-expr ] <code>;</code>
+</pre>
+<p>
+A return statement terminates the current worker normally.The result of
+evaluating the action-or-expr provides the termination value of the worker. If
+action-or-expr is omitted, then the termination value is nil.
+</p>
 </section>
 
 </section>
