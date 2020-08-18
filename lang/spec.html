@@ -4305,7 +4305,7 @@ where the namespace-uri comes from xml-namespace-uri specified in the
 xmlns-decl, and the local-name comes from the identifier following the colon.
 </p>
 <p>
-If the variable-reference references a type defined with a type definition, then
+If the variable-reference references a type defined with a module type definition, then
 the result of evaluating the variable-reference-expr is a typedesc value for
 that type.
 </p>
@@ -6100,7 +6100,6 @@ class="grammar">statement :=
    action-stmt
    | block-stmt
    | local-var-decl-stmt
-   | local-type-defn-stmt
    | xmlns-decl-stmt
    | assignment-stmt
    | compound-assignment-stmt
@@ -6810,19 +6809,6 @@ of E apply within B</li>
 <li>the narrowed type for a variable x no longer applies as soon as there is a
 possibility of x being assigned to</li>
 </ul>
-</section>
-<section>
-<h3>Local type definition statement</h3>
-
-<pre
-class="grammar">local-type-defn-stmt :=
-   [annots] <code>type</code> identifier type-descriptor <code>;</code>
-</pre>
-<p>
-A local-type-defn-stmt binds the identifier to a type descriptor within the
-scope of the current block. The type-descriptor is resolved when the statement
-is executed.
-</p>
 </section>
 <section>
 <h3 id="XML_namespace_declaration_statement">XML namespace declaration statement</h3>
@@ -7828,6 +7814,13 @@ class="grammar">module-type-defn :=
    metadata
    [<code>public</code>] <code>type</code> identifier type-descriptor <code>;</code>
 </pre>
+
+<p>
+A module-type-defn binds the identifier to the specified type descriptor. The
+binding is in the main symbol space. The type-descriptor is resolved as part of
+module initialization.
+</p>
+
 </section>
 
 
@@ -8179,7 +8172,7 @@ The available attachment points are described in the following table.
   </tr>
   <tr>
    <td>type</td>
-   <td>module-type-defn, local-type-defn-stmt, module-enum-decl, type-cast-expr</td>
+   <td>module-type-defn, module-enum-decl, type-cast-expr</td>
    <td>defined type</td>
   </tr>
   <tr>
@@ -8598,6 +8591,7 @@ string.</li>
 <li>The ability to specify the visibility of parameter names has been removed: a
 parameter can always be specified by name as well as position; a parameter
 cannot be declared as <code>public</code>.</li>
+<li>Local type definitions have been removed.</li>
 </ol>
 </section>
 <section>
