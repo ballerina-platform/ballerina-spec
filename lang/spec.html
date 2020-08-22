@@ -6127,14 +6127,20 @@ expressions, and the execution of substatements. The following sections
 describes how each kind of statement is evaluated, assuming that the evaluation
 of those expressions and actions completes normally, and assuming that the
 execution of any substatements does not cause termination of the current worker.
- Except where explicitly stated to the contrary, statements handle abrupt
-completion of the evaluation of expressions and actions as follows. If in the
-course of executing a statement, the evaluation of some expression or action
-completes abruptly with associated value e, then the current worker is
-terminated with termination value e; if the abrupt termination is a check-fail,
-then the termination is normal, otherwise the termination is abnormal. If the
-execution of a substatement causes termination of the current worker, then the
-execution of the statement terminates at that point.
+Except where explicitly stated to the contrary, statements handle abrupt
+completion of the evaluation of expressions and actions as follows. There are
+two possibilities.
+</p>
+<ul>
+<li>If the abrupt termination is a check-fail, then control flow is transferred
+as if by a fail statement with an expression that evaluates to e.</li>
+<li>If the abrupt termination is a panic, then the current worker is terminated
+abnormally with termination value e. This is the same as if
+a panic statement is executed with an expression that evaluates to e.</li>
+</ul>
+<p>
+If the execution of a substatement causes termination of the current worker,
+then the execution of the statement terminates at that point.
 </p>
 
 <pre
@@ -7495,6 +7501,23 @@ directly or indirectly in a call to that defined function.
 class="grammar">stmt-with-on-fail := regular-compound-stmt on-fail-clause
 on-fail-clause := <code>on</code> <code>fail</code> typed-binding-pattern statement-block
 </pre>
+<p>
+A <code>stmt-with-on-fail</code> is executed by executing the
+<code>regular-compound-stmt</code>. A <code>check</code> expression or action,
+or a <code>fail</code> statement may cause control to transfer to the
+<code>on-fail-cause</code>. In this case, the <code>typed-binding-pattern</code>
+is matched to the associated error value, binding the variables occurring within
+the <code>typed-binding-pattern</code>; the <code>statement-block</code> is then
+executed with these bindings in scope. Otherwise, the
+<code>on-fail-clause</code> is not executed.
+</p>
+<p>
+The static type of the associated error value is determined from the static type
+of the relevant <code>check</code> expressions and actions, and
+<code>fail</code> statements. It is a compile error unless the match of the
+<code>typed-binding-pattern</code> with the associated error value is guaranteed
+to succeed by the static type of the associated error value.
+</p>
 </section>
 
 <section>
@@ -7502,6 +7525,17 @@ on-fail-clause := <code>on</code> <code>fail</code> typed-binding-pattern statem
 <pre
 class="grammar">fail-stmt := <code>fail</code> expression <code>;</code>
 </pre>
+<p>
+Executing a fail-stmt will cause control flow to transfer to the on-fail-clause
+of the nearest lexically enclosing statement that has an on-fail-clause. If
+there is no such statement, it terminates the current worker.
+</p>
+<p>
+The static type of the expression must be a subtype of error. Execution of the
+fail-stmt evaluates the expression; the resulting error value is passed to the
+on-fail-clause or becomes the termination value of the current worker.
+</p>
+
 </section>
 
 <section>
@@ -8623,6 +8657,10 @@ string.</li>
 parameter can always be specified by name as well as position; a parameter
 cannot be declared as <code>public</code>.</li>
 <li>Local type definitions have been removed.</li>
+<li>The <code>fail</code> statement has been added, along with a <code>on
+fail</code> clause for compound statements. If a <code>check</code> expression
+or action fails, it behaves like a <code>fail</code> statement rather than a
+<code>return</code> statement.</li>
 </ol>
 </section>
 <section>
