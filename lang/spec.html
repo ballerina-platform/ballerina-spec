@@ -1954,10 +1954,14 @@ provides the method definitions that are associated with the object when it is
 constructed. A class is defined using a module-level class definition.
 </p>
 <p>
-The object basic type is selectively immutable. Each field has a read-only bit.
-If the read-only bit of a field is on, it means the field cannot be assigned to
-after the object has been constructed. The read-only bit of an object value is
-on if and only if the read-only bit of all its fields is on.
+The object basic type is selectively immutable. An object value has a read-only
+bit, which is fixed when the object is constructed. An
+<code>object-type-descriptor</code> does not describe whether the object's
+read-only bit is set: whether a value belongs to the type described by an
+<code>object-type-descriptor</code> is not affected by the object's read-only
+bit. Whether an object is read-only can be described separately using a
+<code>readonly</code> type descriptor, which can be combined with an
+<code>object-type-descriptor</code> using the type intersection operator.
 </p>
 
 <pre
@@ -1981,14 +1985,17 @@ methods; other objects types must not.
 
 <pre
 class="grammar">object-field-descriptor :=
-   metadata [<code>public</code>] [<code>readonly</code>] type-descriptor field-name <code>;</code>
+   metadata [<code>public</code>] type-descriptor field-name <code>;</code>
 </pre>
 <p>
 An <code>object-field-descriptor</code> describes a field of the object. It is
 an error for an object-type-descriptor to have two fields with the same
-field-name. When an <code>object-field-descriptor</code> includes
-<code>readonly</code>, the type of the field is the intersection of
-<code>readonly</code> and the type specified by the type-descriptor.
+field-name.
+</p>
+<p>
+If an object's read-only bit is set, then the read-only bit of the value of
+every field must also be set and the value of a field cannot be changed after
+the object has been constructed.
 </p>
 </section>
 <section>
@@ -2061,10 +2068,6 @@ f' in T' is the same as the visibility region of f in T. This implies that if an
 object type descriptor T has fields or methods with module-level visibility,
 then it is possible to define another object type descriptor that is a subtype
 of T only within the same module as T.
-</p>
-<p>
-The read-only bit of a field is part of the read-only aspect of the object's
-shape.
 </p>
  
 </section>
@@ -4113,20 +4116,10 @@ If there is a <code>type-reference</code>, then the referenced type is included
 in the object's type in the same was as an <code>object-type-inclusion</code>.
 The type-ids of the constructed object are type ids of the referenced type.
 </p>
-<p>
-An <code>object-constructor-expr</code> will construct an object with its
-read-only bit set if it occurs within a <code>const-expr</code> or if the the
-applicable contextually expected type is a subtype of readonly. In this case,
-the read-only bit of every field will also be set and the contextually expected
-type for a field-initializer will be the intersection of readonly and the type
-specified in the type-descriptor of the object-field. Conversely, if every field
-is specified to be <code>readonly</code>, then the read-only bit of the
-constructed object will be set.
-</p>
 
 <pre
 class="grammar">object-field :=
-   metadata [object-visibility-qual] [<code>readonly</code>]
+   metadata [object-visibility-qual] [<code>final</code>]
    type-descriptor field-name [<code>=</code> field-initializer] <code>;</code>
 field-initializer := expression
 </pre>
@@ -4134,12 +4127,25 @@ field-initializer := expression
 An <code>object-field</code> declares and initializes a field of the object.
 </p>
 <p>
-If <code>readonly</code> is present, the read-only bit of the field will be set.
-</p>
-<p>
 If a field does not specify a field-initializer, then there must be an <code>init</code>
 method and the <code>init</code> method must initialize the field.
 </p>
+<p>
+If <code>final</code> is present, then the field must be assigned to exactly
+once, either by its initializer or in the <code>init</code> method.
+</p>
+<p>
+An <code>object-constructor-expr</code> will construct an object with its
+read-only bit set if
+</p>
+<ul>
+<li>every object-field is declared as <code>final</code> and has a
+type-descriptor that is a subtype of readonly; or</li>
+<li>it occurs within a <code>const-expr</code> or the applicable contextually
+expected type is a subtype of readonly; in this case, the contextually expected
+type for a field-initializer will be the intersection of readonly and the type
+specified in the type-descriptor of the object-field.</li>
+</ul>
 
 <pre
 class="grammar">method-defn :=
@@ -7923,9 +7929,10 @@ object type descriptor that is a subtype of the class's type.
 </p>
 <p>
 If <code>class-type-quals</code> contains <code>readonly</code>, then an object
-constructed using the class and all its fields will have their read-only bits
-set; furthermore, an object shape belongs to the class's type only of it has the
-read-only bit set.
+constructed using the class will have its read-only bit set; the effective type
+of each field is thus the intersection of the specified type and
+<code>readonly</code>; furthermore, an object shape belongs to the class's type
+only if its read-only bit is set.
 </p>
 <p>
 If an object-type-inclusion references a type-descriptor that is a class, then
@@ -8621,9 +8628,10 @@ The <code>int:Unsigned8</code> type is equivalent to the predefined
 descriptors are what was previously called <em>abstract</em>: they declare
 methods but do not define them. Objects are now created either by using an
 object constructor expression, which includes method definitions, or by applying
-<code>new</code> to the name of a class defined by a class definition.</li>
-<li>The <code>readonly</code> type has been added. Fields of records and objects
-can also be declared as <code>readonly</code>.</li>
+<code>new</code> to the name of a class defined by a class definition. Classes
+and object constructors can declare fields as final.</li>
+<li>The <code>readonly</code> type has been added. Fields of records can also be
+declared as <code>readonly</code>.</li>
 <li>Intersection types have been added.</li>
 <li>Distinct types have been added; these provide the functionality of nominal
 types with the framework of a structural type system.</li>
