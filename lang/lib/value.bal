@@ -173,12 +173,40 @@ public function toJson(anydata v) returns json = external;
 public function toJsonString(anydata v) returns string = external;
 
 # Parses a string in JSON format and returns the the value that it represents.
-# All numbers in the JSON will be represented as float values.
+# Numbers in the JSON string are converted into Ballerina values of type
+# decimal except in the following two cases:
+# if the JSON number starts with `-` and is numerically equal to zero, then it is
+# converted into float value of `-0.0`;
+# otherwise, if the JSON number is syntactically an integer and is in the range representable
+# by a Ballerina int, then it is converted into a Ballerina int.
+# A JSON number is considered syntactically an integer if it contains neither
+# a decimal point nor an exponent.
+# 
 # Returns an error if the string cannot be parsed.
 #
 # + str - string in JSON format
 # + return - `str` parsed to json or error
 public function fromJsonString(string str) returns json|error = external;
+
+# Subtype of `json` that allows only float numbers.
+public type JsonFloat ()|boolean|string|float|JsonFloat[]|map<JsonFloat>;
+
+# Parses a string in JSON format, using float to represent numbers.
+# Returns an error if the string cannot be parsed.
+#
+# + str - string in JSON format
+# + return - `str` parsed to json or error
+public function fromJsonFloatString(string str) returns JsonFloat|error = external;
+
+# Subtype of `json` that allows only decimal numbers.
+public type JsonDecimal ()|boolean|string|decimal|JsonDecimal[]|map<JsonDecimal>;
+
+# Parses a string in JSON format, using decimal to represent numbers.
+# Returns an error if the string cannot be parsed.
+#
+# + str - string in JSON format
+# + return - `str` parsed to json or error
+public function fromJsonDecimalString(string str) returns JsonDecimal|error = external;
 
 # Converts a value of type json to a user-specified type.
 # This works the same as `cloneWithType`,
