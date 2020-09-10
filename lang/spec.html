@@ -1939,10 +1939,9 @@ value. A method of an object is a function that can be invoked on the object
 using a <code>method-call-expr</code>; when a method is invoked on an object,
 the function can access the object using the <code>self</code> variable. An
 object's methods are associated with the object when the object is constructed
-and cannot be changed thereafter. Fields and methods have names that uniqely
-identify them within their object; An object has separate symbol spaces for its
-fields and its methods; the name of a field or method is unique in its symbol
-space, but it is possible for an object to have a field and a method with the
+and cannot be changed thereafter. Fields and methods have names that uniquely
+identify them within their object; fields and methods share a single symbol
+space; it is not possible for an object to have a field and a method with the
 same name.
 </p>
 <p>
@@ -1988,9 +1987,12 @@ class="grammar">object-field-descriptor :=
    metadata [<code>public</code>] type-descriptor field-name <code>;</code>
 </pre>
 <p>
-An <code>object-field-descriptor</code> describes a field of the object. It is
-an error for an object-type-descriptor to have two fields with the same
-field-name.
+An <code>object-field-descriptor</code> describes a field of the object. The
+<code>field-name</code> of an <code>object-field-descriptor</code> must be
+distinct from the <code>field-name</code> of every other
+<code>object-field-descriptor</code> in the <code>object-type-descriptor</code>
+and from the <code>method-name</code> of every <code>method-decl</code> in the
+<code>object-type-descriptor</code>.
 </p>
 <p>
 If an object's read-only bit is set, then the read-only bit of the value of
@@ -2009,9 +2011,13 @@ class="grammar">method-decl :=
 method-name := identifier
 </pre>
 <p>
-The names of all the methods of an object must be distinct: there is no method
-overloading. The <code>method-name</code> in a <code>method-decl</code> must not
-be <code>init</code>.
+The <code>method-name</code> of a <code>method-decl</code> must be distinct from
+the <code>method-name</code> of every other <code>method-decl</code> in the
+<code>object-type-descriptor</code> and from the <code>field-name</code> of
+every <code>object-field-descriptor</code> in the
+<code>object-type-descriptor</code>. Note that here is no method overloading.
+The <code>method-name</code> in a <code>method-decl</code> must not be
+<code>init</code>.
 </p>
 <pre
 class="grammar">remote-qual := <code>remote</code>
@@ -2039,7 +2045,7 @@ containing this object type descriptor; this is called module-level visibility.
 
 <p>
 The shape of an object consists of an unordered collection of object field
-shapes and an unordered collection of object method shapes. An object field
+shapes and object method shapes. An object field
 shape or object method shape is a 4-tuple consisting of the name of the field or
 method, the visibility region, a remote flag and a
 shape for the value of the field or for the method's function.
@@ -2087,12 +2093,14 @@ descriptor will thus necessarily be definite and a subtype of object. The
 referenced type are included in the type being defined. A type-reference to a
 class is treated as a reference to the class's type; only the types of the
 methods and fields are copied from the referenced type. An
-<code>object-field-descriptor</code> or <code>object-method</code> in a
-<code>object-type-descriptor</code> can override an
-<code>object-field-descriptor</code> or <code>object-method</code> of the same
+<code>object-field-descriptor</code> or <code>method-decl</code> in a
+<code>object-type-descriptor</code> can override respectively an
+<code>object-field-descriptor</code> or <code>method-decl</code> of the same
 name in an included <code>object-type-descriptor</code>, provided the type
 declared for the field or method in the overriding descriptor is a subtype of
-the type declared in the overridden descriptor.
+the type declared in the overridden descriptor. An <code>object-field-descriptor</code>
+cannot override a <code>method-decl</code>, nor can a <code>method-decl</code>
+override an <code>object-field-descriptor</code>.
 </p>
 <p>
 An object-type-descriptor is always definite. The set of type-ids induced by an
@@ -8645,8 +8653,9 @@ The <code>int:Unsigned8</code> type is equivalent to the predefined
 descriptors are what was previously called <em>abstract</em>: they declare
 methods but do not define them. Objects are now created either by using an
 object constructor expression, which includes method definitions, or by applying
-<code>new</code> to the name of a class defined by a class definition. Classes
-and object constructors can declare fields as final.</li>
+<code>new</code> to the name of a class defined by a class definition. The
+methods and fields of an object are not in a single symbol space. Classes and
+object constructors can declare fields as final.</li>
 <li>The <code>readonly</code> type has been added. Fields of records can also be
 declared as <code>readonly</code>.</li>
 <li>Intersection types have been added.</li>
