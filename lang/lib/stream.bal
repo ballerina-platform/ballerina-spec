@@ -44,8 +44,8 @@ type Type1 any|error;
 #
 # + stm - the stream
 # + return - a new iterator object that will iterate over the members of `stm`.
-public function iterator(stream<Type,CompletionType> stm) returns object {
-    public function next() returns record {|
+public isolated function iterator(stream<Type,CompletionType> stm) returns object {
+    public isolated function next() returns record {|
         Type value;
     |}|CompletionType;
 } = external;
@@ -55,7 +55,7 @@ public function iterator(stream<Type,CompletionType> stm) returns object {
 #
 # + stm - the stream to close
 # + return - () if the close completed successfully, otherwise an error
-public function close(stream<Type,CompletionType> stm) returns CompletionType? = external;
+public isolated function close(stream<Type,CompletionType> stm) returns CompletionType? = external;
 
 // Functional iteration
 
