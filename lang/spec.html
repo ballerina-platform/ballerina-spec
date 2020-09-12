@@ -5593,11 +5593,11 @@ E<sub>2</sub></code>.
 
 <section>
 <h4>Join clause</h4>
-<pre class="grammar">join-clause := <code>join</code> typed-binding-pattern <code>in</code> expression join-on-condition
+<pre class="grammar">join-clause := [<code>outer</code>] <code>join</code> typed-binding-pattern <code>in</code> expression join-on-condition
 join-on-condition := <code>on</code> expression <code>equals</code> expression
 </pre>
 <p>
-A join clause performs an inner equijoin.
+A join clause performs an inner or left outer equijoin.
 </p>
 <p>
 A <code>join</code> clause is executed as follows:
@@ -5634,8 +5634,12 @@ in scope resulting in a value <var>k</var>;</li>
 <li>let <var>fs</var> be the list of frames for key <var>k</var> in <var>m</var>;</li>
 <li>for each frame <var>f'</var> in <var>fs</var>
 <ul>
-<li>emit a frame consisting of <var>f</var> augmented with <var>f'</var>.</li>
+<li>emit a frame consisting of <var>f</var> augmented with <var>f'</var>;</li>
 </ul>
+</li>
+<li>if <code>outer</code> was specified and <var>fs</var> is empty, then emit a
+single frame consisting of <var>f</var> augmented with a frame that binds every
+variable occurring in typed-binding-pattern to <code>()</code>.
 </li>
 </ul>
 </li>
@@ -5652,6 +5656,14 @@ following <code>in</code>, nor for the expression on the right of
 <code>equals</code>. Variables bound by the typed-binding-pattern are not in
 scope for the expression following <code>in</code>, nor for the expression on
 the left of <code>equals</code>.
+</p>
+<p>
+When <code>outer</code> is specified, the typed-binding-pattern is treated
+specially: the inferable-type-descriptor in the typed-binding-pattern must be
+<code>var</code>, and for each variable occurring in the typed-binding-pattern,
+if the type that would be inferred usually for the variable would be
+<var>T</var>, then the type inferred in this case will be
+<var>T</var><code>?</code>.
 </p>
 
 </section>
