@@ -19,4 +19,4 @@
 # This sets the cancellation flag in the strand corresponding to `f`.
 # Each time that a strand yields, it will check the cancellation flag
 # and terminate abnormally if the flag is set.
-public function cancel(future f) returns () = external;
+public isolated function cancel(future f) returns () = external;
