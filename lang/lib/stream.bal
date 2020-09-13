@@ -64,7 +64,7 @@ public isolated function close(stream<Type,CompletionType> stm) returns Completi
 # + stm - the stream
 # + func - a function to apply to each member
 # + return - new stream containing result of applying `func` to each member of `stm` in order
-public function 'map(stream<Type,CompletionType> stm, function(Type val) returns Type1 func)
+public isolated function 'map(stream<Type,CompletionType> stm, @isolatedParam function(Type val) returns Type1 func)
    returns stream<Type1,CompletionType> = external;
 
 # Applies a function to each member of a stream.
@@ -72,14 +72,14 @@ public function 'map(stream<Type,CompletionType> stm, function(Type val) returns
 #
 # + stm - the stream
 # + func - a function to apply to each member
-public function forEach(stream<Type,CompletionType> stm, function(Type val) returns () func) returns CompletionType = external;
+public isolated function forEach(stream<Type,CompletionType> stm, @isolatedParam function(Type val) returns () func) returns CompletionType = external;
 
 # Selects the members from a stream for which a function returns true.
 #
 # + stm - the stream
 # + func - a predicate to apply to each member to test whether it should be selected
 # + return - new stream only containing members of `stm` for which `func` evaluates to true
-public function filter(stream<Type,CompletionType> stm, function(Type val) returns boolean func)
+public isolated function filter(stream<Type,CompletionType> stm, @isolatedParam function(Type val) returns boolean func)
    returns stream<Type,CompletionType> = external;
 
 # Combines the members of a stream using a combining function.
@@ -90,5 +90,5 @@ public function filter(stream<Type,CompletionType> stm, function(Type val) retur
 # + func - combining function
 # + initial - initial value for the first argument of combining function `func`
 # + return - result of combining the members of `stm` using `func`
-public function reduce(stream<Type,ErrorType?> stm, function(Type1 accum, Type val) returns Type1 func, Type1 initial)
+public isolated function reduce(stream<Type,ErrorType?> stm, @isolatedParam function(Type1 accum, Type val) returns Type1 func, Type1 initial)
    returns Type1|ErrorType = external;
