@@ -61,7 +61,7 @@ A function or method can be declared with the qualifier `transactional`. This me
 
 
 *   the scope of its default worker is transactional
-*   it can only be called from a lexical scope
+*   it can only be called from a lexical scope that is transactional
 
 This is similar to `MANDATORY` in JEE, except that it is checked at compile-time.
 
