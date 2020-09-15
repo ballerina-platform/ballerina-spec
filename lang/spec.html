@@ -2957,6 +2957,213 @@ according to the following table.
 </table>
 </section>
 <section>
+<h4 id="ToString">ToString</h4>
+<p>
+ToString(v,style) converts a value to a string in one of three styles. The
+conversion can be performed in one of three styles, specified by the style
+parameter, which are as follows.
+</p>
+<ul>
+<li>expression style: produces a string that looks like a Ballerina expression; there are
+two cases
+<ul>
+<li>when v belongs to anydata and does not have cycles, it will produce a string that
+is a valid Ballerina expression, such that evaluating that string will result in a value v'
+for which DeepEquals(v, v') is true</li>
+<li>otherwise, it will produce a string that is either not a valid Ballerina expression
+or is a valid Ballerina expression that evaluates to a value that does not belong type type anydata</li>
+</ul>
+</li>
+<li>informal style: similar to expression style, but does not preserve all the distinctions that
+expression style does, and avoids syntax that requires a knowledge of Ballerina</li>
+<li>direct style: this does a direct conversion of the value to a string rather than producing
+a string that describes the value
+<ul>
+<li>if v is a string, then the result of ToString(v,direct) is v</li>
+<li>if v is XML, then the result of ToString(v,direct) is v in XML syntax</li>
+<li>direct style falls back to informal style for basic types where there is no
+other natural more direct conversion</li>
+</ul>
+</li>
+</ul>
+<p>
+The following table summarizes the result of ToString(v,style) for each basic type.
+</p>
+<table>
+  <tr>
+   <td rowspan="2">Basic type of v
+   </td>
+   <td colspan="3">style
+   </td>
+  </tr>
+  <tr>
+   <td>expression
+   </td>
+   <td>informal
+   </td>
+   <td>direct
+   </td>
+  </tr>
+  <tr>
+   <td>nil
+   </td>
+   <td><code>()</code>
+   </td>
+   <td><code>null</code>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>true
+   </td>
+   <td colspan="3"><code>true</code>
+   </td>
+  </tr>
+  <tr>
+   <td>int
+   </td>
+   <td colspan="3"><code>2</code>
+   </td>
+  </tr>
+  <tr>
+   <td rowspan="3">float
+   </td>
+   <td colspan="3"><code>1.0</code>
+   </td>
+  </tr>
+  <tr>
+   <td><code>float:NaN</code>
+   </td>
+   <td colspan="2"><code>NaN</code>
+   </td>
+  </tr>
+  <tr>
+   <td><code>float:Infinity</code>
+   </td>
+   <td colspan="2"><code>Infinity</code>
+   </td>
+  </tr>
+  <tr>
+   <td rowspan="2">decimal
+   </td>
+   <td><code>1d</code>
+   </td>
+   <td colspan="2"><code>1</code>
+   </td>
+  </tr>
+  <tr>
+   <td><code>1.20d</code>
+   </td>
+   <td colspan="2"><code>1.20</code>
+   </td>
+  </tr>
+  <tr>
+   <td>string
+   </td>
+   <td colspan="2"><code>"xyz"</code>
+   </td>
+   <td><code>xyz</code>
+   </td>
+  </tr>
+  <tr>
+   <td>xml
+   </td>
+   <td><code>xml`&lt;d>t&lt;/d>`</code>
+   </td>
+   <td><code>`&lt;d>t&lt;/d>`</code>
+   </td>
+   <td><code>&lt;d>t&lt;/d></code>
+   </td>
+  </tr>
+  <tr>
+   <td rowspan="2">array
+   </td>
+   <td colspan="3"><code>[<var>X</var>,<var>Y</var>]</code>
+   </td>
+  </tr>
+  <tr>
+   <td><var>X</var>, <var>Y</var> expression style
+   </td>
+   <td colspan="2"><var>X</var>,<var>Y</var> informal style
+   </td>
+  </tr>
+  <tr>
+   <td rowspan="2">map
+   </td>
+   <td colspan="3"><code>{"x":<var>X</var>,"y":<var>Y</var>}</code>
+   </td>
+  </tr>
+  <tr>
+   <td><var>X</var>, <var>Y</var> expression style
+   </td>
+   <td colspan="2"><var>X</var>,<var>Y</var> informal style
+   </td>
+  </tr>
+  <tr>
+   <td rowspan="2">table
+   </td>
+   <td><code>table key(k) [<var>R<sub>1</sub></var>,<var>R<sub>2</sub></var>]</code>
+   </td>
+   <td colspan="2"><code>[<var>R<sub>1</sub></var>,<var>R<sub>2</sub></var>]</code>
+   </td>
+  </tr>
+  <tr>
+   <td><var>R<sub>1</sub></var>,<var>R<sub>2</sub></var> expression style
+   </td>
+   <td colspan="2"><var>R<sub>1</sub></var>,<var>R<sub>2</sub></var> informal style
+   </td>
+  </tr>
+  <tr>
+   <td rowspan="3">error
+   </td>
+   <td colspan="3"><code>error D<sub>1</sub>&amp;D<sub>2</sub> (M,C,F<sub>1</sub>=V<sub>1</sub>,F<sub>2</sub>=V<sub>2</sub>)</code>
+   </td>
+  </tr>
+  <tr>
+   <td>V<sub>1</sub>, V<sub>2</sub> expression style, D<sub>1</sub>,D<sub>2</sub>  in the form <code>{<var>module-id</var>}<var>local-id</var></code>, M expression style, C expression style
+   </td>
+   <td colspan="2">V<sub>1</sub>, V<sub>2</sub> informal style, just local id of D<sub>1</sub>,D<sub>2</sub>, M informal style, C informal style
+   </td>
+  </tr>
+  <tr>
+   <td colspan="3">D<sub>1</sub>,D<sub>2</sub> are type-ids, M is the error message, C is the error cause, F<sub>1</sub>=V<sub>1</sub>,F<sub>2</sub>=V<sub>2</sub> are field names and values of the error detail
+   </td>
+  </tr>
+  <tr>
+   <td>object w/o toString method
+   </td>
+   <td colspan="3"><code>object D1&amp;D2 U</code> where U is an identifier that uniquely identifies the object (objects will have the same identifier only if they are <code>===</code>)
+   </td>
+  </tr>
+  <tr>
+   <td rowspan="2">object with toString method
+   </td>
+   <td><code>object S</code>
+   </td>
+   <td colspan="2"><code>S</code>
+   </td>
+  </tr>
+  <tr>
+    <td colspan="3"><code>S</code> in direct style where S is the result of calling the toString method</td>
+  </tr>
+  <tr>
+   <td rowspan="2"><em>cycle detected</em>
+   </td>
+   <td><code>...[N]</code>
+   </td>
+   <td colspan="2"><code>...</code>
+   </td>
+  </tr>
+  <tr>
+   <td>N is 0-based index down path from root object to object where cycle is detected
+   </td>
+   <td colspan="2">
+   </td>
+  </tr>
+</table>
+</section>
+<section>
 <h4 id="ordering">Ordering</h4>
 <p>
 There are three abstract operations related to ordering: Compare(x, y),
@@ -3770,12 +3977,11 @@ interpolation must be a simple type and must not be nil. Within a
 <code>interpolation</code> is interpreted as a literal character. A
 string-template-expr is evaluated by evaluating the expression in each
 interpolation in the order in which they occur, and converting the result of the
-each evaluation to a string as if using by <code>toString</code> function of the
-<code>lang.value</code> module of the lang library. The result
-of evaluating the <code>string-template-expr</code> is a string comprising the
-literal characters and the results of evaluating and converting the
-interpolations, in the order in which they occur in the
-<code>BacktickString</code>.
+each evaluation to a string using the <a href="#ToString">ToString</a> abstract
+operation with the direct style. The result of evaluating the
+<code>string-template-expr</code> is a string comprising the literal characters
+and the results of evaluating and converting the interpolations, in the order in
+which they occur in the <code>BacktickString</code>.
 </p>
 <p>
 A literal <code>`</code> can be included in string template by using an

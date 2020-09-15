@@ -82,68 +82,15 @@ public isolated function cloneWithType(anydata v, typedesc<AnydataType> t) retur
 # + return - true if read-only, false otherwise
 public isolated function isReadOnly(anydata v) returns boolean = external;
 
-# Performs a minimal conversion of a value to a string.
-# The conversion is minimal in particular in the sense
-# that the conversion applied to a value that is already
-# a string does nothing.
+# Performs a direct conversion of a value to a string.
+# The conversion is direct in the sense that when applied to a value that is already
+# a string it leaves the value unchanged.
+#
 # + v - the value to be converted to a string
 # + return - a string resulting from the conversion
-# 
-# The result of `toString(v)` is as follows:
 #
-# - if `v` is a string, then returns `v`
-# - if `v` is `()`, then returns an empty string
-# - if `v` is boolean, then the string `true` or `false`
-# - if `v` is an int, then return `v` represented as a decimal string
-# - if `v` is a float or decimal, then return `v` represented as a decimal string,
-#   with a decimal point only if necessary, but without any suffix indicating the type of `v`;
-#   return `NaN`, `Infinity` for positive infinity, and `-Infinity` for negative infinity
-# - if `v` is a list, then returns the results of toString on each member of the list
-#   separated by a space character
-# - if `v` is a mapping, then returns key=value for each member separated by a space character
-# - if `v` is xml, then returns `v` in XML format (as if it occurred within an XML element)
-# - if `v` is table, then returns the results of toString on each member of the table
-#    separate by a newline character
-# - if `v` is an error, then a string consisting of the following in order
-#     1. the string `error`
-#     2. a space character
-#     3. if the set of type-ids of the error is not empty
-#         1. a space character
-          2. a string representing the primary type-ids as described below
-#     4. the message string
-#     5. if the detail record is non-empty
-#         1. a space character
-#         2. the result of calling toString on the detail record
-# - if `v` is an object, then
-#     - if `v` provides a `toString` method with a string return type and no required parameters,
-#       then the result of calling that method on `v`
-#     - otherwise, a string consisting of the following in order
-#         1. the string `object`
-#         2. a space character
-#	  3. if the set of type-ids of the object is not empty
-#            1. a space character
-#            2. a string representing the primary type-ids as described below
-#	  4. a string representing the storage identity of the object in an
-#	     implementation-dependent way
-# - if `v` is a typedesc, then
-#     1. the string `typedesc`
-#     2. a space character
-#     3. if the type descriptor is definite and the induced set of type-ids is not empty
-#         1. a space character
-#         2. a string representing the primary type-ids as described below
-#     4. an implementation-dependent string
-# - if `v` is any other behavioral type, then the identifier for the behavioral type
-#   (`function`, `future`, `service` or `handle`)
-#   followed by some implementation-dependent string
-#
-# The string describing a set of type-ids consists of strings describing each type-id
-# separated by `&`. A string describing each primary type-id consists of a string of the
-# form `{M}L` where M describes the module id and L describes the local id. M is of
-# form `o/m` where o is the organization and m is the module name. If the local id is
-# named, then L consists of the name; otherwise, L consists of `$` followed by an integer.
-#
-# Note that `toString` may produce the same string for two Ballerina values
-# that are not equal (in the sense of the `==` operator).
+# The details of the conversion are specified by the ToString abstract operation
+# defined in the Ballerina Language Specification, using the direct style.
 public isolated function toString((any|error) v) returns string = external;
 
 // JSON conversion
