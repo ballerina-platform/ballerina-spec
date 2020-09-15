@@ -93,6 +93,26 @@ public isolated function isReadOnly(anydata v) returns boolean = external;
 # defined in the Ballerina Language Specification, using the direct style.
 public isolated function toString((any|error) v) returns string = external;
 
+# Converts a value to a string that describes the value in Ballerina syntax.
+# + v - the value to be converted to a string
+# + return - a string resulting from the conversion
+#
+# If `v` is anydata and does not have cycles, then the result will
+# conform to the grammar for a Ballerina expression and when evaluated
+# will result in a value that is == to v.
+#
+# The details of the conversion are specified by the ToString abstract operation
+# defined in the Ballerina Language Specification, using the expression style.
+public isolated function toBalString(any|error v) returns string = external;
+
+# Parses and evaluates a subset of Ballerina expression syntax.
+# + s - the string to be parsed and evaluated
+# return - the result of evaluating the parsed expression, or
+# an error if the string cannot be parsed
+# The subset of Ballerina expression syntax supported is that produced
+# by toBalString when applied to an anydata value.
+function fromBalString(string s) returns anydata|error = external;
+
 // JSON conversion
 
 # Converts a value of type `anydata` to `json`.
