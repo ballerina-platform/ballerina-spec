@@ -178,13 +178,7 @@ It makes sense to have non-isolated methods of isolated objects: they are constr
 
 With the proposed fix to #[574](https://github.com/ballerina-platform/ballerina-spec/issues/574), you can get a method bound to a particular object by accessing the method name like a field name. Since isolated methods treats the self variable like a special parameter, the bound method will be isolated only if the method and the object are isolated.
 
-## Standard library implications
-
-For this to be useful, many of the functions in the standard library will need to be declared as isolated. It would be good if the compiler can help with this.
-
-## Further work
-
-### Access to module-level state
+## Isolated module-level variables
 
 We can extend allow safe access to module-level state by using a similar approach to isolated objects:
 
@@ -202,6 +196,61 @@ Note that a destructuring assignment statement can be used to swap two isolated 
 ```
 x, y = y, x
 ```
+
+
+## Standard library implications
+
+For this to be useful, many of the functions in the standard library will need to be declared as isolated. It would be good if the compiler can help with this.
+
+## Further work
+
+### Strand creation
+
+In the above, we prohibit isolated functions from creating new strands either with named
+workers or start. This will be too restrictive.
+
+A named worker gets input from:
+* parameters
+* variables declared outside the worker in the initialization section of the function
+* inter-worker receive
+
+Inter-worker receive is safe (because it's cloned), but the other two
+or not. We can make them safe by requiring that a named worker can
+only access a parameter or variable outside the worker if the type of
+the worker is a subtype of `readonly | isolated object {}`; in
+addition, a variable must be final (parameters are automatically
+final). The named worker must also follow the restrictions the default
+worker (e.g. only call isolated functions).
+
+This doesn't give the named worker any access to mutable parameters.
+This would be problematic for at least two reasons.
+
+- There is no way to guarantee that a named worker does not continue to
+execute after the default worker returns. Even if the default worker
+waits for a named worker, the default worker may panic before it gets
+a chance to wait. (Perhaps the language should do something about this,
+but it doesn't currently.)
+
+- Two mutable parameters may share mutable state, so it wouldn't work
+to divide up the parameters between workers.
+
+A named worker can produce output by:
+* worker return value
+* storing into variables declared outside the worker in the initialization section
+* inter-worker send
+
+Inter-worker send is safe, because it's cloned. Storing into variables
+obviously needs to be disallowed. The worker return value is safe,
+even thought it may be mutable, because ownership is transferred from
+the named worker to the waiting worker. We already have a constraint
+that only one wait on a named worker can succeed (see issue #139).
+
+Similarly, we can allow `start` by requiring
+* the function type must be isolated
+* the argument types must be a subtype of `readonly | isolated object {}`
+(this is a restriction on the static types of the supplied arguments,
+not on the declared parameter types of the function)
+
 
 ### Escape hatch
 
