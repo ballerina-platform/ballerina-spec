@@ -1625,10 +1625,11 @@ A <code>default-value</code> specifies a default value for the field, which is
 used when the record type descriptor is used to construct a mapping value but no
 value is specified explicitly for the field. The type descriptor contains a
 0-argument function closure for each default value. The closure is created from
-the expression when the type descriptor is resolved. The closure is evaluated to
-create a field value each time the default is used in the construction of a
-mapping value. The default value does not affect the type described by the type
-descriptor.
+the expression when the type descriptor is resolved. The expression must meet
+the requirements for an <a href="#isolated_functions">isolated function</a>. The
+closure is evaluated to create a field value each time the default is used in
+the construction of a mapping value. The default value does not affect the type
+described by the type descriptor.
 </p>
 <p>
 A <code>record-type-inclusion</code> includes fields from a named record type.
@@ -1804,7 +1805,7 @@ a non-empty set of type-ids.
 <h4 id="functions">Functions</h4>
 
 <pre
-class="grammar">function-type-descriptor := <code>function</code> function-signature
+class="grammar">function-type-descriptor := [isolated-qual] <code>function</code> function-signature
 function-signature := <code>(</code> param-list <code>)</code> return-type-descriptor
 </pre>
 <p>
@@ -1879,7 +1880,10 @@ affect typing. The closures computing the defaultable parameters are created
 when the type descriptor is resolved; the default value is computed by calling
 the closure each time the function is called and the corresponding parameter is
 not specified. Whether a parameter is defaultable is used at compile time, but
-the closure that computes the default value is only used at runtime.
+the closure that computes the default value is only used at runtime. If the
+function-type-descriptor includes an isolated-qual, then an expression in a
+default-value must meet the requirements for an <a
+href="#isolated_functions">isolated function</a>.
 </p>
 <p>
 The name of each parameter is included in the function's type descriptor. A
@@ -1929,6 +1933,30 @@ parameter list type P is a subtype of a function type with return type R' and
 parameter list type P' if and only if R is a subtype of R' and P' is a subtype
 of P. A function value f belongs to a function type T if the declared type of f
 is a subtype of T.
+</p>
+
+<pre
+class="grammar">isolated-qual := <code>isolated</code>
+</pre>
+<p>
+Every function value has an isolated bit in addition to a read-only bit. If a
+function type includes the <code>isolated-qual</code>, then a function value
+belongs to the type only if the value's isolated bit is set; if the function
+type does not include <code>isolated-qual</code>, then whether a function value
+belongs to the type is not affected by the value's isolated bit.
+</p>
+<p>
+The read-only bit of a function value is always on, because a function's code
+cannot be modified. It provides no information about what happens when the
+function is executed; this is the role of the isolated bit. A function value
+with its isolated bit on is called an isolated function. The invocation of an
+isolated function is guaranteed not to result in access to a mutable storage
+location unless the storage location is reachable from an argument of that
+function invocation and the access happens on the strand on which the function
+is invoked. Reachable here means reachable by a succession of reads. This is the
+same concept used for readonly: any storage location reachable from a read-only
+value is read-only. Thus an invocation of an isolated function with only
+readonly arguments will access only read-only storage locations.
 </p>
 </section>
 <section>
@@ -2006,7 +2034,7 @@ the object has been constructed.
 <pre
 class="grammar">method-decl :=
    metadata
-   [<code>public</code>][remote-qual]
+   [<code>public</code>] [remote-qual] [isolated-qual]
    <code>function</code> method-name function-signature <code>;</code>
 method-name := identifier
 </pre>
@@ -4369,7 +4397,7 @@ specified in the type-descriptor of the object-field.</li>
 
 <pre
 class="grammar">method-defn :=
-   metadata [object-visibility-qual] [remote-qual]
+   metadata [object-visibility-qual] [remote-qual] [isolated-qual]
    <code>function</code> method-name function-signature method-defn-body
 method-defn-body := function-defn-body
 </pre>
@@ -4485,7 +4513,7 @@ class="grammar">service-constructor-expr := [annots] <code>service</code> servic
 service-body-block := <code>{</code> service-method-defn* <code>}</code>
 service-method-defn :=
    metadata
-   [<code>resource</code>]
+   [<code>resource</code>] [isolated-qual]
    <code>function</code> identifier function-signature method-defn-body
 </pre>
 <p>
@@ -4979,7 +5007,7 @@ the point where the error constructor was evaluated.
 
 <pre
 class="grammar">anonymous-function-expr := explicit-anonymous-function-expr | infer-anonymous-function-expr
-explicit-anonymous-function-expr := [annots] <code>function</code> function-signature (block-function-body|expr-function-body)
+explicit-anonymous-function-expr := [annots] [isolated-qual] <code>function</code> function-signature (block-function-body|expr-function-body)
 </pre>
 <p>
 Evaluating an anonymous-function-expr creates a closure, whose basic type is
@@ -4992,16 +5020,6 @@ If block-function-body refers to a block-scope variable defined
 outside of the block-function-body, the closure will capture a reference to that
 variable; the captured reference will refer to the same storage as the original
 reference not a copy.
-</p>
-
-<pre
-class="grammar">expr-function-body := <code>=></code> expression
-</pre>
-<p>
-An expr-function-body is used for an expression-bodied function, that is a
-function whose body is specified by an expression. An expr-function-body of the
-form <code>=> <var>E</var></code> is short for a block-function-body <code>{
-return <var>E</var >}</code>.
 </p>
 
 <pre
@@ -6225,7 +6243,10 @@ strand must be part of the same thread as the current strand.
 
 </section>
 <section>
-<h3>Function and worker execution</h3>
+<h3>Function bodies</h3>
+
+<section>
+<h4>Workers</h4>
 
 <pre
 class="grammar">block-function-body :=
@@ -6330,6 +6351,82 @@ identify the strand to wait on cannot fail at runtime.
 <p>
 In the above, function includes method, and function call includes method call.
 </p>
+</section>
+
+<section>
+<h4>Expression-bodied functions</h4>
+
+<pre
+class="grammar">expr-function-body := <code>=></code> expression
+</pre>
+
+<p>
+An expr-function-body is used for an expression-bodied function, that is a
+function whose body is specified by an expression. An expr-function-body of the
+form <code>=> <var>E</var></code> is short for a block-function-body <code>{
+return <var>E</var >}</code>.
+</p>
+
+</section>
+
+<section>
+<h4>External functions</h4>
+
+<pre
+class="grammar">external-function-body := <code>=</code> [annots] <code>external</code> 
+</pre>
+
+<p>
+An <code>external-function-body</code> means that the implementation of the
+function is not provided in the Ballerina source module. A function-defn-body
+with a function-signature that is dependently-typed must be an
+external-function-body.
+</p>
+
+</section>
+<section>
+<h4 id="isolated_functions">Isolated functions</h4>
+<p>
+The body of a function or method declared as <code>isolated</code> must meet the
+following requirements.
+</p>
+<ul>
+<li>Only isolated functions can be called:
+<ul>
+<li>in a function-call-expr, the function-reference must refer to a function
+whose static type is isolated;</li>
+<li>in a method-call-expr, the method-name must refer to a method or
+function whose static type is isolated.</li>
+</ul>
+</li>
+<li>Module-level state can be read only if it is immutable: in a variable-reference-expr
+<ul>
+<li>if the variable-reference refers to an identifier defined with a
+module-var-decl, the module-var-decl must include <code>final</code>; and</li>
+<li>if the variable-reference refers to an identifier defined with a
+module-var-decl, listener-decl or service-decl, the static type of the
+referenced variable must be a subtype of <code>readonly</code>.</li>
+</ul>
+</li>
+<li>Module-level state cannot be mutated: a variable-reference-lvexpr cannot
+refer to a variable defined by a module-var-decl.</li>
+<li>Captured variables must be immutable: if the body is part of an
+anonymous-function-expr, then any captured variable references must refer to
+variables that are both final (either explicitly or implicitly) and have a
+static type that is a subtype of <code>readonly</code>.</li>
+<li>New workers cannot be started: the following constructs are not allowed
+<ul>
+<li>named-worker-decl</li>
+<li>fork-stmt</li>
+<li>start-action</li>
+</ul>
+</li>
+</ul>
+<p>
+The result of these requirements is that an isolated function can only access
+mutable state that is reachable from its parameters.
+</p>
+</section>
 </section>
 <section>
 <h3>Statement execution</h3>
@@ -8101,20 +8198,13 @@ fails.</li>
 <pre
 class="grammar">function-defn := 
    metadata
-   [<code>public</code>]
+   [<code>public</code>] [isolated-qual]
    <code>function</code> identifier function-signature function-defn-body
 function-defn-body :=
    block-function-body
    | expr-function-body <code>;</code>
    | external-function-body <code>;</code>
-external-function-body := <code>=</code> [annots] <code>external</code> 
 </pre>
-<p>
-An <code>external-function-body</code> means that the implementation of the
-function is not provided in the Ballerina source module. A function-defn-body
-with a function-signature that is dependently-typed must be an
-external-function-body.
-</p>
 <p>
 If a module has a function-defn with an identifier of <code>init</code>, it is
 called called automatically by the system at the end of the initialization of
@@ -8888,7 +8978,9 @@ object constructor expression, which includes method definitions, or by applying
 methods and fields of an object are not in a single symbol space. Classes and
 object constructors can declare fields as final.</li>
 <li>The <code>readonly</code> type has been added. Fields of records can also be
-declared as <code>readonly</code>.</li>
+declared as <code>readonly</code>. Functions can be declared as
+<code>isolated</code>; this works in conjunction with <code>readonly</code> to
+support concurrency safety.</li>
 <li>Intersection types have been added.</li>
 <li>Distinct types have been added; these provide the functionality of nominal
 types with the framework of a structural type system.</li>
