@@ -8212,6 +8212,34 @@ using <code><var>obj</var></code>'s <code>__attach</code> method;</li>
 fails.</li>
 </ol>
 </section>
+
+<section>
+<h4>Isolated inference</h4>
+
+<p>
+A listener object can use the isolated bit of a resource method to determine
+whether it is safe to make concurrent calls to the resource method.
+</p>
+<p>
+The compiler may infer that a resource method is isolated even it is not
+explicitly declared as such. In doing so, it analyzes a module to determine
+whether there is a set of definitions, where each definition is a
+<code>service-method-defn</code>, <code>function-defn</code> or
+<code>method-defn</code>, and no definition is explicitly declared as isolated,
+such that if all the definitions were declared as isolated, then they all would
+meet the requirements for <a href="#isolated_functions">isolated functions</a>.
+If so, the isolated bit of the function value associated with each definition is
+set.
+</p>
+<p>
+This inference is purely an optimization to improve service concurrency and is
+subject to two constraints. First, any inferences do not affect the static type
+of functions visible to other modules. Second, any functions or methods
+explicitly declared as isolated must satisfy the requirements for isolated
+functions without relying on inference.
+</p>
+
+</section>
 </section>
 
 <section>
