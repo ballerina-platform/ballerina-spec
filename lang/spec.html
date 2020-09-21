@@ -4381,8 +4381,11 @@ field-initializer := expression
 An <code>object-field</code> declares and initializes a field of the object.
 </p>
 <p>
-If a field does not specify a field-initializer, then there must be an <code>init</code>
-method and the <code>init</code> method must initialize the field.
+If a field does not specify a field-initializer, then there must be an
+<code>init</code> method and the <code>init</code> method must initialize the
+field. The field-initializer must be the requirements for an isolated function
+unless there the <code>init</code> method is present and not declared as
+<code>isolated</code>.
 </p>
 <p>
 If <code>final</code> is present, then the field must be assigned to exactly
@@ -4451,7 +4454,11 @@ not affect when an object value belongs to a type. The <code>init</code> method
 can be called in a <code>method-call-expr</code> only when the expression
 preceding the <code>.</code> is <code>self</code>.
 </p>
-
+<p>
+A missing <code>init</code> method is equivalent to an isolated
+<code>init</code> method with no parameters and an empty body (which will always
+return nil).
+</p>
 <pre
 class="grammar">object-visibility-qual := <code>public</code>|<code>private</code>
 </pre>
@@ -4482,9 +4489,7 @@ class. It is a compile error if the type-descriptor if the arg-list does not
 match the signature of the class's <code>init</code> method. If the result of
 calling the <code>init</code> method is an error value e, then the result of
 evaluating the explicit-new-expr is e; otherwise the result is the newly
-initialized object. A class without an <code>init</code> method behaves as it
-had an <code>init</code> method with no parameters and an empty body (which will
-always return nil).
+initialized object.
 </p>
 <p>
 When the class-reference refers to a stream type <code>stream&lt;T,E&gt;</code>,
@@ -6402,7 +6407,9 @@ following requirements.
 <li>in a function-call-expr, the function-reference must refer to a function
 whose static type is isolated;</li>
 <li>in a method-call-expr, the method-name must refer to a method or
-function whose static type is isolated.</li>
+function whose static type is isolated;</li>
+<li>in a new-expr, the init method that is called must be declared as isolated
+(a missing init method is equivalent is implicitly isolated).</li>
 </ul>
 </li>
 <li>Module-level state can be read only if it is immutable: in a variable-reference-expr
