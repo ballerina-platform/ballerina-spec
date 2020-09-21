@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2034,7 +2035,7 @@ the object has been constructed.
 <pre
 class="grammar">method-decl :=
    metadata
-   [<code>public</code>] [remote-qual] [isolated-qual]
+   [<code>public</code>] method-quals
    <code>function</code> method-name function-signature <code>;</code>
 method-name := identifier
 </pre>
@@ -2048,10 +2049,16 @@ every <code>object-field-descriptor</code> in the
 The <code>method-name</code> in a <code>method-decl</code> must not be
 <code>init</code>.
 </p>
+
+<pre
+class="grammar">method-quals := (remote-qual | isolated-qual)*
+</pre>
 <p>
-The <code>isolated-qual</code> together with the <code>function-signature</code>
-give the function type of the method. An isolated method has the same access to
-the object on which the method is invoked that it has to parameters.
+Both <code>remote-qual</code> and <code>isolated-qual</code> must occur at most
+once in <code>method-quals</code>. The <code>isolated-qual</code> together with
+the <code>function-signature</code> give the function type of the method. An
+isolated method has the same access to the object on which the method is invoked
+that it has to parameters.
 </p>
 <pre
 class="grammar">remote-qual := <code>remote</code>
@@ -4406,7 +4413,7 @@ specified in the type-descriptor of the object-field.</li>
 
 <pre
 class="grammar">method-defn :=
-   metadata [object-visibility-qual] [remote-qual] [isolated-qual]
+   metadata [object-visibility-qual] method-quals
    <code>function</code> method-name function-signature method-defn-body
 method-defn-body := function-defn-body
 </pre>
@@ -4523,15 +4530,17 @@ is not a class or stream type.
 class="grammar">service-constructor-expr := [annots] <code>service</code> service-body-block
 service-body-block := <code>{</code> service-method-defn* <code>}</code>
 service-method-defn :=
-   metadata
-   [<code>resource</code>] [isolated-qual]
+   metadata service-method-quals
    <code>function</code> identifier function-signature method-defn-body
+service-method-quals := (<code>resource</code> | isolated-qual)*
 </pre>
 <p>
 A <code>service-constructor-expr</code> constructs a service value. The result
 of evaluating a service-constructor-expr is a value of type service. If a
 service-method-defn contains a <code>resource</code> qualifier, then it defines
-a resource method. The self variable can be used in a method-defn-body of a
+a resource method. Both the <code>resource</code> and <code>isolated</code>
+qualifiers can occur at most once in a service-method-defn. The
+<code>self</code> variable can be used in a method-defn-body of a
 service-method-defn in the same way as for objects.
 </p>
 <p>
