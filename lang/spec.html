@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -545,7 +544,7 @@ terms of names of fields (required keys) and value for each field</td>
 within the table by a key derived from the mapping</td>
   </tr>
   <tr>
-   <td rowspan="8">basic, behavioral</td>
+   <td rowspan="7">basic, behavioral</td>
    <td>error</td>
    <td>an indication that there has been an error, with a string identifying the
 reason for the error, and a mapping giving additional details about the error</td>
@@ -562,10 +561,6 @@ type</td>
   <tr>
    <td>object</td>
    <td>a combination of named fields and named methods</td>
-  </tr>
-  <tr>
-   <td>service</td>
-   <td>a collection of named methods, including resource methods</td>
   </tr>
   <tr>
    <td>typedesc</td>
@@ -1745,7 +1740,6 @@ class="grammar">behavioral-type-descriptor :=
    | function-type-descriptor
    | object-type-descriptor
    | future-type-descriptor
-   | service-type-descriptor
    | typedesc-type-descriptor
    | handle-type-descriptor
    | stream-type-descriptor
@@ -1994,7 +1988,7 @@ bit. Whether an object is read-only can be described separately using a
 
 <pre
 class="grammar">object-type-descriptor :=
-   [<code>client</code>] <code>object</code> <code>{</code>
+   [object-network-qual] <code>object</code> <code>{</code>
       object-member-descriptor*
    <code>}</code>
 object-member-descriptor :=
@@ -2002,11 +1996,6 @@ object-member-descriptor :=
    | method-decl
    | object-type-inclusion
 </pre>
-<p>
-If the <code>object-type-descriptor</code> specifies <code>client</code>, then
-the object type is a client object type. A client object type may have remote
-methods; other objects types must not.
-</p>
 
 <section>
 <h5>Fields</h5>
@@ -2034,8 +2023,7 @@ the object has been constructed.
 
 <pre
 class="grammar">method-decl :=
-   metadata
-   [<code>public</code>] method-quals
+   metadata method-decl-quals
    <code>function</code> method-name function-signature <code>;</code>
 method-name := identifier
 </pre>
@@ -2051,45 +2039,85 @@ The <code>method-name</code> in a <code>method-decl</code> must not be
 </p>
 
 <pre
-class="grammar">method-quals := (remote-qual | isolated-qual)*
+class="grammar">method-decl-quals :=
+   <code>public</code> [isolated-qual]
+   | (remote-qual | isolated-qual)*
 </pre>
 <p>
-Both <code>remote-qual</code> and <code>isolated-qual</code> must occur at most
-once in <code>method-quals</code>. The <code>isolated-qual</code> together with
-the <code>function-signature</code> give the function type of the method. An
-isolated method has the same access to the object on which the method is invoked
-that it has to parameters.
+Neither <code>remote-qual</code> not <code>isolated-qual</code> can occur more
+than once in <code>method-decl-quals</code>. The <code>isolated-qual</code>
+together with the <code>function-signature</code> give the function type of the
+method. An isolated method has the same access to the object on which the method
+is invoked that it has to parameters.
 </p>
+
+</section>
+
+<section>
+<h5>Network interaction</h5>
+<p>
+Objects are the basis for Ballerina's network interaction primitives. There are
+two special kinds of object for network interaction: client objects and service
+objects. A client object supports network interaction with a remote system that
+is originated by the Ballerina program. A service object supports network
+interaction with a remote system that is originated by the remote system. An
+object may be a client object or a service object or neither; it cannot be both
+a client object and a service object. An object that is a client object or a
+service object is a network interaction object.
+</p>
+
+<pre
+class="grammar">object-network-qual := <code>client</code> | <code>service</code>
+</pre>
+
+<p>
+If the <code>object-network-qual</code> is <code>client</code>, then an object
+belongs to the type only if it is a client object. If the
+<code>object-network-qual</code> is <code>service</code>, then an object belongs
+to the type only if it is a service object. If <code>object-network-qual</code>
+is not present, then an object belongs to the type regardless of whether it is a
+client object or service object or neither. A <code>object-network-qual</code>
+is not allowed in conjunction with <code>public</code>.
+</p>
+
 <pre
 class="grammar">remote-qual := <code>remote</code>
 </pre>
 <p>
-A method that is declared with the <code>remote</code> qualifier is a remote
-method. A remote method is allowed only in a client object. A remote method is
-invoked using a different syntax from a non-remote method.
+A method with a <code>remote-qual</code> is a remote method. Only a network
+interaction object can have a remote method. A remote method is a method for
+network interaction: a remote method of a client object is for outbound network
+interaction; a remote method of a service object is for inbound network
+interaction. A remote method cannot be called using the normal method call
+syntax. A remote method of a client object can only be invoked by a
+<code>client-remote-method-call-action</code>. A remote method of a service
+object is invoked by a Listener object provided by a library module; Ballerina
+does not yet define a mechanism to allow such a library module to be implemented
+completely in Ballerina.
 </p>
-
 </section>
 <section>
 <h5>Visibility</h5>
 <p>
 Each field and method of an object has a <em>visibility region</em>, which is
 the region of code within which the field or method is visible and can be
-accessed. If an <code>object-field-descriptor</code> or <code>method-decl</code>
-includes the keyword <code>public</code>, then its visibility region consists of
-all the modules of the program. Otherwise the visibility region is the module
-containing this object type descriptor; this is called module-level visibility.
+accessed. If <code>object-field-descriptor</code> or <code>method-decl</code>
+includes <code>public</code>, or if the <code>method-decl</code> includes
+<code>remote</code>, then its visibility region consists of all the modules of
+the program. Otherwise the visibility region is the module containing this
+object type descriptor; this is called module-level visibility.
 </p>
 </section>
 <section>
 <h5>Typing</h5>
 
 <p>
-The shape of an object consists of an unordered collection of object field
-shapes and object method shapes. An object field
-shape or object method shape is a 4-tuple consisting of the name of the field or
-method, the visibility region, a remote flag and a
-shape for the value of the field or for the method's function.
+The shape of an object consists of a network interaction kind and an unordered
+collection of object field shapes and object method shapes. A network
+interaction kind has one of three values: service, client or empty. An object
+field shape or object method shape is a 4-tuple consisting of the name of the
+field or method, the visibility region, a remote flag and a shape for the value
+of the field or for the method's function.
 </p>
 <p>
 An object type is inclusive, in a similar way to an
@@ -2171,34 +2199,6 @@ named worker is a subtype of T.
 <p>
 A value belongs to a type <code>future</code> (without the type-parameter)
 if it has basic type future.
-</p>
-</section>
-<section>
-<h4>[Preview] Services</h4>
-
-<pre
-class="grammar">service-type-descriptor := <code>service</code>
-</pre>
-<p>
-A service is like an object, but differs in the following respects:
-</p>
-<ul>
-<li>a method of a service can be declared as a resource method, but cannot be
-declared as a remote method</li>
-<li>a service is stateless and does not have fields</li>
-</ul>
-<p>
-A resource method is a special kind of method, with associated configuration
-data, that is invoked in response to network messages received by a Listener. A
-service can be thought of as the dual of a client object.
-</p>
-<p>
-All service values belong to the type <code>service</code>.
-</p>
-<p>
-It is planned that a future version of Ballerina will provide a mechanism that
-allows more precise typing of services. In the meantime, implementations can use
-annotations on type definitions to support this.
 </p>
 </section>
 <section>
@@ -2414,7 +2414,6 @@ read-only bit on. These basic types are:
 <li>string</li>
 <li>error</li>
 <li>function</li>
-<li>service</li>
 <li>typedesc</li>
 <li>handle</li>
 </ul>
@@ -2712,19 +2711,21 @@ The Listener type is defined in <code>lang.object</code> as follows.
 </p>
 
 <pre>distinct object {
-   public function attach(service s, string? name = ()) returns error?;
-   public function detach(service s) returns error?;
+   public function attach(service object {} s, string? name = ()) returns error?;
+   public function detach(service object {} s) returns error?;
    public function start() returns error?;
    public function gracefulStop() returns error?;
    public function immediateStop() returns error?;
 }
 </pre>
+<!-- Fix in #615
 <p>
 Note that if an implementation does precise service typing using annotations on
 type definitions, it will need to treat Listener as being parameterized in the
 precise service type that is used to the first argument to
 <code>attach</code>.
 </p>
+-->
 </section>
 <section>
 <h4>RawTemplate</h4>
@@ -3525,7 +3526,6 @@ class="grammar">expression :=
    | structural-constructor-expr
    | object-constructor-expr
    | new-expr
-   | service-constructor-expr
    | variable-reference-expr
    | field-access-expr
    | optional-field-access-expr
@@ -4348,9 +4348,8 @@ fields come from a separate, named class definition.
 
 <pre
 class="grammar">object-constructor-expr :=
-   [annots] [<code>client</code>] <code>object</code> [type-reference] <code>{</code>
-      object-member*
-   <code>}</code>
+   [annots] [object-network-qual] <code>object</code> [type-reference] object-constructor-block
+object-constructor-block := <code>{</code> object-member* <code>}</code>
 object-member := object-field | method-defn
 </pre>
 <p>
@@ -4413,12 +4412,24 @@ specified in the type-descriptor of the object-field.</li>
 
 <pre
 class="grammar">method-defn :=
-   metadata [object-visibility-qual] method-quals
+   metadata method-defn-quals
    <code>function</code> method-name function-signature method-defn-body
 method-defn-body := function-defn-body
+method-defn-quals :=
+   object-visibility-qual [isolated-qual]
+   | (remote-qual | isolated-qual)*
+object-visibility-qual := <code>public</code>|<code>private</code>
 </pre>
+
 <p>
-A <code>method-defn</code> defines a method of an object.
+A <code>method-defn</code> defines a method of an object. Neither
+<code>remote-qual</code> not <code>isolated-qual</code> can occur more than once
+in <code>method-defn-quals</code>. If <code>isolated</code> is present, then the
+method has its isolated bit set and its <code>method-defn-body</code> must
+satisfy the requirements for an <a href="isolated_functions">isolated
+function</a>. If the <code>remote</code> is present, then the method is a remote
+method; this is allowed only when an <code>object-network-qual</code> is present
+in the <code>object-constructor-expr</code>.
 </p>
 <p>
 Within a <code>method-defn-body</code>, the fields and methods of the object are
@@ -4466,9 +4477,6 @@ A missing <code>init</code> method is equivalent to an isolated
 <code>init</code> method with no parameters and an empty body (which will always
 return nil).
 </p>
-<pre
-class="grammar">object-visibility-qual := <code>public</code>|<code>private</code>
-</pre>
 <p>
 A visibility qualifier of <code>private</code> can be used within an
 <code>object-constructor-expr</code> expression; this means that the visibility
@@ -4522,36 +4530,6 @@ implicit-new-expr consisting of just <code>new</code> is equivalent to
 is not a class or stream type.
 </p>
 </section>
-</section>
-<section>
-<h3>Service constructor</h3>
-
-<pre
-class="grammar">service-constructor-expr := [annots] <code>service</code> service-body-block
-service-body-block := <code>{</code> service-method-defn* <code>}</code>
-service-method-defn :=
-   metadata service-method-quals
-   <code>function</code> identifier function-signature method-defn-body
-service-method-quals := (<code>resource</code> | isolated-qual)*
-</pre>
-<p>
-A <code>service-constructor-expr</code> constructs a service value. The result
-of evaluating a service-constructor-expr is a value of type service. If a
-service-method-defn contains a <code>resource</code> qualifier, then it defines
-a resource method. Both the <code>resource</code> and <code>isolated</code>
-qualifiers can occur at most once in a service-method-defn. The
-<code>self</code> variable can be used in a method-defn-body of a
-service-method-defn in the same way as for objects.
-</p>
-<p>
-Each service value has its own type descriptor. (Evaluating a service
-constructor thus has an effect analogous to defining an anonymous object type
-and then creating a value of that type.)
-</p>
-<p>
-The return type of a resource method must be a subtype of <code>error?</code> and must contain
-nil.
-</p>
 </section>
 <section>
 <h3>Variable reference expression</h3>
@@ -4943,13 +4921,13 @@ If the static type of <code>expression</code> is a subtype of object, and the
 object type includes a method named <code>method-name</code>, then the
 <code>method-call-expr</code> is executed by calling that method on
 <var>v</var>. A <code>method-call-expr</code> can be used within a method of a
-service to call another method of that service other than a resource method; in
+service to call another method of that service other than a remote method; in
 this case, <code>expression</code> must be <code>self</code>. The
 <code>arg-list</code> is used to construct an argument list that is passed to
 the method in the same way as with a <code>function-call-expr</code>. A
-<code>method-call-expr</code> cannot be used to call a remote method; it can
-only be called by a <code>remote-method-call-action</code>. A
-<code>method-call-expr</code> cannot be used to call a resource method.
+<code>method-call-expr</code> cannot be used to call a remote method. A remote
+method of a client object can be called by a
+<code>client-remote-method-call-action</code>.
 </p>
 <p>
 Otherwise, the <code>method-call-expr</code> will be turned into a call to a
@@ -6188,7 +6166,7 @@ class="grammar">action :=
    | send-action
    | receive-action 
    | flush-action
-   | remote-method-call-action
+   | client-remote-method-call-action
    | query-action
    | type-cast-action
    | checking-action
@@ -6208,8 +6186,8 @@ shown in the sequence diagram in the graphical syntax.
 </p>
 <p>
 The syntax for actions is defined by the above grammar and precedence rules. The
-precedence rules are that a remote-method-call-action has higher precedence than
-a checking-action or a trap-action.
+precedence rules are that a client-remote-method-call-action has higher
+precedence than a checking-action or a trap-action.
 </p>
 <p>
 An action is evaluated in the same way as an expression. Static typing for
@@ -6551,7 +6529,7 @@ block-function-body.
 <h3>Start action</h3>
 
 <pre
-class="grammar">start-action := [annots] <code>start</code> (function-call-expr|method-call-expr|remote-method-call-action)
+class="grammar">start-action := [annots] <code>start</code> (function-call-expr|method-call-expr|client-remote-method-call-action)
 </pre>
 
 <p>
@@ -6992,25 +6970,26 @@ success before it has executed one member from every send set.</li>
 </section>
 
 <section>
-<h3>Remote interaction</h3>
+<h3>Outbound network interaction</h3>
 
 <p>
 A client object is a stub that allows a worker to send network messages to a
-remote process according to some protocol. A local variable declared with client
+remote system according to some protocol. A local variable declared with client
 object type will be depicted as a lifeline in the function's sequence diagram.
 The remote methods of the client object correspond to distinct network messages
 defined by the protocol for the role played by the client object. The return
 value of a remote method represents the protocol's response. A
-remote-method-call-action is depicted as a horizontal arrow from the worker
-lifeline to the client object lifeline.
+client-remote-method-call-action is depicted as a horizontal arrow from the
+worker lifeline to the client object lifeline.
 </p>
 
 <pre
-class="grammar">remote-method-call-action := expression <code>-&gt;</code> method-name <code>(</code> arg-list <code>)</code>
+class="grammar">client-remote-method-call-action := expression <code>-&gt;</code> method-name <code>(</code> arg-list <code>)</code>
 </pre>
 <p>
-Calls a remote method. This works the same as a method call expression, except
-that it is used only for a method with the <code>remote</code> modifier.
+Calls a remote method of a client object. This works the same as a method call
+expression, except that it is used for a client object method with the
+<code>remote</code> qualifier.
 </p>
 
 </section>
@@ -8101,25 +8080,31 @@ unsuccessful, terminates the program execution.
 <h3>Listeners and services</h3>
 
 <p>
-Services have resource methods, which are the network entry points of a
+Service objects have remote methods, which are the network entry points of a
 Ballerina program. Listeners provide the interface between the network and
-services. A listener object receives network messages from a remote process
-according to some protocol and translates the received messages into calls on
-the resource methods of service values that have been attached to the listener
-object. It is up to the listener object to determine how this translation
-happens; the type of the listener object thus constrains the type of a service
-that can be attached to the listener. (This constraint is not yet enforced by
-Ballerina's type system.)
+service objects. A listener object receives network messages from a remote
+process according to some protocol and translates the received messages into
+calls on the remote methods of service objects that have been attached to the
+listener object. It is up to the listener object to determine how this
+translation happens; the type of the listener object thus constrains the type of
+a service that can be attached to the listener. (This constraint is not yet
+enforced by Ballerina's type system.)
 </p>
 <p>
-The return type of a resource method represents whether the method successfully
-handled the protocol message. The listener typically calls a resource method
-with a client object as a parameter. The remote methods on the client object
-correspond to the distinct network messages defined by the protocol as possible
-responses to the message that the resource method is handling. A resource method
-called by a listener as a result of a network message received from a remote
-process can then use the client object to send a response message back to that
-remote process.
+An error return value is used by a service object's remote method to indicate
+that it encountered an error in processing the protocol message. The
+interpretation of other return values is dependent on the listener object. A
+listener object can allow a service object's remote method to use the return
+value to supply the response in the non-error case. This has the limitation that
+the remote method cannot control what happens if there is an error in sending a
+response. It also has the limitation that it cannot handle complex message
+exchange patterns, although returning multiple responses to a single request can
+be modelled by a remote method that returns a stream. A listener object can
+avoid these limitations by passing a client object as a parameter to the service
+object's remote method; the service object then makes calls on the remote
+methods of the client object in order to send a response back to the client. In
+this case, the service object's remote method should return nil if it does not
+return an error.
 </p>
 <p>
 The methods defined by the Listener object type allow for the
@@ -8182,8 +8167,8 @@ result of the evaluation.
 
 <pre
 class="grammar">service-decl :=
-  metadata
-  <code>service</code> [variable-name] <code>on</code> expression-list service-body-block
+   metadata
+   <code>service</code> [variable-name] <code>on</code> expression-list object-constructor-block
 expression-list := expression (<code>,</code> expression)*
 </pre>
 <p>
@@ -8193,21 +8178,17 @@ a variable declared in a final variable declaration, the variable can be
 referenced by a variable-reference, but cannot be assigned to.
 </p>
 <p>
-The service-body-block has the same semantics as in a service-constructor-expr.
-The static type of each expression in the expression list must be a subtype of
-the union of error with the Listener object type. If an implementation
-is using annotations to provide more precise typing of services, then any
-annotations on the service type that is the first parameter of the
-<code>__attach</code> method in the object type of each expression in expression
-list will constrain the type of the service value constructed by the
-service-body-block.
+The object-constructor-block has the same semantics as in an
+object-constructor-expr with a <code>service</code> qualifier. The static type
+of each expression in the expression list must be a subtype of the union of
+error with the Listener object type.
 </p>
 <p>
 A service-decl is initialized as part of module initialization as follows. The
-service-body-block is evaluated as in a service-constructor resulting in a
-service value <code><var>s</var></code>. If variable-name is specified, then the
-variable is initialized to <code><var>s</var></code>. Then for each expression
-in expression-list:
+object-constructor-block is evaluated as in an object-constructor-expr resulting
+in a service object <code><var>s</var></code>. If variable-name is specified,
+then the variable is initialized to <code><var>s</var></code>. Then for each
+expression in expression-list:
 </p>
 <ol>
 <li>the expression is evaluated resulting in a value which is either an error or
@@ -8227,19 +8208,18 @@ fails.</li>
 <h4>Isolated inference</h4>
 
 <p>
-A listener object can use the isolated bit of a resource method to determine
-whether it is safe to make concurrent calls to the resource method.
+A listener object can use the isolated bit of a service object's remote method to determine
+whether it is safe to make concurrent calls to the remote method.
 </p>
 <p>
-The compiler may infer that a resource method is isolated even it is not
-explicitly declared as such. In doing so, it analyzes a module to determine
-whether there is a set of definitions, where each definition is a
-<code>service-method-defn</code>, <code>function-defn</code> or
-<code>method-defn</code>, and no definition is explicitly declared as isolated,
-such that if all the definitions were declared as isolated, then they all would
-meet the requirements for <a href="#isolated_functions">isolated functions</a>.
-If so, the isolated bit of the function value associated with each definition is
-set.
+The compiler may infer that a service object's remote method is isolated even it
+is not explicitly declared as such. In doing so, it analyzes a module to
+determine whether there is a set of definitions, where each definition is a
+<code>function-defn</code> or <code>method-defn</code>, and no definition is
+explicitly declared as isolated, such that if all the definitions were declared
+as isolated, then they all would meet the requirements for <a
+href="#isolated_functions">isolated functions</a>. If so, the isolated bit of
+the function value associated with each definition is set.
 </p>
 <p>
 This inference is purely an optimization to improve service concurrency and is
@@ -8310,7 +8290,7 @@ class="grammar">module-class-defn :=
    [<code>public</code>] class-type-quals <code>class</code> identifier <code>{</code>
       class-member*
   <code>}</code>
-class-type-quals := (<code>distinct</code> | <code>client</code> | <code>readonly</code>)*
+class-type-quals := (<code>distinct</code> | <code>readonly</code> | object-network-qual)*
 class-member :=
    object-field
    | method-defn
@@ -8318,7 +8298,7 @@ class-member :=
 </pre>
 <p>
 It is an error for a keyword to appear more than once in
-<code>class-type-quals</code>
+<code>class-type-quals</code>.
 </p>
 <p>
 As in an object constructor expression, a visibility qualifier of
@@ -8609,7 +8589,7 @@ dual-attach-point := [<code>source</code>] dual-attach-point-ident
 dual-attach-point-ident :=
    <code>type</code>
    | <code>class</code>
-   | [<code>object</code>|<code>resource</code>] <code>function</code>
+   | [<code>object</code>|<code>service</code> <code>remote</code>] <code>function</code>
    | <code>parameter</code>
    | <code>return</code>
    | <code>service</code>
@@ -8660,7 +8640,7 @@ The available attachment points are described in the following table.
   </tr>
   <tr>
    <td>function</td>
-   <td>function-defn, method-decl, method-defn, anonymous-function-expr, service-method-defn</td>
+   <td>function-defn, method-decl, method-defn, anonymous-function-expr</td>
    <td>type of function</td>
   </tr>
   <tr>
@@ -8669,8 +8649,8 @@ The available attachment points are described in the following table.
    <td>type of function</td>
   </tr>
   <tr>
-   <td>resource function</td>
-   <td>service-method-defn with resource modifier</td>
+   <td>service remote function</td>
+   <td>method-defn with remote qualifier on service object</td>
    <td>type of function, on service value</td>
   </tr>
   <tr>
@@ -8685,7 +8665,7 @@ The available attachment points are described in the following table.
   </tr>
   <tr>
    <td>service</td>
-   <td>service-decl, service-constructor-expr</td>
+   <td>service-decl, object-constructor-expr with service qualifier</td>
    <td>type of service</td>
   </tr>
   <tr>
@@ -9043,6 +9023,8 @@ object constructor expression, which includes method definitions, or by applying
 <code>new</code> to the name of a class defined by a class definition. The
 methods and fields of an object are not in a single symbol space. Classes and
 object constructors can declare fields as final.</li>
+<li>Services have become service objects that work in a similar way to client
+objects; resource methods on service objects have become remote methods.</li>
 <li>The <code>readonly</code> type has been added. Fields of records can also be
 declared as <code>readonly</code>. Functions can be declared as
 <code>isolated</code>; this works in conjunction with <code>readonly</code> to
@@ -9424,8 +9406,6 @@ programs secure by default.</li>
 to date and time.</li>
 <li><em>Event stream processing</em> will build on the <code>stream</code> type
 to allow queries over timestamped sequences of events</li>
-<li><em>Service typing</em> will allow for proper typing of service values,
-including typing of the response of resource functions.</li>
 <li><em>Generic types</em> will provide types that can be instantiated with one
 or more type parameters.</li>
 <li><em>Flexible message passing</em> will support patterns of communication

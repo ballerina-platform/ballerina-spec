@@ -21,14 +21,14 @@ public type Listener distinct object {
     # + s - the service to attach
     # + name - optionally a name associated with the service
     # + return - `()` if no error occurred, and an error otherwise
-    public function attach(service s, string? name = ()) returns error?;
+    public function attach(service object {} s, string? name = ()) returns error?;
 
     # Handle service detachment from the listener.
     #
     # + s - the service to detach
     # + return - `()` if no error occurred, and an error otherwise
 
-    public function detach(service s) returns error?;
+    public function detach(service object {} s) returns error?;
     # Handle listener start.
     #
     # + return - `()` if no error occurred, and an error otherwise
