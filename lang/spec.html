@@ -8154,20 +8154,25 @@ result of the evaluation.
 <pre
 class="grammar">service-decl :=
    metadata
-   <code>service</code> [variable-name] <code>on</code> expression-list object-constructor-block
+   <code>service</code> [[type-descriptor] variable-name] <code>on</code> expression-list object-constructor-block
 expression-list := expression (<code>,</code> expression)*
 </pre>
 <p>
-A <code>service-decl</code> creates a service and attaches it to one or more
+A <code>service-decl</code> creates a service object and attaches it to one or more
 listeners. If a variable-name is specified, it also declares a variable; as with
 a variable declared in a final variable declaration, the variable can be
 referenced by a variable-reference, but cannot be assigned to.
 </p>
 <p>
-The object-constructor-block has the same semantics as in an
-object-constructor-expr with a <code>service</code> qualifier. The static type
-of each expression in the expression list must be a subtype of the union of
-error with the Listener object type.
+The static type S for the constructed service object is specified by the
+type-descriptor if present, and otherwise is the union of a type inferred from
+each expression in the expression list as follows. Each expression in the
+expression-list must have a type L|E where L is a listener and E is a subtype of
+error; the inferred type is the type of the first parameter to the
+<code>attach</code> method of L. The object-constructor-block has the same
+semantics as in an object-constructor-expr with a <code>service</code> qualifier
+and a type-reference that refers to S. The type S is also used as the type of
+the variable declared.
 </p>
 <p>
 A service-decl is initialized as part of module initialization as follows. The
