@@ -125,7 +125,7 @@ For module-level classes and service objects, we should infer when they are isol
 
 ### init method
 
-Define an expression to be unique if it is known at compile-time that either the result is readonly or the result is the unique reference to the value.
+Define an expression to be unique if it is known at compile-time that either the result is readonly or the result is the unique reference into the value's mutable storage graph.
 We can define rules for when an expression is unique, e.g.
 * a string literal is unique
 * a list constructor expression is unique if all its subexpressions are unique
