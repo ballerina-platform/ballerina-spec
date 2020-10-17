@@ -3797,7 +3797,7 @@ completes abruptly in the same way as E1.
 <section>
 <h3>Static typing of expressions</h3>
 <p>
-A type is computed for every expression at compile type; this is called the
+A type is computed for every expression at compile time; this is called the
 static type of the expression. The compiler and runtime together guarantee that
 if the evaluation of an expression at runtime completes normally, then the
 resulting value will belong to the static type. A type is also computed for
@@ -3899,6 +3899,40 @@ the value that the literal represents, whereas the broad type is the precise
 type widened to contain the entire basic type of which it is a subtype. For
 example, the precise type of the string literal <code>"X"</code> is the
 singleton type <code>"X"</code>, but the broad type is <code>string</code>.
+</p>
+</section>
+<section>
+<h4>Isolated expressions</h4>
+<p>
+Ballerina defines requirements for when an expression is <em>isolated</em>.
+If an expression meets the requirements, then it is compile-time guaranteed
+that the value of the expression will be an isolated root
+and will not be aliased.
+</p>
+<p>
+Each syntactic kind of expression has a rule for when it is isolated, which may
+depend on the static type of the expression and of subexpressions. An expression
+is always isolated if its static type is immutable, i.e. a subtype of
+<code>readonly</code>.
+</p>
+<p>
+In addition, the following expressions are also isolated if all their
+subexpressions are isolated:
+</p>
+<ul>
+<li><code>list-constructor-expr</code></li>
+<li><code>table-constructor-expr</code></li>
+<li><code>mapping-constructor-expr</code></li>
+<li><code>xml-template-expr</code></li>
+<li><code>raw-template-expr</code></li>
+<li><code>type-cast-expr</code></li>
+<li><code>checking-expr</code></li>
+<li><code>trap-expr</code></li>
+<li><code>conditional-expr</code></li>
+</ul>
+<p>
+The section for each kind of expression will describe any additional conditions
+under which that kind of expression is isolated.
 </p>
 </section>
 </section>
@@ -4575,7 +4609,9 @@ class. It is a compile error if the type-descriptor if the arg-list does not
 match the signature of the class's <code>init</code> method. If the result of
 calling the <code>init</code> method is an error value e, then the result of
 evaluating the explicit-new-expr is e; otherwise the result is the newly
-initialized object.
+initialized object. The explicit-new-expr is isolated if the type of the
+<code>init</code> is isolated and the expression for every argument in the
+arg-list is isolated.
 </p>
 <p>
 When the class-reference refers to a stream type <code>stream&lt;T,E&gt;</code>,
@@ -4583,7 +4619,8 @@ the arg-list must either be empty or be a single argument belonging to object
 type StreamImplementor&lt;T,E?&gt;. When the arg-list is empty, the result will
 be an empty stream (i.e. a stream whose next method returns nil). When the
 arg-list evaluates to a StreamImplementor object, the result will be a stream
-that wraps that object.
+that wraps that object. The explicit-new-expr is isolated if the the arg-list is
+empty or if the expression for the single argument is isolated.
 </p>
 <p>
 An explicit-type-expr specifying a class-descriptor T has static type T, except
@@ -4632,6 +4669,10 @@ If the variable-reference references a type defined with a module type
 definition or a class defined with a module class definition, then the result of
 evaluating the variable-reference-expr is a typedesc value for that type or
 class.
+</p>
+<p>
+A variable-reference-expr is isolated if it refers to an identifier bound by a
+let-expr to an expression that is isolated.
 </p>
 </section>
 <section>
@@ -4969,6 +5010,12 @@ also an error if there is a named argument for a parameter that was supplied by
 a positional argument.
 </p>
 <p>
+A function-call-expr is isolated if the type of the function being called is
+isolated and the expression for every argument is isolated. In addition, a call
+to the <code>clone</code> or <code>cloneReadOnly</code> functions defined by the
+lang.value module of the lang library is always isolated.
+</p>
+<p>
 When a function to be called results from the evaluation of an expression that
 is not merely a variable reference, the function can be called by first storing
 the value of the expression in a variable.
@@ -4991,14 +5038,14 @@ contextually expected type for <code>expression</code>.
 If the static type of <code>expression</code> is a subtype of object, and the
 object type includes a method named <code>method-name</code>, then the
 <code>method-call-expr</code> is executed by calling that method on
-<var>v</var>. A <code>method-call-expr</code> can be used within a method of a
-service to call another method of that service other than a remote method; in
-this case, <code>expression</code> must be <code>self</code>. The
-<code>arg-list</code> is used to construct an argument list that is passed to
-the method in the same way as with a <code>function-call-expr</code>. A
-<code>method-call-expr</code> cannot be used to call a remote method. A remote
-method of a client object can be called by a
-<code>client-remote-method-call-action</code>.
+<var>v</var>. The <code>arg-list</code> is used to construct an argument list
+that is passed to the method in the same way as with a
+<code>function-call-expr</code>. A <code>method-call-expr</code> cannot be used
+to call a remote method. A remote method of a client object can be called by a
+<code>client-remote-method-call-action</code>. A method-call-expr is isolated if
+the expression preceding <code>.</code> is isolated, the expression for each
+argument in the arg-list is isolated and the type of the method being called is
+isolated.
 </p>
 <p>
 Otherwise, the <code>method-call-expr</code> will be turned into a call to a
@@ -5022,7 +5069,9 @@ the function is called.</li>
 <p>
 It is a compile-time error if the resulting function call does not satisfy all
 the constraints that would apply if it has been written explicitly as a
-<code>function-call-expr</code>.
+<code>function-call-expr</code>. The <code>method-call-expr</code> expression is
+isolated under the same conditions that the corresponding
+<code>function-call-expr</code> would be isolated.
 </p>
 </section>
 <section>
@@ -5143,7 +5192,10 @@ inferred from the precise static type of the expression following
 </p>
 <p>
 Since expressions cannot modify variables, the variables bound in a let-var-decl
-are implicitly final.
+are implicitly final. A let-expr is isolated if the expression following
+<code>in</code> is isolated; a reference in that expression to a variable bound
+by a let-var-decl will be treated as isolated if the expression initializing the
+variable in the let-var-decl is isolated.
 </p>
 
 </section>
