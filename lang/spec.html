@@ -4464,7 +4464,7 @@ fields come from a separate, named class definition.
 
 <pre
 class="grammar">object-constructor-expr :=
-   [annots] [object-network-qual] <code>object</code> [type-reference] object-constructor-block
+   [annots] object-type-quals <code>object</code> [type-reference] object-constructor-block
 object-constructor-block := <code>{</code> object-member* <code>}</code>
 object-member := object-field | method-defn
 </pre>
@@ -4481,16 +4481,26 @@ evaluated. This means that every object resulting from the evaluation of an
 <code>object-constructor-expr</code> has its own type descriptor.
 </p>
 <p>
-If the applicable contextually expected type is a subtype of readonly, then the
-object will be constructed with its read-only bit on.
-</p>
-<p>
 If there is a <code>type-reference</code>, then the referenced type is included
 in the object's type in the same was as an <code>object-type-inclusion</code>,
 and the type-ids of the constructed object are type-ids of the referenced type.
 If there is no <code>type-reference</code>, then the applicable contextually
 expected type T, if any, must be definite, and the type-ids of the constructed
 object are the type-ids, if any, induced by T.
+</p>
+<p>
+The <code>object-constructor-expr</code> is <em>implicitly read-only</em> if the
+applicable contextually expected type is a subtype of readonly or if the
+type-reference is present and references a type that is a subtype of readonly.
+If <code>object-constructor-expr</code> is <em>implicitly read-only</em>, then
+the object will be constructed with its read-only bit on.
+</p>
+<p>
+The <code>object-constructor-expr</code> is <em>explicitly isolated</em> if
+<code>object-type-quals</code> includes <code>isolated</code> or if the
+type-reference is present and references an isolated object type. An
+<code>object-constructor-expr</code> that is explicitly isolated will construct
+an object with its isolated bit set.
 </p>
 
 <pre
@@ -4507,7 +4517,10 @@ If a field does not specify a field-initializer, then there must be an
 <code>init</code> method and the <code>init</code> method must initialize the
 field. The field-initializer must be the requirements for an isolated function
 unless there the <code>init</code> method is present and not declared as
-<code>isolated</code>.
+<code>isolated</code>. If the <code>object-constructor-expr</code> is implicitly
+read-only, then the contextually expected type for a field-initializer will be
+the intersection of readonly and the type specified in the type-descriptor of
+the object-field.
 </p>
 <p>
 If <code>final</code> is present, then the field must be assigned to exactly
@@ -4515,16 +4528,25 @@ once, either by its initializer or in the <code>init</code> method.
 </p>
 <p>
 An <code>object-constructor-expr</code> will construct an object with its
-read-only bit set if
+read-only bit set if every object-field is declared as <code>final</code> and
+has a type-descriptor that is a subtype of <code>readonly</code>. In this case,
+the static type of the <code>object-constructor-expr</code> will be intersected
+with <code>readonly</code>.
 </p>
-<ul>
-<li>every object-field is declared as <code>final</code> and has a
-type-descriptor that is a subtype of readonly; or</li>
-<li>it occurs within a <code>const-expr</code> or the applicable contextually
-expected type is a subtype of readonly; in this case, the contextually expected
-type for a field-initializer will be the intersection of readonly and the type
-specified in the type-descriptor of the object-field.</li>
-</ul>
+<p>
+An object field is <em>isolated</em> if it is declared as <code>final</code> and
+has a type-descriptor that is a subtype of <code>readonly</code> or
+<code>isolated object {}</code>, or if the <code>object-constructor-expr</code>
+is implicitly read-only. An <code>object-constructor-expr</code> is
+<em>implicitly isolated</em> if it is implicitly readonly or if every object
+field is isolated. An <code>object-constructor-expr</code> that is implicitly
+isolated will construct an object with its isolated bit set. In this case, the
+static type of the <code>object-constructor-expr</code> will be intersected with
+<code>isolated object {}</code>. If the <code>object-constructor-expr</code> is
+explicitly isolated, then every <code>field-initializer</code> must be an
+isolated expression and any field that is not isolated must be declared as
+private.
+</p>
 
 <pre
 class="grammar">method-defn :=
@@ -4549,8 +4571,13 @@ in the <code>object-constructor-expr</code>.
 </p>
 <p>
 Within a <code>method-defn-body</code>, the fields and methods of the object are
-not implicitly in-scope; instead the keyword <code>self</code> is bound to the
-object and can be used to access fields and methods of the object.
+not implicitly in-scope; instead the variable <code>self</code> is bound to the
+object and can be used to access fields and methods of the object. If the
+<code>object-constructor-expr</code> is explicitly isolated, then the
+<code>self</code> variable must be accessed only within the scope of a lock
+statement, except when <code>self</code> is part of a
+<code>field-access-expr</code> of the form <code>self.<var>f</var></code>, where
+<code><var>f</var></code> is the name of an isolated field.
 </p>
 <p>
 A <code>method-defn</code> with a <code>method-name</code> of <code>init</code>
@@ -4579,6 +4606,12 @@ is not definitely assigned at that point. It is a compile error if a
 </ul>
 </li>
 </ul>
+<p>
+If the <code>object-constructor-expr</code> is explicitly isolated, then a field
+can only be assigned to by an <code>assignment-stmt</code> with a right hand
+side that is an isolated expression. The requirement to access <code>self</code>
+within a lock statement does not apply to the <code>init</code> method.
+</p>
 <p>
 The visibility of the <code>init</code> method cannot be <code>private</code>.
 </p>
