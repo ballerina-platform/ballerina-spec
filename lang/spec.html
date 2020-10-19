@@ -2073,14 +2073,24 @@ bit. Whether an object is read-only can be described separately using a
 
 <pre
 class="grammar">object-type-descriptor :=
-   [object-network-qual] <code>object</code> <code>{</code>
+   object-type-quals <code>object</code> <code>{</code>
       object-member-descriptor*
    <code>}</code>
+object-type-quals :=
+   isolated-qual [object-network-qual]
+   | [object-network-qual [isolated-qual]]
 object-member-descriptor :=
    object-field-descriptor
    | method-decl
    | object-type-inclusion
 </pre>
+
+<p>
+If an isolated-qual is specified, then an object belongs to the described type
+only if the object's isolated bit is set. If an isolated-qual is not specified,
+then an object's isolated bit does not affect whether it belongs to the
+described type.
+</p>
 
 <section>
 <h5>Fields</h5>
@@ -2197,12 +2207,12 @@ object type descriptor; this is called module-level visibility.
 <h5>Typing</h5>
 
 <p>
-The shape of an object consists of a network interaction kind and an unordered
-collection of object field shapes and object method shapes. A network
-interaction kind has one of three values: service, client or empty. An object
-field shape or object method shape is a 4-tuple consisting of the name of the
-field or method, the visibility region, a remote flag and a shape for the value
-of the field or for the method's function.
+The shape of an object consists of a read-only bit, an isolated bit, a network
+interaction kind and an unordered collection of object field shapes and object
+method shapes. A network interaction kind has one of three values: service,
+client or empty. An object field shape or object method shape is a 4-tuple
+consisting of the name of the field or method, the visibility region, a remote
+flag and a shape for the value of the field or for the method's function.
 </p>
 <p>
 An object type is inclusive, in a similar way to an
@@ -3913,7 +3923,8 @@ and will not be aliased.
 Each syntactic kind of expression has a rule for when it is isolated, which may
 depend on the static type of the expression and of subexpressions. An expression
 is always isolated if its static type is immutable, i.e. a subtype of
-<code>readonly</code>.
+<code>readonly</code>, or an isolated object, i.e. a subtype of
+<code>isolated object {}</code>.
 </p>
 <p>
 In addition, the following expressions are also isolated if all their
