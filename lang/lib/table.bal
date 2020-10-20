@@ -76,7 +76,6 @@ public isolated function add(table<Type> t, Type val) = external;
 // Functional iteration
 
 # Applies a function each member of a table and returns a table of the result.
-# The resulting table will have the same keys as the argument table.
 #
 # + t - the table
 # + func - a function to apply to each member
@@ -92,6 +91,7 @@ public isolated function map(table<Type> t, @isolatedParam function(Type val) re
 public isolated function forEach(table<Type> t, @isolatedParam function(Type val) returns () func) returns () = external;
 
 # Selects the members from a table for which a function returns true.
+# The resulting table will have the same keys as the argument table.
 #
 # + t - the table
 # + func - a predicate to apply to each member to test whether it should be included
