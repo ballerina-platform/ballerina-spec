@@ -8022,6 +8022,37 @@ error if a function definition contains a named-worker-decl or start-action, and
 there is a function call lexically within the lock-stmt that might result
 directly or indirectly in a call to that defined function.
 </p>
+<p>
+There are two cases where a variable is restricted to be used only within a
+lock statement:
+</p>
+<ul>
+<li>when the variable is an isolated module-level variable; since module-level
+variables are not allowed to be public, this restriction applies
+to all functins in the module;</li>
+<li>when the variable is <code>self</code> within an isolated object, unless
+<code>self</code> is being used only to read an isolated field; since
+non-isolated fields are required to be private, this restriction applies only to
+the object's methods.</li>
+</ul>
+<p>
+When a lock statement contains one of the above two cases of restricted variable
+usage, the lock statement is subject to the following additional requirements,
+which maintain the invariant that the restricted variable is an isolated root.
+</p>
+<ul>
+<li>Only one such variable can occur in the lock statement.</li>
+<li>A function or method can be called in the lock statement only if the type of
+the function is isolated.</li>
+<li>Transferring values out of the lock statement is constrained: the expression
+following a return statement must be an isolated expression; an assignment to a
+variable defined outside the lock statement is allowed only if left-hand side is
+just a variable name and the right hand side is an isolated expression.</li>
+<li>Transferring values into the lock statement is constrained: a
+variable-reference-expr within the lock statement that refers to a variable or
+parameter defined outside the lock statement is allowed only if the
+variable-reference-expr occurs within an expression that is isolated.</li>
+</ul>
 
 </section>
 
