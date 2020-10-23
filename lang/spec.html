@@ -8429,25 +8429,30 @@ fails.</li>
 <h4>Isolated inference</h4>
 
 <p>
-A listener object can use the isolated bit of a service object's remote method to determine
-whether it is safe to make concurrent calls to the remote method.
+A listener object can use the isolated bit of a service object and of a service
+object's remote method to determine whether it is safe to make concurrent calls
+to the remote object or the remote method.
 </p>
 <p>
-The compiler may infer that a service object's remote method is isolated even it
-is not explicitly declared as such. In doing so, it analyzes a module to
-determine whether there is a set of definitions, where each definition is a
-<code>function-defn</code> or <code>method-defn</code>, and no definition is
-explicitly declared as isolated, such that if all the definitions were declared
-as isolated, then they all would meet the requirements for <a
-href="#isolated_functions">isolated functions</a>. If so, the isolated bit of
-the function value associated with each definition is set.
+The compiler may infer that a service object or a service object's remote method
+is isolated even it is not explicitly declared as such. In doing so, it analyzes
+a module to determine whether there is a set of declarations and definitions in
+the module, where each of them is a <code>service-decl</code>,
+<code>module-var-decl</code>, <code>module-class-defn</code>
+<code>function-defn</code> or <code>method-defn</code>, and none of them
+explicitly specified an <code>isolated</code> qualifier, such that if all them
+explicitly specified an <code>isolated</code> qualifier, then they all would
+meet the requirements for <a href="#isolated_functions">isolated functions</a>
+and isolated objects. If so, then the isolated bit of values resulting from them
+is set in the same way as if <code>isolated</code> qualifiers had been
+explicitly specified.
 </p>
 <p>
 This inference is purely an optimization to improve service concurrency and is
-subject to two constraints. First, any inferences do not affect the static type
-of functions visible to other modules. Second, any functions or methods
-explicitly declared as isolated must satisfy the requirements for isolated
-functions without relying on inference.
+subject to two constraints. First, any inferences do not affect the static types
+visible to other modules. Second, anything explicitly declared as
+<code>isolated</code> must satisfy the requirements of this specification
+without without relying on inference.
 </p>
 
 </section>
