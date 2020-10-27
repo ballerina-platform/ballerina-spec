@@ -14,38 +14,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-# Represents the shape expected from all listeners.
-public type Listener distinct object {
-    # Handle service attachment to the listener.
-    #
-    # + s - the service to attach
-    # + name - optionally a name associated with the service
-    # + return - `()` if no error occurred, and an error otherwise
-    public function attach(service object {} s, string? name = ()) returns error?;
-
-    # Handle service detachment from the listener.
-    #
-    # + s - the service to detach
-    # + return - `()` if no error occurred, and an error otherwise
-
-    public function detach(service object {} s) returns error?;
-    # Handle listener start.
-    #
-    # + return - `()` if no error occurred, and an error otherwise
-    public function start() returns error?;
-
-    # Handle listener graceful stop.
-    #
-    # + return - `()` if no error occurred, and an error otherwise
-    public function gracefulStop() returns error?;
-
-    # Handle listener immediate stop.
-    #
-    # + return - `()` if no error occurred, and an error otherwise
-    public function immediateStop() returns error?;
-};
-
-
 # Distinct Iterable type.
 # An object can make itself iterable by using `*object:Iterable;`,
 # and then defining an `iterator` method.

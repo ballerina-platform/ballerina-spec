@@ -2191,7 +2191,7 @@ interaction; a remote method of a service object is for inbound network
 interaction. A remote method cannot be called using the normal method call
 syntax. A remote method of a client object can only be invoked by a
 <code>client-remote-method-call-action</code>. A remote method of a service
-object is invoked by a Listener object provided by a library module; Ballerina
+object is invoked by a listener object provided by a library module; Ballerina
 does not yet define a mechanism to allow such a library module to be implemented
 completely in Ballerina.
 </p>
@@ -2793,25 +2793,28 @@ immediately returns <code>()</code>.
 <section>
 <h4>Listener</h4>
 <p>
-The Listener type is defined in <code>lang.object</code> as follows.
+The abstract object type Listener&lt;T&gt;, where T is a a subtype of
+<code>service object {}</code>, is described by the following object type
+descriptor:
 </p>
 
-<pre>distinct object {
-   public function attach(service object {} s, string? name = ()) returns error?;
-   public function detach(service object {} s) returns error?;
+<pre>object {
+   public function attach(T svc, string? name = ()) returns error?;
+   public function detach(T svc) returns error?;
    public function start() returns error?;
    public function gracefulStop() returns error?;
    public function immediateStop() returns error?;
 }
 </pre>
-<!-- Fix in #615
 <p>
-Note that if an implementation does precise service typing using annotations on
-type definitions, it will need to treat Listener as being parameterized in the
-precise service type that is used to the first argument to
-<code>attach</code>.
+The above methods all return an error value if an error occurred, and
+return nil otherwise.
 </p>
--->
+<p>
+A type is a <em>listener object type</em> if it is a subtype of the abstract
+object type Listener&lt;T&gt;, for some type T that is a subtype of
+<code>service object {}</code>.
+</p>
 </section>
 <section>
 <h4>RawTemplate</h4>
@@ -8337,7 +8340,7 @@ this case, the service object's remote method should return nil if it does not
 return an error.
 </p>
 <p>
-The methods defined by the Listener object type allow for the
+The methods defined by the Listener&lt;T&gt; object type allow for the
 management of the lifecycle of a listener object and its attached services. A
 listener declaration registers a listener object with a module, so that it can
 be managed by the module. The runtime state of each module includes a list of
@@ -8381,7 +8384,7 @@ be assigned to. A module may have multiple multiple listeners.
 If the type-descriptor is present it specifies the static type of the variable;
 if it is not present, the the static type is the static type of
 <code>expression</code>. In both cases, the static type is constrained to be a
-subtype of the Listener object type.
+listener object type.
 </p>
 <p>
 When a listener-decl is initialized as part of module initialization, its
@@ -8411,13 +8414,13 @@ referenced by a variable-reference, but cannot be assigned to.
 The static type S for the constructed service object is specified by the
 type-descriptor if present, and otherwise is the union of a type inferred from
 each expression in the expression list as follows. Each expression in the
-expression-list must have a type L|E where L is a listener and E is a subtype of
-error; the inferred type is the type of the first parameter to the
-<code>attach</code> method of L. The object-constructor-block has the same
-semantics as in an object-constructor-expr with a <code>service</code> qualifier
-and a type-reference that refers to S. The type S is also used as the type of
-the variable declared. If the service-decl includes <code>isolated</code>, then
-it is equivalent to an object-constructor-expr with an <code>isolated</code>
+expression-list must have a type Listener&lt;T&gt;|E where T is a subtype of
+<code>service object {}</code> and E is a subtype of <code>error</code>; the
+inferred type is T. The object-constructor-block has the same semantics as in an
+object-constructor-expr with a <code>service</code> qualifier and a
+type-reference that refers to S. The type S is also used as the type of the
+variable declared. If the service-decl includes <code>isolated</code>, then it
+is equivalent to an object-constructor-expr with an <code>isolated</code>
 qualifier as well as a <code>service</code> qualifier.
 </p>
 <p>
@@ -8429,7 +8432,7 @@ expression in expression-list:
 </p>
 <ol>
 <li>the expression is evaluated resulting in a value which is either an error or
-an object <code><var>obj</var></code> that is a subtype of Listener;</li>
+an object <code><var>obj</var></code> belonging to a listener object type;</li>
 <li>if it is an error, module initialization fails;</li>
 <li>otherwise, <code><var>obj</var></code> is registered as a module listener
 (registering the same object multiple times is the same as registering it
