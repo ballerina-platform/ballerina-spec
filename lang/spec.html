@@ -5080,8 +5080,9 @@ the value of the expression in a variable.
 class="grammar">method-call-expr := expression <code>.</code> method-name <code>(</code> arg-list <code>)</code>
 </pre>
 <p>
-A <code>method-call-expr</code> either calls a method or calls a function in the
-lang library. The evaluation of the method-call-expr starts by evaluating
+A <code>method-call-expr</code> either calls an object's method, calls an
+object's field where the type of the field is a function or calls a function in
+the lang library. The evaluation of the method-call-expr starts by evaluating
 <code>expression</code> resulting in some value <var>v</var>. There is no
 contextually expected type for <code>expression</code>.
 </p>
@@ -5093,10 +5094,20 @@ object type includes a method named <code>method-name</code>, then the
 that is passed to the method in the same way as with a
 <code>function-call-expr</code>. A <code>method-call-expr</code> cannot be used
 to call a remote method. A remote method of a client object can be called by a
-<code>client-remote-method-call-action</code>. A method-call-expr is isolated if
-the expression preceding <code>.</code> is isolated, the expression for each
-argument in the arg-list is isolated and the type of the method being called is
-isolated.
+<code>client-remote-method-call-action</code>. In this case, a method-call-expr
+is isolated if the expression preceding <code>.</code> is isolated, the
+expression for each argument in the arg-list is isolated and the type of the
+method being called is isolated.
+</p>
+<p>
+Otherwise, if the static type of <code>expression</code> is a subtype of object,
+and the object type includes a field named <code>method-name</code> with a
+function type, then the <code>method-call-expr</code> is executed by calling the
+value of that field. The <code>arg-list</code> is used to construct an argument
+list that is passed to the method in the same way as with a
+<code>function-call-expr</code>. In this case, a method-call-expr is isolated if
+the type of the function is isolated and the expression for each argument in the
+arg-list is isolated.
 </p>
 <p>
 Otherwise, the <code>method-call-expr</code> will be turned into a call to a
