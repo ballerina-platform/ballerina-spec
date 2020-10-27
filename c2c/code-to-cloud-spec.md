@@ -69,14 +69,14 @@ Ballerina recommends having single entry point per ballerina project. The cloud 
   
 
 ``` sh
-  $ ballerina build -a --cloud = docker
+  $ ballerina build -a --cloud=docker
   ```
 
  For Kubernetes
  
 
 ``` sh
- $ ballerina build -a --cloud = k8s
+ $ ballerina build -a --cloud=k8s
  ```
 
 ## Features
@@ -156,7 +156,6 @@ Ballerina Code to Cloud provides ability for developers to provide configuration
 
 ``` yaml
 [[cloud.config.envs]]
-name= "foo"
 config_name= "module-foo"
 key= "FOO"
 
@@ -166,7 +165,7 @@ config_name= "module-bar"
 key= "BAR"
 ```
 
-#### External Configeration
+#### External Configuration
 
 ``` yaml
 [[cloud.config.files]]
@@ -206,7 +205,7 @@ function hello() {
 
 ### Probes
 
-Container Orchestrators uses probes as a way of ensuring the readiness and health of the container. Ballerina Code to
+Container orchestrators uses probes as a way of ensuring the readiness and health of the container. Ballerina Code to
  Cloud makes it easier for the developers to define probes.
 
 ``` yaml
@@ -250,21 +249,21 @@ Container image user account related properties
 
 Contains the configs required for the application in terms of Key Value pairs.
 
-|Identifier     |Description	                    |Example Value  |
-|---	        |---	                            |---	        |
-|name   	    |name of the configuration   	    |"foo"   	    |
-|config_name    |Name of the config config map      |"module-foo"   |
-|key   	        |Key of the environment variable    |"FOO"   	    |
+|Identifier     |Description	                                        |Example Value  |
+|---	        |---	                                                |---	        |
+|key_ref   	    |Key of the environment variable                        |"FOO"   	    |
+|name(optional) |Name of the env if its different from the Key          |"foo"   	    | 
+|config_name    |Name of the config config map                          |"module-foo"   |
 
 #### [[cloud.config.secrets]]
 
 Contains external configuration files for the code.
 
-|Identifier   	|Description	                |Example Value   	    |
-|---	        |---	                        |---	                |
-|name   	    |Name of the secret  	        |"ROOT_PASSWORD"  	    |
-|secret_name   	|Name of the secret group       |"db-crdential-secret"  |
-|key_ref   	    |Reference key of the secret    |"MYSQL_ROOT_PASSWORD"  |
+|Identifier   	|Description	                                        |Example Value   	    |
+|---	        |---	                                                |---	                |
+|key_ref   	    |Reference key of the secret                            |"MYSQL_ROOT_PASSWORD"  |
+|name(optional) |Name of the secret if its different from the Key	    |"ROOT_PASSWORD"  	    |
+|secret_name   	|Name of the secret group                               |"db-crdential-secret"  |
 
 #### [[cloud.config.files]]
 
@@ -274,7 +273,6 @@ Contains external configuration files for the code.
 |---	    |---	                                            |---	                              |
 |file   	|Path of the external configuration file  	        |"resource/ballerina.conf"  	      |
 |mount_path |Path of the configuration file in the container   	|"/home/ballerina/foo/ballerina.conf" |
-|key_ref   	|Reference key of the secret   	                    |"MYSQL_ROOT_PASSWORD"   	          |
 
 #### [cloud.deployment]
 
@@ -284,10 +282,10 @@ Contains the properties related to the deployment.
 |---	                |---	                                                 |---	            |
 |internal_domain_name   |Name of the internal domain  	                         |$PROJECT_NAME  	|
 |external_accessible   	|Status of exposing the container outside of the cluster |true   	        |
-|min_memory   	        |Minimum memory allocated to the container   	         |100Mi   	        |
-|max_memory   	        |Maximum memory allocated to the container  	         |256Mi   	        |
-|min_cpu   	            |Minimum CPU allocated to the container 	             |1000m   	        |
-|max_cpu   	            |Maximum CPU allocated to the container  	             |1500m   	        |
+|min_memory   	        |Minimum memory allocated to the container   	         |"100Mi"   	    |
+|max_memory   	        |Maximum memory allocated to the container  	         |"256Mi"   	    |
+|min_cpu   	            |Minimum CPU allocated to the container 	             |"1000m"   	    |
+|max_cpu   	            |Maximum CPU allocated to the container  	             |"1500m"   	    |
 
 #### [cloud.deployment.autoscaling]
 
