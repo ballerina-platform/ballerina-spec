@@ -1868,26 +1868,29 @@ information:
 the error</li>
 <li>a cause, which is either nil or another error value that was the cause of
 this error</li>
-<li>a detail, which is an immutable mapping providing additional information about
-the error</li>
+<li>a detail, which is an immutable mapping providing additional information
+about the error; the members of the mapping must belong to type Cloneable, and
+so the detail mapping belongs to type <code>map&lt;Cloneable&gt;</code>;</li>
 <li>a stack trace, which is an immutable snapshot of the state of the execution
 stack</li>
 </ul>
 <p>
-The detail mapping must be a subtype of <code>map&lt;Cloneable&gt;</code>.
-</p>
-<p>
 The shapes of the message, cause and detail record are part of the shape of the
-error; the stack trace is not part of the shape. A type descriptor
-<code>error&lt;<var>T</var>&gt;</code> contains an error shape if
-<code><var>T</var></code> contains the shape of its detail. The type
-<code>error</code> contains a shape if its basic type is error.
+error; the stack trace is not part of the shape.
 </p>
 <p>
-A type of <code>error&lt;*&gt;</code> means that the type is a subtype of error,
-where the precise subtype is to be inferred from the context. This is allowed
+A detail-type-descriptor in the error-type-param must refer to an inclusive
+record type descriptor or a union of such type descriptors. These inclusive
+record type descriptors are interpreted as being open to fields of type
+Cloneable, rather than in the usual way as being open to fields of type anydata.
+An error shape belongs to the type <code>error&lt;<var>T</var>&gt;</code>, where
+<code><var>T</var></code> is a detail-type-descriptor, if and only if the shape
+of its detail mapping belongs to T with this special interpretation. A type of
+<code>error&lt;*&gt;</code> means that the type is a subtype of error, where the
+type of the detail record is to be inferred from the context. This is allowed
 only within type descriptors occurring in a context that is specified to be
-inferable.
+inferable. A value belongs to the type <code>error</code> (with no type
+parameter) if and only if its basic type is error.
 </p>
 <p>
 An error-type-descriptor is always definite and induces an empty set of
