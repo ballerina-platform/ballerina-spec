@@ -8835,35 +8835,28 @@ annotation-tag-reference, and for each such identifier which module defines that
 annotation tag.
 </p>
 <p>
-If the annotation includes a mapping-constructor-expr, then the value of the
-annotation is the mapping value resulting from evaluating the
-mapping-constructor-expr; otherwise the value is the boolean value
-<code>true</code>. For every construct that has an annotation with a particular
-tag, there is an <em>effective value</em> for that annotation tag, which is
-constructed from the values of all annotations with that tag that were attached
-to that construct. The effective value must belong to the type of the annotation
-tag.
+Each annotation has a value. For every construct that has an annotation with a
+particular tag, there is also an <em>effective value</em> for that annotation
+tag, which is constructed from the values of all annotations with that tag that
+were attached to that construct. The effective value belongs to the type
+declared for the annotation tag. The type of the annotation tag determines the
+type of the annotation value and whether multiple annotations with the same tag
+on a single construct are allowed. For an annotation tag declared with type T,
+if T is M[] for some type mapping type M, then the type of the annotation value
+is M, multiple annotations are allowed, and the effective value is an array of
+the values for each annotation; otherwise the type of the annotation value is T,
+multiple annotations are not allowed, the effective value is the value of the
+single annotation.
 </p>
 <p>
-The type of the annotation tag constrains both the annotation value and the
-occurrence of multiple annotations with the same tag on a single construct as
-follows.
+If the type of the annotation value is <code>true</code>, then a
+mapping-constructor-expr is not allowed, and the annotation value is
+<code>true</code>. Otherwise the type of the annotation value must be a mapping
+type M; if a mapping-constructor-expr is not specified, then it defaults to
+<code>{ }</code>; the mapping-constructor-expr must have static type M and the
+annotation value is the result of evaluating the mapping-constructor-expr with M
+as the contextually expected type.
 </p>
-<ul>
-<li>If the type of the annotation tag is T[] for some T, then the
-mapping-constructor-expr must be specified and its static type must be a subtype
-of T; multiple annotations are allowed; the effective value is a list containing
-the value for each annotation with the tag in the order specified.</li>
-<li>Otherwise, multiple annotations with this tag are not allowed and the
-effective value for the tag is the value of the single annotation with the tag.
-<ul>
-<li>If the type of the annotation tag is true, then the mapping-constructor-expr
-must not be specified.</li>
-<li>Otherwise, the mapping-constructor-expr must be specified and its static
-type must be a subtype of the type of the annotation tag.</li>
-</ul>
-</li>
-</ul>
 <p>
 If the annotation-decl for a tag specifies <code>const</code>, then a
 mapping-constructor-expr in annotations with that tag must be a const-expr and
