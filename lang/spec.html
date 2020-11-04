@@ -4477,7 +4477,7 @@ fields come from a separate, named class definition.
 class="grammar">object-constructor-expr :=
    [annots] object-type-quals <code>object</code> [type-reference] object-constructor-block
 object-constructor-block := <code>{</code> object-member* <code>}</code>
-object-member := object-field | method-defn | remote-method-defn
+object-member := object-field | method-defn | remote-method-defn | resource-method-defn
 </pre>
 <p>
 The resulting of evaluating an <code>object-constructor-expr</code> is an
@@ -4591,9 +4591,30 @@ class="grammar">remote-method-defn :=
    <code>function</code> method-name function-signature method-defn-body
 </pre>
 <p>
-If <code>remote-method-defn</code> defines a remote method. This is allowed only
+A <code>remote-method-defn</code> defines a remote method. This is allowed only
 when an <code>object-network-qual</code> is present in the
 <code>object-constructor-expr</code>.
+</p>
+
+<pre
+class="grammar">resource-method-defn :=
+   metadata resource-method-quals
+   <code>function</code> resource-method-name resource-name function-signature method-defn-body
+resource-method-quals :=
+   resource-qual [isolated-qual]
+   | isolated-qual resource-qual
+resource-qual := <code>resource</code>
+resource-method-name := identifier
+resource-name :=
+   dot-resource-name
+   | resource-segment-name (<code>/</code> resource-segment-name)*
+dot-resource-name := <code>.</code>
+resource-segment-name := identifier
+</pre>
+<p>
+A <code>resource-method-defn</code> defines a resource method. This is allowed
+only when an <code>object-network-qual</code> of <code>service</code> is present
+in the <code>object-constructor-expr</code>.
 </p>
 
 <pre
@@ -8585,6 +8606,7 @@ class-member :=
    object-field
    | method-defn
    | remote-method-defn
+   | resource-method-defn
    | object-type-inclusion
 </pre>
 <p>
