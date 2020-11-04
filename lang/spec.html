@@ -4739,17 +4739,25 @@ lock-stmt.
 class="grammar">field-access-expr := expression <code>.</code> field-name
 </pre>
 <p>
-A field-access-expr accesses a field of an object or a member of a mapping. The
-semantics depends on the static type T of expression. A field-access-expr where
-T is a subtype of xml is interpreted as an xml-required-attribute-access-expr.
+A field-access-expr is typically used to access a field of an object or a field
+of a record. More generally, it can be used to access a member of an object or a
+member of a mapping. The semantics depends on the static type T of expression. A
+field-access-expr where T is a subtype of xml is interpreted as an
+xml-required-attribute-access-expr.
 </p>
 <p>
-If T is a subtype of the object basic type, then T must have a field field-name
-and the static type of the field-access-expr is the type of that field. In this
-case, the field-access-expr is evaluated by first evaluating the expression to
-get a value <var>obj</var>; the result of the field-access-expr is the value of
-that field of <var>obj</var>. The rest of this subsection applies when T is not
-a subtype of the object basic type.
+If T is a subtype of the object basic type, then T must have a member with name
+field-name. The field-access-expr is evaluated by first evaluating the
+expression to get a value <var>obj</var>. If the member is a field, then the
+result of the expression if the value of that field of <var>obj</var> and the
+static type of the field-access-expr is the type of that field of T. If that
+member is a method, then the result of the expression is a new function value
+that when called will call the method with <code>self</code> bound to
+<var>obj</var>; the isolated bit of the new function value is set if and only if
+the isolated bits of both <var>obj</var> and the method are set; the type
+descriptor of the new function value will have the same annotations as the type
+descriptor of the method. The rest of this subsection applies when T is not a
+subtype of the object basic type.
 </p>
 <p>
 Let T' be the intersection of T and basic type mapping, let K be the singleton type
