@@ -178,70 +178,48 @@ between the terminals and nonterminals that it references.
 <h2 id="program_structure">3. Program structure</h2>
 <p>
 A Ballerina program is divided into modules. A module has a source form and a
-binary form. The module is the unit of compilation; a Ballerina compiler
-translates the source form of a module into its binary form. A module may
-reference other modules. When a compiler translates a source module into a
-binary module, it needs access only to the binary form of other modules
-referenced from the source module.
+binary form. The source form of a module consists of an ordered collection of
+one or more source parts; each source part is a sequence of bytes that is the
+UTF-8 encoding of part of the source code for the module. The format of a source
+part is defined by this specification. The format of a binary module is
+specified by the Ballerina platform.
 </p>
 <p>
-A binary module can only be referenced if it is placed in a module store. There
-are two kinds of module store: a repository and a project. A module stored in a
-repository can be referenced from any other module. A module stored in a project
-can only be referenced from other modules stored in the same project.
+A source module can reference other modules. Each source module can be
+separately compiled into a binary module: compilation of a source module needs
+access only to the binary form of other modules referenced from the source
+module. A source module identifies each module that it references using an
+organization name and a module name, which is divided into one or more parts.
+Both the organization name and each part of the module name are Unicode strings.
 </p>
 <p>
-A repository organizes binary modules into a 3-level hierarchy:
+The Ballerina platform defines a packaging system for Ballerina modules, which
+allows one or more modules to be combined into a package. The packaging system
+treats the first part of each module's name as being a package name. All the
+modules combined into a package share the same package name. Packages have both
+a source and a binary format. The source format stores the source form of a
+package's modules in a hierarchical filesystem. The binary format stores the
+binary form of a package's module as a sequence of bytes.
+</p>
+<p>
+Binary packages can be stored in a package repository. Packages are versioned;
+versions are semantic, as described in the SemVer specification. A package
+repository can store multiple versions of the same package. Thus, within a
+repository, binary packages are organized into a three-level hierarchy:
 </p>
 <ol>
 <li>organization;</li>
-<li>module name;</li>
+<li>package name;</li>
 <li>version.</li>
 </ol>
 <p>
-Organizations are identified by Unicode strings, and are unique within a
-repository. Any organization name starting with the string
-<code>ballerina</code> is reserved for use by
-the Ballerina platform. A module name is a Unicode string and is unique within a
-repository organization. A particular module name can have one or more versions
-each associated with a separate binary module. Versions are semantic, as
-described in the SemVer specification.
+The source format of a package includes a <code>Ballerina.toml</code> file that
+allows control over the package versions used for referenced modules.
 </p>
 <p>
-A project stores modules using a simpler single-level hierarchy, in which the
-module is associated directly with the module name.
-</p>
-<p>
-A binary module is a sequence of octets. Its format is specified in the
-Ballerina platform.
-</p>
-<p>
-An abstract source module consists of:
-</p>
-<ul>
-<li>an ordered collection of one or more source parts; each source part is a
-sequence of octets that is the UTF-8 encoding of part of the source code for the
-module</li>
-<li>metadata containing the following
-<ul>
-<li>always required: module name</li>
-<li>required only if the source module is to be compiled into a binary module
-stored in a repository:
-<ul>
-<li>organization name</li>
-<li>version</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<p>
-An abstract source module can be stored in a variety of concrete forms. For
-example, the Ballerina platform describes a method for storing an
-abstract source module in a filesystem, where the source parts are files with a
-<code>.bal </code>extension stored in a directory, the module name comes from
-the name of that directory, and the version and organization name comes from a
-configuration file <code>Ballerina.toml</code> in that directory.
+The packaging system also allows control over which modules are exported from a
+package; modules that are not exported from a package are visible only to
+modules within the package.
 </p>
 </section>
 <section>
