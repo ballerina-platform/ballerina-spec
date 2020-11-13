@@ -2795,7 +2795,7 @@ descriptor:
 </p>
 
 <pre>object {
-   public function attach(T svc, string? name = ()) returns error?;
+   public function attach(T svc, string[]? path = ()) returns error?;
    public function detach(T svc) returns error?;
    public function start() returns error?;
    public function gracefulStop() returns error?;
@@ -8484,14 +8484,17 @@ result of the evaluation.
 <pre
 class="grammar">service-decl :=
    metadata [isolated-qual]
-   <code>service</code> [[type-descriptor] variable-name] <code>on</code> expression-list object-constructor-block
+   <code>service</code> [type-descriptor] [absolute-resource-path] <code>on</code> expression-list object-constructor-block
+absolute-resource-path :=
+   root-resource-path
+   (<code>/</code> resource-path-segment)+
+root-resource-path := <code>/</code>
+
 expression-list := expression (<code>,</code> expression)*
 </pre>
 <p>
 A <code>service-decl</code> creates a service object and attaches it to one or more
-listeners. If a variable-name is specified, it also declares a variable; as with
-a variable declared in a final variable declaration, the variable can be
-referenced by a variable-reference, but cannot be assigned to.
+listeners. 
 </p>
 <p>
 The static type S for the constructed service object is specified by the
@@ -8501,17 +8504,30 @@ expression-list must have a type Listener&lt;T&gt;|E where T is a subtype of
 <code>service object {}</code> and E is a subtype of <code>error</code>; the
 inferred type is T. The object-constructor-block has the same semantics as in an
 object-constructor-expr with a <code>service</code> qualifier and a
-type-reference that refers to S. The type S is also used as the type of the
-variable declared. If the service-decl includes <code>isolated</code>, then it
+type-reference that refers to S. If the service-decl includes <code>isolated</code>, then it
 is equivalent to an object-constructor-expr with an <code>isolated</code>
 qualifier as well as a <code>service</code> qualifier.
 </p>
 <p>
+The <code>absolute-resource-path</code> determines the second argument passed to
+the <code>attach</code> method: if the <code>absolute-resource-path</code> is
+absent, then the argument is nil; otherwise, the argument is an array of
+strings, with one string for each <code>resource-path-segment</code>. Attaching
+service objects <var>s</var><sub>1</sub>,...,<var>s</var><sub><var>n</var></sub>
+with absolute resource paths
+<var>p</var><sub>1</sub>,...,<var>p</var><sub><var>n</var></sub> is equivalent
+to attaching a single service object with <var>n</var> <code>get</code> resource
+methods to <code>/</code>, where the <var>i</var>-th resource method has a path
+<var>p</var><sub>i</sub> (an <code>absolute-resource-path</code> is turned into
+a <code>relative-resource-path</code> with the same
+<code>resource-path-segment</code>s) and returns
+<var>s</var><sub><var>i</var></sub>.
+</p>
+<p>
 A service-decl is initialized as part of module initialization as follows. The
 object-constructor-block is evaluated as in an object-constructor-expr resulting
-in a service object <code><var>s</var></code>. If variable-name is specified,
-then the variable is initialized to <code><var>s</var></code>. Then for each
-expression in expression-list:
+in a service object <code><var>s</var></code>. Then for each expression in
+expression-list:
 </p>
 <ol>
 <li>the expression is evaluated resulting in a value which is either an error or
