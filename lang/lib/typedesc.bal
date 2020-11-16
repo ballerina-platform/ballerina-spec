@@ -21,8 +21,8 @@ public type ModuleId readonly & record {|
     string organization;
     # the module name
     string name;
-    # the version string
-    string version;
+    # platform-specified parts of the identifier
+    string[] platformParts;
 |};
 
 # A record representing a type-id.
