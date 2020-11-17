@@ -4616,17 +4616,14 @@ set and its <code>method-defn-body</code> must satisfy the requirements for an
 In addition to remote methods, a service object can use <em>resources</em> to
 support network interaction. Resources support a more data-oriented style of
 network interaction, which complements the RPC style supported by remote
-methods. A service object's resources are organized hierarchically in a tree.
-Each edge of the tree is labelled with a string. The label from a node to a
-child node uniquely identifies the child relative to its siblings. Each node in
-the tree is associated with zero or more resource methods. Each resource method
-has an method name, which identifies an operation to be performed on the
-resource; by convention the method name <code>get</code> is used for retrieving
-the resource. The resource's method name uniquely identifies it relative to
-other resource methods on the same node. A resource method is thus uniquely
-identified relative to its service object by the combination of a path in the
-resource tree and a method name. A resource method can only be invoked by a
-listener object.
+methods. A service object's resources are arranged in a tree. Each resource
+exposes one or more named methods; by convention the method name
+<code>get</code> is used for retrieving the resource. A listener thus identifies
+a resource method to be called using the combination of a hierarchical path,
+which identifies the resource, and the resource method name. A resource method
+can also specify that a segment of the path provided by the listener should be
+treated as a parameter. A resource method can only be invoked by a listener
+object.
 </p>
 
 <pre
@@ -4640,19 +4637,35 @@ resource-qual := <code>resource</code>
 resource-method-name := identifier
 resource-path :=
    dot-resource-path
-   | resource-path-segment (<code>/</code> resource-path-segment)*
+   | resource-path-segment (<code>/</code> resource-path-segment)* [<code>/</code> resource-path-rest-param]
+   | resource-path-rest-param
 dot-resource-path := <code>.</code>
-resource-path-segment := identifier
+resource-path-segment := resource-path-segment-name | resource-path-segment-param
+resource-path-segment-name := identifier
+resource-path-segment-param := <code>[</code>[annots] type-descriptor param-name<code>]</code>
+resource-path-rest-param := <code>[</code>[annots] type-descriptor <code>...</code> param-name<code>]</code>
 </pre>
+
 <p>
 A <code>resource-method-defn</code> defines a resource method. This is allowed
 only when an <code>object-network-qual</code> of <code>service</code> is present
-in the <code>object-constructor-expr</code>. The
-<code>resource-method-name</code> specifies the resource's method name. The
-<code>resource-path</code> specifies the path to node in the resource tree; each
-<code>resource-path-segment</code> specifies the label of an edge from a node to
-its child. A <code>dot-resource-path</code> specifies the root of the service
-object's resource tree.
+in the <code>object-constructor-expr</code>. The <code>resource-path</code>
+specifies the node in the service object's resource tree to which the method is
+attached and the <code>resource-method-name</code> specifies the method name. It
+is an error to have two <code>resource-method-defn</code>s that both have the
+same name and have a path that refers to the same node. A
+<code>dot-resource-path</code> specifies the root of the service object's
+resource tree. In a service object's resource tree, each edge from a parent node
+to a child node has a label, which uniquely identifies the child relative to its
+siblings. A label is either a string or one of two special values that indicate
+that the corresponding path segment should be treated as a parameter. A
+<code>resource-path-segment-name</code> specifies a label that is a string. The
+two special label values come from a <code>resource-path-segment-param</code>
+and a <code>resource-path-rest-param</code> respectively. A parameter in a
+<code>resource-path-segment-param</code> will be bound to a value representing a
+single path segment; a parameter in a <code>resource-path-rest-param</code> will
+be bound to a list representing zero or more path segments, with each member
+representing a single path segment.
 </p>
 
 </section>
