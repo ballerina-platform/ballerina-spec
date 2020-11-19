@@ -4665,7 +4665,85 @@ and a <code>resource-path-rest-param</code> respectively. A parameter in a
 <code>resource-path-segment-param</code> will be bound to a value representing a
 single path segment; a parameter in a <code>resource-path-rest-param</code> will
 be bound to a list representing zero or more path segments, with each member
-representing a single path segment.
+representing a single path segment. The type of a path segment depends on the
+listener, but the listener must be able to convert it into a string. For
+example, in HTTP a path segment is natively a sequence of bytes, and an HTTP
+listener could convert it into a string by decoding with UTF-8. It also depends
+on the listener which types other than string it is able to convert a path
+segment to.
+</p>
+<p>
+A resource method with a name of <code>get</code> that can return a service
+object represents a subservice. It is subject to the following restrictions:
+</p>
+<ul>
+<li>the return type must not allow anything other that service
+objects and errors;</li>
+<li>the resource path must not end with a <code>resource-path-rest-param</code>;</li>
+<li>the method's node must not have any child nodes.</li>
+</ul>
+<p>
+The semantics of hierarchical resources are defined by a lookup function, which
+takes four parameters:
+</p>
+<ul>
+<li><var>m</var> is the name of the method;</li>
+<li><var>p</var> is the resource path;</li>
+<li><var>r</var> refers to a node in the resource tree of a service object;</li>
+<li><var>v</var> is the list path segments bound so far.</li>
+</ul>
+<p>
+It returns an error or a tuple [<var>r</var>, <var>v</var>], where
+</p>
+<ul>
+<li><var>r</var> is a node in the resource tree with an m method, which is the
+method to be called;</li>
+<li><var>v</var> is a list of path segments to be bound to the method’s variable
+resource path parameters.</li>
+</ul>
+<p>
+The function lookup(<var>m</var>, <var>p</var>, <var>r</var>, <var>v</var>) is
+defined as follows:
+</p>
+<ol>
+<li>If <var>r</var> has a <code>get</code> method that can return a service
+object, then call the <code>get</code> method of <var>r</var> using <var>v</var>
+to bind the path parameters; if the result is an error, then return that error;
+otherwise, the result must be a service object. Let <var>r</var>' be the root of
+its resource tree. Return lookup(<var>m</var>, <var>p</var>, <var>r</var>',
+[]).</li>
+<li>If <var>p</var> is empty: 
+<ol>
+<li>if <var>r</var> has a method <var>m</var>, then return
+[<var>r</var>,<var>v</var>];</li>
+<li>otherwise, if <var>r</var> has a child labelled as repeated variable path
+segment and that child has a method <var>m</var>, then let <var>r</var>' be
+child with that label and return [<var>r</var>',<var>v</var>];</li>
+<li>otherwise, return an error.</li> 
+</ol>
+</li>
+<li>Let the first segment in <var>p</var> be <var>s</var> and let <var>p</var>'
+be a list of the 2nd and subsequent members of <var>p</var>.</li>
+<li>If <var>r</var> has a child labelled with the string that results from
+converting <var>s</var> to a string, then let <var>r</var>' be the child with
+that label. Return lookup(<var>m</var>, <var>p</var>', <var>r</var>',
+<var>v</var>).</li>
+<li>If <var>r</var> has an edge to a child labelled as a single path segment
+parameter, then let <var>r</var>' be that child and let <var>v</var>' be the
+result of adding <var>s</var> to the end of <var>v</var>. Return
+lookup(<var>m</var>, <var>p</var>', <var>r</var>', <var>v</var>').</li>
+<li>If <var>r</var> has an edge to a child labelled as a rest parameter and that
+child has a method <var>m</var>, then let <var>r</var>' be that child, and let
+<var>v</var>' be the result of concatenating <var>v</var> and <var>p</var>.
+Return [<var>r</var>',<var>v</var>'].</li>
+<li>Otherwise, return an error.</li>
+</ol>
+<p>
+The syntax allows only the last of a resource method's path parameters to be a
+rest parameter. When a list of path segments is bound to the path parameters of
+a resource method, one path segment is bound to each path parameter that is not
+a rest parameter and a list of the remaining path segments is bound to the rest
+parameter, if any.
 </p>
 
 </section>
