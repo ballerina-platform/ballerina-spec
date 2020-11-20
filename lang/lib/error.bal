@@ -55,3 +55,19 @@ public isolated function detail(error<DetailType> e) returns readonly & DetailTy
 # + return - a new object representing the stack trace of the error value
 public isolated function stackTrace(error e) returns readonly & object { } = external;
 
+# Converts an error to a string.
+#
+# + e - the error to be converted to a string
+# + return - a string resulting from the conversion
+#
+# The details of the conversion are specified by the ToString abstract operation
+# defined in the Ballerina Language Specification, using the direct style.
+public isolated function toString(error e) returns string = external;
+
+# Converts an error to a string that describes the value in Ballerina syntax.
+# + e - the error to be converted to a string
+# + return - a string resulting from the conversion
+#
+# The details of the conversion are specified by the ToString abstract operation
+# defined in the Ballerina Language Specification, using the expression style.
+public isolated function toBalString(error e) returns string = external;
