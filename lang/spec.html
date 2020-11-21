@@ -8493,31 +8493,34 @@ unsuccessful, terminates the program execution.
 <h3>Listeners and services</h3>
 
 <p>
-Service objects have remote methods, which are the network entry points of a
-Ballerina program. Listeners provide the interface between the network and
-service objects. A listener object receives network messages from a remote
-process according to some protocol and translates the received messages into
-calls on the remote methods of service objects that have been attached to the
-listener object. It is up to the listener object to determine how this
-translation happens; the type of the listener object thus constrains the type of
-a service that can be attached to the listener. (This constraint is not yet
-enforced by Ballerina's type system.)
+Service objects support network interaction using remote methods and resource
+methods. Listeners provide the interface between the network and service
+objects. A listener object receives network messages from a remote process
+according to some protocol and translates the received messages into calls on
+the remote and resource methods of service objects that have been attached to
+the listener object. It is up to the listener object to determine how this
+translation happens; the type of the listener object constrains the type of a
+service that can be attached to the listener. (This constraint cannot yet be
+fully expressed by Ballerina's type system.)
 </p>
 <p>
-An error return value is used by a service object's remote method to indicate
-that it encountered an error in processing the protocol message. The
-interpretation of other return values is dependent on the listener object. A
-listener object can allow a service object's remote method to use the return
-value to supply the response in the non-error case. This has the limitation that
-the remote method cannot control what happens if there is an error in sending a
-response. It also has the limitation that it cannot handle complex message
-exchange patterns, although returning multiple responses to a single request can
-be modelled by a remote method that returns a stream. A listener object can
+A service object's remote or resource method uses its return value to indicate
+to the listener what further handling of the network message is needed. An error
+return value is used to indicate that the method encountered some sort of error
+in handling the network message. When a service object is returned, it means
+that the listener should use that service object to further handle the network
+message. When no further handling is needed, the return value should be nil.
+</p>
+<p>
+The return value can also be used to supply a response to the network message.
+This has the limitation that the method cannot control what happens if there is
+an error in sending a response. It also has the limitation that it cannot handle
+complex message exchange patterns, although returning multiple responses to a
+single request can be modelled by returning a stream. A listener object can
 avoid these limitations by passing a client object as a parameter to the service
-object's remote method; the service object then makes calls on the remote
-methods of the client object in order to send a response back to the client. In
-this case, the service object's remote method should return nil if it does not
-return an error.
+object's remote or resource method; the service object then makes calls on the
+remote methods of the client object in order to send a response back to the
+client.
 </p>
 <p>
 The methods defined by the Listener&lt;T&gt; object type allow for the
