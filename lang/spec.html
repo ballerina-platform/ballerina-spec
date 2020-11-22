@@ -8821,7 +8821,7 @@ is not allowed to assign to the variable after it is initialized.
 </p>
 <pre
 class="grammar">
-module-init-var-decl := metadata module-init-var-quals typed-binding-pattern <code>=</code> module-var-init <code>;</code>
+module-init-var-decl := metadata [<code>public</code>] module-init-var-quals typed-binding-pattern <code>=</code> module-var-init <code>;</code>
 module-init-var-quals := (<code>final</code> | isolated-qual | <code>configurable</code>)*
 module-var-init := expression | <code>?</code>
 </pre>
@@ -8836,12 +8836,12 @@ that type-descriptor provides the contextually expected type for action-or-expr.
 </p>
 <p>
 If a module-init-var-decl includes an isolated-qual, then the variable declared
-is isolated. In this case, the binding-pattern in the typed-binding-pattern must
-be just a variable-name, and the expression must be an isolated expression. A
-variable declared as an isolated variable can be accessed only within a
-lock-stmt. When an isolated-qual occurs in a position where the grammar would
-allow it to be parsed as part of module-init-var-quals or typed-binding-pattern,
-the former parse is used.
+is isolated. In this case, <code>public</code> must not be specified, the
+binding-pattern in the typed-binding-pattern must be just a variable-name, and
+the expression must be an isolated expression. A variable declared as an
+isolated variable can be accessed only within a lock-stmt. When an isolated-qual
+occurs in a position where the grammar would allow it to be parsed as part of
+module-init-var-quals or typed-binding-pattern, the former parse is used.
 </p>
 <p>
 If <code>configurable</code> is specified, then the initializer specified in the
@@ -8858,7 +8858,7 @@ a subtype of <code>anydata</code>.
 </p>
 
 <pre
-class="grammar">module-no-init-var-decl := metadata [<code>final</code>] type-descriptor variable-name <code>;</code>
+class="grammar">module-no-init-var-decl := metadata [<code>public</code>] [<code>final</code>] type-descriptor variable-name <code>;</code>
 </pre>
 <p>
 A module variable declared with <code>module-no-init-var-decl</code> must be
@@ -9509,9 +9509,11 @@ object constructors can declare fields as final.</li>
 objects; resource methods on service objects have become remote methods. There
 is a new concept for resource methods.</li>
 <li>The <code>readonly</code> type has been added. Fields of records can also be
-declared as <code>readonly</code>. Functions can be declared as
+declared as <code>readonly</code>.</li>
+<li>Functions, objects and module-level variables can be declared as
 <code>isolated</code>; this works in conjunction with <code>readonly</code> to
 support concurrency safety.</li>
+<li>Module-level variables can be public, provided they are not isolated.</li>
 <li>Intersection types have been added.</li>
 <li>Distinct types have been added; these provide the functionality of nominal
 types with the framework of a structural type system.</li>
