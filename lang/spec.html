@@ -7437,20 +7437,20 @@ variable must not be assigned more than once.
 </p>
 </section>
 <section>
-<h3>Implicit variable type narrowing</h3>
+<h3 id="conditional_variable_type_narrowing">Conditional variable type narrowing</h3>
 <p>
 Usually the type of a reference to a variable is determined by the variable's
 declaration, either explicitly specified by a type descriptor or inferred from
-the static type of the initializer.
-</p>
-<p>
-In addition, this section defines cases where a variable is used in certain
-kinds of boolean expression in a conditional context, and it can be proved at
-compile time that the value stored in local variable or parameter will, within a
-particular region of code, always belong to a type that is narrower that the
-static type of the variable. In these cases, references to the variable within
-particular regions of code will have a static type that is narrower that the
-variable type.
+the static type of the initializer. However, the language also recognizes two
+kinds of case where the way a local variable or parameter is used means that is
+known at compile-time that within a particular region of code the value of the
+variable will belong to a type that is narrower than the declared type. In these
+cases, references to the variable within particular regions of code will have a
+static type that is narrower that the variable type. One kind of case, which is
+described in this section, is when a variable is used in a boolean expression in
+a conditional context. The other kind of case is when a variable is used in a
+match statement; this is described in the <a href="#match_statement">Match
+statement</a> section.
 </p>
 <p>
 Given an expression E with static type boolean, and a variable x with static
@@ -7942,7 +7942,7 @@ class="grammar">do-stmt := <code>do</code> statement-block
 </pre>
 </section>
 <section>
-<h3>Match statement</h3>
+<h3 id="match_statement">Match statement</h3>
 
 <pre
 class="grammar">match-stmt := <code>match</code> action-or-expr <code>{</code> match-clause+ <code>}</code>
@@ -8074,12 +8074,47 @@ bound to a new mapping that contains just the fields for which that did not
 match a <code>field-match-pattern</code>.
 </p>
 <p>
-For a match of an <code>error-match-pattern</code> with an
+For every match pattern, there is a set of shapes that the pattern matches. The
+type corresponding to the match pattern is the type containing these shapes. The
+value matches the pattern if and only if it looks like the type. A mutable value
+thus can match the pattern without belonging to the corresponding type. However,
+an immutable value that matches the pattern will always belong to the type.
+In particular, for the match of an <code>error-match-pattern</code> with an
 <code>error-type-reference</code> against an error value to succeed, the
-referenced error type must contain the shape of the error value; since errors
-are immutable, this requirement is equivalent to requiring that the error value
-belong to the referenced error type.
+error value must belong to the referenced error type.
 </p>
+<p>
+A variable is the <em>matched variable</em> of a <code>match-statement</code> if
+the <code>action-or-expression</code> following <code>match</code> is a
+<code>variable-reference</code> that references this variable. The type of a
+matched variable is subject to narrowing within regions of the
+<code>match-statement</code> as follows. The matched variable has a narrowed
+type at the start of each match-clause, which is determined by previous
+<code>match-clause</code>s; the type for the first <code>match-clause</code> is
+the normal static type of the variable. Narrowing is applied to each
+<code>match-clause</code> as follows:
+</p>
+<ul>
+<li>let <var>T</var> be the narrowed type of the matched variable at the start
+of the match-clause;</li>
+<li>let <var>P</var> be the union of the corresponding types of each
+<code>match-pattern</code> in the <code>match-pattern-list</code> of the
+<code>match-clause</code>;</li>
+<li>let <var>N</var> be the intersection of <var>T</var> and
+<var>P</var>;</li>
+<li>let <var>R</var> be the set difference of <var>T</var> and
+<var>P</var>;</li>
+<li>if <var>N</var> is a subtype of <code>readonly</code>, then the narrowed
+type for the <code>match-guard</code>, if any, and <code>statement-block</code>
+of the <code>match-clause</code> is <var>N</var>; otherwise it is
+<var>T</var>;</li>
+<li>if there is a match-guard, then the type narrowing described in <a
+href="#conditional_variable_type_narrowing">Conditional variable type
+narrowing</a> is done in addition to the type narrowing described here;</li>
+<li>if <var>R</var> is a subtype of <code>readonly</code> and there is no
+<code>match-guard</code>, then the narrowed type for the next
+<code>match-clause</code> is <var>R</var>; otherwise, it is <var>T</var>.</li>
+</ul>
 
 </section>
 <section>
