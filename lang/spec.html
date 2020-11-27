@@ -1630,9 +1630,9 @@ exclusive-record-type-descriptor :=
 field-descriptor :=
    individual-field-descriptor | record-type-inclusion
 individual-field-descriptor :=
-   metadata [<code>readonly</code>] type-descriptor field-name [<code>?</code> | default-value] <code>;</code>
+   metadata [<code>readonly</code>] type-descriptor field-name [<code>?</code> | (<code>=</code> default-expression)] <code>;</code>
 field-name := identifier
-default-value := <code>=</code> expression
+default-expression := expression
 record-type-inclusion := <code>*</code> type-reference <code>;</code>
 record-rest-descriptor := type-descriptor <code>...</code> <code>;</code>
 </pre>
@@ -1697,15 +1697,16 @@ specifies <code>readonly</code>, then it describes a type that is a subtype of
 set.
 </p>
 <p>
-A <code>default-value</code> specifies a default value for the field, which is
-used when the record type descriptor is used to construct a mapping value but no
-value is specified explicitly for the field. The type descriptor contains a
-0-argument function closure for each default value. The closure is created from
-the expression when the type descriptor is resolved. The expression must meet
-the requirements for an <a href="#isolated_functions">isolated function</a>. The
-closure is evaluated to create a field value each time the default is used in
-the construction of a mapping value. The default value does not affect the type
-described by the type descriptor.
+A <code>default-expression</code> is an expression that specifies a default
+value for the field, which is used when the record type descriptor is used to
+construct a mapping value but no value is specified explicitly for the field.
+The type descriptor contains a 0-argument function closure for each default
+value. The closure is created from the expression when the type descriptor is
+resolved. The expression must meet the requirements for an <a
+href="#isolated_functions">isolated function</a>. The closure is evaluated to
+create a field value each time the default is used in the construction of a
+mapping value. The default value does not affect the type described by the type
+descriptor.
 </p>
 <p>
 A <code>record-type-inclusion</code> includes fields from a named record type.
@@ -1902,9 +1903,10 @@ class="grammar">param-list :=
 required-params := required-param (<code>,</code> required-param)*
 required-param := [annots] type-descriptor [param-name]
 defaultable-params := defaultable-param (<code>,</code> defaultable-param)*
-defaultable-param := [annots] type-descriptor [param-name] default-value
+defaultable-param := [annots] type-descriptor [param-name] <code>=</code> (default-expression | inferred-typedesc-default) 
 rest-param := [annots] type-descriptor <code>...</code> [param-name]
 param-name := identifier
+inferred-typedesc-default := <code>&lt;</code> <code>&gt;</code>
 </pre>
 <p>
 A param-name can be omitted from a required-param, defaultable-param or
@@ -1946,11 +1948,17 @@ The conformance of the argument list ensures that the members of this list will
 belong to type T.
 </p>
 <p>
-A defaultable-param is a parameter for which a default value is specified. The
-expression specifying the default value may refer to previous parameters by
-name. For each defaultable parameter, the function's type descriptor includes a
-closure that computes the default value for the parameter using the values of
-previous parameters. The caller of the function uses the closures in the
+A defaultable-param is a parameter for which a default value is specified. An
+expression can be used to specify the default value; this expression may refer
+to previous parameters. Each such expression is turned into a closure that
+computes the default value for the parameter using the values of previous
+parameters, and this closure is part of the type descriptor for the function. It
+is also possible for the default to be specified as <code>&lt;&gt;</code>; this
+means that the default value is a <code>typedesc</code> value that is to be
+inferred by the caller from the contextually expected type of the function call.
+It is allowed only when the parameter name to which the default value applies is
+referenced in the return-type-descriptor, as described below, and is allowed for
+at most one parameter in a function. The caller of the function uses the
 function's type descriptor to compute default values for any defaultable
 arguments that were not specified explicitly. These default values are included
 in the argument list passed to the function. Whether a parameter is defaultable,
@@ -1960,8 +1968,8 @@ when the type descriptor is resolved; the default value is computed by calling
 the closure each time the function is called and the corresponding parameter is
 not specified. Whether a parameter is defaultable is used at compile time, but
 the closure that computes the default value is only used at runtime. If the
-function-type-descriptor includes an isolated-qual, then an expression in a
-default-value must meet the requirements for an <a
+function-type-descriptor includes an isolated-qual, then an expression used as a
+default-expression must meet the requirements for an <a
 href="#isolated_functions">isolated function</a>.
 </p>
 <p>
@@ -5226,14 +5234,32 @@ array type. If there is rest-arg, then no parameter defaults are added.
 <p>
 If there is no rest-arg, then each non-rest parameter that was not supplied by
 positional argument is added in order from a named argument, if there is one,
-and otherwise using the parameter default. The contextually expected type for
-the expression specifying a named argument is the type declared for the
-corresponding parameter. A default parameter is computed by calling the closure
-in the type descriptor, passing it the previous arguments in the argument list.
-It is a compile-time error if there is a non-rest parameter for which there was
-no positional argument and no named argument and which is not defaultable. It is
+and otherwise using the default value specified in the function's type
+descriptor. The contextually expected type for the expression specifying a named
+argument is the type declared for the corresponding parameter. It is a
+compile-time error if there is a non-rest parameter for which there was no
+positional argument and no named argument and which is not defaultable. It is
 also an error if there is a named argument for a parameter that was supplied by
 a positional argument.
+</p>
+<p>
+If the default value for a parameter was specified as <code>&lt;&gt;</code>,
+then then the caller will pass a typedesc value determined at compile-time from
+the contextually expected type of the function-call-expr as follows. Let the
+name of the parameter for which a default of <code>&lt;&gt;</code> was specified
+be <var>t</var>. Let the type of <var>t</var> be typedesc&lt;<var>T</var>&gt;.
+Let the return type descriptor for the function be <var>R</var>, which will have
+references to <var>t</var>. Let the contextually expected type for the
+function-call-expr be <var>C</var>. Then the default value is found by unifying
+<var>C</var> and <var>R</var>: the default value is a typedesc value
+representing a type descriptor <var>S</var> that is a subtype of <var>T</var>,
+such that <var>R</var> with <var>S</var> substituted for <var>t</var> is
+equivalent to <var>C</var>.
+</p>
+<p>
+If the default value for a parameter was specifed using an expression, then it
+is computed by calling the closure stored in the type descriptor, passing it the
+previous arguments in the argument list.
 </p>
 <p>
 A function-call-expr is isolated if the type of the function being called is
@@ -9567,7 +9593,8 @@ function.</li>
 structural types and no longer has preview status.</li>
 <li>Enum declarations have been added.</li>
 <li>The return type of a function with an external body can depend on the value
-of a parameter of typedesc type.</li>
+of a parameter of typedesc type, which can be defaulted from the contextually
+expected type.</li>
 <li>Query expressions support some new clauses: <code>join</code> clause,
 <code>order by</code> clause, <code>limit</code> clause and <code>on
 conflict</code> clause.</li>
