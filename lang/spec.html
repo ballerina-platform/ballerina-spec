@@ -261,16 +261,14 @@ points.
 
 <pre
 class="grammar">identifier := UnquotedIdentifier | QuotedIdentifier
-UnquotedIdentifier :=
-   IdentifierInitialChar IdentifierFollowingChar*
-QuotedIdentifier := <code>'</code> QuotedIdentifierChar+
-QuotedIdentifierChar :=
-  IdentifierFollowingChar
-  | QuotedIdentifierEscape
-  | StringNumericEscape
+UnquotedIdentifier := (IdentifierInitialChar | IdentifierEscape) (IdentifierFollowingChar | IdentifierEscape)*
+QuotedIdentifier := <code>'</code> (IdentifierFollowingChar | IdentifierEscape)+
 IdentifierInitialChar :=  AsciiLetter | <code>_</code> | UnicodeIdentifierChar
 IdentifierFollowingChar := IdentifierInitialChar | Digit
-QuotedIdentifierEscape := <code>\</code> ^ ( AsciiLetter | 0x9 | 0xA | 0xD | UnicodePatternWhiteSpaceChar )
+IdentifierEscape := IdentifierSingleEscape | NumericEscape
+IdentifierSingleEscape := <code>\</code> ^ ( AsciiLetter | 0x9 | 0xA | 0xD | UnicodePatternWhiteSpaceChar )
+NumericEscape := <code>\u{</code> CodePoint <code>}</code>
+CodePoint := HexDigit+
 AsciiLetter := <code>A</code> .. <code>Z</code> | <code>a</code> .. <code>z</code>
 UnicodeIdentifierChar := ^ ( AsciiChar | UnicodeNonIdentifierChar )
 AsciiChar := 0x0 .. 0x7F
@@ -292,10 +290,14 @@ of Unicode TR31 for immutable identifiers; the set of characters is immutable in
 the sense that it does not change between Unicode versions.
 </p>
 <p>
-The QuotedIdentifier syntax allows an arbitrary non-empty string to be treated
-as an identifier. In particular, a reserved keyword <code><var>K</var></code>
-can be used as an identifier by preceding it with a single quote i.e.
-<code>'<var>K</var></code>.
+The <code>QuotedIdentifier</code> syntax allows a reserved keyword
+<code><var>K</var></code> can be used as an identifier by preceding it with a
+single quote i.e. <code>'<var>K</var></code>. The <code>IdentifierEscape</code>
+syntax allows an arbitrary non-empty string to be treated as an identifier. In a
+<code>NumericEscape</code>, <code>CodePoint</code> must valid Unicode code
+point; more precisely, it must be a hexadecimal numeral denoting an integer
+<em>n</em> where 0 &#x2264; <em>n</em> &lt; 0xD800 or 0xDFFF &lt; n &#x2264;
+0x10FFFF.
 </p>
 
 <pre
@@ -1153,10 +1155,8 @@ class="grammar">string-type-descriptor := <code>string</code>
 string-literal := DoubleQuotedStringLiteral
 DoubleQuotedStringLiteral := <code>"</code> (StringChar | StringEscape)* <code>"</code>
 StringChar := ^ ( 0xA | 0xD | <code>\</code> | <code>"</code> )
-StringEscape := StringSingleEscape | StringNumericEscape
+StringEscape := StringSingleEscape | NumericEscape
 StringSingleEscape := <code>\t</code> | <code>\n</code> | <code>\r</code> | <code>\\</code> | <code>\"</code>
-StringNumericEscape := <code>\u{</code> CodePoint <code>}</code>
-CodePoint := HexDigit+
 </pre>
 <p>
 A string is an sequence of zero or more Unicode characters. More precisely, it
@@ -1165,12 +1165,6 @@ Unicode scalar value is any code point in the Unicode range of 0x0 to 0x10FFFF
 inclusive, other than surrogate code points, which are 0xD800 to 0xDFFF
 inclusive. Note that a string may include Unicode noncharacters, such as 0xFFFE
 and 0xFFFF.
-</p>
-<p>
-In a <code>StringNumericEscape</code>, <code>CodePoint</code> must valid Unicode
-code point; more precisely, it must be a hexadecimal numeral denoting an
-integer <em>n</em> where 0 &#x2264; <em>n</em> &lt; 0xD800 or 0xDFFF &lt; n &#x2264;
-0x10FFFF.
 </p>
 <p>
 String values do not have storage identity and so the string basic type is
