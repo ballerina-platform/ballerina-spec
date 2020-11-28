@@ -52,6 +52,7 @@ public isolated function iterator(stream<Type,CompletionType> stm) returns objec
 
 # Closes a stream.
 # This releases any system resources being used by the stream.
+# Closing a stream that has already been closed has no efffect and returns `()`.
 #
 # + stm - the stream to close
 # + return - () if the close completed successfully, otherwise an error
