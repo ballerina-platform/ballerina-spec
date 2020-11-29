@@ -5212,29 +5212,42 @@ descriptor of the referenced function value.
 </p>
 <p>
 The expressions occurring in the arg-list are evaluated in the order in which
-they occur in the arg-list. The result of evaluating each positional-arg is
-added to the argument list in order. The contextually expected type for the
-expression in the i-th positional-arg is the type of the i-th parameter.
+they occur in the arg-list. The contextually expected type for the expression in
+the i-th positional-arg is the type of the i-th required or defaultable
+parameter; if there is no such parameter, then the contextually expected type is
+the type of the rest-param. The contextually expected type for the expression in
+a named-arg is the type declared for the corresponding parameter. The value of
+evaluating the expression for the rest-arg must be either a list or a mapping
+value.
 </p>
 <p>
-If there is a rest-arg, then it is evaluated. The result must be a list value.
-Each member of the list value is added to the argument in the order that it
-occurs. The static type of the list value must be such as to guarantee that the
-resulting argument list will conform to the function's declared param-list. The
-rest-arg is not restricted to supplying the part of the argument list that will
-be bound to a rest-param, and its static type is not restricted to being an
-array type. If there is rest-arg, then no parameter defaults are added.
+The results of evaluating the expressions in the arg-list are used to construct
+the argument list as follows. First, the result of evaluating each
+positional-arg is added to the argument list in order. Then there are three
+possibilities:
 </p>
+<ul>
+<li>If there is a rest-arg that evaluates to a list, then each member of the
+list value is added to the argument in the order that it occurs; default values
+are not used in this case.</li>
+<li>Otherwise, if there is no rest-arg, each required or defaultable parameter
+that was not supplied by a positional-arg is added in parameter declaration
+order from a named-arg, if there is one with the specified name, and otherwise
+using the default value as specified in the function's type descriptor.</li>
+<li>Otherwise, the rest-arg is a mapping and there are no named-args.
+The effect in this case is as if for each field of the mapping there
+was a named-arg, with the name and value of the named-arg coming
+from the name and value of the field.</li>
+</ul>
 <p>
-If there is no rest-arg, then each non-rest parameter that was not supplied by
-positional argument is added in order from a named argument, if there is one,
-and otherwise using the default value specified in the function's type
-descriptor. The contextually expected type for the expression specifying a named
-argument is the type declared for the corresponding parameter. It is a
-compile-time error if there is a non-rest parameter for which there was no
-positional argument and no named argument and which is not defaultable. It is
-also an error if there is a named argument for a parameter that was supplied by
-a positional argument.
+The static type of the rest-arg must be such as to guarantee that the
+constructed argument list will conform to the function's declared param-list.
+Note that in the case where the rest-arg is a list, it is is not restricted to
+supplying the part of the argument list that will be bound to a rest-param, nor
+is its static type restricted to being an array type. It is a compile-time error
+if there is a required parameter for which there was neither a positional
+argument nor a named argument, or if there is a named argument for a parameter
+that was supplied by a positional argument.
 </p>
 <p>
 If the default value for a parameter was specified as <code>&lt;&gt;</code>,
@@ -5262,9 +5275,9 @@ to the <code>clone</code> or <code>cloneReadOnly</code> functions defined by the
 lang.value module of the lang library is always isolated.
 </p>
 <p>
-When a function to be called results from the evaluation of an expression that
-is not merely a variable reference, the function can be called by first storing
-the value of the expression in a variable.
+When there is a need to call a function value resulting from the evaluation of
+an expression, the result of the expression evaluation can be assigned to a
+variable and then the function called by using a reference to the variable.
 </p>
 
 </section>
