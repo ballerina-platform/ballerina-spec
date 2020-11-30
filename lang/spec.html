@@ -2251,7 +2251,7 @@ class="grammar">object-type-inclusion := <code>*</code> type-reference <code>;</
 Every type descriptor referenced directly or indirectly by a
 <code>type-reference</code> in an <code>object-type-inclusion</code> must be an
 <code>object-type-descriptor</code>, <code>distinct-type-descriptor</code>,
-<code>intersection-type-descriptor</code> or a class; the referenced type
+<code>intersection-type-descriptor</code> or a class that is not readonly; the referenced type
 descriptor will thus necessarily be definite and a subtype of object. The
 <code>object-field-descriptor</code>s and <code>method-decl</code>s from the
 referenced type are included in the type being defined. A type-reference to a
@@ -4494,9 +4494,11 @@ object are the type-ids, if any, induced by T.
 <p>
 The <code>object-constructor-expr</code> is <em>implicitly read-only</em> if the
 applicable contextually expected type is a subtype of readonly or if the
-type-reference is present and references a type that is a subtype of readonly.
-If <code>object-constructor-expr</code> is <em>implicitly read-only</em>, then
-the object will be constructed with its read-only bit on.
+<code>type-reference</code> is present and references a type that is a subtype
+of readonly. If the <code>object-constructor-expr</code> is <em>implicitly
+read-only</em>, then the object will be constructed with its read-only bit on;
+furthermore, in this case an <code>object-type-inclusion</code> is allowed to
+directly or indirectly reference a readonly class.
 </p>
 <p>
 The <code>object-constructor-expr</code> is <em>explicitly isolated</em> if
@@ -8838,13 +8840,16 @@ class is subject to same requirements as when it occurs as an
 explicitly isolated.
 </p>
 <p>
-If an object-type-inclusion references a type-descriptor that is a class, then
-only the type of the class is included: the definitions of the methods and any
-initializers for the fields are not included. If a class uses an
+If an <code>object-type-inclusion</code> references a type-descriptor that is a
+class, then only the type of the class is included: the definitions of the
+methods and any initializers for the fields are not included. If a class uses an
 object-type-inclusion to include an object type T, then each method declared in
 T must be defined in the class using a <code>method-defn</code> with the same
 visibility. If T has a method or field with module-level visibility, then C must
-be in the same module.
+be in the same module. If the class is readonly (i.e.
+<code>class-type-quals</code> includes <code>readonly</code>), then an
+<code>object-type-inclusion</code> in the class is allowed to directly or
+indirectly reference a readonly class.
 </p>
 <p>
 If <code>class-type-quals</code> contains <code>distinct</code>, then the
