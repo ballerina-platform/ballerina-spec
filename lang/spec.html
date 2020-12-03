@@ -1875,8 +1875,14 @@ a non-empty set of type-ids.
 <h4 id="functions">Functions</h4>
 
 <pre
-class="grammar">function-type-descriptor := [isolated-qual] <code>function</code> [function-signature]
+class="grammar">function-type-descriptor :=
+   function-quals <code>function</code> function-signature
+   | [isolated-qual] <code>function</code>
+function-quals :=
+   transactional-qual [isolated-qual]
+   | [isolated-qual] [transactional-qual]
 isolated-qual := <code>isolated</code>
+transactional-qual := <code>transactional</code>
 function-signature := <code>(</code> param-list <code>)</code> return-type-descriptor
 </pre>
 <p>
@@ -2146,8 +2152,9 @@ the object has been constructed.
 
 <pre
 class="grammar">method-decl :=
-   metadata [<code>public</code>] [isolated-qual]
+   metadata [<code>public</code>] method-quals
    <code>function</code> method-name function-signature <code>;</code>
+method-quals := function-quals
 method-name := identifier
 </pre>
 <p>
@@ -2172,8 +2179,11 @@ class="grammar">remote-method-decl :=
    metadata remote-method-quals 
    <code>function</code> method-name function-signature <code>;</code>
 remote-method-quals :=
-   remote-qual [isolated-qual]
-   | isolated-qual remote-qual
+   remote-qual function-quals
+   | isolated-qual [transactional-qual] remote-qual
+   | transactional-qual [isolated-qual] remote-qual
+   | isolated-qual remote-qual transactional-qual
+   | transactional-qual remote-qual isolated-qual
 remote-qual := <code>remote</code>
 </pre>
 <p>
@@ -4575,7 +4585,7 @@ private.
 
 <pre
 class="grammar">method-defn :=
-   metadata object-visibility-qual [isolated-qual]
+   metadata object-visibility-qual method-quals
    <code>function</code> method-name function-signature method-defn-body
 </pre>
 
@@ -4637,8 +4647,11 @@ class="grammar">resource-method-defn :=
    metadata resource-method-quals
    <code>function</code> resource-method-name resource-path function-signature method-defn-body
 resource-method-quals :=
-   resource-qual [isolated-qual]
-   | isolated-qual resource-qual
+   resource-qual function-quals
+   | isolated-qual [transactional-qual] resource-qual
+   | transactional-qual [isolated-qual] resource-qual
+   | isolated-qual resource-qual transactional-qual
+   | transactional-qual resource-qual isolated-qual
 resource-qual := <code>resource</code>
 resource-method-name := identifier
 resource-path :=
@@ -5401,7 +5414,7 @@ the point where the error constructor was evaluated.
 
 <pre
 class="grammar">anonymous-function-expr := explicit-anonymous-function-expr | infer-anonymous-function-expr
-explicit-anonymous-function-expr := [annots] [isolated-qual] <code>function</code> function-signature (block-function-body|expr-function-body)
+explicit-anonymous-function-expr := [annots] function-quals <code>function</code> function-signature (block-function-body|expr-function-body)
 </pre>
 <p>
 Evaluating an anonymous-function-expr creates a closure, whose basic type is
@@ -8757,7 +8770,7 @@ without without relying on inference.
 <pre
 class="grammar">function-defn := 
    metadata
-   [<code>public</code>] [isolated-qual]
+   [<code>public</code>] function-quals
    <code>function</code> identifier function-signature function-defn-body
 function-defn-body :=
    block-function-body
