@@ -16,7 +16,7 @@ COPYFILES= \
   lib/array.bal lib/boolean.bal lib/decimal.bal lib/error.bal lib/float.bal \
   lib/future.bal lib/int.bal lib/map.bal lib/object.bal lib/stream.bal \
   lib/string.bal lib/table.bal lib/typedesc.bal lib/xml.bal \
-  lib/runtime.bal lib/value.bal \
+  lib/runtime.bal lib/transaction.bal lib/value.bal \
   style/ballerina-language-specification.css \
   style/ballerina-language-specification.js
 DISTFILES=spec.html $(COPYFILES)
