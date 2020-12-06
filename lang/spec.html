@@ -2029,7 +2029,21 @@ All function values belongs to a function-type-descriptor <code>function</code>;
 a function value belongs to the function-type-descriptor <code>isolated
 function</code> if and only if it is an isolated function.
 </p>
-
+<p>
+In addition to a readonly bit and an isolated bit, a function value also has a
+transactional bit. A function value with its transactional bit set can only be
+called in <a href="#transactions">transactional scope</a>; this is enforced by
+the type system. A function value with its transactional bit not set belongs to
+the type described by a function-type-descriptor with a function-signature only
+if the function-type-descriptor does not include a <code>transactional</code>
+qualifier. This means that a function-type-descriptor with a function-signature
+but without a <code>transactional</code> qualifier is a subtype of the
+corresponding function-type-descriptor with a <code>transactional</code>
+qualifier. Note that the subtyping relationship for <code>transactional</code>
+is in the opposite direction from <code>isolated</code>. A function value's
+transactional bit does not affect whether it belongs to the type described by a
+function-type-descriptor without a function-signature.
+</p>
 </section>
 <section>
 <h4>Objects</h4>
@@ -2845,6 +2859,8 @@ expression. The type is defined in <code>lang.object</code> as follows.
 <h4>RetryManager</h4>
 
 <p>
+Classes of type RetryManager are defined by the application to allow control
+over retries performed by the retry statement and retry transaction statement
 The object type RetryManager&lt;E&gt;, where E is a a subtype of
 <code>error</code>, is described by the following object type descriptor:
 </p>
@@ -2853,6 +2869,11 @@ The object type RetryManager&lt;E&gt;, where E is a a subtype of
    public function shouldRetry(E e) returns boolean;
 }
 </pre>
+<p>
+Note that RetryManager&lt;E&gt; is contravariant in E i.e. RetryManager&lt;E&gt;
+is a subtype of RetryManager&lt;E'&gt; if and only if E' is a subtype of E.
+</p>
+
 </section>
 
 </section>
@@ -6593,6 +6614,11 @@ where <code>v</code> is a variable name not used in <code><var>X</var></code>.
 <pre
 class="grammar">transactional-expr := <code>transactional</code>
 </pre>
+<p>
+A <code>transactional-expr</code> evaluates to true if the expression is being
+evaluated in transaction mode and false otherwise.
+</p>
+
 </section>
 
 </section>
@@ -8296,7 +8322,7 @@ The static type of <code>expression</code> must be a subtype of boolean.
 class="grammar">continue-stmt := <code>continue</code> <code>;</code>
 </pre>
 <p>
-A continue statement is only allowed if it is lexically enclosed within a
+A continue statement is only allowed if it is lexically within a
 while-stmt or a foreach-stmt. Executing a continue statement causes execution of
 the nearest enclosing while-stmt or foreach-stmt to jump to the end of the
 outermost statement-block in the while-stmt or foreach-stmt.
@@ -8308,7 +8334,7 @@ outermost statement-block in the while-stmt or foreach-stmt.
 <pre class="grammar">break-stmt := <code>break</code> <code>;</code>
 </pre>
 <p>
-A break statement is only allowed if it is lexically enclosed within a
+A break statement is only allowed if it is lexically within a
 while-stmt or a foreach-stmt. Executing a break statement causes the nearest
 enclosing while-stmt or foreach-stmt to terminate.
 </p>
@@ -8381,6 +8407,26 @@ variable-reference-expr occurs within an expression that is isolated.</li>
 <section>
 <h3>Fail and retry</h3>
 <section>
+<h4>Fail statement</h4>
+<pre
+class="grammar">fail-stmt := <code>fail</code> expression <code>;</code>
+</pre>
+<p>
+Executing a fail-stmt will cause control flow to transfer to the on-fail-clause
+of the nearest lexically enclosing failure handling statement. The failure
+handling statements are stmt-with-on-fail, retry-stmt, transaction-stmt and
+retry-transaction-stmt. If there is no such statement, it terminates the current
+worker normally.
+</p>
+<p>
+The static type of the expression must be a subtype of error. Execution of the
+fail-stmt evaluates the expression; the resulting error value is passed to the
+failure handling statement or becomes the termination value of the current
+worker.
+</p>
+
+</section>
+<section>
 <h4>On fail clause</h4>
 <pre
 class="grammar">stmt-with-on-fail := regular-compound-stmt on-fail-clause
@@ -8406,71 +8452,206 @@ to succeed by the static type of the associated error value.
 </section>
 
 <section>
-<h4>Fail statement</h4>
-<pre
-class="grammar">fail-stmt := <code>fail</code> expression <code>;</code>
-</pre>
-<p>
-Executing a fail-stmt will cause control flow to transfer to the on-fail-clause
-of the nearest lexically enclosing statement that has an on-fail-clause. If
-there is no such statement, it terminates the current worker normally.
-</p>
-<p>
-The static type of the expression must be a subtype of error. Execution of the
-fail-stmt evaluates the expression; the resulting error value is passed to the
-on-fail-clause or becomes the termination value of the current worker.
-</p>
-
-</section>
-<section>
 <h4>Retry statement</h4>
 <pre
 class="grammar">retry-stmt := <code>retry</code> retry-spec statement-block
 retry-spec := [type-parameter] [ <code>(</code> arg-list <code>)</code> ]
 </pre>
+<p>
+The type-parameter in a retry-spec specifies a class, which must be a subtype of
+RetryManager&gt;F&lt;, where F is the failure type of the statement-block; this
+implies that the parameter type of the class's shouldRetry method must be a
+supertype of F. The arg-list in a retry-spec specifies parameters to be passed
+to the class's <code>init</code> method; as with <code>new</code>, the arg-list
+can be omitted if the class's <code>init</code> method has no required
+arguments.
+</p>
+<p>
+A retry-stmt is executed as follows:
+</p>
+<ol>
+<li>Create an object r of type RetryManager by calling <code>new T(A)</code>,
+where T and A are the type-descriptor in the type-parameter and the arg-list
+respectively.</li>
+<li>Execute the statement-block.</li>
+<li>If the execution failed with associated error e, then call
+<code>r.shouldRetry(e)</code>. If the result is true, go back to the previous
+step. If the result is false, then continue with the fail.</li>
+</ol>
+<p>
+If the type-parameter is omitted, it defaults to
+<code>DefaultRetryManager</code> defined in langlib error module.
+</p>
+
 </section>
 
 </section>
 
 <section>
-<h3>Transactions</h3>
+<h3 id="transactions">Transactions</h3>
+
+<p>
+Ballerina supports distributed transactions. A global transaction consists of
+multiple transaction branches, where a branch corresponds to work done by a
+single strand of a Ballerina program that is part of the global transaction.
+Every transaction branch is uniquely identified by an XID, which consists of an
+identifier of the global transaction and an identifier of a branch with the
+global transaction.
+</p>
+<p>
+At runtime, there is a mapping from each strand to a transaction stack, which is
+a stack of transaction branches. A strand is in <em>transaction mode</em>, if
+its transaction stack is non-empty; the top of a strand's transaction stack is
+the current transaction branch for that strand.
+</p>
+<p>
+A running instance of a Ballerina program includes a transaction manager. This
+may run in the same process as the Ballerina program or in a separate process.
+It should not be connected over an unreliable network.
+</p>
+<p>
+A strand in transaction mode can register commit or rollback handlers with the
+transaction manager for the current transaction branch, which are functions
+which will be called by the transaction manager when the decision has been made
+whether to commit or rollback the global transaction to which the branch
+belongs.
+</p>
+<p>
+Static checking is based on the idea of a transactional scope: this is a lexical
+region of the program where it is known that at runtime the strand executing the
+region will always be in transactional mode. A function with the
+<code>transactional</code> qualifier can only be called in a transactional
+scope.
+</p>
+<p>
+Ballerina also has the concept that a transaction may be part of a sequence of
+retries, where the last transaction can complete with either a rollback or
+commit, and the preceding transactions all completed with a rollback.
+</p>
 
 <section>
 <h4>Transaction manager</h4>
 
+<p>
+The semantics of Ballerina's transactional language features are defined in
+terms of the following abstract operations on the transaction manager. These
+operations cover only the interface between the application and the transaction
+manager, not the interface between the resource manager and the application.
+These operations are all performed by a Ballerina program in the context of a
+strand. The transaction manager supports additional operations, which are
+defined in the langlib transaction module.
+</p>
+
 <section>
 <h5>Begin operation</h5>
+<p>
+The Begin operation starts a global transaction and pushes a transaction branch
+for the new global transaction onto the current strand's transaction stack. This
+transaction branch is the initiating branch of the global transaction. The
+current strand will be in transaction mode.
+</p>
+<p>
+The Begin operation has an optional parameter that contains information about
+the previous transactions in a sequence of retries.
+</p>
 </section>
 
 <section>
 <h5>Commit operation</h5>
+<p>
+The Commit operation is only called in transaction mode, and when the current
+transaction branch is the initiating branch of a global transaction. The Commit
+operation always removes the topmost transaction branch from the strand's transaction
+stack. The Commit operation initiates a commit of the global transaction that
+the current transaction branch belongs to.
+</p>
+<p>
+When the commit is initiated, the transaction manager runs a two-phase commit
+protocol if necessary. First, it requests each participant to prepare to commit
+and waits for the participants to respond. There are two possibilities. If it
+receives a response from each participant that it is prepared to commit, then
+the transaction manager will make a decision to commit. If it receives a
+response from any participant that it cannot commit or it gives up waiting for a
+response from any participant, then the transaction manager will make a decision
+to rollback; in this case, it will create an error value for the cause of the
+rollback.
+</p>
+<p>
+Once the transaction manager has made a decision whether to commit, it calls the
+handlers that were registered with it for for the branches of the global
+transaction that it is managing; the commit handlers are called if the decision
+was to commit and the rollback handlers are called if the decision was to
+rollback. The error value for the cause of the rollback will be passed as an
+argument to the call of each rollback handler. At this point, the Commit
+operation can return. The transaction manager will also communicate its decision
+to the transaction's participants, which will result in them running commit or
+rollback handlers for their branches.
+</p>
+<p>
+The Commit operation has an optional parameter which is a RetryManager object or
+nil, which defaults to nil. If this parameter is non-nil and the decision is to
+rollback, then the transaction manager will call the RetryManager object's
+shouldRetry method, record the result and then pass it as the willRetry
+parameter to any rollback handlers.
+</p>
+<p>
+If the transaction manager decided to rollback, then the Commit operation
+returns the error value for the cause of the rollback. Otherwise, it returns
+nil.
+</p>
+
 </section>
 
 <section>
 <h5>Rollback operation</h5>
-</section>
+<p>
+The Rollback operation is only called in transaction mode, and when the current
+transaction branch is the initiating branch of a global transaction. The
+Rollback operation always removes the topmost transaction from the strand's
+transaction stack. The Rollback operations initiates a commit of the global
+transaction that the current transaction branch belongs to. The transaction
+manager calls the rollback handlers that were registered with it for the
+branches of the global transaction that it is managing.
+</p>
+<p>
+The Rollback operation has an optional parameter which is a RetryManager object
+or nil, which defaults to nil. If this parameter is non-nil, then the
+transaction manager will call the RetryManager object's shouldRetry method,
+record the result and then pass it as the willRetry parameter to any rollback
+handlers.
+</p>
 
-<section>
-<h5>Info operation</h5>
 </section>
-
-<section>
-<h5>SetRollbackOnly operation</h5>
-</section>
-
-<section>
-<h5>SetTimeout operation</h5>
-</section>
-
 </section>
 
 <section>
 <h4>Transaction statement</h4>
 
+<p>
+A transaction is performed using a transaction statement. The semantics of the
+transaction statement guarantees that every transaction manager Begin operation
+will be paired with a Rollback or Commit operation.
+</p>
 <pre
 class="grammar">transaction-stmt := <code>transaction</code> statement-block
 </pre>
-
+<p>
+The statement-block must contain at least one commit-action. In addition, the
+compiler must be able to verify that any exit out of the statement-block that is
+neither a panic nor a fail will have executed a commit-action or
+rollback-statement.
+</p>
+<p>
+A transaction-stmt is executed as follows:
+</p>
+<ul>
+<li>Perform the transaction Begin() operation.</li>
+<li>Execute the statement-block.</li>
+<li>If the new transaction that was begun is still the current transaction, then
+the statement-block must have failed or panicked. In this case, perform a
+Rollback(e) operation, where e is the error associated with the fail or panic,
+and then continue with the fail or panic.</li>
+</ul>
 </section>
 
 
@@ -8480,6 +8661,21 @@ class="grammar">transaction-stmt := <code>transaction</code> statement-block
 <pre
 class="grammar">retry-transaction-stmt := <code>retry</code> retry-spec transaction-stmt
 </pre>
+<p>
+A retry-transaction-stmt is the same as a retry-stmt containing a
+transaction-stmt, except as follows.
+</p>
+<ul>
+<li>When a transaction is retried, information about the previous transaction is
+passed as a parameter to the Begin() operation.</li>
+<li>If the transaction committed successfully, but the statement-block of the
+transaction-stmt failed, then the transaction-stmt will not be retried.</li>
+<li>The RetryManager is passed as a parameter to the Commit() and Rollback()
+operations and the shouldRetry method is then called by those operations, so
+that the result is available to the rollback handlers. The transaction manager
+records the result of calling shouldRetry, and this is used to determine whether
+to retry.</li>
+</ul>
 </section>
 
 <section>
@@ -8488,6 +8684,16 @@ class="grammar">retry-transaction-stmt := <code>retry</code> retry-spec transact
 <pre
 class="grammar">commit-action := <code>commit</code>
 </pre>
+<p>
+A <code>commit-action</code> is only allowed if it is lexically within the
+<code>statement-block</code> of a <code>transaction-stmt.</code>
+</p>
+<p>
+Evaluating the <code>commit-action</code> performs the transaction manager
+Commit() operation; the result of this operation is the result of the
+<code>commit-action</code>. Note that the commit action does not alter the flow
+of control.
+</p>
 
 </section>
 
@@ -8497,6 +8703,16 @@ class="grammar">commit-action := <code>commit</code>
 <pre
 class="grammar">rollback-stmt := <code>rollback</code> [expression] <code>;</code>
 </pre>
+<p>
+A <code>rollback-stmt</code> is only allowed if it is lexically within the
+<code>statement-block</code> of a <code>transaction-stmt.</code>
+</p>
+<p>
+The <code>rollback-stmt</code> performs the transaction manager Rollback(e)
+operation, where e is the result of executing the <code>expression</code>, if
+present, and nil otherwise. Note that like the commit action, the rollback
+statement does not alter the flow of control.
+</p>
 
 </section>
 
