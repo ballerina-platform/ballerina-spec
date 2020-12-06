@@ -2032,7 +2032,7 @@ function</code> if and only if it is an isolated function.
 <p>
 In addition to a readonly bit and an isolated bit, a function value also has a
 transactional bit. A function value with its transactional bit set can only be
-called in <a href="#transactions">transactional scope</a>; this is enforced by
+called in a <a href="#transactions">transactional scope</a>; this is enforced by
 the type system. A function value with its transactional bit not set belongs to
 the type described by a function-type-descriptor with a function-signature only
 if the function-type-descriptor does not include a <code>transactional</code>
@@ -6770,6 +6770,12 @@ particular, it is convenient to use <code>error&lt;*&gt;</code> to specify the
 error type.
 </p>
 <p>
+A named-worker is a transactional scope only if it is declared as
+<code>transactional</code>. This is allowed only if the block-function-body is a
+transactional scope, i.e. if it is the body of a function declared as
+<code>transactional</code>.
+</p>
+<p>
 When a function has named workers, the default worker executes in three stages,
 as follows:
 </p>
@@ -7019,6 +7025,7 @@ of basic type future immediately. If the static type of the call expression or
 action <code><var>C</var></code> is T, then the static type of <code>start
 <var>C</var></code> is future&lt;T&gt;.
 </p>
+
 
 </section>
 <section>
@@ -8521,7 +8528,14 @@ Static checking is based on the idea of a transactional scope: this is a lexical
 region of the program where it is known that at runtime the strand executing the
 region will always be in transactional mode. A function with the
 <code>transactional</code> qualifier can only be called in a transactional
-scope.
+scope; this includes functions called using <code>start</code>.
+</p>
+<p>
+When a new strand is created by a named-worker-decl that includes a
+<code>transactional</code> qualifier or by using <code>start</code> to call a
+function with a <code>transactional</code> qualifier, a new transaction branch
+will be created and joined to the current transaction; this transaction branch
+will be pushed onto transaction stack for the newly created strand.
 </p>
 <p>
 Ballerina also has the concept that a transaction may be part of a sequence of
@@ -9129,6 +9143,10 @@ fails. The following special requirements apply to the <code>init</code>
 function of a module: it must not be declared <code>public</code>; its return
 type must both be a subtype of <code>error?</code> and contain <code>()</code>;
 it must have no parameters.
+</p>
+<p>
+If the function-quals includes <code>transactional</code>, then
+expr-function-body and the block-function-body are transactional scopes.
 </p>
 
 </section>
