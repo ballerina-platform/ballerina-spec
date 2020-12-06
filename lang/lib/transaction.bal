@@ -29,7 +29,7 @@ type Info readonly & record {|
 |};
 
 # Returns information about the current transaction
-public transactional function info() returns Info = external;
+public transactional isolated function info() returns Info = external;
 
 # Returns information about the transaction with
 # the specified xid.
