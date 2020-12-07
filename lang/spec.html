@@ -2819,13 +2819,13 @@ immediately returns <code>()</code>.
 <section>
 <h4>Listener</h4>
 <p>
-The object type Listener&lt;T&gt;, where T is a a subtype of
-<code>service object {}</code>, is described by the following object type
-descriptor:
+The object type Listener&lt;T,A&gt;, where T is a a subtype of <code>service
+object {}</code> and A is a subtype of <code>string{}|string|()</code>, is
+described by the following object type descriptor:
 </p>
 
 <pre>object {
-   public function attach(T svc, string[]? path = ()) returns error?;
+   public function attach(T svc, A attachPoint) returns error?;
    public function detach(T svc) returns error?;
    public function start() returns error?;
    public function gracefulStop() returns error?;
@@ -2837,9 +2837,9 @@ The above methods all return an error value if an error occurred, and
 return nil otherwise.
 </p>
 <p>
-A type is a <em>listener object type</em> if it is a subtype of the abstract
-object type Listener&lt;T&gt;, for some type T that is a subtype of
-<code>service object {}</code>.
+A type is a <em>listener object type</em> if it is a subtype of the object type
+Listener&lt;T,A&gt;, for some type T that is a subtype of <code>service object
+{}</code> and some type A that is a subtype of <code>string{}|string|()</code>.
 </p>
 </section>
 <section>
@@ -8970,7 +8970,7 @@ remote methods of the client object in order to send a response back to the
 client.
 </p>
 <p>
-The methods defined by the Listener&lt;T&gt; object type allow for the
+The methods defined by the Listener object type allow for the
 management of the lifecycle of a listener object and its attached services. A
 listener declaration registers a listener object with a module, so that it can
 be managed by the module. The runtime state of each module includes a list of
@@ -9031,7 +9031,8 @@ result of the evaluation.
 <pre
 class="grammar">service-decl :=
    metadata [isolated-qual]
-   <code>service</code> [type-descriptor] [absolute-resource-path] <code>on</code> expression-list object-constructor-block
+   <code>service</code> [type-descriptor] [attach-point] <code>on</code> expression-list object-constructor-block
+attach-point := absolute-resource-path | string-literal
 absolute-resource-path :=
    root-resource-path
    | (<code>/</code> resource-path-segment)+
@@ -9047,26 +9048,29 @@ listeners.
 The static type S for the constructed service object is specified by the
 type-descriptor if present, and otherwise is the union of a type inferred from
 each expression in the expression list as follows. Each expression in the
-expression-list must have a type Listener&lt;T&gt;|E where T is a subtype of
-<code>service object {}</code> and E is a subtype of <code>error</code>; the
+expression-list must have a type Listener&lt;T,A&gt;|E where T is a subtype of
+<code>service object {}</code>, A is a subtype of
+<code>string[]|string|()</code> and E is a subtype of <code>error</code>; the
 inferred type is T. The object-constructor-block has the same semantics as in an
 object-constructor-expr with a <code>service</code> qualifier and a
-type-reference that refers to S. If the service-decl includes <code>isolated</code>, then it
-is equivalent to an object-constructor-expr with an <code>isolated</code>
-qualifier as well as a <code>service</code> qualifier.
+type-reference that refers to S. If the service-decl includes
+<code>isolated</code>, then it is equivalent to an object-constructor-expr with
+an <code>isolated</code> qualifier as well as a <code>service</code> qualifier.
 </p>
 <p>
-The <code>absolute-resource-path</code> determines the second argument passed to
-the <code>attach</code> method: if the <code>absolute-resource-path</code> is
-absent, then the argument is nil; otherwise, the argument is an array of
-strings, with one string for each <code>resource-path-segment</code>. Attaching
-service objects <var>s</var><sub>1</sub>,...,<var>s</var><sub><var>n</var></sub>
-with absolute resource paths
-<var>p</var><sub>1</sub>,...,<var>p</var><sub><var>n</var></sub> is equivalent
-to attaching a single service object with <var>n</var> <code>get</code> resource
-methods to <code>/</code>, where the <var>i</var>-th resource method has a path
-<var>p</var><sub>i</sub> (an <code>absolute-resource-path</code> is turned into
-a <code>relative-resource-path</code> with the same
+The <code>attach-point</code> determines the second argument passed to the
+<code>attach</code> method: if the <code>attach-point</code> is absent, then the
+argument is nil; if it is a <code>string-literal</code>, then the argument is a
+string; otherwise, it is an <code>absolute-resource-path</code> and the argument
+is an array of strings, with one string for each
+<code>resource-path-segment</code>. Attaching service objects
+<var>s</var><sub>1</sub>,...,<var>s</var><sub><var>n</var></sub> with absolute
+resource paths <var>p</var><sub>1</sub>,...,<var>p</var><sub><var>n</var></sub>
+is equivalent to attaching a single service object with <var>n</var>
+<code>get</code> resource methods to <code>/</code>, where the <var>i</var>-th
+resource method has a path <var>p</var><sub>i</sub> (an
+<code>absolute-resource-path</code> is turned into a
+<code>relative-resource-path</code> with the same
 <code>resource-path-segment</code>s) and returns
 <var>s</var><sub><var>i</var></sub>.
 </p>
