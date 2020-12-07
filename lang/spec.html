@@ -3901,8 +3901,8 @@ In this version of Ballerina, only the first step has been taken towards
 supporting this concept. There is a fixed set of type descriptors that are
 classified as lax: specifically <code>json</code> is lax, and
 <code>map&lt;T&gt;</code> is lax if T is lax. The only kinds of expression for
-which lax typing rules are specified are field-access-expr and
-optional-field-access-expr.
+which lax typing rules are specified are field-access-expr,
+optional-field-access-expr and checking-expr.
 </p>
 
 </section>
@@ -6086,8 +6086,23 @@ completes abruptly with a check-fail with associated value v;</li>
 completes abruptly with a panic with associated value v.</li>
 </ul>
 <p>
-If the static type of expression e is T|E, where E is a subtype of error, then
-the static type of check e is T.
+If the static type of expression <code><var>Expr</var></code> is T|E, where E is
+a subtype of error, then the static type of <code>check <var>Expr</var></code>
+or <code>checkpanic <var>Expr</var></code> is T. However, if:
+</p>
+<ul>
+<li>the checking-keyword is <code>check</code>,</li>
+<li>the above rules would result in a compile-time error,</li>
+<li>the static type of <code><var>Expr</var></code> is lax,</li>
+<li>T is a subtype of <code>json</code>, and</li>
+<li>there is a contextually expected type S, where S is a subtype of
+<code>()|int|float|decimal|string</code>,</li>
+</ul>
+<p>
+then instead <code>check <var>Expr</var></code> is treated as <code>check
+<var>val</var>:ensureType(<var>Expr</var>, <var>s</var>)</code>, where
+<code><var>s</var></code> is a typedesc value representing S and
+<code><var>val</var></code> refers to the <code>value</code> module in langlib.
 </p>
 </section>
 <section>

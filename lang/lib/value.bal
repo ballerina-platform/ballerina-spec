@@ -68,6 +68,14 @@ public isolated function cloneReadOnly(CloneableType v) returns CloneableType & 
 #   to supply any missing members
 public isolated function cloneWithType(anydata v, typedesc<anydata> t = <>) returns t|error = external;
 
+# Safely casts a value to a type.
+# This casts a value to a type in the same way as a type cast expression,
+# but returns an error if the cast cannot be done, rather than panicking.
+# + v - the value to be cast
+# + t - a typedesc for the type to which to cast it
+# return - `v` cast to the type described by `t`, or an error, if the cast cannot be done
+public isolated function ensureType(any|error v, typedesc<any> t = <>) returns t|error = external;
+
 # Tests whether `v` is read-only, i.e. immutable
 # Returns true if read-only, false otherwise.
 #
