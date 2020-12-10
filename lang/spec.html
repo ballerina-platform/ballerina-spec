@@ -1894,21 +1894,24 @@ an argument list as input and returns a value as output.
 
 <pre
 class="grammar">param-list :=
-   required-params [<code>,</code> defaultable-params] [<code>,</code> rest-param]
-   | defaultable-params [<code>,</code> rest-param]
+   required-params [<code>,</code> defaultable-params] [<code>,</code> included-record-params] [<code>,</code> rest-param]
+   | defaultable-params [<code>,</code> included-record-params] [<code>,</code> rest-param]
+   | included-record-params [<code>,</code> rest-param]
    | [rest-param]
 required-params := required-param (<code>,</code> required-param)*
 required-param := [annots] type-descriptor [param-name]
 defaultable-params := defaultable-param (<code>,</code> defaultable-param)*
 defaultable-param := [annots] type-descriptor [param-name] <code>=</code> (default-expression | inferred-typedesc-default) 
+included-record-params := included-record-param (<code>,</code> included-record-param)*
+included-record-param := [annots] <code>*</code> type-reference [param-name]
 rest-param := [annots] type-descriptor <code>...</code> [param-name]
 param-name := identifier
 inferred-typedesc-default := <code>&lt;</code> <code>&gt;</code>
 </pre>
 <p>
-A param-name can be omitted from a required-param, defaultable-param or
-rest-param only when occuring in the function-signature of a
-function-type-descriptor.
+A param-name can be omitted from a required-param, defaultable-param,
+included-record-param or rest-param only when occuring in the function-signature
+of a function-type-descriptor.
 </p>
 <p>
 The argument list passed to a function consists of zero or more arguments in order;
@@ -1920,11 +1923,13 @@ the function will panic.
 <p>
 It is convenient to consider the complete param-list as having a type. This type
 is described by a tuple-type-descriptor that has a member-type-descriptor for
-each required-param and defaultable-param, and has a tuple-rest-descriptor if
-and only if there is a rest-param. The i-th member-type-descriptor of the tuple
-type descriptor is the same as the type-descriptor of the i-th member of the
-param-list; the type-descriptor of the tuple-rest-descriptor, if present, is the
-same as the type-descriptor of the rest-param.
+each required-param, defaultable-param and included-record-param, and has a
+tuple-rest-descriptor if and only if there is a rest-param. The i-th
+member-type-descriptor of the tuple type descriptor is the same as the
+type-descriptor of the i-th member of the param-list; for an
+included-record-param, the type-descriptor is the type-reference; the
+type-descriptor of the tuple-rest-descriptor, if present, is the same as the
+type-descriptor of the rest-param.
 </p>
 <p>
 An argument list consisting of values v<sub>1</sub>,..., v<sub>n</sub> conforms
@@ -1932,17 +1937,6 @@ to a param-list that has type P, if and only if for each i with 1 &#x2264; i &#x
 n, v<sub>i</sub> belongs to T<sub>i</sub>, where T<sub>i</sub> is defined to be the type
 that contains a shape s if and only if P contains a list shape whose i-th member
 is s.
-</p>
-<p>
-When an argument list is passed to a function, the non-rest parameters are
-initialized from the arguments in the argument list in order. The conformance of
-the argument list to the param-list declared for the function ensures that each
-parameter will be initialized to a value that belongs to the declared type of
-the parameter. If there is a rest-param, then that is a initialized to a newly
-created lists containing the remaining arguments in the argument-list; the
-inherent type of this list will be T[] where T is the type of the rest-param.
-The conformance of the argument list ensures that the members of this list will
-belong to type T.
 </p>
 <p>
 A defaultable-param is a parameter for which a default value is specified. An
@@ -1976,6 +1970,23 @@ supplying. In this case, the caller uses the parameter name at compile time in
 conjunction with the type descriptor to create the argument list. The
 parameter names do not affect the shape of the function and thus do not affect
 typing.
+</p>
+<p>
+The type-reference in an included-record-param must refer to a type defined by a
+record-type-descriptor. Specifying an included-record-param <code>*<var>T</var>
+<var>p</var></code> is similar to specifying a required-param <code><var>T</var>
+<var>p</var></code>. The difference is that the caller of the function may
+specify the value for a field of an included-record-param using the field's name
+as if it had been declared as a parameter. Any field of the
+included-record-param not so specified is defaulted using the
+record-type-descriptor. A field-descriptor is a <code>parameter field
+descriptor</code> of a function if it is a field descriptor of a
+record-type-descriptor referenced by an included-record-param of the function.
+The field names of all the parameter field descriptors whose type is not
+<code>never</code> must be distinct from each other and from the names of the
+parameters. Whether a parameter is an included-record-param is part of the
+function's type-descriptor, but does not affect the shape of the function and
+thus does not affect whether a function value belongs to a function type.
 </p>
 <p>
 The process by which the function caller creates an argument list, which may
@@ -5242,87 +5253,127 @@ function-reference := variable-reference
 arg-list :=
    positional-args [<code>,</code> other-args]
    | [other-args]
-positional-args := positional-arg (<code>,</code> positional-arg)*
-positional-arg := expression
 other-args := named-args | rest-arg
-named-args := named-arg (<code>,</code> named-arg)*
-named-arg := arg-name <code>=</code> expression
-arg-name := identifier
-rest-arg := <code>...</code> expression
 </pre>
 <p>
 A function-call-expr is evaluated by constructing an argument list and passing
-the argument list to the function referred to by the variable-name. If the
-function terminates normally, then the result of the function-call-expr is the
-return value of the function; otherwise the function-call-expr completes
-abruptly with a panic. The static type of the function-call-expr is the return
-type of the function type.
+the argument list to the function referred to by the variable-name. The argument
+list will be used to bind the parameters of the function before the body of the
+function is executed. If the function terminates normally, then the result of
+the function-call-expr is the return value of the function; otherwise the
+function-call-expr completes abruptly with a panic. The static type of the
+function-call-expr is the return type of the function type.
 </p>
 <p>
-The variable-reference must refer to a variable with function type. The type
+The function-reference must refer to a variable with function type. The type
 descriptor of that function type is used to construct an argument list from the
 specified arg-list. Note that it is the type descriptor of the declared type of
 the variable that is used for this purpose, rather than the runtime type
-descriptor of the referenced function value.
+descriptor of the referenced function value. The expressions occurring in the
+arg-list are evaluated in the order in which they occur in the arg-list; the
+contextually expected type for the expression comes from the static type
+required for the expression as specified below.
 </p>
+<pre
+class="grammar">positional-args := positional-arg (<code>,</code> positional-arg)*
+positional-arg := expression
+</pre>
 <p>
-The expressions occurring in the arg-list are evaluated in the order in which
-they occur in the arg-list. The contextually expected type for the expression in
-the i-th positional-arg is the type of the i-th required or defaultable
-parameter; if there is no such parameter, then the contextually expected type is
-the type of the rest-param. The contextually expected type for the expression in
-a named-arg is the type declared for the corresponding parameter. The value of
-evaluating the expression for the rest-arg must be either a list or a mapping
-value.
+The result of evaluating the <var>i</var>-th positional-arg becomes the
+<var>i</var>-th member of the argument list. The static type of the expression
+for the <var>i</var>-th positional-arg must be a subtype of the type declared
+for the <var>i</var>-th parameter that is not a rest-param, if there is such a
+parameter; otherwise, there must be a rest-param and the static type must be a
+subtype of the type declared for the rest-param.
 </p>
+<pre
+class="grammar">named-args := named-arg (<code>,</code> named-arg)*
+named-arg := arg-name <code>=</code> expression
+arg-name := identifier
+</pre>
 <p>
-The results of evaluating the expressions in the arg-list are used to construct
-the argument list as follows. First, the result of evaluating each
-positional-arg is added to the argument list in order. Then there are three
-possibilities:
+The arg-name of every named-arg must be distinct. Each named-arg must correspond
+to either a parameter that is not a rest-param or to a field of an
+included-record-param. In the latter case, there are two possibilities.
 </p>
 <ul>
-<li>If there is a rest-arg that evaluates to a list, then each member of the
-list value is added to the argument in the order that it occurs; default values
-are not used in this case.</li>
-<li>Otherwise, if there is no rest-arg, each required or defaultable parameter
-that was not supplied by a positional-arg is added in parameter declaration
-order from a named-arg, if there is one with the specified name, and otherwise
-using the default value as specified in the function's type descriptor.</li>
-<li>Otherwise, the rest-arg is a mapping and there are no named-args.
-The effect in this case is as if for each field of the mapping there
-was a named-arg, with the name and value of the named-arg coming
-from the name and value of the field.</li>
+<li>The field is described by an individual-field-descriptor with a type that is not
+<code>never</code>.</li>
+<li>The field is described by a record-rest-descriptor, either explicitly as
+part of an exclusive-record-type-descriptor or implicitly as part of an
+inclusive-record-type-descriptor. In this case:
+<ul>
+<li>for every parameter name and every individual-field-descriptor of an
+included-record-param with a type that is not <code>never</code>, the
+record-type-descriptor must include an individual-field-descriptor that has type
+<code>never</code> and is optional, and so disallows a field with that
+name;</li>
+<li>the record-type-descriptor must not include any other
+individual-field-descriptor; and</li>
+<li>there must be no other included-record-param with a
+record-rest-descriptor.</li>
+</ul>
+</li>
 </ul>
 <p>
-The static type of the rest-arg must be such as to guarantee that the
-constructed argument list will conform to the function's declared param-list.
-Note that in the case where the rest-arg is a list, it is is not restricted to
-supplying the part of the argument list that will be bound to a rest-param, nor
-is its static type restricted to being an array type. It is a compile-time error
-if there is a required parameter for which there was neither a positional
-argument nor a named argument, or if there is a named argument for a parameter
-that was supplied by a positional argument.
+It is an error if there is a named-arg and a positional-arg that correspond to
+the same parameter. If there is a named-arg or positional-arg corresponding to
+an included-record-param, it is an error for a named-arg to specify a field of
+that included-record-param. The static type of the expression of the named-arg
+must be a subtype of the type declared for the corresponding parameter or
+field-descriptor.
+</p>
+<pre
+class="grammar">rest-arg := <code>...</code> expression
+</pre>
+<p>
+The static type of the expression in a rest-arg must be either a list type or a
+mapping type. If it is a list type, then the rest-arg is equivalent to
+specifying each member of the list as a positional-arg. If it is a mapping type,
+then the rest-arg is equivalent to specifying each field of the mapping as a
+named-arg, with the name and value of the named-arg coming from the name and
+value of the field. In either case, the static type of the expression must be
+such as to ensure that the equivalent named-args or positional-args would be
+valid.
 </p>
 <p>
-If the default value for a parameter was specified as <code>&lt;&gt;</code>,
-then then the caller will pass a typedesc value determined at compile-time from
-the contextually expected type of the function-call-expr as follows. Let the
-name of the parameter for which a default of <code>&lt;&gt;</code> was specified
-be <var>t</var>. Let the type of <var>t</var> be typedesc&lt;<var>T</var>&gt;.
-Let the return type descriptor for the function be <var>R</var>, which will have
-references to <var>t</var>. Let the contextually expected type for the
-function-call-expr be <var>C</var>. Then the default value is found by unifying
-<var>C</var> and <var>R</var>: the default value is a typedesc value
-representing a type descriptor <var>S</var> that is a subtype of <var>T</var>,
-such that <var>R</var> with <var>S</var> substituted for <var>t</var> is
-equivalent to <var>C</var>.
+If there is neither a named-arg nor a positional-arg for a parameter that is not
+a rest-param, then a default value is computed for the parameter, if possible;
+otherwise, it is an error. Default values are computed in parameter declaration
+order.
 </p>
-<p>
-If the default value for a parameter was specifed using an expression, then it
-is computed by calling the closure stored in the type descriptor, passing it the
-previous arguments in the argument list.
-</p>
+<ul>
+<li>If the parameter is a required-param, it is an error.</li>
+<li>If the parameter is a defaultable-param, then the value for the parameter is
+computed from the default value in the function's type descriptor.
+<ul>
+<li>If the default value for a defaultable-param was specifed
+using an expression, then it is computed by calling the closure stored in the
+type descriptor, passing it the previous arguments in the argument list.</li>
+<li>If the default value for a defaultable-param was specified as
+<code>&lt;&gt;</code>, then the value for the parameter will be a typedesc value
+determined at compile-time from the contextually expected type of the
+function-call-expr as follows. Let the name of the parameter for which a default
+of <code>&lt;&gt;</code> was specified be <var>t</var>. Let the type of
+<var>t</var> be typedesc&lt;<var>T</var>&gt;. Let the return type descriptor for
+the function be <var>R</var>, which will have references to <var>t</var>. Let
+the contextually expected type for the function-call-expr be <var>C</var>. Then
+the default value is found by unifying <var>C</var> and <var>R</var>: the
+default value is a typedesc value representing a type descriptor <var>S</var>
+that is a subtype of <var>T</var>, such that <var>R</var> with <var>S</var>
+substituted for <var>t</var> is equivalent to <var>C</var>.</li>
+</ul>
+</li>
+<li>If the parameter is an included-record-param, then a new mapping value is
+constructed for it using its record-type-descriptor. The mapping value will have
+a field for each named-arg that corresponds to a field of this
+included-record-param, with the name and value of the field coming from the name
+and value of the named-arg. The mapping value will also have a field for each
+individual-field-descriptor with a default-expr for which there was no
+corresponding named-arg. It is an error if the record-type-descriptor has an
+individual-field-descriptor that is not optional and has no default and there is
+not corresponding named-arg.</li>
+</ul>
 <p>
 A function-call-expr is isolated if the type of the function being called is
 isolated and the expression for every argument is isolated. In addition, a call
@@ -5334,7 +5385,6 @@ When there is a need to call a function value resulting from the evaluation of
 an expression, the result of the expression evaluation can be assigned to a
 variable and then the function called by using a reference to the variable.
 </p>
-
 </section>
 <section>
 <h3>Method call expression</h3>
@@ -6730,6 +6780,27 @@ strand must be part of the same thread as the current strand.
 <h3>Function bodies</h3>
 
 <section>
+<h4>Function parameters</h4>
+<p>
+Before the block-function-body of a function-defn is executed, the parameters
+declared in the function-signature of the function-defn are initialized from the
+argument list that was constructed by the function-call-expr. The non-rest
+parameters are initialized from the arguments in the argument list in order. The
+conformance of the argument list to the param-list declared for the function
+ensures that each parameter will be initialized to a value that belongs to the
+declared type of the parameter. If there is a rest-param, then that is a
+initialized to a newly created list containing the remaining arguments in the
+argument-list; the inherent type of this list will be T[] where T is the type of
+the rest-param. The conformance of the argument list ensures that the members of
+this list will belong to type T.
+</p>
+<p>
+The parameters are in scope for the block-function-body. They are implicitly
+final: they can be read but not modified.
+</p>
+</section>
+
+<section>
 <h4>Workers</h4>
 
 <pre
@@ -6803,8 +6874,8 @@ statement-block on its strand.</li>
 for the termination of the named workers started in stage 2.</li>
 </ol>
 <p>
-Variables declared in default-worker-init are in scope within named workers,
-whereas variables declared in default-worker are not.
+Parameters and variables declared in default-worker-init are in scope within
+named workers, whereas variables declared in default-worker are not.
 </p>
 <p>
 The execution of a worker's statements may result in the execution of a
@@ -6814,11 +6885,6 @@ terminates as soon as it has finished executing its statements. In this case,
 the worker terminates normally, and the termination value is nil. In other
 words, falling off the end of a worker is equivalent to <code>return;</code>,
 which is in turn equivalent to <code>return ();</code>.
-</p>
-<p>
-The parameters declared for a function are in scope in the block-function-body.
-They are implicitly final: they can be read but not modified. They are in scope
-for named workers as well as for the default worker.
 </p>
 <p>
 The scope of a worker-name in a named-worker-decl that is part of a
