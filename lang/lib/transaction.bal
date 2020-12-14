@@ -17,15 +17,17 @@
 # Information about a transaction that does not change
 # after the transaction is started.
 type Info readonly & record {|
-   // unique identifier
+   # Unique identifier for the transaction branch
    byte[] xid;
    // non-zero means this transaction was a retry of 
    // a previous one
+   # The number of previous attempts in a sequence of retries
    int retryNumber;
-   // probably useful for timeouts and logs
-   Timestamp startTime;
-   // maybe useful
+   # Information about the previous attempt in a sequence of retries.
+   # This will be `()` if the `retryNumber` is 0.
    Info? prevAttempt;
+   # The time at which the transaction was started.
+   Timestamp startTime;
 |};
 
 # An instant in time.
@@ -43,19 +45,43 @@ public transactional isolated function info() returns Info = external;
 # the specified xid.
 public isolated function getInfo(byte[] xid) returns Info? = external;
 
+# Prevents the global transaction from committing successfully.
+# This ask the transaction manager that when it makes the decision
+# whether to commit or rollback, it should decide to rollback.
+#
+# + error - the error that caused the rollback or `()`, if there is none
 public transactional isolated function setRollbackOnly(error? e) = external;
 
+# Tells whether it is known that the transaction will be rolled back.
+# + return - true if it is known that the transaction manager will,
+# when it makes the decision whether to commit or rollback, decide
+# to rollback
 public transactional isolated function getRollbackOnly() returns boolean = external;
 
+# Associates some data with the current transaction branch.
 public transactional isolated function setData(readonly data) = external;
 
-// returns () if no data has been set
+# Retrieves data associated with the current transaction branch.
+# The data is set using `setData`.
+# + return - the data, or `()` if no data has been set.
 public transactional isolated function getData() returns readonly = external;
 
+# Type of a commit handler function.
+# + info - information about the transaction being committed
 public type CommitHandler function(Info info);
 
+# Type of a rollback handler function.
+# + info - information about the transaction being committed
+# + cause - an error describing the cause of the rollback, if there is
+# + willRetry - true if the transaction will be retried, false otherwise
 public type RollbackHandler function(Info info, error? cause, boolean willRetry);
 
+# Adds a handler to be called if and when the global transaction commits.
+#
+# + handler - the function to be called on commit
 public transactional isolated function onCommit(CommitHandler handler) = external;
 
+# Adds a handler to be called if and when the global transaction rolls back.
+#
+# + handler - the function to be called on rollback
 public transactional isolated function onRollback(RollbackHandler handler) = external;
