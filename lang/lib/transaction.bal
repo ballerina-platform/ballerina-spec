@@ -23,10 +23,18 @@ type Info readonly & record {|
    // a previous one
    int retryNumber;
    // probably useful for timeouts and logs
-   timestamp startTime;
+   Timestamp startTime;
    // maybe useful
    Info? prevAttempt;
 |};
+
+# An instant in time.
+public type Timestamp readonly & object {
+    # Returns milliseconds since 1970-01-01T00:00:00Z, not including leap seconds
+    public toMillisecondsInt() returns int;
+    # Returns a string representation of the timestamp in ISO 8601 format
+    public toString() returns string;
+};
 
 # Returns information about the current transaction
 public transactional isolated function info() returns Info = external;
