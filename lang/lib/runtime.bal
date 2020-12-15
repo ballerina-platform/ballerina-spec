@@ -32,3 +32,19 @@ public isolated function registerListener(DynamicListener listener) = external;
 # The `listener` ceases to be a module listener of the module from
 # which this function is called.
 public isolated function deregisterListener(DynamicListener listener) = external;
+
+
+# Type representing a stack frame.
+# A call stack is represented as an array of stack frames.
+# This type is also present in lang.error to avoid a dependency.
+public type StackFrame readonly & object {
+   # Returns a string representing this StackFrame.
+   # This must not contain any newline characters.
+   # + return - a string
+   public function toString() returns string;
+};
+
+# Return a stack trace for the current call stack.
+# + return - an array representing the current call stack
+# The first member of the array represents the top of the call stack.
+public function getStackTrace() returns StackFrame[] = external;

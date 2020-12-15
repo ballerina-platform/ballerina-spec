@@ -49,11 +49,22 @@ public isolated function cause(error e) returns error? = external;
 # + return - error detail value
 public isolated function detail(error<DetailType> e) returns readonly & DetailType = external;
 
-# Returns an object representing the stack trace of the error.
+# Type representing a stack frame.
+# A call stack is represented as an array of stack frames.
+# This type is also present in lang.runtime to avoid a dependency.
+public type StackFrame readonly & object {
+   # Returns a string representing this StackFrame.
+   # This must not contain any newline characters.
+   # + return - a string
+   public function toString() returns string;
+};
+
+# Returns an array representing an error's stack trace.
 #
 # + e - the error value
-# + return - a new object representing the stack trace of the error value
-public isolated function stackTrace(error e) returns readonly & object { } = external;
+# + return - an array representing the stack trace of the error value
+# The first member of the array represents the top of the call stack.
+public isolated function stackTrace(error e) returns StackFrame[] = external;
 
 # Converts an error to a string.
 #
