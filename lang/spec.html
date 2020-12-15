@@ -8594,9 +8594,36 @@ its transaction stack is non-empty; the top of a strand's transaction stack is
 the current transaction branch for that strand.
 </p>
 <p>
+Static checking is based on the idea of a transactional scope: this is a lexical
+region of the program where it is known that at runtime the strand executing the
+region will always be in transactional mode. A function with the
+<code>transactional</code> qualifier can only be called in a transactional
+scope; this includes function calls using <code>start</code>.
+</p>
+<p>
 A running instance of a Ballerina program includes a transaction manager. This
 may run in the same process as the Ballerina program or in a separate process.
 It should not be connected over an unreliable network.
+</p>
+<p>
+When a global transaction involves multiple Ballerina programs, there must be a
+network protocol that allows that transaction managers in each program to
+communicate. The protocol must also allow a remote method or resource method on
+a service object to be informed of the global transaction, if any, to which it
+belongs. When a listener object determines that a remote method or resource
+method of a service object is to be a part of a global transaction manager, then
+it will create a new transaction branch, join it to the global transaction and
+push that on the transaction stack for the strand on which the method is called;
+if the method is declared as <code>transactional</code>, the listener will not
+call the method unless it can do this. Similarly, the protocol must allow a
+remote method on a client object that is called in transaction mode to send
+information about the global transaction of which it is part; if the method is
+declared as <code>transactional</code>, then as usual the method can only be
+called in transaction mode; it also implies that the client object
+implementation is transaction-aware, and that the recipient of the message sent
+by the remote method must join the global transaction. A global transaction can
+combine Ballerina programs with programs written in other programming languages
+provided they agree on this network protocol.
 </p>
 <p>
 A strand in transaction mode can register commit or rollback handlers with the
@@ -8612,17 +8639,10 @@ variables to their state when the transaction started. It is up to the
 programmer to do this using commit or rollback handlers.
 </p>
 <p>
-Static checking is based on the idea of a transactional scope: this is a lexical
-region of the program where it is known that at runtime the strand executing the
-region will always be in transactional mode. A function with the
-<code>transactional</code> qualifier can only be called in a transactional
-scope; this includes function calls using <code>start</code>.
-</p>
-<p>
 When a new strand is created by a named-worker-decl that includes a
 <code>transactional</code> qualifier or by using <code>start</code> to call a
 function with a <code>transactional</code> qualifier, a new transaction branch
-will be created and joined to the current transaction; this transaction branch
+will be created and joined to the global transaction; this transaction branch
 will be pushed onto transaction stack for the newly created strand.
 </p>
 <p>
