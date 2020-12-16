@@ -8495,17 +8495,34 @@ variable-reference-expr occurs within an expression that is isolated.</li>
 
 <section>
 <h3>Fail and retry</h3>
+<p>
+The execution of a statement can fail either as the result of <code>check</code>
+expression or action, or from an explicit <code>fail</code> statement. When
+execution of a statement fails, control flow transfers to the nearest lexically
+enclosing failure-handling statement. The failure handling statements are
+stmt-with-on-fail, retry-stmt, transaction-stmt and retry-transaction-stmt. If
+there is no such statement, it terminates the current worker normally. Note that
+failure is completely distinct from panic.
+</p>
+<p>
+When execution fails there is an associated error value, which is passed to the
+failure-handling statement if there is one. If there is no failure-handling
+statement, then the error value becomes the return value of the worker. The
+possible failure control flows are known at compile-time, as are the types of
+the associated error values. For every statement, the type of the error value
+associated with a failure causing control to transfer out of the block is
+determined at compile-time. This is in contrast with panics, for which the type
+of associated error value is not known at compile-time.
+</p>
+
 <section>
 <h4>Fail statement</h4>
 <pre
 class="grammar">fail-stmt := <code>fail</code> expression <code>;</code>
 </pre>
 <p>
-Executing a fail-stmt will cause control flow to transfer to the on-fail-clause
-of the nearest lexically enclosing failure handling statement. The failure
-handling statements are stmt-with-on-fail, retry-stmt, transaction-stmt and
-retry-transaction-stmt. If there is no such statement, it terminates the current
-worker normally.
+Executing a fail-stmt will cause control flow to transfer to the nearest
+lexically enclosing failure handling statement.
 </p>
 <p>
 The static type of the expression must be a subtype of error. Execution of the
