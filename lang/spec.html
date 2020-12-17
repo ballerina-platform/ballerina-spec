@@ -7034,11 +7034,12 @@ completion of the evaluation of expressions and actions as follows. There are
 two possibilities.
 </p>
 <ul>
-<li>If the abrupt termination is a check-fail, then control flow is transferred
-as if by a <code>fail-stmt</code> with an expression that evaluates to e.</li>
-<li>If the abrupt termination is a panic, then the current worker is terminated
-abnormally with termination value e. This is the same as if
-a panic statement is executed with an expression that evaluates to e.</li>
+<li>If the abrupt termination is a check-fail with associated value e, then
+control flow is transferred as if by a <code>fail-stmt</code> with an expression
+that evaluates to e.</li>
+<li>If the abrupt termination is a panic with associated value, then the current
+worker is terminated as if by a <code>panic-stmt</code> with an expression that
+evaluates to e.</li>
 </ul>
 <p>
 If the execution of a substatement causes termination of the current worker,
@@ -8789,7 +8790,10 @@ A transaction-stmt is executed as follows:
 </p>
 <ul>
 <li>Perform the transaction Begin() operation.</li>
-<li>Execute the statement-block.</li>
+<li>Execute the statement-block. While executing the statement-block, any panic
+does not immediately terminate the current worker; rather control is transferred
+back to the transaction-stmt, so that the transaction-stmt can handle it as
+described in the next step.</li>
 <li>If the new transaction that was begun is still the current transaction, then
 the statement-block must have failed or panicked. In this case, perform a
 Rollback(e) operation, where e is the error associated with the fail or panic,
