@@ -2140,11 +2140,12 @@ is not allowed in conjunction with <code>public</code>.
 
 <p>
 Network interaction objects provide two additional features: remote methods and
-resources. Remote methods are supported by both client and service objects.
-Resources are supported only by service objects. Object type descriptors do not
-provide a way to describe the resources of a service object: whether a service
-object belongs to an object type is not affected by the service object's
-resources. Resources are described in detail in the <a
+resources. Remote methods are supported by both client and service objects. The
+remote methods of an object are in a separate symbol space from the other
+methods of the object. Resources are supported only by service objects. Object
+type descriptors do not provide a way to describe the resources of a service
+object: whether a service object belongs to an object type is not affected by
+the service object's resources. Resources are described in detail in the <a
 href="#resources">section</a> on object constructors.
 </p>
 
@@ -2216,12 +2217,16 @@ A <code>remote-method-decl</code> declares a remote method. An object can
 include a <code>remote-method-decl</code> only if it is a network interaction
 object. A remote method is a method for network interaction: a remote method of
 a client object is for outbound network interaction; a remote method of a
-service object is for inbound network interaction. A remote method cannot be
-called using the normal method call syntax. A remote method of a client object
-can only be invoked by a <code>client-remote-method-call-action</code>. A remote
-method of a service object is invoked by a listener object provided by a library
-module; Ballerina does not yet define a mechanism to allow such a library module
-to be implemented completely in Ballerina.
+service object is for inbound network interaction. The <code>method-name</code>
+of a <code>remote-method-decl</code> must be distinct from the
+<code>method-name</code> of every other <code>remote-method-decl</code> in the
+<code>object-type-descriptor</code>. However, a <code>method-decl</code> and a
+<code>remote-method-decl</code> can have the same name. A remote method cannot
+be called using the normal method call syntax. A remote method of a client
+object can only be invoked by a <code>client-remote-method-call-action</code>. A
+remote method of a service object is invoked by a listener object provided by a
+library module; Ballerina does not yet define a mechanism to allow such a
+library module to be implemented completely in Ballerina.
 </p>
 
 </section>
@@ -10102,8 +10107,9 @@ object constructor expression, which includes method definitions, or by applying
 methods and fields of an object are not in a single symbol space. Classes and
 object constructors can declare fields as final.</li>
 <li>Services have become service objects that work in a similar way to client
-objects; resource methods on service objects have become remote methods. There
-is a new concept for resource methods.</li>
+objects; resource methods on service objects have become remote methods. Remote
+methods are in a separate symbol space from regular methods. There is a new
+concept for resource methods.</li>
 <li>The <code>readonly</code> type has been added. Fields of records can also be
 declared as <code>readonly</code>.</li>
 <li>Functions, objects and module-level variables can be declared as
