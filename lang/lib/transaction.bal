@@ -14,13 +14,15 @@
 // specific language governing permissions and limitations
 // under the License.
 
+
+# Type of error returned by commit action.
+type Error distinct error;
+
 # Information about a transaction that does not change
 # after the transaction is started.
 type Info readonly & record {|
    # Unique identifier for the transaction branch
    byte[] xid;
-   // non-zero means this transaction was a retry of 
-   // a previous one
    # The number of previous attempts in a sequence of retries
    int retryNumber;
    # Information about the previous attempt in a sequence of retries.
