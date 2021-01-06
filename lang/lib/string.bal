@@ -91,6 +91,15 @@ public isolated function indexOf(string str, string substr, int startIndex = 0) 
 #    or `()` if there is no such occurrence
 public isolated function lastIndexOf(string str, string substr, int startIndex = str.length() - substr.length()) returns int? = external;
 
+# Tests whether a string includes another string.
+#
+# + str - the string in which to search
+# + substr - the string to search for
+# + startIndex - index to start searching from
+# + return - `true` if there is an occurrence of `substr` in `str` at an index >= `startIndex`,
+#    or `false` otherwise
+public isolated function includes(string str, string substr, int startIndex = 0) returns boolean = external;
+
 # Tests whether a string starts with another string.
 #
 # + str - the string to be tested
