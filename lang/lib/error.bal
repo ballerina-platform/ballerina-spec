@@ -22,7 +22,7 @@ type Cloneable readonly|xml|Cloneable[]|map<Cloneable>|table<map<Cloneable>>;
 
 # The type to which error detail records must belong.
 public type Detail record {|
-   ...Cloneable;
+   Cloneable...;
 |};
 
 # A type parameter that is a subtype of error `Detail` record type.
