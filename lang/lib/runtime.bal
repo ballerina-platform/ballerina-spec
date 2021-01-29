@@ -18,7 +18,7 @@
 public type DynamicListener object {
    public function 'start() returns error?;
    public function gracefulStop() returns error?;
-   public function immedateStop() returns error?;
+   public function immediateStop() returns error?;
 };
 
 # Register a listener object with a module.
