@@ -14,6 +14,12 @@
 // specific language governing permissions and limitations
 // under the License.
 
+# Sleep for `seconds`.
+# + seconds - a decimal giving the length of time to sleep in seconds
+# The function will do nothing for the specified period of time before returning.
+# This will cause the current strand to yield.
+public isolated function sleep(decimal seconds) = external; 
+
 # A listener that is dynamically registered with a module.
 public type DynamicListener object {
    public function 'start() returns error?;
