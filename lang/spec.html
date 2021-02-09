@@ -1824,10 +1824,7 @@ class="grammar">behavioral-type-descriptor :=
 <h4>Errors</h4>
 
 <pre
-class="grammar">error-type-descriptor := <code>error</code> [error-type-param]
-error-type-param := <code>&lt;</code> (detail-type-descriptor | inferred-type-descriptor) <code>&gt;</code>
-detail-type-descriptor := type-descriptor
-inferred-type-descriptor := <code>*</code>
+class="grammar">error-type-descriptor := <code>error</code> [type-parameter]
 </pre>
 <p>
 An error value provides information about an error that has occurred. Error
@@ -1857,12 +1854,6 @@ error; the stack trace is not part of the shape. A type descriptor
 <code>error&lt;<var>T</var>&gt;</code> contains an error shape if
 <code><var>T</var></code> contains the shape of its detail. The type
 <code>error</code> contains a shape if its basic type is error.
-</p>
-<p>
-A type of <code>error&lt;*&gt;</code> means that the type is a subtype of error,
-where the precise subtype is to be inferred from the context. This is allowed
-only within type descriptors occurring in a context that is specified to be
-inferable.
 </p>
 <p>
 An error-type-descriptor is always definite and induces an empty set of
@@ -3595,8 +3586,8 @@ used to create the variables occurring in the binding-pattern. If var is used
 instead of a type-descriptor, it means the type is inferred. How the type is
 inferred depends on the context of the typed-binding-pattern. An
 inferable-type-descriptor is an inferable context for a type descriptor, which
-means that <code>*</code> can be used with the type descriptor to infer certain
-parts of it.
+means that <code>*</code> can be used with the type descriptor to infer
+the length of an array.
 </p>
 <p>
 The simplest and most common form of a typed-binding-pattern is for the binding
@@ -6844,11 +6835,7 @@ the termination of its named workers.
 <p>
 A named worker has a return type. If the worker terminates normally, the
 termination value will belong to the return type. If the return type of a worker
-is not specified, it defaults to nil as for functions. A return-type-descriptor
-in a named-worker-decl is an inferable context for a type descriptor, which
-means that <code>*</code> can be used to infer parts of the type descriptor; in
-particular, it is convenient to use <code>error&lt;*&gt;</code> to specify the
-error type.
+is not specified, it defaults to nil as for functions.
 </p>
 <p>
 A named-worker is a transactional scope only if it is declared as
@@ -10163,6 +10150,9 @@ predeclared.</li>
 <li>Backslash escapes can be used in identifiers without needing an initial
 single quote.</li>
 <li>Language support for transactions has been added.</li>
+<li>The <code>error&lt;*&gt;</code> feature has been removed, because it does
+not work well with distinct error types.</li>
+
 </ol>
 </section>
 <section>
