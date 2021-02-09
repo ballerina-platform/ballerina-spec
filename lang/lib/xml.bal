@@ -125,6 +125,18 @@ public isolated function getChildren(Element elem) returns xml = external;
 # + children - xml or string to set as children
 public isolated function setChildren(Element elem, xml|string children) = external;
 
+# Returns the descendants of `elem`.
+#
+# + elem - xml element
+# + return - descendants of `elem`
+# The descendants of an element are the children of the element and
+# the descendants of those children that are elements, ordered so that
+# each element immediately precedes all its descendants.
+# The order of the items in the returned sequence will thus correspond
+# to the order in which the first character of the representation
+# of the item would occur in the representation of the element in XML syntax.
+public isolated function getDescendants(Element elem) returns xml = external;
+
 # Returns a string with the character data of an xml value.
 # + x - the xml value
 # + return - a string consisting of all the character data of `x`
