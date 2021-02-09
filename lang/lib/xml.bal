@@ -103,6 +103,14 @@ public isolated function getName(Element elem) returns string = external;
 # + xName - new expanded name
 public isolated function setName(Element elem, string xName) = external;
 
+# Returns the map representing the attributes of `elem`.
+# This includes namespace attributes.
+# The keys in the map are the expanded names of the attributes.
+#
+# + x - xml element
+# + return - attributes of `x`
+public isolated function getAttributes(Element x) returns map<string> = external;
+
 # Returns the children of `elem`.
 #
 # + elem - xml element
@@ -116,14 +124,6 @@ public isolated function getChildren(Element elem) returns xml = external;
 # + elem - xml element
 # + children - xml or string to set as children
 public isolated function setChildren(Element elem, xml|string children) = external;
-
-# Returns the map representing the attributes of `elem`.
-# This includes namespace attributes.
-# The keys in the map are the expanded names of the attributes.
-#
-# + x - xml element
-# + return - attributes of `x`
-public isolated function getAttributes(Element x) returns map<string> = external;
 
 # Returns a string with the character data of an xml value.
 # + x - the xml value
