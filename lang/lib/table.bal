@@ -58,7 +58,7 @@ public isolated function iterator(table<Type> t) returns object {
 # + t - the table
 # + k - the key
 # + return - member with key `k`
-public isolated function get(table<Type> key<KeyType> t, KeyType k) returns KeyType = external;
+public isolated function get(table<Type> key<KeyType> t, KeyType k) returns Type = external;
 
 # Adds a member `val` to table `t`, replacing any member with the same key value.
 # If `val` replaces an existing member, it will have the same position
