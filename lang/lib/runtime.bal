@@ -53,4 +53,4 @@ public type StackFrame readonly & object {
 # Return a stack trace for the current call stack.
 # + return - an array representing the current call stack
 # The first member of the array represents the top of the call stack.
-public function getStackTrace() returns StackFrame[] = external;
+public isolated function getStackTrace() returns StackFrame[] = external;
