@@ -6811,26 +6811,27 @@ distinguished from an error termination value resulting from an abnormal
 termination.
 </p>
 <p>
-A function always has a single default worker, which is unnamed. The strand for the
-default worker is the same as the strand of the worker on which function was called.
-When a function is called, the current worker becomes inactive, and a default worker
-for the called function is started. When the default worker terminates, the function
-returns to its caller, and the caller's worker is reactivated. Thus only one worker
-in each strand is active at any given time. If the default worker terminates
-normally, then its termination value provides the return value of the function.
-If the default worker terminates abnormally, then the evaluation of the function
-call expression completes abruptly with a panic and the default worker's
-termination value provides the associated value for the abrupt completion of the
-function call. The function's return type is the same as the return type of the
-function's default worker.
+A function always has a single default worker, which is unnamed. The strand for
+a function's default worker is the same as the strand of the worker on which
+function was called. When a function is called, the current worker becomes
+inactive, and a default worker for the called function is started. When the
+default worker terminates, the function returns to its caller, and the caller's
+worker is reactivated. Thus only one worker in each strand is active at any
+given time. If a function's default worker terminates normally, then its
+termination value provides the return value of the function. If a function's
+default worker terminates abnormally, then the evaluation of the function call
+expression completes abruptly with a panic and the worker's termination value
+provides the associated value for the abrupt completion of the function call.
+The function's return type is the same as the return type of the function's
+default worker.
 </p>
 <p>
 A function also has zero or more named workers. Each named worker runs on its
 own new strand. The termination of a function is independent of the termination
 of its named workers. The termination of a named worker does not automatically
-result in the termination of its function. When a default worker terminates
-causing the function to terminate, the function does not automatically wait for
-the termination of its named workers.
+result in the termination of its function. When a function's default worker
+terminates, causing the function to terminate, the function does not
+automatically wait for the termination of its named workers.
 </p>
 <p>
 A named worker has a return type. If the worker terminates normally, the
@@ -6844,8 +6845,8 @@ transactional scope, i.e. if it is the body of a function declared as
 <code>transactional</code>.
 </p>
 <p>
-When a function has named workers, the default worker executes in three stages,
-as follows:
+When a function has named workers, the function's default worker executes in
+three stages, as follows:
 </p>
 <ol>
 <li>The statements in default-worker-init are executed.</li>
@@ -7136,8 +7137,8 @@ to a named worker cannot fail.
 </p>
 <p>
 Note that it is only possible to wait for a named worker, which will start its
-own strand. It is not possible to wait for a default worker, which runs on an
-existing strand.
+own strand. It is not possible to wait for a function's default worker, which
+runs on an existing strand.
 </p>
 <p>
 A mapping-constructor-expr is not recognized as a wait-future-expr (it would not
@@ -7232,20 +7233,20 @@ guarantees that any sent message will be received, provided that neither the
 sending nor the receiving worker terminate abnormally or with an error.
 </p>
 <p>
-Messages can only be sent between workers that are peers of each other. The
-default worker and the named workers in a function are peers of each other. The
+Messages can only be sent between workers that are peers of each other. A
+function's default worker and its named workers are peers of each other. The
 workers created in a fork-stmt are also peers of each other. The workers created
-in a fork-stmt are not peers of the default worker and named workers created by
-a function.
+in a fork-stmt are not peers of a function's default worker nor of its named
+workers.
 </p>
 
 <pre
-class="grammar">peer-worker := worker-name | <code>default</code>
+class="grammar">peer-worker := worker-name | <code>function</code>
 </pre>
 <p>
 A worker-name refers to a worker named in a named-worker-decl, which must be in
-scope; default refers to the default worker. The referenced worker must be a
-peer worker.
+scope; <code>function</code> refers to the function's default worker. The
+referenced worker must be a peer worker.
 </p>
 <p>
 Each worker maintains a separate logical queue for each peer worker to which it
