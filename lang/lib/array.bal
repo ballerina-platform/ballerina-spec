@@ -93,12 +93,12 @@ public isolated function filter(Type[] arr, @isolatedParam function(Type val) re
 # is the same as `sum(1, 2, 3)`.
 public isolated function reduce(Type[] arr, @isolatedParam function(Type1 accum, Type val) returns Type1 func, Type1 initial) returns Type1 = external;
 
-# Returns a subarray starting from `startIndex` (inclusive) to `endIndex` (exclusive).
+# Returns a slice of an array.
 #
 # + arr - the array
 # + startIndex - index of first member to include in the slice
 # + endIndex - index of first member not to include in the slice
-# + return - array slice within specified range
+# + return - new array containing members of `arr` with index >= `startIndex` and < `endIndex` 
 public isolated function slice(Type[] arr, int startIndex, int endIndex = arr.length()) returns Type[] = external;
 
 # Removes a member of an array.
@@ -112,7 +112,7 @@ public isolated function remove(Type[] arr, int index) returns Type = external;
 
 # Removes all members of an array.
 # + arr - the array
-#  Panics if any member cannot be removed.
+# Panics if any member cannot be removed.
 public isolated function removeAll((any|error)[] arr) returns () = external;
 
 # Changes the length of an array.
@@ -145,7 +145,7 @@ public isolated function lastIndexOf(PureType[] arr, PureType val, int startInde
 # Reverses the order of the members of an array.
 #
 # + arr - the array to be reversed
-# + return - `arr` with its members in reverse order
+# + return - new array with the members of `arr` in reverse order
 public isolated function reverse(Type[] arr) returns Type[] = external;
 
 # Direction for `sort` function.
@@ -165,7 +165,7 @@ public type OrderedType ()|boolean|int|float|decimal|string|OrderedType[];
 # + arr - the array to be sorted; 
 # + direction - direction in which to sort
 # + key - function that returns a key to use to sort the members
-# + return - a new array consisting of the members of `arr` in sorted order
+# + return - new array consisting of the members of `arr` in sorted order
 public isolated function sort(Type[] arr, SortDirection direction = ASCENDING,
         (isolated function(Type val) returns OrderedType)? key = ()) returns Type[] = external;
 
