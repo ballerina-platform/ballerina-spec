@@ -2841,8 +2841,38 @@ described by the following object type descriptor:
 }
 </pre>
 <p>
-The above methods all return an error value if an error occurred, and
-return nil otherwise.
+The role of a Listener is to handle incoming network messages by making
+calls on service objects as described in <a
+href="#listeners_and_services">Listeners and services</a>. Each method is used
+as follows:
+</p>
+<ul>
+<li>the <code>attach</code> method is used to provide the Listener with a
+service object that it can use to handle incoming network messages; the
+<code>attachPoint</code> argument is used to identify which network messages the
+service object should be used for;</li>
+<li>the <code>detach</code> method tells the Listener to stop using a service
+object that was previously provided using the <code>attach</code> method;</li>
+<li>the <code>start</code> method tells the Listener to start handling incoming
+network messages;</li>
+<li>the <code>gracefulStop</code> and <code>immediateStop</code> messages tell
+the Listener to stop handling incoming network messages;
+<ul>
+<li>in the case of <code>gracefulStop</code>, the listener should complete the
+handling of any incoming messages that it has started to handle; in particular,
+it should wait for the completion of any strands that it created to execute
+service object methods;</li>
+<li>in the case of <code>immediateStop</code>, the listener should not try to
+complete the hanlding of any incoming messages that is has started to handle; in
+particular, it should cancel any strands that it created to execute service
+object methods.</li>
+</ul>
+</li>
+</ul>
+<p> 
+Each method returns an error value if an error occurred, and return nil
+otherwise. The listener object is responsible for creating and keeping track of
+any strands that it needs.
 </p>
 <p>
 A type is a <em>listener object type</em> if it is a subtype of the object type
@@ -9068,7 +9098,7 @@ unsuccessful, terminates the program execution.
 </section>
 
 <section>
-<h3>Listeners and services</h3>
+<h3 id="listeners_and_services">Listeners and services</h3>
 
 <p>
 Service objects support network interaction using remote methods and resource
