@@ -23,7 +23,7 @@ The platform supports the following syntaxes to supply configurable values:
 
 ## Toml Syntax 
 
-TOML is a minimal configuration file format with key/value pairs and collections of such key/values pairs (tables). Configuration values should be specified in TOML syntax in a file called `Config.toml` as key/value pairs, tables, and an array of tables. 
+TOML is a minimal configuration file format with key/value pairs and collections of such key/values pairs (tables). Configuration values should be specified in TOML syntax in a file with `.toml` extension as key/value pairs, tables, and an array of tables. 
 
 Note that values cannot be supplied to configurable variables with nil and mapping types via TOML syntax. Here are the supported types.
 
@@ -49,7 +49,7 @@ Limitations
 
 ### TOML keys
 
-Here is the structure of TOML [keys](https://toml.io/en/v1.0.0#keys) allowed in `Config.toml`.
+Here is the structure of TOML [keys](https://toml.io/en/v1.0.0#keys) allowed in TOML files.
 
 
 ```
@@ -150,17 +150,18 @@ Say organization name is `p` and the root package name is also `p` and the user 
 We can resolve this by forcing the user to specify an organization for the root package. 
 
 
-### Locating Config.toml
-
+### Locating TOML fjiles
 The following rules are applicable when running a Ballerina program with `java -jar`, `bal run` commands:
 
-
-*   Look for the environment variable `BAL_CONFIG_FILE`. It should provide a path to the `Config.toml` file.
-*   If not, look for the environment variable `BAL_CONFIG_DATA`. It should provide the `Config.toml` content.
-*   If not, look for the `Config.toml` file in the current working directory(CWD)
+*   Look for the environment variable `BAL_CONFIG_FILES`. It should provide a list of paths to `.toml` files.
+    *   The list paths are seperated by the OS-specific separator.
+    *   If a key is specified in one or more `.toml` files, use the following mechanism to resolve the confict:
+        *   Let `A.toml` and `B.toml` be two TOML files specified in the `BAL_CONFIG_FILES` environment variable and `A.toml` is specified before the `B.toml` in the path list. If key `K` is defined in both toml files, then pick the value in `A.toml` and ingore the value in `B.toml`.
+    *   The default value of `BAL_CONFIG_FILES` is `./Config.toml`. 
+*   If not, look for the environment variable `BAL_CONFIG_DATA`. It should provide the TOML content.
+*   If not, look for a `Config.toml` file using the path available in the default value of the `BAL_CONFIG_FILES` envionment variable. 
 
 The following rules are applicable when running units tests of a module with `bal test` command:
-
 *   Look for the Config.toml file in the corresponding module test directory root.
 
 ## Command-line arguments
@@ -257,4 +258,4 @@ The` toString()` representation of the value can be provided with the -C option.
 Notes:
 *   Nil value cannot be provided with this design
 *   The rules for resolving a configurable variable from a command-line argument key and from a TOML key are the same. 
-
+*   A value supplied via a command-line arg gets the priority over a value supplied via TOML for a given `configurable` variable.
