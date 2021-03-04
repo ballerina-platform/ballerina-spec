@@ -150,7 +150,7 @@ Say organization name is `p` and the root package name is also `p` and the user 
 We can resolve this by forcing the user to specify an organization for the root package. 
 
 
-### Locating TOML fjiles
+### Locating TOML files
 The following rules are applicable when running a Ballerina program with `java -jar`, `bal run` commands:
 
 *   Look for the environment variable `BAL_CONFIG_FILES`. It should provide a list of paths to `.toml` files.
