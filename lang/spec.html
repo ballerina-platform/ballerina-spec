@@ -1902,7 +1902,8 @@ inferred-typedesc-default := <code>&lt;</code> <code>&gt;</code>
 <p>
 A param-name can be omitted from a required-param, defaultable-param,
 included-record-param or rest-param only when occuring in the function-signature
-of a function-type-descriptor.
+of a function-type-descriptor. The type-descriptor in a required-param or
+defaultable-param must not be <code>never</code>.
 </p>
 <p>
 The argument list passed to a function consists of zero or more arguments in order;
@@ -1998,7 +1999,8 @@ return <code>()</code>.
 <p>
 The value returned by a function will belong to the type specified in the
 return-type-descriptor. An empty return-type-descriptor is equivalent to
-<code>returns ()</code>.
+<code>returns ()</code>. The type-descriptor in a return-type-descriptor may be
+<code>never</code>.
 </p>
 <p>
 A return-type-descriptor may be depend on the param-list in the following way. A
@@ -2214,10 +2216,11 @@ of a <code>remote-method-decl</code> must be distinct from the
 <code>object-type-descriptor</code>. However, a <code>method-decl</code> and a
 <code>remote-method-decl</code> can have the same name. A remote method cannot
 be called using the normal method call syntax. A remote method of a client
-object can only be invoked by a <code>client-remote-method-call-action</code>. A
-remote method of a service object is invoked by a listener object provided by a
-library module; Ballerina does not yet define a mechanism to allow such a
-library module to be implemented completely in Ballerina.
+object can only be invoked by a <code>client-remote-method-call-action</code>.
+The return type of the remote method of a client object must not be
+<code>never</code>. A remote method of a service object is invoked by a listener
+object provided by a library module; Ballerina does not yet define a mechanism
+to allow such a library module to be implemented completely in Ballerina.
 </p>
 
 </section>
@@ -3612,12 +3615,13 @@ inferable-type-descriptor := type-descriptor | <code>var</code>
 </pre>
 <p>
 A typed-binding-pattern combines a type-descriptor and a binding-pattern, and is
-used to create the variables occurring in the binding-pattern. If var is used
+used to create the variables occurring in the binding-pattern. The
+type-descriptor must not be <code>never</code>. If <code>var</code> is used
 instead of a type-descriptor, it means the type is inferred. How the type is
 inferred depends on the context of the typed-binding-pattern. An
 inferable-type-descriptor is an inferable context for a type descriptor, which
-means that <code>*</code> can be used with the type descriptor to infer
-the length of an array.
+means that <code>*</code> can be used with the type descriptor to infer the
+length of an array.
 </p>
 <p>
 The simplest and most common form of a typed-binding-pattern is for the binding
@@ -3910,6 +3914,13 @@ if the evaluation of an expression at runtime completes normally, then the
 resulting value will belong to the static type. A type is also computed for
 check-fail abrupt completion, which will be a (possibly empty) subtype of error;
 however, for panic abrupt completion, no type is computed.
+</p>
+<p>
+It is an error if the static type of an expression is <code>never</code>, except
+in cases where the expression is one that this specification explicitly permits
+to have static type <code>never</code> and the expression occurs in a context
+where this specification explicitly permits an expression with static type
+<code>never</code> to occur.
 </p>
 <p>
 The detailed rules for the static typing of expressions are quite elaborate and
@@ -5286,7 +5297,8 @@ list will be used to bind the parameters of the function before the body of the
 function is executed. If the function terminates normally, then the result of
 the function-call-expr is the return value of the function; otherwise the
 function-call-expr completes abruptly with a panic. The static type of the
-function-call-expr is the return type of the function type.
+function-call-expr is the return type of the function type; this type is
+permitted to be <code>never</code>.
 </p>
 <p>
 The function-reference must refer to a variable with function type. The type
@@ -5419,7 +5431,9 @@ class="grammar">method-call-expr := expression <code>.</code> method-name <code>
 <p>
 A <code>method-call-expr</code> either calls an object's method, calls an
 object's field where the type of the field is a function or calls a function in
-the lang library. The evaluation of the method-call-expr starts by evaluating
+the lang library. The static type of the method-call-expr is the return type of
+the function type of the function that is called; this type is permitted to be
+<code>never</code>. The evaluation of the method-call-expr starts by evaluating
 <code>expression</code> resulting in some value <var>v</var>. There is no
 contextually expected type for <code>expression</code>.
 </p>
@@ -6193,7 +6207,7 @@ result of trap-exp is e</li>
 </ul>
 </li>
 <li>If type of <code>expr</code> is T, then type of <code>trap expr</code> is
-T|error.</li>
+T|error. It is permitted for T to be <code>never</code>.</li>
 </ul>
 </section>
 
@@ -7121,7 +7135,8 @@ invocation to be executed on a new strand. The arguments for the function or
 method call are evaluation on the current strand. A start-action returns a value
 of basic type future immediately. If the static type of the call expression or
 action <code><var>C</var></code> is T, then the static type of <code>start
-<var>C</var></code> is future&lt;T&gt;.
+<var>C</var></code> is future&lt;T&gt;; it is permitted for T to be
+<code>never</code>.
 </p>
 
 
@@ -7646,7 +7661,8 @@ A local variable declared <code>local-no-init-var-decl-stmt</code> must be
 definitely assigned at each point that the variable is referenced. This means
 that the compiler must be able to verify that the local variable will have been
 assigned before that point. If <code>final</code> is specified, then the
-variable must not be assigned more than once.
+variable must not be assigned more than once. The <code>type-descriptor</code>
+must not be <code>never</code>.
 </p>
 </section>
 <section>
@@ -8124,9 +8140,8 @@ call-expr :=
 </pre>
 <p>
 A call-stmt is executed by evaluating call-expr as an expression and discarding
-the resulting value, which must be nil. It is a compile-time error if the static
-type of the call-expr in an call-stmt is not a subtype of nil. Note that
-<code>never</code> is a subtype of nil.
+the resulting value, which must be nil. The static type of the call-expr in an
+call-stmt must be a subtype of nil; it is permitted to be <code>never</code>.
 </p>
 </section>
 <section>
@@ -9486,7 +9501,8 @@ class="grammar">module-no-init-var-decl := metadata [<code>public</code>] [<code
 A module variable declared with <code>module-no-init-var-decl</code> must be
 initialized in the module's <code>init</code> function. It must be definitely
 assigned at each point that the variable is referenced. If <code>final</code> is
-specified, then the variable must not be assigned more than once.
+specified, then the variable must not be assigned more than once. The
+<code>type-descriptor</code> must not be <code>never</code>.
 </p>
 
 </section>
@@ -9515,9 +9531,10 @@ that references this constant.
 If type-descriptor is present, then it provides the contextually expected type
 for the interpretation of const-expr. It is a compile-time error if the static
 type of const-expr is not a subtype of that type. The type-descriptor must
-specify a type that is a subtype of anydata. Note that the type-descriptor does
-not specify the type of the constant, although the type of the constant will all
-be a subtype of the type specified by the type-descriptor.
+specify a type that is a subtype of anydata and must not be <code>never</code>.
+Note that the type-descriptor does not specify the type of the constant,
+although the type of the constant will all be a subtype of the type specified by
+the type-descriptor.
 </p>
 </section>
 
