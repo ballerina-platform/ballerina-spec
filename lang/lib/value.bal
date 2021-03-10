@@ -76,13 +76,6 @@ public isolated function cloneWithType(anydata v, typedesc<anydata> t = <>) retu
 # return - `v` cast to the type described by `t`, or an error, if the cast cannot be done
 public isolated function ensureType(any|error v, typedesc<any> t = <>) returns t|error = external;
 
-# Tests whether `v` is read-only, i.e. immutable
-# Returns true if read-only, false otherwise.
-#
-# + v - source value
-# + return - true if read-only, false otherwise
-public isolated function isReadOnly(anydata v) returns boolean = external;
-
 # Performs a direct conversion of a value to a string.
 # The conversion is direct in the sense that when applied to a value that is already
 # a string it leaves the value unchanged.
