@@ -3615,26 +3615,33 @@ inferable-type-descriptor := type-descriptor | <code>var</code>
 </pre>
 <p>
 A typed-binding-pattern combines a type-descriptor and a binding-pattern, and is
-used to create the variables occurring in the binding-pattern. The
-type-descriptor must not be <code>never</code>. An
-inferable-type-descriptor is an inferable context for a type descriptor, which
-means that <code>*</code> can be used with the type descriptor to infer the
-length of an array.
+used to create the variables occurring in the binding-pattern. If
+<code>var</code> is used instead of a type-descriptor, it means the type is
+inferred.
 </p>
 <p>
-If <code>var</code> is used instead of a type-descriptor, it means the type is
-inferred. There are two kinds of context in which a typed-binding-pattern can
-occur. In the first kind of context, the typed-binding-pattern is matched once
-against the result of evaluating an expression and the type is inferred to be
-the static type of the expression. In this case, it is an error if the
+There are two ways in which a typed-binding-pattern can be used.
+</p>
+<ul>
+<li><em>Single use</em>. In the language syntax, this kind of use of a
+typed-binding-pattern is usually followed by <code>=</code> (the only case where
+it is not followed by <code>=</code> is when it follows <code>on fail</code>).
+The typed-binding-pattern is matched once against the result of evaluating an
+expression. When <code>var</code> is used, the type is inferred from the static
+type of the expression (in the <code>on fail</code> case there can be multiple
+expressions from which it is inferred); in this case, it is an error if the
 intersection of <code>error</code> and the inferred type is non-empty, the
 binding-pattern of the typed-binding-pattern is a capture-binding-pattern, and
-the variable referenced in the capture-binding-pattern is not used. In the
-second kind of context, an iterator is created from the result of evaluating an
-expression and the typed-binding-pattern is matched against each value returned
-by the iterator; the type is inferred to be T, where the static type of the
-expression is Iterable&lt;T,C&gt;.
-</p>
+the variable referenced in the capture-binding-pattern is not used. It is an
+error if the type-descriptor in the typed-binding-pattern is
+<code>never</code>.</li>
+<li><em>Iterative use</em>. In the language syntax, this kind of use of a
+typed-binding-pattern is followed by the <code>in</code> keyword. An iterator is
+created from the result of evaluating an expression, and the
+typed-binding-pattern is matched against each value returned by the iterator.
+When <code>var</code> is used, the type is inferred to be T, where the static
+type of the expression is an iterable type with value type T.</li>
+</ul>
 <p>
 The simplest and most common form of a typed-binding-pattern is for the binding
 pattern to consist of just a variable name. In this case, the variable is
