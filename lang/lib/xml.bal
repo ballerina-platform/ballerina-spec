@@ -241,6 +241,11 @@ public isolated function children(xml x) returns xml = external;
 # This is equivalent to `children(x).elements(nm)`.
 public isolated function elementChildren(xml x, string? nm = ()) returns xml<Element> = external;
 
+# Selects text items from an xml value.
+# + x - the xml value
+# return - an xml sequence consisting of the concatentation of the text items in `x`
+public isolated function text(xml x) returns Text = external;
+
 // Functional programming methods
 
 # Applies a function to each item in an xml sequence, and returns an xml sequence of the results.
