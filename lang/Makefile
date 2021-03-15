@@ -12,11 +12,12 @@ VERSION:=$(shell sed -n -e '/^<h1[ >]/s/.* \(20[12][0-9]R[0-9][0-9]*\(-[A-Za-z0-
 
 DISTDIR=ballerina-lang-spec-$(VERSION)
 ZIPFILE=$(DISTDIR).zip
-COPYFILES= \
+INCFILES= \
   lib/array.bal lib/boolean.bal lib/decimal.bal lib/error.bal lib/float.bal \
   lib/future.bal lib/int.bal lib/map.bal lib/object.bal lib/stream.bal \
   lib/string.bal lib/table.bal lib/typedesc.bal lib/xml.bal \
-  lib/runtime.bal lib/transaction.bal lib/value.bal \
+  lib/runtime.bal lib/transaction.bal lib/value.bal
+COPYFILES= \
   style/ballerina-language-specification.css \
   style/ballerina-language-specification.js
 DISTFILES=spec.html $(COPYFILES)
@@ -29,7 +30,7 @@ $(BUILDDIR)/spec.html: $(BUILDDIR)/spec.xml spec.xsl
 	  sed -e '/<meta http-equiv/d' >>$(BUILDDIR)/spec.html
 	tar cf - $(COPYFILES) | (cd $(BUILDDIR)/; tar xf -)
 
-$(BUILDDIR)/spec.xml: spec.html spec.awk
+$(BUILDDIR)/spec.xml: spec.html spec.awk $(INCFILES)
 	test -d $(BUILDDIR) || mkdir $(BUILDDIR)
 	$(AWK) -f spec.awk -v date=`date -u -I` spec.html >$(BUILDDIR)/spec.xml
 

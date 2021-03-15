@@ -16,14 +16,14 @@ body = element body { h1, block*, section2* }
 
 # Blocks
 
-block = p|ul|ol|pre|pre.grammar|table
+block = p|ul|ol|pre|table
 
 # Headings
 
 h1 = element h1 { h.model }
 
 section2 = element section { section2.class?, h2, block*, section3* }
-section2.class =   attribute class { "toc" | "appendix" }
+section2.class = attribute class { "toc" | "appendix" }
 h2 = element h2 { h.model }
 
 section3 = element section { h3, block*, section4* }
@@ -39,12 +39,14 @@ h.model = attribute id { token }?, inline.content
 
 # Paragraphs
 
-p = element p { attribute class { "status" }?, inline.content }
-pre = element pre { inline.content }
-pre.grammar = element pre {
-  attribute class { "grammar" },
-  mixed { element code|em|dfn|abbr { text }* }
-}
+p = element p { p.class?, inline.content }
+p.class = attribute class { "status" | "langlib" }
+
+pre = element pre { pre.class?, pre.content }
+pre.class = attribute class { "grammar" | "langlib" }
+# libxml2 seems to have some problems with allowed content depending
+# on attribute value, so keep this simple
+pre.content = mixed { (inline | element dfn|abbr { text })* }
 
 # Lists
 

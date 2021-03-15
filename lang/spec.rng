@@ -80,7 +80,6 @@
       <ref name="ul"/>
       <ref name="ol"/>
       <ref name="pre"/>
-      <ref name="pre.grammar"/>
       <ref name="table"/>
     </choice>
   </define>
@@ -174,37 +173,54 @@
   <define name="p">
     <element name="p">
       <optional>
-        <attribute name="class">
-          <value>status</value>
-        </attribute>
+        <ref name="p.class"/>
       </optional>
       <ref name="inline.content"/>
     </element>
   </define>
+  <define name="p.class">
+    <attribute name="class">
+      <choice>
+        <value>status</value>
+        <value>langlib</value>
+      </choice>
+    </attribute>
+  </define>
   <define name="pre">
     <element name="pre">
-      <ref name="inline.content"/>
+      <optional>
+        <ref name="pre.class"/>
+      </optional>
+      <ref name="pre.content"/>
     </element>
   </define>
-  <define name="pre.grammar">
-    <element name="pre">
-      <attribute name="class">
+  <define name="pre.class">
+    <attribute name="class">
+      <choice>
         <value>grammar</value>
-      </attribute>
-      <mixed>
-        <zeroOrMore>
+        <value>langlib</value>
+      </choice>
+    </attribute>
+  </define>
+  <!--
+    libxml2 seems to have some problems with allowed content depending
+    on attribute value, so keep this simple
+  -->
+  <define name="pre.content">
+    <mixed>
+      <zeroOrMore>
+        <choice>
+          <ref name="inline"/>
           <element>
             <choice>
-              <name>code</name>
-              <name>em</name>
               <name>dfn</name>
               <name>abbr</name>
             </choice>
             <text/>
           </element>
-        </zeroOrMore>
-      </mixed>
-    </element>
+        </choice>
+      </zeroOrMore>
+    </mixed>
   </define>
   <!-- Lists -->
   <define name="ol">

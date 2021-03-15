@@ -1,4 +1,5 @@
 # Add markup to <pre class="grammar"> elements.
+# Include langlib source files in the document.
 # Non-terminal definitions are wrapped with <dfn>
 # Non-termimal references are wrapped with <abbr>
 # For portability, we avoid using any GNU awk extensions
@@ -48,5 +49,20 @@
     print
     next
 }
-	
+
+/^<p  *class *= *"langlib">/ {
+    match($0, / href *= *"/)
+    filename = substr($0, RSTART+RLENGTH)
+    closeQuote = index(filename, "\"")
+    filename = substr(filename, 0, closeQuote - 1)
+    print "<pre class=\"langlib\"><![CDATA["
+    while ((getline line < filename) > 0) {
+	if (index(line, "//") != 1) {
+	    print line
+	}
+    }
+    print "]]></pre>"
+    next
+}
+
 { print }
