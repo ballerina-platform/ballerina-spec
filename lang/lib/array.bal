@@ -154,7 +154,11 @@ public enum SortDirection {
    DESCENDING = "descending"
 }
 
-# Any ordered type is a subtype of this.
+# A type of which any ordered type must be a subtype.
+# Whether a type is an ordered type cannot be defined in
+# terms of being a subtype of a type, so being a subtype
+# of `OrderedType` is a necessary but not sufficient condition
+# for a type to be an ordered type.
 public type OrderedType ()|boolean|int|float|decimal|string|OrderedType[];
 
 # Sorts an array.
