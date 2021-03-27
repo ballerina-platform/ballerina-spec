@@ -244,3 +244,13 @@ public isolated function toBase16(byte[] arr) returns string = external;
 # + str - Base16 string representation
 # + return - the byte array or error
 public isolated function fromBase16(string str) returns byte[]|error = external;
+
+# Returns a stream of the members of an array.
+#
+# + arr - the array
+# + returns - stream of members of the array
+# The returned stream will use an iterator over `arr` and
+# will therefore handle mutation of `arr` in the same way
+# as an iterator does.
+# Theutation of the `arr`
+public isolated function toStream(T[] arr) returns stream<T,()> = external;
