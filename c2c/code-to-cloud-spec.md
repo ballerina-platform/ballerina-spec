@@ -17,16 +17,12 @@ The deployment artifacts will be generated in the target directory of the projec
 ├── Cloud.toml                               <- Used to override default configerations used to generate artifacts.
 ├── Ballerina.lock
 ├── Ballerina.toml
-├── src
-│   └── module
-│       └── entry.bal                             <- Entry point of the project.
+├── entry.bal                                <- Entry point of the project.
 └── target
-    ├── balo
-    │   └── module-0.0.1.balo
+    ├── bala
+    │   └── module-0.0.1.bala
     ├── bin
     │   └── module.jar
-    ├── caches
-    |
     ├── docker
     │   └── module
     │       └── Dockerfile                        <- Generated Dockerfile according to the ballerina project
@@ -296,8 +292,7 @@ Contains the properties related to the deployment.
 
 |Identifier   	        |Description	                                         |Default Value   	|
 |---	                |---	                                                 |---	            |
-|internal_domain_name   |Name of the internal domain  	                         |$MODULE_NAME  	|
-|external_accessible   	|Status of exposing the container outside of the cluster |true   	        |
+|internal_domain_name   |Name of the internal domain (k8s service name)  	     |${MODULE_NAME}_svc|
 |min_memory   	        |Minimum memory allocated to the container   	         |"100Mi"   	    |
 |max_memory   	        |Maximum memory allocated to the container  	         |"256Mi"   	    |
 |min_cpu   	            |Minimum CPU allocated to the container 	             |"1000m"   	    |
