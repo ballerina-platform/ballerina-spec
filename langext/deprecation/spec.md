@@ -44,8 +44,8 @@ This specification introduces a new built-in annotation called `@deprecated` to 
 The semantics is that the usage of a deprecated API element is allowed, but the compiler should give a warning.
 
 ```ballerina
-public const annotation deprecated on source type, source object type, source const, source annotation,
-          source function, source parameter, source object function, source object field;
+public const annotation deprecated on source type, source class, source const, source annotation,
+                source function, source parameter, source object field;
 ```
 
 ### Attachment points
@@ -53,16 +53,20 @@ This section lists the attachment points to which the @deprecated annotation can
 
 The module-level symbols with public visibility:
 - `module-type-defn`
+- `module-class-defn`
 - `module-const-decl`
 - `annotation-decl`
 - `function-defn`
 
 Function and method parameters: 
-- `required-param` with public visibility
-- `defaultable-param` with public visibility. 
+- `required-param`
+- `defaultable-param`
+- `rest-param`
 
 Object members with public visibility:
-- `object-method`
+- `method-defn`
+- `method-decl`
+- `object-field`
 - `object-field-descriptor`
 
 ### Deprecation warning 
