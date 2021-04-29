@@ -207,13 +207,14 @@ public isolated function slice(xml<ItemType> x, int startIndex, int endIndex = x
     returns xml<ItemType> = external;
 
 # Strips the insignificant parts of the an xml value.
-# Comment items, processing instruction items are considered insignificant.
-# After removal of comments and processing instructions, the text is grouped into
-# the biggest possible chunks (i.e. only elements cause division into multiple chunks)
-# and a chunk is considered insignificant if the entire chunk is whitespace.
+# This first transforms the xml value by leaving out any constituent
+# item that is a comment or processing instruction. It then
+# transforms this value by leaving out any constituent item that
+# is a text item that consists entirely of whitespace, where whitespace
+# is as defined by the S production of XML 1.0.
 #
 # + x - the xml value
-# + return - `x` with insignificant parts removed
+# + return - `x` transformed by leaving out insignificant items
 public isolated function strip(xml x) returns xml = external;
 
 # Selects elements from an xml value.
