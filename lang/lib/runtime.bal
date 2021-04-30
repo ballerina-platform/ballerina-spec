@@ -54,3 +54,6 @@ public type StackFrame readonly & object {
 # + return - an array representing the current call stack
 # The first member of the array represents the top of the call stack.
 public isolated function getStackTrace() returns StackFrame[] = external;
+
+# Error to panic with when a type cast expression fails
+public type TypeCastError distinct error;
