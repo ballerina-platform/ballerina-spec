@@ -61,8 +61,7 @@ public isolated function cloneReadOnly(CloneableType v) returns CloneableType & 
 # - the read-only bit of values and fields comes from the specified type descriptor
 # - the graph structure of `v` is not preserved; the result will always be a tree;
 #   an error will be returned if `v` has cycles
-# - immutable structural values are copied rather being returned as is; all
-#   structural values in the result will be mutable.
+# - immutable structural values are copied rather than being returned as is
 # - numeric values can be converted using the NumericConvert abstract operation
 # - if a record type descriptor specifies default values, these will be used
 #   to supply any missing members
