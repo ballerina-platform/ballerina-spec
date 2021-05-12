@@ -458,6 +458,14 @@ objects. Finally, some basic types are inherently mutable: the read-only bit is
 never on for a value belonging to an inherently mutable basic type.
 </p>
 <p>
+Each selectively immutable basic type can be partitioned into two
+<em>uniform</em> types, one containing values with the read-only bit on, and one
+containing values where the read-only bit is off. For every other basic type,
+there is a single uniform type. Every uniform type is thus either completely
+readonly or completely mutable; every value thus belongs to exactly one unform
+type, and mutation cannot change the uniform type to which a value belongs.
+</p>
+<p>
 It is also possible to limit the mutability of variables, by making them final.
 This means that the value that a variable holds cannot be changed after the
 variable has been initialized. Unlike immutability of variables, this is not
@@ -7731,6 +7739,22 @@ match statement; this is described in the <a href="#match_statement">Match
 statement</a> section.
 </p>
 <p>
+Type narrowing makes use of the <em>read-only difference</em> between two types,
+which is defined as follows. We use the notation T
+&#x2212;<sub><em>ro</em></sub> S for the read-only difference of T and S. T
+&#x2212;<sub><em>ro</em></sub> S is computed separately for each uniform type.
+Let T<sup>U</sup> be the subset of T belonging to uniform type U, i.e. the
+intersection of T and U. For a uniform type U that is immutable, T<sup>U</sup>
+&#x2212;<sub><em>ro</em></sub> S<sup>U</sup> is the same as T<sup>U</sup> -
+S<sup>U</sup> (set difference); for a uniform type U that is mutable,
+T<sup>U</sup> &#x2212;<sub><em>ro</em></sub> S<sup>U</sup> is empty if
+T<sup>U</sup> is a subset of S<sup>U</sup>, and T<sup>U</sup> otherwise. T
+&#x2212;<sub><em>ro</em></sub> S is the union for every uniform type U of
+T<sup>U</sup> &#x2212;<sub><em>ro</em></sub> S<sup>U</sup>. This definition of
+read-only difference ensures that if a value x belongs to T but not does not
+belong to S, then x belongs to T &#x2212;<sub><em>ro</em></sub> S.
+</p>
+<p>
 Given an expression E with static type boolean, and a variable x with static
 type Tx, we define how to determine
 </p>
@@ -7746,7 +7770,8 @@ based on the syntactic form of E as follows.
 <ul>
 <li>the narrowed type for x implied by truth of E is the intersection of Tx and
 T</li>
-<li>the narrowed type for x implied by falsity of E is Tx with T removed</li>
+<li>the narrowed type for x implied by falsity of E is Tx
+&#x2212;<sub><em>ro</em></sub> T</li>
 </ul>
 </li>
 <li>If E has the form x == E1 or E1 == x where the static type of E1 is an
@@ -7754,13 +7779,15 @@ expression whose static type is a singleton simple type T1, then
 <ul>
 <li>the narrowed type for x implied by truth of E is the intersection of Tx and
 T1</li>
-<li>the narrowed type for x implied by falsity of E is Tx with T1 removed</li>
+<li>the narrowed type for x implied by falsity of E is Tx
+&#x2212;<sub><em>ro</em></sub> T1</li>
 </ul>
 </li>
 <li>If E has the form x != E1 or E1 != x where the static type of E1 is an
 expression whose static type is a singleton simple type T1, then
 <ul>
-<li>the narrowed type for x implied by truth of E is Tx with T1 removed</li>
+<li>the narrowed type for x implied by truth of E is Tx
+&#x2212;<sub><em>ro</em></sub> T1</li>
 <li>the narrowed type for x implied by falsity of E is the intersection of Tx
 and T1</li>
 </ul>
