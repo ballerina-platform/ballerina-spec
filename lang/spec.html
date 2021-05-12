@@ -7051,10 +7051,12 @@ a variable-reference can refer to an an identifier declared by a
 module-var-decl or listener-decl only if:
 <ul>
 <li>the identifier is declared by a module-var-decl that includes
-<code>final</code> but does not include <code>isolated</code>, or is declared by
-a listener-decl or a service-decl, and</li>
-<li>the static type of the variable is a subtype of <code>readonly</code> or of
-<code>isolated object {}</code>.</li>
+<code>final</code> or <code>configurable</code> but does not include
+<code>isolated</code>, or is declared by a listener-decl or a service-decl,
+and</li>
+<li>the static type of the variable is a subtype of <code>isolated object
+{}</code> or of <code>readonly</code> (which will always be the case if the
+identifier is declared as <code>configurable</code>).</li>
 </ul>
 </li>
 <li>Non-isolated module-level state cannot be mutated: an identifier in a
@@ -9532,7 +9534,7 @@ variable after it is initialized.
 <pre
 class="grammar">
 module-init-var-decl := metadata [<code>public</code>] module-init-var-quals typed-binding-pattern <code>=</code> module-var-init <code>;</code>
-module-init-var-quals := (<code>final</code> | isolated-qual | <code>configurable</code>)*
+module-init-var-quals := (<code>final</code> | isolated-qual)* | <code>configurable</code>
 module-var-init := expression | <code>?</code>
 </pre>
 <p>
@@ -9540,9 +9542,10 @@ A module-init-var-decl declares and initializes a variable. It is an error for a
 keyword to appear more than once in <code>module-init-var-quals</code>. If the
 typed-binding-pattern uses <code>var</code>, then the type of the variables is
 inferred from the static type of <code>expression</code>; if the module-var-decl
-includes <code>final</code>, the precise type is used, and otherwise the broad
-type is used. If the typed-binding-pattern specifies a type-descriptor, then
-that type-descriptor provides the contextually expected type for action-or-expr.
+includes <code>final</code> or <code>configurable</code>, the precise type is
+used, and otherwise the broad type is used. If the typed-binding-pattern
+specifies a type-descriptor, then that type-descriptor provides the contextually
+expected type for action-or-expr.
 </p>
 <p>
 If the module-init-var-decl includes <code>public</code>, then the
@@ -9568,7 +9571,12 @@ configurable value must be supplied for this variable. If
 <code>configurable</code> is specified, then the typed-binding-pattern must use
 an explicit type-descriptor rather than <code>var</code> and the binding-pattern
 must be just a variable-name. The type specified by the type-descriptor must be
-a subtype of <code>anydata</code>.
+a subtype of <code>anydata</code>. A variable declared as
+<code>configurable</code> is implicitly final, and cannot be assigned to outside
+the declaration. The static type of a variable declared as
+<code>configurable</code> is implicitly <code>readonly</code>: the type
+specified in the type-descriptor is intersected with <code>readonly</code>. A
+configurable variable can thus always be referenced within an isolated function.
 </p>
 
 <pre
