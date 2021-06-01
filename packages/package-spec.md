@@ -1,6 +1,27 @@
 # Ballerina Package Specification
 
-## 1. Introduction
+## Table of contents
+
+   * [1 Introduction](#1.-introduction)
+   * [2 Notation](#2.-notation)
+   * [3 Packages](#3.-packages)
+      * [3.1 Package Repositories](#3.1-package-repositories)
+      * [3.2 Organizations](#3.2-organizations)
+      * [3.3 Package names](#3.3-package-names)
+      * [3.4 Versions](#3.4-versions)
+      * [3.5 Module names](#3.5-module-names)
+      * [3.6 The default module](#3.6-the-default-module)
+   * [4 Source format](#4-source-format)
+      * [4.1 Source code file extension](#4.1-source-code-file-extension)
+      * [4.2 Module directory layout](#4.2-module-directory-layout)
+      * [4.3 Package directory layout](#4.3-package-directory-layout)
+      * [4.4 Ballerina.toml file](#4.4-ballerina.toml-file)
+         * [4.4.1 The `[package]` section](#4.4.1-the-`[package]`-section)
+         * [4.4.2 The `[build-options]` section](#4.4.2-the-`[build-options]`-section)
+         * [4.4.2 The `[platform]` section](#4.4.2-the-`[platform]`-section)
+      * [4.5 Dependencies.toml file](#4.5-dependencies.toml-file)
+
+## 1 Introduction
 
 Ballerina is an open-source programming language for the cloud that makes it easier to use, combine, and create network services. For a detailed reference guide on Ballerina, see “Ballerina Langauge Specification”.  
 
@@ -8,12 +29,12 @@ Ballerina programs are built by linking together Ballerina modules, which are na
 
 This document describes a packaging system for Ballerina modules. 
 
-## 2. Notation
+## 2 Notation
 Each text file described in this specification is a UTF-8 encoded file.
 
 This specification uses the <code>[identifier](https://ballerina.io/spec/lang/master/#identifier)</code> format as defined in the Ballerina language specification. 
 
-## 3. Packages
+## 3 Packages
 
 A Ballerina package provides a mechanism that allows one or modules to be combined, versioned, and distributed as a single entity.
 
@@ -57,7 +78,7 @@ module-name := package-name [/ sub-module-name]
 sub-module-name := identifier(.identifier)*
 ```
 
-### 3.6. The default module
+### 3.6 The default module
 
 A package is a collection of modules, and one module in this collection is identified as the default module of a package. The default module name is the same as the package name. 
 
@@ -65,7 +86,7 @@ A package is a collection of modules, and one module in this collection is ident
 default-module-name := package-name
 ```
 
-## 4. Source format
+## 4 Source format
 
 This section defines the layout of files and directories of the source format of a package.  
 
@@ -215,13 +236,13 @@ The `Ballerina.toml` file identifies a directory as a package. It also acts as a
 
 An empty `Ballerina.toml `is a valid file. The default values are used if any of the key/value pairs are missing.
 
-#### 4.4.1 The` [package]` section
+#### 4.4.1 The `[package]` section
 
 This is an optional section. 
 
-#### 4.4.2 The` [build-options]` section
+#### 4.4.2 The `[build-options]` section
 
-#### 4.4.2 The` [platform]` section
+#### 4.4.2 The `[platform]` section
 
 ### 4.5 Dependencies.toml file
 
