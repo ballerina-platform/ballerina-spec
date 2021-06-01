@@ -16,9 +16,9 @@
       * [4.2 Module directory layout](#42-module-directory-layout)
       * [4.3 Package directory layout](#43-package-directory-layout)
       * [4.4 Ballerina.toml file](#44-ballerinatoml-file)
-         * [4.4.1 The `[package]` section](#441-the-[package]-section)
-         * [4.4.2 The `[build-options]` section](#442-the-[build-options]-section)
-         * [4.4.2 The `[platform]` section](#442-the-[platform]-section)
+         * [4.4.1 The `[package]` section](#441-the-package-section)
+         * [4.4.2 The `[build-options]` section](#442-the-build-options-section)
+         * [4.4.2 The `[platform]` section](#442-the-platform-section)
       * [4.5 Dependencies.toml file](#45-dependenciestoml-file)
 
 ## 1 Introduction
