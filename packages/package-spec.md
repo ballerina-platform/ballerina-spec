@@ -2,11 +2,11 @@
 
 ## Table of contents
 
-   * [1 Introduction](#1.-introduction)
-   * [2 Notation](#2.-notation)
-   * [3 Packages](#3.-packages)
-      * [3.1 Package Repositories](#3.1-package-repositories)
-      * [3.2 Organizations](#3.2-organizations)
+   * [1 Introduction](#1-introduction)
+   * [2 Notation](#2-notation)
+   * [3 Packages](#3-packages)
+      * [3.1 Package Repositories](#31-package-repositories)
+      * [3.2 Organizations](#32-organizations)
       * [3.3 Package names](#3.3-package-names)
       * [3.4 Versions](#3.4-versions)
       * [3.5 Module names](#3.5-module-names)
