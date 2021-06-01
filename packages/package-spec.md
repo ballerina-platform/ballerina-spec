@@ -20,6 +20,13 @@
          * [4.4.2 The `[build-options]` section](#442-the-build-options-section)
          * [4.4.2 The `[platform]` section](#442-the-platform-section)
       * [4.5 Dependencies.toml file](#45-dependenciestoml-file)
+   * [5 Package repositories](#5-package-repositories)
+      * [5.1 Local repositories](#51-local-repositories)
+      * [5.2 Remote repositories](#52-remote-repositories)
+      * [5.3 Built-in package repositories](#53-built-in-package-repositories)
+         * [5.3.1 Platform distribution repository](#531-platform-distribution-repository)
+         * [5.3.2 Ballerina central repository](#532-ballerina-central-repository)
+         * [5.3.2 User local repository](#533-user-local-repository)
 
 ## 1 Introduction
 
@@ -42,7 +49,7 @@ Packages have both a source and a distribution format. The source format stores 
 
 ### 3.1 Package Repositories
 
-The distribution form of packages can be stored in a package repository. [Ballerina Central](https://central.ballerina.io/) is one such package repository. Within a repository, A package is identified by an organization, package name, and version.
+A package repository contains the distribution format of packages. [Ballerina Central](https://central.ballerina.io/) is one such package repository. Within a repository, A package is identified by an organization, package name, and version.
 
 ### 3.2 Organizations
 
@@ -257,3 +264,85 @@ Every `Dependencies.toml` file MUST consist of the following format:
     *   `name` - Package name of the dependency
     *   `version` - Dependency version
     *   `repository` - Optional Repository name 
+
+
+## 5 Package repositories
+Ballerina packages are stored in package repositories. They provide a mechanism to look up packages using the organization name, package name, and version. 
+
+There are two types of repositories called `local` and `remote`.
+
+### 5.1 Local repositories
+A local repository is a package repository available in the local environment where the Ballerina tool runs. It is a directory, and the structure is based on the hierarchical file system.
+
+The layout of a local package directory must look like this:
+
+<table>
+  <tr>
+   <td>Entry
+   </td>
+   <td>Description
+   </td>
+  </tr>
+  <tr>
+   <td>/
+   </td>
+   <td>The root of the local package repository directory. It must include `bala` directory. Other files and directories are ignored.
+   </td>
+  </tr>
+  <tr>
+   <td><code>/bala</code>
+   </td>
+   <td>Includes only sub-directories, and their name must be the same as organization names of packages. 
+   </td>
+  </tr>
+  <tr>
+   <td><code>/bala/&lt;org-name></code>
+   </td>
+   <td>Includes only the packages that belong to the `&lt;org-name>` organization. A sub-directory name must be the same as the package names.
+   </td>
+  </tr>
+  <tr>
+   <td><code>/bala/&lt;org-name>/&lt;package-name></code>
+   </td>
+   <td>Include only the versions of the package `&lt;package-name>` that belongs to the organization  `&lt;org-name>`. A sub-directory name must be the same as the package version.
+   </td>
+  </tr>
+  <tr>
+   <td><code>/bala/&lt;org-name>/&lt;package-name>/&lt;version></code>
+   </td>
+   <td>Include the distribution format of the package. It is up to the implementation to maintain the `.zip` archive file or exploded version of the archive. 
+   </td>
+  </tr>
+</table>
+
+### 5.2 Remote repositories
+A remote repository is a package repository that is accessed by the `https://` protocol. This specification defines the set the queries that a remote repository must respond to. 
+
+Read the [OpenAPI description](https://github.com/wso2-enterprise/ballerina-registry/blob/v2.0-dev/src/registry_package_api/resources/openapi/ballerina-registry-openapi-spec.yaml) of the remote repository for more details. 
+
+### 5.3 Built-in package repositories 
+The following three package repositories defined by this specification:
+1. Platform distribution repository
+2. Ballerina central repository
+3. User local repository
+
+If a dependency entry in `Dependencies.toml` does not specify the `repository` field, the dependency is looked up in both the Platform distribution and Ballerina central repository.
+
+#### 5.3.1 Platform distribution repository  
+Each ballerina platform distribution comes with a package repository. It is a local repository that includes language library packages and standard library packages. 
+
+#### 5.3.2 Ballerina central repository
+Ballerina central is the package repository provided by the Ballerina community. It is a remote package repository hosted at [`https:\\central.ballerina.io`](https:\\central.ballerina.io).
+
+#### 5.3.3 User local repository
+This is a per-user package repository available in the local environment where the Ballerina tool runs. It is a local repository, and the location is implementation-dependent. If an application depends on a package that is available in the user local repository, then the corresponding `[[dependency]]` entry in `Dependencies.toml` must have the `repository = “local”` field.
+
+```
+[[dependency]]
+org = "foo"
+name = "bar"
+version = "0.1.0"
+repository = "local"` 
+```
+
+
