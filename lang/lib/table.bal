@@ -14,17 +14,17 @@
 // specific language governing permissions and limitations
 // under the License.
 
-# A type parameter that is a subtype of `any|error`.
+# A type parameter that is a subtype of `map<any|error>`.
 # Has the special semantic that when used in a declaration
 # all uses in the declaration must refer to same type.
 @typeParam
-type Type any|error;
+type MapType map<any|error>;
 
-# A type parameter that is a subtype of `any|error`.
+# A type parameter that is a subtype of `map<any|error>`.
 # Has the special semantic that when used in a declaration
 # all uses in the declaration must refer to same type.
 @typeParam
-type Type1 any|error;
+type MapType1 map<any|error>;
 
 # A type parameter that is a subtype of `anydata`.
 # Has the special semantic that when used in a declaration
@@ -36,7 +36,7 @@ type KeyType anydata;
 #
 # + t - the table
 # + return - number of members in `t`
-public isolated function length(table<any|error> t) returns int = external;
+public isolated function length(table<map<any|error>> t) returns int = external;
 
 # Returns an iterator over a table.
 # The iterator will iterate over the members of the table not the keys.
@@ -45,9 +45,9 @@ public isolated function length(table<any|error> t) returns int = external;
 # 
 # + t - the table
 # + return - a new iterator object that will iterate over the members of `t`
-public isolated function iterator(table<Type> t) returns object {
+public isolated function iterator(table<MapType> t) returns object {
     public isolated function next() returns record {|
-        Type value;
+        MapType value;
     |}?;
 } = external;
 
@@ -58,20 +58,20 @@ public isolated function iterator(table<Type> t) returns object {
 # + t - the table
 # + k - the key
 # + return - member with key `k`
-public isolated function get(table<Type> key<KeyType> t, KeyType k) returns Type = external;
+public isolated function get(table<MapType> key<KeyType> t, KeyType k) returns MapType = external;
 
 # Adds a member `val` to table `t`, replacing any member with the same key value.
 # If `val` replaces an existing member, it will have the same position
 # in the order of the members as the existing member;
 # otherwise, it will be added as the last member.
 # It panics if `val` is inconsistent with the inherent type of `t`.
-public isolated function put(table<Type> t, Type val) = external;
+public isolated function put(table<MapType> t, MapType val) = external;
 
 # Adds a member `val` to table `t`.
 # It will be added as the last member.
 # It panics if `val` has the same key as an existing member of `t`,
 # or if `val` is inconsistent with the inherent type of `t`.
-public isolated function add(table<Type> t, Type val) = external;
+public isolated function add(table<MapType> t, MapType val) = external;
 
 // Functional iteration
 
@@ -80,15 +80,15 @@ public isolated function add(table<Type> t, Type val) = external;
 # + t - the table
 # + func - a function to apply to each member
 # + return - new table containing result of applying function `func` to each member
-public isolated function map(table<Type> t, @isolatedParam function(Type val) returns Type1 func)
-   returns table<Type1> key<never> = external;
+public isolated function map(table<MapType> t, @isolatedParam function(MapType val) returns MapType1 func)
+   returns table<MapType1> key<never> = external;
 
 # Applies a function to each member of a table.
 # The function `func` is applied to each member of `t`.
 #
 # + t - the table
 # + func - a function to apply to each member
-public isolated function forEach(table<Type> t, @isolatedParam function(Type val) returns () func) returns () = external;
+public isolated function forEach(table<MapType> t, @isolatedParam function(MapType val) returns () func) returns () = external;
 
 # Selects the members from a table for which a function returns true.
 # The resulting table will have the same keys as the argument table.
@@ -96,8 +96,8 @@ public isolated function forEach(table<Type> t, @isolatedParam function(Type val
 # + t - the table
 # + func - a predicate to apply to each member to test whether it should be included
 # + return - new table containing members for which `func` evaluates to true
-public isolated function filter(table<Type> key<KeyType> t, @isolatedParam function(Type val) returns boolean func)
-   returns table<Type> key<KeyType> = external;
+public isolated function filter(table<MapType> key<KeyType> t, @isolatedParam function(MapType val) returns boolean func)
+   returns table<MapType> key<KeyType> = external;
 
 # Combines the members of a table using a combining function.
 # The combining function takes the combined value so far and a member of the table,
@@ -107,7 +107,7 @@ public isolated function filter(table<Type> key<KeyType> t, @isolatedParam funct
 # + func - combining function
 # + initial - initial value for the first argument of combining function `func`
 # + return - result of combining the members of `t` using `func`
-public isolated function reduce(table<Type> t, @isolatedParam function(Type1 accum, Type val) returns Type1 func, Type1 initial) returns Type1 = external;
+public isolated function reduce(table<MapType> t, @isolatedParam function(MapType1 accum, MapType val) returns MapType1 func, MapType1 initial) returns MapType1 = external;
 
 # Removes a member of a table.
 #
@@ -116,7 +116,7 @@ public isolated function reduce(table<Type> t, @isolatedParam function(Type1 acc
 # + return - the member of `t` that had key `k`
 # This removed the member of `t` with key `k` and returns it.
 # It panics if there is no such member.
-public isolated function remove(table<Type> key<KeyType> t, KeyType k) returns Type = external;
+public isolated function remove(table<MapType> key<KeyType> t, KeyType k) returns MapType = external;
 
 # Removes a member of a table with a given key, if the table has member with the key.
 #
@@ -125,32 +125,32 @@ public isolated function remove(table<Type> key<KeyType> t, KeyType k) returns T
 # + return - the member of `t` that had key `k`, or `()` if `t` does not have a key `k`
 # If `t` has a member with key `k`, it removes and returns it;
 # otherwise it returns `()`.
-public isolated function removeIfHasKey(table<Type> key<KeyType> t, KeyType k) returns Type? = external;
+public isolated function removeIfHasKey(table<MapType> key<KeyType> t, KeyType k) returns MapType? = external;
 
 # Removes all members of a table.
 # This panics if any member cannot be removed.
 #
 # + t - the table
-public isolated function removeAll(table<any|error> t) returns () = external;
+public isolated function removeAll(table<map<any|error>> t) returns () = external;
 
 # Tests whether `t` has a member with key `k`.
 #
 # + t - the table
 # + k - the key
 # + return - true if `t` has a member with key `k`
-public isolated function hasKey(table<Type> key<KeyType> t, KeyType k) returns boolean = external;
+public isolated function hasKey(table<MapType> key<KeyType> t, KeyType k) returns boolean = external;
 
 # Returns a list of all the keys of table `t`.
 #
 # + t - the table
 # + return - a new list of all keys
-public isolated function keys(table<any|error> key<KeyType> t) returns KeyType[] = external;
+public isolated function keys(table<map<any|error>> key<KeyType> t) returns KeyType[] = external;
 
 # Returns a list of all the members of a table.
 #
 # + t - the table
 # + return - an array whose members are the members of `t`
-public isolated function toArray(table<Type> t) returns Type[] = external;
+public isolated function toArray(table<MapType> t) returns MapType[] = external;
 
 # Returns the next available integer key.
 # + t - the table with a key of type int
@@ -158,4 +158,4 @@ public isolated function toArray(table<Type> t) returns Type[] = external;
 # This is maximum used key value + 1, or 0 if no key used
 # XXX should it be 0, if the maximum used key value is < 0?
 # Provides similar functionality to auto-increment
-public isolated function nextKey(table<any|error> key<int> t) returns int = external;
+public isolated function nextKey(table<map<any|error>> key<int> t) returns int = external;
