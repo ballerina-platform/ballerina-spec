@@ -50,6 +50,15 @@ public isolated function iterator(stream<Type,CompletionType> stm) returns objec
     |}|CompletionType;
 } = external;
 
+# Returns the next member of the stream.
+#
+# + stm - the stream
+# + return - a record containing the next member of the stream, if there is one, or,
+#   otherwise, the completion value
+public isolated function next(stream<Type,CompletionType> stm) returns record {|
+        Type value;
+    |}|CompletionType = external;
+
 # Closes a stream.
 # This releases any system resources being used by the stream.
 # Closing a stream that has already been closed has no efffect and returns `()`.
