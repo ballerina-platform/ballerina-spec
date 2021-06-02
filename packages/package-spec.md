@@ -30,9 +30,9 @@
 
 ## 1 Introduction
 
-Ballerina is an open-source programming language for the cloud that makes it easier to use, combine, and create network services. For a detailed reference guide on Ballerina, see “Ballerina Langauge Specification”.  
+Ballerina is an open-source programming language for the cloud that makes it easier to use, combine, and create network services. For a detailed reference guide on Ballerina, see “Ballerina Language Specification".  
 
-Ballerina programs are built by linking together Ballerina modules, which are namespaces that isolates function definitions, type definitions, constants, variables from other namespaces to achieve encapsulation, modularity, and code reuse. For more details on modules, see section: 3. Program Structure in the language specification.
+Ballerina programs are built by linking together Ballerina modules, which are namespaces that isolate function definitions, type definitions, constants, variables from other namespaces to achieve encapsulation, modularity, and code reuse. For more details on modules, see section: 3. Program Structure in the language specification.
 
 This document describes a packaging system for Ballerina modules. 
 
