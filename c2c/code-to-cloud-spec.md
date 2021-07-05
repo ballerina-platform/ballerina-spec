@@ -339,3 +339,11 @@ Contains the volume definitions of the application. No default volumes will be g
 |name   	 |Name of the volume  	     |"volume1"  	|
 |local_path  |Path of the volume   	     |"files"   	|
 |size   	 |Maximum size of the Volume |"2Gi"   	    |
+
+#### [[settings]]
+Contains the settings related to artifacts generation.
+
+|Identifier      |Description	                                     |Example Value |
+|---	         |---	                                             |---	        |
+|singleYAML   	 |Generate a single YAML file with all the artifacts |true  	    |
+|buildImage      |Build Docker image  	                             |true      	|
