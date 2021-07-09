@@ -275,25 +275,33 @@ Contains the secrets required for the application.
 |---	        |---	                                                |---	                |
 |key_ref   	    |Reference key of the secret                            |"MYSQL_ROOT_PASSWORD"  |
 |name(optional) |Name of the secret if its different from the Key	    |"ROOT_PASSWORD"  	    |
-|secret_name   	|Name of the secret group                               |"db-crdential-secret"  |
+|secret_name    |Name of the secret group                               |"db-crdential-secret"  |
 
-#### [[cloud.config.files]]
+#### [[cloud.config.maps]]
 
 Contains external files required for the code.
 
-|Identifier |Description	                                    |Example Value   	                  |
+|Identifier |Description                                        |Example Value                      |
 |---	    |---	                                            |---	                              |
-|file   	|Path of the external file  	        |"resource/file.txt"  	      |
-|mount_path |Path of the file in the container   	|"/home/ballerina/foo/file.txt" |
+|file    |Path of the external file            |"resource/file.txt"          |
+|mount_path |Path of the file in the container    |"/home/ballerina/foo/file.txt" |
+
+#### [[cloud.config.files]]
+
+Contains config toml files required for the code.
+
+|Identifier |Description                                        |Example Value                      |
+|---	    |---	                                            |---	                              |
+|file    |Path of the external file            |"conf/Config.toml"          |
 
 #### [cloud.deployment]
 
 Contains the properties related to the deployment.
 
-|Identifier   	        |Description	                                         |Default Value   	|
+|Identifier            |Description                                             |Default Value    |
 |---	                |---	                                                 |---	            |
-|internal_domain_name   |Name of the internal domain (k8s service name)  	     |${MODULE_NAME}_svc|
-|min_memory   	        |Minimum memory allocated to the container   	         |"100Mi"   	    |
+|internal_domain_name   |Name of the internal domain (k8s service name)         |${MODULE_NAME}_svc|
+|min_memory            |Minimum memory allocated to the container             |"100Mi"        |
 |max_memory   	        |Maximum memory allocated to the container  	         |"256Mi"   	    |
 |min_cpu   	            |Minimum CPU allocated to the container 	             |"1000m"   	    |
 |max_cpu   	            |Maximum CPU allocated to the container  	             |"1500m"   	    |
