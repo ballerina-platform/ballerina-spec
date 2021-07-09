@@ -300,7 +300,7 @@ Contains the properties related to the deployment.
 
 |Identifier            |Description                                             |Default Value    |
 |---	                |---	                                                 |---	            |
-|internal_domain_name   |Name of the internal domain (k8s service name)         |${MODULE_NAME}_svc|
+|internal_domain_name   |Name of the internal domain (k8s service name)         |${MODULE_NAME}-svc|
 |min_memory            |Minimum memory allocated to the container             |"100Mi"        |
 |max_memory   	        |Maximum memory allocated to the container  	         |"256Mi"   	    |
 |min_cpu   	            |Minimum CPU allocated to the container 	             |"1000m"   	    |
