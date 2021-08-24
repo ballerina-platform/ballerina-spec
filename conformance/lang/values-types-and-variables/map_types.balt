@@ -120,69 +120,69 @@ public function main() {
 
 Test-case: output
 Description: Test mapping type-descriptor being covariant in the types of their members.
-Labels: map-type-descriptor, mapping-type-descriptor, int-type-descriptor, byte-type-descriptor, 
-        anydata-type-descriptor, mapping-constructor-expr, int-literal
+Labels: map-type-descriptor, mapping-type-descriptor, int-type-descriptor, optional-type-descriptor, 
+        any-type-descriptor, mapping-constructor-expr, int-literal
 
 public function main() {
-    map<byte> a = {a: 1, b: 2};
+    map<int> a = {a: 1, b: 2};
     testMap(a);
 
-    map<int> b = a;
+    map<int?> b = a;
     testMap(b);
 }
 
-function testMap(map<anydata> m) {
+function testMap(map<any> m) {
     io:println(m); // @output {"a":1,"b":2}
                    // @output {"a":1,"b":2} 
 }
 
 Test-case: output
 Description: Test mapping type-descriptor being covariant in the types of their members, at runtime.
-Labels: map-type-descriptor, mapping-type-descriptor, int-type-descriptor, byte-type-descriptor, 
-        anydata-type-descriptor, mapping-constructor-expr, int-literal, string-literal, is-expr
+Labels: map-type-descriptor, mapping-type-descriptor, int-type-descriptor, optional-type-descriptor, 
+        any-type-descriptor, mapping-constructor-expr, int-literal, string-literal, nil-literal, is-expr
 
 public function main() {
-    map<byte> a = {a: 1, b: 2};
+    map<int> a = {a: 1, b: 2};
     testMap(a);
 
-    map<int> b = a;
+    map<int?> b = a;
     testMap(b);
 
-    map<int> c = {x: 1, y: 2, z: 3};
+    map<int?> c = {x: 1, y: 2, z: ()};
     testMap(c);
 
-    map<anydata> d = {a: 1, b: "hello world"};
+    map<any> d = {a: 1, b: "hello world"};
     testMap(d);
 
     testMap({a: 1, b: 2});
 }
 
-function testMap(map<anydata> m) {
-    io:println(m is map<int>); // @output true
-                               // @output true
-                               // @output true
-                               // @output false
-                               // @output false
+function testMap(map<any> m) {
+    io:println(m is map<int?>); // @output true
+                                // @output true
+                                // @output true
+                                // @output false
+                                // @output false
 }
 
 Test-case: error
 Description: Test mapping type-descriptor being covariant in the types of their members, via incompatible assignments.
-Labels: map-type-descriptor, mapping-type-descriptor, int-type-descriptor, byte-type-descriptor, 
+Labels: map-type-descriptor, mapping-type-descriptor, int-type-descriptor, optional-type-descriptor, 
         string-type-descriptor, mapping-constructor-expr
 
 public function main() {
-    map<int> a = {};
-    testMap(a); // @error map of int is not a subtype of map of byte
+    map<int?> a = {};
+    testMap(a); // @error map of int? is not a subtype of map of int
 
-    map<string> b = a; // @error map of int is not a subtype of map of string
+    map<string> b = a; // @error map of int? is not a subtype of map of string
 }
 
-function testMap(map<byte> m) {
+function testMap(map<int> m) {
 }
 
 Test-case: panic
 Description: Test inherent type violation of a map.
-Labels: map-type-descriptor, mapping-type-descriptor, int-type-descriptor, anydata-type-descriptor, 
+Labels: map-type-descriptor, mapping-type-descriptor, int-type-descriptor, any-type-descriptor, 
         mapping-constructor-expr, int-literal, string-literal, assignment-stmt, member-access-lvexpr, lvexpr
 
 public function main() {
@@ -190,22 +190,22 @@ public function main() {
     testMap(a, "hello");
 }
 
-function testMap(map<anydata> m, anydata value) {
-    m["k"] = value; // @panic cannot insert a string value as a field of a map<int>
+function testMap(map<any> m, any v) {
+    m["k"] = v; // @panic cannot insert a string value as a field of a map<int>
 }
 
 Test-case: panic
 Description: Test inherent type violation of a map with a value that looks like the constraint.
-Labels: map-type-descriptor, mapping-type-descriptor, int-type-descriptor, anydata-type-descriptor, 
-        byte-type-descriptor, mapping-constructor-expr, int-literal, string-literal, assignment-stmt, 
+Labels: map-type-descriptor, mapping-type-descriptor, int-type-descriptor, any-type-descriptor, 
+        optional-type-descriptor, mapping-constructor-expr, int-literal, string-literal, assignment-stmt, 
         member-access-lvexpr, lvexpr
 
 public function main() {
-    map<map<byte>> a = {x: {a: 1, b: 2}};
-    map<int> b = {a: 0, b: 255};
+    map<map<int>> a = {x: {a: 1, b: 2}};
+    map<int?> b = {a: 0, b: 255};
     testMap(a, b); 
 }
 
-function testMap(map<anydata> m, anydata value) {
-    m["k"] = value; // @panic cannot insert a map<int> value as a field of a map<map<byte>>
+function testMap(map<any> m, any v) {
+    m["k"] = v; // @panic cannot insert a map<int?> value as a field of a map<map<int>>
 }
