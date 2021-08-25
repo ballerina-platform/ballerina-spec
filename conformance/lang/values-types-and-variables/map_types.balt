@@ -111,11 +111,75 @@ public function main() {
 Test-case: error
 Description: Test the iteration completion value of a map being nil via incompatible assignments.
 Labels: map-type-descriptor, mapping-type-descriptor, record-type-descriptor, int-type-descriptor, 
-        error-type-descriptor, mapping-constructor-expr, lang.map
+        error-type-descriptor, union-type-descriptor, mapping-constructor-expr, lang.map
 
 public function main() {
     map<int> a = {};    
     record {| int value; |}|error next = a.iterator().next(); // @error completion type for map iteration is nil
+}
+
+Test-case: output
+Description: Test no two fields in a map sharing the same key.
+Labels: map-type-descriptor, mapping-type-descriptor, int-type-descriptor, mapping-constructor-expr, int-literal
+        string-literal, assignment-stmt, member-access-lvexpr, lvexpr
+
+public function main() {
+    map<int> a = {x: 1, y: 2};
+    testMap(a);
+
+    a["x"] = 3;
+    testMap(a);
+}
+
+function testMap(map<any> m) {
+    io:println(m); // @output {"x":1,"y":2}
+                   // @output {"x":3,"y":2}
+}
+
+Test-case: error
+Description: Test the read-only bit being set for a field of a map value with its read-only bit set, by attempting 
+             to assign to and remove such fields.
+Labels: map-type-descriptor, mapping-type-descriptor, int-type-descriptor, readonly-type-descriptor, 
+        intersection-type-descriptor, mapping-constructor-expr, int-literal, string-literal, assignment-stmt, 
+        member-access-lvexpr, lvexpr, lang.map
+
+public function main() {
+    map<int> & readonly a = {x: 1, y: 2};
+
+    int b = a.remove("x"); // @error cannot remove a field with its read-only bit on
+
+    a["z"] = 3; // @error cannot assign to a field with its read-only bit on
+}
+
+Test-case: panic
+Description: Test the read-only bit being set for a field of a map value with its read-only bit set, by attempting 
+             to assign to such fields at runtime.
+Labels: map-type-descriptor, mapping-type-descriptor, int-type-descriptor, readonly-type-descriptor, 
+        intersection-type-descriptor, mapping-constructor-expr, int-literal, string-literal, assignment-stmt, 
+        member-access-lvexpr, lvexpr
+
+public function main() {
+    map<int> & readonly a = {x: 1, y: 2};
+    testAssignment(a);
+}
+
+function testAssignment(map<int> m) {
+    m["z"] = 3; // @panic cannot assign to a field with its read-only bit on
+}
+
+Test-case: panic
+Description: Test the read-only bit being set for a field of a map value with its read-only bit set, by attempting 
+             to remove such fields at runtime.
+Labels: map-type-descriptor, mapping-type-descriptor, int-type-descriptor, readonly-type-descriptor, 
+        intersection-type-descriptor, mapping-constructor-expr, int-literal, string-literal, lang.map
+
+public function main() {
+    map<int> & readonly a = {x: 1, y: 2};
+    testRemoval(a);
+}
+
+function testRemoval(map<int> m) {
+    int b = m.remove("x"); // @panic cannot remove a field with its read-only bit on
 }
 
 Test-case: output
@@ -208,4 +272,47 @@ public function main() {
 
 function testMap(map<any> m, any v) {
     m["k"] = v; // @panic cannot insert a map<int?> value as a field of a map<map<int>>
+}
+
+Test-case: output
+Description: Test immutability being deep for maps.
+Labels: map-type-descriptor, mapping-type-descriptor, int-type-descriptor, readonly-type-descriptor, 
+        intersection-type-descriptor, mapping-constructor-expr, int-literal, string-literal, is-expr
+
+public function main() {
+    map<map<int>> & readonly a = {a: {x: 1, y: 2}, b: {}};
+    testMap(a);
+}
+
+function testMap(map<map<int>> m) {
+    io:println(m is map<map<int>> & readonly); // @output true
+    io:println(m["a"] is map<int> & readonly); // @output true
+}
+
+Test-case: error
+Description: Test immutability maps not allowing mutable members.
+Labels: map-type-descriptor, mapping-type-descriptor, int-type-descriptor, readonly-type-descriptor, 
+        intersection-type-descriptor, mapping-constructor-expr, int-literal, string-literal
+
+public function main() {
+    map<int> a = {a: 1};
+    map<map<int>> & readonly b = {x: a}; // @error an immutable map cannot contain a mutable value as a member
+}
+
+Test-case: output
+Description: Test an immutable map belonging to a type if and only if the type contains the shape of the value.
+Labels: map-type-descriptor, mapping-type-descriptor, int-type-descriptor, readonly-type-descriptor, 
+        intersection-type-descriptor, mapping-constructor-expr, int-literal, nil-literal, is-expr
+
+public function main() {
+    map<int?> & readonly a = {a: 1, b: ()};
+    testMap(a);
+
+    map<int?> & readonly b = {a: 1, b: 2};
+    testMap(b);
+}
+
+function testMap(map<int?> m) {
+    io:println(m is map<int>); // @output false
+                               // @output true
 }
