@@ -1,0 +1,266 @@
+Test-case: output
+Description: Test basic array type and value
+Label: array-type-descriptor, int-type-descriptor, int-literal, list-constructor-expr
+
+public function main() {
+    int[5] a = [1, 2, 3, 4, 5];
+    io:println(a); // @output [1,2,3,4,5]
+
+    int[4] b = [20, 65];
+    io:println(b); // @output [20,65,0,0]
+}
+
+Test-case: error
+Description: Test error in size mismatch for closed array
+Label: array-type-descriptor, int-type-descriptor, list-constructor-expr, int-literal
+
+public function main() {
+    int[2] a = [1, 2, 3, 4, 5]; // @error length of array value is greater than 2
+}
+
+Test-case: output
+Description: Test array declaration with array length as constant-reference-expr
+Label: array-type-descriptor, int-literal, list-constructor-expr, module-const-decl, constant-reference-expr
+
+const LENGTH = 2;
+
+public function main() {
+    int[LENGTH] a = [1, 255];
+    io:println(a); // @output [1,255]
+}
+
+Test-case: error
+Description: Test error in array declaration with array length as negative constant-reference-expr
+Fail-Issue: ballerina-lang#32269
+Label: array-type-descriptor, int-literal, list-constructor-expr, module-const-decl, constant-reference-expr
+
+const LENGTH2 = -1;
+
+public function main() {
+    int[LENGTH2] bool; // @error constant-reference-expr must evaluate to non-negative integer
+}
+
+Test-case: error
+Description: Test using variable-reference as array length
+Label: array-type-descriptor, int-type-descriptor, list-constructor-expr, int-literal
+
+public function main() {
+    int length = 3;
+    int[length] a = [1, 2, 3]; // @error `length` must be a const-ref-expr
+}
+
+Test-case: output
+Description: Test array declaration with inferred array length
+Label: array-type-descriptor, int-type-descriptor, list-constructor-expr, int-literal
+
+public function main() {
+    int[*] c = [1, 43];
+    io:println(c); // @output [1,43]
+}
+
+Test-case: error
+Description: Test no-init array declaration with inferred array length
+Label: array-type-descriptor, int-type-descriptor
+
+public function main() {
+    int[*] a; // @error array declaration inferred array length must have an initialization
+}
+
+Test-case: output
+Description: Test array declaration with variable array length
+Label: array-type-descriptor, list-constructor-expr, int-type-descriptor, assignment-stmt, int-literal
+
+public function main() {
+    int[] d = [1, 2];
+    io:println(d); // @output [1,2]
+    d = [1];
+    io:println(d); // @output [1]
+    d = [1, 6555, 4, 449, 9];
+    io:println(d); // @output [1,6555,4,449,9]
+}
+
+Test-case: error
+Description: Test initializing array variable with other values
+Label: array-type-descriptor, int-type-descriptor, list-constructor-expr, int-literal, string-literal
+
+public function main() {
+    int[] b = "Idea"; // @error incompatible types
+    int[*] c = 6; // @error incompatible types
+}
+
+Test-case: error
+Description: Test all members of the array value should belong to type specified by member-type-descriptor
+Label: array-type-descriptor, list-constructor-expr, int-type-descriptor, boolean-literal, int-literal
+
+public function main() {
+    int[2] a = [1, true]; // @error all members should belong to int type
+}
+
+Test-case: output
+Description: Test array value belongs to a type if and only if its inherent type is a subtype of that type.
+Label: array-type-descriptor, optional-type-descriptor, int-literal, int-type-descriptor, , list-constructor-expr
+
+public function main() {
+    int[3] a = [0, 1, 2];
+    int[] b = a;
+    io:println(b); // @output [0,1,2]
+
+    int[3] c = [4, 5, 6];
+    int?[3] d = c;
+    io:println(d); // @output [4,5,6]
+}
+
+Test-case: error
+Description: Test array value belongs to a type if and only if its inherent type is a subtype of that type.
+Label: array-type-descriptor, optional-type-descriptor, int-literal, int-type-descriptor, , list-constructor-expr
+
+public function main() {
+    int?[3] a = [4, 5, 6];
+    int[3] b = a; // @error inherent type of `a` is not a sub type of `b`
+}
+
+Test-case: output
+Description: Test the type of the values in the iteration sequence of a value belonging to T[] being T.
+Labels: array-type-descriptor, int-type-descriptor, list-constructor-expr, int-literal, foreach-stmt
+
+public function main() {
+    int[3] a = [1, 2, 3];
+
+    foreach int i in a {
+        io:println(i); // @output 1
+                       // @output 2
+                       // @output 3
+    }
+
+    int[] b = [];
+
+    foreach int i in a {
+        io:println(i);
+    }
+}
+
+Test-case: error
+Description: Test the type of the values in the iteration sequence of a value belonging to T[] being T
+             via incompatible assignments.
+Labels: array-type-descriptor, int-type-descriptor, list-constructor-expr, int-literal, foreach-stmt
+
+public function main() {
+    int[3] a = [1, 2, 3];
+
+    foreach string s in a { // @error value in the iteration sequence should be int
+    }
+}
+
+Test-case: output
+Description: Test mutation of array values
+Label: array-type-descriptor, int-type-descriptor, list-constructor-expr, member-access-lvexpr, int-literal
+
+public function main() {
+    int[4] j = [55555, 5343434, 999999, 4];
+    j[3] = 888888888;
+    io:println(j); // @output [55555,5343434,999999,888888888]
+}
+
+Test-case: error
+Description: Test immutable array values
+Label: array-type-descriptor, readonly-type-descriptor, list-constructor-expr, member-access-lvexpr,
+       intersection-type-descriptor, int-literal
+
+public function main() {
+    readonly & int[2] e = [1, 2];
+    e[1] = 3; // @error cannot mutate immutable array values
+}
+
+Test-case: error
+Description: Test if array value is immutable, all of it's members are immutable
+Label: array-type-descriptor, readonly-type-descriptor, string-type-descriptor, record-type-descriptor, string-literal,
+       list-constructor-expr, field-access-expr, mapping-constructor-expr, intersection-type-descriptor
+
+public function main() {
+    readonly & record {|string name;|}[1] f = [{name:"Wick"}];
+    f[0].name = "fd"; // @error if read-only bit of a array value is on, then the read-only bit of each member is on.
+}
+
+Test-case: panic
+Description: Test inherent type violation of a array value.
+Labels: array-type-descriptor, int-type-descriptor, any-type-descriptor, list-constructor-expr, int-literal,
+        string-literal, member-access-lvexpr
+
+public function main() {
+    int[3] a = [1, 2, 3];
+    any[3] b = a;
+    b[0] = "String"; @panic incompatible types expected inherent type `int`
+}
+
+Test-case: panic
+Description: Test inherent type violation of a array value with a value that looks like the constraint.
+Labels: array-type-descriptor, int-type-descriptor, any-type-descriptor, map-type-descriptor, optional-type-descriptor,
+        list-constructor-expr, mapping-constructor-expr, int-literal, member-access-lvexpr
+
+public function main() {
+    map<int>[*] a = [{a: 0}];
+    map<int?> b = {a: 1};
+    any[1] c = a;
+    any d = b;
+    c[0] = d; @panic incompatible types expected inherent type `int`
+}
+
+Test-case: output
+Description: Test storage identity of array values
+Label: array-type-descriptor, int-type-descriptor, list-constructor-expr, member-access-lvexpr, int-literal
+
+public function main() {
+    int[2] n = [1, 2];
+    int[] o = n;
+    o[1] = 433;
+    io:println(n); // @output [1,433]
+}
+
+Test-case: output
+Description: Test multidimensional array
+Fail-Issue: ballerina-lang#32282
+Label: array-type-descriptor, int-type-descriptor, list-constructor-expr, int-literal
+
+public function main() returns (){
+     int[][2] a = [[45], [444, 55, 545]]; // output [[45], [444, 55, 545]]
+}
+
+Test-case: output
+Description: Test array declaration with other type descriptors
+Label: array-type-descriptor, record-type-descriptor, any-type-descriptor, nil-type-descriptor, xml-type-descriptor,
+       object-type-descriptor, table-type-descriptor, int-type-descriptor, string-type-descriptor,
+       list-constructor-expr, mapping-constructor-expr, xml-template-expr, object-constructor-expr,
+       table-constructor-expr, int-literal, string-literal, boolean-literal, nil-literal, field-access-lvexpr,
+       map-type-descriptor, float-type-descriptor, float-literal, byte-type-descriptor
+
+public function main() {
+    any[6] a = [2, 2.3, "String", true, [], {}];
+    io:println(a); // @output [2,2.3,"String",true,[],{}]
+
+    ()[*] b = [null, ()];
+    io:println(b); // @output [(),()]
+
+    xml[] c = [xml ``, xml `<body>v</body>`];
+    io:println(c); // @output [xml``,xml`<body>v</body>`]
+
+    table<record {|int id;|}>[] d = [table [{id: 1001}, {id:1002}]];
+    io:println(d); // @output [table key() [{"id":1001},{"id":1002}]]
+
+    byte[2] e = [1, 255];
+    io:println(e); // @output [1,255]
+
+    string[*] f = ["Cat", "Dog"];
+    io:println(f); // @output ["Cat","Dog"]
+
+    float[] g = [1.25, 2.5];
+    io:println(g); // @output [1.25,2.5]
+
+    record {|string name;|}[2] h = [{name: "John"}, {name: "Mike"}];
+    io:println(h); // @output [{"name":"John"},{"name":"Mike"}]
+
+    map<string>[2] i = [{name: "John"}, {name: "Mike"}];
+    io:println(i); // @output [{"name":"John"},{"name":"Mike"}]
+
+    (int[])[2] j = [[45], [444, 55, 545]];
+    io:println(j); // @output [[45],[444,55,545]]
+}
