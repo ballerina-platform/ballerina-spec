@@ -1,0 +1,70 @@
+Test-Case: output
+Description: Test boolean type descriptor.
+Labels: boolean-type-descriptor, boolean-literal
+
+public function main() {
+    boolean x = true;
+    testBoolean(x);
+
+    x = false;
+    testBoolean(x);
+}
+
+function testBoolean(boolean a) {
+    io:println(a); // @output true
+                   // @output false
+}
+
+Test-Case: output
+Description: Test immutability of boolean type descriptor.
+Labels: boolean-type-descriptor, readonly-type-descriptor, boolean-literal
+
+public function main() {
+    boolean x = true;
+    readonly y = x;
+    io:println(y); // @output true
+}
+
+Test-Case: error
+Description: Test boolean values with invalid type descriptors.
+Labels: floating-point-type-descriptor, int-type-descriptor, nil-type-descriptor, string-type-descriptor,
+        boolean-literal
+
+public function main() {
+    decimal a = true; // @error expected a 'decimal', but found a 'boolean'
+    decimal b = false; // @error expected a 'decimal', but found a 'boolean'
+
+    float c = true; // @error expected a 'float', but found a 'boolean'
+    float d = false; // @error expected a 'float', but found a 'boolean'
+
+    int e = true; // @error expected a 'int', but found a 'boolean'
+    int f = false; // @error expected a 'int', but found a 'boolean'
+
+    () g = true; // @error expected a '()', but found a 'boolean'
+    () h = false; // @error expected a '()', but found a 'boolean'
+
+    string i = true; // @error expected a 'string', but found a 'boolean'
+    string j = false; // @error expected a 'string', but found a 'boolean'
+}
+
+Test-Case: error
+Description: Test boolean type descriptors with invalid values.
+Labels: boolean-type-descriptor, floating-point-literal, int-literal, nil-literal, string-literal, list-constructor-expr
+
+public function main() {
+    boolean a = 8.135d; // @error expected a 'boolean', but found a 'decimal'
+
+    boolean b = 102.1f; // @error expected a 'boolean', but found a 'float'
+
+    boolean c = 1; // @error expected a 'boolean', but found a 'int'
+
+    boolean d = 0; // @error expected a 'boolean', but found a 'int'
+
+    boolean e = (); // @error expected a 'boolean', but found a '()'
+
+    boolean f = null; // @error expected a 'boolean', but found a '()'
+
+    boolean g = "true"; // @error expected a 'boolean', but found a 'string'
+
+    boolean h = [true]; // @error expected a 'boolean', but found a '[boolean]'
+}
