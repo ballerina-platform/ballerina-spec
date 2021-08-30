@@ -1,0 +1,130 @@
+Test-Case: output
+Description: Test nil type descriptor.
+Labels: nil-type-descriptor, nil-literal
+
+public function main() {
+    () x = ();
+    testNil(x);
+
+    () y = null;
+    testNil(x);
+
+    x = null;
+    testNil(x);
+}
+
+function testNil(() a) {
+    a.toBalString(); // @output ()
+                     // @output ()
+                     // @output ()
+}
+
+Test-Case: output
+Description: Test nil value with json type descriptor.
+Labels: json-type-descriptor, nil-literal
+
+public function main() {
+    json J1 = ();
+    J1.toBalString(); // @output ()
+
+    json J2 = null;
+    J2.toBalString(); // @output ()
+}
+
+Test-Case: output
+Description: Test nil value with optional type descriptor.
+Labels: boolean-type-descriptor, floating-point-type-descriptor, int-type-descriptor, object-type-descriptor,
+        optional-type-descriptor, string-type-descriptor, nil-literal
+
+public function main() {
+    boolean? a = ();
+    a.toBalString(); // @output ()
+
+    boolean? b = null;
+    b.toBalString(); // @output ()
+
+    decimal? c = ();
+    c.toBalString(); // @output ()
+
+    decimal? d = null;
+    d.toBalString(); // @output ()
+
+    float? e = ();
+    e.toBalString(); // @output ()
+
+    float? f = null;
+    f.toBalString(); // @output ()
+
+    int? g = ();
+    g.toBalString(); // @output ()
+
+    int? h = null;
+    h.toBalString(); // @output ()
+
+    object {}? i = ();
+    i.toBalString(); // @output ()
+
+    object {}? j = null;
+    j.toBalString(); // @output ()
+
+    string? k = ();
+    k.toBalString(); // @output ()
+
+    string? l = null;
+    l.toBalString(); // @output ()
+}
+
+Test-Case: output
+Description: Test immutability of nil type descriptor.
+Labels: nil-type-descriptor, readonly-type-descriptor, nil-literal
+
+public function main() {
+    () x = ();
+    readonly y = x;
+    y.toBalString(); // @output ()
+}
+
+Test-Case: error
+Description: Test nil value with invalid type descriptors.
+Labels: boolean-type-descriptor, floating-point-type-descriptor, int-type-descriptor, string-type-descriptor,
+        object-type-descriptor, nil-literal
+
+public function main() {
+    boolean a = (); // @error expected a 'boolean', but found a '()'
+    boolean b = null; // @error expected a 'boolean', but found a '()'
+
+    decimal c = (); // @error expected a 'decimal', but found a '()'
+    decimal d = null; // @error expected a 'decimal', but found a '()'
+
+    float e = (); // @error expected a 'float', but found a '()'
+    float f = null; // @error expected a 'float', but found a '()'
+
+    int g = (); // @error expected a 'int', but found a '()'
+    int h = null; // @error expected a 'int', but found a '()'
+
+    object {} i = (); // @error expected a 'object {}', but found a '()'
+    object {} j = null; // @error expected a 'object {}', but found a '()'
+
+    string k = (); // @error expected a 'string', but found a '()'
+    string l = null; // @error expected a 'string', but found a '()'
+}
+
+Test-Case: error
+Description: Test nil type descriptors with invalid values.
+Labels: nil-type-descriptor, boolean-literal, floating-point-literal, string-literal, list-constructor-expr
+
+public function main() {
+    () a = true; // @error expected a '()', but found a 'boolean'
+
+    () b = false; // @error expected a '()', but found a 'boolean'
+
+    () c = 1.23d; // @error expected a '()', but found a 'decimal'
+
+    () d = 1.921f; // @error expected a '()', but found a 'float'
+
+    () e = 9548; // @error expected a '()', but found a 'int'
+
+    () f = "()"; // @error expected a '()', but found a 'string'
+
+    () g = [1, 3]; // @error expected a '()', but found a '[int, int]'
+}
