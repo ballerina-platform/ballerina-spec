@@ -1,0 +1,234 @@
+Test-Case: output
+Description: Test valid base16 byte array literal.
+Label: byte-array-literal
+
+public function main() {
+    byte[] byteArray1 = base16 ``;
+    io:println(byteArray1); // @output []
+    
+    byte[] byteArray2 = base16 `00aaabff`;
+    io:println(byteArray1); // @output [0,170,171,255]
+
+    byte[] byteArray3 = base16 `aaabcfccadafcd341a4bdfabcd8912df`;
+    io:println(byteArray3); // @output [170,171,207,204,173,175,205,52,26,75,223,171,205,137,18,223]
+
+    testByteArray(byteArray3);
+    testByteArray(base16 `aaabcfccadafcd341a4bdfabcd8912df`);
+}
+
+function testByteArray(byte[] byteArray) {
+    io:println(byteArray); // @output [170,171,207,204,173,175,205,52,26,75,223,171,205,137,18,223]
+                           // @output [170,171,207,204,173,175,205,52,26,75,223,171,205,137,18,223]
+}
+
+Test-Case: output
+Description: Test different ways of writing the same base16 byte array literal with spaces.
+Label: byte-array-literal
+
+public function main() {
+    byte[] byteArray1 = base16 `aaabcfccadafcd341a4bdfabcd8912df`;
+    byte[] byteArray2 = base16 `AAABCFCCADAFCD341A4BDFABCD8912DF`;
+    byte[] byteArray3 = base16 `aa ab cf cc ad af cd 34 1a 4b df ab cd 89 12 df`;
+    byte[] byteArray4 = base16 `aaabcfccad afcd34 1a4bdf abcd8912df`;
+    byte[] byteArray5 = base16 ` aa ab c fcc a   d af cd    3 4  1a4 bdf abcd8 91 2d f  `;
+
+    io:println(byteArray1 == byteArray2); // @output true
+    io:println(byteArray1 == byteArray3); // @output true
+    io:println(byteArray1 == byteArray4); // @output true
+    io:println(byteArray1 == byteArray5); // @output true
+}
+
+Test-Case: output
+Description: Test different ways of writing the same base16 byte array literal with tabs.
+Fail-Issue: ballerina-lang#32545
+Label: byte-array-literal
+
+public function main() {
+    byte[] byteArray1 = base16 `aaabcfccadafcd341a4bdfabcd8912df`;
+    byte[] byteArray2 = base16 `aa	ab	cf	cc	ad	af	cd	34	1a	4b	df	ab	cd	89	12	df`;
+    byte[] byteArray3 = base16 `aaabcfccad	afcd34	1a4bdf	abcd8912df`;
+    byte[] byteArray4 = base16 `	aa	ab	c	fcc	a	d	af	cd	3	4	1a4	bdf	abcd8	91	2d	f	`;
+
+    io:println(byteArray1 == byteArray2); // @output true
+    io:println(byteArray1 == byteArray3); // @output true
+    io:println(byteArray1 == byteArray4); // @output true
+}
+
+Test-Case: output
+Description: Test different ways of writing the same base16 byte array literal with newlines.
+Fail-Issue: ballerina-lang#32545
+Label: byte-array-literal
+
+public function main() {
+    byte[] byteArray1 = base16 `aaabcfccadafcd341a4bdfabcd8912df`;
+
+    byte[] byteArray2 = base16 `aaabcfccadafcd34
+    1a4bdfabcd8912df`;
+    
+    byte[] byteArray3 = base16 `aaabcfccadafcd34
+
+    1a4bdfabcd8912df`;
+        
+    byte[] byteArray4 = base16 `aaabcfcca
+                                dafcd341
+                                a4bd
+                                fabcd8912df`;
+    
+    io:println(byteArray1 == byteArray2); // @output true
+    io:println(byteArray1 == byteArray3); // @output true    
+    io:println(byteArray1 == byteArray4); // @output true    
+}
+
+Test-Case: output
+Description: Test static type and inherent type of the base16 byte array literal.
+Fail-Issue: ballerina-lang#32542
+Label: byte-array-literal , is-expr
+
+public function main() {
+    io:println(base16 `` is byte[0]); // @output true
+    io:println(base16 `aaabcfccadafcd341a4bdfabcd8912df` is byte[16]); // @output true
+    
+    byte[16] byteArray1 = base16 `aaabcfccadafcd341a4bdfabcd8912df`;
+    byte[*] byteArray2 = base16 `aaabcfccadafcd341a4bdfabcd8912df`;
+    io:println(byteArray1); // @output [170,171,207,204,173,175,205,52,26,75,223,171,205,137,18,223]
+    io:println(byteArray1 == byteArray2); // @output true      
+}
+
+Test-Case: error
+Description: Test invalid base16 byte array literal.
+Label: byte-array-literal
+
+public function main() {
+    byte[] byteArray1 = base16 `aa b`; // @error invalid base16 content in byte array literal
+    byte[] byteArray2 = base16 `aa bg`; // @error invalid base16 content in byte array literal
+    byte[] byteArray3 = base16 `aa // some comment
+                                bb`; // @error invalid base16 content in byte array literal
+}
+
+Test-Case: output
+Description: Test valid base64 byte array literal.
+Label: byte-array-literal
+
+public function main() {
+    byte[] byteArray1 = base64 ``;
+    io:println(byteArray1); // @output []
+    
+    byte[] byteArray2 = base64 `////AAAA///+AAA=`;
+    io:println(byteArray2); // @output [255,255,255,0,0,0,255,255,254,0,0]   
+    
+    byte[] byteArray3 = base64 `bGlnaHQgd29y`;
+    io:println(byteArray3); // @output [108,105,103,104,116,32,119,111,114]
+    
+    byte[] byteArray4 = base64 `afc3abcd+giekf3w/bc2d/a4fFaK9as=`;
+    io:println(byteArray4); // @output [105,247,55,105,183,29,250,8,158,145,253,240,253,183,54,119,246,184,124,86,138,245,171]
+    
+    byte[] byteArray5 = base64 `aGVsbG8gYmFsbGVyaW5hICEhIQ==`;
+    io:println(byteArray5); // @output [104,101,108,108,111,32,98,97,108,108,101,114,105,110,97,32,33,33,33]
+        
+    testByteArray(byteArray3);
+    testByteArray(base64 `bGlnaHQgd29y`);
+}
+
+function testByteArray(byte[] bArr) {
+    io:println(bArr); // @output [108,105,103,104,116,32,119,111,114]
+                      // @output [108,105,103,104,116,32,119,111,114]
+}
+
+Test-Case: output
+Description: Test different ways of writing the same base64 byte array literal with spaces.
+Label: byte-array-literal
+
+public function main() {
+    byte[] byteArray1 = base64 `aGVsbG8gYmFsbGVyaW5hICEhIQ==`;
+    byte[] byteArray2 = base64 `aGVs bG8g YmFs bGVy aW5h ICEh IQ==`;
+    byte[] byteArray3 = base64 `  aG  Vs b   G 8g Y mFs bGVy aW5h ICEh IQ=     =  `;
+    
+    io:println(byteArray1 == byteArray2); // @output true
+    io:println(byteArray1 == byteArray3); // @output true    
+    io:println(base64 `okay` != base64 `OKAY`); // @output true
+}
+
+Test-Case: output
+Description: Test different ways of writing the same base64 byte array literal with tabs.
+Fail-Issue: ballerina-lang#32545
+Label: byte-array-literal
+
+public function main() {
+    byte[] byteArray1 = base64 `aGVsbG8gYmFsbGVyaW5hICEhIQ==`;
+    byte[] byteArray2 = base64 `aGVs	bG8g	YmFs	bGVy	aW5h	ICEh	IQ==`;
+    byte[] byteArray3 = base64 `	aG	Vs	b	G	8g	Y	mFs	bGVy	aW5h	ICEh	IQ=		=	`;
+    
+    io:println(byteArray1 == byteArray2); // @output true
+    io:println(byteArray1 == byteArray3); // @output true
+}
+
+Test-Case: output
+Description: Test different ways of writing the same base64 byte array literal with newlines.
+Fail-Issue: ballerina-lang#32545
+Label: byte-array-literal
+
+public function main() {
+    byte[] byteArray1 = base64 `aGVsbG8gYmFsbGVyaW5hICEhIQ==`;
+    
+    byte[] byteArray2 = base64 `aGVsbG8gYmFsbG
+    VyaW5hICEhIQ==`;
+    
+    byte[] byteArray3 = base64 `aGVsbG8gYmFsbG
+
+    VyaW5hICEhIQ==`;
+        
+    byte[] byteArray4 = base64 `aGVsbG
+                                8gYmF
+                                sbGVyaW5
+                                hICEhIQ==`;
+    
+    io:println(byteArray1 == byteArray2); // @output true
+    io:println(byteArray1 == byteArray3); // @output true    
+    io:println(byteArray1 == byteArray4); // @output true    
+    io:println(base64 `okay` != base64 `OKAY`); // @output true
+    
+    byte[] byteArray5 = base64 `aGVs // group1
+                                bG8g // group2
+                                YmFs`;
+    io:println(byteArray5); // @output [104,101,108,255,248,43,162,234,117,108,111,32,255,248,43,162,234,118,98,97,108]    
+}
+
+Test-Case: output
+Description: Test static type and inherent type of the base64 byte array literal.
+Fail-Issue: ballerina-lang#32542
+Label: byte-array-literal , is-expr
+
+public function main() {
+    io:println(base64 `` is byte[0]); // @output true
+    io:println(base64 `aGVsbG8gYmFsbGVyaW5hICEhIQ==` is byte[21]); // @output true
+
+    byte[9] byteArray1 = base64 `bGlnaHQgd29y`;
+    byte[*] byteArray2 = base64 `bGlnaHQgd29y`;
+    io:println(byteArray1); // @output [108,105,103,104,116,32,119,111,114]
+    io:println(byteArray1 == byteArray2); // @output true
+   
+    byte[20] byteArray3 = base64 `aGVsbG8gYmFsbGVyaW5hICEhIQz=`;
+    byte[*] byteArray4 = base64 `aGVsbG8gYmFsbGVyaW5hICEhIQz=`;
+    io:println(byteArray3); // @output [104,101,108,108,111,32,98,97,108,108,101,114,105,110,97,32,33,33,33,12]
+    io:println(byteArray3 == byteArray4); // @output true
+        
+    byte[19] byteArray5 = base64 `aGVsbG8gYmFsbGVyaW5hICEhIQ==`;
+    byte[*] byteArray6 = base64 `aGVsbG8gYmFsbGVyaW5hICEhIQ==`;
+    io:println(byteArray5); // @output [104,101,108,108,111,32,98,97,108,108,101,114,105,110,97,32,33,33,33]
+    io:println(byteArray5 == byteArray6); // @output true
+}
+
+Test-Case: error
+Description: Test invalid base64 byte array literal.
+Label: byte-array-literal
+
+public function main() {
+    byte[] byteArray1 = base64 `aGVs b`; // @error invalid base64 content in byte array literal
+    byte[] byteArray2 = base64 `aGVs bG`; // @error invalid base64 content in byte array literal
+    byte[] byteArray3 = base64 `aGVs bG1`; // @error invalid base64 content in byte array literal
+    byte[] byteArray4 = base64 `aGVs b===`; // @error invalid base64 content in byte array literal
+    byte[] byteArray5 = base64 `aGVs bGG= ====`; // @error invalid base64 content in byte array literal
+    byte[] byteArray6 = base64 `=aGV sbGD`; // @error invalid base64 content in byte array literal    
+    byte[] byteArray7 = base64 `aG=s bG3D`; // @error invalid base64 content in byte array literal
+    byte[] byteArray8 = base64 `aGVs bG.D`; // @error invalid base64 content in byte array literal
+}
