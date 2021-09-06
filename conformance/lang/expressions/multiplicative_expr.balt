@@ -537,8 +537,8 @@ public function main() {
     io:println(a * d); // @output 0
 
     io:println(b * a); // @output 0
-    io:println(b * a); // @output 0
-    io:println(b * a); // @output 0
+    io:println(c * a); // @output 0
+    io:println(d * a); // @output 0
 }
 
 Test-Case: panic
@@ -620,8 +620,8 @@ public function main() {
     io:println(a * d); // @output 0
 
     io:println(b * a); // @output 0
-    io:println(b * a); // @output 0
-    io:println(b * a); // @output 0
+    io:println(c * a); // @output 0
+    io:println(d * a); // @output 0
 }
 
 Test-Case: panic
@@ -703,8 +703,8 @@ public function main() {
     io:println(a * d); // @output 0
 
     io:println(b * a); // @output 0
-    io:println(b * a); // @output 0
-    io:println(b * a); // @output 0
+    io:println(c * a); // @output 0
+    io:println(d * a); // @output 0
 }
 
 Test-Case: panic
@@ -786,8 +786,8 @@ public function main() {
     io:println(a * d); // @output 0
 
     io:println(b * a); // @output 0
-    io:println(b * a); // @output 0
-    io:println(b * a); // @output 0
+    io:println(c * a); // @output 0
+    io:println(d * a); // @output 0
 }
 
 Test-Case: panic
@@ -1522,4 +1522,1430 @@ type Ints -2|-1|0|1|2;
 public function main() {
     Ints a = -2;
     int c = a * 4611686018427387905; // @panic integer overflow on multiplication
+}
+
+Test-Case: output
+Description: Test integer multiplication non-overflow scenarios, for optional positive non-zero integers.
+Labels: multiplicative-expr, int-type-descriptor, optional-type-descriptor, numeric-literal, int-literal
+
+public function main() {
+    int? a = 1;
+    int? b = 2;
+    int? c = 4611686018427387903;
+    int? d = 6917529027641081853;
+    int? e = 9223372036854775807;
+    int? f = ();
+
+    io:println(a * a); // @output 1
+    io:println(a * b); // @output 2
+    io:println(a * c); // @output 4611686018427387903
+    io:println(a * d); // @output 6917529027641081853
+    io:println(a * e); // @output 9223372036854775807
+    io:println((a * f).toBalString()); // @output ()
+
+    io:println(b * a); // @output 2
+    io:println(b * b); // @output 4
+    io:println(b * c); // @output 9223372036854775806
+    io:println((b * f).toBalString()); // @output ()
+
+    io:println(c * a); // @output 4611686018427387903
+    io:println(c * b); // @output 9223372036854775806
+    io:println((c * f).toBalString()); // @output ()
+
+    io:println(d * a); // @output 6917529027641081853
+    io:println((d * f).toBalString()); // @output ()
+
+    io:println(e * a); // @output 9223372036854775807
+    io:println((e * f).toBalString()); // @output ()
+
+    io:println((f * a).toBalString()); // @output ()
+    io:println((f * b).toBalString()); // @output ()
+    io:println((f * c).toBalString()); // @output ()
+    io:println((f * d).toBalString()); // @output ()
+    io:println((f * e).toBalString()); // @output ()
+    io:println((f * f).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test integer multiplication non-overflow scenarios, for optional negative non-zero integers.
+Labels: multiplicative-expr, int-type-descriptor, optional-type-descriptor, numeric-literal, int-literal, unary-expr
+
+public function main() {
+    int? a = -1;
+    int? b = -2;
+    int? c = -4611686018427387903;
+    int? d = -6917529027641081853;
+    int? e = -9223372036854775807;
+    int? f = ();
+
+    io:println(a * a); // @output 1
+    io:println(a * b); // @output 2
+    io:println(a * c); // @output 4611686018427387903
+    io:println(a * d); // @output 6917529027641081853
+    io:println(a * e); // @output 9223372036854775807
+    io:println((a * f).toBalString()); // @output ()
+
+    io:println(b * a); // @output 2
+    io:println(b * b); // @output 4
+    io:println(b * c); // @output 9223372036854775806
+    io:println((b * f).toBalString()); // @output ()
+
+    io:println(c * a); // @output 4611686018427387903
+    io:println(c * b); // @output 9223372036854775806
+    io:println((c * f).toBalString()); // @output ()
+
+    io:println(d * a); // @output 6917529027641081853
+    io:println((d * f).toBalString()); // @output ()
+
+    io:println(e * a); // @output 9223372036854775807
+    io:println((e * f).toBalString()); // @output ()
+
+    io:println((f * a).toBalString()); // @output ()
+    io:println((f * b).toBalString()); // @output ()
+    io:println((f * c).toBalString()); // @output ()
+    io:println((f * d).toBalString()); // @output ()
+    io:println((f * e).toBalString()); // @output ()
+    io:println((f * f).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test integer multiplication non-overflow scenarios, where one operand is negative 
+             and the other is positive, with optional type-descriptors.
+Labels: multiplicative-expr, int-type-descriptor, optional-type-descriptor, numeric-literal, int-literal, unary-expr
+
+public function main() {
+    int? a = -9223372036854775808;
+    int? b = -1234;
+    int? c = -1;
+    int? d = 1;
+    int? e = 60708;
+    int? f = 9223372036854775807;
+    int? g = ();
+
+    io:println(a * d); // @output -9223372036854775808
+    io:println((a * g).toBalString()); // @output ()
+
+    io:println(b * d); // @output -1234
+    io:println(b * e); // @output -74913672
+    io:println((b * g).toBalString()); // @output ()
+
+    io:println(c * d); // @output -1
+    io:println(c * e); // @output -60708
+    io:println(c * f); // @output -9223372036854775807
+    io:println((c * g).toBalString()); // @output ()
+
+    io:println(d * a); // @output -9223372036854775808
+    io:println(d * b); // @output -1234
+    io:println(d * c); // @output -1
+    io:println((d * g).toBalString()); // @output ()
+
+    io:println(e * b); // @output -74913672
+    io:println(e * c); // @output -60708
+    io:println((e * g).toBalString()); // @output ()
+
+    io:println(f * c); // @output -9223372036854775807
+    io:println((f * g).toBalString()); // @output ()
+
+    io:println((g * a).toBalString()); // @output ()
+    io:println((g * b).toBalString()); // @output ()
+    io:println((g * c).toBalString()); // @output ()
+    io:println((g * d).toBalString()); // @output ()
+    io:println((g * e).toBalString()); // @output ()
+    io:println((g * f).toBalString()); // @output ()
+    io:println((g * g).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test integer multiplication non-overflow scenarios, where at least one operand is zero,
+             with optional type-descriptors.
+Labels: multiplicative-expr, int-type-descriptor, optional-type-descriptor, numeric-literal, int-literal, unary-expr
+
+public function main() {
+    int? a = -9223372036854775808;
+    int? b = -1234;
+    int? c = -1;
+    int? d = -0;
+    int? e = 0;
+    int? f = 1;
+    int? g = 60708;
+    int? h = 9223372036854775807;
+    int? i = ();
+
+    io:println(a * d); // @output 0
+    io:println(a * e); // @output 0
+
+    io:println(b * d); // @output 0
+    io:println(b * e); // @output 0
+
+    io:println(c * d); // @output 0
+    io:println(c * e); // @output 0
+
+    io:println(d * a); // @output 0
+    io:println(d * b); // @output 0
+    io:println(d * c); // @output 0
+    io:println(d * d); // @output 0
+    io:println(d * e); // @output 0
+    io:println(d * f); // @output 0
+    io:println(d * g); // @output 0
+    io:println(d * h); // @output 0
+    io:println((d * i).toBalString()); // @output ()
+
+    io:println(e * a); // @output 0
+    io:println(e * b); // @output 0
+    io:println(e * c); // @output 0
+    io:println(e * d); // @output 0
+    io:println(e * e); // @output 0
+    io:println(e * f); // @output 0
+    io:println(e * g); // @output 0
+    io:println(e * h); // @output 0
+    io:println((e * i).toBalString()); // @output ()
+
+    io:println(f * d); // @output 0
+    io:println(f * e); // @output 0
+
+    io:println(g * d); // @output 0
+    io:println(g * e); // @output 0
+
+    io:println(h * d); // @output 0
+    io:println(h * e); // @output 0
+
+    io:println((i * d).toBalString()); // @output ()
+    io:println((i * e).toBalString()); // @output ()
+}
+
+Test-Case: panic
+Description: Test 1 for integer multiplication overflow with optional type-descriptors.
+Labels: multiplicative-expr, int-type-descriptor, optional-type-descriptor, numeric-literal, int-literal
+
+public function main() {
+    int? a = 9223372036854775807;
+    int? b = 2;    
+    int? c = a * b; // @panic integer overflow on multiplication
+}
+
+Test-Case: output
+Description: Test integer multiplication non-overflow scenarios, for positive non-zero integers, 
+             for optional int:Unsigned8.
+Labels: multiplicative-expr, optional-type-descriptor, numeric-literal, int-literal, lang.int
+
+public function main() {
+    int:Unsigned8? a = 1;
+    int:Unsigned8? b = 2;
+    int:Unsigned8? c = 3;
+    int:Unsigned8? d = 86;
+    int:Unsigned8? e = 255;
+    int:Unsigned8? f = ();
+
+    io:println(a * a); // @output 1
+    io:println(a * b); // @output 2
+    io:println(a * c); // @output 3
+    io:println(a * d); // @output 86
+    io:println(a * e); // @output 255
+    io:println((a * f).toBalString()); // @output ()
+
+    io:println(b * a); // @output 2
+    io:println(b * b); // @output 4
+    io:println(b * c); // @output 6
+    io:println(b * d); // @output 172
+    io:println(b * e); // @output 510
+    io:println((b * f).toBalString()); // @output ()
+
+    io:println(c * a); // @output 3
+    io:println(c * b); // @output 6
+    io:println(c * c); // @output 9
+    io:println(c * d); // @output 258
+    io:println(c * e); // @output 765
+    io:println((c * f).toBalString()); // @output ()
+
+    io:println(d * a); // @output 86
+    io:println(d * b); // @output 172
+    io:println(d * c); // @output 258
+    io:println(d * d); // @output 7396
+    io:println(d * e); // @output 21930
+    io:println((d * f).toBalString()); // @output ()
+
+    io:println(e * a); // @output 255
+    io:println(e * b); // @output 510
+    io:println(e * c); // @output 765
+    io:println(e * d); // @output 21930
+    io:println(e * e); // @output 65025
+    io:println((e * f).toBalString()); // @output ()
+
+    io:println((f * a).toBalString()); // @output ()
+    io:println((f * b).toBalString()); // @output ()
+    io:println((f * c).toBalString()); // @output ()
+    io:println((f * d).toBalString()); // @output ()
+    io:println((f * e).toBalString()); // @output ()
+    io:println((f * f).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test integer multiplication non-overflow scenarios, where at least one operand is zero, 
+             for optional int:Unsigned8.
+Labels: multiplicative-expr, optional-type-descriptorm numeric-literal, int-literal, unary-expr, lang.int
+
+public function main() {
+    int:Unsigned8? a = 0;
+    int:Unsigned8? b = 1;
+    int:Unsigned8? c = 128;
+    int:Unsigned8? d = 255;
+    int:Unsigned8? e = ();
+
+    io:println(a * a); // @output 0
+
+    io:println(a * b); // @output 0
+    io:println(a * c); // @output 0
+    io:println(a * d); // @output 0
+    io:println((a * e).toBalString()); // @output ()
+
+    io:println(b * a); // @output 0
+    io:println(c * a); // @output 0
+    io:println(d * a); // @output 0
+    io:println((e * a).toBalString()); // @output ()
+}
+
+Test-Case: panic
+Description: Test 1 for integer multiplication overflow, where one operand is of type optional int:Unsigned8.
+Labels: multiplicative-expr, int-type-descriptor, optional-type-descriptor, numeric-literal, int-literal, lang.int
+
+public function main() {
+    int:Unsigned8? a = 255;
+    int b = 36170086419038337;    
+    int? c = a * b; // @panic integer overflow on multiplication
+}
+
+Test-Case: panic
+Description: Test 2 for integer multiplication overflow, where one operand is of type optional int:Unsigned8.
+Labels: multiplicative-expr, int-type-descriptor, optional-type-descriptor, numeric-literal, int-literal, lang.int
+
+public function main() {
+    int? a = -461168601842738791;
+    int:Unsigned8? b = 20;  
+    int? c = a * b; // @panic integer overflow on multiplication
+}
+
+Test-Case: output
+Description: Test integer multiplication non-overflow scenarios, for positive non-zero integers, for optional byte.
+Labels: multiplicative-expr, optional-type-descriptor, byte-type-descriptor, numeric-literal, int-literal
+
+public function main() {
+    byte? a = 1;
+    byte? b = 2;
+    byte? c = 3;
+    byte? d = 86;
+    byte? e = 255;
+    byte? f = ();
+
+    io:println(a * a); // @output 1
+    io:println(a * b); // @output 2
+    io:println(a * c); // @output 3
+    io:println(a * d); // @output 86
+    io:println(a * e); // @output 255
+    io:println((a * f).toBalString()); // @output ()
+
+    io:println(b * a); // @output 2
+    io:println(b * b); // @output 4
+    io:println(b * c); // @output 6
+    io:println(b * d); // @output 172
+    io:println(b * e); // @output 510
+    io:println((b * f).toBalString()); // @output ()
+
+    io:println(c * a); // @output 3
+    io:println(c * b); // @output 6
+    io:println(c * c); // @output 9
+    io:println(c * d); // @output 258
+    io:println(c * e); // @output 765
+    io:println((c * f).toBalString()); // @output ()
+
+    io:println(d * a); // @output 86
+    io:println(d * b); // @output 172
+    io:println(d * c); // @output 258
+    io:println(d * d); // @output 7396
+    io:println(d * e); // @output 21930
+    io:println((d * f).toBalString()); // @output ()
+
+    io:println(e * a); // @output 255
+    io:println(e * b); // @output 510
+    io:println(e * c); // @output 765
+    io:println(e * d); // @output 21930
+    io:println(e * e); // @output 65025
+    io:println((e * f).toBalString()); // @output ()
+
+    io:println((f * a).toBalString()); // @output ()
+    io:println((f * b).toBalString()); // @output ()
+    io:println((f * c).toBalString()); // @output ()
+    io:println((f * d).toBalString()); // @output ()
+    io:println((f * e).toBalString()); // @output ()
+    io:println((f * f).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test integer multiplication non-overflow scenarios, where at least one operand is zero, for optional byte.
+Labels: multiplicative-expr, optional-type-descriptor, byte-type-descriptor, numeric-literal, int-literal
+
+public function main() {
+    byte? a = 0;
+    byte? b = 1;
+    byte? c = 128;
+    byte? d = 255;
+    byte? e = ();
+
+    io:println(a * a); // @output 0
+
+    io:println(a * b); // @output 0
+    io:println(a * c); // @output 0
+    io:println(a * d); // @output 0
+    io:println((a * e).toBalString()); // @output ()
+
+    io:println(b * a); // @output 0
+    io:println(c * a); // @output 0
+    io:println(d * a); // @output 0
+    io:println((e * a).toBalString()); // @output ()
+}
+
+Test-Case: panic
+Description: Test 1 for integer multiplication overflow, where one operand is of type optional byte.
+Labels: multiplicative-expr, int-type-descriptor, byte-type-descriptor, optional-type-descriptor, numeric-literal, int-literal
+
+public function main() {
+    byte? a = 255;
+    int b = 36170086419038337;    
+    int? c = a * b; // @panic integer overflow on multiplication
+}
+
+Test-Case: panic
+Description: Test 2 for integer multiplication overflow, where one operand is of type optional byte.
+Labels: multiplicative-expr, int, byte, optional-type-descriptor, numeric-literal, int-literal
+
+public function main() {
+    int? a = -461168601842738791;
+    byte? b = 20;  
+    int? c = a * b; // @panic integer overflow on multiplication
+}
+
+Test-Case: output
+Description: Test integer multiplication non-overflow scenarios, for positive non-zero integers, for optional int:Unsigned16.
+Labels: multiplicative-expr, optional-type-descriptor, numeric-literal, int-literal, int:Unsigned16
+
+public function main() {
+    int:Unsigned16? a = 1;
+    int:Unsigned16? b = 2;
+    int:Unsigned16? c = 5;
+    int:Unsigned16? d = 40123;
+    int:Unsigned16? e = 65535;
+    int:Unsigned16? f = ();
+
+    io:println(a * a); // @output 1
+    io:println(a * b); // @output 2
+    io:println(a * c); // @output 5
+    io:println(a * d); // @output 40123
+    io:println(a * e); // @output 65535
+    io:println((a * f).toBalString()); // @output ()
+
+    io:println(b * a); // @output 2
+    io:println(b * b); // @output 4
+    io:println(b * c); // @output 10
+    io:println(b * d); // @output 80246
+    io:println(b * e); // @output 131070
+    io:println((b * f).toBalString()); // @output ()
+
+    io:println(c * a); // @output 5
+    io:println(c * b); // @output 10
+    io:println(c * c); // @output 25
+    io:println(c * d); // @output 200615
+    io:println(c * e); // @output 327675
+    io:println((c * f).toBalString()); // @output ()
+
+    io:println(d * a); // @output 40123
+    io:println(d * b); // @output 80246
+    io:println(d * c); // @output 200615
+    io:println(d * d); // @output 1609855129
+    io:println(d * e); // @output 2629460805
+    io:println((d * f).toBalString()); // @output ()
+
+    io:println(e * a); // @output 65535
+    io:println(e * b); // @output 131070
+    io:println(e * c); // @output 327675
+    io:println(e * d); // @output 2629460805
+    io:println(e * e); // @output 4294836225
+    io:println((e * f).toBalString()); // @output ()
+
+    io:println((f * a).toBalString()); // @output ()
+    io:println((f * b).toBalString()); // @output ()
+    io:println((f * c).toBalString()); // @output ()
+    io:println((f * d).toBalString()); // @output ()
+    io:println((f * e).toBalString()); // @output ()
+    io:println((f * f).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test integer multiplication non-overflow scenarios, where at least one operand is zero, for optional int:Unsigned16.
+Labels: multiplicative-expr, optional-type-descriptor, numeric-literal, int-literal, unary-expr, int:Unsigned16
+
+public function main() {
+    int:Unsigned16? a = 0;
+    int:Unsigned16? b = 1;
+    int:Unsigned16? c = 128;
+    int:Unsigned16? d = 255;
+    int:Unsigned16? e = ();
+
+    io:println(a * a); // @output 0
+
+    io:println(a * b); // @output 0
+    io:println(a * c); // @output 0
+    io:println(a * d); // @output 0
+    io:println((a * e).toBalString()); // @output ()
+
+    io:println(b * a); // @output 0
+    io:println(c * a); // @output 0
+    io:println(d * a); // @output 0
+    io:println((e * a).toBalString()); // @output ()
+}
+
+Test-Case: panic
+Description: Test 1 for integer multiplication overflow, where one operand is of type optional int:Unsigned16.
+Labels: multiplicative-expr, int-type-descriptor, optional-type-descriptor, numeric-literal, int-literal, int:Unsigned16
+
+public function main() {
+    int:Unsigned16? a = 65534;
+    int? b = 140741783453701;    
+    int? c = a * b; // @panic integer overflow on multiplication
+}
+
+Test-Case: panic
+Description: Test 2 for integer multiplication overflow, where one operand is of type optional int:Unsigned16.
+Labels: multiplicative-expr, int-type-descriptor, optional-type-descriptor, numeric-literal, int-literal, int:Unsigned16
+
+public function main() {
+    int a = -30744573456182586;
+    int:Unsigned16? b = 301;  
+    int? c = a * b; // @panic integer overflow on multiplication
+}
+
+Test-Case: output
+Description: Test integer multiplication non-overflow scenarios, for positive non-zero integers, for optional int:Unsigned32.
+Labels: multiplicative-expr, optional-type-descriptor, numeric-literal, int-literal, int:Unsigned32
+
+public function main() {
+    int:Unsigned32? a = 1;
+    int:Unsigned32? b = 2;
+    int:Unsigned32? c = 10;
+    int:Unsigned32? d = 12034;
+    int:Unsigned32? e = 429496729;
+    int:Unsigned32? f = ();
+
+    io:println(a * a); // @output 1
+    io:println(a * b); // @output 2
+    io:println(a * c); // @output 10
+    io:println(a * d); // @output 12034
+    io:println(a * e); // @output 429496729
+    io:println((a * f).toBalString()); // @output ()
+
+    io:println(b * a); // @output 2
+    io:println(b * b); // @output 4
+    io:println(b * c); // @output 20
+    io:println(b * d); // @output 24068
+    io:println(b * e); // @output 858993458
+    io:println((b * f).toBalString()); // @output ()
+
+    io:println(c * a); // @output 10
+    io:println(c * b); // @output 20
+    io:println(c * c); // @output 100
+    io:println(c * d); // @output 120340
+    io:println(c * e); // @output 4294967290
+    io:println((c * f).toBalString()); // @output ()
+
+    io:println(d * a); // @output 12034
+    io:println(d * b); // @output 24068
+    io:println(d * c); // @output 120340
+    io:println(d * d); // @output 144817156
+    io:println(d * e); // @output 5168563636786
+    io:println((d * f).toBalString()); // @output ()
+
+    io:println(e * a); // @output 429496729
+    io:println(e * b); // @output 858993458
+    io:println(e * c); // @output 4294967290
+    io:println(e * d); // @output 5168563636786
+    io:println(e * e); // @output 184467440221699441
+    io:println((e * f).toBalString()); // @output ()
+
+    io:println((f * a).toBalString()); // @output ()
+    io:println((f * b).toBalString()); // @output ()
+    io:println((f * c).toBalString()); // @output ()
+    io:println((f * d).toBalString()); // @output ()
+    io:println((f * e).toBalString()); // @output ()
+    io:println((f * f).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test integer multiplication non-overflow scenarios, where at least one operand is zero, for optional int:Unsigned32.
+Labels: multiplicative-expr, optional-type-descriptor, numeric-literal, int-literal, unary-expr, int:Unsigned32
+
+public function main() {
+    int:Unsigned32? a = 0;
+    int:Unsigned32? b = 1;
+    int:Unsigned32? c = 1259273;
+    int:Unsigned32? d = 4294967295;
+    int:Unsigned32? e = ();
+
+    io:println(a * a); // @output 0
+
+    io:println(a * b); // @output 0
+    io:println(a * c); // @output 0
+    io:println(a * d); // @output 0
+    io:println((a * e).toBalString()); // @output ()
+
+    io:println(b * a); // @output 0
+    io:println(c * a); // @output 0
+    io:println(d * a); // @output 0
+    io:println((e * a).toBalString()); // @output ()
+}
+
+Test-Case: panic
+Description: Test 1 for integer multiplication overflow, where one operand is of type optional int:Unsigned32.
+Labels: multiplicative-expr, int-type-descriptor, optional-type-descriptor, numeric-literal, int-literal, int:Unsigned32
+
+public function main() {
+    int:Unsigned32? a = 4294127249;
+    int b = 2147903754;
+    int? c = a * b; // @panic integer overflow on multiplication
+}
+
+Test-Case: panic
+Description: Test 2 for integer multiplication overflow, where one operand is of type optional int:Unsigned32.
+Labels: multiplicative-expr, int-type-descriptor, optional-type-descriptor, numeric-literal, int-literal, int:Unsigned32
+
+public function main() {
+    int? a = -140737488355328;
+    int:Unsigned32? b = 65537;
+    int? c = a * b; // @panic integer overflow on multiplication
+}
+
+Test-Case: panic
+Description: Test 3 for integer multiplication overflow, where both operands are of type optional int:Unsigned32.
+Labels: multiplicative-expr, int-type-descriptor, optional-type-descriptor, numeric-literal, int-literal, int:Unsigned32
+
+public function main() {
+    int:Unsigned32? a = 4294967295;
+    int? c = a * a; // @panic integer overflow on multiplication
+}
+
+Test-Case: output
+Description: Test integer multiplication non-overflow scenarios, for positive non-zero integers, for optional int:Signed8.
+Labels: multiplicative-expr, optional-type-descriptor, numeric-literal, int-literal, int:Signed8, value:toBalString
+
+public function main() {
+    int:Signed8? a = 1;
+    int:Signed8? b = 2;
+    int:Signed8? c = 10;
+    int:Signed8? d = 100;
+    int:Signed8? e = 127;
+    int:Signed8? f = ();
+
+    io:println(a * a); // @output 1
+    io:println(a * b); // @output 2
+    io:println(a * c); // @output 10
+    io:println(a * d); // @output 100
+    io:println(a * e); // @output 127
+    io:println((a * f).toBalString()); // @output ()
+
+    io:println(b * a); // @output 2
+    io:println(b * b); // @output 4
+    io:println(b * c); // @output 20
+    io:println(b * d); // @output 200
+    io:println(b * e); // @output 254
+    io:println((b * f).toBalString()); // @output ()
+
+    io:println(c * a); // @output 10
+    io:println(c * b); // @output 20
+    io:println(c * c); // @output 100
+    io:println(c * d); // @output 1000
+    io:println(c * e); // @output 1270
+    io:println((c * f).toBalString()); // @output ()
+
+    io:println(d * a); // @output 100
+    io:println(d * b); // @output 200
+    io:println(d * c); // @output 1000
+    io:println(d * d); // @output 10000
+    io:println(d * e); // @output 12700
+    io:println((d * f).toBalString()); // @output ()
+
+    io:println(e * a); // @output 127
+    io:println(e * b); // @output 254
+    io:println(e * c); // @output 1270
+    io:println(e * d); // @output 12700
+    io:println(e * e); // @output 16129
+    io:println((e * f).toBalString()); // @output ()
+
+    io:println((f * a).toBalString()); // @output ()
+    io:println((f * b).toBalString()); // @output ()
+    io:println((f * c).toBalString()); // @output ()
+    io:println((f * d).toBalString()); // @output ()
+    io:println((f * e).toBalString()); // @output ()
+    io:println((f * f).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test integer multiplication non-overflow scenarios, for negative non-zero integers, for optional int:Signed8.
+Labels: multiplicative-expr, optional-type-descriptor, numeric-literal, int-literal, unary-expr, int:Signed8, value:toBalString
+
+public function main() {
+    int:Signed8? a = -1;
+    int:Signed8? b = -2;
+    int:Signed8? c = -100;
+    int:Signed8? d = -120;
+    int:Signed8? e = -128;
+    int:Signed8? f = ();
+
+    io:println(a * a); // @output 1
+    io:println(a * b); // @output 2
+    io:println(a * c); // @output 100
+    io:println(a * d); // @output 120
+    io:println(a * e); // @output 128
+    io:println((a * f).toBalString()); // @output ()
+
+    io:println(b * a); // @output 2
+    io:println(b * b); // @output 4
+    io:println(b * c); // @output 200
+    io:println(b * d); // @output 240
+    io:println(b * e); // @output 256
+    io:println((b * f).toBalString()); // @output ()
+
+    io:println(c * a); // @output 100
+    io:println(c * b); // @output 200
+    io:println(c * c); // @output 10000
+    io:println(c * d); // @output 12000
+    io:println(c * e); // @output 12800
+    io:println((c * f).toBalString()); // @output ()
+
+    io:println(d * a); // @output 120
+    io:println(d * b); // @output 240
+    io:println(d * c); // @output 12000
+    io:println(d * d); // @output 14400
+    io:println(d * e); // @output 15360
+    io:println((d * f).toBalString()); // @output ()
+
+    io:println(e * a); // @output 128
+    io:println(e * b); // @output 256
+    io:println(e * c); // @output 12800
+    io:println(e * d); // @output 15360
+    io:println(e * e); // @output 16384
+    io:println((e * f).toBalString()); // @output ()
+
+    io:println((f * a).toBalString()); // @output ()
+    io:println((f * b).toBalString()); // @output ()
+    io:println((f * c).toBalString()); // @output ()
+    io:println((f * d).toBalString()); // @output ()
+    io:println((f * e).toBalString()); // @output ()
+    io:println((f * f).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test integer multiplication non-overflow scenarios, where one operand is negative
+             and the other is positive, for optional int:Signed8.
+Labels: multiplicative-expr, optional-type-descriptor, numeric-literal, int-literal, unary-expr, int:Signed8
+
+public function main() {
+    int:Signed8? a = -128;
+    int:Signed8? b = -100;
+    int:Signed8? c = -1;
+    int:Signed8? d = 1;
+    int:Signed8? e = 100;
+    int:Signed8? f = 127;
+
+    io:println(a * d); // @output -128
+    io:println(a * e); // @output -12800
+    io:println(a * f); // @output -16256
+
+    io:println(b * d); // @output -100
+    io:println(b * e); // @output -10000
+    io:println(b * f); // @output -12700
+
+    io:println(c * d); // @output -1
+    io:println(c * e); // @output -100
+    io:println(c * f); // @output -127
+
+    io:println(d * a); // @output -128
+    io:println(d * b); // @output -100
+    io:println(d * c); // @output -1
+
+    io:println(e * a); // @output -12800
+    io:println(e * b); // @output -10000
+    io:println(e * c); // @output -100
+
+    io:println(f * a); // @output -16256
+    io:println(f * b); // @output -12700
+    io:println(f * c); // @output -127
+}
+
+Test-Case: output
+Description: Test integer multiplication non-overflow scenarios, where at least one operand is zero, for optional int:Signed8.
+Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, unary-expr, int:Signed8, value:toBalString
+
+public function main() {
+    int:Signed8? a = -128;
+    int:Signed8? b = -100;
+    int:Signed8? c = -1;
+    int:Signed8? d = -0;
+    int:Signed8? e = 0;
+    int:Signed8? f = 1;
+    int:Signed8? g = 100;
+    int:Signed8? h = 127;
+    int:Signed8? i = ();
+
+    io:println(a * d); // @output 0
+    io:println(a * e); // @output 0
+
+    io:println(b * d); // @output 0
+    io:println(b * e); // @output 0
+
+    io:println(c * d); // @output 0
+    io:println(c * e); // @output 0
+
+    io:println(d * a); // @output 0
+    io:println(d * b); // @output 0
+    io:println(d * c); // @output 0
+    io:println(d * d); // @output 0
+    io:println(d * e); // @output 0
+    io:println(d * f); // @output 0
+    io:println(d * g); // @output 0
+    io:println(d * h); // @output 0
+    io:println((d * i).toBalString()); // @output ()
+
+    io:println(e * a); // @output 0
+    io:println(e * b); // @output 0
+    io:println(e * c); // @output 0
+    io:println(e * d); // @output 0
+    io:println(e * e); // @output 0
+    io:println(e * f); // @output 0
+    io:println(e * g); // @output 0
+    io:println(e * h); // @output 0
+    io:println((e * i).toBalString()); // @output ()
+
+    io:println(f * d); // @output 0
+    io:println(f * e); // @output 0
+
+    io:println(g * d); // @output 0
+    io:println(g * e); // @output 0
+
+    io:println(h * d); // @output 0
+    io:println(h * e); // @output 0
+
+    io:println((i * d).toBalString()); // @output ()
+    io:println((i * e).toBalString()); // @output ()
+}
+
+Test-Case: panic
+Description: Test 1 for integer multiplication overflow, for optional int:Signed8.
+Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, int:Signed8
+
+public function main() {
+    int? a = 72624976668147842;
+    int:Signed8? b = 127;
+    int? c = a * b; // @panic integer overflow on multiplication
+}
+
+Test-Case: panic
+Description: Test 2 for integer multiplication overflow, for optional int:Signed8.
+Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, int:Signed8
+
+public function main() {
+    int:Signed8? a = -128;
+    int? b = 72057594037927937 * a; // @panic integer overflow on multiplication
+}
+
+Test-Case: output
+Description: Test integer multiplication non-overflow scenarios, for positive non-zero integers, for optional int:Signed16.
+Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, int:Signed16, value:toBalString
+
+public function main() {
+    int:Signed16? a = 1;
+    int:Signed16? b = 2;
+    int:Signed16? c = 10;
+    int:Signed16? d = 12345;
+    int:Signed16? e = 32767;
+    int:Signed16? f = ();
+
+    io:println(a * a); // @output 1
+    io:println(a * b); // @output 2
+    io:println(a * c); // @output 10
+    io:println(a * d); // @output 12345
+    io:println(a * e); // @output 32767
+    io:println((a * f).toBalString()); // @output ()
+
+    io:println(b * a); // @output 2
+    io:println(b * b); // @output 4
+    io:println(b * c); // @output 20
+    io:println(b * d); // @output 24690
+    io:println(b * e); // @output 65534
+    io:println((b * f).toBalString()); // @output ()
+
+    io:println(c * a); // @output 10
+    io:println(c * b); // @output 20
+    io:println(c * c); // @output 100
+    io:println(c * d); // @output 123450
+    io:println(c * e); // @output 327670
+    io:println((c * f).toBalString()); // @output ()
+
+    io:println(d * a); // @output 12345
+    io:println(d * b); // @output 24690
+    io:println(d * c); // @output 123450
+    io:println(d * d); // @output 152399025
+    io:println(d * e); // @output 404508615
+    io:println((d * f).toBalString()); // @output ()
+
+    io:println(e * a); // @output 32767
+    io:println(e * b); // @output 65534
+    io:println(e * c); // @output 327670
+    io:println(e * d); // @output 404508615
+    io:println(e * e); // @output 1073676289
+    io:println((e * f).toBalString()); // @output ()
+
+    io:println((f * a).toBalString()); // @output ()
+    io:println((f * b).toBalString()); // @output ()
+    io:println((f * c).toBalString()); // @output ()
+    io:println((f * d).toBalString()); // @output ()
+    io:println((f * e).toBalString()); // @output ()
+    io:println((f * f).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test integer multiplication non-overflow scenarios, for negative non-zero integers, for optional int:Signed16.
+Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, unary-expr, int:Signed16, value:toBalString
+
+public function main() {
+    int:Signed16? a = -1;
+    int:Signed16? b = -2;
+    int:Signed16? c = -100;
+    int:Signed16? d = -20000;
+    int:Signed16? e = -32768;
+    int:Signed16? f = ();
+
+    io:println(a * a); // @output 1
+    io:println(a * b); // @output 2
+    io:println(a * c); // @output 100
+    io:println(a * d); // @output 20000
+    io:println(a * e); // @output 32768
+    io:println((a * f).toBalString()); // @output ()
+
+    io:println(b * a); // @output 2
+    io:println(b * b); // @output 4
+    io:println(b * c); // @output 200
+    io:println(b * d); // @output 40000
+    io:println(b * e); // @output 65536
+    io:println((b * f).toBalString()); // @output ()
+
+    io:println(c * a); // @output 100
+    io:println(c * b); // @output 200
+    io:println(c * c); // @output 10000
+    io:println(c * d); // @output 2000000
+    io:println(c * e); // @output 3276800
+    io:println((c * f).toBalString()); // @output ()
+
+    io:println(d * a); // @output 20000
+    io:println(d * b); // @output 40000
+    io:println(d * c); // @output 2000000
+    io:println(d * d); // @output 400000000
+    io:println(d * e); // @output 655360000
+    io:println((d * f).toBalString()); // @output ()
+
+    io:println(e * a); // @output 32768
+    io:println(e * b); // @output 65536
+    io:println(e * c); // @output 3276800
+    io:println(e * d); // @output 655360000
+    io:println(e * e); // @output 1073741824
+    io:println((e * f).toBalString()); // @output ()
+
+    io:println((f * a).toBalString()); // @output ()
+    io:println((f * b).toBalString()); // @output ()
+    io:println((f * c).toBalString()); // @output ()
+    io:println((f * d).toBalString()); // @output ()
+    io:println((f * e).toBalString()); // @output ()
+    io:println((f * f).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test integer multiplication non-overflow scenarios, where one operand is negative
+             and the other is positive, for optional int:Signed16.
+Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, unary-expr, int:Signed16
+
+public function main() {
+    int:Signed16? a = -32768;
+    int:Signed16? b = -200;
+    int:Signed16? c = -1;
+    int:Signed16? d = 1;
+    int:Signed16? e = 200;
+    int:Signed16? f = 32767;
+
+    io:println(a * d); // @output -32768
+    io:println(a * e); // @output -6553600
+    io:println(a * f); // @output -1073709056
+
+    io:println(b * d); // @output -200
+    io:println(b * e); // @output -40000
+    io:println(b * f); // @output -6553400
+
+    io:println(c * d); // @output -1
+    io:println(c * e); // @output -200
+    io:println(c * f); // @output -32767
+
+    io:println(d * a); // @output -32768
+    io:println(d * b); // @output -200
+    io:println(d * c); // @output -1
+
+    io:println(e * a); // @output -6553600
+    io:println(e * b); // @output -40000
+    io:println(e * c); // @output -200
+
+    io:println(f * a); // @output -1073709056
+    io:println(f * b); // @output -6553400
+    io:println(f * c); // @output -32767
+}
+
+Test-Case: output
+Description: Test integer multiplication non-overflow scenarios, where at least one operand is zero, for optional int:Signed16.
+Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, unary-expr, int:Signed16, value:toBalString
+
+public function main() {
+    int:Signed16? a = -32768;
+    int:Signed16? b = -100;
+    int:Signed16? c = -1;
+    int:Signed16? d = -0;
+    int:Signed16? e = 0;
+    int:Signed16? f = 1;
+    int:Signed16? g = 1100;
+    int:Signed16? h = 32767;
+    int:Signed16? i = ();
+
+    io:println(a * d); // @output 0
+    io:println(a * e); // @output 0
+
+    io:println(b * d); // @output 0
+    io:println(b * e); // @output 0
+
+    io:println(c * d); // @output 0
+    io:println(c * e); // @output 0
+
+    io:println(d * a); // @output 0
+    io:println(d * b); // @output 0
+    io:println(d * c); // @output 0
+    io:println(d * d); // @output 0
+    io:println(d * e); // @output 0
+    io:println(d * f); // @output 0
+    io:println(d * g); // @output 0
+    io:println(d * h); // @output 0
+    io:println((d * i).toBalString()); // @output ()
+
+    io:println(e * a); // @output 0
+    io:println(e * b); // @output 0
+    io:println(e * c); // @output 0
+    io:println(e * d); // @output 0
+    io:println(e * e); // @output 0
+    io:println(e * f); // @output 0
+    io:println(e * g); // @output 0
+    io:println(e * h); // @output 0
+    io:println((e * i).toBalString()); // @output ()
+
+    io:println(f * d); // @output 0
+    io:println(f * e); // @output 0
+
+    io:println(g * d); // @output 0
+    io:println(g * e); // @output 0
+
+    io:println(h * d); // @output 0
+    io:println(h * e); // @output 0
+
+    io:println((i * d).toBalString()); // @output ()
+    io:println((i * e).toBalString()); // @output ()
+}
+
+Test-Case: panic
+Description: Test 1 for integer multiplication overflow, for optional int:Signed16.
+Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, int:Signed16
+
+public function main() {
+    int? a = 281483566907401;
+    int:Signed16? b = 32767;
+    int? c = a * b; // @panic integer overflow on multiplication
+}
+
+Test-Case: panic
+Description: Test 2 for integer multiplication overflow, for optional int:Signed16.
+Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, int:Signed16
+
+public function main() {
+    int:Signed16? a = -32768;
+    int b = 281474976710666;
+    int? c = b * a; // @panic integer overflow on multiplication
+}
+
+Test-Case: output
+Description: Test integer multiplication non-overflow scenarios, for positive non-zero integers, for optional int:Signed32.
+Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, int:Signed32, value:toBalString
+
+public function main() {
+    int:Signed32? a = 1;
+    int:Signed32? b = 2;
+    int:Signed32? c = 10;
+    int:Signed32? d = 1000;
+    int:Signed32? e = 2147483647;
+    int:Signed32? f = ();
+
+    io:println(a * a); // @output 1
+    io:println(a * b); // @output 2
+    io:println(a * c); // @output 10
+    io:println(a * d); // @output 1000
+    io:println(a * e); // @output 2147483647
+    io:println((a * f).toBalString()); // @output ()
+
+    io:println(b * a); // @output 2
+    io:println(b * b); // @output 4
+    io:println(b * c); // @output 20
+    io:println(b * d); // @output 2000
+    io:println(b * e); // @output 4294967294
+    io:println((b * f).toBalString()); // @output ()
+
+    io:println(c * a); // @output 10
+    io:println(c * b); // @output 20
+    io:println(c * c); // @output 100
+    io:println(c * d); // @output 10000
+    io:println(c * e); // @output 21474836470
+    io:println((c * f).toBalString()); // @output ()
+
+    io:println(d * a); // @output 1000
+    io:println(d * b); // @output 2000
+    io:println(d * c); // @output 10000
+    io:println(d * d); // @output 1000000
+    io:println(d * e); // @output 2147483647000
+    io:println((d * f).toBalString()); // @output ()
+
+    io:println(e * a); // @output 2147483647
+    io:println(e * b); // @output 4294967294
+    io:println(e * c); // @output 21474836470
+    io:println(e * d); // @output 2147483647000
+    io:println(e * e); // @output 4611686014132420609
+    io:println((e * f).toBalString()); // @output ()
+
+    io:println((f * a).toBalString()); // @output ()
+    io:println((f * b).toBalString()); // @output ()
+    io:println((f * c).toBalString()); // @output ()
+    io:println((f * d).toBalString()); // @output ()
+    io:println((f * e).toBalString()); // @output ()
+    io:println((f * f).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test integer multiplication non-overflow scenarios, for negative non-zero integers, for optional int:Signed32.
+Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, unary-expr, int:Signed32, value:toBalString
+
+public function main() {
+    int:Signed32? a = -1;
+    int:Signed32? b = -2;
+    int:Signed32? c = -100;
+    int:Signed32? d = -20000;
+    int:Signed32? e = -2147483648;
+    int:Signed32? f = ();
+
+    io:println(a * a); // @output 1
+    io:println(a * b); // @output 2
+    io:println(a * c); // @output 100
+    io:println(a * d); // @output 20000
+    io:println(a * e); // @output 2147483648
+    io:println((a * f).toBalString()); // @output ()
+
+    io:println(b * a); // @output 2
+    io:println(b * b); // @output 4
+    io:println(b * c); // @output 200
+    io:println(b * d); // @output 40000
+    io:println(b * e); // @output 4294967296
+    io:println((b * f).toBalString()); // @output ()
+
+    io:println(c * a); // @output 100
+    io:println(c * b); // @output 200
+    io:println(c * c); // @output 10000
+    io:println(c * d); // @output 2000000
+    io:println(c * e); // @output 214748364800
+    io:println((c * f).toBalString()); // @output ()
+
+    io:println(d * a); // @output 20000
+    io:println(d * b); // @output 40000
+    io:println(d * c); // @output 2000000
+    io:println(d * d); // @output 400000000
+    io:println(d * e); // @output 42949672960000
+    io:println((d * f).toBalString()); // @output ()
+
+    io:println(e * a); // @output 2147483648
+    io:println(e * b); // @output 4294967296
+    io:println(e * c); // @output 214748364800
+    io:println(e * d); // @output 42949672960000
+    io:println(e * e); // @output 4611686018427387904
+    io:println((e * f).toBalString()); // @output ()
+
+    io:println((f * a).toBalString()); // @output ()
+    io:println((f * b).toBalString()); // @output ()
+    io:println((f * c).toBalString()); // @output ()
+    io:println((f * d).toBalString()); // @output ()
+    io:println((f * e).toBalString()); // @output ()
+    io:println((f * f).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test integer multiplication non-overflow scenarios, where one operand is negative
+             and the other is positive, for optional int:Signed32.
+Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, unary-expr, int:Signed32
+
+public function main() {
+    int:Signed32? a = -2147483648;
+    int:Signed32? b = -200;
+    int:Signed32? c = -1;
+    int:Signed32? d = 1;
+    int:Signed32? e = 200;
+    int:Signed32? f = 2147483647;
+
+    io:println(a * d); // @output -2147483648
+    io:println(a * e); // @output -429496729600
+    io:println(a * f); // @output -4611686016279904256
+
+    io:println(b * d); // @output -200
+    io:println(b * e); // @output -40000
+    io:println(b * f); // @output -429496729400
+
+    io:println(c * d); // @output -1
+    io:println(c * e); // @output -200
+    io:println(c * f); // @output -2147483647
+
+    io:println(d * a); // @output -2147483648
+    io:println(d * b); // @output -200
+    io:println(d * c); // @output -1
+
+    io:println(e * a); // @output -429496729600
+    io:println(e * b); // @output -40000
+    io:println(e * c); // @output -200
+
+    io:println(f * a); // @output -4611686016279904256
+    io:println(f * b); // @output -429496729400
+    io:println(f * c); // @output -2147483647
+}
+
+Test-Case: output
+Description: Test integer multiplication non-overflow scenarios, where at least one operand is zero, for optional int:Signed32.
+Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, unary-expr, int:Signed32, value:toBalString
+
+public function main() {
+    int:Signed32? a = -2147483648;
+    int:Signed32? b = -12342340;
+    int:Signed32? c = -1;
+    int:Signed32? d = -0;
+    int:Signed32? e = 0;
+    int:Signed32? f = 1;
+    int:Signed32? g = 139456264;
+    int:Signed32? h = 2147483647;
+    int:Signed32? i = ();
+
+    io:println(a * d); // @output 0
+    io:println(a * e); // @output 0
+
+    io:println(b * d); // @output 0
+    io:println(b * e); // @output 0
+
+    io:println(c * d); // @output 0
+    io:println(c * e); // @output 0
+
+    io:println(d * a); // @output 0
+    io:println(d * b); // @output 0
+    io:println(d * c); // @output 0
+    io:println(d * d); // @output 0
+    io:println(d * e); // @output 0
+    io:println(d * f); // @output 0
+    io:println(d * g); // @output 0
+    io:println(d * h); // @output 0
+    io:println((d * i).toBalString()); // @output ()
+
+    io:println(e * a); // @output 0
+    io:println(e * b); // @output 0
+    io:println(e * c); // @output 0
+    io:println(e * d); // @output 0
+    io:println(e * e); // @output 0
+    io:println(e * f); // @output 0
+    io:println(e * g); // @output 0
+    io:println(e * h); // @output 0
+    io:println((e * i).toBalString()); // @output ()
+
+    io:println(f * d); // @output 0
+    io:println(f * e); // @output 0
+
+    io:println(g * d); // @output 0
+    io:println(g * e); // @output 0
+
+    io:println(h * d); // @output 0
+    io:println(h * e); // @output 0
+
+    io:println((i * d).toBalString()); // @output ()
+    io:println((i * e).toBalString()); // @output ()
+}
+
+Test-Case: panic
+Description: Test 1 for integer multiplication overflow, for optional int:Signed32.
+Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, int:Signed32
+
+public function main() {
+    int? a = 4294967399;
+    int:Signed32? b = 2147483646;
+    int? c = a * b; // @panic integer overflow on multiplication
+}
+
+Test-Case: panic
+Description: Test 2 for integer multiplication overflow, for optional int:Signed32.
+Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, int:Signed32
+
+public function main() {
+    int:Signed32? a = -2147483648;
+    int? c = a * 4294967297; // @panic integer overflow on multiplication
+}
+
+Test-Case: output
+Description: Test integer multiplication non-overflow scenarios, for positive non-zero integers,
+             for user-defined subtype of int.
+Labels: multiplicative-expr, optional-type, numeric-literal, int-literal, module-type-defn
+
+type Ints -2|-1|0|1|2;
+
+public function main() {
+    Ints? a = 1;
+    Ints? b = 2;
+    Ints? c = ();
+
+    io:println(a * a); // @output 1
+    io:println(a * b); // @output 2
+    io:println((a * c).toBalString()); // @output ()
+
+    io:println(b * a); // @output 2
+    io:println(b * b); // @output 4
+    io:println((b * c).toBalString()); // @output ()
+
+    io:println((c * a).toBalString()); // @output ()
+    io:println((c * b).toBalString()); // @output ()
+    io:println((c * c).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test integer multiplication non-overflow scenarios, for negative non-zero integers,
+             for user-defined subtype of int.
+Labels: multiplicative-expr, optional-type, numeric-literal, int-literal, unary-expr, module-type-defn
+
+type Ints -2|-1|0|1|2;
+
+public function main() {
+    Ints? a = -1;
+    Ints? b = -2;
+
+    io:println(a * a); // @output 1
+    io:println(a * b); // @output 2
+    io:println((a * c).toBalString()); // @output ()
+
+    io:println(b * a); // @output 2
+    io:println(b * b); // @output 4
+    io:println((b * c).toBalString()); // @output ()
+
+    io:println((c * a).toBalString()); // @output ()
+    io:println((c * b).toBalString()); // @output ()
+    io:println((c * c).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test integer multiplication non-overflow scenarios, where one operand is negative
+             and the other is positive, for user-defined subtype of int.
+Labels: multiplicative-expr, optional-type, numeric-literal, int-literal, unary-expr, module-type-defn
+
+type Ints -2|-1|0|1|2;
+
+public function main() {
+    Ints? a = -1;
+    Ints? b = -2;
+    Ints? c = 1;
+    Ints? d = 2;
+
+    io:println(a * c); // @output -1
+    io:println(a * d); // @output -2
+
+    io:println(b * c); // @output -2
+    io:println(b * d); // @output -4
+
+    io:println(c * a); // @output -1
+    io:println(c * b); // @output -2
+
+    io:println(d * a); // @output -2
+    io:println(d * b); // @output -4
+}
+
+Test-Case: output
+Description: Test integer multiplication non-overflow scenarios, where at least one operand is zero, for
+             user-defined subtype of int.
+Labels: multiplicative-expr, optional-type, numeric-literal, int-literal, unary-expr, module-type-defn
+
+type Ints -2|-1|0|1|2;
+
+public function main() {
+    Ints? a = -2;
+    Ints? b = -1;
+    Ints? c = -0;
+    Ints? d = 0;
+    Ints? e = 1;
+    Ints? f = 2;
+    Ints? g = ();
+
+    io:println(a * c); // @output 0
+    io:println(a * d); // @output 0
+
+    io:println(b * c); // @output 0
+    io:println(b * d); // @output 0
+
+    io:println(c * a); // @output 0
+    io:println(c * b); // @output 0
+    io:println(c * c); // @output 0
+    io:println(c * d); // @output 0
+    io:println(c * e); // @output 0
+    io:println(c * f); // @output 0
+    io:println((c * g).toBalString()); // @output ()
+
+    io:println(d * a); // @output 0
+    io:println(d * b); // @output 0
+    io:println(d * c); // @output 0
+    io:println(d * d); // @output 0
+    io:println(d * e); // @output 0
+    io:println(d * f); // @output 0
+    io:println((d * g).toBalString()); // @output ()
+
+    io:println(e * c); // @output 0
+    io:println(e * d); // @output 0
+
+    io:println(f * c); // @output 0
+    io:println(f * d); // @output 0
+
+    io:println((g * c).toBalString()); // @output ()
+    io:println((g * d).toBalString()); // @output ()
+}
+
+Test-Case: panic
+Description: Test 1 for integer multiplication overflow, for user-defined subtype of int.
+Labels: multiplicative-expr, int, optional-type, numeric-literal, int-literal, module-type-defn
+
+type Ints -2|-1|0|1|2;
+
+public function main() {
+    int? a = 4611686018427387904;
+    Ints? b = 2;
+    int? c = a * b; // @panic integer overflow on multiplication
+}
+
+Test-Case: panic
+Description: Test 2 for integer multiplication overflow, for user-defined subtype of int.
+Labels: multiplicative-expr, int, optional-type, numeric-literal, int-literal, module-type-defn
+
+type Ints -2|-1|0|1|2;
+type NilableInts Ints?;
+
+public function main() {
+    NilableInts a = -2;
+    int? c = a * 4611686018427387905; // @panic integer overflow on multiplication
 }
