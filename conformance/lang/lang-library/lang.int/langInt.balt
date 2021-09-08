@@ -2252,33 +2252,6 @@ function testInt(int i) {
                    // @output 3000
 }
 
-Test-Case: panic
-Description: Test int range overflow with `max` function.
-Labels: lang.int
-
-public function main() {
-    int a1 = 135362;
-
-    int b1 = a1.max(9223372036854775807 + 1, 3526); // @panic int range overflow with 9223372036854775807 + 1
-    io:println(b1);
-}
-
-Test-Case: panic
-Description: Test int range overflow with `max` function.
-Labels: lang.int
-
-public function main() {
-    int b1 = (9223372036854775807 + 1).max(10); // @panic int range overflow with 9223372036854775807 + 1
-}
-
-Test-Case: panic
-Description: Test int range overflow with `max` function.
-Labels: lang.int
-
-public function main() {
-    int b1 = (-9223372036854775807 - 2).max(10); // @panic int range overflow with -9223372036854775807 - 2
-}
-
 Test-Case: output
 Description: Test assignability of `max` function result with compatible types.
 Labels: lang.int
@@ -2577,24 +2550,6 @@ function testInt(int i) {
                    // @output 100
 }
 
-Test-Case: panic
-Description: Test int range overflow with `min` function.
-Labels: lang.int
-
-public function main() {
-    int a1 = 135362;
-
-    int b1 = a1.min(9223372036854775807 + 1, 3526); // @panic int range overflow with 9223372036854775807 + 1
-}
-
-Test-Case: panic
-Description: Test int range overflow with `min` function.
-Labels: lang.int
-
-public function main() {
-    int b1 = (-9223372036854775807 - 2).min(10); // @panic int range overflow with -9223372036854775807 - 2
-}
-
 Test-Case: output
 Description: Test assignability of `min` function result with compatible types.
 Labels: lang.int
@@ -2652,4 +2607,850 @@ Labels: lang.int
 
 public function main() {
     int a = int:min(); // @error missing first int value
+}
+
+Test-Case: output
+Description: Test `fromString` function.
+Labels: lang.int, lang.string
+
+public function main() {
+    string a1 = "-9223372036854775808";
+    string a2 = "-3546372";
+    string a3 = "3546372";
+    string a4 = "+3546372";
+    string a5 = "9223372036854775807";
+
+    int|error b1 = int:fromString(a1);
+    testResult(b1);
+
+    testResult(int:fromString(a2));
+
+    b1 = int:fromString(a3);
+    testResult(b1);
+
+    testResult(int:fromString(a4));
+
+    b1 = int:fromString(a5);
+    testResult(b1);
+}
+
+function testResult(int|error i) {
+    if i is int {
+        io:println(i); // @output -9223372036854775808
+                       // @output -3546372
+                       // @output 3546372
+                       // @output 3546372
+                       // @output 9223372036854775807
+    } else {
+        io:println(i);
+    }
+}
+
+Test-Case: output
+Description: Test `fromString` function with string literals.
+Labels: lang.int, string
+
+public function main() {
+    int|error b1 = int:fromString("-9223372036854775808");
+    testResult(b1);
+
+    testResult(int:fromString("-3546372"));
+
+    b1 = int:fromString("3546372");
+    testResult(b1);
+
+    testResult(int:fromString("+3546372"));
+
+    b1 = int:fromString("9223372036854775807");
+    testResult(b1);
+}
+
+function testResult(int|error i) {
+    if i is int {
+        io:println(i); // @output -9223372036854775808
+                       // @output -3546372
+                       // @output 3546372
+                       // @output 3546372
+                       // @output 9223372036854775807
+    } else {
+        io:println(i);
+    }
+}
+
+Test-Case: output
+Description: Test `fromString` function with string template expression.
+Labels: lang.int, string-template-expr
+
+public function main() {
+    string a1 = string `-9223372036854775808`;
+    string a2 = string `-3546372`;
+    string a3 = string `3546372`;
+    string a4 = string `+3546372`;
+    string a5 = string `9223372036854775807`;
+
+    int|error b1 = int:fromString(string `-9223372036854775808`);
+    testResult(b1);
+
+    testResult(int:fromString(string `-3546372`));
+
+    b1 = int:fromString(string `3546372`);
+    testResult(b1);
+
+    testResult(int:fromString(string `+3546372`));
+
+    b1 = int:fromString(string `9223372036854775807`);
+    testResult(b1);
+}
+
+function testResult(int|error i) {
+    if i is int {
+        io:println(i); // @output -9223372036854775808
+                       // @output -3546372
+                       // @output 3546372
+                       // @output 3546372
+                       // @output 9223372036854775807
+    } else {
+        io:println(i);
+    }
+}
+
+Test-Case: output
+Description: Test `fromString` function with string template with interpolation.
+Labels: lang.int, string-template-expr
+
+public function main() {
+    string a1 = string `3546372`;
+    string a2 = "3546372";
+    int a3 = 3546372;
+
+    int|error b1 = int:fromString(string `-3546372${a1}`);
+    testResult(b1);
+
+    testResult(int:fromString(string `-3546372${a2}`));
+
+    b1 = int:fromString(string `-3546372${a3}`);
+    testResult(b1);
+
+    b1 = int:fromString(string `${a1}${a2}`);
+    testResult(b1);
+
+    testResult(int:fromString(string `${a1}${a3}`));
+
+    testResult(int:fromString(string `123${a2}${a3}`));
+}
+
+function testResult(int|error i) {
+    if i is int {
+        io:println(i); // @output -35463723546372
+                       // @output -35463723546372
+                       // @output -35463723546372
+                       // @output 35463723546372
+                       // @output 35463723546372
+                       // @output 12335463723546372
+    } else {
+        io:println(i);
+    }
+}
+
+Test-Case: output
+Description: Test `fromString` function with string subtypes.
+Labels: lang.int, module-const-decl, module-type-defn, string
+
+const A = "2536";
+const B = "35463";
+
+type StringType1 "10"|"20"|"30";
+
+type StringType2 string:Char;
+
+type StringType3 A|B;
+
+public function main() {
+    string:Char a1 = "9";
+    string|string:Char a2 = "1234535";
+    StringType1 a3 = "10";
+    StringType2 a4 = "8";
+    StringType3 a5 = "35463";
+
+    int|error b1 = int:fromString(a1);
+    testResult(b1);
+
+    testResult(int:fromString(a2));
+
+    b1 = int:fromString(a3);
+    testResult(b1);
+
+    testResult(int:fromString(A));
+
+    testResult(int:fromString(a4));
+
+    testResult(int:fromString(a5));
+}
+
+function testResult(int|error i) {
+    if i is int {
+        io:println(i); // @output 0
+                       // @output 1234535
+                       // @output 10
+                       // @output 2536
+                       // @output 8
+                       // @output 35463
+    } else {
+        io:println(i);
+    }
+}
+
+Test-Case: output
+Description: Test `fromString` function with string values from various expressions.
+Labels: lang.int, string
+
+public function main() {
+    int a1 = 3546372;
+    int a2 = 5;
+    string a3 = "10";
+
+    int|error b1 = int:fromString(a1.toString());
+    testResult(b1);
+
+    testResult(int:fromString(3546372.toString()));
+
+    b1 = int:fromString(getString() + a1.toString() + string `${a2}` + "2" + a3);
+    testResult(b1);
+}
+
+function getString() returns string {
+    return "12536";
+}
+
+function testResult(int|error i) {
+    if i is int {
+        io:println(i); // @output 3546372
+                       // @output 3546372
+                       // @output 1253635463725210
+    } else {
+        io:println(i);
+    }
+}
+
+Test-Case: output
+Description: Test assignability of `fromString` function result.
+Labels: lang.int, string
+
+type Type int|error;
+
+public function main() {
+    string a1 = "12343";
+
+    testResult(int:fromString(a1));
+
+    Type b1 = int:fromString(a1);
+    testResult(b1);
+
+    var b2 = int:fromString(a1);
+    testResult(b2);
+}
+
+function testResult(any|error i) {
+    if i is any {
+        io:println(i); // @output 12343
+                       // @output 12343
+                       // @output 12343
+    } else {
+        io:println(i);
+    }
+}
+
+Test-Case: output
+Description: Test `fromString` function with invalid strings.
+Labels: lang.int, string
+
+public function main() {
+    string a1 = "10ABC";
+    float a2 = 10;
+
+    int|error b1 = int:fromString(a1);
+    testResult(b1);
+
+    b1 = int:fromString("20ABC");
+    testResult(b1);
+
+    testResult(int:fromString(string `30ABC`));
+
+    testResult(int:fromString(getString()));
+
+    b1 = int:fromString(string `${a2}`);
+    testResult(b1);
+
+    int|error b2 = int:fromString("9223372036854775808");
+    testResult(b2);
+
+    b2 = int:fromString("-9223372036854775809");
+    testResult(b2);
+}
+
+function getString() returns string {
+    return "12536.26";
+}
+
+function testResult(int|error i) {
+    if i is int {
+        io:println(i);
+    } else {
+        io:println(i); // @output error("{ballerina/lang.int}NumberParsingError",message="'string' value '10ABC' cannot be converted to 'int'")
+                       // @output error("{ballerina/lang.int}NumberParsingError",message="'string' value '20ABC' cannot be converted to 'int'")
+                       // @output error("{ballerina/lang.int}NumberParsingError",message="'string' value '30ABC' cannot be converted to 'int'")
+                       // @output error("{ballerina/lang.int}NumberParsingError",message="'string' value '12536.26' cannot be converted to 'int'")
+                       // @output error("{ballerina/lang.int}NumberParsingError",message="'string' value '10.0' cannot be converted to 'int'")
+                       // @output error("{ballerina/lang.int}NumberParsingError",message="'string' value '9223372036854775808' cannot be converted to 'int'")
+                       // @output error("{ballerina/lang.int}NumberParsingError",message="'string' value '-9223372036854775809' cannot be converted to 'int'")
+    }
+}
+
+Test-Case: error
+Description: Test passing invalid value to `fromString` function.
+Labels: lang.int, string
+
+public function main() {
+    float a1 = 10.5;
+    string|int a2 = "ABC";
+
+    int|error b1 = int:fromString(a1); // @error float is not a subtype of string
+
+    b1 = int:fromString(a2); // @error (string|int) is not a subtype of string
+
+    b1 = int:fromString(12d); // @error decimal is not a subtype of string
+}
+
+Test-Case: error
+Description: Test assigning the result of `fromString` function to an incompatible type.
+Labels: lang.int, string
+
+public function main() {
+    int b1 = int:fromString("100"); // @error expects an int, but fromString() returns (int|error)
+
+    int:Signed32|error b2 = int:fromString("100"); // @error expects a (int:Signed32|error), but fromString() returns (int|error)
+}
+
+Test-Case: error
+Description: Test incorrect `fromString` function call.
+Labels: lang.int
+
+public function main() {
+    string a1 = "1234";
+    any a2 = "1234";
+
+    int|error b1 = a1.fromString(); // @error fromString() is not defined for string
+
+    int|error b2 = a2.fromString(); // @error fromString() is not defined for any
+}
+
+Test-Case: error
+Description: Test missing required parameter in `fromString` function call.
+Labels: lang.int
+
+public function main() {
+    int|error b1 = int:fromString(); // @error missing string argument
+}
+
+Test-Case: error
+Description: Test passing too many arguments to `fromString`.
+Labels: lang.int
+
+public function main() {
+    string a1 = "1234";
+    int|error b1 = int:fromString(a1, a2); // @error too many arguments
+}
+
+Test-Case: output
+Description: Test `toHexString` function with type Signed32 values.
+Labels: lang.int
+
+public function main() {
+    int:Signed32 a1 = -2147483648;
+    int:Signed32 a2 = 10;
+    int:Signed32 a3 = 3245;
+    int:Signed32 a4 = 2147483647;
+
+    string b1 = a1.toHexString();
+    testString(b1);
+
+    b1 = a2.toHexString();
+    testString(b1);
+
+    b1 = int:toHexString(a3);
+    testString(b1);
+
+    testString(a4.toHexString());
+
+    testString(int:toHexString(a4));
+}
+
+function testString(string i) {
+    io:println(i); // @output ffffffff80000000
+                   // @output a
+                   // @output cad
+                   // @output 7fffffff
+                   // @output 7fffffff
+}
+
+Test-Case: output
+Description: Test `toHexString` function with type Signed16 values.
+Labels: lang.int
+
+public function main() {
+    int:Signed16 a1 = -32768;
+    int:Signed16 a2 = 10;
+    int:Signed16 a3 = 1234;
+    int:Signed16 a4 = 32767;
+
+    string b1 = a1.toHexString();
+    testString(b1);
+
+    b1 = a2.toHexString();
+    testString(b1);
+
+    b1 = int:toHexString(a3);
+    testString(b1);
+
+    testString(a4.toHexString());
+
+    testString(int:toHexString(a4));
+}
+
+function testString(string i) {
+    io:println(i); // @output ffffffffffff8000
+                   // @output a
+                   // @output 4d2
+                   // @output 7fff
+                   // @output 7fff
+}
+
+Test-Case: output
+Description: Test `toHexString` function with type Signed8 values.
+Labels: lang.int
+
+public function main() {
+    int:Signed8 a1 = -128;
+    int:Signed8 a2 = -20;
+    int:Signed8 a3 = 45;
+    int:Signed8 a4 = 127;
+
+    string b1 = a1.toHexString();
+    testString(b1);
+
+    b1 = a2.toHexString();
+    testString(b1);
+
+    b1 = int:toHexString(a3);
+    testString(b1);
+
+    testString(a4.toHexString());
+
+    testString(int:toHexString(a4));
+}
+
+function testString(string i) {
+    io:println(i); // @output ffffffffffffff80
+                   // @output ffffffffffffffec
+                   // @output 2d
+                   // @output 7f
+                   // @output 7f
+}
+
+Test-Case: output
+Description: Test `toHexString` function with type Unsigned32 values.
+Labels: lang.int
+
+public function main() {
+    int:Unsigned32 a1 = 0;
+    int:Unsigned32 a2 = 125;
+    int:Unsigned32 a3 = 36272;
+    int:Unsigned32 a4 = 4294967295;
+
+    string b1 = a1.toHexString();
+    testString(b1);
+
+    b1 = a2.toHexString();
+    testString(b1);
+
+    b1 = int:toHexString(a3);
+    testString(b1);
+
+    testString(a4.toHexString());
+
+    testString(int:toHexString(a4));
+}
+
+function testString(string i) {
+    io:println(i); // @output 0
+                   // @output 7d
+                   // @output 8db0
+                   // @output ffffffff
+                   // @output ffffffff
+}
+
+Test-Case: output
+Description: Test `toHexString` function with type Unsigned16 values.
+Labels: lang.int
+
+public function main() {
+    int:Unsigned16 a1 = 0;
+    int:Unsigned16 a2 = 125;
+    int:Unsigned16 a3 = 2321;
+    int:Unsigned16 a4 = 65535;
+
+    string b1 = a1.toHexString();
+    testString(b1);
+
+    b1 = a2.toHexString();
+    testString(b1);
+
+    b1 = int:toHexString(a3);
+    testString(b1);
+
+    testString(a4.toHexString());
+
+    testString(int:toHexString(a4));
+}
+
+function testString(string i) {
+    io:println(i); // @output 0
+                   // @output 7d
+                   // @output 911
+                   // @output ffff
+                   // @output ffff
+}
+
+Test-Case: output
+Description: Test `toHexString` function with type Unsigned8 values.
+Labels: lang.int
+
+public function main() {
+    int:Unsigned8 a1 = 0;
+    int:Unsigned8 a2 = 10;
+    int:Unsigned8 a3 = 120;
+    int:Unsigned8 a4 = 255;
+
+    string b1 = a1.toHexString();
+    testString(b1);
+
+    b1 = a2.toHexString();
+    testString(b1);
+
+    b1 = int:toHexString(a3);
+    testString(b1);
+
+    testString(a4.toHexString());
+
+    testString(int:toHexString(a4));
+}
+
+function testString(string i) {
+    io:println(i); // @output 0
+                   // @output a
+                   // @output 78
+                   // @output ff
+                   // @output ff
+}
+
+Test-Case: output
+Description: Test `toHexString` function with type int values.
+Labels: lang.int
+
+public function main() {
+    int a1 = -9223372036854775807 - 1;
+    int a2 = 125;
+    int a3 = 84633;
+    int a4 = 9223372036854775807;
+
+    string b1 = a1.toHexString();
+    testString(b1);
+
+    b1 = a2.toHexString();
+    testString(b1);
+
+    b1 = int:toHexString(a3);
+    testString(b1);
+
+    testString(a4.toHexString());
+
+    testString(int:toHexString(a4));
+}
+
+function testString(string i) {
+    io:println(i); // @output 8000000000000000
+                   // @output 7d
+                   // @output 14a99
+                   // @output 7fffffffffffffff
+                   // @output 7fffffffffffffff
+}
+
+Test-Case: output
+Description: Test `toHexString` function with int subtypes.
+Labels: lang.int, module-const-decl, module-type-defn, string
+
+const A = 10;
+const B = 20;
+
+type IntType1 10|20|30;
+
+type IntType3 A|B;
+
+public function main() {
+    A a1 = 10;
+    IntType1 a2 = 30;
+    IntType3 a3 = 20;
+
+    testString(int:toHexString(a1));
+
+    string b1 = int:toHexString(a2);
+    testString(b1);
+
+    testString(B.toHexString());
+
+    testString(int:toHexString(a3));
+}
+
+function testString(string i) {
+    io:println(i); // @output a
+                   // @output 1e
+                   // @output 14
+                   // @output 14
+}
+
+Test-Case: output
+Description: Test `toHexString` function with int subtypes.
+Fail-Issue: ballerina-lang#32620
+Labels: lang.int, module-type-defn, string
+
+type IntType int:Signed8|int:Unsigned32;
+
+public function main() {
+    int:Signed8|int:Unsigned32 a1 = 235262;
+    IntType a2 = 4563;
+
+    string b1 = a1.toHexString();
+    b1 = a2.toHexString();
+}
+
+Test-Case: output
+Description: Test `toHexString` function with int subtypes.
+Fail-Issue: ballerina-lang#32620
+Labels: lang.int, module-type-defn, string
+
+public function main() {
+    int:Signed8|int:Unsigned32 a1 = 235262;
+    string b1 = int:toHexString(a1);
+}
+
+Test-Case: output
+Description: Test `toHexString` function with int subtypes.
+Fail-Issue: ballerina-lang#32620
+Labels: lang.int, module-type-defn, string
+
+type IntType int:Signed8|int:Unsigned32;
+
+public function main() {
+    IntType a1 = 4563;
+    string b1 = int:toHexString(a1);
+}
+
+Test-Case: output
+Description: Test assignability of `toHexString` function result with compatible types.
+Labels: lang.int
+
+public function main() {
+    int a1 = 2345;
+
+    string? b1 = a1.toHexString();
+    io:println(b1); // @output 929
+
+    testAny(int:toHexString(a1));
+}
+
+function testAny(any i) {
+    io:println(i); // @output 929
+}
+
+Test-Case: error
+Description: Test assigning the result of `toHexString` function to an incompatible type.
+Labels: lang.int
+
+public function main() {
+    int a1 = 10;
+
+    string:Char b1 = a1.toHexString(); // @error expects a string:Char, but toHexString() returns a string
+
+    int b2 = int:toHexString(a1); // @error expects a int, but toHexString() returns a string
+
+    b2 = a1.toHexString(); // @error expects a int, but toHexString() returns a string
+}
+
+Test-Case: error
+Description: Test passing invalid value to `toHexString` function.
+Labels: lang.int
+
+public function main() {
+    int|string a1 = 10;
+    string b2 = int:toHexString(a1); // @error expects an int argument
+}
+
+Test-Case: error
+Description: Test `toHexString` function on invalid type.
+Labels: lang.int
+
+public function main() {
+    int|string a1 = 10;
+    string b2 = a1.toHexString(); // @error toHexString() is not defined for (int|string)
+}
+
+Test-Case: error
+Description: Test missing required parameter in `toHexString` function call.
+Labels: lang.int
+
+public function main() {
+    string b2 = int:toHexString(); // @error missing int argument
+}
+
+Test-Case: error
+Description: Test passing too many arguments to `toHexString`.
+Labels: lang.int
+
+public function main() {
+    int a1 = 1234;
+
+    string b1 = a1.toHexString(a1); // @error too many arguments
+    b1 = int:toHexString(a1, a1); // @error too many arguments
+}
+
+Test-Case: output
+Description: Test `fromHexString` function.
+Labels: lang.int
+
+public function main() {
+    string a1 = "7fffffff";
+    string a2 = "cad";
+    string a3 = "7fff";
+    string a4 = "ffffffff";
+    string a5 = "911";
+    string a6 = "14a99";
+    string a7 = "7fffffffffffffff";
+
+    int|error b1 = int:fromHexString(a1);
+    testResult(b1);
+
+    testResult(int:fromHexString(a2));
+
+    b1 = int:fromHexString(a3);
+    testResult(b1);
+
+    testResult(int:fromHexString(a4));
+
+    testResult(int:fromHexString(a5));
+
+    testResult(int:fromHexString(a6));
+
+    testResult(int:fromHexString(a7));
+}
+
+function testResult(int|error i) {
+    if i is int {
+        io:println(i); // @output 2147483647
+                       // @output 3245
+                       // @output 32767
+                       // @output 4294967295
+                       // @output 2321
+                       // @output 84633
+                       // @output 9223372036854775807
+    } else {
+        io:println(i);
+    }
+}
+
+Test-Case: output
+Description: Test `fromHexString` function.
+Fail-Issue: ballerina-lang#32627
+Labels: lang.int, string
+
+public function main() {
+    string a1 = "ffffffff80000000";
+    string a2 = "ffffffffffff8000";
+    string a3 = "ffffffffffffffec";
+    string a4 = "8000000000000000";
+
+    int|error b1 = int:fromHexString(a1);
+    testResult(b1);
+
+    testResult(int:fromHexString(a2));
+
+    b1 = int:fromHexString(a3);
+    testResult(b1);
+
+    testResult(int:fromHexString(a4));
+}
+
+function testResult(int|error i) {
+    if i is int {
+        io:println(i); // @output -2147483648
+                       // @output -32768
+                       // @output -20
+                       // @output -9223372036854775808
+    } else {
+        io:println(i);
+    }
+}
+
+Test-Case: output
+Description: Test `fromHexString` function with string literals.
+Labels: lang.int, string
+
+public function main() {
+    int|error b1 = int:fromHexString("7fffffff");
+    testResult(b1);
+
+    testResult(int:fromHexString("7fff"));
+
+    b1 = int:fromHexString("911");
+    testResult(b1);
+
+    testResult(int:fromHexString("7fffffffffffffff"));
+}
+
+function testResult(int|error i) {
+    if i is int {
+        io:println(i); // @output 2147483647
+                       // @output 32767
+                       // @output 2321
+                       // @output 9223372036854775807
+    } else {
+        io:println(i);
+    }
+}
+
+Test-Case: output
+Description: Test `fromHexString` function with string literals.
+Fail-Issue: ballerina-lang#32627
+Labels: lang.int, string
+
+public function main() {
+    int|error b1 = int:fromHexString("ffffffff80000000");
+    testResult(b1);
+
+    testResult(int:fromHexString("ffffffffffff8000"));
+
+    b1 = int:fromHexString("ffffffffffffffec");
+    testResult(b1);
+
+    testResult(int:fromHexString("8000000000000000"));
+}
+
+function testResult(int|error i) {
+    if i is int {
+        io:println(i); // @output -2147483648
+                       // @output -32768
+                       // @output -20
+                       // @output -9223372036854775808
+    } else {
+        io:println(i);
+    }
 }
