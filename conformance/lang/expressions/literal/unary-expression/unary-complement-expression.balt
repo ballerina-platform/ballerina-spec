@@ -1,0 +1,120 @@
+Test-Case: output
+Description: Test unary complement integer operations.
+Labels: additive-expr, const, equality, int, unary-complement, unary-minus, var
+
+const int CONST1 = ~2;
+const int CONST2 = ~(-36);
+
+public function main() {
+    int a1 = ~0;
+    io:println(a1); // @output -1
+
+    io:println(CONST1); // @output -3
+
+    int a2 = ~a1;
+    io:println(a2); // @output 0
+
+    int a3 = ~(-1);
+    io:println(a3); // @output 0
+
+    io:println(CONST2); // @output 35
+
+    var a4 = 10;
+    io:println(~a4); // @output -11
+
+    io:println(~a1 == -(a1 + 1)); // @output true
+}
+
+Test-Case: output
+Description: Test unary complement expressions with int sub types.
+Labels: function-defn, int, langlib, unary-complement
+
+public function main() {
+    byte a1 = 0;
+    io:println(getComplement(a1)); // @output -1
+
+    int:Unsigned8 a2 = 0;
+    io:println(getComplement(a2)); // @output -1
+
+    int:Unsigned16 a3 = 0;
+    io:println(getComplement(a3)); // @output -1
+
+    int:Unsigned32 a4 = 0;
+    io:println(getComplement(a4)); // @output -1
+
+    int:Signed8 a5 = 0;
+    io:println(getComplement(a5)); // @output -1
+
+    int:Signed16 a6 = 0;
+    io:println(getComplement(a6)); // @output -1
+
+    int:Signed32 a7 = 0;
+    io:println(getComplement(a7)); // @output -1
+
+    io:println((~0x7FFFFFFFFFFFFFFF).toHexString()); // @output 8000000000000000
+}
+
+public function getComplement(int i) returns int {
+    return ~i;
+}
+
+Test-Case: error
+Description: Test unary complement expression assignments resulting in an error.
+Labels: byte, boolean, langlib, module-type-defn, unary-complement
+
+type Ints 1|2;
+
+public function main() {
+    byte x3 = 0;
+    byte x4 = ~x3; // @error static type of complement expression with operand of int subtype is int
+
+    int:Unsigned8 x5 = 0;
+    int:Unsigned8 x6 = ~x5; // @error static type of complement expression with operand of int subtype is int
+
+    Ints intNum = 1;
+    Ints x7 = ~intNum; // @error static type of complement expression with operand of int subtype is int
+}
+
+Test-Case: error
+Description: Test the static type of operand belonging to non-int type resulting in an error.
+Labels: const, function-defn, optional-type, multiplicative-expr, tuple-type, unary-complement
+
+// const int CONST1 = ~~false;   ballerina-lang#32628
+
+public function main() {
+    io:println(~true); // @error unary complement not defined for boolean
+
+    int x7 = ~getIntOrNil(); // @error unary complement not defined for int?
+    io:println(x7);
+
+    [int, int] intTuple = [1, 2];
+    int x8 = ~intTuple; // @error unary complement not defined for [int, int]
+
+    var x9 = 1.5 * 2.5; // @error unary complement not defined for float
+    int x10 = ~x9;
+
+    int x11 = ~~false; // @error unary complement not defined for boolean
+}
+
+function getIntOrNil() returns int? {
+    return 0;
+}
+
+Test-Case: output
+Description: Test unary complement operator with unary minus operator.
+Labels: function-defn, unary-complement, unary-minus
+
+public function main() {
+    io:println(minusTwo(42)); // @output 40
+    io:println(minusTwo(-98)); // @output -100
+
+    io:println(addTwo(42)); // @output 44
+    io:println(addTwo(-98)); // @output -96
+}
+
+public function minusTwo(int i) returns int {
+    return ~-~-i;
+}
+public function addTwo(int i) returns int {
+    return -~-~i;
+}
