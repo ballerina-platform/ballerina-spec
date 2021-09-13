@@ -1,78 +1,85 @@
 Test-Case: output
 Description: Test unary not operations.
-Labels: const, boolean, unary-not, var
-
-const boolean CONST1 = !false;
-const boolean CONST2 = !!true;
-const boolean CONST3 = !CONST2;
+Labels: function-defn, unary-not
 
 public function main() {
-    io:println(CONST1); // @output true
-    io:println(CONST2); // @output true
-    io:println(CONST3); // @output false
+    io:println(!false); // @output true
 
     boolean a1 = !false;
     io:println(a1); // @output true
 
-    boolean a2 = !a1;
-    io:println(a2); // @output false
+    io:println(!a1); // @output false
 
-    boolean a3 = !!false;
-    io:println(a3); // @output false
+    io:println(!!false); // @output false
 
-    var a4 = !true;
-    io:println(a4); // @output false
+    io:println(!true is boolean); // @output true
 
-    boolean? a5 = !true;
-    io:println(a5); // @output true
-}
-
-Test-Case: output
-Description: Test unary complement expressions with int sub types.
-Labels: function-defn, boolean, unary-not
-
-public function main() {
     io:println(getNegation(true)); // @output false
-
-    var a1 = true;
-    io:println(getNegation(a1)); // @output false
-    io:println(!getNegation(a1)); // @output true
 }
 
 public function getNegation(boolean bool) returns boolean {
     return !bool;
 }
 
+Test-Case: output
+Description: Test unary not operations at module level.
+Labels: const, unary-not
+
+boolean notFalse = !false;
+var notTrue = !true;
+
+const boolean CONST1 = !false;
+const boolean CONST2 = !CONST1;
+const boolean CONST3 = !!false;
+
+public function main() {
+    io:println(notFalse); // @output true
+
+    io:println(notTrue is boolean); // @output true
+
+    io:println(CONST1); // @output true
+
+    io:println(CONST2); // @output false
+
+    io:println(CONST3); // @output false
+}
+
 Test-Case: error
 Description: Test unary not expression assignments resulting in an error.
-Labels: byte, boolean, langlib, module-type-defn, unary-complement
+Labels: boolean, module-type-defn, unary-not
 
 type SwitchOn true|1;
 
 const boolean CONST4 = !false;
 
 public function main() {
-    string x5 = !CONST4; // @error static type of not expression is boolean
+    string x5 = !CONST4; // @error static type of unary-not expression is boolean
 
-    int x6 = !false; // @error static type of not expression is boolean
+    int x6 = !false; // @error static type of unary-not expression is boolean
 
     boolean x1 = true;
-    SwitchOn x2 = !x1; // @error static type of not expression is boolean
+    SwitchOn x2 = !x1; // @error static type of unary-not expression is boolean
 }
 
 Test-Case: error
 Description: Test the static type of operand belonging to non-boolean type resulting in an error.
-Labels: function-defn, optional-type, tuple-type, unary-not
+Labels: function-defn, module-type-defn, optional-type, tuple-type, unary-not
+
+type BooleanValue true|false;
 
 public function main() {
-    io:println(!1); // @error unary not is not defined for int
+    io:println(!1); // @error unary-not is not defined for int
 
-    boolean x7 = !getNegateOrNil(); // @error unary not is not defined for boolean?
+    boolean x7 = !getBooleanOrNil(); // @error unary-not is not defined for boolean?
 
     [boolean, boolean] booleanTuple = [true, false];
-    boolean x8 = !booleanTuple; // @error unary not is not defined for tuple
+    boolean x8 = !booleanTuple; // @error unary-not is not defined for tuple
+
+    BooleanValue bool = true;
+    io:println(!bool); // @error unary-not is not defined for user defined type
+
 }
 
-function getNegateOrNil() returns boolean? {
+function getBooleanOrNil() returns boolean? {
     return false;
 }
