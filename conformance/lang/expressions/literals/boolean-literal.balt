@@ -1,6 +1,6 @@
 Test-Case: output
-Description: Test boolean type descriptor.
-Labels: boolean-type-descriptor, boolean-literal
+Description: Test boolean literals with type descriptor.
+Labels: boolean
 
 public function main() {
     boolean x = true;
@@ -11,41 +11,50 @@ public function main() {
 }
 
 Test-Case: output
-Description: Test boolean literals with function calls.
-Labels: function-type-descriptor, boolean-type-descriptor, boolean-literal
+Description: Test boolean literals with toString().
+Labels: boolean, value:toBalString
 
 public function main() {
-    testBoolean(true);
-
-    testBoolean(false);
-
     io:println(true.toString()); // @output true
 
     io:println(false.toString()); // @output false
 }
 
+Test-Case: output
+Description: Test boolean literals with function calls.
+Labels: boolean
+
+public function main() {
+    testBoolean(true); // @output true
+
+    testBoolean(false); // @output false
+}
+
 function testBoolean(boolean x) {
-    io:println(x); // @output true
-                   // @output false
+    io:println(x);
 }
 
 Test-Case: output
 Description: Test boolean literals with return statement.
-Labels: function-type-descriptor, boolean-type-descriptor, return-type-descriptor, boolean-literal
+Labels: boolean
 
 public function main() {
-    io:println(testBoolean(true)); // @output true
+    io:println(testTrue()); // @output true
 
-    io:println(testBoolean(false)); // @output false
+    io:println(testFalse()); // @output false
 }
 
-function testBoolean(boolean x) returns boolean {
-    return x;
+function testTrue() returns boolean {
+    return true;
+}
+
+function testFalse() returns boolean {
+    return false;
 }
 
 Test-Case: output
 Description: Test negation of boolean literals.
-Labels: boolean-literal, unary-expr
+Labels: boolean, unary-not
 
 public function main() {
     io:println(!true); // @output false
@@ -55,7 +64,7 @@ public function main() {
 
 Test-Case: output
 Description: Equality check of boolean literals.
-Labels: boolean-literal, equality-expr
+Labels: boolean, equality
 
 public function main() {
     io:println(true == true); // @output true
@@ -72,8 +81,8 @@ public function main() {
 }
 
 Test-Case: output
-Description: Test assigned boolean literals.
-Labels: boolean-type-descriptor, boolean-literal, equality-expr
+Description: Equality check of boolean literals.
+Labels: boolean, equality
 
 public function main() {
     boolean x = true;
@@ -84,8 +93,38 @@ public function main() {
 }
 
 Test-Case: output
+Description: Exact-equality check of boolean literals.
+Labels: boolean, exact-equality
+
+public function main() {
+    io:println(true === true); // @output true
+
+    io:println(true !== true); // @output false
+
+    io:println(false === false); // @output true
+
+    io:println(false !== false); // @output false
+
+    io:println(true === false); // @output false
+
+    io:println(true !== false); // @output true
+}
+
+Test-Case: output
+Description: Exact-equality check of boolean literals.
+Labels: boolean, exact-equality
+
+public function main() {
+    boolean x = true;
+    io:println(x === true); // @output true
+
+    boolean y = false;
+    io:println(y === false); // @output true
+}
+
+Test-Case: output
 Description: Test boolean literal with if-else block.
-Labels: boolean-type-descriptor, boolean-literal, equality-expr, if-else-stmt
+Labels: boolean
 
 public function main() {
     boolean x = false;
@@ -106,8 +145,18 @@ public function main() {
 }
 
 Test-Case: output
+Description: Test boolean literals with is-expr.
+Labels: boolean, is-expr
+
+public function main() {
+    io:println(true is boolean); // @output true
+
+    io:println(false is boolean); // @output true
+}
+
+Test-Case: output
 Description: Test boolean literals with valid type cast.
-Labels: boolean-type-descriptor, boolean-literal, type-cast-expr
+Labels: boolean, type-cast-expr
 
 public function main() {
     io:println(<boolean> true); // @output true
@@ -117,8 +166,7 @@ public function main() {
 
 Test-Case: error
 Description: Test boolean literals with invalid type cast.
-Labels: any-type-descriptor, floating-point-type-descriptor, int-type-descriptor, nil-type-descriptor,
-        string-type-descriptor, nil-literal, type-cast-expr
+Labels: any, boolean, decimal, float, int, null, string, type-cast-expr
 
 public function main() {
     any x = <decimal> true; // @error 'boolean' cannot be cast to 'decimal'
@@ -142,9 +190,29 @@ public function main() {
     x = <string> false; // @error 'boolean' cannot be cast to 'string'
 }
 
+Test-Case: output
+Description: Test boolean literals with interpolation in template expressions.
+Labels: boolean, raw-template-expr
+
+public function main() {
+    io:println(`${true}`); // @output true
+
+    io:println(`${false}`); // @output false
+}
+
+Test-Case: output
+Description: Test boolean literals as member of structural constructors.
+Labels: array-type, map-type, boolean, string
+
+public function main() {
+    io:println([true, false]); // @output [true,false]
+
+    io:println({"c" : true, "b" : false}); // @output {"c":true,"b":false}
+}
+
 Test-Case: error
 Description: Test invalid boolean literals.
-Labels: boolean-type-descriptor, int-literal
+Labels: boolean, int
 
 public function main() {
     boolean a = True; // @error expected a 'boolean', but found an undefined symbol 'True'
