@@ -1,22 +1,35 @@
 Test-Case: error
-Description: Test the static type of operand expressions belonging to different basic types resulting in an error.
-Labels: multiplicative-expr, int-type-descriptor, floating-point-type-descriptor, optional-type-descriptor
+Description: Test multiplicative expression with static type of operands belonging to int and float resulting in an error.
+Labels: multiplicative-expr, int, float
 
-public function main(int a, float b, decimal c, 
-                     int? d, float? e, decimal? f) {
+public function main(int a, float b) {
     int a1 = a * b; // @error * is not allowed with operands of different basic types
     int a2 = a / b; // @error / is not allowed with operands of different basic types
     int a3 = a % b; // @error % is not allowed with operands of different basic types
     float a4 = b * a; // @error * is not allowed with operands of different basic types
     float a5 = b / a; // @error / is not allowed with operands of different basic types
     float a6 = b % a; // @error % is not allowed with operands of different basic types
-    int a7 = a * c; // @error * is not allowed with operands of different basic types
-    decimal a8 = c / a; // @error / is not allowed with operands of different basic types
-    int a9 = a % c; // @error % is not allowed with operands of different basic types
-    float a10 = b * c; // @error * is not allowed with operands of different basic types
-    float a11 = b / c; // @error / is not allowed with operands of different basic types
-    decimal a12 = c % b; // @error % is not allowed with operands of different basic types
+}
 
+Test-Case: error
+Description: Test multiplicative expression with static type of operands belonging to int, float, and decimal resulting in an error.
+Labels: multiplicative-expr, int, float, decimal
+
+public function main(int a, float b, decimal c) {
+    int a1 = a * c; // @error * is not allowed with operands of different basic types
+    decimal a2 = c / a; // @error / is not allowed with operands of different basic types
+    int a3 = a % c; // @error % is not allowed with operands of different basic types
+    float a4 = b * c; // @error * is not allowed with operands of different basic types
+    float a5 = b / c; // @error / is not allowed with operands of different basic types
+    decimal a6 = c % b; // @error % is not allowed with operands of different basic types
+}
+
+Test-Case: error
+Description: Test multiplicative expression with static type of operands belonging to different basic types resulting in an error.
+Labels: multiplicative-expr, int, float, decimal, optional-type
+
+public function main(int a, float b, decimal c, 
+                     int? d, float? e, decimal? f) {
     int a13 = d * e; // @error * is not allowed with operands of different basic types
     int a14 = d / e; // @error / is not allowed with operands of different basic types
     int a15 = a % e; // @error % is not allowed with operands of different basic types
@@ -33,11 +46,9 @@ public function main(int a, float b, decimal c,
 
 Test-Case: error
 Description: Test the static type of operands belonging to non-numeric basic types resulting in an error.
-Labels: multiplicative-expr, int-type-descriptor, string-type-descriptor, floating-point-type-descriptor,
-        optional-type-descriptor    
+Labels: multiplicative-expr, int, string, float, decimal, optional-type
 
-public function main(int a, float b, decimal c, 
-                     int? d, float? e, decimal? f,
+public function main(int a, float b, decimal c, int? d, float? e, decimal? f,
                      string g, string? h) {
     string a1 = g * g; // @error * is not allowed with operands of non-numeric basic types
     string a2 = g / g; // @error / is not allowed with operands of non-numeric basic types
@@ -63,9 +74,9 @@ public function main(int a, float b, decimal c,
 Test-Case: error
 Description: Test the static type of operand expressions belonging to different basic types resulting in an error
              when the static type of at least one operand includes a subtype of a numeric type.
-Labels: multiplicative-expr, int-type-descriptor, floating-point-type-descriptor, optional-type-descriptor, 
-        byte-type-descriptor, union-type-descriptor, singleton-type-descriptor, module-type-defn, numeric-literal,  
-        int-literal, floating-point-literal, lang.int
+Labels: multiplicative-expr, int, float, decimal, optional-type, 
+        byte, union-type, singleton-type, module-type-defn, numeric-literal,  
+        int-literal, floating-point-literal, DecimalFloatingPointNumber, int:Signed8
 
 type Ints 1|2;
 type Floats 2.0|3.0|4.0;
@@ -88,12 +99,11 @@ public function main(int:Signed8 a, int:Signed16 b, int:Signed32 c,
 }
 
 Test-Case: error
-Description: Test the static type of the result being the basic type of the operands via invalid assignment
-             with inferrence, where operands are of numeric types.
-Labels: multiplicative-expr, int-type-descriptor, floating-point-type-descriptor, var,
-        numeric-literal, int-literal, floating-point-literal 
+Description: Test for int the static type of the result being the basic type of the operands via invalid assignment
+             with inference, where operands are of numeric types.
+Labels: multiplicative-expr, int, float, decimal, var, numeric-literal, int-literal, DecimalNumber
 
-public function main(int a, int b, float c, float d, decimal e, decimal f) {
+public function main(int a, int b) {
     var a1 = a * b;
     float a2 = a1; // @error static type of multiplicative-expr with int operands is int
 
@@ -103,40 +113,54 @@ public function main(int a, int b, float c, float d, decimal e, decimal f) {
     var a5 = 1 % b;
     float a6 = a5; // @error static type of multiplicative-expr with int operands is int
 
-    var a7 = 2.0 * 2.1;
-    int a8 = a7; // @error static type of multiplicative-expr with float operands is float
-
-    var a9 = c / d;
-    decimal a10 = a9; // @error static type of multiplicative-expr with float operands is float
-
-    var a11 = d % d;
-    int a12 = a11; // @error static type of multiplicative-expr with float operands is float
-    
-    var a13 = e * e;
-    float a14 = a13; // @error static type of multiplicative-expr with decimal operands is decimal
-
-    var a15 = f / e;
-    int a16 = a15; // @error static type of multiplicative-expr with decimal operands is decimal
-
-    var a17 = 1d % f;
-    float a18 = a17; // @error static type of multiplicative-expr with decimal operands is decimal
-
-    var a19 = getInt(12 * 2) * b;
-    float a20 = a19; // @error static type of multiplicative-expr with int operands is int
-
-    var a21 = d % (getFloat(getFloat(2.0 / c)));
-    int a22 = a21; // @error static type of multiplicative-expr with float operands is float
-
-    var a23 = getDecimal((20d % 2d)) % e;
-    int a24 = a23; // @error static type of multiplicative-expr with decimal operands is decimal    
+    var a7 = getInt(12 * 2) * b;
+    float a8 = a7; // @error static type of multiplicative-expr with int operands is int
 }
 
 function getInt(int i) returns int {
     return i * 1;
 }
 
+Test-Case: error
+Description: Test for float the static type of the result being the basic type of the operands via invalid assignment
+             with inference, where operands are of numeric types.
+Labels: multiplicative-expr, int, float, decimal, var, DecimalFloatingPointNumber
+
+public function main(float c, float d) {
+    var a1 = 2.0 * 2.1;
+    int a2 = a1; // @error static type of multiplicative-expr with float operands is float
+
+    var a3 = c / d;
+    decimal a4 = a3; // @error static type of multiplicative-expr with float operands is float
+
+    var a5 = d % d;
+    int a6 = a5; // @error static type of multiplicative-expr with float operands is float
+    
+    var a7 = d % (getFloat(getFloat(2.0 / c)));
+    int a8 = a7; // @error static type of multiplicative-expr with float operands is float
+}
+
 function getFloat(float f) returns float {
     return f / 1f;
+}
+
+Test-Case: error
+Description: Test for decimal the static type of the result being the basic type of the operands via invalid assignment
+             with inference, where operands are of numeric types.
+Labels: multiplicative-expr, int, float, decimal, var, numeric-literal, DecimalFloatingPointNumber
+
+public function main(decimal e, decimal f) {
+    var a1 = e * e;
+    float a2 = a1; // @error static type of multiplicative-expr with decimal operands is decimal
+
+    var a3 = f / e;
+    int a4 = a3; // @error static type of multiplicative-expr with decimal operands is decimal
+
+    var a5 = 1d % f;
+    float a6 = a5; // @error static type of multiplicative-expr with decimal operands is decimal
+
+    var a7 = getDecimal((20d % 2d)) % e;
+    int a8 = a7; // @error static type of multiplicative-expr with decimal operands is decimal    
 }
 
 function getDecimal(decimal d) returns decimal {
@@ -144,46 +168,56 @@ function getDecimal(decimal d) returns decimal {
 }
 
 Test-Case: error
-Description: Test the static type of the result being the basic type of the operands via invalid assignment
-             where operands are of optional numeric types.
-Labels: multiplicative-expr, int-type-descriptor, floating-point-type-descriptor, optional-type-descriptor, var,
-        numeric-literal, int-literal, floating-point-literal 
+Description: Test for optional int the static type of the result being the basic type of the operands via invalid assignment.
+Labels: multiplicative-expr, int, optional-type, var, numeric-literal, DecimalNumber
 
-public function main(int a, int? b, float c, float? d, decimal e, decimal? f) {
+public function main(int a, int? b) {
     int a1 = a * b; // @error static type of multiplicative-expr with at least one int? operand is int
     int a2 = getOptionalInt(1 / 2) * b; // @error static type of multiplicative-expr with at least one int? operand is int
     int a3 = b % getOptionalInt(1 % 2); // @error static type of multiplicative-expr with at least one int? operand is int
     int a4 = b * getInt(1); // @error static type of multiplicative-expr with at least one int? operand is int
-
-    float a5 = d * c; // @error static type of multiplicative-expr with at least one float? operand is float
-    float a6 = getFloat(2.0) * d; // @error static type of multiplicative-expr with at least one float? operand is float
-    float a7 = d % getOptionalFloat(1.0 % 2f); // @error static type of multiplicative-expr with at least one float? operand is float
-    float a8 = c / getOptionalFloat(1); // @error static type of multiplicative-expr with at least one float? operand is float
-
-    decimal a9 = e * f; // @error static type of multiplicative-expr with at least one int? operand is int
-    decimal a10 = getOptionalDecimal(1d / 2.0d) * e; // @error static type of multiplicative-expr with at least one int? operand is int
-    decimal a11 = f % getOptionalDecimal(()); // @error static type of multiplicative-expr with at least one int? operand is int
-    decimal a12 = getOptionalDecimal(3) * getDecimal(1); // @error static type of multiplicative-expr with at least one int? operand is int
 }
 
 function getInt(int i) returns int {
     return i * 1;
 }
 
-function getFloat(float f) returns float {
-    return f / 1f;
-}
-
-function getDecimal(decimal d) returns decimal {
-    return d % 2d;
-}
-
 function getOptionalInt(int? i) returns int? {
     return i * 1;
 }
 
+Test-Case: error
+Description: Test for optional float the static type of the result being the basic type of the operands via invalid assignment.
+Labels: multiplicative-expr, float, optional-type, var, numeric-literal, DecimalFloatingPointNumber
+
+public function main(float c, float? d) {
+    float a1 = d * c; // @error static type of multiplicative-expr with at least one float? operand is float
+    float a2 = getFloat(2.0) * d; // @error static type of multiplicative-expr with at least one float? operand is float
+    float a3 = d % getOptionalFloat(1.0 % 2f); // @error static type of multiplicative-expr with at least one float? operand is float
+    float a4 = c / getOptionalFloat(1); // @error static type of multiplicative-expr with at least one float? operand is float
+}
+
+function getFloat(float f) returns float {
+    return f / 1f;
+}
+
 function getOptionalFloat(float? f) returns float? {
     return f / 1f;
+}
+
+Test-Case: error
+Description: Test for optional decimal the static type of the result being the basic type of the operands via invalid assignment.
+Labels: multiplicative-expr, int, float, decimal, optional-type, var, numeric-literal, DecimalFloatingPointNumber
+
+public function main(decimal e, decimal? f) {
+    decimal a1 = e * f; // @error static type of multiplicative-expr with at least one int? operand is int
+    decimal a2 = getOptionalDecimal(1d / 2.0d) * e; // @error static type of multiplicative-expr with at least one int? operand is int
+    decimal a3 = f % getOptionalDecimal(()); // @error static type of multiplicative-expr with at least one int? operand is int
+    decimal a4 = getOptionalDecimal(3) * getDecimal(1); // @error static type of multiplicative-expr with at least one int? operand is int
+}
+
+function getDecimal(decimal d) returns decimal {
+    return d % 2d;
 }
 
 function getOptionalDecimal(decimal? d) returns decimal? {
@@ -193,7 +227,7 @@ function getOptionalDecimal(decimal? d) returns decimal? {
 Test-Case: error
 Description: Test the static type of the result being the basic type of the operands via invalid assignment,
              where operands are of types that are subtypes of int types.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, lang.int
+Labels: multiplicative-expr, int, DecimalNumber, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, byte, module-type-defn
 
 type Ints 1|2;
 
@@ -248,7 +282,7 @@ function getUnsigned32Int(int:Signed32 i) returns int:Unsigned32 {
 Test-Case: error
 Description: Test the static type of the result being the basic type of the operands via invalid assignment,
              where operands are of types that are optional types with subtypes of int types.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, lang.int
+Labels: multiplicative-expr, int, optional-type, DecimalNumber, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, byte, module-type-defn
 
 type Ints 1|2;
 
@@ -305,7 +339,7 @@ function getUnsigned32Int(int:Signed32 i) returns int:Unsigned32 {
 
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, for positive non-zero integers.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal
+Labels: multiplicative-expr, int, DecimalNumber
 
 public function main() {
     int a = 1;
@@ -334,7 +368,7 @@ public function main() {
 
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, for negative non-zero integers.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, unary-expr
+Labels: multiplicative-expr, int, DecimalNumber, unary-minus
 
 public function main() {
     int a = -1;
@@ -364,7 +398,7 @@ public function main() {
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, where one operand is negative 
              and the other is positive.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, unary-expr
+Labels: multiplicative-expr, int, DecimalNumber, unary-minus
 
 public function main() {
     int a = -9223372036854775808;
@@ -395,7 +429,7 @@ public function main() {
 
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, where at least one operand is zero.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, unary-expr
+Labels: multiplicative-expr, int, DecimalNumber, unary-minus
 
 public function main() {
     int a = -9223372036854775808;
@@ -446,7 +480,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 1 for integer multiplication overflow.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal
+Labels: multiplicative-expr, int, DecimalNumber
 
 public function main() {
     int a = 9223372036854775807;
@@ -456,7 +490,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 2 for integer multiplication overflow.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal
+Labels: multiplicative-expr, int, DecimalNumber
 
 public function main() {
     int c = 2 * 4611686018427387904; // @panic integer overflow on multiplication
@@ -464,7 +498,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 3 for integer multiplication overflow.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal
+Labels: multiplicative-expr, int, DecimalNumber, unary-minus
 
 public function main() {
     int c = -3074457345618258603 * 3; // @panic integer overflow on multiplication
@@ -472,7 +506,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 4 for integer multiplication overflow.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal
+Labels: multiplicative-expr, int, DecimalNumber, unary-minus
 
 public function main() {
     int c = -1 * -9223372036854775808; // @panic integer overflow on multiplication
@@ -480,7 +514,7 @@ public function main() {
 
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, for positive non-zero integers, for int:Unsigned8.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, lang.int
+Labels: multiplicative-expr, DecimalNumber, int:Unsigned8
 
 public function main() {
     int:Unsigned8 a = 1;
@@ -522,7 +556,7 @@ public function main() {
 
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, where at least one operand is zero, for int:Unsigned8.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, unary-expr, lang.int
+Labels: multiplicative-expr, DecimalNumber, int:Unsigned8
 
 public function main() {
     int:Unsigned8 a = 0;
@@ -543,7 +577,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 1 for integer multiplication overflow, where one operand is of type int:Unsigned8.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, lang.int
+Labels: multiplicative-expr, int, DecimalNumber, int:Unsigned8, unary-minus
 
 public function main() {
     int:Unsigned8 a = 255;
@@ -553,7 +587,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 2 for integer multiplication overflow, where one operand is of type int:Unsigned8.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, lang.int
+Labels: multiplicative-expr, int, DecimalNumber, int:Unsigned8, unary-minus
 
 public function main() {
     int a = -461168601842738791;
@@ -563,7 +597,7 @@ public function main() {
 
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, for positive non-zero integers, for byte.
-Labels: multiplicative-expr, int-type-descriptor, byte-type-descriptor, numeric-literal, int-literal
+Labels: multiplicative-expr, DecimalNumber, byte
 
 public function main() {
     byte a = 1;
@@ -605,7 +639,7 @@ public function main() {
 
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, where at least one operand is zero, for byte.
-Labels: multiplicative-expr, int-type-descriptor, byte-type-descriptor, numeric-literal, int-literal
+Labels: multiplicative-expr, DecimalNumber, byte
 
 public function main() {
     byte a = 0;
@@ -626,7 +660,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 1 for integer multiplication overflow, where one operand is of type byte.
-Labels: multiplicative-expr, int-type-descriptor, byte-type-descriptor, numeric-literal, int-literal
+Labels: multiplicative-expr, int, DecimalNumber, byte
 
 public function main() {
     byte a = 255;
@@ -636,7 +670,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 2 for integer multiplication overflow, where one operand is of type byte.
-Labels: multiplicative-expr, int-type-descriptor, byte-type-descriptor, numeric-literal, int-literal
+Labels: multiplicative-expr, int,  DecimalNumber, byte
 
 public function main() {
     int a = -461168601842738791;
@@ -646,7 +680,7 @@ public function main() {
 
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, for positive non-zero integers, for int:Unsigned16.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, lang.int
+Labels: multiplicative-expr, DecimalNumber, int:Unsigned16
 
 public function main() {
     int:Unsigned16 a = 1;
@@ -688,7 +722,7 @@ public function main() {
 
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, where at least one operand is zero, for int:Unsigned16.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, unary-expr, lang.int
+Labels: multiplicative-expr, DecimalNumber, int:Unsigned16
 
 public function main() {
     int:Unsigned16 a = 0;
@@ -709,7 +743,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 1 for integer multiplication overflow, where one operand is of type int:Unsigned16.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, lang.int
+Labels: multiplicative-expr, int, DecimalNumber, int:Unsigned16
 
 public function main() {
     int:Unsigned16 a = 65534;
@@ -719,7 +753,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 2 for integer multiplication overflow, where one operand is of type int:Unsigned16.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, lang.int
+Labels: multiplicative-expr, int, DecimalNumber, int:Unsigned16, unary-minus
 
 public function main() {
     int a = -30744573456182586;
@@ -729,7 +763,7 @@ public function main() {
 
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, for positive non-zero integers, for int:Unsigned32.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, lang.int
+Labels: multiplicative-expr, DecimalNumber, int:Unsigned32
 
 public function main() {
     int:Unsigned32 a = 1;
@@ -771,7 +805,7 @@ public function main() {
 
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, where at least one operand is zero, for int:Unsigned32.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, unary-expr, lang.int
+Labels: multiplicative-expr, DecimalNumber, int:Unsigned32
 
 public function main() {
     int:Unsigned32 a = 0;
@@ -792,7 +826,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 1 for integer multiplication overflow, where one operand is of type int:Unsigned32.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, lang.int
+Labels: multiplicative-expr, int, DecimalNumber, int:Unsigned32
 
 public function main() {
     int:Unsigned32 a = 4294127249;
@@ -802,7 +836,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 2 for integer multiplication overflow, where one operand is of type int:Unsigned32.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, lang.int
+Labels: multiplicative-expr, int, DecimalNumber, int:Unsigned32, unary-minus
 
 public function main() {
     int a = -140737488355328;
@@ -812,7 +846,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 3 for integer multiplication overflow, where both operands are of type int:Unsigned32.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, lang.int
+Labels: multiplicative-expr, int, DecimalNumber, int:Unsigned32
 
 public function main() {
     int:Unsigned32 a = 4294967295;  
@@ -821,7 +855,7 @@ public function main() {
 
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, for positive non-zero integers, for int:Signed8.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, lang.int
+Labels: multiplicative-expr, DecimalNumber, int:Signed8
 
 public function main() {
     int:Signed8 a = 1;
@@ -863,7 +897,7 @@ public function main() {
 
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, for negative non-zero integers, for int:Signed8.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, unary-expr, lang.int
+Labels: multiplicative-expr, DecimalNumber, int:Signed8, unary-minus
 
 public function main() {
     int:Signed8 a = -1;
@@ -906,7 +940,7 @@ public function main() {
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, where one operand is negative 
              and the other is positive, for int:Signed8.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, unary-expr, lang.int
+Labels: multiplicative-expr, DecimalNumber, int:Signed8, unary-minus
 
 public function main() {
     int:Signed8 a = -128;
@@ -943,7 +977,7 @@ public function main() {
 
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, where at least one operand is zero, for int:Signed8.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, unary-expr, lang.int
+Labels: multiplicative-expr, DecimalNumber, int:Signed8, unary-minus
 
 public function main() {
     int:Signed8 a = -128;
@@ -994,7 +1028,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 1 for integer multiplication overflow, for int:Signed8.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, lang.int
+Labels: multiplicative-expr, int, DecimalNumber, int:Signed8
 
 public function main() {
     int a = 72624976668147842;
@@ -1004,7 +1038,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 2 for integer multiplication overflow, for int:Signed8.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, lang.int
+Labels: multiplicative-expr, int, DecimalNumber, int:Signed8, unary-minus
 
 public function main() {
     int:Signed8 a = -128;
@@ -1013,7 +1047,7 @@ public function main() {
 
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, for positive non-zero integers, for int:Signed16.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, lang.int
+Labels: multiplicative-expr, DecimalNumber, int:Signed16
 
 public function main() {
     int:Signed16 a = 1;
@@ -1055,7 +1089,7 @@ public function main() {
 
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, for negative non-zero integers, for int:Signed16.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, unary-expr, lang.int
+Labels: multiplicative-expr, DecimalNumber, int:Signed16, unary-minus
 
 public function main() {
     int:Signed16 a = -1;
@@ -1098,7 +1132,7 @@ public function main() {
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, where one operand is negative 
              and the other is positive, for int:Signed16.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, unary-expr, lang.int
+Labels: multiplicative-expr, DecimalNumber, int:Signed16, unary-minus
 
 public function main() {
     int:Signed16 a = -32768;
@@ -1135,7 +1169,7 @@ public function main() {
 
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, where at least one operand is zero, for int:Signed16.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, unary-expr, lang.int
+Labels: multiplicative-expr, DecimalNumber, int:Signed16, unary-minus
 
 public function main() {
     int:Signed16 a = -32768;
@@ -1186,7 +1220,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 1 for integer multiplication overflow, for int:Signed16.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, lang.int
+Labels: multiplicative-expr, int, DecimalNumber, int:Signed16
 
 public function main() {
     int a = 281483566907401;
@@ -1196,7 +1230,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 2 for integer multiplication overflow, for int:Signed16.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, lang.int
+Labels: multiplicative-expr, int, DecimalNumber, int:Signed16, unary-minus
 
 public function main() {
     int:Signed16 a = -32768;
@@ -1206,7 +1240,7 @@ public function main() {
 
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, for positive non-zero integers, for int:Signed32.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, lang.int
+Labels: multiplicative-expr, DecimalNumber, int:Signed32
 
 public function main() {
     int:Signed32 a = 1;
@@ -1248,7 +1282,7 @@ public function main() {
 
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, for negative non-zero integers, for int:Signed32.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, unary-expr, lang.int
+Labels: multiplicative-expr, DecimalNumber, int:Signed32, unary-minus
 
 public function main() {
     int:Signed32 a = -1;
@@ -1291,7 +1325,7 @@ public function main() {
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, where one operand is negative 
              and the other is positive, for int:Signed32.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, unary-expr, lang.int
+Labels: multiplicative-expr, DecimalNumber, int:Signed32, unary-minus
 
 public function main() {
     int:Signed32 a = -2147483648;
@@ -1328,7 +1362,7 @@ public function main() {
 
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, where at least one operand is zero, for int:Signed32.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, unary-expr, lang.int
+Labels: multiplicative-expr, DecimalNumber, int:Signed32, unary-minus
 
 public function main() {
     int:Signed32 a = -2147483648;
@@ -1379,7 +1413,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 1 for integer multiplication overflow, for int:Signed32.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, lang.int
+Labels: multiplicative-expr, int, DecimalNumber, int:Signed32
 
 public function main() {
     int a = 4294967399;
@@ -1389,7 +1423,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 2 for integer multiplication overflow, for int:Signed32.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, lang.int
+Labels: multiplicative-expr, int, DecimalNumber, int:Signed32, unary-minus
 
 public function main() {
     int:Signed32 a = -2147483648;
@@ -1399,7 +1433,7 @@ public function main() {
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, for positive non-zero integers, 
              for user-defined subtype of int.
-Labels: multiplicative-expr, numeric-literal, int-literal, module-type-defn
+Labels: multiplicative-expr, union-type, DecimalNumber, unary-minus, module-type-defn
 
 type Ints -2|-1|0|1|2;
 
@@ -1418,7 +1452,7 @@ public function main() {
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, for negative non-zero integers,  
              for user-defined subtype of int.
-Labels: multiplicative-expr, numeric-literal, int-literal, unary-expr, module-type-defn
+Labels: multiplicative-expr, union-type, DecimalNumber, unary-minus, module-type-defn
 
 type Ints -2|-1|0|1|2;
 
@@ -1436,7 +1470,7 @@ public function main() {
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, where one operand is negative 
              and the other is positive, for user-defined subtype of int.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, unary-expr, module-type-defn
+Labels: multiplicative-expr, union-type, DecimalNumber, unary-minus, module-type-defn
 
 type Ints -2|-1|0|1|2;
 
@@ -1462,7 +1496,7 @@ public function main() {
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, where at least one operand is zero, for 
              user-defined subtype of int.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, unary-expr, module-type-defn
+Labels: multiplicative-expr, union-type, DecimalNumber, unary-minus, module-type-defn
 
 type Ints -2|-1|0|1|2;
 
@@ -1503,7 +1537,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 1 for integer multiplication overflow, for user-defined subtype of int.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, module-type-defn
+Labels: multiplicative-expr, union-type, DecimalNumber, unary-minus, module-type-defn
 
 type Ints -2|-1|0|1|2;
 
@@ -1515,7 +1549,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 2 for integer multiplication overflow, for user-defined subtype of int.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, module-type-defn
+Labels: multiplicative-expr, union-type, DecimalNumber, unary-minus, module-type-defn
 
 type Ints -2|-1|0|1|2;
 
@@ -1526,7 +1560,7 @@ public function main() {
 
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, for optional positive non-zero integers.
-Labels: multiplicative-expr, int-type-descriptor, optional-type-descriptor, numeric-literal, int-literal
+Labels: multiplicative-expr, int, optional-type, DecimalNumber, nil-literal, value:toBalString
 
 public function main() {
     int? a = 1;
@@ -1568,7 +1602,7 @@ public function main() {
 
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, for optional negative non-zero integers.
-Labels: multiplicative-expr, int-type-descriptor, optional-type-descriptor, numeric-literal, int-literal, unary-expr
+Labels: multiplicative-expr, int, optional-type, DecimalNumber, nil-literal, value:toBalString, unary-minus
 
 public function main() {
     int? a = -1;
@@ -1611,7 +1645,7 @@ public function main() {
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, where one operand is negative 
              and the other is positive, with optional type-descriptors.
-Labels: multiplicative-expr, int-type-descriptor, optional-type-descriptor, numeric-literal, int-literal, unary-expr
+Labels: multiplicative-expr, int, optional-type, DecimalNumber, nil-literal, value:toBalString, unary-minus
 
 public function main() {
     int? a = -9223372036854775808;
@@ -1658,7 +1692,7 @@ public function main() {
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, where at least one operand is zero,
              with optional type-descriptors.
-Labels: multiplicative-expr, int-type-descriptor, optional-type-descriptor, numeric-literal, int-literal, unary-expr
+Labels: multiplicative-expr, int, optional-type, DecimalNumber, nil-literal, value:toBalString, unary-minus
 
 public function main() {
     int? a = -9223372036854775808;
@@ -1715,7 +1749,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 1 for integer multiplication overflow with optional type-descriptors.
-Labels: multiplicative-expr, int-type-descriptor, optional-type-descriptor, numeric-literal, int-literal
+Labels: multiplicative-expr, int, optional-type, DecimalNumber
 
 public function main() {
     int? a = 9223372036854775807;
@@ -1726,7 +1760,7 @@ public function main() {
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, for positive non-zero integers, 
              for optional int:Unsigned8.
-Labels: multiplicative-expr, optional-type-descriptor, numeric-literal, int-literal, lang.int
+Labels: multiplicative-expr, int:Unsigned8, optional-type, DecimalNumber, nil-literal, value:toBalString
 
 public function main() {
     int:Unsigned8? a = 1;
@@ -1782,7 +1816,7 @@ public function main() {
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, where at least one operand is zero, 
              for optional int:Unsigned8.
-Labels: multiplicative-expr, optional-type-descriptorm numeric-literal, int-literal, unary-expr, lang.int
+Labels: multiplicative-expr, int:Unsigned8, optional-type, DecimalNumber, nil-literal, value:toBalString
 
 public function main() {
     int:Unsigned8? a = 0;
@@ -1806,7 +1840,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 1 for integer multiplication overflow, where one operand is of type optional int:Unsigned8.
-Labels: multiplicative-expr, int-type-descriptor, optional-type-descriptor, numeric-literal, int-literal, lang.int
+Labels: multiplicative-expr, int, int:Unsigned8, optional-type, DecimalNumber, nil-literal, value:toBalString
 
 public function main() {
     int:Unsigned8? a = 255;
@@ -1816,7 +1850,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 2 for integer multiplication overflow, where one operand is of type optional int:Unsigned8.
-Labels: multiplicative-expr, int-type-descriptor, optional-type-descriptor, numeric-literal, int-literal, lang.int
+Labels: multiplicative-expr, int, int:Unsigned8, optional-type, DecimalNumber, nil-literal, value:toBalString
 
 public function main() {
     int? a = -461168601842738791;
@@ -1826,7 +1860,7 @@ public function main() {
 
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, for positive non-zero integers, for optional byte.
-Labels: multiplicative-expr, optional-type-descriptor, byte-type-descriptor, numeric-literal, int-literal
+Labels: multiplicative-expr, byte, optional-type, DecimalNumber, nil-literal, value:toBalString
 
 public function main() {
     byte? a = 1;
@@ -1881,7 +1915,7 @@ public function main() {
 
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, where at least one operand is zero, for optional byte.
-Labels: multiplicative-expr, optional-type-descriptor, byte-type-descriptor, numeric-literal, int-literal
+Labels: multiplicative-expr, byte, optional-type, DecimalNumber, nil-literal, value:toBalString
 
 public function main() {
     byte? a = 0;
@@ -1905,7 +1939,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 1 for integer multiplication overflow, where one operand is of type optional byte.
-Labels: multiplicative-expr, int-type-descriptor, byte-type-descriptor, optional-type-descriptor, numeric-literal, int-literal
+Labels: multiplicative-expr, int, byte, optional-type, DecimalNumber
 
 public function main() {
     byte? a = 255;
@@ -1915,7 +1949,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 2 for integer multiplication overflow, where one operand is of type optional byte.
-Labels: multiplicative-expr, int, byte, optional-type-descriptor, numeric-literal, int-literal
+Labels: multiplicative-expr, int, byte, optional-type, DecimalNumber
 
 public function main() {
     int? a = -461168601842738791;
@@ -1925,7 +1959,7 @@ public function main() {
 
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, for positive non-zero integers, for optional int:Unsigned16.
-Labels: multiplicative-expr, optional-type-descriptor, numeric-literal, int-literal, int:Unsigned16
+Labels: multiplicative-expr, int:Unsigned16, optional-type, DecimalNumber, nil-literal, value:toBalString
 
 public function main() {
     int:Unsigned16? a = 1;
@@ -1980,7 +2014,7 @@ public function main() {
 
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, where at least one operand is zero, for optional int:Unsigned16.
-Labels: multiplicative-expr, optional-type-descriptor, numeric-literal, int-literal, unary-expr, int:Unsigned16
+Labels: multiplicative-expr, int:Unsigned16, optional-type, DecimalNumber, nil-literal, value:toBalString
 
 public function main() {
     int:Unsigned16? a = 0;
@@ -2004,7 +2038,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 1 for integer multiplication overflow, where one operand is of type optional int:Unsigned16.
-Labels: multiplicative-expr, int-type-descriptor, optional-type-descriptor, numeric-literal, int-literal, int:Unsigned16
+Labels: multiplicative-expr, int, int:Unsigned16, optional-type, DecimalNumber
 
 public function main() {
     int:Unsigned16? a = 65534;
@@ -2014,7 +2048,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 2 for integer multiplication overflow, where one operand is of type optional int:Unsigned16.
-Labels: multiplicative-expr, int-type-descriptor, optional-type-descriptor, numeric-literal, int-literal, int:Unsigned16
+Labels: multiplicative-expr, int, int:Unsigned16, optional-type, DecimalNumber, nil-literal, value:toBalString, unary-minus
 
 public function main() {
     int a = -30744573456182586;
@@ -2024,7 +2058,7 @@ public function main() {
 
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, for positive non-zero integers, for optional int:Unsigned32.
-Labels: multiplicative-expr, optional-type-descriptor, numeric-literal, int-literal, int:Unsigned32
+Labels: multiplicative-expr, int:Unsigned32, optional-type, DecimalNumber, nil-literal, value:toBalString
 
 public function main() {
     int:Unsigned32? a = 1;
@@ -2079,7 +2113,7 @@ public function main() {
 
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, where at least one operand is zero, for optional int:Unsigned32.
-Labels: multiplicative-expr, optional-type-descriptor, numeric-literal, int-literal, unary-expr, int:Unsigned32
+Labels: multiplicative-expr, int:Unsigned32, optional-type, DecimalNumber, nil-literal, value:toBalString
 
 public function main() {
     int:Unsigned32? a = 0;
@@ -2103,7 +2137,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 1 for integer multiplication overflow, where one operand is of type optional int:Unsigned32.
-Labels: multiplicative-expr, int-type-descriptor, optional-type-descriptor, numeric-literal, int-literal, int:Unsigned32
+Labels: multiplicative-expr, int, int:Unsigned32, optional-type, DecimalNumber
 
 public function main() {
     int:Unsigned32? a = 4294127249;
@@ -2113,7 +2147,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 2 for integer multiplication overflow, where one operand is of type optional int:Unsigned32.
-Labels: multiplicative-expr, int-type-descriptor, optional-type-descriptor, numeric-literal, int-literal, int:Unsigned32
+Labels: multiplicative-expr, int, int:Unsigned32, optional-type, DecimalNumber, unary-minus
 
 public function main() {
     int? a = -140737488355328;
@@ -2123,7 +2157,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 3 for integer multiplication overflow, where both operands are of type optional int:Unsigned32.
-Labels: multiplicative-expr, int-type-descriptor, optional-type-descriptor, numeric-literal, int-literal, int:Unsigned32
+Labels: multiplicative-expr, int, int:Unsigned32, optional-type, DecimalNumber
 
 public function main() {
     int:Unsigned32? a = 4294967295;
@@ -2132,7 +2166,7 @@ public function main() {
 
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, for positive non-zero integers, for optional int:Signed8.
-Labels: multiplicative-expr, optional-type-descriptor, numeric-literal, int-literal, int:Signed8, value:toBalString
+Labels: multiplicative-expr, int:Signed8, optional-type, DecimalNumber, nil-literal, value:toBalString
 
 public function main() {
     int:Signed8? a = 1;
@@ -2187,7 +2221,7 @@ public function main() {
 
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, for negative non-zero integers, for optional int:Signed8.
-Labels: multiplicative-expr, optional-type-descriptor, numeric-literal, int-literal, unary-expr, int:Signed8, value:toBalString
+Labels: multiplicative-expr, int:Signed8, optional-type, DecimalNumber, nil-literal, value:toBalString, unary-minus
 
 public function main() {
     int:Signed8? a = -1;
@@ -2243,7 +2277,7 @@ public function main() {
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, where one operand is negative
              and the other is positive, for optional int:Signed8.
-Labels: multiplicative-expr, optional-type-descriptor, numeric-literal, int-literal, unary-expr, int:Signed8
+Labels: multiplicative-expr, int:Signed8, optional-type, DecimalNumber, unary-minus
 
 public function main() {
     int:Signed8? a = -128;
@@ -2280,7 +2314,7 @@ public function main() {
 
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, where at least one operand is zero, for optional int:Signed8.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, unary-expr, int:Signed8, value:toBalString
+Labels: multiplicative-expr, int:Signed8, optional-type, DecimalNumber, nil-literal, value:toBalString, unary-minus
 
 public function main() {
     int:Signed8? a = -128;
@@ -2337,7 +2371,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 1 for integer multiplication overflow, for optional int:Signed8.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, int:Signed8
+Labels: multiplicative-expr, int, int:Signed8, optional-type, DecimalNumber
 
 public function main() {
     int? a = 72624976668147842;
@@ -2347,7 +2381,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 2 for integer multiplication overflow, for optional int:Signed8.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, int:Signed8
+Labels: multiplicative-expr, int, int:Signed8, optional-type, DecimalNumber, unary-minus
 
 public function main() {
     int:Signed8? a = -128;
@@ -2356,7 +2390,7 @@ public function main() {
 
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, for positive non-zero integers, for optional int:Signed16.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, int:Signed16, value:toBalString
+Labels: multiplicative-expr, int:Signed16, optional-type, DecimalNumber, nil-literal, value:toBalString
 
 public function main() {
     int:Signed16? a = 1;
@@ -2411,7 +2445,7 @@ public function main() {
 
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, for negative non-zero integers, for optional int:Signed16.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, unary-expr, int:Signed16, value:toBalString
+Labels: multiplicative-expr, int:Signed16, optional-type, DecimalNumber, nil-literal, value:toBalString, unary-minus
 
 public function main() {
     int:Signed16? a = -1;
@@ -2467,7 +2501,7 @@ public function main() {
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, where one operand is negative
              and the other is positive, for optional int:Signed16.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, unary-expr, int:Signed16
+Labels: multiplicative-expr, int:Signed16, optional-type, DecimalNumber, unary-minus
 
 public function main() {
     int:Signed16? a = -32768;
@@ -2504,7 +2538,7 @@ public function main() {
 
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, where at least one operand is zero, for optional int:Signed16.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, unary-expr, int:Signed16, value:toBalString
+Labels: multiplicative-expr, int:Signed16, optional-type, DecimalNumber, nil-literal, value:toBalString, unary-minus
 
 public function main() {
     int:Signed16? a = -32768;
@@ -2561,7 +2595,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 1 for integer multiplication overflow, for optional int:Signed16.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, int:Signed16
+Labels: multiplicative-expr, int, int:Signed16, optional-type, DecimalNumber, nil-literal, value:toBalString
 
 public function main() {
     int? a = 281483566907401;
@@ -2581,7 +2615,7 @@ public function main() {
 
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, for positive non-zero integers, for optional int:Signed32.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, int:Signed32, value:toBalString
+Labels: multiplicative-expr, int:Signed32, optional-type, DecimalNumber, nil-literal, value:toBalString, unary-minus
 
 public function main() {
     int:Signed32? a = 1;
@@ -2636,7 +2670,7 @@ public function main() {
 
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, for negative non-zero integers, for optional int:Signed32.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, unary-expr, int:Signed32, value:toBalString
+Labels: multiplicative-expr, int:Signed32, optional-type, DecimalNumber, nil-literal, value:toBalString, unary-minus
 
 public function main() {
     int:Signed32? a = -1;
@@ -2692,7 +2726,7 @@ public function main() {
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, where one operand is negative
              and the other is positive, for optional int:Signed32.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, unary-expr, int:Signed32
+Labels: multiplicative-expr, int:Signed32, optional-type, DecimalNumber, unary-minus
 
 public function main() {
     int:Signed32? a = -2147483648;
@@ -2729,7 +2763,7 @@ public function main() {
 
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, where at least one operand is zero, for optional int:Signed32.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, unary-expr, int:Signed32, value:toBalString
+Labels: multiplicative-expr, int:Signed32, optional-type, DecimalNumber, nil-literal, value:toBalString, unary-minus
 
 public function main() {
     int:Signed32? a = -2147483648;
@@ -2786,7 +2820,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 1 for integer multiplication overflow, for optional int:Signed32.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, int:Signed32
+Labels: multiplicative-expr, int, int:Signed32, optional-type, DecimalNumber
 
 public function main() {
     int? a = 4294967399;
@@ -2796,7 +2830,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 2 for integer multiplication overflow, for optional int:Signed32.
-Labels: multiplicative-expr, int-type-descriptor, numeric-literal, int-literal, int:Signed32
+Labels: multiplicative-expr, int:Signed32, optional-type, DecimalNumber, unary-minus
 
 public function main() {
     int:Signed32? a = -2147483648;
@@ -2806,7 +2840,7 @@ public function main() {
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, for positive non-zero integers,
              for user-defined subtype of int.
-Labels: multiplicative-expr, optional-type, numeric-literal, int-literal, module-type-defn
+Labels: multiplicative-expr, union-type, optional-type, DecimalNumber, module-type-defn, unary-minus, value:toBalString
 
 type Ints -2|-1|0|1|2;
 
@@ -2831,7 +2865,7 @@ public function main() {
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, for negative non-zero integers,
              for user-defined subtype of int.
-Labels: multiplicative-expr, optional-type, numeric-literal, int-literal, unary-expr, module-type-defn
+Labels: multiplicative-expr, union-type, optional-type, DecimalNumber, module-type-defn, unary-minus, value:toBalString
 
 type Ints -2|-1|0|1|2;
 
@@ -2855,7 +2889,7 @@ public function main() {
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, where one operand is negative
              and the other is positive, for user-defined subtype of int.
-Labels: multiplicative-expr, optional-type, numeric-literal, int-literal, unary-expr, module-type-defn
+Labels: multiplicative-expr, union-type, optional-type, DecimalNumber, module-type-defn, unary-minus
 
 type Ints -2|-1|0|1|2;
 
@@ -2881,7 +2915,7 @@ public function main() {
 Test-Case: output
 Description: Test integer multiplication non-overflow scenarios, where at least one operand is zero, for
              user-defined subtype of int.
-Labels: multiplicative-expr, optional-type, numeric-literal, int-literal, unary-expr, module-type-defn
+Labels: multiplicative-expr, union-type, optional-type, DecimalNumber, module-type-defn, unary-minus, value:toBalString
 
 type Ints -2|-1|0|1|2;
 
@@ -2928,7 +2962,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 1 for integer multiplication overflow, for user-defined subtype of int.
-Labels: multiplicative-expr, int, optional-type, numeric-literal, int-literal, module-type-defn
+Labels: multiplicative-expr, int, union-type, optional-type, DecimalNumber, module-type-defn, unary-minus
 
 type Ints -2|-1|0|1|2;
 
@@ -2940,7 +2974,7 @@ public function main() {
 
 Test-Case: panic
 Description: Test 2 for integer multiplication overflow, for user-defined subtype of int.
-Labels: multiplicative-expr, int, optional-type, numeric-literal, int-literal, module-type-defn
+Labels: multiplicative-expr, int, union-type, optional-type, DecimalNumber, module-type-defn, unary-minus
 
 type Ints -2|-1|0|1|2;
 type NilableInts Ints?;
