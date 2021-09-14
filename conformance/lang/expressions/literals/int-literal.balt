@@ -1,19 +1,19 @@
 Test-Case: output
-Description: Test DecimalNumbers with int type descriptor.
+Description: Test DecimalNumbers with int-type-descriptor.
 Labels: int
 
 public function main() {
-   int x = 101;
-   io:println(x); // @output 101
+    int x = 101;
+    io:println(x); // @output 101
 
-   x = 0;
-   io:println(x); // @output 0
+    x = 0;
+    io:println(x); // @output 0
 
-   x = 3;
-   io:println(x); @output 3
+    x = 3;
+    io:println(x); // @output 3
 
-   x = 9223372036854775807;
-   io:println(x); // @output 9223372036854775807
+    x = 9223372036854775807;
+    io:println(x); // @output 9223372036854775807
 }
 
 Test-Case: output
@@ -21,44 +21,20 @@ Description: Test DecimalNumbers with function call.
 Labels: int
 
 public function main() {
-   int x = 101;
-   printInt(x);
+    printInt(101);
 
-   x = 0;
-   printInt(x);
+    printInt(0);
 
-   x = 3;
-   printInt(x);
+    printInt(3);
 
-   x = 9223372036854775807;
-   printInt(x);
+    printInt(9223372036854775807);
 }
 
 function printInt(int x) {
-   io:println(x); // @output 101
-                  // @output 0
-                  // @output 3
-                  // @output 9223372036854775807
-}
-
-/// to string
-
-Test-Case: output
-Description: Test DecimalNumbers with toBalString.
-Labels: int, value:toBalString
-
-public function main() {
-   int x = 101;
-   io:println(x.toBalString()); // @output 101
-
-   x = 0;
-   io:println(x.toBalString()); // @ouftput 0
-
-   x = 3;
-   io:println(x.toBalString()); // @output 3
-
-   x = 9223372036854775807;
-   io:println(x.toBalString()); // @output 9223372036854775807
+    io:println(x); // @output 101
+                   // @output 0
+                   // @output 3
+                   // @output 9223372036854775807
 }
 
 Test-Case: error
@@ -72,7 +48,7 @@ public function main() {
 }
 
 Test-Case: output
-Description: Test HexIntLiterals with function call.
+Description: Test HexIntLiterals with int-type-descriptor and function call.
 Labels: int
 
 public function main() {
@@ -97,7 +73,7 @@ public function main() {
     x = 0x192AAce;
     printInt(x);
 
-    int x = 0X1;
+    x = 0X1;
     printInt(x);
 
     x = 0Xa;
@@ -109,11 +85,9 @@ public function main() {
     x = 0XABCDEF81;
     printInt(x);
 
-    x = 0X1fedcba7;
-    printInt(0xA);
+    printInt(0X1fedcba7);
 
-    x = 0X192AAc5;
-    printInt(0xA);
+    printInt(0X192AAc5);
 }
 
 function printInt(int x) {
@@ -132,20 +106,8 @@ function printInt(int x) {
                    // @output 26389189
 }
 
-Test-Case: output
-Description: Test HexIntLiterals with toBalString.
-Labels: int, value:toBalString
-
-public function main() {
-    int x = 0x1;
-    io:println(x.toBalString()); // @output 1
-
-    x = 0x7FFFFFFFFFFFFFFF;
-    io:println(x.toBalString()); // @output 9223372036854775807
-}
-
 Test-Case: error
-Description: Test invalid HexInLiteral literals.
+Description: Test invalid HexInLiteral.
 Fail-Issue: ballerina-lang #32559
 Labels: int
 
@@ -160,25 +122,53 @@ public function main() {
 
     x = 0X123G; // @error invalid HexIntLiteral due to incorrect HexDigits
 
-    x = 123Fab; // @error invalid HexIntLiteral due to missing HexIndicator
+    x = 123ab; // @error undefined symbol 'ab'
 }
 
 Test-Case: output
-Description: Test int type descriptor with DecimalNumbers.
+Description: Test int-literals with toString().
 Labels: int
 
 public function main() {
-    io:println(printInt(123)); // @output 123
+    io:println((101).toString()); // @output 101
 
-    io:println(printInt(0)); // @output 0
+    io:println((0).toString()); // @output 0
 
-    io:println(printInt(0xabe123)); // @output 11264291
+    io:println((9223372036854775807).toString()); // @output 9223372036854775807
 
-    io:println(printInt(0X12edf)); // @output 77535
+    io:println((0x12ab).toString()); // @output 4779
 }
 
-function printInt(int x) returns int {
-    return x;
+Test-Case: output
+Description: Test DecimalNumbers with toBalString().
+Labels: int, value:toBalString
+
+public function main() {
+    io:println((101).toBalString()); // @output 101
+
+    io:println((0).toBalString()); // @output 0
+
+    io:println((9223372036854775807).toBalString()); // @output 9223372036854775807
+
+    io:println((0x12ab).toBalString()); // @output 4779
+}
+
+Test-Case: output
+Description: Test int literals with return statement.
+Labels: int
+
+public function main() {
+    io:println(printDecimalNumber()); // @output 5674
+
+    io:println(printHexIntLiteral()); // @output 77739
+}
+
+function printDecimalNumber() returns int {
+    return 5674;
+}
+
+function printHexIntLiteral() returns int {
+    return 0x12fab;
 }
 
 Test-Case: error
@@ -186,13 +176,13 @@ Description: Test possible invalid int-literal scenarios.
 Labels: int
 
 public function main() {
-    int x = 0b10111; // @error expected a 'int', but found an undefined symbol '0b10111'
+    int x = 0b10111; // @error expected a 'int', but found an undefined symbol '0b10111' // Note - multiple errors for this
 
-    x = 123 456 789; // @error invalid expression
+    x = 123 456 789; // @error invalid expression // Note - multiple errors for this
 
-    x = 1,123,456,789; // @error invalid expression
+    x = 1,123,456,789; // @error invalid expression // Note - multiple errors for this
 
-    x = 0h123ca; // @error expected a 'int', but found an undefined symbol '0h123ca'
+    x = 0h123ca; // @error expected a 'int', but found an undefined symbol '0h123ca' // Note - multiple errors for this
 
     x = Ox456fa; // @error expected a 'int', but found an undefined symbol 'Ox456fa'
 }
@@ -202,8 +192,25 @@ Description: Numeric value is greater than upper bound.
 Labels: decimal
 
 public function main() {
-    decimal d = 10092233720368547758081009223372036854775; // @error number
-                                                               '10092233720368547758081009223372036854775' is too large
+    decimal d = 10092233720368547758081009223372036854775; // @error number '10092233720368547758081009223372036854775' is too large
+}
+
+Test-Case: output
+Description: Test int-literals with equality.
+Labels: equality
+
+public function main() {
+    io:println(10 == 10); // @output true
+
+    io:println(10 != 10); // @output false
+
+    io:println(0x1a == 0x1a); // @output true
+
+    io:println(0x1a != 0x1a); // @output false
+
+    io:println(0x1234abdef1 == 78193090289); // @output true
+
+    io:println(0x1234abdef1 != 7819309028); // @output true
 }
 
 Test-Case: output
@@ -229,7 +236,7 @@ public function main() {
 
 Test-Case: error
 Description: Test the basic type when the numeric-literal includes a FloatTypeSuffix.
-Labels: float, decimal, int
+Labels: decimal, float, int
 
 public function main() {
     int x = 0f; // @error expected an 'int' but found a 'float'
@@ -241,7 +248,7 @@ public function main() {
 
 Test-Case: output
 Description: Test the basic type when the numeric-literal includes a DecimalTypeSuffix.
-Labels: any, float, int, is-expr
+Labels: any, decimal, float, int, is-expr
 
 public function main() {
     any x = 0d;
@@ -262,7 +269,7 @@ public function main() {
 
 Test-Case: error
 Description: Test the basic type when the numeric-literal includes a DecimalTypeSuffix.
-Labels: decimal, float, int, is-expr
+Labels: decimal, float, int
 
 public function main() {
     int x = 0d; // @error expected an 'int' but found a 'decimal'
@@ -295,7 +302,7 @@ public function main() {
 
 Test-Case: error
 Description: Test the basic type when the numeric-literal is a HexFloatingPointLiteral.
-Labels: any, decimal, float, int, is-expr
+Labels: decimal, float, int
 
 public function main() {
     decimal x = 0xabc12.def; // @error expected an 'decimal' but found a 'float'
@@ -307,24 +314,27 @@ public function main() {
 
 Test-Case: output
 Description: Test the basic type when the applicable contextually expected type is a subtype of decimal.
-Labels: any, decimal, float, int, is-expr
+Labels: decimal, int, is-expr, null, string
 
 public function main() {
-    int|decimal x = 1.212;
-    io:println(x is int); // @output false
-    io:println(x is decimal); // @output true
+    int|decimal a = 1.212;
+    io:println(a is int); // @output false
+    io:println(a is decimal); // @output true
 
-    int|decimal y = 0.0;
-    io:println(y is int); // @output false
-    io:println(y is decimal); // @output true
+    int|decimal b = 0.0;
+    io:println(b is int); // @output false
+    io:println(b is decimal); // @output true
 
-    string|decimal z = 32.12;
+    string|decimal c = 32.12;
+    io:println(c is decimal); // @output true
 
+    ()|decimal d = 10;
+    io:println(d is decimal); // @output true
 }
 
 Test-Case: output
-Description: Test the basic when the applicable contextually expected type is a subtype of float.
-Labels: any, decimal, float, int, is-expr
+Description: Test the basic type when the applicable contextually expected type is a subtype of float.
+Labels: decimal, float, int, null, is-expr, string
 
 public function main() {
     int|float x = 1.212;
@@ -334,11 +344,24 @@ public function main() {
     int|float y = 0.0;
     io:println(y is int); // @output false
     io:println(y is float); // @output true
+
+    decimal|float z = 0x123;
+    io:println(z is decimal); // @output false
+    io:println(z is float); // @output true
+
+    string|float a = 32.12;
+    io:println(a is float); // @output true
+
+    ()|float b = 10;
+    io:println(b is float); // @output true
+
+    ()|float c = 0x12ab;
+    io:println(c is float); // @output true
 }
 
 Test-Case: output
-Description: Test the basic type when the applicable contextually expected type is not a subtype of decimal|float and
-             the numeric literal is an int-literal.
+Description: Test the basic type when the applicable contextually expected type is not a subtype of either decimal or
+             float and the numeric literal is an int-literal.
 Labels: any, decimal, float, int, is-expr
 
 public function main() {
@@ -358,9 +381,19 @@ public function main() {
     io:println(z is decimal); // @output false
 }
 
+Test-Case: error
+Description: Test the basic type when the applicable contextually expected type is not a subtype of either decimal or
+             float and the numeric literal is an int-literal.
+Fail-Issue: ballerina-lang #32698
+Labels: decimal, float, int
+
+public function main() {
+    float|decimal a = 1; // @error expected a '(float|decimal)' but found a 'int'
+}
+
 Test-Case: output
-Description: Test the basic type when the applicable contextually expected type is not a subtype of decimal|float and
-             the numeric literal is not an int-literal.
+Description: Test the basic type when the applicable contextually expected type is not a subtype of either decimal or
+             float and the numeric literal is not an int-literal.
 Labels: any, decimal, float, int, is-expr
 
 public function main() {
@@ -369,17 +402,69 @@ public function main() {
     io:println(x is float); // @output true
     io:println(x is decimal); // @output false
 
-    x = 932.32e11;
-    io:println(x is int); // @output false
-    io:println(x is float); // @output true
-    io:println(x is decimal); // @output false
-
-    any y = 123.654;
-    io:println(y is int); // @output false
+    float|decimal y = 932.32e11;
     io:println(y is float); // @output true
     io:println(y is decimal); // @output false
 
-    float|decimal z = 1;
+    any z = 123.654;
+    io:println(z is int); // @output false
     io:println(z is float); // @output true
     io:println(z is decimal); // @output false
+}
+
+Test-Case: output
+Description: Test int literals with valid type casts.
+Labels: decimal, float, int, type-cast-expr
+
+public function main() {
+    io:println(<int> 13245); // @output 13245
+
+    io:println(<int> 0xabde12a); // @output 180216106
+
+    io:println(<decimal> 13245); // @output 13245
+
+    io:println(<decimal> 0xabde12a); // @output 180216106.0
+
+    io:println(<float> 13245); // @output 13245.0
+
+    io:println(<float> 0xabde12a); // @output 1.80216106E8
+}
+
+Test-Case: error
+Description: Test nil literal '()' with invalid type casts.
+Fail-Issue: ballerina-lang #32716
+Labels: any, boolean, int, nil-literal, string, type-cast-expr
+
+public function main() {
+    any x = <boolean> 0; // @error 'int' cannot be cast to 'boolean'
+
+    x = <boolean> 0x0; // @error 'int' cannot be cast to 'boolean'
+
+    x = <()> 123; // @error 'int' cannot be cast to '()'
+
+    x = <()> 0X42af; // @error 'int' cannot be cast to '()'
+
+    x = <string> 456; // @error 'int' cannot be cast to 'string'
+
+    x = <string> 0xa21bd; // @error 'int' cannot be cast to 'string'
+}
+
+Test-Case: output
+Description: Test int literals with interpolation in template expressions.
+Labels: int, raw-template-expr
+
+public function main() {
+    io:println(`${124}`); // @output 124
+
+    io:println(`${0x7ab1}`); // @output 31409
+}
+
+Test-Case: output
+Description: Test int literals as member of structural constructors.
+Labels: array-type, int, map-type
+
+public function main() {
+    io:println([123, 0x12a3]); // @output [123,4771]
+
+    io:println({"c" : 987, "b" : 0X92c1}); // @output {"c":987,"b":37569}
 }
