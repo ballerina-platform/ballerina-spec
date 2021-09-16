@@ -1,0 +1,339 @@
+Test-Case: error
+Description: Test multiplicative expression with static type of operands belonging to int and float resulting in an error.
+Labels: multiplicative-expr, int, float
+
+public function main(int a, float b) {
+    int a1 = a * b; // @error * is not allowed with operands of different basic types
+    int a2 = a / b; // @error / is not allowed with operands of different basic types
+    int a3 = a % b; // @error % is not allowed with operands of different basic types
+    float a4 = b * a; // @error * is not allowed with operands of different basic types
+    float a5 = b / a; // @error / is not allowed with operands of different basic types
+    float a6 = b % a; // @error % is not allowed with operands of different basic types
+}
+
+Test-Case: error
+Description: Test multiplicative expression with static type of operands belonging to int, float, and decimal resulting in an error.
+Labels: multiplicative-expr, int, float, decimal
+
+public function main(int a, float b, decimal c) {
+    int a1 = a * c; // @error * is not allowed with operands of different basic types
+    decimal a2 = c / a; // @error / is not allowed with operands of different basic types
+    int a3 = a % c; // @error % is not allowed with operands of different basic types
+    float a4 = b * c; // @error * is not allowed with operands of different basic types
+    float a5 = b / c; // @error / is not allowed with operands of different basic types
+    decimal a6 = c % b; // @error % is not allowed with operands of different basic types
+}
+
+Test-Case: error
+Description: Test multiplicative expression with static type of operands belonging to different basic types resulting in an error.
+Labels: multiplicative-expr, int, float, decimal, optional-type
+
+public function main(int a, float b, decimal c, 
+                     int? d, float? e, decimal? f) {
+    int a13 = d * e; // @error * is not allowed with operands of different basic types
+    int a14 = d / e; // @error / is not allowed with operands of different basic types
+    int a15 = a % e; // @error % is not allowed with operands of different basic types
+    float a16 = e * a; // @error * is not allowed with operands of different basic types
+    float a17 = b / d; // @error / is not allowed with operands of different basic types
+    float a18 = e % d; // @error % is not allowed with operands of different basic types
+    int a19 = d * c; // @error * is not allowed with operands of different basic types
+    decimal? a20 = f / d; // @error / is not allowed with operands of different basic types
+    int a21 = d % f; // @error % is not allowed with operands of different basic types
+    float a22 = b * f; // @error * is not allowed with operands of different basic types
+    float a23 = e / c; // @error / is not allowed with operands of different basic types
+    decimal a24 = c % e; // @error % is not allowed with operands of different basic types
+}
+
+Test-Case: error
+Description: Test the static type of operands belonging to non-numeric basic types resulting in an error.
+Labels: multiplicative-expr, int, string, float, decimal, optional-type
+
+public function main(int a, float b, decimal c, int? d, float? e, decimal? f,
+                     string g, string? h) {
+    string a1 = g * g; // @error * is not allowed with operands of non-numeric basic types
+    string a2 = g / g; // @error / is not allowed with operands of non-numeric basic types
+    string a3 = g % g; // @error % is not allowed with operands of non-numeric basic types
+    string a4 = h * h; // @error * is not allowed with operands of non-numeric basic types
+    string a5 = h / h; // @error / is not allowed with operands of non-numeric basic types
+    string a6 = h % h; // @error % is not allowed with operands of non-numeric basic types
+    string a7 = g * h; // @error * is not allowed with operands of non-numeric basic types
+    string a8 = g / h; // @error / is not allowed with operands of non-numeric basic types
+    string a9 = g % h; // @error % is not allowed with operands of non-numeric basic types
+    string a10 = h * g; // @error * is not allowed with operands of non-numeric basic types
+    string a11 = h / g; // @error / is not allowed with operands of non-numeric basic types
+    string a12 = h % g; // @error % is not allowed with operands of non-numeric basic types
+
+    string a13 = a * g; // @error * is not allowed with operands of different basic types
+    string a14 = d / g; // @error / is not allowed with operands of different basic types
+    string a15 = b % h; // @error % is not allowed with operands of different basic types
+    string a16 = c * h; // @error * is not allowed with operands of different basic types
+    string? a17 = e / h; // @error / is not allowed with operands of different basic types
+    string a18 = f % h; // @error % is not allowed with operands of different basic types
+}
+
+Test-Case: error
+Description: Test the static type of operand expressions belonging to different basic types resulting in an error
+             when the static type of at least one operand includes a subtype of a numeric type.
+Labels: multiplicative-expr, int, float, decimal, optional-type, 
+        byte, union-type, singleton-type, module-type-defn, numeric-literal,  
+        int-literal, floating-point-literal, DecimalFloatingPointNumber, int:Signed8
+
+type Ints 1|2;
+type Floats 2.0|3.0|4.0;
+type Decimals 1d|4.12d;
+
+public function main(int:Signed8 a, int:Signed16 b, int:Signed32 c,
+                     int:Unsigned8 d, int:Unsigned16 e, int:Unsigned32 f, 
+                     byte g, Ints h, Floats i, Decimals j, 
+                     int:Unsigned8? k, Ints? l, Floats? m, Decimals? n) {
+    int:Signed8 a1 = a * i; // @error * is not allowed with operands of different basic types
+    decimal a2 = j / b; // @error / is not allowed with operands of different basic types
+    float a3 = c % m; // @error % is not allowed with operands of different basic types
+    float a4 = i * d; // @error * is not allowed with operands of different basic types
+    int a5 = e / j; // @error / is not allowed with operands of different basic types
+    float a6 = m % f; // @error % is not allowed with operands of different basic types
+    int a7 = g * n; // @error * is not allowed with operands of different basic types
+    decimal a8 = h / j; // @error / is not allowed with operands of different basic types
+    int a9 = k % n; // @error % is not allowed with operands of different basic types
+    float a10 = l * i; // @error * is not allowed with operands of different basic types
+}
+
+Test-Case: error
+Description: Test for int the static type of the result being the basic type of the operands via invalid assignment
+             with inference, where operands are of numeric types.
+Labels: multiplicative-expr, int, float, decimal, var, numeric-literal, int-literal, DecimalNumber
+
+public function main(int a, int b) {
+    var a1 = a * b;
+    float a2 = a1; // @error static type of multiplicative-expr with int operands is int
+
+    var a3 = a / a;
+    decimal a4 = a3; // @error static type of multiplicative-expr with int operands is int
+
+    var a5 = 1 % b;
+    float a6 = a5; // @error static type of multiplicative-expr with int operands is int
+
+    var a7 = getInt(12 * 2) * b;
+    float a8 = a7; // @error static type of multiplicative-expr with int operands is int
+}
+
+function getInt(int i) returns int {
+    return i * 1;
+}
+
+Test-Case: error
+Description: Test for float the static type of the result being the basic type of the operands via invalid assignment
+             with inference, where operands are of numeric types.
+Labels: multiplicative-expr, int, float, decimal, var, DecimalFloatingPointNumber
+
+public function main(float c, float d) {
+    var a1 = 2.0 * 2.1;
+    int a2 = a1; // @error static type of multiplicative-expr with float operands is float
+
+    var a3 = c / d;
+    decimal a4 = a3; // @error static type of multiplicative-expr with float operands is float
+
+    var a5 = d % d;
+    int a6 = a5; // @error static type of multiplicative-expr with float operands is float
+    
+    var a7 = d % (getFloat(getFloat(2.0 / c)));
+    int a8 = a7; // @error static type of multiplicative-expr with float operands is float
+}
+
+function getFloat(float f) returns float {
+    return f / 1f;
+}
+
+Test-Case: error
+Description: Test for decimal the static type of the result being the basic type of the operands via invalid assignment
+             with inference, where operands are of numeric types.
+Labels: multiplicative-expr, int, float, decimal, var, numeric-literal, DecimalFloatingPointNumber
+
+public function main(decimal e, decimal f) {
+    var a1 = e * e;
+    float a2 = a1; // @error static type of multiplicative-expr with decimal operands is decimal
+
+    var a3 = f / e;
+    int a4 = a3; // @error static type of multiplicative-expr with decimal operands is decimal
+
+    var a5 = 1d % f;
+    float a6 = a5; // @error static type of multiplicative-expr with decimal operands is decimal
+
+    var a7 = getDecimal((20d % 2d)) % e;
+    int a8 = a7; // @error static type of multiplicative-expr with decimal operands is decimal    
+}
+
+function getDecimal(decimal d) returns decimal {
+    return d % 2d;
+}
+
+Test-Case: error
+Description: Test for optional int the static type of the result being the basic type of the operands via invalid assignment.
+Labels: multiplicative-expr, int, optional-type, var, numeric-literal, DecimalNumber
+
+public function main(int a, int? b) {
+    int a1 = a * b; // @error static type of multiplicative-expr with at least one int? operand is int
+    int a2 = getOptionalInt(1 / 2) * b; // @error static type of multiplicative-expr with at least one int? operand is int
+    int a3 = b % getOptionalInt(1 % 2); // @error static type of multiplicative-expr with at least one int? operand is int
+    int a4 = b * getInt(1); // @error static type of multiplicative-expr with at least one int? operand is int
+}
+
+function getInt(int i) returns int {
+    return i * 1;
+}
+
+function getOptionalInt(int? i) returns int? {
+    return i * 1;
+}
+
+Test-Case: error
+Description: Test for optional float the static type of the result being the basic type of the operands via invalid assignment.
+Labels: multiplicative-expr, float, optional-type, var, numeric-literal, DecimalFloatingPointNumber
+
+public function main(float c, float? d) {
+    float a1 = d * c; // @error static type of multiplicative-expr with at least one float? operand is float
+    float a2 = getFloat(2.0) * d; // @error static type of multiplicative-expr with at least one float? operand is float
+    float a3 = d % getOptionalFloat(1.0 % 2f); // @error static type of multiplicative-expr with at least one float? operand is float
+    float a4 = c / getOptionalFloat(1); // @error static type of multiplicative-expr with at least one float? operand is float
+}
+
+function getFloat(float f) returns float {
+    return f / 1f;
+}
+
+function getOptionalFloat(float? f) returns float? {
+    return f / 1f;
+}
+
+Test-Case: error
+Description: Test for optional decimal the static type of the result being the basic type of the operands via invalid assignment.
+Labels: multiplicative-expr, int, float, decimal, optional-type, var, numeric-literal, DecimalFloatingPointNumber
+
+public function main(decimal e, decimal? f) {
+    decimal a1 = e * f; // @error static type of multiplicative-expr with at least one int? operand is int
+    decimal a2 = getOptionalDecimal(1d / 2.0d) * e; // @error static type of multiplicative-expr with at least one int? operand is int
+    decimal a3 = f % getOptionalDecimal(()); // @error static type of multiplicative-expr with at least one int? operand is int
+    decimal a4 = getOptionalDecimal(3) * getDecimal(1); // @error static type of multiplicative-expr with at least one int? operand is int
+}
+
+function getDecimal(decimal d) returns decimal {
+    return d % 2d;
+}
+
+function getOptionalDecimal(decimal? d) returns decimal? {
+    return d % 2d;
+}
+
+Test-Case: error
+Description: Test the static type of the result being the basic type of the operands via invalid assignment,
+             where operands are of types that are subtypes of int types.
+Labels: multiplicative-expr, int, DecimalNumber, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, byte, module-type-defn
+
+type Ints 1|2;
+
+public function main(int:Signed8 a, int:Signed16 b, int:Signed32 c,
+                     int:Unsigned8 d, int:Unsigned16 e, int:Unsigned32 f,
+                     byte g, Ints h) {
+    int:Signed8 a1 = a * a; // @error static type of multiplicative-expr with operands of int subtypes is int
+    int:Signed8 a2 = a / 1; // @error static type of multiplicative-expr with operands of int subtypes is int
+    Ints a3 = a % h; // @error static type of multiplicative-expr with operands of int subtypes is int
+    int a4 = getUnsigned32Int(c % h) * a; // @error static type of multiplicative-expr with operands of int subtypes is int
+
+    int:Signed16 a5 = b * b; // @error static type of multiplicative-expr with operands of int subtypes is int
+    int:Signed16 a6 = b / b; // @error static type of multiplicative-expr with operands of int subtypes is int
+    byte a7 = b % g; // @error static type of multiplicative-expr with operands of int subtypes is int
+    int a8 = getUnsigned32Int(b / h) * b; // @error static type of multiplicative-expr with operands of int subtypes is int
+
+    int:Signed32 a9 = c * b; // @error static type of multiplicative-expr with operands of int subtypes is int
+    int:Signed32 a10 = c / c; // @error static type of multiplicative-expr with operands of int subtypes is int
+    int:Signed8 a11 = c % a; // @error static type of multiplicative-expr with operands of int subtypes is int
+    int a12 = getUnsigned32Int(c % c) * c; // @error static type of multiplicative-expr with operands of int subtypes is int
+
+    int:Unsigned8 a13 = d * d; // @error static type of multiplicative-expr with operands of int subtypes is int
+    int:Unsigned8 a14 = d / 1; // @error static type of multiplicative-expr with operands of int subtypes is int
+    Ints a15 = d % h; // @error static type of multiplicative-expr with operands of int subtypes is int
+    int a16 = getUnsigned32Int(f % h) * d; // @error static type of multiplicative-expr with operands of int subtypes is int
+
+    int:Unsigned16 a17 = e * e; // @error static type of multiplicative-expr with operands of int subtypes is int
+    int:Unsigned16 a18 = e / e; // @error static type of multiplicative-expr with operands of int subtypes is int
+    byte a19 = e % g; // @error static type of multiplicative-expr with operands of int subtypes is int
+    int a20 = getUnsigned32Int(e / h) * e; // @error static type of multiplicative-expr with operands of int subtypes is int
+
+    int:Unsigned32 a21 = f * g; // @error static type of multiplicative-expr with operands of int subtypes is int
+    int:Unsigned32 a22 = f / f; // @error static type of multiplicative-expr with operands of int subtypes is int
+    int:Unsigned8 a23 = f % d; // @error static type of multiplicative-expr with operands of int subtypes is int
+    int a24 = getUnsigned32Int(f % f) * f; // @error static type of multiplicative-expr with operands of int subtypes is int
+
+    byte a25 = g * g; // @error static type of multiplicative-expr with operands of int subtypes is int
+    byte a26 = g / 1; // @error static type of multiplicative-expr with operands of int subtypes is int
+    Ints a27 = g % h; // @error static type of multiplicative-expr with operands of int subtypes is int
+    int a28 = getUnsigned32Int(g * h) * g; // @error static type of multiplicative-expr with operands of int subtypes is int
+
+    Ints a29 = h * h; // @error static type of multiplicative-expr with operands of int subtypes is int
+    Ints a30 = a / h; // @error static type of multiplicative-expr with operands of int subtypes is int
+    Ints a31 = a % h; // @error static type of multiplicative-expr with operands of int subtypes is int
+    int a32 = getUnsigned32Int(c % h) % h; // @error static type of multiplicative-expr with operands of int subtypes is int
+}
+
+function getUnsigned32Int(int:Signed32 i) returns int:Unsigned32 {
+    return 0;
+}
+
+Test-Case: error
+Description: Test the static type of the result being the basic type of the operands via invalid assignment,
+             where operands are of types that are optional types with subtypes of int types.
+Labels: multiplicative-expr, int, optional-type, DecimalNumber, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, byte, module-type-defn
+
+type Ints 1|2;
+
+public function main(int:Signed8 a, int:Signed16 b, int:Signed32 c,
+                     int:Unsigned8 d, int:Unsigned16 e, int:Unsigned32 f,
+                     byte g, Ints h,
+                     int:Signed8? i, int:Signed16? j, int:Signed32? k,
+                     int:Unsigned8? l, int:Unsigned16? m, int:Unsigned32? n,
+                     byte? o, Ints? p) {
+    int:Signed8? a1 = a * i; // @error static type of multiplicative-expr with operands of int? subtypes is int?
+    int:Signed8 a2 = i / 1; // @error static type of multiplicative-expr with operands of int? subtypes is int?
+    Ints? a3 = i % h; // @error static type of multiplicative-expr with operands of int? subtypes is int?
+    int? a4 = getUnsigned32Int(i % a) * i; // @error static type of multiplicative-expr with operands of int? subtypes is int?
+
+    int:Signed16 a5 = j * b; // @error static type of multiplicative-expr with operands of int? subtypes is int?
+    int:Signed16 a6 = j / j; // @error static type of multiplicative-expr with operands of int? subtypes is int?
+    byte a7 = g % j; // @error static type of multiplicative-expr with operands of int? subtypes is int?
+    int? a8 = getUnsigned32Int(j / k) * b; // @error static type of multiplicative-expr with operands of int? subtypes is int?
+
+    int:Signed32 a9 = k * b; // @error static type of multiplicative-expr with operands of int? subtypes is int?
+    int:Signed32 a10 = c / k; // @error static type of multiplicative-expr with operands of int? subtypes is int?
+    int:Signed8 a11 = k % k; // @error static type of multiplicative-expr with operands of int? subtypes is int?
+    int? a12 = getUnsigned32Int(c % k) * c; // @error static type of multiplicative-expr with operands of int? subtypes is int?
+
+    int:Unsigned8 a13 = l * m; // @error static type of multiplicative-expr with operands of int? subtypes is int?
+    int:Unsigned8 a14 = l / 1; // @error static type of multiplicative-expr with operands of int? subtypes is int?
+    Ints a15 = d % l; // @error static type of multiplicative-expr with operands of int? subtypes is int?
+    int? a16 = getUnsigned32Int(f % h) * l; // @error static type of multiplicative-expr with operands of int? subtypes is int?
+
+    int:Unsigned16 a17 = m * m; // @error static type of multiplicative-expr with operands of int? subtypes is int?
+    int:Unsigned16 a18 = m / e; // @error static type of multiplicative-expr with operands of int? subtypes is int?
+    byte a19 = m % g; // @error static type of multiplicative-expr with operands of int? subtypes is int?
+    int? a20 = getUnsigned32Int(m / n) * e; // @error static type of multiplicative-expr with operands of int? subtypes is int?
+
+    int:Unsigned32 a21 = n * g; // @error static type of multiplicative-expr with operands of int? subtypes is int?
+    int:Unsigned32 a22 = n / n; // @error static type of multiplicative-expr with operands of int? subtypes is int?
+    int:Unsigned8 a23 = n % d; // @error static type of multiplicative-expr with operands of int? subtypes is int?
+    int? a24 = getUnsigned32Int(f % n) * n; // @error static type of multiplicative-expr with operands of int? subtypes is int?
+
+    byte a25 = o * g; // @error static type of multiplicative-expr with operands of int? subtypes is int?
+    int a26 = o / o; // @error static type of multiplicative-expr with operands of int? subtypes is int?
+    Ints a27 = m % o; // @error static type of multiplicative-expr with operands of int? subtypes is int?
+    int? a28 = getUnsigned32Int(n * o) * o; // @error static type of multiplicative-expr with operands of int? subtypes is int?
+
+    int a29 = p * p; // @error static type of multiplicative-expr with operands of int? subtypes is int?
+    int a30 = i / p; // @error static type of multiplicative-expr with operands of int? subtypes is int?
+    int a31 = a % p; // @error static type of multiplicative-expr with operands of int? subtypes is int?
+    int? a32 = getUnsigned32Int(c % p) % h; // @error static type of multiplicative-expr with operands of int? subtypes is int?
+}
+
+function getUnsigned32Int(int:Signed32 i) returns int:Unsigned32 {
+    return 0;
+}
+
