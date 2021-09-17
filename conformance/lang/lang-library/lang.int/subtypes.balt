@@ -1,0 +1,112 @@
+Test-Case: error
+Description: Test missing int module-prefix with signed builtin subtypes of int.
+Labels:
+
+public function main() {
+    Signed8 a = 10; // @error unknown type
+    Signed16 b = 10; // @error unknown type
+    Signed32 c = 10; // @error unknown type
+}
+
+Test-Case: error
+Description: Test missing int module-prefix with unsigned builtin subtypes of int.
+Labels:
+
+public function main() {
+    Unsigned8 a = 10; // @error unknown type
+    Unsigned16 b = 10; // @error unknown type
+    Unsigned32 c = 10; // @error unknown type
+}
+
+Test-Case: output
+Description: Test union of builtin subtypes of int.
+Labels: int:Signed8, int:Signed16, int:Signed32, int:Unsigned32, module-type-defn, type-reference
+
+type IntType int:Signed8|int:Unsigned32;
+
+type SignedTypes int:Signed16|int:Signed32;
+
+type IntType2 IntType|SignedTypes;
+
+public function main() {
+    int:Signed8|int:Unsigned32 a1 = 235262;
+    io:println(a1); // @output 235262
+
+    int:Signed8 x = -127;
+    int:Signed8|int:Unsigned32 a2 = x;
+    io:println(a2); // @output -127
+
+    IntType a3 = 235262;
+    io:println(a3); // @output 235262
+
+    IntType a4 = x;
+    io:println(a4); // @output -127
+
+    IntType2 a5 = 10;
+    io:println(a5); // @output 10
+}
+
+Test-Case: output
+Description: Test assigning valid values to union of builtin subtypes of int.
+Fail-Issue: ballerina-lang#32686
+Labels: int:Unsigned8, int:Unsigned32, module-type-defn, type-reference
+
+type IntType int:Signed8|int:Unsigned32;
+
+public function main() {
+    int:Signed8|int:Unsigned32 a = -127;
+    IntType b = -127;
+}
+
+Test-Case: output
+Description: Test assigning invalid values to union of builtin subtypes of int.
+Labels: additive-expr, int:Unsigned8, int:Unsigned32, module-type-defn
+
+type IntType int:Signed8|int:Unsigned32;
+
+public function main() {
+    int:Signed8|int:Unsigned32 a = 4294967295 + 1;  // @error int is not a subtype of (int:Signed8|int:Unsigned32)
+
+    IntType c = 4294967295 + 1;  // @error int is not a subtype of IntType
+}
+
+Test-Case: output
+Description: Test assigning invalid values to union of builtin subtypes of int.
+Fail-Issue: ballerina-lang#32687
+Labels: int:Unsigned8, int:Unsigned32, module-type-defn
+
+type IntType int:Signed8|int:Unsigned32;
+
+public function main() {
+    int:Signed8|int:Unsigned32 b = 4294967296;  // @error int is not a subtype of (int:Signed8|int:Unsigned32)
+
+    IntType d = 4294967296;  // @error int is not a subtype of IntType
+}
+
+Test-Case: output
+Description: Test toString function on union of builtin subtypes of int.
+Labels: int:Unsigned8, int:Unsigned32, module-type-defn
+
+type IntType int:Signed8|int:Unsigned32;
+
+public function main() {
+    int:Signed8|int:Unsigned32 a = 10;
+    io:println(a.toString()); // @output 10
+
+    IntType b = 20;
+    io:println(b.toString()); // @output 20
+}
+
+Test-Case: output
+Description: Test union of builtin subtypes of int as required param type descriptor, and function return type.
+Labels: int:Unsigned8, int:Unsigned32
+
+type IntType int:Signed8|int:Unsigned32;
+
+public function main() {
+    io:println(getInt(10)); // @output 10
+}
+
+function getInt(IntType a) returns int:Signed8|int:Unsigned32 {
+    return a;
+}

@@ -1,0 +1,41 @@
+Test-Case: error
+Description: Test assigning the result of `min` function to an incompatible type.
+Labels: int:min, int:Signed8, string
+
+public function main() {
+    int a1 = -10;
+
+    int:Signed8 b1 = a1.min(10); // @error expects a int:Signed8 value, but min() returns an int
+
+    string b2 = a1.min(); // @error expects a string value, but min() returns an int
+
+    b2 = int:min(-10); // @error expects a string value, but min() returns an int
+}
+
+Test-Case: error
+Description: Test passing invalid value to `min` function.
+Labels: int:min, string
+
+public function main() {
+    int a1 = 10;
+    int b1 = a1.min(10.5); // @error expects other values to be int
+
+    b1 = int:min("ABC"); // @error expects first value to be int
+}
+
+Test-Case: error
+Description: Test `min` function on invalid type.
+Labels: int:min, string
+
+public function main() {
+    string a1 = "ABC";
+    int b1 = a1.min(10); // @error min() is not defined for string
+}
+
+Test-Case: error
+Description: Test missing required parameter in `min` function call.
+Labels: int:min
+
+public function main() {
+    int a = int:min(); // @error missing first int value
+}

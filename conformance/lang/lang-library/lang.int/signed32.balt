@@ -1,0 +1,132 @@
+Test-Case: output
+Description: Test Signed32 built-in subtype of int.
+Labels: int:Signed32
+
+public function main() {
+    int:Signed32 a1 = -2147483648;
+    int:Signed32 a2 = 145678392;
+    int:Signed32 a3 = 2147483647;
+
+    testSigned32Int(a1); // @output -2147483648
+    testSigned32Int(a2); // @output 145678392
+    testSigned32Int(a3); // @output 2147483647
+}
+
+function testSigned32Int(int:Signed32 i) {
+    io:println(i);
+}
+
+Test-Case: output
+Description: Test assignability of type Signed32.
+Labels: int:Signed32, optional-type
+
+public function main() {
+    int:Signed32 a1 = -2147483648;
+    int:Signed32 a2 = 145678392;
+    int:Signed32 a3 = 2147483647;
+
+    int b1 = a1;
+    io:println(b1 is int:Signed32); // @output true
+
+    int? b2 = a2;
+    io:println(b2 is int:Signed32); // @output true
+}
+
+Test-Case: output
+Description: Test assignability of type Signed32.
+Labels: any, int:Signed32, optional-type, string
+
+public function main() {
+    int:Signed32 a1 = -2147483648;
+    int:Signed32 a2 = 145678392;
+    int:Signed32 a3 = 2147483647;
+
+    testIntOrNil(a1); // @output -2147483648
+    testIntOrNil(a2); // @output 145678392
+    testIntOrNil(a3); // @output 2147483647
+
+    testAny(a1); // @output -2147483648
+    testAny(a2); // @output 145678392
+    testAny(a3); // @output 2147483647
+}
+
+function testIntOrNil(int? i) {
+    if i is int {
+        io:println(i);
+    } else {
+        io:println("nil");
+    }
+}
+
+function testAny(any i) {
+    io:println(i);
+}
+
+Test-Case: output
+Description: Test int:Signed32 value belonging to a type.
+Labels: int:Signed32
+
+public function main() {
+    int:Signed32 a1 = 1234521672;
+
+    io:println(1234521672 is int:Signed32); // @output true
+    io:println(a1 is int); // @output true
+}
+
+Test-Case: output
+Description: Test equality of int:Signed32 values.
+Labels: int:Signed32
+
+public function main() {
+    int:Signed32 a1 = 127;
+    int:Signed32 a2 = 127;
+
+    io:println(a1 == a2); // @output true
+
+    int b1 = 127;
+    io:println(a1 == b1); // @output true
+
+    int:Signed32 a3 = -127;
+
+    io:println(a3 == -127); // @output true
+
+    io:println(a1 != a3); // @output true
+}
+
+Test-Case: error
+Description: Test assignability of type Signed32 with incompatible types.
+Labels: int:Signed8, int:Signed32, string
+
+public function main() {
+    int:Signed32 a1 = 21474836488; // @error int is not a subtype of int:Signed32
+
+    int:Signed32 a2 = -2147483649; // @error int is not a subtype of int:Signed32
+
+    int:Signed32 a3 = 100;
+    testSigned8Int(a3); // @error int:Signed32 is not a subtype of int:Signed8
+
+    int:Signed32 a3 = "A"; // @error string is not a subtype of int:Signed32
+
+    string b1 = a2; // @error int:Signed32 is not a subtype of string
+}
+
+function testSigned8Int(int:Signed8 i) {
+}
+
+Test-Case: error
+Description: Test assigning too large value to a Signed32 type variable.
+Fail-Issue: ballerina-lang#32574
+Labels: int:Signed32
+
+public function main() {
+    int:Signed32 x = 9223372036854775808; // @error too large value
+}
+
+Test-Case: error
+Description: Test assigning too small value to a Signed32 type variable.
+Fail-Issue: ballerina-lang#32574
+Labels: int:Signed32
+
+public function main() {
+    int:Signed32 x = -9223372036854775809; // @error too small value
+}

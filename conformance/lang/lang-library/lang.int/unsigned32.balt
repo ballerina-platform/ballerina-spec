@@ -1,0 +1,134 @@
+Test-Case: output
+Description: Test Unsigned32 built-in subtype of int.
+Labels: int:Unsigned32
+
+public function main() {
+    int:Unsigned32 a1 = 0;
+    int:Unsigned32 a2 = 23526165;
+    int:Unsigned32 a3 = 4294967295;
+
+    testUnsigned32Int(a1); // @output 0
+    testUnsigned32Int(a2); // @output 23526165
+    testUnsigned32Int(a3); // @output 4294967295
+}
+
+function testUnsigned32Int(int:Unsigned32 i) {
+    io:println(i);
+}
+
+Test-Case: output
+Description: Test assignability with type Unsigned32.
+Labels: any, int:Unsigned32, optional-type, string
+
+public function main() {
+    int:Unsigned32 a1 = 0;
+    int:Unsigned32 a2 = 23526165;
+    int:Unsigned32 a3 = 4294967295;
+
+    int b1 = a1;
+    io:println(b1 is int:Unsigned32); // @output true
+
+    int? b2 = a2;
+    io:println(b2 is int:Unsigned32); // @output true
+
+    testIntOrNil(a1); // @output 0
+    testIntOrNil(a2); // @output 23526165
+    testIntOrNil(a3); // @output 4294967295
+
+    testAny(a1); // @output 0
+    testAny(a2); // @output 23526165
+    testAny(a3); // @output 4294967295
+}
+
+function testIntOrNil(int? i) {
+    if i is int {
+        io:println(i);
+    } else {
+        io:println("nil");
+    }
+}
+
+function testAny(any i) {
+    io:println(i);
+}
+
+Test-Case: output
+Description: Test type Unsigned32 value belonging to a type.
+Labels: int:Unsigned32, is-expr
+
+public function main() {
+    int:Unsigned32 a1 = 130;
+
+    io:println(130 is int:Unsigned32); // @output true
+    io:println(a1 is int); // @output true
+}
+
+Test-Case: output
+Description: Test equality of type Unsigned32 values.
+Labels: int:Unsigned8, int:Unsigned16, int:Unsigned32
+
+public function main() {
+    int:Unsigned32 a1 = 127;
+    int:Unsigned32 a2 = 127;
+    int:Unsigned32 a3 = 120;
+
+    io:println(a1 == a2); // @output true
+    io:println(a1 != a3); // @output true
+
+    int:Unsigned16 b1 = 127;
+    io:println(a1 == b1); // @output true
+
+    int:Unsigned8 b2 = 127;
+    io:println(a2 == b2); // @output true
+
+    int b3 = a1;
+    io:println(a1 == b3); // @output true
+}
+
+Test-Case: output
+Description: Test equality of type Unsigned32 values.
+Fail-Issue: ballerina-lang#32788
+Labels: byte, int:Unsigned32
+
+public function main() {
+    int:Unsigned32 a1 = 127;
+    byte a2 = 127;
+
+    io:println(a1 == a2); // @output true
+}
+
+Test-Case: error
+Description: Test type Unsigned32 value assignability with incompatible types.
+Labels: int:Unsigned8, int:Unsigned32, string
+
+public function main() {
+    int:Unsigned32 a1 = -1; // @error int is not a subtype of int:Unsigned32
+
+    int:Unsigned32 a2 = 130;
+    testUnsigned8Int(a2); // @error int:Unsigned32 is not a subtype of int:Unsigned8
+
+    int:Unsigned32 a3 = "A"; // @error string is not a subtype of int:Unsigned32
+
+    string b1 = a2; // @error int:Unsigned32 is not a subtype of string
+}
+
+function testUnsigned8Int(int:Unsigned8 i) {
+}
+
+Test-Case: error
+Description: Test assigning too large value to a Unsigned32 type variable.
+Fail-Issue: ballerina-lang#32574
+Labels: int:Unsigned32
+
+public function main() {
+    int:Unsigned32 x = 9223372036854775808; // @error too large value
+}
+
+Test-Case: error
+Description: Test assigning too small value to a Unsigned32 type variable.
+Fail-Issue: ballerina-lang#32574
+Labels: int:Unsigned32
+
+public function main() {
+    int:Unsigned32 x = -9223372036854775809; // @error too small value
+}

@@ -1,0 +1,37 @@
+Test-Case: error
+Description: Test assigning the result of `abs` function to an incompatible type.
+Labels: int:abs, int:Signed8, string
+
+public function main() {
+    int a1 = -10;
+
+    int:Signed8 b1 = a1.abs(); // @error expects a int:Signed8 value, but abs() returns an int
+
+    string b2 = a1.abs(); // @error expects a string value, but abs() returns an int
+
+    b2 = int:abs(-10); // @error expects a string value, but abs() returns an int
+}
+
+Test-Case: error
+Description: Test passing invalid value to `abs` function.
+Labels: float, int:abs, string
+
+public function main() {
+    float a1 = 10.5;
+
+    int b1 = a1.abs(); // @error expects an int value to be operated on
+
+    b1 = int:abs("ABC"); // @error expects an int value to be operated on
+
+    b1 = 10.23.abs(); // @error expects an int value to be operated on
+
+    b1 = "ABC".abs(); // @error abs() is not defined for string
+}
+
+Test-Case: error
+Description: Test missing required parameter in `abs` function call.
+Labels: int:abs
+
+public function main() {
+    int a = int:abs(); // @error missing value to be operated on
+}

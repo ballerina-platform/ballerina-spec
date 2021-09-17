@@ -1,0 +1,50 @@
+Test-Case: error
+Description: Test assigning the result of `toHexString` function to an incompatible type.
+Labels: int:toHexString, string:Char
+
+public function main() {
+    int a1 = 10;
+
+    string:Char b1 = a1.toHexString(); // @error expects a string:Char, but toHexString() returns a string
+
+    int b2 = int:toHexString(a1); // @error expects an int, but toHexString() returns a string
+
+    b2 = a1.toHexString(); // @error expects an int, but toHexString() returns a string
+}
+
+Test-Case: error
+Description: Test passing invalid value to `toHexString` function.
+Labels: int:toHexString, string, union-type
+
+public function main() {
+    int|string a1 = 10;
+    string b2 = int:toHexString(a1); // @error expects an int argument
+}
+
+Test-Case: error
+Description: Test `toHexString` function on invalid type.
+Labels: int:toHexString, string, union-type
+
+public function main() {
+    int|string a1 = 10;
+    string b2 = a1.toHexString(); // @error toHexString() is not defined for (int|string)
+}
+
+Test-Case: error
+Description: Test missing required parameter in `toHexString` function call.
+Labels: int:toHexString, string
+
+public function main() {
+    string b2 = int:toHexString(); // @error missing int argument
+}
+
+Test-Case: error
+Description: Test passing too many arguments to `toHexString`.
+Labels: int:toHexString, string
+
+public function main() {
+    int a1 = 1234;
+
+    string b1 = a1.toHexString(a1); // @error too many arguments
+    b1 = int:toHexString(a1, a1); // @error too many arguments
+}

@@ -1,0 +1,417 @@
+Test-Case: output
+Description: Test `fromHexString` function.
+Labels: error, int:fromHexString, is-expr, string, union-type
+
+public function main() {
+    string a1 = "4abcdef12";
+    string a2 = "4ABCDEF12";
+    string a3 = "+7ABffdea1";
+    string a4 = "-7fffffffffffffff";
+    string a5 = "+7fffffffffffffff";
+    string a6 = "1234";
+    string a7 = "affde";
+
+    int|error b1 = int:fromHexString(a1);
+    testResult(b1); // @output 20062269202
+
+    testResult(int:fromHexString(a2)); // @output 20062269202
+
+    b1 = int:fromHexString(a3);
+    testResult(b1); // @output 32950443681
+
+    testResult(int:fromHexString(a4)); // @output -9223372036854775807
+
+    testResult(int:fromHexString(a5)); // @output 9223372036854775807
+
+    testResult(int:fromHexString(a6)); // @output 4660
+
+    testResult(int:fromHexString(a7)); // @output -13638
+}
+
+function testResult(int|error i) {
+    if i is int {
+        io:println(i);
+    } else {
+        io:println(i);
+    }
+}
+
+Test-Case: output
+Description: Test `fromHexString` function.
+Fail-Issue: ballerina-lang#32627
+Labels: error, int:fromHexString, is-expr, string, union-type
+
+public function main() {
+    string a1 = "ffffffff80000000";
+    string a2 = "ffffffffffff8000";
+    string a3 = "ffffffffffffffec";
+    string a4 = "8000000000000000";
+
+    int|error b1 = int:fromHexString(a1);
+    testResult(b1); // @output -2147483648
+
+    testResult(int:fromHexString(a2)); // @output -32768
+
+    b1 = int:fromHexString(a3);
+    testResult(b1); // @output -20
+
+    testResult(int:fromHexString(a4)); // @output -9223372036854775808
+}
+
+function testResult(int|error i) {
+    if i is int {
+        io:println(i);
+    } else {
+        io:println(i);
+    }
+}
+
+Test-Case: output
+Description: Test `fromHexString` function with string literals.
+Labels: error, int:fromHexString, is-expr, string, union-type
+
+public function main() {
+    int|error b1 = int:fromHexString("7fffffff");
+    testResult(b1); // @output 2147483647
+
+    testResult(int:fromHexString("7fff")); // @output 32767
+
+    b1 = int:fromHexString("911");
+    testResult(b1); // @output 2321
+
+    testResult(int:fromHexString("7fffffffffffffff")); // @output 9223372036854775807
+}
+
+function testResult(int|error i) {
+    if i is int {
+        io:println(i);
+    } else {
+        io:println(i);
+    }
+}
+
+Test-Case: output
+Description: Test `fromHexString` function with string literals.
+Fail-Issue: ballerina-lang#32627
+Labels: error, int:fromHexString, is-expr, string, union-type
+
+public function main() {
+    int|error b1 = int:fromHexString("ffffffff80000000");
+    testResult(b1); // @output -2147483648
+
+    testResult(int:fromHexString("ffffffffffff8000")); // @output -32768
+
+    b1 = int:fromHexString("ffffffffffffffec");
+    testResult(b1); // @output -20
+
+    testResult(int:fromHexString("8000000000000000")); // @output -9223372036854775808
+}
+
+function testResult(int|error i) {
+    if i is int {
+        io:println(i);
+    } else {
+        io:println(i);
+    }
+}
+
+Test-Case: output
+Description: Test `fromHexString` function with string template expression.
+Labels: error, int:fromHexString, is-expr, string, string-template-expr, union-type
+
+public function main() {
+    string a1 = string `7fffffff`;
+    string a2 = string `911`;
+    string a3 = string `cad`;
+
+    int|error b1 = int:fromHexString(string `7fff`);
+    testResult(b1); // @output 32767
+
+    testResult(int:fromHexString(a1)); // @output 2147483647
+
+    b1 = int:fromHexString(a2);
+    testResult(b1); // @output 2321
+
+    testResult(int:fromHexString(string `7fffffffffffffff`)); // @output 9223372036854775807
+
+    b1 = int:fromHexString(a3);
+    testResult(b1); // @output 3245
+}
+
+function testResult(int|error i) {
+    if i is int {
+        io:println(i);
+    } else {
+        io:println(i);
+    }
+}
+
+Test-Case: output
+Description: Test `fromHexString` function with string template with interpolation.
+Labels: error, int:fromHexString, is-expr, string, string-template-expr, union-type
+
+public function main() {
+    string a1 = "ffffff";
+    string a2 = string `c`;
+
+    int|error b1 = int:fromHexString(string `7fffffffff${a1}`);
+    testResult(b1); // @output 9223372036854775807
+
+    testResult(int:fromHexString(string `${a2}ad`)); // @output 3245
+
+    testResult(int:fromHexString(string `${a1}${a2}`)); // @output 268435452
+}
+
+function testResult(int|error i) {
+    if i is int {
+        io:println(i);
+    } else {
+        io:println(i);
+    }
+}
+
+Test-Case: output
+Description: Test `fromHexString` function with string subtypes.
+Labels: error, int:fromHexString, is-expr, module-const-decl, module-type-defn, string, string:Char,
+        type-reference, union-type
+
+const A = "7fffffff";
+const B = "cad";
+
+type StringType1 "7fff"|"ffffffff"|"cad";
+
+type StringType2 string:Char;
+
+type StringType3 A|B;
+
+public function main() {
+    string:Char a1 = "f";
+    string|string:Char a2 = "7fffffffffffffff";
+    StringType1 a3 = "ffffffff";
+    StringType2 a4 = "c";
+    StringType3 a5 = "7fffffff";
+
+    int|error b1 = int:fromHexString(a1);
+    testResult(b1); // @output 15
+
+    testResult(int:fromHexString(a2)); // @output 9223372036854775807
+
+    b1 = int:fromHexString(a3);
+    testResult(b1); // @output 4294967295
+
+    testResult(int:fromHexString(A)); // @output 2147483647
+
+    testResult(int:fromHexString(a4)); // @output 12
+
+    testResult(int:fromHexString(a5)); // @output 2147483647
+}
+
+function testResult(int|error i) {
+    if i is int {
+        io:println(i);
+    } else {
+        io:println(i);
+    }
+}
+
+Test-Case: output
+Description: Test `fromHexString` function with string values from various expressions.
+Labels: additive-expr, error, int:fromHexString, is-expr, string, string-template-expr, union-type
+
+public function main() {
+    int a1 = 0xf;
+    int a2 = 125365;
+    string a3 = "7fff";
+
+    int|error b1 = int:fromHexString(a1.toString());
+    testResult(b1); // @output 21
+
+    testResult(int:fromHexString(3546372.toString())); // @output 55862130
+
+    b1 = int:fromHexString(getString() + string `${a2}` + "2" + a3);
+    testResult(b1); // @output 1488880740833853439
+}
+
+function getString() returns string {
+    return "14a99";
+}
+
+function testResult(int|error i) {
+    if i is int {
+        io:println(i);
+    } else {
+        io:println(i);
+    }
+}
+
+Test-Case: output
+Description: Test assignability of `fromHexString` function result.
+Labels: any, int:fromHexString, is-expr, module-type-defn, string, type-reference, var
+
+type Type int|error;
+
+public function main() {
+    string a1 = "12a3b79cd4e8f56";
+
+    testResult(int:fromHexString(a1)); // @output 83944937381334870
+
+    Type b1 = int:fromHexString(a1);
+    testResult(b1); // @output 83944937381334870
+
+    var b2 = int:fromHexString(a1);
+    testResult(b2); // @output 83944937381334870
+}
+
+function testResult(any|error i) {
+    if i is any {
+        io:println(i);
+    } else {
+        io:println(i);
+    }
+}
+
+Test-Case: output
+Description: Test `fromHexString` function with invalid strings.
+Labels: error, float, int:fromHexString, string, union-type
+
+public function main() {
+    string a1 = "FFFFF999ABfdec364432";
+    float a2 = 10;
+
+    int|error b1 = int:fromHexString(a1);
+    testResult(b1); // @output true
+
+    b1 = int:fromHexString("FFDEFF999ABfdec364432"); // @output true
+    testResult(b1);
+
+    testResult(int:fromHexString(string `xyz123`)); // @output true
+
+    testResult(int:fromHexString(getString())); // @output true
+
+    b1 = int:fromHexString(string `${a2}`);
+    testResult(b1); // @output true
+
+    int|error b2 = int:fromHexString("9223372036854775808");
+    testResult(b2); // @output true
+
+    b2 = int:fromHexString("-9223372036854775809");
+    testResult(b2); // @output true
+}
+
+function getString() returns string {
+    return "12536.26";
+}
+
+function testResult(int|error i) {
+    if i is int {
+        io:println(i);
+    } else {
+        io:println(i is error);
+    }
+}
+
+Test-Case: panic
+Description: Test `fromHexString` function with invalid strings.
+Labels: error, float, int:fromHexString, panic-stmt, string, union-type
+
+public function main() {
+    testResult(int:fromHexString("sfg12")); // @panic number parsing error for input string
+}
+
+function testResult(int|error i) {
+    if i is int {
+        io:println(i);
+    } else {
+        panic i;
+    }
+}
+
+Test-Case: output
+Description: Test `fromHexString` function result belonging to a type.
+Labels: int:fromHexString, is-expr, var
+
+public function main() {
+    string a1 = "4abcdef12";
+
+    io:println(int:fromHexString(a1) is int); // @output true
+
+    var b1 = int:fromHexString(a1);
+    io:println(b1 is int); // @output true
+}
+
+Test-Case: output
+Description: Test equality with `fromHexString` function result.
+Labels: int:Signed32, int:fromHexString, string
+
+public function main() {
+    string a1 = "4abcdef12";
+    int a2 = 0x4abcdef12;
+    int:Unsigned32 a3 = 78368239;
+
+    int|error b1 = int:fromHexString(a1);
+    int|error b2 = int:fromHexString("4abcdef12");
+
+    testEquality(b1, b2); // @output a1 is int && a2 is int
+                          // @output true
+
+    testEquality(int:fromHexString(a1), int:fromHexString("4abcdef12")); // @output a1 is int && a2 is int
+                                                                         // @output true
+
+    testEquality(int:fromHexString(a1), int:fromHexString("4352")); // @output a1 is int && a2 is int
+                                                                    // @output false
+
+    testEquality(int:fromHexString(a3.toHexString()), a3); // @output a1 is int && a2 is int
+                                                           // @output true
+}
+
+function testEquality(int|error a1, int|error a2) {
+    if a1 is int && a2 is int {
+        io:println("a1 is int && a2 is int");
+        io:println(a1 == a2);
+    } else if a1 is int && a2 is error {
+        io:println("a1 is int && a2 is error");
+    } else if a1 is error && a2 is int {
+        io:println("a1 is error && a2 is int");
+    } else {
+        io:println("a1 is error && a2 is error");
+    }
+}
+
+Test-Case: output
+Description: Test `fromHexString` method call as expression in return statement.
+Labels: int:fromHexString
+
+public function main() {
+    io:println(getInt("4abcdef12")); // @output 20062269202
+}
+
+function getInt(string s) returns int|error {
+    return int:fromHexString(s);
+}
+
+Test-Case: output
+Description: Test `fromHexString` method call as expression in list constructor.
+Labels: array-type, int:fromHexString, list-constructor-expr
+
+public function main() {
+    (int|error)[] arr = [int:fromHexString("24"), int:fromHexString("-10"), int:fromHexString("10")];
+    io:println(arr); // @output [36,-16,16]
+}
+
+Test-Case: output
+Description: Test `fromHexString` method call as expression in map constructor.
+Labels: int:fromHexString, mapping-constructor-expr, map-type, string
+
+public function main() {
+    map<int|error> a = {"One": int:fromHexString("23"), "Two": int:fromHexString("30")};
+    io:println(a); // @output {"One":35,"Two":48}
+}
+
+Test-Case: output
+Description: Test `fromHexString` method call as expression in typeof expression.
+Labels: int:fromHexString, mapping-constructor-expr, map-type, string, typedesc, typeof-expr
+
+public function main() {
+    typedesc j = typeof int:fromHexString("123");
+    io:println(j); // @output typedesc 291
+}

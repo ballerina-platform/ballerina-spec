@@ -1,0 +1,198 @@
+Test-Case: output
+Description: Test maximum value of Signed8 built-in subtype of int.
+Labels: int:SIGNED8_MAX_VALUE, is-expr, optional-type, string
+
+public function main() {
+    int:SIGNED8_MAX_VALUE a = 127;
+
+    testIntOrNil(a); // @output 127
+    testIntOrNil(int:SIGNED8_MAX_VALUE); // @output 127
+
+    int b = int:SIGNED8_MAX_VALUE;
+    testIntOrNil(b); // @output 127
+}
+
+function testIntOrNil(int? i) {
+    if i is int {
+        io:println(i);
+    } else {
+        io:println("nil");
+    }
+}
+
+Test-Case: output
+Description: Test SIGNED8_MAX_VALUE belonging to a type.
+Labels: byte, int:Signed8, int:Signed16, int:Signed32, int:SIGNED8_MAX_VALUE, int:Unsigned8, int:Unsigned16,
+        int:Unsigned32, is-expr
+
+public function main() {
+    io:println(int:SIGNED8_MAX_VALUE is int); // @output true
+    io:println(int:SIGNED8_MAX_VALUE is int:Signed8); // @output true
+    io:println(int:SIGNED8_MAX_VALUE is int:Signed16); // @output true
+    io:println(int:SIGNED8_MAX_VALUE is int:Signed32); // @output true
+
+    io:println(int:SIGNED8_MAX_VALUE is int:Unsigned8); // @output true
+    io:println(int:SIGNED8_MAX_VALUE is int:Unsigned16); // @output true
+    io:println(int:SIGNED8_MAX_VALUE is int:Unsigned32); // @output true
+    io:println(int:SIGNED8_MAX_VALUE is byte); // @output true
+}
+
+Test-Case: output
+Description: Test assignability of SIGNED8_MAX_VALUE with var.
+Labels: int:SIGNED8_MAX_VALUE, is-expr, optional-type, string
+
+public function main() {
+    var a = int:SIGNED8_MAX_VALUE;
+    io:println(a); // @output 127
+    io:println(a is int); // @output true
+}
+
+Test-Case: output
+Description: Test declaring module level variables with SIGNED8_MAX_VALUE.
+Labels: int:SIGNED8_MAX_VALUE, module-const-decl
+
+const int a = int:SIGNED8_MAX_VALUE;
+
+int b = int:SIGNED8_MAX_VALUE;
+
+public function main() {
+    io:println(a); // @output 127
+    io:println(b); // @output 127
+}
+
+Test-Case: output
+Description: Test defining types with SIGNED8_MAX_VALUE.
+Labels: int:SIGNED8_MAX_VALUE, module-type-defn, type-reference, union-type
+
+const int A = int:SIGNED8_MAX_VALUE;
+
+type Const1 int:SIGNED8_MAX_VALUE;
+
+type Const2 A|Const1|int:SIGNED8_MAX_VALUE;
+
+public function main() {
+    Const1 a1 = 127;
+    io:println(a1); // @output 127
+
+    Const2 a2 = 127;
+    io:println(a1); // @output 127
+
+    int:SIGNED8_MAX_VALUE|int:Unsigned16 a3 = 130;
+    io:println(a3); // @output 130
+}
+
+Test-Case: output
+Description: Test equality with SIGNED8_MAX_VALUE.
+Labels: byte, int:Signed8, int:Signed16, int:SIGNED8_MAX_VALUE, int:Unsigned32
+
+public function main() {
+    io:println(int:SIGNED8_MAX_VALUE == 127); // @output true
+
+    int a = 127;
+    io:println(a == int:SIGNED8_MAX_VALUE); // @output true
+
+    int:Signed8 b = 127;
+    io:println(b == int:SIGNED8_MAX_VALUE); // @output true
+
+    byte c = 127;
+    io:println(c == int:SIGNED8_MAX_VALUE); // @output true
+
+    int:Signed16|int:Unsigned32 d = 127;
+    io:println(d == int:SIGNED8_MAX_VALUE); // @output true
+}
+
+Test-Case: output
+Description: Test SIGNED8_MAX_VALUE as expression in return statement.
+Labels: int:SIGNED8_MAX_VALUE
+
+public function main() {
+    io:println(getInt()); // @output 127
+}
+
+function getInt() returns int {
+    return int:SIGNED8_MAX_VALUE;
+}
+
+Test-Case: output
+Description: Test SIGNED8_MAX_VALUE as expression in list constructor.
+Labels: array-type, int:SIGNED8_MAX_VALUE, list-constructor-expr
+
+public function main() {
+    int[] arr = [int:SIGNED8_MAX_VALUE, int:SIGNED8_MAX_VALUE];
+    io:println(arr); // @output [127,127]
+}
+
+Test-Case: output
+Description: Test SIGNED8_MAX_VALUE as expression in method call expression.
+Labels: int:SIGNED8_MAX_VALUE, value:toString()
+
+public function main() {
+    io:println(int:SIGNED8_MAX_VALUE.toString()); // @output 127
+}
+
+Test-Case: output
+Description: Test SIGNED8_MAX_VALUE as expression in map constructor.
+Labels: int:SIGNED8_MAX_VALUE, mapping-constructor-expr, map-type, string
+
+public function main() {
+    map<int> intMap = {"One": int:SIGNED8_MAX_VALUE, "Two": int:SIGNED8_MAX_VALUE};
+    io:println(intMap); // @output {"One":127,"Two":127}
+}
+
+Test-Case: output
+Description: Test SIGNED8_MAX_VALUE as expression in additive expression.
+Labels: additive-expr, int:SIGNED8_MAX_VALUE
+
+public function main() {
+    int a = int:SIGNED8_MAX_VALUE + int:SIGNED8_MAX_VALUE;
+    io:println(a); // @output 254
+}
+
+Test-Case: output
+Description: Test SIGNED8_MAX_VALUE as expression in if else statement.
+Labels: int:SIGNED8_MAX_VALUE, relational-expr
+
+public function main() {
+    compare(); // @output true
+}
+
+function compare() {
+    if int:SIGNED8_MAX_VALUE > 20 {
+        io:println(int:SIGNED8_MAX_VALUE > 20);
+    } else {
+        io:println();
+    }
+}
+
+Test-Case: error
+Description: Test assigning invalid value for int:SIGNED8_MAX_VALUE type variable.
+Labels: int:SIGNED8_MAX_VALUE
+
+public function main() {
+    int:SIGNED8_MAX_VALUE a = 10; // @error int is not a subtype of 127
+}
+
+Test-Case: error
+Description: Test assigning int:SIGNED8_MAX_VALUE to an incompatible type.
+Labels: int:Signed8, int:SIGNED8_MAX_VALUE, string
+
+public function main() {
+    int:Signed8 a = int:SIGNED8_MAX_VALUE; // @error int is not a subtype of int:Signed8
+    string b = int:SIGNED8_MAX_VALUE; // @error int is not a subtype of string
+}
+
+Test-Case: error
+Description: Test updating int:SIGNED8_MAX_VALUE constant value.
+Labels: int:SIGNED8_MAX_VALUE
+
+public function main() {
+    int:SIGNED8_MAX_VALUE = 10; // @error cannot update constant
+}
+
+Test-Case: error
+Description: Test missing int module-prefix with int:SIGNED8_MAX_VALUE.
+Labels:
+
+public function main() {
+    SIGNED8_MAX_VALUE a = -100; // @error unknown type
+}
