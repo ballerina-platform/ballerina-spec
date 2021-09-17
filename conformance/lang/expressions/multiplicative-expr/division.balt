@@ -3213,3 +3213,695 @@ public function main() {
     Ints? b = -1;
     int? c = a / b; // @panic integer overflow on division
 }
+
+Test-Case: output
+Description: Test variable reference as integer division operands.
+Labels: multiplicative-expr, int, DecimalNumber, variable-reference-expr
+
+public function main() {
+    int a = 2;
+    int b = a / a;
+    io:println(b); // @output 1
+}
+
+Test-Case: output
+Description: Test field and member access as integer division operands.
+Labels: multiplicative-expr, int, DecimalNumber, record-type, mapping-constructor, array-type, list-constructor, module-type-defn
+
+public function main() {
+    Record c = {x: 10};
+    int[] d = [30, 40];
+    int e = d[0] / c.x;
+    io:println(e); // @output 3
+}
+
+type Record record {
+    int x;
+};
+
+Test-Case: output
+Description: Test function and method call as integer division operands.
+Labels: multiplicative-expr, int, DecimalNumber, function-call, module-class-defn, new-expr, method-call-expr
+
+public function main() {
+    Class f = new;
+    int g = f.getInt() / getInt();
+    io:println(g); // @output 12
+}
+
+function getInt() returns int {
+    return 10 / 2;
+}
+
+class Class {
+    function getInt() returns int {
+        return 60;
+    }
+}
+
+Test-Case: output
+Description: Test let expression in integer division operands.
+Labels: multiplicative-expr, int, DecimalNumber, let-expr
+
+public function main() {
+    int h = (let int h1 = 40 / 4 in h1) / 5;
+    io:println(h); // @output 2
+}
+
+Test-Case: output
+Description: Test type cast expression in integer division operands.
+Labels: multiplicative-expr, int, DecimalNumber, type-cast-expr
+
+public function main() {
+    int i = <int> 16 / 8;
+    io:println(i); // @output 2
+}
+
+Test-Case: output
+Description: Test unary expressions in integer division operands.
+Labels: multiplicative-expr, int, DecimalNumber, type-cast-expr, typeof-expr, typedesc, unary-plus, unary-minus, unary-complement
+
+public function main() {
+    int k = +42 / -3;
+    io:println(k); // @output -14
+
+    int l = -(-20 / 5);
+    io:println(l); // @output 4
+
+    int m = ~(20 / 5);
+    io:println(m); // @output -5
+
+    int n = ~20 / 3;
+    io:println(n); // @output -7
+}
+
+Test-Case: output
+Description: Test 1 for multiplicative expression in integer division operands.
+Labels: multiplicative-expr, int, DecimalNumber
+
+public function main() {
+    int o = 808 / 404 % 10 * 4;
+    io:println(o); // @output 8
+}
+
+Test-Case: output
+Description: Test 2 for multiplicative expression in integer division operands.
+Labels: multiplicative-expr, int, DecimalNumber
+
+public function main() {
+    int o = 32 / (404 % 10 * 4);
+    io:println(o); // @output 2
+}
+
+Test-Case: output
+Description: Test additive expressions as integer division operands.
+Labels: multiplicative-expr, int, DecimalNumber, additive-expr
+
+public function main() {
+    int p = (1 + 20) / (3 + 4);
+    io:println(p); // @output 3
+}
+
+Test-Case: output
+Description: Test shift expressions as integer division operands.
+Labels: multiplicative-expr, int, DecimalNumber, shift-expr
+
+public function main() {
+    int p = (100 >> 4) / (1 << 2);
+    io:println(p); // @output 1
+}
+
+Test-Case: output
+Description: Test binary bitwise expressions as integer division operands.
+Labels: multiplicative-expr, int, DecimalNumber, binary-bitwise-expr
+
+public function main() {
+    int p = (2 & 6) / (2 ^ 6);
+    io:println(p); // @output 0
+}
+
+Test-Case: output
+Description: Test conditional expressions as integer division operands.
+Labels: multiplicative-expr, int, DecimalNumber, conditional-expr, union-type, error, optional-type
+
+public function main() {
+    int|error a = 12;
+    int? b = ();
+    int c = (a is error ? 2 : a) / (b ?: 2);
+    io:println(c); // @output 6
+}
+
+Test-Case: output
+Description: Test checking expressions as integer division operands.
+Labels: multiplicative-expr, int, DecimalNumber, checking-expr, union-type, error
+
+public function main() returns error? {
+    int|error a = 12;
+    int c = check a / checkpanic a;
+    io:println(c); // @output 1
+}
+
+Test-Case: output
+Description: Test integer division with operands of different int subtypes.
+Labels: multiplicative-expr, int, DecimalNumber, byte, int:Signed8, int:Signed16,
+        int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, module-type-defn, union-type
+
+type Ints -9|9;
+
+public function main() returns error? {
+    int a = -1;
+    byte b = 2;
+    int:Signed8 c = -3;
+    int:Signed16 d = 4;
+    int:Signed32 e = -5;
+    int:Unsigned8 f = 6;
+    int:Unsigned16 g = 7;
+    int:Unsigned32 h = 8;
+    Ints i = -9;
+
+    int v = a / b;
+    io:println(v); // @output 0
+
+    v = a / c;
+    io:println(v); // @output 0
+
+    v = a / d;
+    io:println(v); // @output 0
+
+    v = a / e;
+    io:println(v); // @output 0
+
+    v = a / f;
+    io:println(v); // @output 0
+
+    v = a / g;
+    io:println(v); // @output 0
+
+    v = a / h;
+    io:println(v); // @output 0
+
+    v = a / i;
+    io:println(v); // @output 0
+
+    v = b / a;
+    io:println(v); // @output -2
+
+    v = b / c;
+    io:println(v); // @output 0
+
+    v = b / d;
+    io:println(v); // @output 0
+
+    v = b / e;
+    io:println(v); // @output 0
+
+    v = b / f;
+    io:println(v); // @output 0
+
+    v = b / g;
+    io:println(v); // @output 0
+
+    v = b / h;
+    io:println(v); // @output 0
+
+    v = b / i;
+    io:println(v); // @output 0
+
+    v = c / a;
+    io:println(v); // @output 3
+
+    v = c / b;
+    io:println(v); // @output -1
+
+    v = c / d;
+    io:println(v); // @output 0
+
+    v = c / e;
+    io:println(v); // @output 0
+
+    v = c / f;
+    io:println(v); // @output 0
+
+    v = c / g;
+    io:println(v); // @output 0
+
+    v = c / h;
+    io:println(v); // @output 0
+
+    v = c / i;
+    io:println(v); // @output 0
+
+    v = d / a;
+    io:println(v); // @output -4
+
+    v = d / b;
+    io:println(v); // @output 2
+
+    v = d / c;
+    io:println(v); // @output -1
+
+    v = d / e;
+    io:println(v); // @output 0
+
+    v = d / f;
+    io:println(v); // @output 0
+
+    v = d / g;
+    io:println(v); // @output 0
+
+    v = d / h;
+    io:println(v); // @output 0
+
+    v = d / i;
+    io:println(v); // @output 0
+
+    v = e / a;
+    io:println(v); // @output 5
+
+    v = e / b;
+    io:println(v); // @output -2
+
+    v = e / c;
+    io:println(v); // @output 1
+
+    v = e / d;
+    io:println(v); // @output -1
+
+    v = e / f;
+    io:println(v); // @output 0
+
+    v = e / g;
+    io:println(v); // @output 0
+
+    v = e / h;
+    io:println(v); // @output 0
+
+    v = e / i;
+    io:println(v); // @output 0
+
+    v = f / a;
+    io:println(v); // @output -6
+
+    v = f / b;
+    io:println(v); // @output 3
+
+    v = f / c;
+    io:println(v); // @output -2
+
+    v = f / d;
+    io:println(v); // @output 1
+
+    v = f / e;
+    io:println(v); // @output -1
+
+    v = f / g;
+    io:println(v); // @output 0
+
+    v = f / h;
+    io:println(v); // @output 0
+
+    v = f / i;
+    io:println(v); // @output 0
+
+    v = g / a;
+    io:println(v); // @output -7
+
+    v = g / b;
+    io:println(v); // @output 3
+
+    v = g / c;
+    io:println(v); // @output -2
+
+    v = g / d;
+    io:println(v); // @output 1
+
+    v = g / e;
+    io:println(v); // @output -1
+
+    v = g / f;
+    io:println(v); // @output 1
+
+    v = g / h;
+    io:println(v); // @output 0
+
+    v = g / i;
+    io:println(v); // @output 0
+
+    v = h / a;
+    io:println(v); // @output -8
+
+    v = h / b;
+    io:println(v); // @output 4
+
+    v = h / c;
+    io:println(v); // @output -2
+
+    v = h / d;
+    io:println(v); // @output 2
+
+    v = h / e;
+    io:println(v); // @output -1
+
+    v = h / f;
+    io:println(v); // @output 1
+
+    v = h / g;
+    io:println(v); // @output 1
+
+    v = h / i;
+    io:println(v); // @output 0
+
+    v = i / a;
+    io:println(v); // @output 9
+
+    v = i / b;
+    io:println(v); // @output -4
+
+    v = i / c;
+    io:println(v); // @output 3
+
+    v = i / d;
+    io:println(v); // @output -2
+
+    v = i / e;
+    io:println(v); // @output 1
+
+    v = i / f;
+    io:println(v); // @output -1
+
+    v = i / g;
+    io:println(v); // @output -1
+
+    v = i / h;
+    io:println(v); // @output -1
+}
+
+Test-Case: output
+Description: Test 1 for integer division with operands of different optional int subtypes.
+Labels: multiplicative-expr, int, DecimalNumber, byte, int:Signed8, int:Signed16, 
+        int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, module-type-defn, union-type, optional-type, value:toBalString
+
+type Ints -9|9;
+
+public function main() returns error? {
+    int? a = -1;
+    byte? b = 2;
+    int:Signed8? c = -3;
+    int:Signed16? d = 4;
+    int:Signed32? e = -5;
+    int:Unsigned8? f = 6;
+    int:Unsigned16? g = 7;
+    int:Unsigned32? h = 8;
+    Ints? i = -9;
+    int? j = ();
+
+    int? v = a / b;
+    io:println(v); // @output 0
+
+    v = a / c;
+    io:println(v); // @output 0
+
+    v = a / d;
+    io:println(v); // @output 0
+
+    v = a / e;
+    io:println(v); // @output 0
+
+    v = a / f;
+    io:println(v); // @output 0
+
+    v = a / g;
+    io:println(v); // @output 0
+
+    v = a / h;
+    io:println(v); // @output 0
+
+    v = a / i;
+    io:println(v); // @output 0
+
+    v = a / j;
+    io:println(v.toBalString()); // @output ()
+
+    v = b / a;
+    io:println(v); // @output -2
+
+    v = b / c;
+    io:println(v); // @output 0
+
+    v = b / d;
+    io:println(v); // @output 0
+
+    v = b / e;
+    io:println(v); // @output 0
+
+    v = b / f;
+    io:println(v); // @output 0
+
+    v = b / g;
+    io:println(v); // @output 0
+
+    v = b / h;
+    io:println(v); // @output 0
+
+    v = b / i;
+    io:println(v); // @output 0
+
+    v = b / j;
+    io:println(v.toBalString()); // @output ()
+
+    v = c / a;
+    io:println(v); // @output 3
+
+    v = c / b;
+    io:println(v); // @output -1
+
+    v = c / d;
+    io:println(v); // @output 0
+
+    v = c / e;
+    io:println(v); // @output 0
+
+    v = c / f;
+    io:println(v); // @output 0
+
+    v = c / g;
+    io:println(v); // @output 0
+
+    v = c / h;
+    io:println(v); // @output 0
+
+    v = c / i;
+    io:println(v); // @output 0
+
+    v = c / j;
+    io:println(v.toBalString()); // @output ()
+
+    v = d / a;
+    io:println(v); // @output -4
+
+    v = d / b;
+    io:println(v); // @output 2
+
+    v = d / c;
+    io:println(v); // @output -1
+
+    v = d / e;
+    io:println(v); // @output 0
+
+    v = d / f;
+    io:println(v); // @output 0
+
+    v = d / g;
+    io:println(v); // @output 0
+
+    v = d / h;
+    io:println(v); // @output 0
+
+    v = d / i;
+    io:println(v); // @output 0
+
+    v = d / j;
+    io:println(v.toBalString()); // @output ()
+
+    v = e / a;
+    io:println(v); // @output 5
+
+    v = e / b;
+    io:println(v); // @output -2
+
+    v = e / c;
+    io:println(v); // @output 1
+
+    v = e / d;
+    io:println(v); // @output -1
+
+    v = e / f;
+    io:println(v); // @output 0
+
+    v = e / g;
+    io:println(v); // @output 0
+
+    v = e / h;
+    io:println(v); // @output 0
+
+    v = e / i;
+    io:println(v); // @output 0
+
+    v = e / j;
+    io:println(v.toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test 2 for integer division with operands of different optional int subtypes.
+Labels: multiplicative-expr, int, DecimalNumber, byte, int:Signed8, int:Signed16, 
+        int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, module-type-defn, union-type, optional-type, value:toBalString
+
+type Ints -9|9;
+
+public function main() returns error? {
+    int? a = -1;
+    byte? b = 2;
+    int:Signed8? c = -3;
+    int:Signed16? d = 4;
+    int:Signed32? e = -5;
+    int:Unsigned8? f = 6;
+    int:Unsigned16? g = 7;
+    int:Unsigned32? h = 8;
+    Ints? i = -9;
+    int? j = ();
+
+    int? v = f / a;
+    io:println(v); // @output -6
+
+    v = f / b;
+    io:println(v); // @output 3
+
+    v = f / c;
+    io:println(v); // @output -2
+
+    v = f / d;
+    io:println(v); // @output 1
+
+    v = f / e;
+    io:println(v); // @output -1
+
+    v = f / g;
+    io:println(v); // @output 0
+
+    v = f / h;
+    io:println(v); // @output 0
+
+    v = f / i;
+    io:println(v); // @output 0
+
+    v = f / j;
+    io:println(v.toBalString()); // @output ()
+
+    v = g / a;
+    io:println(v); // @output -7
+
+    v = g / b;
+    io:println(v); // @output 3
+
+    v = g / c;
+    io:println(v); // @output -2
+
+    v = g / d;
+    io:println(v); // @output 1
+
+    v = g / e;
+    io:println(v); // @output -1
+
+    v = g / f;
+    io:println(v); // @output 1
+
+    v = g / h;
+    io:println(v); // @output 0
+
+    v = g / i;
+    io:println(v); // @output 0
+
+    v = g / j;
+    io:println(v.toBalString()); // @output ()
+
+    v = h / a;
+    io:println(v); // @output -8
+
+    v = h / b;
+    io:println(v); // @output 4
+
+    v = h / c;
+    io:println(v); // @output -2
+
+    v = h / d;
+    io:println(v); // @output 2
+
+    v = h / e;
+    io:println(v); // @output -1
+
+    v = h / f;
+    io:println(v); // @output 1
+
+    v = h / g;
+    io:println(v); // @output 1
+
+    v = h / i;
+    io:println(v); // @output 0
+
+    v = h / j;
+    io:println(v.toBalString()); // @output ()
+
+    v = i / a;
+    io:println(v); // @output 9
+
+    v = i / b;
+    io:println(v); // @output -4
+
+    v = i / c;
+    io:println(v); // @output 3
+
+    v = i / d;
+    io:println(v); // @output -2
+
+    v = i / e;
+    io:println(v); // @output 1
+
+    v = i / f;
+    io:println(v); // @output -1
+
+    v = i / g;
+    io:println(v); // @output -1
+
+    v = i / h;
+    io:println(v); // @output -1
+
+    v = i / j;
+    io:println(v.toBalString()); // @output ()
+
+    v = j / a;
+    io:println(v.toBalString()); // @output ()
+
+    v = j / b;
+    io:println(v.toBalString()); // @output ()
+
+    v = j / c;
+    io:println(v.toBalString()); // @output ()
+
+    v = j / d;
+    io:println(v.toBalString()); // @output ()
+
+    v = j / e;
+    io:println(v.toBalString()); // @output ()
+
+    v = j / f;
+    io:println(v.toBalString()); // @output ()
+
+    v = j / g;
+    io:println(v.toBalString()); // @output ()
+
+    v = j / h;
+    io:println(v.toBalString()); // @output ()
+
+    v = j / i;
+    io:println(v.toBalString()); // @output ()
+}

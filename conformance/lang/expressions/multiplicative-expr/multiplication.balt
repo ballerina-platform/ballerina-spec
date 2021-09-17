@@ -2645,3 +2645,696 @@ public function main() {
     NilableInts a = -2;
     int? c = a * 4611686018427387905; // @panic integer overflow on multiplication
 }
+
+Test-Case: output
+Description: Test variable reference as integer multiplication operands.
+Labels: multiplicative-expr, int, DecimalNumber, variable-reference-expr
+
+public function main() {
+    int a = 2;
+    int b = a * a;
+    io:println(b); // @output 4
+}
+
+Test-Case: output
+Description: Test field and member access as integer multiplication operands.
+Labels: multiplicative-expr, int, DecimalNumber, record-type, mapping-constructor, array-type, list-constructor, module-type-defn
+
+public function main() {
+    Record c = {x: 10};
+    int[] d = [30, 40];
+    int e = c.x * d[0];
+    io:println(e); // @output 300
+}
+
+type Record record {
+    int x;
+};
+
+Test-Case: output
+Description: Test function and method call as integer multiplication operands.
+Labels: multiplicative-expr, int, DecimalNumber, function-call, module-class-defn, new-expr, method-call-expr 
+
+public function main() {
+    Class f = new;
+    int g = f.getInt() * getInt();
+    io:println(g); // @output 360
+}
+
+function getInt() returns int {
+    return 2 * 3;
+}
+
+class Class {
+    function getInt() returns int {
+        return 60;
+    }
+}
+
+Test-Case: output
+Description: Test let expression in integer multiplication operands.
+Labels: multiplicative-expr, int, DecimalNumber, let-expr 
+
+public function main() {
+    int h = (let int h1 = 3 * 4 in h1) * 5;
+    io:println(h); // @output 60
+}
+
+Test-Case: output
+Description: Test type cast expression in integer multiplication operands.
+Labels: multiplicative-expr, int, DecimalNumber, type-cast-expr
+
+public function main() {
+    int i = <int> 6 * 7;
+    io:println(i); // @output 42
+}
+
+Test-Case: output
+Description: Test unary expressions in integer multiplication operands.
+Labels: multiplicative-expr, int, DecimalNumber, type-cast-expr, typeof-expr, typedesc, unary-plus, unary-minus, unary-complement
+        additive-expr 
+
+public function main() {
+    int k = +4 * -3;
+    io:println(k); // @output -12
+
+    int l = -(-2 * 5);
+    io:println(l); // @output 10
+
+    int m = ~(2 * 5);
+    io:println(m); // @output -11
+
+    int n = ~2 * 5;
+    io:println(n); // @output -15
+}
+
+Test-Case: output
+Description: Test 1 for multiplicative expression in integer multiplication operands.
+Labels: multiplicative-expr, int, DecimalNumber
+
+public function main() {
+    int o = 2 * 404 % 10 / 4;
+    io:println(o); // @output 2
+}
+
+Test-Case: output
+Description: Test 2 for multiplicative expression in integer multiplication operands.
+Labels: multiplicative-expr, int, DecimalNumber
+
+public function main() {
+    int o = 2 * (404 % 10 / 4);
+    io:println(o); // @output 2
+}
+
+Test-Case: output
+Description: Test additive expressions as integer multiplication operands.
+Labels: multiplicative-expr, int, DecimalNumber, additive-expr 
+
+public function main() {
+    int p = (1 + 2) * (3 + 4);
+    io:println(p); // @output 21
+}
+
+Test-Case: output
+Description: Test shift expressions as integer multiplication operands.
+Labels: multiplicative-expr, int, DecimalNumber, shift-expr 
+
+public function main() {
+    int p = (1 << 2) * (100 >> 4);
+    io:println(p); // @output 24
+}
+
+Test-Case: output
+Description: Test binary bitwise expressions as integer multiplication operands.
+Labels: multiplicative-expr, int, DecimalNumber, binary-bitwise-expr 
+
+public function main() {
+    int p = (2 & 6) * (2 ^ 6);
+    io:println(p); // @output 8
+}
+
+Test-Case: output
+Description: Test conditional expressions as integer multiplication operands.
+Labels: multiplicative-expr, int, DecimalNumber, conditional-expr, union-type, error, optional-type
+
+public function main() {
+    int|error a = 12;
+    int? b = ();
+    int c = (a is error ? 2 : a) * (b ?: 13);
+    io:println(c); // @output 156
+}
+
+Test-Case: output
+Description: Test checking expressions as integer multiplication operands.
+Labels: multiplicative-expr, int, DecimalNumber, checking-expr, union-type, error
+
+public function main() returns error? {
+    int|error a = 12;
+    int c = check a * checkpanic a;
+    io:println(c); // @output 144
+}
+
+Test-Case: output
+Description: Test integer multiplication with operands of different int subtypes.
+Labels: multiplicative-expr, int, DecimalNumber, byte, int:Signed8, int:Signed16,
+        int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, module-type-defn, union-type
+
+type Ints -9|9;
+
+public function main() returns error? {
+    int a = -1;
+    byte b = 2;
+    int:Signed8 c = -3;
+    int:Signed16 d = 4;
+    int:Signed32 e = -5;
+    int:Unsigned8 f = 6;
+    int:Unsigned16 g = 7;
+    int:Unsigned32 h = 8;
+    Ints i = -9;
+
+    int v = a * b;
+    io:println(v); // @output -2
+
+    v = a * c;
+    io:println(v); // @output 3
+
+    v = a * d;
+    io:println(v); // @output -4
+
+    v = a * e;
+    io:println(v); // @output 5
+
+    v = a * f;
+    io:println(v); // @output -6
+
+    v = a * g;
+    io:println(v); // @output -7
+
+    v = a * h;
+    io:println(v); // @output -8
+
+    v = a * i;
+    io:println(v); // @output 9
+
+    v = b * a;
+    io:println(v); // @output -2
+
+    v = b * c;
+    io:println(v); // @output -6
+
+    v = b * d;
+    io:println(v); // @output 8
+
+    v = b * e;
+    io:println(v); // @output -10
+
+    v = b * f;
+    io:println(v); // @output 12
+
+    v = b * g;
+    io:println(v); // @output 14
+
+    v = b * h;
+    io:println(v); // @output 16
+
+    v = b * i;
+    io:println(v); // @output -18
+
+    v = c * a;
+    io:println(v); // @output 3
+
+    v = c * b;
+    io:println(v); // @output -6
+
+    v = c * d;
+    io:println(v); // @output -12
+
+    v = c * e;
+    io:println(v); // @output 15
+
+    v = c * f;
+    io:println(v); // @output -18
+
+    v = c * g;
+    io:println(v); // @output -21
+
+    v = c * h;
+    io:println(v); // @output -24
+
+    v = c * i;
+    io:println(v); // @output 27
+
+    v = d * a;
+    io:println(v); // @output -4
+
+    v = d * b;
+    io:println(v); // @output 8
+
+    v = d * c;
+    io:println(v); // @output -12
+
+    v = d * e;
+    io:println(v); // @output -20
+
+    v = d * f;
+    io:println(v); // @output 24
+
+    v = d * g;
+    io:println(v); // @output 28
+
+    v = d * h;
+    io:println(v); // @output 32
+
+    v = d * i;
+    io:println(v); // @output -36
+
+    v = e * a;
+    io:println(v); // @output 5
+
+    v = e * b;
+    io:println(v); // @output -10
+
+    v = e * c;
+    io:println(v); // @output 15
+
+    v = e * d;
+    io:println(v); // @output -20
+
+    v = e * f;
+    io:println(v); // @output -30
+
+    v = e * g;
+    io:println(v); // @output -35
+
+    v = e * h;
+    io:println(v); // @output -40
+
+    v = e * i;
+    io:println(v); // @output 45
+
+    v = f * a;
+    io:println(v); // @output -6
+
+    v = f * b;
+    io:println(v); // @output 12
+
+    v = f * c;
+    io:println(v); // @output -18
+
+    v = f * d;
+    io:println(v); // @output 24
+
+    v = f * e;
+    io:println(v); // @output -30
+
+    v = f * g;
+    io:println(v); // @output 42
+
+    v = f * h;
+    io:println(v); // @output 48
+
+    v = f * i;
+    io:println(v); // @output -54
+
+    v = g * a;
+    io:println(v); // @output -7
+
+    v = g * b;
+    io:println(v); // @output 14
+
+    v = g * c;
+    io:println(v); // @output -21
+
+    v = g * d;
+    io:println(v); // @output 28
+
+    v = g * e;
+    io:println(v); // @output -35
+
+    v = g * f;
+    io:println(v); // @output 42
+
+    v = g * h;
+    io:println(v); // @output 56
+
+    v = g * i;
+    io:println(v); // @output -63
+
+    v = h * a;
+    io:println(v); // @output -8
+
+    v = h * b;
+    io:println(v); // @output 16
+
+    v = h * c;
+    io:println(v); // @output -24
+
+    v = h * d;
+    io:println(v); // @output 32
+
+    v = h * e;
+    io:println(v); // @output -40
+
+    v = h * f;
+    io:println(v); // @output 48
+
+    v = h * g;
+    io:println(v); // @output 56
+
+    v = h * i;
+    io:println(v); // @output -72
+
+    v = i * a;
+    io:println(v); // @output 9
+
+    v = i * b;
+    io:println(v); // @output -18
+
+    v = i * c;
+    io:println(v); // @output 27
+
+    v = i * d;
+    io:println(v); // @output -36
+
+    v = i * e;
+    io:println(v); // @output 45
+
+    v = i * f;
+    io:println(v); // @output -54
+
+    v = i * g;
+    io:println(v); // @output -63
+
+    v = i * h;
+    io:println(v); // @output -72
+}
+
+Test-Case: output
+Description: Test 1 for integer multiplication with operands of different optional int subtypes.
+Labels: multiplicative-expr, int, DecimalNumber, byte, int:Signed8, int:Signed16,
+        int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, module-type-defn, union-type
+
+type Ints -9|9;
+
+public function main() returns error? {
+    int a = -1;
+    byte b = 2;
+    int:Signed8 c = -3;
+    int:Signed16 d = 4;
+    int:Signed32 e = -5;
+    int:Unsigned8 f = 6;
+    int:Unsigned16 g = 7;
+    int:Unsigned32 h = 8;
+    Ints i = -9;
+    int? j = ();
+
+    int? v = a * b;
+    io:println(v); // @output -2
+
+    v = a * c;
+    io:println(v); // @output 3
+
+    v = a * d;
+    io:println(v); // @output -4
+
+    v = a * e;
+    io:println(v); // @output 5
+
+    v = a * f;
+    io:println(v); // @output -6
+
+    v = a * g;
+    io:println(v); // @output -7
+
+    v = a * h;
+    io:println(v); // @output -8
+
+    v = a * i;
+    io:println(v); // @output 9
+
+    v = a * j;
+    io:println(v.toBalString()); // @output ()
+
+    v = b * a;
+    io:println(v); // @output -2
+
+    v = b * c;
+    io:println(v); // @output -6
+
+    v = b * d;
+    io:println(v); // @output 8
+
+    v = b * e;
+    io:println(v); // @output -10
+
+    v = b * f;
+    io:println(v); // @output 12
+
+    v = b * g;
+    io:println(v); // @output 14
+
+    v = b * h;
+    io:println(v); // @output 16
+
+    v = b * i;
+    io:println(v); // @output -18
+
+    v = b * j;
+    io:println(v.toBalString()); // @output ()
+
+    v = c * a;
+    io:println(v); // @output 3
+
+    v = c * b;
+    io:println(v); // @output -6
+
+    v = c * d;
+    io:println(v); // @output -12
+
+    v = c * e;
+    io:println(v); // @output 15
+
+    v = c * f;
+    io:println(v); // @output -18
+
+    v = c * g;
+    io:println(v); // @output -21
+
+    v = c * h;
+    io:println(v); // @output -24
+
+    v = c * i;
+    io:println(v); // @output 27
+
+    v = c * j;
+    io:println(v.toBalString()); // @output ()
+
+    v = d * a;
+    io:println(v); // @output -4
+
+    v = d * b;
+    io:println(v); // @output 8
+
+    v = d * c;
+    io:println(v); // @output -12
+
+    v = d * e;
+    io:println(v); // @output -20
+
+    v = d * f;
+    io:println(v); // @output 24
+
+    v = d * g;
+    io:println(v); // @output 28
+
+    v = d * h;
+    io:println(v); // @output 32
+
+    v = d * i;
+    io:println(v); // @output -36
+
+    v = d * j;
+    io:println(v.toBalString()); // @output ()
+
+    v = e * a;
+    io:println(v); // @output 5
+
+    v = e * b;
+    io:println(v); // @output -10
+
+    v = e * c;
+    io:println(v); // @output 15
+
+    v = e * d;
+    io:println(v); // @output -20
+
+    v = e * f;
+    io:println(v); // @output -30
+
+    v = e * g;
+    io:println(v); // @output -35
+
+    v = e * h;
+    io:println(v); // @output -40
+
+    v = e * i;
+    io:println(v); // @output 45
+
+    v = e * j;
+    io:println(v.toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test 2 for integer multiplication with operands of different optional int subtypes.
+Labels: multiplicative-expr, int, DecimalNumber, byte, int:Signed8, int:Signed16,
+        int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, module-type-defn, union-type
+
+type Ints -9|9;
+
+public function main() returns error? {
+    int a = -1;
+    byte b = 2;
+    int:Signed8 c = -3;
+    int:Signed16 d = 4;
+    int:Signed32 e = -5;
+    int:Unsigned8 f = 6;
+    int:Unsigned16 g = 7;
+    int:Unsigned32 h = 8;
+    Ints i = -9;
+    int? j = ();
+
+    int? v = f * a;
+    io:println(v); // @output -6
+
+    v = f * b;
+    io:println(v); // @output 12
+
+    v = f * c;
+    io:println(v); // @output -18
+
+    v = f * d;
+    io:println(v); // @output 24
+
+    v = f * e;
+    io:println(v); // @output -30
+
+    v = f * g;
+    io:println(v); // @output 42
+
+    v = f * h;
+    io:println(v); // @output 48
+
+    v = f * i;
+    io:println(v); // @output -54
+
+    v = f * j;
+    io:println(v.toBalString()); // @output ()
+
+    v = g * a;
+    io:println(v); // @output -7
+
+    v = g * b;
+    io:println(v); // @output 14
+
+    v = g * c;
+    io:println(v); // @output -21
+
+    v = g * d;
+    io:println(v); // @output 28
+
+    v = g * e;
+    io:println(v); // @output -35
+
+    v = g * f;
+    io:println(v); // @output 42
+
+    v = g * h;
+    io:println(v); // @output 56
+
+    v = g * i;
+    io:println(v); // @output -63
+
+    v = g * j;
+    io:println(v.toBalString()); // @output ()
+
+    v = h * a;
+    io:println(v); // @output -8
+
+    v = h * b;
+    io:println(v); // @output 16
+
+    v = h * c;
+    io:println(v); // @output -24
+
+    v = h * d;
+    io:println(v); // @output 32
+
+    v = h * e;
+    io:println(v); // @output -40
+
+    v = h * f;
+    io:println(v); // @output 48
+
+    v = h * g;
+    io:println(v); // @output 56
+
+    v = h * i;
+    io:println(v); // @output -72
+
+    v = h * j;
+    io:println(v.toBalString()); // @output ()
+
+    v = i * a;
+    io:println(v); // @output 9
+
+    v = i * b;
+    io:println(v); // @output -18
+
+    v = i * c;
+    io:println(v); // @output 27
+
+    v = i * d;
+    io:println(v); // @output -36
+
+    v = i * e;
+    io:println(v); // @output 45
+
+    v = i * f;
+    io:println(v); // @output -54
+
+    v = i * g;
+    io:println(v); // @output -63
+
+    v = i * h;
+    io:println(v); // @output -72
+
+    v = i * j;
+    io:println(v.toBalString()); // @output ()
+
+    v = j * a;
+    io:println(v.toBalString()); // @output ()
+
+    v = j * b;
+    io:println(v.toBalString()); // @output ()
+
+    v = j * c;
+    io:println(v.toBalString()); // @output ()
+
+    v = j * d;
+    io:println(v.toBalString()); // @output ()
+
+    v = j * e;
+    io:println(v.toBalString()); // @output ()
+
+    v = j * f;
+    io:println(v.toBalString()); // @output ()
+
+    v = j * g;
+    io:println(v.toBalString()); // @output ()
+
+    v = j * h;
+    io:println(v.toBalString()); // @output ()
+
+    v = j * i;
+    io:println(v.toBalString()); // @output ()
+}
