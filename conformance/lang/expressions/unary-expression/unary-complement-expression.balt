@@ -1,0 +1,482 @@
+Test-Case: output
+Description: Test unary complement basic operations.
+Labels: unary-complement, HexIntLiteral
+
+public function main() {
+    io:println(~0); // @output -1
+
+    int a1 = ~1;
+    io:println(a1); // @output -2
+
+    io:println(~0x0FFF); // @output -4096
+
+    io:println(~~0 == 0); // @output true
+}
+
+Test-Case: output
+Description: Test unary complement operator's operand and result static types.
+Labels: unary-complement
+
+public function main() {
+    io:println(getComplement(10)); // @output -11
+}
+
+public function getComplement(int i) returns int {
+    return ~i;
+}
+
+Test-Case: output
+Description: Test unary complement's bit inversion.
+Labels: additive-expr, unary-complement, unary-minus
+
+public function main() {
+    io:println(~5 == getTwosComplementRepresentation(5)); // @output true
+    io:println(~-5 == getTwosComplementRepresentation(-5)); // @output true
+    io:println(~0 == getTwosComplementRepresentation(0)); // @output true
+}
+
+function getTwosComplementRepresentation(int x) returns int {
+    return -(x + 1);
+}
+
+Test-Case: output
+Description: Test unary complement result type.
+Labels: unary-complement
+
+public function main() {
+    int a1 = ~0;
+    io:println(a1); // @output true
+    io:println(~0 is int); // @output true
+}
+
+Test-Case: output
+Description: Test unary complement result type inferring.
+Labels: unary-complement, var
+
+var moduleVar1 = ~1;
+
+public function main() {
+    var x1 = ~5;
+    io:println(x1 is int); // @output true
+    io:println(moduleVar1 is int); // @output true
+}
+
+Test-Case: output
+Description: Test unary complement integer operations at module level.
+Labels: const, unary-complement, unary-minus
+
+int complementOfZero = ~0;
+
+const int CONST1 = ~2;
+const int CONST2 = ~CONST1;
+const int CONST3 = ~(-36);
+
+public function main() {
+    io:println(complementOfZero); // @output -1
+
+    io:println(CONST1); // @output -3
+
+    io:println(CONST2); // @output 2
+
+    io:println(CONST3); // @output 35
+}
+
+Test-Case: output
+Description: Test unary complement with int minimum and maximum values.
+Labels: int:MAX_VALUE, int:MIN_VALUE, unary-complement
+
+public function main() {
+    io:println(~int:MAX_VALUE);  // @output -9223372036854775808
+    io:println(~int:MIN_VALUE);  // @output 9223372036854775807
+}
+
+Test-Case: output
+Description: Test unary complement expressions with byte operand.
+Labels: byte, unary-complement
+
+public function main() {
+    byte a1 = 8;
+    int res = ~a1;
+    io:println(res); // @output -9
+
+    byte a2 = 255;
+    io:println(~a2); // @output -256
+}
+
+Test-Case: output
+Description: Test unary complement expressions with Unsigned8 operand.
+Labels: int:Unsigned8, int:UNSIGNED8_MAX_VALUE, unary-complement
+
+public function main() {
+    int:Unsigned8 unsignedInt = 86;
+    int res = ~unsignedInt;
+    io:println(res); // @output -87
+
+    io:println(~int:UNSIGNED8_MAX_VALUE);  // @output -256
+}
+
+Test-Case: output
+Description: Test unary complement expressions with Unsigned16 operand.
+Labels: int:Unsigned16, int:UNSIGNED16_MAX_VALUE, unary-complement
+
+public function main() {
+    int:Unsigned16 unsignedInt = 40123;
+    int res = ~unsignedInt;
+    io:println(res); // @output -40124
+
+    io:println(~int:UNSIGNED16_MAX_VALUE);  // @output -65536
+}
+
+Test-Case: output
+Description: Test unary complement expressions with Signed16 operand.
+Labels: int:Signed16, int:SIGNED16_MAX_VALUE, unary-complement
+
+public function main() {
+    int:Signed16 signedInt = 12345;
+    int res = ~signedInt;
+    io:println(res); // @output -12346
+
+    io:println(~int:SIGNED16_MAX_VALUE); @output -32768
+}
+
+Test-Case: output
+Description: Test unary complement expressions with Unsigned32 operand.
+Labels: int:Unsigned32, int:UNSIGNED32_MAX_VALUE, unary-complement
+
+public function main() {
+    int:Unsigned32 unsignedInt = 12034;
+    int res = ~unsignedInt;
+    io:println(res); // @output -12035
+
+    io:println(~int:UNSIGNED32_MAX_VALUE);  // @output -4294967296
+}
+
+Test-Case: output
+Description: Test unary complement expressions with Signed8 operand.
+Labels: int:Signed8, int:SIGNED8_MIN_VALUE, int:SIGNED8_MAX_VALUE, unary-complement
+
+public function main() {
+    int:Signed8 signedInt = 100;
+    int res = ~signedInt;
+    io:println(res); // @output -101
+
+    io:println(~int:SIGNED8_MIN_VALUE);  // @output 127
+    io:println(~int:SIGNED8_MAX_VALUE);  // @output -128
+}
+
+Test-Case: output
+Description: Test unary complement expressions with Signed16 operand.
+Labels: int:Signed16, int:SIGNED16_MIN_VALUE, int:SIGNED16_MAX_VALUE, unary-complement
+
+public function main() {
+    int:Signed16 a3 = 12345;
+    int res = ~a3;
+    io:println(res); // @output -12346
+
+    io:println(~int:SIGNED16_MIN_VALUE);  // @output 32767
+    io:println(~int:SIGNED16_MAX_VALUE);  // @output -32768
+}
+
+Test-Case: output
+Description: Test unary complement expressions with Signed32 operand.
+Labels: int:Signed32, int:SIGNED32_MIN_VALUE, int:SIGNED32_MAX_VALUE, unary-complement
+
+public function main() {
+    int:Signed32 a3 = 1000;
+    int res = ~a3;
+    io:println(res); // @output -1001
+
+    io:println(~int:SIGNED32_MIN_VALUE);  // @output 2147483648
+    io:println(~int:SIGNED32_MAX_VALUE);  // @output -2147483648
+}
+
+Test-Case: error
+Description: Test unary complement expression assignments resulting in an error.
+Labels: byte, int:Unsigned8, int:Unsigned16, int:Unsigned32, int:Signed8, int:Signed16,langlib, int:Signed32,
+module-type-defn, unary-complement
+
+type Ints -1|-2;
+
+public function main(byte x1, int:Unsigned8 x2, int:Unsigned16 x3, int:Unsigned32 x4, int:Signed8 x5,
+                    int:Signed16 x6, int:Signed32 x7) {
+    byte res1 = ~x1; // @error static type of complement expression with operand of byte is int
+
+    int:Unsigned8 res2 = ~x2; // @error static type of complement expression with operand of Unsigned8 is int
+
+    int:Unsigned16 res3 = ~x3; // @error static type of complement expression with operand of Unsigned16 is int
+
+    int:Unsigned32 res4 = ~x4; // @error static type of complement expression with operand of Unsigned32 is int
+
+    int:Signed8 res5 = ~x5; // @error static type of complement expression with operand of Signed8 is int
+
+    int:Signed16 res6 = ~x6; // @error static type of complement expression with operand of Signed16 is int
+
+    int:Signed32 res7 = ~x7; // @error static type of complement expression with operand of Signed32 is int
+
+    Ints x8 = ~1; // @error static type of complement expression with operand of int subtype is int
+}
+
+Test-Case: error
+Description: Test the static type of operand belonging to non-int type used as a constant resulting in an error.
+Fail-Issue: ballerina-lang#32628
+Labels: const, float, unary-complement
+
+const int CONST1 = ~false; // @error unary complement not supported for boolean
+const int CONST2 = ~~false; // @error unary complement not supported for boolean
+
+const int CONST3 = ~"false"; // @error unary complement not supported for string
+const int CONST4 = ~~"false"; // @error unary complement not supported for string
+
+float floatVal = 1.5;
+const int CONST5 = ~floatVal; // @error unary complement not supported for float
+
+public function main() {
+}
+
+Test-Case: error
+Description: Test the static type of operand belonging to non-int type resulting in an error.
+Labels: float, tuple-type, unary-complement
+
+public function main() {
+    int a1 = ~true; // @error unary complement not supported for boolean
+
+    [int, int] intTuple = [1, 2];
+    int a3 = ~intTuple; // @error unary complement not supported for [int, int]
+
+    float floatVal = 1.5;
+    int a4 = ~floatVal; // @error unary complement not supported for float
+
+    int a5 = ~~false; // @error unary complement not supported for boolean
+}
+
+Test-Case: output
+Description: Test the static type of operand belonging to int optional type.
+Labels: optional-type, unary-complement
+
+public function main() {
+    int? result = ~getIntOrNil();
+    if result is int {
+        io:println(result); // @output -101
+    } else {
+        io:println("Result is nil");
+    }
+}
+
+function getIntOrNil() returns int? {
+    return 100;
+}
+
+Test-Case: output
+Description: Test unary complement operator with unary-plus and unary-minus operators.
+Fail-Issue: ballerina-lang#32702
+Labels: unary-complement, unary-minus, unary-plus
+
+public function main() {
+    io:println(+~1); // @output -2
+    io:println(~+1); // @output -2
+    io:println(~-1); // @output 0
+    io:println(-~1); // @output 2
+
+    io:println(minusTwo(42)); // @output 40
+    io:println(minusTwo(-98)); // @output -100
+
+    io:println(addTwo(42)); // @output 44
+    io:println(addTwo(-98)); // @output -96
+}
+
+public function minusTwo(int i) returns int {
+    return ~-~-i;
+}
+public function addTwo(int i) returns int {
+    return -~-~i;
+}
+
+Test-Case: output
+Description: Test unary complement with field access expression.
+Labels: field-access-expr, record-type, unary-complement
+
+type Record record {
+    int x;
+};
+
+public function main() {
+    Record b = {x: 10};
+    int c = ~b.x;
+    io:println(c); // @output -11
+}
+
+Test-Case: output
+Description: Test unary complement with member access expression.
+Labels: array-type, list-constructor, member-access-expr, unary-complement
+
+public function main() {
+    int[] d = [30, 40];
+    int e = ~d[0] ;
+    io:println(e); // @output -31
+}
+
+Test-Case: output
+Description: Test unary complement with a function call.
+Labels: module-class-defn, new-expr, unary-complement
+
+class Class {
+    function getInt() returns int {
+        return 60;
+    }
+}
+
+public function main() {
+    Class f = new;
+    int g = ~f.getInt();
+    io:println(g); // @output -61
+}
+
+Test-Case: output
+Description: Test unary complement with let expression.
+Labels: let-expr, unary-complement
+
+public function main() {
+    int h = let int h1 = ~3 in h1;
+    io:println(h); // @output -4
+}
+
+Test-Case: output
+Description: Test unary complement with type cast.
+Labels: type-cast-expr, unary-complement
+
+public function main() {
+    int i = ~<int>6;
+    io:println(i); // @output -7
+
+    int i = ~<int>10.5;
+    io:println(j); // @output -11
+}
+
+Test-Case: output
+Description: Test unary complement with typeof.
+Labels: typeof-expr, typedesc, unary-complement
+
+public function main() {
+    typedesc j = typeof (~8);
+    io:println(j); // @output typedesc -9
+}
+
+Test-Case: output
+Description: Test unary complement with checking expression.
+Labels: checking-expr, unary-complement
+
+public function main() returns error? {
+    int k = ~check getIntOrError();
+    io:println(k); // @output -2
+
+    int l = ~checkpanic getIntOrError();
+    io:println(l); // @output -2
+}
+
+function getIntOrError() returns int|error {
+    return 1;
+}
+
+Test-Case: output
+Description: Test unary complement with multiplicative expression.
+Labels: multiplicative-expr, unary-plus, unary-minus, unary-complement
+
+public function main() {
+    int m = ~(4 * -3);
+    io:println(m); // @output 11
+
+    int n = ~(-2 * +5);
+    io:println(n); // @output 9
+
+    int o = ~(20 / 3);
+    io:println(o); // @output -7
+
+    int p = ~(20 % 3);
+    io:println(p); // @output -3
+}
+
+Test-Case: output
+Description: Test unary complement with additive expression.
+Labels: additive-expr, unary-minus, unary-complement
+
+public function main() {
+    int q = ~(10 + 20);
+    io:println(q); // @output -31
+
+    int r = ~(-10 + -20);
+    io:println(r); // @output 29
+
+    int s = ~(10 - 20);
+    io:println(s); // @output 9
+}
+
+Test-Case: output
+Description: Test unary complement with shift expression.
+Labels: shift-expr, unary-complement
+
+public function main() {
+    int t = ~(1 << 2);
+    io:println(t); // @output -5
+
+    int u = ~(1 >> 2);
+    io:println(u); // @output -1
+
+    int v = ~(10 >>> 2);
+    io:println(v); // @output -3
+}
+
+Test-Case: output
+Description: Test unary complement with binary bitwise expression.
+Labels: binary-bitwise-expr, unary-complement
+
+public function main() {
+    int x = ~(6 & 0);
+    io:println(x); // @output -1
+
+    int y = ~(6 ^ 0);
+    io:println(y); // @output -7
+
+    int z = ~(6 | 0);
+    io:println(z); // @output -7
+}
+
+Test-Case: output
+Description: Test unary complement with conditional expression.
+Labels: conditional-expr, unary-complement
+
+public function main() {
+    int aa = ~(getIntOptional() ?: 10);
+    io:println(aa); // @output -2
+
+    int bb = ~(getIntOptional() is int ? 2 : -1);
+    io:println(bb); // @output -3
+}
+
+function getIntOptional() returns int? {
+    return 1;
+}
+
+Test-Case: output
+Description: Test unary complement in a anonymous function.
+Labels: expr-function-body, unary-complement
+
+public function main() {
+    function (int) returns int lambda = (input) => ~input;
+    io:println(lambda(5)); // @output -6
+}
+
+Test-Case: output
+Description: Test unary complement in a anonymous function.
+Labels: match-stmt, unary-complement
+
+public function main() {
+    int v = -10;
+    match ~v {
+        var a if a > 0 => {
+            io:println(a); // @output 9
+        }
+        _ => {
+            io:println("default");
+        }
+    }
+}
