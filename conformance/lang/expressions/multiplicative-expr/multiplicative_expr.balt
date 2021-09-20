@@ -26,7 +26,7 @@ public function main(int a, float b, decimal c) {
 
 Test-Case: error
 Description: Test multiplicative expression with static type of operands belonging to different basic types resulting in an error.
-Labels: multiplicative-expr, int, float, decimal, optional-type
+Labels: multiplicative-expr, int, float, decimal, optional-type, numeric-nil-lifting
 
 public function main(int a, float b, decimal c, 
                      int? d, float? e, decimal? f) {
@@ -46,7 +46,7 @@ public function main(int a, float b, decimal c,
 
 Test-Case: error
 Description: Test the static type of operands belonging to non-numeric basic types resulting in an error.
-Labels: multiplicative-expr, int, string, float, decimal, optional-type
+Labels: multiplicative-expr, int, string, float, decimal, optional-type, numeric-nil-lifting
 
 public function main(int a, float b, decimal c, int? d, float? e, decimal? f,
                      string g, string? h) {
@@ -77,7 +77,7 @@ Description: Test the static type of operand expressions belonging to different 
 Labels: multiplicative-expr, int, float, decimal, optional-type, 
         byte, union-type, singleton-type, module-type-defn, numeric-literal,  
         int-literal, floating-point-literal, DecimalFloatingPointNumber, 
-        int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32
+        int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, numeric-nil-lifting
 
 type Ints 1|2;
 type Floats 2.0|3.0|4.0;
@@ -170,13 +170,13 @@ function getDecimal(decimal d) returns decimal {
 
 Test-Case: error
 Description: Test for optional int the static type of the result being the basic type of the operands via invalid assignment.
-Labels: multiplicative-expr, int, optional-type, var, numeric-literal, DecimalNumber
+Labels: multiplicative-expr, int, optional-type, var, numeric-literal, DecimalNumber, numeric-nil-lifting
 
 public function main(int a, int? b) {
-    int a1 = a * b; // @error static type of multiplicative-expr with at least one int? operand is int
-    int a2 = getOptionalInt(1 / 2) * b; // @error static type of multiplicative-expr with at least one int? operand is int
-    int a3 = b % getOptionalInt(1 % 2); // @error static type of multiplicative-expr with at least one int? operand is int
-    int a4 = b * getInt(1); // @error static type of multiplicative-expr with at least one int? operand is int
+    int a1 = a * b; // @error static type of multiplicative-expr with at least one int? operand is int?
+    int a2 = getOptionalInt(1 / 2) * b; // @error static type of multiplicative-expr with at least one int? operand is int?
+    int a3 = b % getOptionalInt(1 % 2); // @error static type of multiplicative-expr with at least one int? operand is int?
+    int a4 = b * getInt(1); // @error static type of multiplicative-expr with at least one int? operand is int?
 }
 
 function getInt(int i) returns int {
@@ -189,13 +189,13 @@ function getOptionalInt(int? i) returns int? {
 
 Test-Case: error
 Description: Test for optional float the static type of the result being the basic type of the operands via invalid assignment.
-Labels: multiplicative-expr, float, optional-type, var, numeric-literal, DecimalFloatingPointNumber
+Labels: multiplicative-expr, float, optional-type, var, numeric-literal, DecimalFloatingPointNumber, numeric-nil-lifting
 
 public function main(float c, float? d) {
-    float a1 = d * c; // @error static type of multiplicative-expr with at least one float? operand is float
-    float a2 = getFloat(2.0) * d; // @error static type of multiplicative-expr with at least one float? operand is float
-    float a3 = d % getOptionalFloat(1.0 % 2f); // @error static type of multiplicative-expr with at least one float? operand is float
-    float a4 = c / getOptionalFloat(1); // @error static type of multiplicative-expr with at least one float? operand is float
+    float a1 = d * c; // @error static type of multiplicative-expr with at least one float? operand is float?
+    float a2 = getFloat(2.0) * d; // @error static type of multiplicative-expr with at least one float? operand is float?
+    float a3 = d % getOptionalFloat(1.0 % 2f); // @error static type of multiplicative-expr with at least one float? operand is float?
+    float a4 = c / getOptionalFloat(1); // @error static type of multiplicative-expr with at least one float? operand is float?
 }
 
 function getFloat(float f) returns float {
@@ -208,13 +208,13 @@ function getOptionalFloat(float? f) returns float? {
 
 Test-Case: error
 Description: Test for optional decimal the static type of the result being the basic type of the operands via invalid assignment.
-Labels: multiplicative-expr, int, float, decimal, optional-type, var, numeric-literal, DecimalFloatingPointNumber
+Labels: multiplicative-expr, int, float, decimal, optional-type, var, numeric-literal, DecimalFloatingPointNumber, numeric-nil-lifting
 
 public function main(decimal e, decimal? f) {
-    decimal a1 = e * f; // @error static type of multiplicative-expr with at least one int? operand is int
-    decimal a2 = getOptionalDecimal(1d / 2.0d) * e; // @error static type of multiplicative-expr with at least one int? operand is int
-    decimal a3 = f % getOptionalDecimal(()); // @error static type of multiplicative-expr with at least one int? operand is int
-    decimal a4 = getOptionalDecimal(3) * getDecimal(1); // @error static type of multiplicative-expr with at least one int? operand is int
+    decimal a1 = e * f; // @error static type of multiplicative-expr with at least one int? operand is int?
+    decimal a2 = getOptionalDecimal(1d / 2.0d) * e; // @error static type of multiplicative-expr with at least one int? operand is int?
+    decimal a3 = f % getOptionalDecimal(()); // @error static type of multiplicative-expr with at least one int? operand is int?
+    decimal a4 = getOptionalDecimal(3) * getDecimal(1); // @error static type of multiplicative-expr with at least one int? operand is int?
 }
 
 function getDecimal(decimal d) returns decimal {
@@ -283,7 +283,7 @@ function getUnsigned32Int(int:Signed32 i) returns int:Unsigned32 {
 Test-Case: error
 Description: Test the static type of the result being the basic type of the operands via invalid assignment,
              where operands are of types that are optional types with subtypes of int types.
-Labels: multiplicative-expr, int, optional-type, DecimalNumber, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, byte, module-type-defn
+Labels: multiplicative-expr, int, optional-type, DecimalNumber, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, byte, module-type-defn, numeric-nil-lifting
 
 type Ints 1|2;
 
