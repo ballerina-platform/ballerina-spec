@@ -1,0 +1,302 @@
+Test-Case: error
+Description: Test invalid concatenation with string.
+Labels: additive-expr, string, int, nil-type, array-type
+
+public function main(string a, int b, () c, string[] d) {
+    string v1 = a + b; // @error cannot concatenate string and int
+    string v2 = a + c; // @error cannot concatenate string and nil
+    string v3 = a + d; // @error cannot concatenate string and array
+    string v4 = b + a; // @error cannot concatenate string and int
+    string v5 = c + a; // @error cannot concatenate string and nil
+    string v6 = d + a; // @error cannot concatenate string and array
+}
+
+Test-Case: error
+Description: Test invalid static type of string concatenation.
+Labels: additive-expr, string, int
+
+public function main(string a, string b) {
+    int c = a + b; // @error static type of string concatenation is string
+}
+
+Test-Case: error
+Description: Test invalid static type of string concatenation with string:Char.
+Labels: additive-expr, string, int, string:Char
+
+public function main(string a, string:Char b) {
+    int c = a + b; // @error static type of string concatenation is string
+    string:Char d = b + b; // @error static type of string concatenation is string
+    string:Char e = b + a; // @error static type of string concatenation is string
+}
+
+Test-Case: error
+Description: Test invalid static type of user-defined string subtype concatenation with string and string:Char.
+Labels: additive-expr, string, int, string:Char, module-type-defn, union-type
+
+type Strings "A"|"foo";
+type Chars "A"|"B";
+
+public function main(string a, string:Char b, Strings c, Chars d) {
+    Strings e = a + c; // @error static type of string concatenation is string
+    Strings f = b + c; // @error static type of string concatenation is string
+    string:Char g = d + c; // @error static type of string concatenation is string
+    int h = c + a; // @error static type of string concatenation is string
+    string:Char i = c + b; // @error static type of string concatenation is string
+    Strings j = c + d; // @error static type of string concatenation is string
+    Strings k = c + c; // @error static type of string concatenation is string
+    Chars l = a + d; // @error static type of string concatenation is string
+    Chars m = b + d; // @error static type of string concatenation is string
+    int n = d + a; // @error static type of string concatenation is string
+    string:Char o = d + b; // @error static type of string concatenation is string
+    Chars p = d + d; // @error static type of string concatenation is string
+}
+
+Test-Case: error
+Description: Test invalid optional string concatenation.
+Labels: additive-expr, string
+
+public function main(string? a, string? b, string c) {
+    string d = a + b; // @error cannot concatenate optional strings
+    string? e = a + b; // @error cannot concatenate optional strings
+    string f = a + c; // @error cannot concatenate string and optional string
+}
+
+Test-Case: error
+Description: Test invalid optional string:Char concatenation.
+Labels: additive-expr, string, string:Char
+
+public function main(string:Char? a, string:Char? b, string:Char c) {
+    string:Char d = a + b; // @error cannot concatenate optional strings
+    string:Char? e = a + b; // @error cannot concatenate optional strings
+    string:Char f = a + c; // @error cannot concatenate string and optional string
+}
+
+Test-Case: error
+Description: Test invalid optional user-defined string type concatenation.
+Labels: additive-expr, string, string:Char
+
+type Strings "a"|"bc";
+
+public function main(Strings? a, Strings? b, Strings c) {
+    Strings d = a + b; // @error cannot concatenate optional strings
+    Strings? e = a + b; // @error cannot concatenate optional strings
+    Strings f = a + c; // @error cannot concatenate string and optional string
+}
+
+Test-Case: output
+Description: Test string concatenation.
+Labels: additive-expr, string, value:toBalString
+
+public function main() {
+    string a = "";
+    string b = "hello ";
+    string c = " world";
+    string d = " from ballerina ";
+
+    string s = a + a;
+    printString(s); // @output ""
+    printString(a + b); // @output "hello "
+    printString(a + c); // @output " world"
+    printString(a + d); // @output " from ballerina "
+
+    printString(b + a); // @output "hello "
+    printString(b + b); // @output "hello hello "
+    printString(b + c); // @output "hello  world"
+    printString(b + d); // @output "hello  from ballerina "
+
+    printString(c + a); // @output " world"
+    printString(c + b); // @output " worldhello "
+    printString(c + c); // @output " world world"
+    printString(c + d); // @output " world from ballerina "
+
+    printString(d + a); // @output " from ballerina "
+    printString(d + b); // @output " from ballerina hello "
+    printString(d + c); // @output " from ballerina  world"
+    printString(d + d); // @output " from ballerina  from ballerina "
+}
+
+function printString(string s) {
+    io:println(s.toBalString());
+}
+
+Test-Case: output
+Description: Test string concatenation with string:Char.
+Labels: additive-expr, string, string:Char, value:toBalString
+
+public function main() {
+    string:Char a = "_";
+    string:Char b = "x";
+    string:Char c = " ";
+    string:Char d = "y";
+
+    string s = a + a;
+    printString(s); // @output "__"
+    printString(a + b); // @output "_x" 
+    printString(a + c); // @output "_ "
+    printString(a + d); // @output "_y"
+
+    printString(b + a); // @output "x_" 
+    printString(b + b); // @output "xx" 
+    printString(b + c); // @output "x "
+    printString(b + d); // @output "xy"
+
+    printString(c + a); // @output " _"
+    printString(c + b); // @output " x"
+    printString(c + c); // @output "  "
+    printString(c + d); // @output " y"
+
+    printString(d + a); // @output "y_"
+    printString(d + b); // @output "yx"
+    printString(d + c); // @output "y "
+    printString(d + d); // @output "yy"
+}
+
+function printString(string s) {
+    io:println(s.toBalString());
+}
+
+Test-Case: output
+Description: Test string concatenation with user-defined subtype of string.
+Labels: additive-expr, string, value:toBalString, module-type-defn, union-type
+
+type Chars "a"|"b";
+type Strings "c"|"de";
+
+public function main() {
+    Chars a = "a";
+    Chars b = "b";
+    Strings c = "c";
+    Strings d = "de";
+
+    string s = a + a;
+    printString(s); // @output "aa"
+    printString(a + b); // @output "ab"
+    printString(a + c); // @output "ac"
+    printString(a + d); // @output "ade"
+
+    s = b + a;
+    printString(s); // @output "ba"
+    printString(b + b); // @output "bb"
+    printString(b + c); // @output "bc"
+    printString(b + d); // @output "bde"
+
+    s = c + a;
+    printString(c + a); // @output "ca"
+    printString(c + b); // @output "cb"
+    printString(c + c); // @output "cc"
+    printString(c + d); // @output "cde"
+
+    s = d + a;
+    printString(s); // @output "dea"
+    printString(d + b); // @output "deb"
+    printString(d + c); // @output "dec"
+    printString(d + d); // @output "dede"
+}
+
+function printString(string s) {
+    io:println(s.toBalString());
+}
+
+Test-Case: output
+Description: Test concatenation of string:Char and user-defined string subtype variable holding a string:Char.
+Labels: additive-expr, string, string:Char, value:toBalString, module-type-defn, union-type
+
+type Strings "a"|"bc";
+
+public function main() {
+    Strings a = "a";
+    string:Char b = "b";
+
+    string s = a + b;
+    printString(s); // @output "ab"
+    printString(b + a); // @output "ba"
+}
+
+function printString(string s) {
+    io:println(s.toBalString());
+}
+
+Test-Case: output
+Description: Test concatenation of string:Char and user-defined string subtype variable holding a non-string:Char value.
+Fail-Issue: ballerina-platform/ballerina-lang#32813
+Labels: additive-expr, string, string:Char, value:toBalString, module-type-defn, union-type
+
+type Strings "a"|"bc";
+
+public function main() {
+    Strings a = "bc";
+    string:Char b = "d";
+
+    string s = a + b;
+    printString(s); // @output "bcd" 
+    printString(b + a); // @output "dbc"
+}
+
+function printString(string s) {
+    io:println(s.toBalString());
+}
+
+Test-Case: output
+Description: Test concatenation of string:Char and string.
+Fail-Issue: ballerina-platform/ballerina-lang#32814
+Labels: additive-expr, string, string:Char, value:toBalString, module-type-defn, union-type
+
+public function main() {
+    string:Char a = "d";
+    string b = "efg";
+    string c = "h";
+
+    string s = a + b;
+    printString(s); // @output "defg" 
+    printString(a + c); // @output "dh"
+
+    s = b + a;
+    printString(s); // @output "efgd"
+    printString(c + a); // @output "hd"
+}
+
+function printString(string s) {
+    io:println(s.toBalString());
+}
+
+Test-Case: output
+Description: Test concatenation of string and user-defined string subtype.
+Labels: additive-expr, string, string:Char, value:toBalString, module-type-defn, union-type
+
+type Strings "a"|"bc";
+
+public function main() {
+    Strings a = "a";
+    Strings b = "bc";
+    string c = "d";
+    string d = "ef";
+    string e = "greetings\r";
+    string f = "b7a";
+    string g = "world";
+
+    string s = a + c;
+    printString(s); // @output "ad"
+    printString(a + d); // @output "aef"
+
+    s = b + c;
+    printString(s); // @output "bcd"
+    printString(b + d); // @output "bcef"
+
+    s = c + a;
+    printString(s); // @output "da"
+    printString(c + b); // @output "dbc"
+
+    s = d + a;
+    printString(s); // @output "efa"
+    printString(d + b); // @output "efbc"
+
+    io:println(e + e); // @output greetings
+    io:println(e + f); // @output b7aetings
+    io:println(f + e); // @output b7agreetings
+    io:println(e + g); // @output worldings
+    io:println(g + e); // @output worldgreetings
+}
+
+function printString(string s) {
+    io:println(s.toBalString());
+}
