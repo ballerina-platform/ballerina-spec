@@ -65,32 +65,23 @@ public function main() {
 }
 
 Test-Case: output
-Description: Test base16 byte array literal in different expression contexts.
-Label: byte-array-literal, is-expr
-
-public function main() {
-    io:println(base16 `aaabcfccadafcd341a4bdfabcd8912df` is byte[]); // @output true
-    io:println(base16 `aaabcfccadafcd341a4bdfabcd8912df`.toString()); // @output [170,171,207,204,173,175,205,52,26,75,223,171,205,137,18,223]
-    io:println(base16 `aaabcfccadafcd341a4bdfabcd8912df`.toBalString()); // @output [170,171,207,204,173,175,205,52,26,75,223,171,205,137,18,223]
-    testByteArray(base16 `aaabcfccadafcd341a4bdfabcd8912df`); // @output [170,171,207,204,173,175,205,52,26,75,223,171,205,137,18,223]
-    if base16 `af12daa0`.length() > 0 {
-        io:println(true); // @output true
-    }
-}
-
-function testByteArray(byte[] byteArray) {
-    io:println(byteArray);
-}
-
-Test-Case: output
-Description: Test static type and inherent type of the base16 byte array literal.
+Description: Test inherent type of base16 byte array literal is byte[N],
+where N is the number of bytes encoded by the Base16Literal.
 Fail-Issue: ballerina-lang#32542
-Label: byte-array-literal , is-expr
+Label: byte-array-literal, is-expr
 
 public function main() {
     io:println(base16 `` is byte[0]); // @output true
     io:println(base16 `aaabcfccadafcd341a4bdfabcd8912df` is byte[16]); // @output true
+}
 
+Test-Case: output
+Description: Test static type of base16 byte array literal is byte[N],
+where N is the number of bytes encoded by the Base16Literal.
+Fail-Issue: ballerina-lang#32542
+Label: byte-array-literal
+
+public function main() {
     byte[16] byteArray1 = base16 `aaabcfccadafcd341a4bdfabcd8912df`;
     byte[*] byteArray2 = base16 `aaabcfccadafcd341a4bdfabcd8912df`;
     io:println(byteArray1); // @output [170,171,207,204,173,175,205,52,26,75,223,171,205,137,18,223]
@@ -99,7 +90,7 @@ public function main() {
 
 Test-Case: output
 Description: Test assignment of base16 byte array literal.
-Label: byte-array-literal, int:Signed32, int:Unsigned32
+Label: byte-array-literal, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32
 
 public function main() {
     byte[] byteArray1 = base16 `aaabcfccadafcd341a4bdfabcd8912df`;
@@ -112,6 +103,107 @@ public function main() {
 }
 
 Test-Case: error
+Description: Test invalid assignment of base16 byte array literal.
+Label: byte-array-literal, int:Singed8
+
+public function main() {
+    int:Signed8[] byteArray = base16 `aabb12`; // @error incompatible types: expected 'int:Signed8[]', found 'byte[]'
+}
+
+Test-Case: output
+Description: Test base16 byte array literal as a function call.
+Label: byte-array-literal
+
+public function main() {
+    testByteArray(base16 `aaabcfccadafcd341a4bdfabcd8912df`); // @output [170,171,207,204,173,175,205,52,26,75,223,171,205,137,18,223]
+}
+
+function testByteArray(byte[] byteArray) {
+    io:println(byteArray);
+}
+
+Test-Case: output
+Description: Test base16 byte array literal in type test expression.
+Label: byte-array-literal, is-expr
+
+public function main() {
+    io:println(base16 `aaabcfccadafcd341a4bdfabcd8912df` is byte[]); // @output true
+}
+
+Test-Case: output
+Description: Test base16 byte array literal with method call.
+Label: byte-array-literal, method-call-expr
+
+public function main() {
+    io:println(base16 `aaabcfccadafcd341a4bdfabcd8912df`.toString()); // @output [170,171,207,204,173,175,205,52,26,75,223,171,205,137,18,223]
+    io:println(base16 `aaabcfccadafcd341a4bdfabcd8912df`.toBalString()); // @output [170,171,207,204,173,175,205,52,26,75,223,171,205,137,18,223]
+}
+
+Test-Case: output
+Description: Test base16 byte array literal in if else statement.
+Label: byte-array-literal
+
+public function main() {
+    if base16 `af12daa0`.length() > 0 {
+        io:println(true); // @output true
+    }
+}
+
+Test-Case: output
+Description: Test base16 byte array literal in match statement.
+Label: byte-array-literal, match-stmt
+
+public function main() {
+    match base16 `abcd` {
+        var v => {
+            io:println(v); // @output [171,205]
+        }
+    }
+}
+
+Test-Case: output
+Description: Test base16 byte array literal with member access.
+Label: byte-array-literal, member-access-expr
+
+public function main() {
+    io:println(base16 `00FFFF`[0]); // @output 0
+    io:println(base16 `00FFFF`[1]); // @output 255
+    io:println(base16 `00FFFF`[2]); // @output 255
+}
+
+Test-Case: output
+Description: Test base16 byte array literal in structural constructors.
+Label: byte-array-literal, list-constructor-expr, mapping-constructor-expr, table-constructor-expr
+
+public function main() {
+    io:println([base16 `aabb`, base16 `ccdd`]); // @output [[170,187],[204,221]]
+    io:println({byteArray1: base16 `aabb`, byteArray2: base16 `abcd`}); // @output {"byteArray1":[170,187],"byteArray2":[171,205]}
+    io:println(table [{ id:1, byteArray: base16 `abcd`}]); // @output [{"id":1,"byteArray":[171,205]}]
+}
+
+Test-Case: output
+Description: Test base16 byte array literal in return statement.
+Label: byte-array-literal
+
+public function main() {
+    io:println(getByteArray()); // @output [171,205]
+}
+
+function getByteArray() returns byte[] {
+    return base16 `abcd`;
+}
+
+Test-Case: output
+Description: Test base16 byte array literal with foreach statement.
+Label: byte-array-literal, foreach-stmt
+
+public function main() {
+    foreach byte i in base16 `abcd` {
+        io:println(i); // @output [171,205]
+    }
+}
+
+Test-Case: error
 Description: Test invalid base16 byte array literal.
 Label: byte-array-literal
 
@@ -120,7 +212,6 @@ public function main() {
     byte[] byteArray2 = base16 `aa bg`; // @error invalid base16 content in byte array literal
     byte[] byteArray3 = base16 `aa // some comment
                                 bb`; // @error invalid base16 content in byte array literal
-    int:Signed8[] byteArray = base16 `aabb12`; // @error incompatible types: expected 'int:Signed8[]', found 'byte[]'
 }
 
 Test-Case: output
@@ -239,14 +330,25 @@ function testByteArray(byte[] byteArray) {
 }
 
 Test-Case: output
-Description: Test static type and inherent type of the base64 byte array literal.
+Description: Test inherent type of base64 byte array literal is byte[N],
+where N is the number of bytes encoded by the Base64Literal.
 Fail-Issue: ballerina-lang#32542
 Label: byte-array-literal, is-expr
 
 public function main() {
     io:println(base64 `` is byte[0]); // @output true
+    io:println(base64 `bGlnaHQgd29y` is byte[9]); // @output true
+    io:println(base64 `aGVsbG8gYmFsbGVyaW5hICEhIQz=` is byte[20]); // @output true
     io:println(base64 `aGVsbG8gYmFsbGVyaW5hICEhIQ==` is byte[19]); // @output true
+}
 
+Test-Case: output
+Description: Test static type of base64 byte array literal is byte[N],
+where N is the number of bytes encoded by the Base64Literal.
+Fail-Issue: ballerina-lang#32542
+Label: byte-array-literal
+
+public function main() {
     byte[9] byteArray1 = base64 `bGlnaHQgd29y`;
     byte[*] byteArray2 = base64 `bGlnaHQgd29y`;
     io:println(byteArray1); // @output [108,105,103,104,116,32,119,111,114]
@@ -264,8 +366,8 @@ public function main() {
 }
 
 Test-Case: output
-Description: Test assignment of base16 byte array literal.
-Label: byte-array-literal, int:Signed32, int:Unsigned32
+Description: Test assignment of base64 byte array literal.
+Label: byte-array-literal, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32
 
 public function main() {
     byte[] byteArray1 = base64 `bGlnaHQgd29y`;
@@ -275,6 +377,109 @@ public function main() {
     int:Unsigned32[] byteArray5 = base64 `bGlnaHQgd29y`;
     int:Signed16[] byteArray6 = base64 `bGlnaHQgd29y`;
     int:Signed32[] byteArray7 = base64 `bGlnaHQgd29y`;
+}
+
+Test-Case: error
+Description: Test invalid assignment of base64 byte array literal.
+Label: byte-array-literal, int:Singed8
+
+public function main() {
+    int:Signed8[] byteArray = base64 `bGlnaHQgd29y`;; // @error incompatible types: expected 'int:Signed8[]', found 'byte[]'
+}
+
+Test-Case: output
+Description: Test base64 byte array literal as a function call.
+Label: byte-array-literal
+
+public function main() {
+    testByteArray(base64 `bGlnaHQgd29y`); // @output [108,105,103,104,116,32,119,111,114]
+}
+
+function testByteArray(byte[] byteArray) {
+    io:println(byteArray);
+}
+
+Test-Case: output
+Description: Test base64 byte array literal in type test expression.
+Label: byte-array-literal, is-expr
+
+public function main() {
+    io:println(base64 `bGlnaHQgd29y` is byte[]); // @output true
+}
+
+Test-Case: output
+Description: Test base64 byte array literal with method call.
+Label: byte-array-literal, method-call-expr
+
+public function main() {
+    io:println(base64 `bGlnaHQgd29y`.toString()); // @output [108,105,103,104,116,32,119,111,114]
+    io:println(base64 `bGlnaHQgd29y`.toBalString()); // @output [108,105,103,104,116,32,119,111,114]
+}
+
+Test-Case: output
+Description: Test base64 byte array literal in if else statement.
+Label: byte-array-literal
+
+public function main() {
+    if base64 `bGlnaHQgd29y`.length() > 0 {
+        io:println(true); // @output true
+    }
+}
+
+Test-Case: output
+Description: Test base64 byte array literal in match statement.
+Label: byte-array-literal, match-stmt
+
+public function main() {
+    match base64 `bGlnaHQgd29y` {
+        var v => {
+            io:println(v); // @output [108,105,103,104,116,32,119,111,114]
+        }
+    }
+}
+
+Test-Case: output
+Description: Test base64 byte array literal with member access.
+Label: byte-array-literal, member-access-expr
+
+public function main() {
+    io:println(base64 `Cake`[0]); // @output 9
+    io:println(base64 `Cake`[1]); // @output 169
+    io:println(base64 `Cake`[2]); // @output 30
+}
+
+Test-Case: output
+Description: Test base64 byte array literal in structural constructors.
+Label: byte-array-literal, list-constructor-expr, mapping-constructor-expr, table-constructor-expr
+
+public function main() {
+    io:println([base64 `More`, base64 `Cake`]); // @output [[50,138,222],[9,169,30]]
+    io:println({byteArray1: base64 `More`, byteArray2: base64 `Cake`}); // @output {"byteArray1":[50,138,222],"byteArray2":[9,169,30]}
+    io:println(table [{ id:1, byteArray: base64 `Cake`}]); // @output [{"id":1,"byteArray":[9,169,30]}]
+}
+
+Test-Case: output
+Description: Test base64 byte array literal in return statement.
+Label: byte-array-literal
+
+public function main() {
+    io:println(getByteArray()); // @output [9,169,30]
+}
+
+function getByteArray() returns byte[] {
+    return base64 `Cake`;
+}
+
+Test-Case: output
+Description: Test base64 byte array literal with foreach statement.
+Label: byte-array-literal, foreach-stmt
+
+public function main() {
+    foreach byte i in base64 `Cake` {
+        io:println(i); // @output 9
+                       // @output 169
+                       // @output 30
+    }
 }
 
 Test-Case: error
@@ -290,5 +495,4 @@ public function main() {
     byte[] byteArray6 = base64 `=aGV sbGD`; // @error invalid base64 content in byte array literal
     byte[] byteArray7 = base64 `aG=s bG3D`; // @error invalid base64 content in byte array literal
     byte[] byteArray8 = base64 `aGVs bG.D`; // @error invalid base64 content in byte array literal
-    int:Signed8[] byteArray = base64 `bGlnaHQgd29y`;; // @error incompatible types: expected 'int:Signed8[]', found 'byte[]'
 }
