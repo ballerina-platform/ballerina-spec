@@ -18,7 +18,7 @@ public function main() {
 
 Test-Case: output
 Description: Test DecimalNumbers with function call.
-Labels: int
+Labels: int, function-call-expr
 
 public function main() {
     printInt(101); // @output 101
@@ -45,8 +45,8 @@ public function main() {
 }
 
 Test-Case: output
-Description: Test HexIntLiterals with int-type-descriptor and function call.
-Labels: int
+Description: Test HexIntLiterals with int-type-descriptor.
+Labels: int, HexIntLiteral, function-call-expr
 
 public function main() {
     int x = 0x1;
@@ -91,7 +91,7 @@ function printInt(int x) {
     io:println(x);
 }
 
-Test-Case: error
+Test-Case: parser-error
 Description: Test invalid HexInLiteral.
 Fail-Issue: ballerina-lang#32559
 Labels: int
@@ -100,8 +100,6 @@ public function main() {
     int x = 0x; // @error invalid HexIntLiteral due to absence of HexDigits
 
     x = 0X; // @error invalid HexIntLiteral due to absence of HexDigits
-
-    x = 0x 12fa; // @error invalid HexIntLiteral
 
     x = 0x123g; // @error invalid HexIntLiteral due to incorrect HexDigits
 
@@ -113,7 +111,7 @@ public function main() {
 Test-Case: output
 Description: Test int-literals with toString().
 Fail-Issue: ballerina-lang#32769
-Labels: int
+Labels: HexIntLiteral, int, value:toString
 
 public function main() {
     io:println((101).toString()); // @output 101
@@ -128,7 +126,7 @@ public function main() {
 Test-Case: output
 Description: Test DecimalNumbers with toBalString().
 Fail-Issue: ballerina-lang#32769
-Labels: int, value:toBalString
+Labels: HexIntLiteral, int, value:toBalString
 
 public function main() {
     io:println((101).toBalString()); // @output 101
@@ -142,7 +140,7 @@ public function main() {
 
 Test-Case: output
 Description: Test int literals with return statement.
-Labels: int
+Labels: HexIntLiteral, int, return-stmt
 
 public function main() {
     io:println(printDecimalNumber()); // @output 5674
@@ -158,18 +156,20 @@ function printHexIntLiteral() returns int {
     return 0x12fab;
 }
 
-Test-Case: error
+Test-Case: parser-error
 Description: Test possible invalid int-literal scenarios.
 Labels: int
 
 public function main() {
-    int x = 0b10111; // @error expected a 'int', but found an undefined symbol '0b10111' // Note - multiple errors for this
+    int x = 0b10111; // @error expected a 'int', but found an undefined symbol '0b10111'
 
-    x = 123 456 789; // @error invalid expression // Note - multiple errors for this
+    x = 123 456 789; // @error invalid expression
 
-    x = 1,123,456,789; // @error invalid expression // Note - multiple errors for this
+    x = 1,123,456,789; // @error invalid expression
 
-    x = 0h123ca; // @error expected a 'int', but found an undefined symbol '0h123ca' // Note - multiple errors for this
+    x = 0x 12fa; // @error invalid HexIntLiteral
+
+    x = 0h123ca; // @error expected a 'int', but found an undefined symbol '0h123ca'
 
     x = Ox456fa; // @error expected a 'int', but found an undefined symbol 'Ox456fa'
 }
@@ -183,18 +183,30 @@ public function main() {
 }
 
 Test-Case: output
-Description: Test int-literals with equality.
-Labels: equality
+Description: Test DecimalNumbers with equality.
+Labels: equality, int
 
 public function main() {
     io:println(10 == 10); // @output true
 
     io:println(10 != 10); // @output false
+}
 
+Test-Case: output
+Description: Test HexIntLiteral with equality.
+Labels: equality, HexIntLiteral
+
+public function main() {
     io:println(0x1a == 0x1a); // @output true
 
     io:println(0x1a != 0x1a); // @output false
+}
 
+Test-Case: output
+Description: Test DecimalNumbers and HexIntLiteral with equality.
+Labels: equality, HexIntLiteral, int
+
+public function main() {
     io:println(0x1234abdef1 == 78193090289); // @output true
 
     io:println(0x1234abdef1 != 7819309028); // @output true
@@ -202,7 +214,7 @@ public function main() {
 
 Test-Case: output
 Description: Test the basic type when the numeric-literal includes a FloatTypeSuffix.
-Labels: any, decimal, float, int, is-expr
+Labels: any, decimal, FloatTypeSuffix, float, int, is-expr
 
 public function main() {
     any x = 0f;
@@ -223,7 +235,7 @@ public function main() {
 
 Test-Case: error
 Description: Test the basic type when the numeric-literal includes a FloatTypeSuffix.
-Labels: decimal, float, int
+Labels: decimal, FloatTypeSuffix, float, int
 
 public function main() {
     int x = 0f; // @error expected an 'int' but found a 'float'
@@ -235,7 +247,7 @@ public function main() {
 
 Test-Case: output
 Description: Test the basic type when the numeric-literal includes a DecimalTypeSuffix.
-Labels: any, decimal, float, int, is-expr
+Labels: any, DecimalTypeSuffix, decimal, float, int, is-expr
 
 public function main() {
     any x = 0d;
@@ -256,7 +268,7 @@ public function main() {
 
 Test-Case: error
 Description: Test the basic type when the numeric-literal includes a DecimalTypeSuffix.
-Labels: decimal, float, int
+Labels: DecimalTypeSuffix, decimal, float, int
 
 public function main() {
     int x = 0d; // @error expected an 'int' but found a 'decimal'
@@ -268,7 +280,7 @@ public function main() {
 
 Test-Case: output
 Description: Test the basic type when the numeric-literal is a HexFloatingPointLiteral.
-Labels: any, decimal, float, int, is-expr
+Labels: any, decimal, float, HexFloatingPointLiteral, int, is-expr
 
 public function main() {
     any x = 0xabc12.def;
@@ -289,7 +301,7 @@ public function main() {
 
 Test-Case: error
 Description: Test the basic type when the numeric-literal is a HexFloatingPointLiteral.
-Labels: decimal, float, int
+Labels: decimal, float, HexFloatingPointLiteral, int
 
 public function main() {
     decimal x = 0xabc12.def; // @error expected an 'decimal' but found a 'float'
@@ -301,27 +313,30 @@ public function main() {
 
 Test-Case: output
 Description: Test the basic type when the applicable contextually expected type is a subtype of decimal.
-Labels: decimal, int, is-expr, null, string
+Labels: decimal, int, is-expr, nil-type, string
 
 public function main() {
-    int|decimal a = 1.212;
-    io:println(a is int); // @output false
+    decimal a = 1.212;
     io:println(a is decimal); // @output true
 
-    int|decimal b = 0.0;
+    int|decimal b = 1.212;
     io:println(b is int); // @output false
     io:println(b is decimal); // @output true
 
-    string|decimal c = 32.12;
+    int|decimal c = 0.0;
+    io:println(c is int); // @output false
     io:println(c is decimal); // @output true
 
-    ()|decimal d = 10;
+    string|decimal d = 32.12;
     io:println(d is decimal); // @output true
+
+    ()|decimal e = 10;
+    io:println(e is decimal); // @output true
 }
 
 Test-Case: output
 Description: Test the basic type when the applicable contextually expected type is a subtype of float.
-Labels: decimal, float, int, null, is-expr, string
+Labels: decimal, float, HexIntLiteral, int, nil-type, is-expr, string
 
 public function main() {
     int|float x = 1.212;
@@ -349,7 +364,7 @@ public function main() {
 Test-Case: output
 Description: Test the basic type when the applicable contextually expected type is not a subtype of either decimal or
              float and the numeric literal is an int-literal.
-Labels: any, decimal, float, int, is-expr
+Labels: any, decimal, float, HexIntLiteral, int, is-expr
 
 public function main() {
     int|float|decimal x = 212;
@@ -401,7 +416,7 @@ public function main() {
 
 Test-Case: output
 Description: Test int literals with valid type casts.
-Labels: decimal, float, int, type-cast-expr
+Labels: decimal, float, HexIntLiteral, int, type-cast-expr
 
 public function main() {
     io:println(<int> 13245); // @output 13245
@@ -420,7 +435,7 @@ public function main() {
 Test-Case: error
 Description: Test nil literal '()' with invalid type casts.
 Fail-Issue: ballerina-lang#32716
-Labels: any, boolean, int, nil-literal, string, type-cast-expr
+Labels: any, boolean, HexIntLiteral, int, nil-literal, string, type-cast-expr
 
 public function main() {
     any x = <boolean> 0; // @error 'int' cannot be cast to 'boolean'
@@ -438,7 +453,7 @@ public function main() {
 
 Test-Case: output
 Description: Test int literals with interpolation in template expressions.
-Labels: int, raw-template-expr
+Labels: HexIntLiteral, int, raw-template-expr
 
 public function main() {
     io:println(`${124}`); // @output 124
@@ -448,7 +463,7 @@ public function main() {
 
 Test-Case: output
 Description: Test int literals as member of structural constructors.
-Labels: int, list-constructor-expr, mapping-constructor-expr, string
+Labels: HexIntLiteral, int, list-constructor-expr, mapping-constructor-expr, string
 
 public function main() {
     io:println([123, 0x12a3]); // @output [123,4771]
