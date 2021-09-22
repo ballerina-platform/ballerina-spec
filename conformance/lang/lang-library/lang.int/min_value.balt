@@ -1,6 +1,6 @@
 Test-Case: output
 Description: Test minimum value of int type.
-Labels: additive-expr, int:MIN_VALUE, is-expr, optional-type, string
+Labels: DecimalNumber, additive-expr, int:MIN_VALUE, is-expr, optional-type, string, unary-minus
 
 public function main() {
     int:MIN_VALUE a = -9223372036854775807 - 1;
@@ -23,7 +23,7 @@ function testIntOrNil(int? i) {
 
 Test-Case: error
 Description: Test assigning int:MIN_VALUE to an incompatible type.
-Labels: int:MIN_VALUE, int:Unsigned32
+Labels: int:MIN_VALUE, int:Unsigned32, string
 
 public function main() {
     int:Unsigned32 a = int:MIN_VALUE; // @error int is not a subtype of int:Unsigned32
@@ -33,15 +33,15 @@ public function main() {
 Test-Case: error
 Description: Test assigning -9223372036854775808 for int:MIN_VALUE type variable.
 Fail-Issue: ballerina-lang#32577 // -9223372036854775808 would overflow, but doesn't atm
-Labels: int:MIN_VALUE
+Labels: DecimalNumber, int:MIN_VALUE, unary-minus
 
 public function main() {
-    int:MIN_VALUE a = -9223372036854775808; // @error
+    int:MIN_VALUE a = -9223372036854775808; // @error integer overflow
 }
 
 Test-Case: error
 Description: Test assigning too small value for int:MIN_VALUE type variable
-Labels: int:MIN_VALUE
+Labels: DecimalNumber, int:MIN_VALUE, unary-minus
 
 public function main() {
     int:MIN_VALUE a = -9223372036854775809; // @error too small value
@@ -50,7 +50,7 @@ public function main() {
 Test-Case: error
 Description: Test assigning invalid value for int:MIN_VALUE type variable.
 Fail-Issue: ballerina-lang#32513 // no error
-Labels: int:MIN_VALUE
+Labels: DecimalNumber, int:MIN_VALUE
 
 public function main() {
     int:MIN_VALUE a = 10; // @error int is not a subtype of -9223372036854775808
@@ -58,16 +58,15 @@ public function main() {
 
 Test-Case: error
 Description: Test updating int:MIN_VALUE constant value.
-Labels: int:MIN_VALUE
+Labels: DecimalNumber, int:MIN_VALUE
 
 public function main() {
     int:MIN_VALUE = 10; // @error cannot update constant
-
 }
 
 Test-Case: error
 Description: Test missing int module-prefix with int MIN_VALUE.
-Labels: additive-expr
+Labels: DecimalNumber, additive-expr, unary-minus
 
 public function main() {
     MIN_VALUE a = -9223372036854775807 - 1; // @error unknown type
