@@ -31,7 +31,7 @@ public function main() {
 
 Test-Case: output
 Description: Test bitwise and expression always evaluates to 0 when at least one operand is 0.
-Label: binary-bitwise-expr, unary-minus
+Label: binary-bitwise-expr, signed-zero, unary-minus, unary-plus
 
 public function main() {
     int a = 53443;
@@ -58,7 +58,7 @@ public function main() {
 
 Test-Case: output
 Description: Test bitwise and expression always evaluates to value V when the value of both operands are V.
-Label: binary-bitwise-expr, unary-minus
+Label: binary-bitwise-expr, unary-minus, unary-plus
 
 public function main() {
     int a = 99443;
@@ -190,7 +190,7 @@ public function main() {
 
 Test-Case: output
 Description: Test bitwise and expression where the operands are a subtype of int.
-Label: binary-bitwise-expr, byte, int:Signed8, int:Signed16, int:Signed32, int:Unsigned32, int:Unsigned16, int:Unsigned8
+Label: binary-bitwise-expr, byte, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32
 
 public function main() {
     int a = 43;
@@ -251,7 +251,7 @@ public function main() {
 
 Test-Case: output
 Description: Test bitwise and expression where the operands are user defined type T where the T is a subtype of int.
-Label: binary-bitwise-expr,
+Label: binary-bitwise-expr, module-type-defn
 
 type MyType int;
 
@@ -272,7 +272,7 @@ function printResult(int result) {
 
 Test-Case: error
 Description: Test the static type of both operands must be a subtype of int.
-Label: binary-bitwise-expr
+Label: binary-bitwise-expr, float, list-constructor-expr, mapping-constructor-expr, map-type, optional-type, string
 
 public function main(map<int> a, map<int> b, int? d, int? e) {
     int a1 = 5 & 7.5; // @error static type of both operands must be a subtype of int
@@ -286,10 +286,14 @@ public function main(map<int> a, map<int> b, int? d, int? e) {
     int a7 = getFloat1() & getFloat2(); // @error static type of both operands must be a subtype of int
 }
 
+function getFloat1() returns float => 99.4;
+
+function getFloat2() returns float => 43.8;
+
 Test-Case: error
 Description: Test error in bitwise and expression where the operands are user defined type T
              where the T is not a subtype of int.
-Label: binary-bitwise-expr,
+Label: binary-bitwise-expr, module-type-defn
 
 type MyType int|decimal;
 
@@ -305,14 +309,10 @@ public function main() {
     result = a & c; // @error MyType is not a subtype of int
 }
 
-function getFloat1() returns float => 99.4;
-
-function getFloat2() returns float => 43.8;
-
 Test-Case: output
 Description: Test if the type of either operand is a subtype of int:UnsignedK when K is 8, 16 or 32, then the static
              type of the result is int:UnsignedN where N is the smallest such K with Unsigned32.
-Label: binary-bitwise-expr
+Label: binary-bitwise-expr, int:Unsigned32
 
 public function main() {
     int a = 9876;
@@ -331,7 +331,7 @@ function printResult(int:Unsigned32 result) {
 Test-Case: output
 Description: Test if the type of either operand is a subtype of int:UnsignedK when K is 8, 16 or 32, then the static
              type of the result is int:UnsignedN where N is the smallest such K with Unsigned16.
-Label: binary-bitwise-expr
+Label: binary-bitwise-expr, int:Unsigned16
 
 public function main() {
     int a = 33334567654;
@@ -350,7 +350,7 @@ function printResult(int:Unsigned16 result) {
 Test-Case: output
 Description: Test if the type of either operand is a subtype of int:UnsignedK when K is 8, 16 or 32, then the static
              type of the result is int:UnsignedN where N is the smallest such K with Unsigned8.
-Label: binary-bitwise-expr
+Label: binary-bitwise-expr, , int:Unsigned8
 
 public function main() {
     int a = 987996;
@@ -369,7 +369,7 @@ function printResult(int:Unsigned8 result) {
 Test-Case: output
 Description: Test if the type of either operand is a subtype of int:UnsignedK when K is 8, 16 or 32, then the static
              type of the result is int:UnsignedN where N is the smallest such K.
-Label: binary-bitwise-expr
+Label: binary-bitwise-expr, int:Unsigned8, int:Unsigned16, int:Unsigned32
 
 public function main() {
     int:Unsigned32 b = 5454;
@@ -391,7 +391,7 @@ public function main() {
 Test-Case: output
 Description: Test if the type of either operand is a subtype of int:UnsignedK when K is 8, 16 or 32, then the static
              type of the result is int:UnsignedN where N is the smallest such K via inference.
-Label: binary-bitwise-expr
+Label: binary-bitwise-expr, int:Unsigned8, int:Unsigned16, int:Unsigned32, var
 
 public function main() {
     int a = 9876;
@@ -418,7 +418,7 @@ public function main() {
 Test-Case: error
 Description: Test if the type of either operand is a subtype of int:UnsignedK when K is 8, 16 or 32, then the static
              type of the result is int:UnsignedN where N is the smallest such K using invalid assignment.
-Label: binary-bitwise-expr
+Label: binary-bitwise-expr, int:Unsigned8, int:Unsigned16, int:Unsigned32
 
 public function main() {
     int a = 4343;
@@ -439,7 +439,7 @@ public function main() {
 Test-Case: error
 Description: Test if the type of either operand is a subtype of int:UnsignedK when K is 8, 16 or 32, then the static
              type of the result is int:UnsignedN where N is the smallest such K via invalid assignment with inference.
-Label: binary-bitwise-expr
+Label: binary-bitwise-expr, int:Unsigned8, int:Unsigned16, int:Unsigned32, var
 
 public function main() {
     int a = 4343;
@@ -462,7 +462,7 @@ public function main() {
 
 Test-Case: output
 Description: Test float literal as operands with type cast.
-Label: binary-bitwise-expr
+Label: binary-bitwise-expr, float, type-cast-expr
 
 public function main() {
     float a = 4.6434;
@@ -480,26 +480,12 @@ function printResult(int result) {
 }
 
 Test-Case: output
-Description: Test byte array literal as operands with member access and type cast.
-Label: binary-bitwise-expr
-
-public function main() {
-    printResult(<int>(base16 `ab`)[0] & <int>(base16 `aa`)[0]); // @output 170
-    printResult(<int>(base64 `A31F`)[0] & <int>(base16 `03`)[0]); // @output 3
-    printResult(<int>(base64 `FFFF`)[0] & <int>(base64 `1111`)[0]); // @output 20
-}
-
-function printResult(int result) {
-    io:println(result);
-}
-
-Test-Case: output
 Description: Test field access and optional field access expression as operands with type cast.
-Label: binary-bitwise-expr
+Label: binary-bitwise-expr, module-type-defn, field-access-expr, optional-field-access-expr, record-type
 
 type Person record {|
-int id;
-int age?;
+    int id;
+    int age?;
 |};
 
 public function main() {
@@ -508,9 +494,9 @@ public function main() {
 
     printResult(p1.id & p2.id); // @output 1
 
-    printResult(<int>p1?.age & <int>p2?.age);  // @output 22
+    printResult(<int>p1?.age & <int>p2?.age); // @output 22
 
-    printResult(p1.id & <int>p2?.age);  // @output 1
+    printResult(p1.id & <int>p2?.age); // @output 1
 }
 
 function printResult(int result) {
@@ -519,7 +505,7 @@ function printResult(int result) {
 
 Test-Case: output
 Description: Test member access expression as operands.
-Label: binary-bitwise-expr
+Label: binary-bitwise-expr, member-access-expr
 
 public function main() {
     int[] a = [33, 22, 535334343];
@@ -561,7 +547,7 @@ function getInt16() returns int:Signed16 => 897;
 
 Test-Case: output
 Description: Test method call expression as operands.
-Label: binary-bitwise-expr
+Label: binary-bitwise-expr, implicit-new-expr, method-call-expr, module-class-defn
 
 class Car {
     int number = 4399;
@@ -579,7 +565,6 @@ public function main() {
     Car c1 = new;
     printResult(c1.getCurrentSpeed() & c1.getCurrentSpeed()); // @output 56
     printResult(c1.getCurrentSpeed() & c1.getRimSize()); // @output 16
-    printResult(c1.number & c1.getRimSize()); // @output 2
     printResult(53 & c1.getRimSize()); // @output 16
 }
 
@@ -589,7 +574,7 @@ function printResult(int result) {
 
 Test-Case: output
 Description: Test multiplicative expression as operands.
-Label: binary-bitwise-expr
+Label: binary-bitwise-expr, multiplicative-expr
 
 public function main() {
     printResult((54 * 5) & (534 * 2)); // @output 12
@@ -614,7 +599,7 @@ function printResult(int result) {
 
 Test-Case: output
 Description: Test additive expression as operands.
-Label: binary-bitwise-expr
+Label: additive-expr, binary-bitwise-expr
 
 public function main() {
     printResult((54 + 5) & (534 + 2)); // @output 24
@@ -636,7 +621,7 @@ function printResult(int result) {
 
 Test-Case: output
 Description: Test shift expression as operands.
-Label: binary-bitwise-expr
+Label: binary-bitwise-expr, shift-expr, unary-minus
 
 public function main() {
     printResult((54 << 1) & (534 << 2)); // @output 72
@@ -690,7 +675,7 @@ function printResult(int result) {
 
 Test-Case: output
 Description: Test check expression as operands.
-Label: binary-bitwise-expr
+Label: checking-expr, binary-bitwise-expr
 
 public function main() returns error? {
     printResult(check getData(4) & 5); // @output 4
