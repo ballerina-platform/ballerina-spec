@@ -3337,3 +3337,110 @@ public function main() returns error? {
     v = j * i;
     io:println(v.toBalString()); // @output ()
 }
+
+Test-Case: output
+Description: Test integer multiplication where at least one operand is of an int subtype union.
+Fail-Issue: ballerina-platform/ballerina-lang#32912
+Labels: multiplicative-expr, int, DecimalNumber, byte, int:Signed8, int:Signed16,
+        int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, module-type-defn, union-type
+
+type T1 1|2;
+
+type T2 int:Signed16|int:Signed32|int:Unsigned8|int:MAX_VALUE;
+
+type T3 int:Unsigned16|int:Unsigned32|byte|int:Signed8;
+
+type T4 T1|T2;
+
+public function main() {
+    T1 a = 1;
+    T2 b = 2;
+    T3 c = 3;
+    T4 d = 4;
+
+    int v = 2 * a;
+    io:println(v); // @output 2
+
+    v = 2 * b;
+    io:println(v); // @output 4
+
+    v = 2 * c;
+    io:println(v); // @output 6
+
+    v = 2 * d;
+    io:println(v); // @output 8
+
+    v = a * a;
+    io:println(v); // @output 1
+
+    v = a * b;
+    io:println(v); // @output 2
+
+    v = a * c;
+    io:println(v); // @output 3
+
+    v = a * d;
+    io:println(v); // @output 4
+
+    v = b * b;
+    io:println(v); // @output 4
+
+    v = b * c;
+    io:println(v); // @output 6
+
+    v = b * d;
+    io:println(v); // @output 8
+
+    v = c * c;
+    io:println(v); // @output 9
+
+    v = c * d;
+    io:println(v); // @output 12
+
+    v = d * d;
+    io:println(v); // @output 16
+}
+
+Test-Case: output
+Description: Test integer multiplication with optional int operand's type written in different ways.
+Labels: multiplicative-expr, int, DecimalNumber, nil-literal, optional-type, module-type-defn, union-type, value:toBalString
+
+type T1 1|()|2;
+
+type T2 1|2?;
+
+public function main() {
+    T1 a = 1;
+    T2 b = 2;
+    ()|int c = ();
+
+    int? v = a * a;
+    io:println(v); // @output 1
+
+    v = a * b;
+    io:println(v); // @output 2
+
+    v = a * c;
+    io:println(v.toBalString()); // @output ()
+
+    v = b * b;
+    io:println(v); // @output 4
+
+    v = b * c;
+    io:println(v.toBalString()); // @output ()
+
+    v = c * c;
+    io:println(v.toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test integer multiplication with HexIntLiterals.
+Labels: multiplicative-expr, int, DecimalNumber, HexIntLiteral
+
+public function main() {
+    int a = 0xdef;
+    int b = a * 0x12;
+    io:println(b); // @output 64206
+    io:println(a * 18); // @output 64206
+    io:println(0Xdef * 18); // @output 64206
+}

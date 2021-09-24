@@ -338,3 +338,42 @@ function getUnsigned32Int(int:Signed32 i) returns int:Unsigned32 {
     return 0;
 }
 
+Test-Case: error
+Description: Test contextually-expected type for multiplicative expression with operands with int as expected type, with invalid values.
+Labels: multiplicative-expr, int, DecimalNumber
+
+public function main() {
+    int a1 = 1 * 9223372036854775808; // @error operands for * with int expected type should be int
+    int a2 = -9223372036854775809 / 2; // @error operands for / with int expected type should be int
+    int a3 = 9223372036854775808 % -92233720368547758070; // @error operands for % with int expected type should be int
+}
+
+Test-Case: error
+Description: Test contextually-expected type for multiplicative expression with operands with optional int as expected type, with invalid values.
+Labels: multiplicative-expr, int, DecimalNumber, optional-type, numeric-nil-lifting
+
+public function main() {
+    int? a1 = 1 * 9223372036854775808; // @error operands for * with int? expected type should be int
+    int? a2 = -9223372036854775809 / 2; // @error operands for / with int? expected type should be int
+    int? a3 = 9223372036854775808 % -92233720368547758070; // @error operands for % with int? expected type should be int
+}
+
+Test-Case: error
+Description: Test contextually-expected type for multiplicative expression with operands with int as expected type, with invalid values.
+Labels: multiplicative-expr, int, HexIntLiteral
+
+public function main() {
+    int a1 = 1 * 0x8000000000000000; // @error operands for * with int expected type should be int
+    int a2 = -0x8000000000000001 / 2; // @error operands for / with int expected type should be int
+    int a3 = 0x8000000000000000 % -0X4FFFFFFFFFFFFFFF6; // @error operands for % with int expected type should be int
+}
+
+Test-Case: error
+Description: Test contextually-expected type for multiplicative expression with operands with optional int as expected type, with invalid values.
+Labels: multiplicative-expr, int, HexIntLiteral, optional-type, numeric-nil-lifting
+
+public function main() {
+    int? a1 = 1 * 0x8000000000000000; // @error operands for * with int? expected type should be int
+    int? a2 = -0x8000000000000001 / 2; // @error operands for / with int? expected type should be int
+    int? a3 = 0x8000000000000000 % -0X4FFFFFFFFFFFFFFF6; // @error operands for % with int? expected type should be int
+}
