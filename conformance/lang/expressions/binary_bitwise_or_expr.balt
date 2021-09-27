@@ -259,8 +259,64 @@ public function main() {
 }
 
 Test-Case: output
+Description: Test nil lifting for bitwise or operator.
+Label: binary-bitwise-expr, byte, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16,
+       int:Unsigned32, numeric-nil-lifting
+
+public function main() {
+    int? a = 43;
+
+    byte? b = 5;
+
+    int:Signed32? c = -21474836;
+    int:Signed16? d = -454;
+    int:Signed8? e = 100;
+
+    int:Unsigned32? f = 21474836;
+    int:Unsigned16? g = 54522;
+    int:Unsigned8? h = 255;
+
+    io:println(a | b); // @output 47
+    io:println(a | c); // @output -21474833
+    io:println(a | d); // @output -453
+    io:println(a | e); // @output 111
+    io:println(a | f); // @output 21474879
+    io:println(a | g); // @output 54523
+    io:println(a | h); // @output 255
+
+    io:println(b | b); // @output 5
+    io:println(b | c); // @output -21474835
+    io:println(b | d); // @output -449
+    io:println(b | e); // @output 101
+
+    io:println(c | c); // @output -21474836
+    io:println(c | d); // @output -2
+    io:println(c | e); // @output -21474836
+    io:println(c | f); // @output -4
+    io:println(c | g); // @output -21441026
+    io:println(c | h); // @output -21474817
+
+    io:println(d | d); // @output -454
+    io:println(d | e); // @output -386
+    io:println(d | f); // @output -450
+    io:println(d | g); // @output -262
+    io:println(d | h); // @output -257
+
+    io:println(e | e); // @output 100
+    io:println(e | f); // @output 21474932
+    io:println(e | g); // @output 54526
+    io:println(e | h); // @output 255
+
+    io:println(f | f); // @output 21474836
+
+    io:println(g | g); // @output 54522
+
+    io:println(h | h); // @output 255
+}
+
+Test-Case: output
 Description: Test bitwise or expression where the operands are byte and int:UnsignedK.
-Fail-Issue: #32888
+Fail-Issue: #32884
 Label: binary-bitwise-expr, byte, int:Unsigned8, int:Unsigned16, int:Unsigned32
 
 public function main() {
@@ -272,21 +328,6 @@ public function main() {
     io:println(b | f); // @output 21474837
     io:println(b | g); // @output 54527
     io:println(b | h); // @output 255
-}
-
-Test-Case: output
-Description: Test bitwise or expression where the operands are int:UnsignedK.
-Fail-Issue: #32884
-Label: binary-bitwise-expr, byte, int:Unsigned8, int:Unsigned16, int:Unsigned32
-
-public function main() {
-    int:Unsigned32 f = 21474836;
-    int:Unsigned16 g = 54522;
-    int:Unsigned8 h = 255;
-
-    io:println(f | g); // @output 21495550
-    io:println(f | h); // @output 21475071
-    io:println(g | h); // @output 54527
 }
 
 Test-Case: output
@@ -311,17 +352,19 @@ function printResult(int result) {
 }
 
 Test-Case: error
-Description: Test the static type of both operands must be a subtype of int.
-Label: binary-bitwise-expr, float, list-constructor-expr, mapping-constructor-expr, map-type, optional-type, string
+Description: Test the static type of both operands must be a subtype of int via invalid numeric operand types.
+Label: binary-bitwise-expr, DecimalNumber, DecimalTypeSuffix, float, FloatTypeSuffix
 
-public function main(map<int> a, map<int> b, int? d, int? e) {
-    int a1 = 5 | 7.5; // @error static type of both operands must be a subtype of int
-    int a2 = "5" | "6"; // @error static type of both operands must be a subtype of int
-    int a3 = [1] | [2]; // @error static type of both operands must be a subtype of int
-    int a4 = {name: "mike"} | {name: "Jone"}; // @error static type of both operands must be a subtype of int
+public function main(float a, float b) {
+    int a2 = 5 | 7.5; // @error static type of both operands must be a subtype of int
 
-    int a5 = a | b; // @error static type of both operands must be a subtype of int
-    int a6 = d | e; // @error static type of both operands must be a subtype of int
+    int a3 = 433.4 | 7.5; // @error static type of both operands must be a subtype of int
+
+    int a4 = 434.446e+2f | 95.446e+2f; // @error static type of both operands must be a subtype of int
+
+    int a5 = 433d | 7d; // @error static type of both operands must be a subtype of int
+
+    int a6 = a | b;
 
     int a7 = getFloat1() | getFloat2(); // @error static type of both operands must be a subtype of int
 }
@@ -329,6 +372,22 @@ public function main(map<int> a, map<int> b, int? d, int? e) {
 function getFloat1() returns float => 99.4;
 
 function getFloat2() returns float => 43.8;
+
+Test-Case: error
+Description: Test the static type of both operands must be a subtype of int via invalid other operand types.
+Label: binary-bitwise-expr, list-constructor-expr, mapping-constructor-expr, map-type, string
+
+public function main(map<int> a, map<int> b) {
+    int a1 = () | (); // @error static type of both operands must be a subtype of int
+
+    int a2 = "5" | "6"; // @error static type of both operands must be a subtype of int
+
+    int a3 = [1] | [2]; // @error static type of both operands must be a subtype of int
+
+    int a4 = {name: "mike"} | {name: "Jone"}; // @error static type of both operands must be a subtype of int
+
+    int a5 = a | b; // @error static type of both operands must be a subtype of int
+}
 
 Test-Case: error
 Description: Test error in bitwise or expression where the operands are user defined type T
