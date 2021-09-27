@@ -1,34 +1,6 @@
 Test-Case: output
-Description: Test basic bitwise and expression
-Label: binary-bitwise-expr, bitwise-and-expr
-
-public function main() {
-    io:println(9 & 6); // @output 0
-    io:println(6 & 9); // @output 0
-    io:println(99999999 & 6); // @output 6
-    io:println(5 & 7568888); // @output 0
-    io:println(54545 & 7568888); // @output 21776
-    io:println(0xAB55 & 0x0032); // @output 16
-    io:println(0xABF5 & 50); // @output 48
-}
-
-Test-Case: output
-Description: Test basic bitwise xor expression
-Label: binary-bitwise-expr, bitwise-xor-expr
-
-public function main() {
-    io:println(5 ^ 6); // @output 3
-    io:println(6 ^ 5); // @output 3
-    io:println(33333 ^ 4); // @output 33329
-    io:println(8 ^ 99999); // @output 99991
-    io:println(435545 ^ 434343); // @output 1534
-    io:println(0xAB55 ^ 0x0032); // @output 43879
-    io:println(0xABF5 ^ 50); // @output 43975
-}
-
-Test-Case: output
-Description: Test basic bitwise or expression
-Label: binary-bitwise-expr, bitwise-or-expr
+Description: Test basic bitwise or expression.
+Label: binary-bitwise-expr, HexIntLiteral
 
 public function main() {
     io:println(9 | 6); // @output 15
@@ -36,60 +8,795 @@ public function main() {
     io:println(99999999 | 6); // @output 99999999
     io:println(5 | 7568888); // @output 7568893
     io:println(54545 | 7568888); // @output 7601657
+    io:println(545454434 | 987454332); // @output 987495294
+
+    io:println(9223372036854775807 | 9223372036854775807); // @output 9223372036854775807
+    io:println(9223372036854775807 | 3); // @output 9223372036854775807
+
     io:println(0xAB55 | 0x0032); // @output 43895
     io:println(0xABF5 | 50); // @output 44023
 }
 
-Test-Case: error
-Description: Test the static type of both operands must be a subtype of int in bitwise and expression
-Label: binary-bitwise-expr, bitwise-and-expr
+Test-Case: output
+Description: Test basic bitwise or expression with negative integer values.
+Label: binary-bitwise-expr, HexIntLiteral, unary-minus
 
-public function main(map<int> a, map<int> b, int? d, int? e) {
-    int a1 = 5 & 7.5; // @error static type of both operands must be a subtype of int
-    int a2 = "5" & "6"; // @error static type of both operands must be a subtype of int
-    int a3 = [1] & [2]; // @error static type of both operands must be a subtype of int
-    int a4 = {name: "mike"} & {name: "Jone"}; // @error static type of both operands must be a subtype of int
-    int a5 = a & b; // @error static type of both operands must be a subtype of int
-    int a6 = d & e; // @error static type of both operands must be a subtype of int
-    int a7 = getFloat1() & getFloat2(); // @error static type of both operands must be a subtype of int
+public function main() {
+    io:println(-89 | 6); // @output -89
+    io:println(6 | -9); // @output -9
+    io:println(-43554 | -6); // @output -2
+
+    io:println(-9223372036854775808 | -9223372036854775808); // @output -9223372036854775808
+    io:println(-9223372036854775808 | 3); // @output -9223372036854775805
+    io:println(-9223372036854775808 | 9223372036854775807); // @output -1
+
+    io:println(0xDB55 | -0x0032); // @output -33
+    io:println(-0xABF5 | -540); // @output -529
 }
 
-function getFloat1() returns float => 99.4;
+Test-Case: output
+Description: Test applying binary bitwise or operation for value V with 0 results in the same value V.
+Label: binary-bitwise-expr, signed-zero, unary-minus, unary-plus
 
-function getFloat2() returns float => 43.8;
+public function main() {
+    int a = 53443;
+    int b = 0;
+    int c = +0;
+    int d = -0;
 
-Test-Case: error
-Description: Test the static type of both operands must be a subtype of int in bitwise xor expression
-Label: binary-bitwise-expr, bitwise-xor-expr
-
-public function main(map<int> a, map<int> b, int? d, int? e) {
-    int a1 = 5 ^ 7.5; // @error static type of both operands must be a subtype of int
-    int a2 = "5" ^ "6"; // @error static type of both operands must be a subtype of int
-    int a3 = [1] ^ [2]; // @error static type of both operands must be a subtype of int
-    int a4 = {name: "mike"} ^ {name: "Jone"}; // @error static type of both operands must be a subtype of int
-    int a5 = a ^ b; // @error static type of both operands must be a subtype of int
-    int a6 = d ^ e; // @error static type of both operands must be a subtype of int
-    int a7 = getFloat1() ^ getFloat2(); // @error static type of both operands must be a subtype of int
+    io:println(543434344 | 0); // @output 543434344
+    io:println(0 | 787654322); // @output 787654322
+    io:println(-9223372036854775808 | 0); // @output -9223372036854775808
+    io:println(0 | 0); // @output 0
+    io:println(0 | a); // @output 53443
+    io:println(a | 0); // @output 53443
+    io:println(a | b); // @output 53443
+    io:println(b | 64535654); // @output 64535654
+    io:println(b | b); // @output 0
+    io:println(-4434353 | b); // @output -4434353
+    io:println(94434843 | c); // @output 94434843
+    io:println(-6534353 | d); // @output -6534353
+    io:println(c | c); // @output 0
+    io:println(d | d); // @output 0
+    io:println(-0 | -0); // @output 0
+    io:println(+0 | +0); // @output 0
 }
 
-function getFloat1() returns float => 99.4;
+Test-Case: output
+Description: Test bitwise or expression always evaluates to value V when the value of both operands are V.
+Label: binary-bitwise-expr, unary-minus, unary-plus
 
-function getFloat2() returns float => 43.8;
+public function main() {
+    int a = 99443;
+    int b = 99443;
+    int c = -223;
+
+    io:println(543434343434 | 543434343434); // @output 543434343434
+    io:println(0 | 0); // @output 0
+    io:println(a | a); // @output 99443
+    io:println(a | b); // @output 99443
+    io:println(b | a); // @output 99443
+    io:println(3 | 3); // @output 3
+    io:println(-3 | -3); // @output -3
+    io:println(c | c); // @output -223
+    io:println(+987654321 | +987654321); // @output 987654321
+}
+
+Test-Case: output
+Description: Test bitwise or expression where the operands are a subtype of int using byte.
+Label: binary-bitwise-expr
+
+public function main() {
+    int a = 987996;
+    byte b = 54;
+    byte c = 99;
+
+    io:println(a | b); // @output 988030
+    io:println(b | a); // @output 988030
+    io:println(b | c); // @output 119
+    io:println(c | b); // @output 119
+    io:println(c | c); // @output 99
+}
+
+Test-Case: output
+Description: Test bitwise or expression where the operands are a subtype of int using Signed32.
+Label: binary-bitwise-expr, int:Signed32, unary-minus
+
+public function main() {
+    int a = 987996;
+    int:Signed32 b = 54;
+    int:Signed32 c = 5454545;
+    int:Signed32 d = -341345678;
+
+    io:println(a | b); // @output 20
+    io:println(b | a); // @output 20
+    io:println(b | c); // @output 16
+    io:println(c | b); // @output 16
+    io:println(c | c); // @output 5454545
+    io:println(d | d); // @output -341345678
+    io:println(c | d); // @output 211536
+}
+
+Test-Case: output
+Description: Test bitwise or expression where the operands are a subtype of int using Signed16.
+Label: binary-bitwise-expr, int:Signed16, unary-minus
+
+public function main() {
+    int a = 387953196;
+    int:Signed16 b = 987;
+    int:Signed16 c = 7764;
+    int:Signed16 d = -9876;
+
+    io:println(a | b); // @output 387953663
+    io:println(b | a); // @output 387953663
+    io:println(b | c); // @output 8159
+    io:println(c | b); // @output 8159
+    io:println(c | c); // @output 7764
+    io:println(d | d); // @output -9876
+    io:println(c | d); // @output -8324
+}
+
+Test-Case: output
+Description: Test bitwise or expression where the operands are a subtype of int using Signed8.
+Label: binary-bitwise-expr, int:Signed8, unary-minus
+
+public function main() {
+    int a = 387953196;
+    int:Signed8 b = 97;
+    int:Signed8 c = 64;
+    int:Signed8 d = -23;
+
+    io:println(a | b); // @output 387953261
+    io:println(b | a); // @output 387953261
+    io:println(b | c); // @output 97
+    io:println(c | b); // @output 97
+    io:println(c | c); // @output 64
+    io:println(d | d); // @output -23
+    io:println(c | d); // @output -23
+}
+
+Test-Case: output
+Description: Test bitwise or expression where the operands are a subtype of int using Unsigned32.
+Label: binary-bitwise-expr, int:Unsigned32
+
+public function main() {
+    int a = 987996;
+    int:Unsigned32 b = 54;
+    int:Unsigned32 c = 5454545;
+
+    io:println(a | b); // @output 988030
+    io:println(b | a); // @output 988030
+    io:println(b | c); // @output 5454583
+    io:println(c | b); // @output 5454583
+    io:println(c | c); // @output 5454545
+}
+
+Test-Case: output
+Description: Test bitwise or expression where the operands are a subtype of int using Unsigned16.
+Label: binary-bitwise-expr, int:Unsigned16
+
+public function main() {
+    int a = 387953196;
+    int:Unsigned16 b = 987;
+    int:Unsigned16 c = 7764;
+
+    io:println(a | b); // @output 387953663
+    io:println(b | a); // @output 387953663
+    io:println(b | c); // @output 8159
+    io:println(c | b); // @output 8159
+    io:println(c | c); // @output 7764
+}
+
+Test-Case: output
+Description: Test bitwise or expression where the operands are a subtype of int using Unsigned8.
+Label: binary-bitwise-expr, int:Unsigned8
+
+public function main() {
+    int a = 387953196;
+    int:Unsigned8 b = 97;
+    int:Unsigned8 c = 64;
+
+    io:println(a | b); // @output 387953261
+    io:println(b | a); // @output 387953261
+    io:println(b | c); // @output 97
+    io:println(c | b); // @output 97
+    io:println(c | c); // @output 64
+}
+
+Test-Case: output
+Description: Test bitwise or expression where the operands are a subtype of int.
+Label: binary-bitwise-expr, byte, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32
+
+public function main() {
+    int a = 43;
+
+    byte b = 5;
+
+    int:Signed32 c = -21474836;
+    int:Signed16 d = -454;
+    int:Signed8 e = 100;
+
+    int:Unsigned32 f = 21474836;
+    int:Unsigned16 g = 54522;
+    int:Unsigned8 h = 255;
+
+    io:println(a | b); // @output 47
+    io:println(a | c); // @output -21474833
+    io:println(a | d); // @output -453
+    io:println(a | e); // @output 111
+    io:println(a | f); // @output 21474879
+    io:println(a | g); // @output 54523
+    io:println(a | h); // @output 255
+
+    io:println(b | b); // @output 5
+    io:println(b | c); // @output -21474835
+    io:println(b | d); // @output -449
+    io:println(b | e); // @output 101
+
+    io:println(c | c); // @output -21474836
+    io:println(c | d); // @output -2
+    io:println(c | e); // @output -21474836
+    io:println(c | f); // @output -4
+    io:println(c | g); // @output -21441026
+    io:println(c | h); // @output -21474817
+
+    io:println(d | d); // @output -454
+    io:println(d | e); // @output -386
+    io:println(d | f); // @output -450
+    io:println(d | g); // @output -262
+    io:println(d | h); // @output -257
+
+    io:println(e | e); // @output 100
+    io:println(e | f); // @output 21474932
+    io:println(e | g); // @output 54526
+    io:println(e | h); // @output 255
+
+    io:println(f | f); // @output 21474836
+
+    io:println(g | g); // @output 54522
+
+    io:println(h | h); // @output 255
+}
+
+Test-Case: output
+Description: Test bitwise or expression where the operands are byte and int:UnsignedK.
+Fail-Issue: #32888
+Label: binary-bitwise-expr, byte, int:Unsigned8, int:Unsigned16, int:Unsigned32
+
+public function main() {
+    byte b = 5;
+    int:Unsigned32 f = 21474836;
+    int:Unsigned16 g = 54522;
+    int:Unsigned8 h = 255;
+
+    io:println(b | f); // @output 21474837
+    io:println(b | g); // @output 54527
+    io:println(b | h); // @output 255
+}
+
+Test-Case: output
+Description: Test bitwise or expression where the operands are int:UnsignedK.
+Fail-Issue: #32884
+Label: binary-bitwise-expr, byte, int:Unsigned8, int:Unsigned16, int:Unsigned32
+
+public function main() {
+    int:Unsigned32 f = 21474836;
+    int:Unsigned16 g = 54522;
+    int:Unsigned8 h = 255;
+
+    io:println(f | g); // @output 21495550
+    io:println(f | h); // @output 21475071
+    io:println(g | h); // @output 54527
+}
+
+Test-Case: output
+Description: Test bitwise or expression where the operands are user defined type T where the T is a subtype of int.
+Label: binary-bitwise-expr, module-type-defn
+
+type MyType int;
+
+public function main() {
+    MyType a = 5;
+    MyType b = 433;
+    int c = 765;
+
+    printResult(a | b); // @output 437
+    printResult(a | 12345); // @output 12349
+    printResult(b | c); // @output 1021
+    printResult(a | c); // @output 765
+}
+
+function printResult(int result) {
+    io:println(result);
+}
 
 Test-Case: error
-Description: Test the static type of both operands must be a subtype of int in bitwise or expression
-Label: binary-bitwise-expr, bitwise-or-expr
+Description: Test the static type of both operands must be a subtype of int.
+Label: binary-bitwise-expr, float, list-constructor-expr, mapping-constructor-expr, map-type, optional-type, string
 
 public function main(map<int> a, map<int> b, int? d, int? e) {
     int a1 = 5 | 7.5; // @error static type of both operands must be a subtype of int
     int a2 = "5" | "6"; // @error static type of both operands must be a subtype of int
     int a3 = [1] | [2]; // @error static type of both operands must be a subtype of int
     int a4 = {name: "mike"} | {name: "Jone"}; // @error static type of both operands must be a subtype of int
+
     int a5 = a | b; // @error static type of both operands must be a subtype of int
     int a6 = d | e; // @error static type of both operands must be a subtype of int
+
     int a7 = getFloat1() | getFloat2(); // @error static type of both operands must be a subtype of int
 }
 
 function getFloat1() returns float => 99.4;
 
 function getFloat2() returns float => 43.8;
+
+Test-Case: error
+Description: Test error in bitwise or expression where the operands are user defined type T
+             where the T is not a subtype of int.
+Label: binary-bitwise-expr, module-type-defn
+
+type MyType int|decimal;
+
+public function main() {
+    MyType a = 5;
+    MyType b = 433;
+    int c = 765;
+    int result;
+
+    result = a | b; // @error MyType is not a subtype of int
+    result = a | 12345; // @error MyType is not a subtype of int
+    result = b | c; // @error MyType is not a subtype of int
+    result = a | c; // @error MyType is not a subtype of int
+}
+
+Test-Case: output
+Description: Test if the type of both operands is a subtype of int:UnsignedK when K is 8, 16 or 32, then the static
+             type of the result is int:UnsignedN where N is the smallest such K with Unsigned32.
+Label: binary-bitwise-expr, int:Unsigned32
+
+public function main() {
+    int:Unsigned32 c = 9994444;
+    int:Unsigned32 d = 999999999;
+    printResult(c | d); // @output 999999999
+}
+
+function printResult(int:Unsigned32 result) {
+    io:println(result);
+}
+
+Test-Case: output
+Description: Test if the type of both operands is a subtype of int:UnsignedK when K is 8, 16 or 32, then the static
+             type of the result is int:UnsignedN where N is the smallest such K with Unsigned16.
+Label: binary-bitwise-expr, int:Unsigned16
+
+public function main() {
+    int:Unsigned16 c = 43343;
+    int:Unsigned16 d = 213;
+    printResult(c | d); // @output 43487
+}
+
+function printResult(int:Unsigned16 result) {
+    io:println(result);
+}
+
+Test-Case: output
+Description: Test if the type of both operands is a subtype of int:UnsignedK when K is 8, 16 or 32, then the static
+             type of the result is int:UnsignedN where N is the smallest such K with Unsigned8.
+Label: binary-bitwise-expr, int:Unsigned8
+
+public function main() {
+    int:Unsigned8 c = 94;
+    int:Unsigned8 d = 99;
+    printResult(c | d); // @output 127
+}
+
+function printResult(int:Unsigned8 result) {
+    io:println(result);
+}
+
+Test-Case: output
+Description: Test if the type of both operands is a subtype of int:UnsignedK when K is 8, 16 or 32, then the static
+             type of the result is int:UnsignedN where N is the smallest such K.
+Label: binary-bitwise-expr, int:Unsigned8, int:Unsigned16, int:Unsigned32
+
+public function main() {
+    int:Unsigned32 a = 5454;
+    int:Unsigned16 b = 4344;
+    int:Unsigned32 c = a | b;
+    io:println(c); // @output 5630
+
+    int:Unsigned8 d = 44;
+    int:Unsigned16 e = 123;
+    int:Unsigned16 g = d | e;
+    io:println(g); // @output 127
+
+    int:Unsigned32 h = 65;
+    int:Unsigned8 i = 2;
+    int:Unsigned32 j = h | i;
+    io:println(j); // @output 67
+}
+
+Test-Case: output
+Description: Test if the type of both operands is a subtype of int:UnsignedK when K is 8, 16 or 32, then the static
+             type of the result is int:UnsignedN where N is the smallest such K.
+Fail-Issue: #32888
+Label: binary-bitwise-expr, int:Unsigned8, int:Unsigned16, int:Unsigned32
+
+public function main() {
+    int:Unsigned32 a = 548677654;
+    int:Unsigned16 b = 4344;
+    int:Unsigned32 c = a | b;
+    io:println(c); // @output 548681982
+
+    int:Unsigned8 d = 44;
+    int:Unsigned16 e = 9876;
+    int:Unsigned16 g = d | e;
+    io:println(g); // @output 9916
+
+    int:Unsigned32 h = 5343435;
+    int:Unsigned8 i = 2;
+    int:Unsigned32 j = h | i;
+    io:println(j); // @output 5343435
+}
+
+Test-Case: output
+Description: Test if the type of both operands is a subtype of int:UnsignedK when K is 8, 16 or 32, then the static
+             type of the result is int:UnsignedN where N is the smallest such K via inference.
+Label: binary-bitwise-expr, int:Unsigned8, int:Unsigned16, int:Unsigned32, var
+
+public function main() {
+    int:Unsigned32 a = 5454;
+    int:Unsigned16 b = 4344;
+    var result1 = a | b;
+    int:Unsigned32 c = result1;
+    io:println(c); // @output 5630
+
+    int:Unsigned8 d = 44;
+    int:Unsigned16 e = 123;
+    var result2 = d | e;
+    int:Unsigned16 g = result2;
+    io:println(g); // @output 127
+
+    int:Unsigned32 h = 65;
+    int:Unsigned8 i = 2;
+    var result3 = h | i;
+    int:Unsigned32 j = result3;
+    io:println(j); // @output 67
+}
+
+Test-Case: error
+Description: Test if the type of both operands is a subtype of int:UnsignedK when K is 8, 16 or 32, then the static
+             type of the result is int:UnsignedN where N is the smallest such K using invalid assignment.
+Label: binary-bitwise-expr, int:Unsigned8, int:Unsigned16, int:Unsigned32
+
+public function main() {
+    int a = 4343;
+    int b = 8;
+    int:Unsigned32 c = a | b; // @error the static type of the result is int
+
+    int d = 9876;
+    int:Unsigned32 e = 5454;
+    int:Unsigned16 f = d | e; // @error the static type of the result is int
+
+    int g = 9876;
+    int:Unsigned16 h = 5454;
+    int:Unsigned8 i = g | h; // @error the static type of the result is int
+
+    byte j = g | h; // @error the static type of the result is int
+
+    int:Signed8 k = 12;
+    int:Signed16 l = 4434;
+    int:Signed8 m = k | l; // @error the static type of the result is int
+
+    int:Unsigned16 n = 12;
+    int:Unsigned16 o = 4434;
+    int:Signed16 p = n | o; // @error the smallest suck K is 16 hence, the static type of the result is Unsigned16
+
+    int:Unsigned32 q = 12;
+    int:Unsigned16 r = 4434;
+    int:Unsigned8 s = q | r; // @error the smallest suck K is 32 hence, the static type of the result is Unsigned32
+}
+
+Test-Case: error
+Description: Test if the type of both operands is a subtype of int:UnsignedK when K is 8, 16 or 32, then the static
+             type of the result is int:UnsignedN where N is the smallest such K using invalid assignment.
+Fail-Issue: #32888
+Label: binary-bitwise-expr, int:Unsigned8, int:Unsigned16, int:Unsigned32
+
+public function main() {
+    int:Unsigned32 a = 4343;
+    int:Unsigned16 b = 8;
+    int:Unsigned16 c = a | b; // @error the smallest suck K is 32 hence, the static type of the result is Unsigned32
+
+    int:Unsigned16 d = 4343;
+    int:Unsigned8 e = 8;
+    int:Unsigned8 f = d | e; // @error the smallest suck K is 16 hence, the static type of the result is Unsigned16
+
+    int:Unsigned16 g = 4343;
+    int:Unsigned8 h = 8;
+    byte i = g | h; // @error the smallest suck K is 16 hence, the static type of the result is Unsigned16
+}
+
+Test-Case: error
+Description: Test if the type of both operands is a subtype of int:UnsignedK when K is 8, 16 or 32, then the static
+             type of the result is int:UnsignedN where N is the smallest such K via invalid assignment with inference.
+Label: binary-bitwise-expr, int:Unsigned8, int:Unsigned16, int:Unsigned32, var
+
+public function main() {
+    int a = 4343;
+    int b = 8;
+    var result1 = a | b;
+    int:Unsigned32 c = result1; // @error the static type of the result is int
+
+    int d = 9876;
+    int:Unsigned32 e = 5454;
+    var result2 = d | e;
+    int:Unsigned16 f = result2; // @error the static type of the result is int
+
+    int g = 9876;
+    int:Unsigned16 h = 5454;
+    var result3 = g | h;
+    int:Unsigned8 i = result3; // @error the static type of the result is int
+
+    byte j = result3; // @error the static type of the result is int
+
+    int:Signed8 k = 12;
+    int:Signed16 l = 4434;
+    var result4 = k | l;
+    int:Signed8 m = result4; // @error the static type of the result is int
+
+    int:Unsigned16 n = 12;
+    int:Unsigned16 o = 4434;
+    var result5 = n | o;
+    int:Signed16 p = result5; // @error the smallest suck K is 16 hence, the static type of the result is Unsigned16
+
+    int:Unsigned32 q = 12;
+    int:Unsigned16 r = 4434;
+    var result6 = q | r;
+    int:Unsigned8 s = result6; // @error the smallest suck K is 32 hence, the static type of the result is Unsigned32
+}
+
+Test-Case: output
+Description: Test float literal as operands with type cast.
+Label: binary-bitwise-expr, float, type-cast-expr
+
+public function main() {
+    float a = 4.6434;
+    float b = 53;
+    printResult(<int>a | <int>b); // @output 53
+
+    int c = 54322;
+    float d = 7.3;
+    printResult(c | <int>d); // @output 54327
+    printResult(<int>d | c); // @output 54327
+}
+
+function printResult(int result) {
+    io:println(result);
+}
+
+Test-Case: output
+Description: Test field access and optional field access expression as operands with type cast.
+Label: binary-bitwise-expr, module-type-defn, field-access-expr, optional-field-access-expr, record-type
+
+type Person record {|
+    int id;
+    int age?;
+|};
+
+public function main() {
+    Person p1 = {id: 33, age: 54};
+    Person p2 = {id: 21, age: 23};
+
+    printResult(p1.id | p2.id); // @output 53
+
+    printResult(<int>p1?.age | <int>p2?.age); // @output 55
+
+    printResult(p1.id | <int>p2?.age); // @output 55
+}
+
+function printResult(int result) {
+    io:println(result);
+}
+
+Test-Case: output
+Description: Test member access expression as operands.
+Label: binary-bitwise-expr, member-access-expr
+
+public function main() {
+    int[] a = [33, 22, 535334343];
+
+    printResult(a[0] | a[1]); // @output 55
+    printResult(a[0] | a[2]); // @output 535334375
+    printResult(a[1] | a[2]); // @output 535334359
+    printResult(a[2] | a[2]); // @output 535334343
+    printResult(a[2] | 0); // @output 535334343
+}
+
+function printResult(int result) {
+    io:println(result);
+}
+
+Test-Case: output
+Description: Test function call expression as operands.
+Label: binary-bitwise-expr, function-call-expr
+
+public function main() {
+    int a = getInt() | getInt();
+    io:println(a); // @output 43
+
+    int b = getInt() | getInt16();
+    io:println(b); // @output 939
+
+    int c = getInt() | getInt32();
+    io:println(c); // @output 44331
+
+    int d = getInt16() | getInt32();
+    io:println(d); // @output 44963
+}
+
+function getInt() returns int => 43;
+
+function getInt32() returns int:Signed32 => 44322;
+
+function getInt16() returns int:Signed16 => 897;
+
+Test-Case: output
+Description: Test method call expression as operands.
+Label: binary-bitwise-expr, implicit-new-expr, method-call-expr, module-class-defn
+
+class Car {
+    function getCurrentSpeed() returns int {
+        return 56;
+    }
+
+    function getRimSize() returns int {
+        return 18;
+    }
+}
+
+public function main() {
+    Car c1 = new;
+    printResult(c1.getCurrentSpeed() | c1.getCurrentSpeed()); // @output 56
+    printResult(c1.getCurrentSpeed() | c1.getRimSize()); // @output 58
+    printResult(53 | c1.getRimSize()); // @output 55
+}
+
+function printResult(int result) {
+    io:println(result);
+}
+
+Test-Case: output
+Description: Test multiplicative expression as operands.
+Label: binary-bitwise-expr, multiplicative-expr
+
+public function main() {
+    printResult((54 * 5) | (534 * 2)); // @output 1326
+    printResult(54 * 5 | 534 * 2); // @output 1326
+
+    printResult((54 / 5) | (534 / 2)); // @output 267
+    printResult(54 / 5 | 534 / 2); // @output 267
+
+    printResult((54 % 5) | (534 % 2)); // @output 4
+    printResult(54 % 5 | 534 % 2); // @output 4
+
+    printResult(43 | 534 % 8); // @output 47
+    printResult(43 | (534 % 8)); // @output 47
+
+    printResult(54 % 5 | 534); // @output 534
+    printResult((54 % 5) | 534); // @output 534
+}
+
+function printResult(int result) {
+    io:println(result);
+}
+
+Test-Case: output
+Description: Test additive expression as operands.
+Label: additive-expr, binary-bitwise-expr
+
+public function main() {
+    printResult((54 + 5) | (534 + 2)); // @output 571
+    printResult(54 + 5 | 534 + 2); // @output 571
+
+    printResult((54 - 5) | (534 - 2)); // @output 565
+    printResult(54 - 5 | 534 - 2); // @output 565
+
+    printResult(43 | 534 + 8); // @output 575
+    printResult(43 | (534 + 8)); // @output 575
+
+    printResult(54 - 5 | 534); // @output 567
+    printResult((54 - 5) | 534); // @output 567
+}
+
+function printResult(int result) {
+    io:println(result);
+}
+
+Test-Case: output
+Description: Test shift expression as operands.
+Label: binary-bitwise-expr, shift-expr, unary-minus
+
+public function main() {
+    printResult((54 << 1) | (534 << 2)); // @output 2172
+    printResult(54 << 1 | 534 << 2); // @output 2172
+
+    printResult((54 >> 1) | (534 >> 1)); // @output 283
+    printResult(54 >> 1 | 534 >> 1); // @output 283
+
+    printResult((-54 >>> 1) | (-534 >>> 1)); // @output 9223372036854775797
+    printResult(-54 >>> 1 | -534 >>> 1); // @output 9223372036854775797
+
+    printResult(43 | 534 << 2); // @output 2171
+    printResult(43 | (534 << 2)); // @output 2171
+
+    printResult(54 >> 5 | 534); // @output 535
+    printResult((54 >> 5) | 534); // @output 535
+}
+
+function printResult(int result) {
+    io:println(result);
+}
+
+Test-Case: output
+Description: Test bitwise expression as operands.
+Label: binary-bitwise-expr
+
+public function main() {
+    printResult(54 | 5 | 534 | 2); // @output 567
+    printResult(((54 | 5) | 534) | 2); // @output 567
+
+    printResult(54 ^ 1 | 534 ^ 1); // @output 567
+    printResult((54 ^ 1) | (534 ^ 1)); // @output 567
+
+    printResult(767 & 1 | 934 & 1); // @output 1
+    printResult((767 & 1) | (934 & 1)); // @output 1
+
+    printResult(43 | 534 | 2); // @output 575
+    printResult((43 | 534) | 2); // @output 575
+
+    printResult(54 & 5 | 534); // @output 534
+    printResult((54 & 5) | 534); // @output 534
+
+    printResult(4341 & 1 | 234 ^ 1); // @output 235
+    printResult((4341 & 1) | (234 ^ 1)); // @output 235
+}
+
+function printResult(int result) {
+    io:println(result);
+}
+
+Test-Case: output
+Description: Test check expression as operands.
+Label: checking-expr, binary-bitwise-expr
+
+public function main() returns error? {
+    printResult(check getData(4) | 5); // @output 5
+    printResult(5 | check getData(4)); // @output 5
+    printResult(check getData(52) | check getData(52)); // @output 52
+
+    printResult(checkpanic getData(4) | 5); // @output 5
+    printResult(5 | checkpanic getData(4)); // @output 5
+    printResult(checkpanic getData(52) | checkpanic getData(52)); // @output 52
+}
+
+function getData(int? data) returns int|error {
+    if data is int {
+        return data;
+    } else {
+        return error("No data");
+    }
+}
+
+function printResult(int result) {
+    io:println(result);
+}
+
+Test-Case: error
+Description: Test syntax errors in bitwise or expression
+Label: binary-bitwise-expr
+
+public function main() {
+    int a = | 434343; // @error missing LHS operand
+    int b = 34665677665 | ; // @error missing RHS operand
+}
