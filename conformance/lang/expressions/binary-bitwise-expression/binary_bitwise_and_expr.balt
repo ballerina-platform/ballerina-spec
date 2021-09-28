@@ -12,9 +12,16 @@ public function main() {
 
     io:println(9223372036854775807 & 9223372036854775807); // @output 9223372036854775807
     io:println(9223372036854775807 & 3); // @output 3
+}
 
+Test-Case: output
+Description: Test basic bitwise and expression using HexIntLiteral.
+Label: binary-bitwise-expr, HexIntLiteral
+
+public function main() {
     io:println(0xAB55 & 0x0032); // @output 16
     io:println(0xABF5 & 50); // @output 48
+    io:println(645 & 0xDBF5); // @output 645
 }
 
 Test-Case: output
@@ -29,9 +36,18 @@ public function main() {
     io:println(-9223372036854775808 & -9223372036854775808); // @output -9223372036854775808
     io:println(-9223372036854775808 & 3); // @output 0
     io:println(-9223372036854775808 & 9223372036854775807); // @output 0
+}
 
+Test-Case: output
+Description: Test basic bitwise and expression for negative integer values using HexIntLiteral.
+Label: binary-bitwise-expr, HexIntLiteral, unary-minus
+
+public function main() {
     io:println(0xDB55 & -0x0032); // @output 56132
+    io:println(-0x1C55 & -0x123F); // @output -7807
     io:println(-0xABF5 & -540); // @output -44032
+    io:println(5656 & -0XBCDE); // @output 512
+    io:println(5656 & 0XBCDE); // @output 5144
 }
 
 Test-Case: output
@@ -326,6 +342,84 @@ public function main() {
 }
 
 Test-Case: output
+Description: Test bitwise and expression evaluates to nil when either operand is nil.
+Label: binary-bitwise-expr, byte, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16,
+       int:Unsigned32, numeric-nil-lifting, value:toBalString
+
+public function main() {
+    int? a = 43;
+
+    byte? b = 5;
+
+    int:Signed32? c = -21474836;
+    int:Signed16? d = -454;
+    int:Signed8? e = 100;
+
+    int:Unsigned32? f = 21474836;
+    int:Unsigned16? g = 54522;
+    int:Unsigned8? h = 255;
+
+    int? i = ();
+    byte? j = ();
+    int:Signed32? k = ();
+    int:Unsigned16? l = ();
+
+    io:println((a & i).toBalString()); // @output ()
+    io:println((a & j).toBalString()); // @output ()
+    io:println((k & a).toBalString()); // @output ()
+    io:println((l & a).toBalString()); // @output ()
+
+    io:println((b & i).toBalString()); // @output ()
+    io:println((b & j).toBalString()); // @output ()
+    io:println((b & k).toBalString()); // @output ()
+    io:println((b & l).toBalString()); // @output ()
+
+    io:println((c & i).toBalString()); // @output ()
+    io:println((c & j).toBalString()); // @output ()
+    io:println((k & c).toBalString()); // @output ()
+    io:println((c & l).toBalString()); // @output ()
+
+    io:println((d & i).toBalString()); // @output ()
+    io:println((d & j).toBalString()); // @output ()
+    io:println((d & k).toBalString()); // @output ()
+    io:println((d & l).toBalString()); // @output ()
+
+    io:println((e & i).toBalString()); // @output ()
+    io:println((e & j).toBalString()); // @output ()
+    io:println((e & k).toBalString()); // @output ()
+    io:println((e & l).toBalString()); // @output ()
+
+    io:println((f & i).toBalString()); // @output ()
+    io:println((f & j).toBalString()); // @output ()
+    io:println((f & k).toBalString()); // @output ()
+    io:println((f & l).toBalString()); // @output ()
+
+    io:println((g & i).toBalString()); // @output ()
+    io:println((g & j).toBalString()); // @output ()
+    io:println((g & k).toBalString()); // @output ()
+    io:println((g & l).toBalString()); // @output ()
+
+    io:println((h & i).toBalString()); // @output ()
+    io:println((h & j).toBalString()); // @output ()
+    io:println((h & k).toBalString()); // @output ()
+    io:println((h & l).toBalString()); // @output ()
+
+    io:println((i & i).toBalString()); // @output ()
+    io:println((i & j).toBalString()); // @output ()
+    io:println((i & k).toBalString()); // @output ()
+    io:println((i & l).toBalString()); // @output ()
+
+    io:println((j & j).toBalString()); // @output ()
+    io:println((j & k).toBalString()); // @output ()
+    io:println((j & l).toBalString()); // @output ()
+
+    io:println((k & k).toBalString()); // @output ()
+    io:println((k & l).toBalString()); // @output ()
+
+    io:println((l & l).toBalString()); // @output ()
+}
+
+Test-Case: output
 Description: Test bitwise and expression where the operands are user defined type T where the T is a subtype of int.
 Label: binary-bitwise-expr, module-type-defn
 
@@ -444,7 +538,7 @@ function printResult(int:Unsigned16 result) {
 Test-Case: output
 Description: Test if the type of either operand is a subtype of int:UnsignedK when K is 8, 16 or 32, then the static
              type of the result is int:UnsignedN where N is the smallest such K with Unsigned8.
-Label: binary-bitwise-expr, , int:Unsigned8
+Label: binary-bitwise-expr, int:Unsigned8
 
 public function main() {
     int a = 987996;
@@ -584,6 +678,12 @@ public function main() {
     float d = 7.3;
     printResult(c & <int>d); // @output 2
     printResult(<int>d & c); // @output 2
+
+    any e = 65.65;
+    any f = 1235.465;
+    printResult(<int> e & <int> f); // @output 66
+    printResult(<int> a & <int> e); // @output 0
+    printResult(<int> f & c); // @output 1042
 }
 
 function printResult(int result) {
@@ -651,11 +751,17 @@ public function main() {
     io:println(d); // @output 256
 }
 
-function getInt() returns int => 43;
+function getInt() returns int {
+    return 43;
+}
 
-function getInt32() returns int:Signed32 => 44322;
+function getInt32() returns int:Signed32 {
+    return 44322;
+}
 
-function getInt16() returns int:Signed16 => 897;
+function getInt16() returns int:Signed16 {
+    return 897;
+}
 
 Test-Case: output
 Description: Test method call expression as operands.
@@ -784,7 +890,7 @@ function printResult(int result) {
 
 Test-Case: output
 Description: Test check expression as operands.
-Label: checking-expr, binary-bitwise-expr
+Label: binary-bitwise-expr, check, checkpanic
 
 public function main() returns error? {
     printResult(check getData(4) & 5); // @output 4
@@ -808,7 +914,7 @@ function printResult(int result) {
     io:println(result);
 }
 
-Test-Case: error
+Test-Case: parser-error
 Description: Test syntax errors in bitwise and expression
 Label: binary-bitwise-expr
 
