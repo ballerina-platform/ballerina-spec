@@ -41,7 +41,7 @@ function getTwosComplementRepresentation(int x) returns int {
 
 Test-Case: output
 Description: Test unary complement result type.
-Labels: unary-complement
+Labels: is-expr, unary-complement
 
 public function main() {
     int a1 = ~0;
@@ -51,7 +51,7 @@ public function main() {
 
 Test-Case: output
 Description: Test unary complement result type inferring.
-Labels: unary-complement, var
+Labels: is-expr, unary-complement, var
 
 var moduleVar1 = ~1;
 
@@ -252,7 +252,7 @@ public function main() {
 Test-Case: output
 Description: Test the static type of operand belonging to int optional type.
 Fail-Issue: ballerina-lang#31701
-Labels: optional-type, unary-complement
+Labels: is-expr, optional-type, unary-complement
 
 public function main() {
     int? result = ~getIntOrNil();
@@ -261,10 +261,42 @@ public function main() {
     } else {
         io:println("Result is nil");
     }
+
+    int? nilVar = ();
+    io:println(~nilVar); // @output ()
 }
 
 function getIntOrNil() returns int? {
     return 100;
+}
+
+Test-Case: error
+Description: Test unary complement expression assignments resulting in an error
+             where operands are of types that are optional subtypes of int types.
+Fail-Issue: ballerina-lang#31701
+Labels: byte, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
+        optional-type, module-type-defn, unary-complement
+
+type Ints 1|2;
+
+public function main(byte? a, int:Signed8? b, int:Signed16? c, int:Signed32? d,
+                    int:Unsigned8? e, int:Unsigned16? f, int:Unsigned32? g,
+                    Ints? h) {
+    byte? a1 = ~a; // @error static type of unary-complement with operands of optional int subtypes is int optional
+
+    int:Signed8? a2 = ~b; // @error static type of unary-complement with operands of optional int subtypes is int optional
+
+    int:Signed16? a3 = ~c; // @error static type of unary-complement with operands of optional int subtypes is int optional
+
+    int:Signed32? a4 = ~d; // @error static type of unary-complement with operands of optional int subtypes is int optional
+
+    int:Unsigned8? a5 = ~e; // @error static type of unary-complement with operands of optional int subtypes is int optional
+
+    int:Unsigned16? a6 = ~f; // @error static type of unary-complement with operands of optional int subtypes is int optional
+
+    int:Unsigned32? a7 = ~g; // @error static type of unary-complement with operands of optional int subtypes is int optional
+
+    Ints? a8 = ~h; // @error static type of unary-complement with operands of optional int subtypes is int optional
 }
 
 Test-Case: output
@@ -443,7 +475,7 @@ public function main() {
 
 Test-Case: output
 Description: Test unary complement with conditional expression.
-Labels: conditional-expr, unary-complement
+Labels: conditional-expr, is-expr, unary-complement
 
 public function main() {
     int x = ~(getIntOptional() ?: 10);
