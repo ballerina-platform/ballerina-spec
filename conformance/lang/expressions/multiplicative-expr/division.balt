@@ -1,0 +1,4013 @@
+Test-Case: output
+Description: Test integer division non-panic scenarios, for positive non-zero integers.
+Labels: multiplicative-expr, int, DecimalNumber
+
+public function main() {
+    int a = 1;
+    int b = 2;
+    int c = 4611686018427387903;
+    int d = 6917529027641081853;
+    int e = 9223372036854775807;
+
+    io:println(a / a); // @output 1
+    io:println(a / b); // @output 0
+    io:println(a / c); // @output 0
+    io:println(a / d); // @output 0
+    io:println(a / e); // @output 0
+
+    io:println(b / a); // @output 2
+    io:println(b / b); // @output 1
+    io:println(b / c); // @output 0
+    io:println(b / d); // @output 0
+    io:println(b / e); // @output 0
+
+    io:println(c / a); // @output 4611686018427387903
+    io:println(c / b); // @output 2305843009213693951
+    io:println(c / c); // @output 1
+    io:println(c / d); // @output 0
+    io:println(c / e); // @output 0
+
+    io:println(d / a); // @output 6917529027641081853
+    io:println(d / b); // @output 3458764513820540926
+    io:println(d / c); // @output 1
+    io:println(d / d); // @output 1
+    io:println(d / e); // @output 0
+
+    io:println(e / a); // @output 9223372036854775807
+    io:println(e / b); // @output 4611686018427387903
+    io:println(e / c); // @output 2
+    io:println(e / d); // @output 1
+    io:println(e / e); // @output 1
+}
+
+Test-Case: output
+Description: Test integer division non-panic scenarios, for negative non-zero integers.
+Labels: multiplicative-expr, int, DecimalNumber, unary-minus
+
+public function main() {
+    int a = -1;
+    int b = -2;
+    int c = -4611686018427387903;
+    int d = -6917529027641081853;
+    int e = -9223372036854775807;
+
+    io:println(a / a); // @output 1
+    io:println(a / b); // @output 0
+    io:println(a / c); // @output 0
+    io:println(a / d); // @output 0
+    io:println(a / e); // @output 0
+
+    io:println(b / a); // @output 2
+    io:println(b / b); // @output 1
+    io:println(b / c); // @output 0
+    io:println(b / d); // @output 0
+    io:println(b / e); // @output 0
+
+    io:println(c / a); // @output 4611686018427387903
+    io:println(c / b); // @output 2305843009213693951
+    io:println(c / c); // @output 1
+    io:println(c / d); // @output 0
+    io:println(c / e); // @output 0
+
+    io:println(d / a); // @output 6917529027641081853
+    io:println(d / b); // @output 3458764513820540926
+    io:println(d / c); // @output 1
+    io:println(d / d); // @output 1
+    io:println(d / e); // @output 0
+
+    io:println(e / a); // @output 9223372036854775807
+    io:println(e / b); // @output 4611686018427387903
+    io:println(e / c); // @output 2
+    io:println(e / d); // @output 1
+    io:println(e / e); // @output 1
+}
+
+Test-Case: output
+Description: Test integer division non-panic scenarios, where one operand is negative 
+             and the other is positive.
+Labels: multiplicative-expr, int, DecimalNumber, unary-minus, int:MIN_VALUE
+
+public function main() {
+    int a = int:MIN_VALUE;
+    int b = -1234;
+    int c = -1;
+    int d = 1;
+    int e = 60708;
+    int f = 9223372036854775807;
+
+    io:println(a / d); // @output -9223372036854775808
+    io:println(a / e); // @output -151930092193035
+    io:println(a / f); // @output -1
+
+    io:println(b / d); // @output -1234
+    io:println(b / e); // @output 0
+    io:println(b / f); // @output 0
+
+    io:println(c / d); // @output -1
+    io:println(c / e); // @output 0
+    io:println(c / f); // @output 0
+
+    io:println(d / a); // @output 0
+    io:println(d / b); // @output 0
+    io:println(d / c); // @output -1
+
+    io:println(e / a); // @output 0
+    io:println(e / b); // @output -49
+    io:println(e / c); // @output -60708
+
+    io:println(f / a); // @output 0
+    io:println(f / b); // @output -7474369559849899
+    io:println(f / c); // @output -9223372036854775807
+}
+
+Test-Case: output
+Description: Test integer division non-panic scenarios, where the first operand is zero.
+Labels: multiplicative-expr, int, DecimalNumber, unary-minus, int:MIN_VALUE
+
+public function main() {
+    int a = int:MIN_VALUE;
+    int b = -1234;
+    int c = -1;
+    int d = -0;
+    int e = 0;
+    int f = 1;
+    int g = 60708;
+    int h = 9223372036854775807;
+
+    io:println(d / a); // @output 0
+    io:println(d / b); // @output 0
+    io:println(d / c); // @output 0
+    io:println(d / f); // @output 0
+    io:println(d / g); // @output 0
+    io:println(d / h); // @output 0
+
+    io:println(e / a); // @output 0
+    io:println(e / b); // @output 0
+    io:println(e / c); // @output 0
+    io:println(e / f); // @output 0
+    io:println(e / g); // @output 0
+    io:println(e / h); // @output 0
+}
+
+Test-Case: panic
+Description: Test 1 for integer division panic on division by zero.
+Labels: multiplicative-expr, int, DecimalNumber, unary-minus, int:MIN_VALUE
+
+public function main() {
+    int a = int:MIN_VALUE;
+    int b = -0;
+
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 2 for integer division panic on division by zero.
+Labels: multiplicative-expr, int, DecimalNumber, int:MIN_VALUE
+
+public function main() {
+    int a = int:MIN_VALUE;
+    int b = 0;
+
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 3 for integer division panic on division by zero.
+Labels: multiplicative-expr, int, DecimalNumber, unary-minus
+
+public function main() {
+    int a = -0;
+    int b = 0;
+
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 4 for integer division panic on division by zero.
+Labels: multiplicative-expr, int, DecimalNumber, unary-minus
+
+public function main() {
+    int a = 0;
+    int b = -0;
+
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 5 for integer division panic on division by zero.
+Labels: multiplicative-expr, int, DecimalNumber, unary-minus
+
+public function main() {
+    int a = 9223372036854775807;
+    int b = -0;
+
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 6 for integer division panic on division by zero.
+Labels: multiplicative-expr, int, DecimalNumber
+
+public function main() {
+    int a = 9223372036854775807;
+    int b = 0;
+
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 7 for integer division panic on division by zero.
+Labels: multiplicative-expr, int, DecimalNumber
+
+public function main() {
+    int c = 9223372036854775807 / 0; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 8 for integer division panic on division by zero.
+Labels: multiplicative-expr, int, DecimalNumber, int:MIN_VALUE, unary-minus
+
+public function main() {
+    int c = int:MIN_VALUE / -0; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 1 for panic on integer division overflow.
+Labels: multiplicative-expr, int, DecimalNumber, int:MIN_VALUE, unary-minus
+
+public function main() {
+    int a = int:MIN_VALUE;
+    int b = -1;    
+    int c = a / b; // @panic integer overflow on division
+}
+
+Test-Case: panic
+Description: Test 2 for panic on integer division overflow.
+Labels: multiplicative-expr, int, DecimalNumber, int:MIN_VALUE, unary-minus
+
+public function main() {
+    int c = int:MIN_VALUE / -1; // @panic integer overflow on division
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, for positive non-zero integers, for int:Unsigned8.
+Labels: multiplicative-expr, DecimalNumber, int:Unsigned8
+
+public function main() {
+    int:Unsigned8 a = 1;
+    int:Unsigned8 b = 2;
+    int:Unsigned8 c = 3;
+    int:Unsigned8 d = 86;
+    int:Unsigned8 e = 255;
+
+    io:println(a / a); // @output 1
+    io:println(a / b); // @output 0
+    io:println(a / c); // @output 0
+    io:println(a / d); // @output 0
+    io:println(a / e); // @output 0
+
+    io:println(b / a); // @output 2
+    io:println(b / b); // @output 1
+    io:println(b / c); // @output 0
+    io:println(b / d); // @output 0
+    io:println(b / e); // @output 0
+
+    io:println(c / a); // @output 3
+    io:println(c / b); // @output 1
+    io:println(c / c); // @output 1
+    io:println(c / d); // @output 0
+    io:println(c / e); // @output 0
+
+    io:println(d / a); // @output 86
+    io:println(d / b); // @output 43
+    io:println(d / c); // @output 28
+    io:println(d / d); // @output 1
+    io:println(d / e); // @output 0
+
+    io:println(e / a); // @output 255
+    io:println(e / b); // @output 127
+    io:println(e / c); // @output 85
+    io:println(e / d); // @output 2
+    io:println(e / e); // @output 1
+}
+
+Test-Case: output
+Description: Test integer division non-panic scenarios, where the first operand is zero, for int:Unsigned8.
+Labels: multiplicative-expr, DecimalNumber, int:Unsigned8
+
+public function main() {
+    int:Unsigned8 a = 0;
+    int:Unsigned8 b = 1;
+    int:Unsigned8 c = 128;
+    int:Unsigned8 d = 255;
+
+    io:println(a / b); // @output 0
+    io:println(a / c); // @output 0
+    io:println(a / d); // @output 0
+}
+
+Test-Case: panic
+Description: Test 1 for integer division panic on division by zero, for int:Unsigned8.
+Labels: multiplicative-expr, DecimalNumber, int:Unsigned8
+
+public function main() {
+    int:Unsigned8 a = 0;
+    int:Unsigned8 b = 1;
+
+    int c = b / a; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 2 for integer division panic on division by zero, for int:Unsigned8.
+Labels: multiplicative-expr, DecimalNumber, int:Unsigned8
+
+public function main() {
+    int:Unsigned8 a = 128;
+    int:Unsigned8 b = 0;
+
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 3 for integer division panic on division by zero, for int:Unsigned8.
+Labels: multiplicative-expr, DecimalNumber, int:Unsigned8
+
+public function main() {
+    int:Unsigned8 a = 255;
+    int:Unsigned8 b = 0;
+
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 4 for integer division panic on division by zero, for int:Unsigned8.
+Labels: multiplicative-expr, DecimalNumber, int:Unsigned8
+
+public function main() {
+    int:Unsigned8 a = 0;
+    int:Unsigned8 b = 0;
+
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, for positive non-zero integers, for byte.
+Labels: multiplicative-expr, DecimalNumber, byte
+
+public function main() {
+    byte a = 1;
+    byte b = 2;
+    byte c = 3;
+    byte d = 86;
+    byte e = 255;
+
+    io:println(a / a); // @output 1
+    io:println(a / b); // @output 0
+    io:println(a / c); // @output 0
+    io:println(a / d); // @output 0
+    io:println(a / e); // @output 0
+
+    io:println(b / a); // @output 2
+    io:println(b / b); // @output 1
+    io:println(b / c); // @output 0
+    io:println(b / d); // @output 0
+    io:println(b / e); // @output 0
+
+    io:println(c / a); // @output 3
+    io:println(c / b); // @output 1
+    io:println(c / c); // @output 1
+    io:println(c / d); // @output 0
+    io:println(c / e); // @output 0
+
+    io:println(d / a); // @output 86
+    io:println(d / b); // @output 43
+    io:println(d / c); // @output 28
+    io:println(d / d); // @output 1
+    io:println(d / e); // @output 0
+
+    io:println(e / a); // @output 255
+    io:println(e / b); // @output 127
+    io:println(e / c); // @output 85
+    io:println(e / d); // @output 2
+    io:println(e / e); // @output 1
+}
+
+Test-Case: output
+Description: Test integer division non-panic scenarios, where the first operand is zero, for byte.
+Labels: multiplicative-expr, DecimalNumber, byte
+
+public function main() {
+    byte a = 0;
+    byte b = 1;
+    byte c = 128;
+    byte d = 255;
+
+    io:println(a / b); // @output 0
+    io:println(a / c); // @output 0
+    io:println(a / d); // @output 0
+}
+
+Test-Case: panic
+Description: Test 1 for integer division panic on division by zero, for byte.
+Labels: multiplicative-expr, DecimalNumber, byte
+
+public function main() {
+    byte a = 0;
+    byte b = 1;
+
+    int c = b / a; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 2 for integer division panic on division by zero, for byte.
+Labels: multiplicative-expr, DecimalNumber, byte
+
+public function main() {
+    byte a = 128;
+    byte b = 0;
+
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 3 for integer division panic on division by zero, for byte.
+Labels: multiplicative-expr, DecimalNumber, byte
+
+public function main() {
+    byte a = 255;
+    byte b = 0;
+
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 4 for integer division panic on division by zero, for byte.
+Labels: multiplicative-expr, DecimalNumber, byte
+
+public function main() {
+    byte a = 0;
+    byte b = 0;
+
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, for positive non-zero integers, for int:Unsigned16.
+Labels: multiplicative-expr, DecimalNumber, int:Unsigned16
+
+public function main() {
+    int:Unsigned16 a = 1;
+    int:Unsigned16 b = 2;
+    int:Unsigned16 c = 5;
+    int:Unsigned16 d = 40123;
+    int:Unsigned16 e = 65535;
+
+    io:println(a / a); // @output 1
+    io:println(a / b); // @output 0
+    io:println(a / c); // @output 0
+    io:println(a / d); // @output 0
+    io:println(a / e); // @output 0
+
+    io:println(b / a); // @output 2
+    io:println(b / b); // @output 1
+    io:println(b / c); // @output 0
+    io:println(b / d); // @output 0
+    io:println(b / e); // @output 0
+
+    io:println(c / a); // @output 5
+    io:println(c / b); // @output 2
+    io:println(c / c); // @output 1
+    io:println(c / d); // @output 0
+    io:println(c / e); // @output 0
+
+    io:println(d / a); // @output 40123
+    io:println(d / b); // @output 20061
+    io:println(d / c); // @output 8024
+    io:println(d / d); // @output 1
+    io:println(d / e); // @output 0
+
+    io:println(e / a); // @output 65535
+    io:println(e / b); // @output 32767
+    io:println(e / c); // @output 13107
+    io:println(e / d); // @output 1
+    io:println(e / e); // @output 1
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, where the first operand is zero, for int:Unsigned16.
+Labels: multiplicative-expr, DecimalNumber, int:Unsigned16
+
+public function main() {
+    int:Unsigned16 a = 0;
+    int:Unsigned16 b = 1;
+    int:Unsigned16 c = 3543;
+    int:Unsigned16 d = 65535;
+
+    io:println(a / b); // @output 0
+    io:println(a / c); // @output 0
+    io:println(a / d); // @output 0
+}
+
+Test-Case: panic
+Description: Test 1 for integer division panic on division by zero, for int:Unsigned16.
+Labels: multiplicative-expr, DecimalNumber, int:Unsigned16
+
+public function main() {
+    int:Unsigned16 a = 0;
+    int:Unsigned16 b = 1;
+
+    int c = b / a; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 2 for integer division panic on division by zero, for int:Unsigned16.
+Labels: multiplicative-expr, DecimalNumber, int:Unsigned16
+
+public function main() {
+    int:Unsigned16 a = 65535;
+    int:Unsigned16 b = 0;
+
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 3 for integer division panic on division by zero, for int:Unsigned16.
+Labels: multiplicative-expr, DecimalNumber, int:Unsigned16
+
+public function main() {
+    int:Unsigned16 a = 65532;
+    int:Unsigned16 b = 0;
+
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 4 for integer division panic on division by zero, for int:Unsigned16.
+Labels: multiplicative-expr, DecimalNumber, int:Unsigned16
+
+public function main() {
+    int:Unsigned16 a = 0;
+    int:Unsigned16 b = 0;
+
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, for positive non-zero integers, for int:Unsigned32.
+Labels: multiplicative-expr, DecimalNumber, int:Unsigned32
+
+public function main() {
+    int:Unsigned32 a = 1;
+    int:Unsigned32 b = 2;
+    int:Unsigned32 c = 10;
+    int:Unsigned32 d = 12034;
+    int:Unsigned32 e = 429496729;
+
+    io:println(a / a); // @output 1
+    io:println(a / b); // @output 0
+    io:println(a / c); // @output 0
+    io:println(a / d); // @output 0
+    io:println(a / e); // @output 0
+
+    io:println(b / a); // @output 2
+    io:println(b / b); // @output 1
+    io:println(b / c); // @output 0
+    io:println(b / d); // @output 0
+    io:println(b / e); // @output 0
+
+    io:println(c / a); // @output 10
+    io:println(c / b); // @output 5
+    io:println(c / c); // @output 1
+    io:println(c / d); // @output 0
+    io:println(c / e); // @output 0
+
+    io:println(d / a); // @output 12034
+    io:println(d / b); // @output 6017
+    io:println(d / c); // @output 1203
+    io:println(d / d); // @output 1
+    io:println(d / e); // @output 0
+
+    io:println(e / a); // @output 429496729
+    io:println(e / b); // @output 214748364
+    io:println(e / c); // @output 42949672
+    io:println(e / d); // @output 35690
+    io:println(e / e); // @output 1
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, where the first operand is zero, for int:Unsigned32.
+Labels: multiplicative-expr, DecimalNumber, int:Unsigned32
+
+public function main() {
+    int:Unsigned32 a = 0;
+    int:Unsigned32 b = 1;
+    int:Unsigned32 c = 1259273;
+    int:Unsigned32 d = 4294967295;
+
+    io:println(a / b); // @output 0
+    io:println(a / c); // @output 0
+    io:println(a / d); // @output 0
+}
+
+Test-Case: panic
+Description: Test 1 for integer division panic on division by zero, for int:Unsigned32.
+Labels: multiplicative-expr, DecimalNumber, int:Unsigned32
+
+public function main() {
+    int:Unsigned32 a = 0;
+    int:Unsigned32 b = 1;
+
+    int c = b / a; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 2 for integer division panic on division by zero, for int:Unsigned32.
+Labels: multiplicative-expr, DecimalNumber, int:Unsigned32
+
+public function main() {
+    int:Unsigned32 a = 4294967295;
+    int:Unsigned32 b = 0;
+
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 3 for integer division panic on division by zero, for int:Unsigned32.
+Labels: multiplicative-expr, DecimalNumber, int:Unsigned32
+
+public function main() {
+    int:Unsigned32 a = 4294967295;
+    int:Unsigned32 b = 0;
+
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 4 for integer division panic on division by zero, for int:Unsigned32.
+Labels: multiplicative-expr, DecimalNumber, int:Unsigned32
+
+public function main() {
+    int:Unsigned32 a = 0;
+    int:Unsigned32 b = 0;
+
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, for negative non-zero integers, for int:Signed8.
+Labels: multiplicative-expr, DecimalNumber, int:Signed8, unary-minus
+
+public function main() {
+    int:Signed8 a = 1;
+    int:Signed8 b = 2;
+    int:Signed8 c = 10;
+    int:Signed8 d = 100;
+    int:Signed8 e = 127;
+
+    io:println(a / a); // @output 1
+    io:println(a / b); // @output 0
+    io:println(a / c); // @output 0
+    io:println(a / d); // @output 0
+    io:println(a / e); // @output 0
+
+    io:println(b / a); // @output 2
+    io:println(b / b); // @output 1
+    io:println(b / c); // @output 0
+    io:println(b / d); // @output 0
+    io:println(b / e); // @output 0
+
+    io:println(c / a); // @output 10
+    io:println(c / b); // @output 5
+    io:println(c / c); // @output 1
+    io:println(c / d); // @output 0
+    io:println(c / e); // @output 0
+
+    io:println(d / a); // @output 100
+    io:println(d / b); // @output 50
+    io:println(d / c); // @output 10
+    io:println(d / d); // @output 1
+    io:println(d / e); // @output 0
+
+    io:println(e / a); // @output 127
+    io:println(e / b); // @output 63
+    io:println(e / c); // @output 12
+    io:println(e / d); // @output 1
+    io:println(e / e); // @output 1
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, for negative non-zero integers, for int:Signed8.
+Labels: multiplicative-expr, DecimalNumber, int:Signed8, unary-minus
+
+public function main() {
+    int:Signed8 a = -1;
+    int:Signed8 b = -2;
+    int:Signed8 c = -100;
+    int:Signed8 d = -120;
+    int:Signed8 e = -128;
+
+    io:println(a / a); // @output 1
+    io:println(a / b); // @output 0
+    io:println(a / c); // @output 0
+    io:println(a / d); // @output 0
+    io:println(a / e); // @output 0
+
+    io:println(b / a); // @output 2
+    io:println(b / b); // @output 1
+    io:println(b / c); // @output 0
+    io:println(b / d); // @output 0
+    io:println(b / e); // @output 0
+
+    io:println(c / a); // @output 100
+    io:println(c / b); // @output 50
+    io:println(c / c); // @output 1
+    io:println(c / d); // @output 0
+    io:println(c / e); // @output 0
+
+    io:println(d / a); // @output 120
+    io:println(d / b); // @output 60
+    io:println(d / c); // @output 1
+    io:println(d / d); // @output 1
+    io:println(d / e); // @output 0
+
+    io:println(e / a); // @output 128
+    io:println(e / b); // @output 64
+    io:println(e / c); // @output 1
+    io:println(e / d); // @output 1
+    io:println(e / e); // @output 1
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, where one operand is negative
+             and the other is positive, for int:Signed8.
+Labels: multiplicative-expr, DecimalNumber, int:Signed8, unary-minus
+
+public function main() {
+    int:Signed8 a = -128;
+    int:Signed8 b = -100;
+    int:Signed8 c = -1;
+    int:Signed8 d = 1;
+    int:Signed8 e = 100;
+    int:Signed8 f = 127;
+
+    io:println(a / d); // @output -128
+    io:println(a / e); // @output -1
+    io:println(a / f); // @output -1
+
+    io:println(b / d); // @output -100
+    io:println(b / e); // @output -1
+    io:println(b / f); // @output 0
+
+    io:println(c / d); // @output -1
+    io:println(c / e); // @output 0
+    io:println(c / f); // @output 0
+
+    io:println(d / a); // @output 0
+    io:println(d / b); // @output 0
+    io:println(d / c); // @output -1
+
+    io:println(e / a); // @output 0
+    io:println(e / b); // @output -1
+    io:println(e / c); // @output -100
+
+    io:println(f / a); // @output 0
+    io:println(f / b); // @output -1
+    io:println(f / c); // @output -127
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, where the first operand is zero, for int:Signed8.
+Labels: multiplicative-expr, DecimalNumber, int:Signed8, unary-minus
+
+public function main() {
+    int:Signed8 a = -128;
+    int:Signed8 b = -100;
+    int:Signed8 c = -1;
+    int:Signed8 d = -0;
+    int:Signed8 e = 0;
+    int:Signed8 f = 1;
+    int:Signed8 g = 100;
+    int:Signed8 h = 127;
+
+    io:println(d / a); // @output 0
+    io:println(d / b); // @output 0
+    io:println(d / c); // @output 0
+    io:println(d / f); // @output 0
+    io:println(d / g); // @output 0
+    io:println(d / h); // @output 0
+
+    io:println(e / a); // @output 0
+    io:println(e / b); // @output 0
+    io:println(e / c); // @output 0
+    io:println(e / f); // @output 0
+    io:println(e / g); // @output 0
+    io:println(e / h); // @output 0
+}
+
+Test-Case: panic
+Description: Test 1 for integer division panic on division by zero, for int:Signed8.
+Labels: multiplicative-expr, int, int:Signed8, DecimalNumber, unary-minus
+
+public function main() {
+    int:Signed8 a = -128;
+    int:Signed8 b = -0;
+
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 2 for integer division panic on division by zero, for int:Signed8.
+Labels: multiplicative-expr, int, int:Signed8, DecimalNumber, unary-minus
+
+public function main() {
+    int:Signed8 a = -128;
+    int:Signed8 b = 0;
+
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 3 for integer division panic on division by zero, for int:Signed8.
+Labels: multiplicative-expr, int, int:Signed8, DecimalNumber, unary-minus
+
+public function main() {
+    int:Signed8 a = -0;
+    int:Signed8 b = 0;
+
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 4 for integer division panic on division by zero, for int:Signed8.
+Labels: multiplicative-expr, int, int:Signed8, DecimalNumber, unary-minus
+
+public function main() {
+    int:Signed8 a = 0;
+    int:Signed8 b = -0;
+
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 5 for integer division panic on division by zero, for int:Signed8.
+Labels: multiplicative-expr, int, int:Signed8, DecimalNumber, unary-minus
+
+public function main() {
+    int:Signed8 a = 127;
+    int:Signed8 b = -0;
+
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 6 for integer division panic on division by zero, for int:Signed8.
+Labels: multiplicative-expr, int, int:Signed8, DecimalNumber
+
+public function main() {
+    int:Signed8 a = 126;
+    int:Signed8 b = 0;
+
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 7 for integer division panic on division by zero.
+Labels: multiplicative-expr, int, int:Signed8, DecimalNumber, int:MIN_VALUE, unary-minus
+
+public function main() {
+    int:Signed8 a = -0;
+    int b = int:MIN_VALUE / a; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test panic on integer division overflow with int:Signed8.
+Labels: multiplicative-expr, int, int:Signed8, DecimalNumber, int:MIN_VALUE, unary-minus
+
+public function main() {
+    int a = int:MIN_VALUE;
+    int:Signed8 b = -1;
+    int c = a / b; // @panic integer overflow on division
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, for positive non-zero integers, for int:Signed16.
+Labels: multiplicative-expr, DecimalNumber, int:Signed16
+
+public function main() {
+    int:Signed16 a = 1;
+    int:Signed16 b = 2;
+    int:Signed16 c = 10;
+    int:Signed16 d = 12345;
+    int:Signed16 e = 32767;
+
+    io:println(a / a); // @output 1
+    io:println(a / b); // @output 0
+    io:println(a / c); // @output 0
+    io:println(a / d); // @output 0
+    io:println(a / e); // @output 0
+
+    io:println(b / a); // @output 2
+    io:println(b / b); // @output 1
+    io:println(b / c); // @output 0
+    io:println(b / d); // @output 0
+    io:println(b / e); // @output 0
+
+    io:println(c / a); // @output 10
+    io:println(c / b); // @output 5
+    io:println(c / c); // @output 1
+    io:println(c / d); // @output 0
+    io:println(c / e); // @output 0
+
+    io:println(d / a); // @output 12345
+    io:println(d / b); // @output 6172
+    io:println(d / c); // @output 1234
+    io:println(d / d); // @output 1
+    io:println(d / e); // @output 0
+
+    io:println(e / a); // @output 32767
+    io:println(e / b); // @output 16383
+    io:println(e / c); // @output 3276
+    io:println(e / d); // @output 2
+    io:println(e / e); // @output 1
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, for negative non-zero integers, for int:Signed16.
+Labels: multiplicative-expr, DecimalNumber, int:Signed16, unary-minus
+
+public function main() {
+    int:Signed16 a = -1;
+    int:Signed16 b = -2;
+    int:Signed16 c = -100;
+    int:Signed16 d = -20000;
+    int:Signed16 e = -32768;
+
+    io:println(a / a); // @output 1
+    io:println(a / b); // @output 0
+    io:println(a / c); // @output 0
+    io:println(a / d); // @output 0
+    io:println(a / e); // @output 0
+
+    io:println(b / a); // @output 2
+    io:println(b / b); // @output 1
+    io:println(b / c); // @output 0
+    io:println(b / d); // @output 0
+    io:println(b / e); // @output 0
+
+    io:println(c / a); // @output 100
+    io:println(c / b); // @output 50
+    io:println(c / c); // @output 1
+    io:println(c / d); // @output 0
+    io:println(c / e); // @output 0
+
+    io:println(d / a); // @output 20000
+    io:println(d / b); // @output 10000
+    io:println(d / c); // @output 200
+    io:println(d / d); // @output 1
+    io:println(d / e); // @output 0
+
+    io:println(e / a); // @output 32768
+    io:println(e / b); // @output 16384
+    io:println(e / c); // @output 327
+    io:println(e / d); // @output 1
+    io:println(e / e); // @output 1
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, where one operand is negative
+             and the other is positive, for int:Signed16.
+Labels: multiplicative-expr, DecimalNumber, int:Signed16, unary-minus
+
+public function main() {
+    int:Signed16 a = -32768;
+    int:Signed16 b = -200;
+    int:Signed16 c = -1;
+    int:Signed16 d = 1;
+    int:Signed16 e = 200;
+    int:Signed16 f = 32767;
+
+    io:println(a / d); // @output -32768
+    io:println(a / e); // @output -163
+    io:println(a / f); // @output -1
+
+    io:println(b / d); // @output -200
+    io:println(b / e); // @output -1
+    io:println(b / f); // @output 0
+
+    io:println(c / d); // @output -1
+    io:println(c / e); // @output 0
+    io:println(c / f); // @output 0
+
+    io:println(d / a); // @output 0
+    io:println(d / b); // @output 0
+    io:println(d / c); // @output -1
+
+    io:println(e / a); // @output 0
+    io:println(e / b); // @output -1
+    io:println(e / c); // @output -200
+
+    io:println(f / a); // @output 0
+    io:println(f / b); // @output -163
+    io:println(f / c); // @output -32767
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, where the first operand is zero, for int:Signed16.
+Labels: multiplicative-expr, DecimalNumber, int:Signed16, unary-minus
+
+public function main() {
+    int:Signed16 a = -32768;
+    int:Signed16 b = -100;
+    int:Signed16 c = -1;
+    int:Signed16 d = -0;
+    int:Signed16 e = 0;
+    int:Signed16 f = 1;
+    int:Signed16 g = 1100;
+    int:Signed16 h = 32767;
+
+    io:println(d / a); // @output 0
+    io:println(d / b); // @output 0
+    io:println(d / c); // @output 0
+    io:println(d / f); // @output 0
+    io:println(d / g); // @output 0
+    io:println(d / h); // @output 0
+
+    io:println(e / a); // @output 0
+    io:println(e / b); // @output 0
+    io:println(e / c); // @output 0
+    io:println(e / f); // @output 0
+    io:println(e / g); // @output 0
+    io:println(e / h); // @output 0
+}
+
+Test-Case: panic
+Description: Test 1 for integer division panic on division by zero, for int:Signed16.
+Labels: multiplicative-expr, int, int:Signed16, DecimalNumber, unary-minus
+
+public function main() {
+    int:Signed16 a = -32768;
+    int:Signed16 b = -0;
+
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 2 for integer division panic on division by zero, for int:Signed16.
+Labels: multiplicative-expr, int, int:Signed16, DecimalNumber, unary-minus
+
+public function main() {
+    int:Signed16 a = -32767;
+    int:Signed16 b = 0;
+
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 3 for integer division panic on division by zero, for int:Signed16.
+Labels: multiplicative-expr, int, int:Signed16, DecimalNumber, unary-minus
+
+public function main() {
+    int:Signed16 a = -0;
+    int:Signed16 b = 0;
+
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 4 for integer division panic on division by zero, for int:Signed16.
+Labels: multiplicative-expr, int, int:Signed16, DecimalNumber, unary-minus
+
+public function main() {
+    int:Signed16 a = 0;
+    int:Signed16 b = -0;
+
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 5 for integer division panic on division by zero, for int:Signed16.
+Labels: multiplicative-expr, int, int:Signed16, DecimalNumber, unary-minus
+
+public function main() {
+    int:Signed16 a = 32767;
+    int:Signed16 b = -0;
+
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 6 for integer division panic on division by zero, for int:Signed16.
+Labels: multiplicative-expr, int, int:Signed16, DecimalNumber
+
+public function main() {
+    int:Signed16 a = 3276;
+    int:Signed16 b = 0;
+
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 7 for integer division panic on division by zero.
+Labels: multiplicative-expr, int, int:Signed16, DecimalNumber, int:MIN_VALUE, unary-minus
+
+public function main() {
+    int:Signed16 a = -0;
+    int b = int:MIN_VALUE / a; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test panic on integer division overflow with int:Signed16.
+Labels: multiplicative-expr, int, int:Signed16, DecimalNumber, int:MIN_VALUE, unary-minus
+
+public function main() {
+    int a = int:MIN_VALUE;
+    int:Signed16 b = -1;
+    int c = a / b; // @panic integer overflow on division
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, for positive non-zero integers, for int:Signed32.
+Labels: multiplicative-expr, DecimalNumber, int:Signed32
+
+public function main() {
+    int:Signed32 a = 1;
+    int:Signed32 b = 2;
+    int:Signed32 c = 10;
+    int:Signed32 d = 1000;
+    int:Signed32 e = 2147483647;
+
+    io:println(a / a); // @output 1
+    io:println(a / b); // @output 0
+    io:println(a / c); // @output 0
+    io:println(a / d); // @output 0
+    io:println(a / e); // @output 0
+
+    io:println(b / a); // @output 2
+    io:println(b / b); // @output 1
+    io:println(b / c); // @output 0
+    io:println(b / d); // @output 0
+    io:println(b / e); // @output 0
+
+    io:println(c / a); // @output 10
+    io:println(c / b); // @output 5
+    io:println(c / c); // @output 1
+    io:println(c / d); // @output 0
+    io:println(c / e); // @output 0
+
+    io:println(d / a); // @output 1000
+    io:println(d / b); // @output 500
+    io:println(d / c); // @output 100
+    io:println(d / d); // @output 1
+    io:println(d / e); // @output 0
+
+    io:println(e / a); // @output 2147483647
+    io:println(e / b); // @output 1073741823
+    io:println(e / c); // @output 214748364
+    io:println(e / d); // @output 2147483
+    io:println(e / e); // @output 1
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, for negative non-zero integers, for int:Signed32.
+Labels: multiplicative-expr, DecimalNumber, int:Signed32, unary-minus
+
+public function main() {
+    int:Signed32 a = -1;
+    int:Signed32 b = -2;
+    int:Signed32 c = -100;
+    int:Signed32 d = -20000;
+    int:Signed32 e = -2147483648;
+
+    io:println(a / a); // @output 1
+    io:println(a / b); // @output 0
+    io:println(a / c); // @output 0
+    io:println(a / d); // @output 0
+    io:println(a / e); // @output 0
+
+    io:println(b / a); // @output 2
+    io:println(b / b); // @output 1
+    io:println(b / c); // @output 0
+    io:println(b / d); // @output 0
+    io:println(b / e); // @output 0
+
+    io:println(c / a); // @output 100
+    io:println(c / b); // @output 50
+    io:println(c / c); // @output 1
+    io:println(c / d); // @output 0
+    io:println(c / e); // @output 0
+
+    io:println(d / a); // @output 20000
+    io:println(d / b); // @output 10000
+    io:println(d / c); // @output 200
+    io:println(d / d); // @output 1
+    io:println(d / e); // @output 0
+
+    io:println(e / a); // @output 2147483648
+    io:println(e / b); // @output 1073741824
+    io:println(e / c); // @output 21474836
+    io:println(e / d); // @output 107374
+    io:println(e / e); // @output 1
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, where one operand is negative 
+             and the other is positive, for int:Signed32.
+Labels: multiplicative-expr, DecimalNumber, int:Signed32, unary-minus
+
+public function main() {
+    int:Signed32 a = -2147483648;
+    int:Signed32 b = -200;
+    int:Signed32 c = -1;
+    int:Signed32 d = 1;
+    int:Signed32 e = 200;
+    int:Signed32 f = 2147483647;
+
+    io:println(a / d); // @output -2147483648
+    io:println(a / e); // @output -10737418
+    io:println(a / f); // @output -1
+
+    io:println(b / d); // @output -200
+    io:println(b / e); // @output -1
+    io:println(b / f); // @output 0
+
+    io:println(c / d); // @output -1
+    io:println(c / e); // @output 0
+    io:println(c / f); // @output 0
+
+    io:println(d / a); // @output 0
+    io:println(d / b); // @output 0
+    io:println(d / c); // @output -1
+
+    io:println(e / a); // @output 0
+    io:println(e / b); // @output -1
+    io:println(e / c); // @output -200
+
+    io:println(f / a); // @output 0
+    io:println(f / b); // @output -10737418
+    io:println(f / c); // @output -2147483647
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, where the first operand is zero, for int:Signed32.
+Labels: multiplicative-expr, DecimalNumber, int:Signed32, unary-minus
+
+public function main() {
+    int:Signed32 a = -2147483648;
+    int:Signed32 b = -12342340;
+    int:Signed32 c = -1;
+    int:Signed32 d = -0;
+    int:Signed32 e = 0;
+    int:Signed32 f = 1;
+    int:Signed32 g = 139456264;
+    int:Signed32 h = 2147483647;
+
+    io:println(d / a); // @output 0
+    io:println(d / b); // @output 0
+    io:println(d / c); // @output 0
+    io:println(d / f); // @output 0
+    io:println(d / g); // @output 0
+    io:println(d / h); // @output 0
+
+    io:println(e / a); // @output 0
+    io:println(e / b); // @output 0
+    io:println(e / c); // @output 0
+    io:println(e / f); // @output 0
+    io:println(e / g); // @output 0
+    io:println(e / h); // @output 0
+}
+
+Test-Case: panic
+Description: Test 1 for integer division panic on division by zero, for int:Signed32.
+Labels: multiplicative-expr, int, int:Signed32, DecimalNumber, unary-minus
+
+public function main() {
+    int:Signed32 a = -2147483648;
+    int:Signed32 b = -0;
+
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 2 for integer division panic on division by zero, for int:Signed32.
+Labels: multiplicative-expr, int, int:Signed32, DecimalNumber, unary-minus
+
+public function main() {
+    int:Signed32 a = -2147483647;
+    int:Signed32 b = 0;
+
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 3 for integer division panic on division by zero, for int:Signed32.
+Labels: multiplicative-expr, int, int:Signed32, DecimalNumber, unary-minus
+
+public function main() {
+    int:Signed32 a = -0;
+    int:Signed32 b = 0;
+
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 4 for integer division panic on division by zero, for int:Signed32.
+Labels: multiplicative-expr, int, int:Signed32, DecimalNumber, unary-minus
+
+public function main() {
+    int:Signed32 a = 0;
+    int:Signed32 b = -0;
+
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 5 for integer division panic on division by zero, for int:Signed32.
+Labels: multiplicative-expr, int, int:Signed32, DecimalNumber, unary-minus
+
+public function main() {
+    int:Signed32 a = 2147483647;
+    int:Signed32 b = -0;
+
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 6 for integer division panic on division by zero, for int:Signed32.
+Labels: multiplicative-expr, int, int:Signed32, DecimalNumber
+
+public function main() {
+    int:Signed32 a = 2147483610;
+    int:Signed32 b = 0;
+
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 7 for integer division panic on division by zero.
+Labels: multiplicative-expr, int, int:Signed32, DecimalNumber, int:MIN_VALUE, unary-minus
+
+public function main() {
+    int:Signed32 a = -0;
+    int b = int:MIN_VALUE / a; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test panic on integer division overflow with int:Signed32.
+Labels: multiplicative-expr, int, int:Signed32, DecimalNumber, int:MIN_VALUE, unary-minus
+
+public function main() {
+    int a = int:MIN_VALUE;
+    int:Signed32 b = -1;
+    int c = a / b; // @panic integer overflow on division
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, for positive non-zero integers, 
+             for user-defined subtype of int.
+Labels: multiplicative-expr, union-type, DecimalNumber, unary-minus, module-type-defn
+
+type Ints -2|-1|0|1|2;
+
+public function main() {
+    Ints a = 1;
+    Ints b = 2;
+
+    io:println(a / a); // @output 1
+    io:println(a / b); // @output 0
+
+    io:println(b / a); // @output 2
+    io:println(b / b); // @output 1
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, for negative non-zero integers,  
+             for user-defined subtype of int.
+Labels: multiplicative-expr, union-type, DecimalNumber, unary-minus, module-type-defn
+
+type Ints -2|-1|0|1|2;
+
+public function main() {
+    Ints a = -1;
+    Ints b = -2;
+
+    io:println(a / a); // @output 1
+    io:println(a / b); // @output 0
+
+    io:println(b / a); // @output 2
+    io:println(b / b); // @output 1
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, where one operand is negative 
+             and the other is positive, for user-defined subtype of int.
+Labels: multiplicative-expr, union-type, DecimalNumber, unary-minus, module-type-defn
+
+type Ints -2|-1|0|1|2;
+
+public function main() {
+    Ints a = -1;
+    Ints b = -2;
+    Ints c = 1;
+    Ints d = 2;
+
+    io:println(a / c); // @output -1
+    io:println(a / d); // @output 0
+
+    io:println(b / c); // @output -2
+    io:println(b / d); // @output -1
+
+    io:println(c / a); // @output -1
+    io:println(c / b); // @output 0
+
+    io:println(d / a); // @output -2
+    io:println(d / b); // @output -1
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, where the first operand is zero, for 
+             user-defined subtype of int.
+Labels: multiplicative-expr, union-type, DecimalNumber, unary-minus, module-type-defn
+
+type Ints -2|-1|0|1|2;
+
+public function main() {
+    Ints a = -2;
+    Ints b = -1;
+    Ints c = -0;
+    Ints d = 0;
+    Ints e = 1;
+    Ints f = 2;
+
+    io:println(c / a); // @output 0
+    io:println(c / b); // @output 0
+    io:println(c / e); // @output 0
+    io:println(c / f); // @output 0
+
+    io:println(d / a); // @output 0
+    io:println(d / b); // @output 0
+    io:println(d / e); // @output 0
+    io:println(d / f); // @output 0
+}
+
+Test-Case: panic
+Description: Test 1 for integer division panic on division by zero, for user-defined subtype of int.
+Labels: multiplicative-expr, union-type, DecimalNumber, module-type-defn
+
+type Ints 0|1|2;
+
+public function main() {
+    Ints a = 1;
+    Ints b = 0;
+
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 1 for integer division panic on division by zero, for user-defined subtype of int.
+Labels: multiplicative-expr, union-type, DecimalNumber, unary-minus, module-type-defn
+
+type Ints -2|-1|0|1|2;
+
+public function main() {
+    Ints a = -1;
+    Ints b = 0;    
+    int c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test for integer division overflow with user-defined subtype of int.
+Labels: multiplicative-expr, union-type, DecimalNumber, unary-minus, module-type-defn,int:MIN_VALUE
+
+type Ints -2|-1|0|1|2;
+
+public function main() {
+    int a = int:MIN_VALUE;
+    Ints b = -1;
+    int c = a / b; // @panic integer overflow on division
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, for optional positive non-zero integers.
+Labels: multiplicative-expr, int, optional-type, DecimalNumber, nil-literal, value:toBalString, numeric-nil-lifting
+
+public function main() {
+    int? a = 1;
+    int? b = 2;
+    int? c = 4611686018427387903;
+    int? d = 6917529027641081853;
+    int? e = 9223372036854775807;
+    int? f = ();
+
+    io:println(a / a); // @output 1
+    io:println(a / b); // @output 0
+    io:println(a / c); // @output 0
+    io:println(a / d); // @output 0
+    io:println(a / e); // @output 0
+    io:println((a / f).toBalString()); // @output ()
+
+    io:println(b / a); // @output 2
+    io:println(b / b); // @output 1
+    io:println(b / c); // @output 0
+    io:println(b / d); // @output 0
+    io:println(b / e); // @output 0
+    io:println((b / f).toBalString()); // @output ()
+
+    io:println(c / a); // @output 4611686018427387903
+    io:println(c / b); // @output 2305843009213693951
+    io:println(c / c); // @output 1
+    io:println(c / d); // @output 0
+    io:println(c / e); // @output 0
+    io:println((c / f).toBalString()); // @output ()
+
+    io:println(d / a); // @output 6917529027641081853
+    io:println(d / b); // @output 3458764513820540926
+    io:println(d / c); // @output 1
+    io:println(d / d); // @output 1
+    io:println(d / e); // @output 0
+    io:println((d / f).toBalString()); // @output ()
+
+    io:println(e / a); // @output 9223372036854775807
+    io:println(e / b); // @output 4611686018427387903
+    io:println(e / c); // @output 2
+    io:println(e / d); // @output 1
+    io:println(e / e); // @output 1
+    io:println((e / f).toBalString()); // @output ()
+
+    io:println((f / a).toBalString()); // @output ()
+    io:println((f / b).toBalString()); // @output ()
+    io:println((f / c).toBalString()); // @output ()
+    io:println((f / d).toBalString()); // @output ()
+    io:println((f / e).toBalString()); // @output ()
+    io:println((f / f).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, for optional negative non-zero integers.
+Labels: multiplicative-expr, int, optional-type, DecimalNumber, nil-literal, value:toBalString, unary-minus, numeric-nil-lifting
+
+public function main() {
+    int? a = -1;
+    int? b = -2;
+    int? c = -4611686018427387903;
+    int? d = -6917529027641081853;
+    int? e = -9223372036854775807;
+    int? f = ();
+
+    io:println(a / a); // @output 1
+    io:println(a / b); // @output 0
+    io:println(a / c); // @output 0
+    io:println(a / d); // @output 0
+    io:println(a / e); // @output 0
+    io:println((a / f).toBalString()); // @output ()
+
+    io:println(b / a); // @output 2
+    io:println(b / b); // @output 1
+    io:println(b / c); // @output 0
+    io:println(b / d); // @output 0
+    io:println(b / e); // @output 0
+    io:println((b / f).toBalString()); // @output ()
+
+    io:println(c / a); // @output 4611686018427387903
+    io:println(c / b); // @output 2305843009213693951
+    io:println(c / c); // @output 1
+    io:println(c / d); // @output 0
+    io:println(c / e); // @output 0
+    io:println((c / f).toBalString()); // @output ()
+
+    io:println(d / a); // @output 6917529027641081853
+    io:println(d / b); // @output 3458764513820540926
+    io:println(d / c); // @output 1
+    io:println(d / d); // @output 1
+    io:println(d / e); // @output 0
+    io:println((d / f).toBalString()); // @output ()
+
+    io:println(e / a); // @output 9223372036854775807
+    io:println(e / b); // @output 4611686018427387903
+    io:println(e / c); // @output 2
+    io:println(e / d); // @output 1
+    io:println(e / e); // @output 1
+    io:println((e / f).toBalString()); // @output ()
+
+    io:println((f / a).toBalString()); // @output ()
+    io:println((f / b).toBalString()); // @output ()
+    io:println((f / c).toBalString()); // @output ()
+    io:println((f / d).toBalString()); // @output ()
+    io:println((f / e).toBalString()); // @output ()
+    io:println((f / f).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, where one operand is negative 
+             and the other is positive, with optional type-descriptors.
+Labels: multiplicative-expr, int, optional-type, DecimalNumber, nil-literal, value:toBalString, unary-minus, numeric-nil-lifting, int:MIN_VALUE
+
+public function main() {
+    int? a = int:MIN_VALUE;
+    int? b = -1234;
+    int? c = -1;
+    int? d = 1;
+    int? e = 60708;
+    int? f = 9223372036854775807;
+    int? g = ();
+
+    io:println(a / d); // @output -9223372036854775808
+    io:println(a / e); // @output -151930092193035
+    io:println(a / f); // @output -1
+    io:println((a / g).toBalString()); // @output ()
+
+    io:println(b / d); // @output -1234
+    io:println(b / e); // @output 0
+    io:println(b / f); // @output 0
+    io:println((b / g).toBalString()); // @output ()
+
+    io:println(c / d); // @output -1
+    io:println(c / e); // @output 0
+    io:println(c / f); // @output 0
+    io:println((c / g).toBalString()); // @output ()
+
+    io:println(d / a); // @output 0
+    io:println(d / b); // @output 0
+    io:println(d / c); // @output -1
+    io:println((d / g).toBalString()); // @output ()
+
+    io:println(e / a); // @output 0
+    io:println(e / b); // @output -49
+    io:println(e / c); // @output -60708
+    io:println((e / g).toBalString()); // @output ()
+
+    io:println(f / a); // @output 0
+    io:println(f / b); // @output -7474369559849899
+    io:println(f / c); // @output -9223372036854775807
+    io:println((f / g).toBalString()); // @output ()
+
+    io:println((g / a).toBalString()); // @output ()
+    io:println((g / b).toBalString()); // @output ()
+    io:println((g / c).toBalString()); // @output ()
+    io:println((g / d).toBalString()); // @output ()
+    io:println((g / e).toBalString()); // @output ()
+    io:println((g / f).toBalString()); // @output ()
+    io:println((g / g).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, where at least one operand is zero,
+             with optional type-descriptors.
+Labels: multiplicative-expr, int, optional-type, DecimalNumber, nil-literal, value:toBalString, unary-minus, numeric-nil-lifting, int:MIN_VALUE
+
+public function main() {
+    int? a = int:MIN_VALUE;
+    int? b = -1234;
+    int? c = -1;
+    int? d = -0;
+    int? e = 0;
+    int? f = 1;
+    int? g = 60708;
+    int? h = 9223372036854775807;
+    int? i = ();
+
+    io:println(d / a); // @output 0
+    io:println(d / b); // @output 0
+    io:println(d / c); // @output 0
+    io:println(d / f); // @output 0
+    io:println(d / g); // @output 0
+    io:println(d / h); // @output 0
+    io:println((d / i).toBalString()); // @output ()
+
+    io:println(e / a); // @output 0
+    io:println(e / b); // @output 0
+    io:println(e / c); // @output 0
+    io:println(e / f); // @output 0
+    io:println(e / g); // @output 0
+    io:println(e / h); // @output 0
+    io:println((e / i).toBalString()); // @output ()
+
+    io:println((i / d).toBalString()); // @output ()
+    io:println((i / e).toBalString()); // @output ()
+}
+
+Test-Case: panic
+Description: Test 1 for integer division panic on division by zero,
+             with optional int type-descriptors.
+Labels: multiplicative-expr, int, optional-type, DecimalNumber, unary-minus, numeric-nil-lifting, int:MIN_VALUE
+
+public function main() {
+    int? a = int:MIN_VALUE;
+    int? b = -0;
+
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 2 for integer division panic on division by zero,
+             with optional int type-descriptors.
+Labels: multiplicative-expr, int, optional-type, DecimalNumber, numeric-nil-lifting, int:MIN_VALUE
+
+public function main() {
+    int? a = int:MIN_VALUE;
+    int? b = 0;
+
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 3 for integer division panic on division by zero,
+             with optional int type-descriptors.
+Labels: multiplicative-expr, int, optional-type, DecimalNumber, unary-minus, numeric-nil-lifting
+
+public function main() {
+    int? a = -0;
+    int? b = 0;
+
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 4 for integer division panic on division by zero,
+             with optional int type-descriptors.
+Labels: multiplicative-expr, int, optional-type, DecimalNumber, unary-minus, numeric-nil-lifting
+
+public function main() {
+    int? a = 0;
+    int? b = -0;
+
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 5 for integer division panic on division by zero,
+             with optional int type-descriptors.
+Labels: multiplicative-expr, int, optional-type, DecimalNumber, unary-minus, numeric-nil-lifting
+
+public function main() {
+    int? a = 9223372036854775807;
+    int? b = -0;
+
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 6 for integer division panic on division by zero,
+             with optional int type-descriptors.
+Labels: multiplicative-expr, int, optional-type, DecimalNumber, numeric-nil-lifting
+
+public function main() {
+    int? a = 9223372036854775807;
+    int? b = 0;
+
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test panic on integer division overflow, with optional int type-descriptors.
+Labels: multiplicative-expr, int, optional-type, DecimalNumber, int:MIN_VALUE, numeric-nil-lifting, unary-minus
+
+public function main() {
+    int? a = int:MIN_VALUE;
+    int? b = -1;    
+    int? c = a / b; // @panic integer overflow on division
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, for positive non-zero integers,
+             for optional int:Unsigned8.
+Labels: multiplicative-expr, int:Unsigned8, optional-type, DecimalNumber, nil-literal, value:toBalString, numeric-nil-lifting
+
+public function main() {
+    int:Unsigned8? a = 1;
+    int:Unsigned8? b = 2;
+    int:Unsigned8? c = 3;
+    int:Unsigned8? d = 86;
+    int:Unsigned8? e = 255;
+    int:Unsigned8? f = ();
+
+    io:println(a / a); // @output 1
+    io:println(a / b); // @output 0
+    io:println(a / c); // @output 0
+    io:println(a / d); // @output 0
+    io:println(a / e); // @output 0
+    io:println((a / f).toBalString()); // @output ()
+
+    io:println(b / a); // @output 2
+    io:println(b / b); // @output 1
+    io:println(b / c); // @output 0
+    io:println(b / d); // @output 0
+    io:println(b / e); // @output 0
+    io:println((b / f).toBalString()); // @output ()
+
+    io:println(c / a); // @output 3
+    io:println(c / b); // @output 1
+    io:println(c / c); // @output 1
+    io:println(c / d); // @output 0
+    io:println(c / e); // @output 0
+    io:println((c / f).toBalString()); // @output ()
+
+    io:println(d / a); // @output 86
+    io:println(d / b); // @output 43
+    io:println(d / c); // @output 28
+    io:println(d / d); // @output 1
+    io:println(d / e); // @output 0
+    io:println((d / f).toBalString()); // @output ()
+
+    io:println(e / a); // @output 255
+    io:println(e / b); // @output 127
+    io:println(e / c); // @output 85
+    io:println(e / d); // @output 2
+    io:println(e / e); // @output 1
+    io:println((e / f).toBalString()); // @output ()
+
+    io:println((f / a).toBalString()); // @output ()
+    io:println((f / b).toBalString()); // @output ()
+    io:println((f / c).toBalString()); // @output ()
+    io:println((f / d).toBalString()); // @output ()
+    io:println((f / e).toBalString()); // @output ()
+    io:println((f / f).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, where at least one operand is zero,
+             for optional int:Unsigned8.
+Labels: multiplicative-expr, int:Unsigned8, optional-type, DecimalNumber, nil-literal, value:toBalString, numeric-nil-lifting
+
+public function main() {
+    int:Unsigned8? a = 0;
+    int:Unsigned8? b = 1;
+    int:Unsigned8? c = 128;
+    int:Unsigned8? d = 255;
+    int:Unsigned8? e = ();
+
+    io:println(a / b); // @output 0
+    io:println(a / c); // @output 0
+    io:println(a / d); // @output 0
+    io:println((a / e).toBalString()); // @output ()
+
+    io:println((e / a).toBalString()); // @output ()
+}
+
+Test-Case: panic
+Description: Test 1 for integer division panic on division by zero, where at least one operand is of type optional int:Unsigned8.
+Labels: multiplicative-expr, DecimalNumber, int:Unsigned8, optional-type, numeric-nil-lifting
+
+public function main() {
+    int:Unsigned8? a = 0;
+    int:Unsigned8? b = 1;
+
+    int? c = b / a; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 2 for integer division panic on division by zero, where at least one operand is of type optional int:Unsigned8.
+Labels: multiplicative-expr, DecimalNumber, int:Unsigned8, optional-type, numeric-nil-lifting
+
+public function main() {
+    int:Unsigned8? a = 128;
+    int:Unsigned8? b = 0;
+
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 3 for integer division panic on division by zero, where one operand is of type optional int:Unsigned8.
+Labels: multiplicative-expr, DecimalNumber, int:Unsigned8, optional-type, numeric-nil-lifting
+
+public function main() {
+    int:Unsigned8? a = 255;
+    int:Unsigned8? b = 0;
+
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 4 for integer division panic on division by zero, where at least one operand is of type optional int:Unsigned8.
+Labels: multiplicative-expr, DecimalNumber, int:Unsigned8, optional-type, numeric-nil-lifting
+
+public function main() {
+    int:Unsigned8? a = 0;
+    int:Unsigned8 b = 0;
+
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, for positive non-zero integers, for optional byte.
+Labels: multiplicative-expr, byte, optional-type, DecimalNumber, nil-literal, value:toBalString, numeric-nil-lifting
+
+public function main() {
+    byte? a = 1;
+    byte? b = 2;
+    byte? c = 3;
+    byte? d = 86;
+    byte? e = 255;
+    byte? f = ();
+
+    io:println(a / a); // @output 1
+    io:println(a / b); // @output 0
+    io:println(a / c); // @output 0
+    io:println(a / d); // @output 0
+    io:println(a / e); // @output 0
+    io:println((a / f).toBalString()); // @output ()
+
+    io:println(b / a); // @output 2
+    io:println(b / b); // @output 1
+    io:println(b / c); // @output 0
+    io:println(b / d); // @output 0
+    io:println(b / e); // @output 0
+    io:println((b / f).toBalString()); // @output ()
+
+    io:println(c / a); // @output 3
+    io:println(c / b); // @output 1
+    io:println(c / c); // @output 1
+    io:println(c / d); // @output 0
+    io:println(c / e); // @output 0
+    io:println((c / f).toBalString()); // @output ()
+
+    io:println(d / a); // @output 86
+    io:println(d / b); // @output 43
+    io:println(d / c); // @output 28
+    io:println(d / d); // @output 1
+    io:println(d / e); // @output 0
+    io:println((d / f).toBalString()); // @output ()
+
+    io:println(e / a); // @output 255
+    io:println(e / b); // @output 127
+    io:println(e / c); // @output 85
+    io:println(e / d); // @output 2
+    io:println(e / e); // @output 1
+    io:println((e / f).toBalString()); // @output ()
+
+    io:println((f / a).toBalString()); // @output ()
+    io:println((f / b).toBalString()); // @output ()
+    io:println((f / c).toBalString()); // @output ()
+    io:println((f / d).toBalString()); // @output ()
+    io:println((f / e).toBalString()); // @output ()
+    io:println((f / f).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, where at least one operand is zero, for optional byte.
+Labels: multiplicative-expr, byte, optional-type, DecimalNumber, nil-literal, value:toBalString, numeric-nil-lifting
+
+public function main() {
+    byte? a = 0;
+    byte? b = 1;
+    byte? c = 128;
+    byte? d = 255;
+    byte? e = ();
+
+    io:println(a / b); // @output 0
+    io:println(a / c); // @output 0
+    io:println(a / d); // @output 0
+    io:println((a / e).toBalString()); // @output ()
+
+    io:println((e / a).toBalString()); // @output ()
+}
+
+Test-Case: panic
+Description: Test 1 for integer division panic on division by zero, where at least one operand is of type optional byte.
+Labels: multiplicative-expr, DecimalNumber, byte, optional-type, numeric-nil-lifting
+
+public function main() {
+    byte? a = 0;
+    byte? b = 1;
+
+    int? c = b / a; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 2 for integer division panic on division by zero, where at least one operand is of type optional byte.
+Labels: multiplicative-expr, DecimalNumber, byte, optional-type, numeric-nil-lifting
+
+public function main() {
+    byte? a = 128;
+    byte? b = 0;
+
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 3 for integer division panic on division by zero, where at least one operand is of type optional byte.
+Labels: multiplicative-expr, DecimalNumber, byte, optional-type, numeric-nil-lifting
+
+public function main() {
+    byte? a = 255;
+    byte? b = 0;
+
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 4 for integer division panic on division by zero, where at least one operand is of type optional byte.
+Labels: multiplicative-expr, DecimalNumber, byte, optional-type, numeric-nil-lifting
+
+public function main() {
+    byte? a = 0;
+    byte? b = 0;
+
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, for positive non-zero integers, for optional int:Unsigned16.
+Labels: multiplicative-expr, int:Unsigned16, optional-type, DecimalNumber, nil-literal, value:toBalString, numeric-nil-lifting
+
+public function main() {
+    int:Unsigned16? a = 1;
+    int:Unsigned16? b = 2;
+    int:Unsigned16? c = 5;
+    int:Unsigned16? d = 40123;
+    int:Unsigned16? e = 65535;
+    int:Unsigned16? f = ();
+
+    io:println(a / a); // @output 1
+    io:println(a / b); // @output 0
+    io:println(a / c); // @output 0
+    io:println(a / d); // @output 0
+    io:println(a / e); // @output 0
+    io:println((a / f).toBalString()); // @output ()
+
+    io:println(b / a); // @output 2
+    io:println(b / b); // @output 1
+    io:println(b / c); // @output 0
+    io:println(b / d); // @output 0
+    io:println(b / e); // @output 0
+    io:println((b / f).toBalString()); // @output ()
+
+    io:println(c / a); // @output 5
+    io:println(c / b); // @output 2
+    io:println(c / c); // @output 1
+    io:println(c / d); // @output 0
+    io:println(c / e); // @output 0
+    io:println((c / f).toBalString()); // @output ()
+
+    io:println(d / a); // @output 40123
+    io:println(d / b); // @output 20061
+    io:println(d / c); // @output 8024
+    io:println(d / d); // @output 1
+    io:println(d / e); // @output 0
+    io:println((d / f).toBalString()); // @output ()
+
+    io:println(e / a); // @output 65535
+    io:println(e / b); // @output 32767
+    io:println(e / c); // @output 13107
+    io:println(e / d); // @output 1
+    io:println(e / e); // @output 1
+    io:println((e / f).toBalString()); // @output ()
+
+    io:println((f / a).toBalString()); // @output ()
+    io:println((f / b).toBalString()); // @output ()
+    io:println((f / c).toBalString()); // @output ()
+    io:println((f / d).toBalString()); // @output ()
+    io:println((f / e).toBalString()); // @output ()
+    io:println((f / f).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, where at least one operand is zero, for optional int:Unsigned16.
+Labels: multiplicative-expr, int:Unsigned16, optional-type, DecimalNumber, nil-literal, value:toBalString, numeric-nil-lifting
+
+public function main() {
+    int:Unsigned16? a = 0;
+    int:Unsigned16? b = 1;
+    int:Unsigned16? c = 128;
+    int:Unsigned16? d = 255;
+    int:Unsigned16? e = ();
+
+    io:println(a / b); // @output 0
+    io:println(a / c); // @output 0
+    io:println(a / d); // @output 0
+    io:println((a / e).toBalString()); // @output ()
+
+    io:println((e / a).toBalString()); // @output ()
+}
+
+Test-Case: panic
+Description: Test 1 for integer division panic on division by zero, where at least one operand is of type optional int:Unsigned16.
+Labels: multiplicative-expr, DecimalNumber, int:Unsigned16, optional-type, numeric-nil-lifting
+
+public function main() {
+    int:Unsigned16? a = 0;
+    int:Unsigned16? b = 1;
+
+    int? c = b / a; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 2 for integer division panic on division by zero, where at least one operand is of type optional int:Unsigned16.
+Labels: multiplicative-expr, DecimalNumber, int:Unsigned16, optional-type, numeric-nil-lifting
+
+public function main() {
+    int:Unsigned16? a = 65535;
+    int:Unsigned16? b = 0;
+
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 3 for integer division panic on division by zero, where at least one operand is of type optional int:Unsigned16.
+Labels: multiplicative-expr, DecimalNumber, int:Unsigned16, optional-type, numeric-nil-lifting
+
+public function main() {
+    int:Unsigned16? a = 65532;
+    int:Unsigned16? b = 0;
+
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 4 for integer division panic on division by zero, where at least one operand is of type optional int:Unsigned16.
+Labels: multiplicative-expr, DecimalNumber, int:Unsigned16, optional-type, numeric-nil-lifting
+
+public function main() {
+    int:Unsigned16? a = 0;
+    int:Unsigned16? b = 0;
+
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, for positive non-zero integers, for optional int:Unsigned32.
+Labels: multiplicative-expr, int:Unsigned32, optional-type, DecimalNumber, nil-literal, value:toBalString, numeric-nil-lifting
+
+public function main() {
+    int:Unsigned32? a = 1;
+    int:Unsigned32? b = 2;
+    int:Unsigned32? c = 10;
+    int:Unsigned32? d = 12034;
+    int:Unsigned32? e = 429496729;
+    int:Unsigned32? f = ();
+
+    io:println(a / a); // @output 1
+    io:println(a / b); // @output 0
+    io:println(a / c); // @output 0
+    io:println(a / d); // @output 0
+    io:println(a / e); // @output 0
+    io:println((a / f).toBalString()); // @output ()
+
+    io:println(b / a); // @output 2
+    io:println(b / b); // @output 1
+    io:println(b / c); // @output 0
+    io:println(b / d); // @output 0
+    io:println(b / e); // @output 0
+    io:println((b / f).toBalString()); // @output ()
+
+    io:println(c / a); // @output 10
+    io:println(c / b); // @output 5
+    io:println(c / c); // @output 1
+    io:println(c / d); // @output 0
+    io:println(c / e); // @output 0
+    io:println((c / f).toBalString()); // @output ()
+
+    io:println(d / a); // @output 12034
+    io:println(d / b); // @output 6017
+    io:println(d / c); // @output 1203
+    io:println(d / d); // @output 1
+    io:println(d / e); // @output 0
+    io:println((d / f).toBalString()); // @output ()
+
+    io:println(e / a); // @output 429496729
+    io:println(e / b); // @output 214748364
+    io:println(e / c); // @output 42949672
+    io:println(e / d); // @output 35690
+    io:println(e / e); // @output 1
+    io:println((e / f).toBalString()); // @output ()
+
+    io:println((f / a).toBalString()); // @output ()
+    io:println((f / b).toBalString()); // @output ()
+    io:println((f / c).toBalString()); // @output ()
+    io:println((f / d).toBalString()); // @output ()
+    io:println((f / e).toBalString()); // @output ()
+    io:println((f / f).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, where at least one operand is zero, for optional int:Unsigned32.
+Labels: multiplicative-expr, int:Unsigned32, optional-type, DecimalNumber, nil-literal, value:toBalString, numeric-nil-lifting
+
+public function main() {
+    int:Unsigned32? a = 0;
+    int:Unsigned32? b = 1;
+    int:Unsigned32? c = 1259273;
+    int:Unsigned32? d = 4294967295;
+    int:Unsigned32? e = ();
+
+    io:println(a / b); // @output 0
+    io:println(a / c); // @output 0
+    io:println(a / d); // @output 0
+    io:println((a / e).toBalString()); // @output ()
+
+    io:println((e / a).toBalString()); // @output ()
+}
+
+Test-Case: panic
+Description: Test 1 for integer division panic on division by zero, for optional int:Unsigned32.
+Labels: multiplicative-expr, DecimalNumber, int:Unsigned32, optional-type, numeric-nil-lifting
+
+public function main() {
+    int:Unsigned32? a = 0;
+    int:Unsigned32? b = 1;
+
+    int? c = b / a; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 2 for integer division panic on division by zero, for optional int:Unsigned32.
+Labels: multiplicative-expr, DecimalNumber, int:Unsigned32, optional-type, numeric-nil-lifting
+
+public function main() {
+    int:Unsigned32? a = 4294967295;
+    int:Unsigned32? b = 0;
+
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 3 for integer division panic on division by zero, for optional int:Unsigned32.
+Labels: multiplicative-expr, DecimalNumber, int:Unsigned32, optional-type, numeric-nil-lifting
+
+public function main() {
+    int:Unsigned32? a = 4294967295;
+    int:Unsigned32? b = 0;
+
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 4 for integer division panic on division by zero, for optional int:Unsigned32.
+Labels: multiplicative-expr, DecimalNumber, int:Unsigned32, optional-type, numeric-nil-lifting
+
+public function main() {
+    int:Unsigned32? a = 0;
+    int:Unsigned32? b = 0;
+
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, for positive non-zero integers, for optional int:Signed8.
+Labels: multiplicative-expr, int:Signed8, optional-type, DecimalNumber, nil-literal, value:toBalString, numeric-nil-lifting
+
+public function main() {
+    int:Signed8? a = 1;
+    int:Signed8? b = 2;
+    int:Signed8? c = 10;
+    int:Signed8? d = 100;
+    int:Signed8? e = 127;
+    int:Signed8? f = ();
+
+    io:println(a / a); // @output 1
+    io:println(a / b); // @output 0
+    io:println(a / c); // @output 0
+    io:println(a / d); // @output 0
+    io:println(a / e); // @output 0
+    io:println((a / f).toBalString()); // @output ()
+
+    io:println(b / a); // @output 2
+    io:println(b / b); // @output 1
+    io:println(b / c); // @output 0
+    io:println(b / d); // @output 0
+    io:println(b / e); // @output 0
+    io:println((b / f).toBalString()); // @output ()
+
+    io:println(c / a); // @output 10
+    io:println(c / b); // @output 5
+    io:println(c / c); // @output 1
+    io:println(c / d); // @output 0
+    io:println(c / e); // @output 0
+    io:println((c / f).toBalString()); // @output ()
+
+    io:println(d / a); // @output 100
+    io:println(d / b); // @output 50
+    io:println(d / c); // @output 10
+    io:println(d / d); // @output 1
+    io:println(d / e); // @output 0
+    io:println((d / f).toBalString()); // @output ()
+
+    io:println(e / a); // @output 127
+    io:println(e / b); // @output 63
+    io:println(e / c); // @output 12
+    io:println(e / d); // @output 1
+    io:println(e / e); // @output 1
+    io:println((e / f).toBalString()); // @output ()
+
+    io:println((f / a).toBalString()); // @output ()
+    io:println((f / b).toBalString()); // @output ()
+    io:println((f / c).toBalString()); // @output ()
+    io:println((f / d).toBalString()); // @output ()
+    io:println((f / e).toBalString()); // @output ()
+    io:println((f / f).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, for negative non-zero integers, for optional int:Signed8.
+Labels: multiplicative-expr, int:Signed8, optional-type, DecimalNumber, nil-literal, value:toBalString, unary-minus, numeric-nil-lifting
+
+public function main() {
+    int:Signed8? a = -1;
+    int:Signed8? b = -2;
+    int:Signed8? c = -100;
+    int:Signed8? d = -120;
+    int:Signed8? e = -128;
+    int:Signed8? f = ();
+
+    io:println(a / a); // @output 1
+    io:println(a / b); // @output 0
+    io:println(a / c); // @output 0
+    io:println(a / d); // @output 0
+    io:println(a / e); // @output 0
+    io:println((a / f).toBalString()); // @output ()
+
+    io:println(b / a); // @output 2
+    io:println(b / b); // @output 1
+    io:println(b / c); // @output 0
+    io:println(b / d); // @output 0
+    io:println(b / e); // @output 0
+    io:println((b / f).toBalString()); // @output ()
+
+    io:println(c / a); // @output 100
+    io:println(c / b); // @output 50
+    io:println(c / c); // @output 1
+    io:println(c / d); // @output 0
+    io:println(c / e); // @output 0
+    io:println((c / f).toBalString()); // @output ()
+
+    io:println(d / a); // @output 120
+    io:println(d / b); // @output 60
+    io:println(d / c); // @output 1
+    io:println(d / d); // @output 1
+    io:println(d / e); // @output 0
+    io:println((d / f).toBalString()); // @output ()
+
+    io:println(e / a); // @output 128
+    io:println(e / b); // @output 64
+    io:println(e / c); // @output 1
+    io:println(e / d); // @output 1
+    io:println(e / e); // @output 1
+    io:println((e / f).toBalString()); // @output ()
+
+    io:println((f / a).toBalString()); // @output ()
+    io:println((f / b).toBalString()); // @output ()
+    io:println((f / c).toBalString()); // @output ()
+    io:println((f / d).toBalString()); // @output ()
+    io:println((f / e).toBalString()); // @output ()
+    io:println((f / f).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, where one operand is negative
+             and the other is positive, for optional int:Signed8.
+Labels: multiplicative-expr, int:Signed8, optional-type, DecimalNumber, unary-minus, numeric-nil-lifting
+
+public function main() {
+    int:Signed8? a = -128;
+    int:Signed8? b = -100;
+    int:Signed8? c = -1;
+    int:Signed8? d = 1;
+    int:Signed8? e = 100;
+    int:Signed8? f = 127;
+
+    io:println(a / d); // @output -128
+    io:println(a / e); // @output -1
+    io:println(a / f); // @output -1
+
+    io:println(b / d); // @output -100
+    io:println(b / e); // @output -1
+    io:println(b / f); // @output 0
+
+    io:println(c / d); // @output -1
+    io:println(c / e); // @output 0
+    io:println(c / f); // @output 0
+
+    io:println(d / a); // @output 0
+    io:println(d / b); // @output 0
+    io:println(d / c); // @output -1
+
+    io:println(e / a); // @output 0
+    io:println(e / b); // @output -1
+    io:println(e / c); // @output -100
+
+    io:println(f / a); // @output 0
+    io:println(f / b); // @output -1
+    io:println(f / c); // @output -127
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, where at least one operand is zero, for optional int:Signed8.
+Labels: multiplicative-expr, int:Signed8, optional-type, DecimalNumber, nil-literal, value:toBalString, unary-minus, numeric-nil-lifting
+
+public function main() {
+    int:Signed8? a = -128;
+    int:Signed8? b = -100;
+    int:Signed8? c = -1;
+    int:Signed8? d = -0;
+    int:Signed8? e = 0;
+    int:Signed8? f = 1;
+    int:Signed8? g = 100;
+    int:Signed8? h = 127;
+    int:Signed8? i = ();
+
+    io:println(d / a); // @output 0
+    io:println(d / b); // @output 0
+    io:println(d / c); // @output 0
+    io:println(d / f); // @output 0
+    io:println(d / g); // @output 0
+    io:println(d / h); // @output 0
+    io:println((d / i).toBalString()); // @output ()
+
+    io:println(e / a); // @output 0
+    io:println(e / b); // @output 0
+    io:println(e / c); // @output 0
+    io:println(e / f); // @output 0
+    io:println(e / g); // @output 0
+    io:println(e / h); // @output 0
+    io:println((e / i).toBalString()); // @output ()
+
+    io:println((i / d).toBalString()); // @output ()
+    io:println((i / e).toBalString()); // @output ()
+}
+
+Test-Case: panic
+Description: Test 1 for integer division panic on division by zero, for optional int:Signed8.
+Labels: multiplicative-expr, int, int:Signed8, optional-type, DecimalNumber, unary-minus, numeric-nil-lifting
+
+public function main() {
+    int:Signed8? a = -128;
+    int:Signed8? b = -0;
+
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 2 for integer division panic on division by zero, for optional int:Signed8.
+Labels: multiplicative-expr, int, int:Signed8, optional-type, DecimalNumber, unary-minus, numeric-nil-lifting
+
+public function main() {
+    int:Signed8? a = -128;
+    int:Signed8? b = 0;
+
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 3 for integer division panic on division by zero, for optional int:Signed8.
+Labels: multiplicative-expr, int, int:Signed8, optional-type, DecimalNumber, unary-minus, numeric-nil-lifting
+
+public function main() {
+    int:Signed8? a = -0;
+    int:Signed8 b = 0;
+
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 4 for integer division panic on division by zero, for optional int:Signed8.
+Labels: multiplicative-expr, int, int:Signed8, optional-type, DecimalNumber, unary-minus, numeric-nil-lifting
+
+public function main() {
+    int:Signed8 a = 0;
+    int:Signed8? b = -0;
+
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 5 for integer division panic on division by zero, for optional int:Signed8.
+Labels: multiplicative-expr, int, int:Signed8, optional-type, DecimalNumber, unary-minus, numeric-nil-lifting
+
+public function main() {
+    int:Signed8? a = 127;
+    int:Signed8 b = -0;
+
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 6 for integer division panic on division by zero, for optional int:Signed8.
+Labels: multiplicative-expr, int, int:Signed8, optional-type, DecimalNumber, numeric-nil-lifting
+
+public function main() {
+    int:Signed8? a = 126;
+    int:Signed8? b = 0;
+
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 7 for integer division panic on division by zero with optional int:Signed8.
+Labels: multiplicative-expr, int, int:Signed8, optional-type, DecimalNumber, int:MIN_VALUE, numeric-nil-lifting, unary-minus
+
+public function main() {
+    int:Signed8? a = -0;
+    int? b = int:MIN_VALUE / a; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test panic on integer division overflow with optional int:Signed8.
+Labels: multiplicative-expr, int, int:Signed8, optional-type, DecimalNumber, int:MIN_VALUE, numeric-nil-lifting, unary-minus
+
+public function main() {
+    int? a = int:MIN_VALUE;
+    int:Signed8? b = -1;
+    int? c = a / b; // @panic integer overflow on division
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, for positive non-zero integers, for optional int:Signed16.
+Labels: multiplicative-expr, int:Signed16, optional-type, DecimalNumber, nil-literal, value:toBalString, numeric-nil-lifting
+
+public function main() {
+    int:Signed16? a = 1;
+    int:Signed16? b = 2;
+    int:Signed16? c = 10;
+    int:Signed16? d = 12345;
+    int:Signed16? e = 32767;
+    int:Signed16? f = ();
+
+    io:println(a / a); // @output 1
+    io:println(a / b); // @output 0
+    io:println(a / c); // @output 0
+    io:println(a / d); // @output 0
+    io:println(a / e); // @output 0
+    io:println((a / f).toBalString()); // @output ()
+
+    io:println(b / a); // @output 2
+    io:println(b / b); // @output 1
+    io:println(b / c); // @output 0
+    io:println(b / d); // @output 0
+    io:println(b / e); // @output 0
+    io:println((b / f).toBalString()); // @output ()
+
+    io:println(c / a); // @output 10
+    io:println(c / b); // @output 5
+    io:println(c / c); // @output 1
+    io:println(c / d); // @output 0
+    io:println(c / e); // @output 0
+    io:println((c / f).toBalString()); // @output ()
+
+    io:println(d / a); // @output 12345
+    io:println(d / b); // @output 6172
+    io:println(d / c); // @output 1234
+    io:println(d / d); // @output 1
+    io:println(d / e); // @output 0
+    io:println((d / f).toBalString()); // @output ()
+
+    io:println(e / a); // @output 32767
+    io:println(e / b); // @output 16383
+    io:println(e / c); // @output 3276
+    io:println(e / d); // @output 2
+    io:println(e / e); // @output 1
+    io:println((e / f).toBalString()); // @output ()
+
+    io:println((f / a).toBalString()); // @output ()
+    io:println((f / b).toBalString()); // @output ()
+    io:println((f / c).toBalString()); // @output ()
+    io:println((f / d).toBalString()); // @output ()
+    io:println((f / e).toBalString()); // @output ()
+    io:println((f / f).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, for negative non-zero integers, for optional int:Signed16.
+Labels: multiplicative-expr, int:Signed16, optional-type, DecimalNumber, nil-literal, value:toBalString, unary-minus, numeric-nil-lifting
+
+public function main() {
+    int:Signed16? a = -1;
+    int:Signed16? b = -2;
+    int:Signed16? c = -100;
+    int:Signed16? d = -20000;
+    int:Signed16? e = -32768;
+    int:Signed16? f = ();
+
+    io:println(a / a); // @output 1
+    io:println(a / b); // @output 0
+    io:println(a / c); // @output 0
+    io:println(a / d); // @output 0
+    io:println(a / e); // @output 0
+    io:println((a / f).toBalString()); // @output ()
+
+    io:println(b / a); // @output 2
+    io:println(b / b); // @output 1
+    io:println(b / c); // @output 0
+    io:println(b / d); // @output 0
+    io:println(b / e); // @output 0
+    io:println((b / f).toBalString()); // @output ()
+
+    io:println(c / a); // @output 100
+    io:println(c / b); // @output 50
+    io:println(c / c); // @output 1
+    io:println(c / d); // @output 0
+    io:println(c / e); // @output 0
+    io:println((c / f).toBalString()); // @output ()
+
+    io:println(d / a); // @output 20000
+    io:println(d / b); // @output 10000
+    io:println(d / c); // @output 200
+    io:println(d / d); // @output 1
+    io:println(d / e); // @output 0
+    io:println((d / f).toBalString()); // @output ()
+
+    io:println(e / a); // @output 32768
+    io:println(e / b); // @output 16384
+    io:println(e / c); // @output 327
+    io:println(e / d); // @output 1
+    io:println(e / e); // @output 1
+    io:println((e / f).toBalString()); // @output ()
+
+    io:println((f / a).toBalString()); // @output ()
+    io:println((f / b).toBalString()); // @output ()
+    io:println((f / c).toBalString()); // @output ()
+    io:println((f / d).toBalString()); // @output ()
+    io:println((f / e).toBalString()); // @output ()
+    io:println((f / f).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, where one operand is negative
+             and the other is positive, for optional int:Signed16.
+Labels: multiplicative-expr, int:Signed16, optional-type, DecimalNumber, unary-minus, numeric-nil-lifting
+
+public function main() {
+    int:Signed16? a = -32768;
+    int:Signed16? b = -200;
+    int:Signed16? c = -1;
+    int:Signed16? d = 1;
+    int:Signed16? e = 200;
+    int:Signed16? f = 32767;
+
+    io:println(a / d); // @output -32768
+    io:println(a / e); // @output -163
+    io:println(a / f); // @output -1
+
+    io:println(b / d); // @output -200
+    io:println(b / e); // @output -1
+    io:println(b / f); // @output 0
+
+    io:println(c / d); // @output -1
+    io:println(c / e); // @output 0
+    io:println(c / f); // @output 0
+
+    io:println(d / a); // @output 0
+    io:println(d / b); // @output 0
+    io:println(d / c); // @output -1
+
+    io:println(e / a); // @output 0
+    io:println(e / b); // @output -1
+    io:println(e / c); // @output -200
+
+    io:println(f / a); // @output 0
+    io:println(f / b); // @output -163
+    io:println(f / c); // @output -32767
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, where at least one operand is zero, for optional int:Signed16.
+Labels: multiplicative-expr, int:Signed16, optional-type, DecimalNumber, nil-literal, value:toBalString, unary-minus, numeric-nil-lifting
+
+public function main() {
+    int:Signed16? a = -32768;
+    int:Signed16? b = -100;
+    int:Signed16? c = -1;
+    int:Signed16? d = -0;
+    int:Signed16? e = 0;
+    int:Signed16? f = 1;
+    int:Signed16? g = 1100;
+    int:Signed16? h = 32767;
+    int:Signed16? i = ();
+
+    io:println(d / a); // @output 0
+    io:println(d / b); // @output 0
+    io:println(d / c); // @output 0
+    io:println(d / f); // @output 0
+    io:println(d / g); // @output 0
+    io:println(d / h); // @output 0
+    io:println((d / i).toBalString()); // @output ()
+
+    io:println(e / a); // @output 0
+    io:println(e / b); // @output 0
+    io:println(e / c); // @output 0
+    io:println(e / f); // @output 0
+    io:println(e / g); // @output 0
+    io:println(e / h); // @output 0
+    io:println((e / i).toBalString()); // @output ()
+
+    io:println((i / d).toBalString()); // @output ()
+    io:println((i / e).toBalString()); // @output ()
+}
+
+Test-Case: panic
+Description: Test 1 for integer division panic on division by zero, for optional int:Signed16.
+Labels: multiplicative-expr, int, int:Signed16, optional-type, DecimalNumber, unary-minus, numeric-nil-lifting
+
+public function main() {
+    int:Signed16? a = -32768;
+    int:Signed16? b = -0;
+
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 2 for integer division panic on division by zero, for optional int:Signed16.
+Labels: multiplicative-expr, int, int:Signed16, optional-type, DecimalNumber, unary-minus, numeric-nil-lifting
+
+public function main() {
+    int:Signed16? a = -32767;
+    int:Signed16 b = 0;
+
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 3 for integer division panic on division by zero, for optional int:Signed16.
+Labels: multiplicative-expr, int, int:Signed16, optional-type, DecimalNumber, unary-minus, numeric-nil-lifting
+
+public function main() {
+    int:Signed16 a = -0;
+    int:Signed16? b = 0;
+
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 4 for integer division panic on division by zero, for optional int:Signed16.
+Labels: multiplicative-expr, int, int:Signed16, optional-type, DecimalNumber, unary-minus, numeric-nil-lifting
+
+public function main() {
+    int:Signed16? a = 0;
+    int:Signed16 b = -0;
+
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 5 for integer division panic on division by zero, for optional int:Signed16.
+Labels: multiplicative-expr, int, int:Signed16, optional-type, DecimalNumber, unary-minus, numeric-nil-lifting
+
+public function main() {
+    int:Signed16? a = 32767;
+    int:Signed16? b = -0;
+
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 6 for integer division panic on division by zero, for optional int:Signed16.
+Labels: multiplicative-expr, int, int:Signed16, optional-type, DecimalNumber, numeric-nil-lifting
+
+public function main() {
+    int:Signed16? a = 3276;
+    int:Signed16? b = 0;
+
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 7 for integer division panic on division by zero.
+Labels: multiplicative-expr, int, int:Signed16, optional-type, DecimalNumber, int:MIN_VALUE, numeric-nil-lifting, unary-minus
+
+public function main() {
+    int:Signed16? a = -0;
+    int? b = int:MIN_VALUE / a; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test panic on integer division overflow with int:Signed16.
+Labels: multiplicative-expr, int, int:Signed16, optional-type, DecimalNumber, int:MIN_VALUE, numeric-nil-lifting, unary-minus
+
+public function main() {
+    int? a = int:MIN_VALUE;
+    int:Signed16? b = -1;
+    int? c = a / b; // @panic integer overflow on division
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, for positive non-zero integers, for optional int:Signed32.
+Labels: multiplicative-expr, int:Signed32, optional-type, DecimalNumber, nil-literal, value:toBalString, unary-minus, numeric-nil-lifting
+
+public function main() {
+    int:Signed32? a = 1;
+    int:Signed32? b = 2;
+    int:Signed32? c = 10;
+    int:Signed32? d = 1000;
+    int:Signed32? e = 2147483647;
+    int:Signed32? f = ();
+
+    io:println(a / a); // @output 1
+    io:println(a / b); // @output 0
+    io:println(a / c); // @output 0
+    io:println(a / d); // @output 0
+    io:println(a / e); // @output 0
+    io:println((a / f).toBalString()); // @output ()
+
+    io:println(b / a); // @output 2
+    io:println(b / b); // @output 1
+    io:println(b / c); // @output 0
+    io:println(b / d); // @output 0
+    io:println(b / e); // @output 0
+    io:println((b / f).toBalString()); // @output ()
+
+    io:println(c / a); // @output 10
+    io:println(c / b); // @output 5
+    io:println(c / c); // @output 1
+    io:println(c / d); // @output 0
+    io:println(c / e); // @output 0
+    io:println((c / f).toBalString()); // @output ()
+
+    io:println(d / a); // @output 1000
+    io:println(d / b); // @output 500
+    io:println(d / c); // @output 100
+    io:println(d / d); // @output 1
+    io:println(d / e); // @output 0
+    io:println((d / f).toBalString()); // @output ()
+
+    io:println(e / a); // @output 2147483647
+    io:println(e / b); // @output 1073741823
+    io:println(e / c); // @output 214748364
+    io:println(e / d); // @output 2147483
+    io:println(e / e); // @output 1
+    io:println((e / f).toBalString()); // @output ()
+
+    io:println((f / a).toBalString()); // @output ()
+    io:println((f / b).toBalString()); // @output ()
+    io:println((f / c).toBalString()); // @output ()
+    io:println((f / d).toBalString()); // @output ()
+    io:println((f / e).toBalString()); // @output ()
+    io:println((f / f).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, for negative non-zero integers, for optional int:Signed32.
+Labels: multiplicative-expr, int:Signed32, optional-type, DecimalNumber, nil-literal, value:toBalString, unary-minus, numeric-nil-lifting
+
+public function main() {
+    int:Signed32? a = -1;
+    int:Signed32? b = -2;
+    int:Signed32? c = -100;
+    int:Signed32? d = -20000;
+    int:Signed32? e = -2147483648;
+    int:Signed32? f = ();
+
+    io:println(a / a); // @output 1
+    io:println(a / b); // @output 0
+    io:println(a / c); // @output 0
+    io:println(a / d); // @output 0
+    io:println(a / e); // @output 0
+    io:println((a / f).toBalString()); // @output ()
+
+    io:println(b / a); // @output 2
+    io:println(b / b); // @output 1
+    io:println(b / c); // @output 0
+    io:println(b / d); // @output 0
+    io:println(b / e); // @output 0
+    io:println((b / f).toBalString()); // @output ()
+
+    io:println(c / a); // @output 100
+    io:println(c / b); // @output 50
+    io:println(c / c); // @output 1
+    io:println(c / d); // @output 0
+    io:println(c / e); // @output 0
+    io:println((c / f).toBalString()); // @output ()
+
+    io:println(d / a); // @output 20000
+    io:println(d / b); // @output 10000
+    io:println(d / c); // @output 200
+    io:println(d / d); // @output 1
+    io:println(d / e); // @output 0
+    io:println((d / f).toBalString()); // @output ()
+
+    io:println(e / a); // @output 2147483648
+    io:println(e / b); // @output 1073741824
+    io:println(e / c); // @output 21474836
+    io:println(e / d); // @output 107374
+    io:println(e / e); // @output 1
+    io:println((e / f).toBalString()); // @output ()
+
+    io:println((f / a).toBalString()); // @output ()
+    io:println((f / b).toBalString()); // @output ()
+    io:println((f / c).toBalString()); // @output ()
+    io:println((f / d).toBalString()); // @output ()
+    io:println((f / e).toBalString()); // @output ()
+    io:println((f / f).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, where one operand is negative
+             and the other is positive, for optional int:Signed32.
+Labels: multiplicative-expr, int:Signed32, optional-type, DecimalNumber, unary-minus, numeric-nil-lifting
+
+public function main() {
+    int:Signed32? a = -2147483648;
+    int:Signed32? b = -200;
+    int:Signed32? c = -1;
+    int:Signed32? d = 1;
+    int:Signed32? e = 200;
+    int:Signed32? f = 2147483647;
+
+    io:println(a / d); // @output -2147483648
+    io:println(a / e); // @output -10737418
+    io:println(a / f); // @output -1
+
+    io:println(b / d); // @output -200
+    io:println(b / e); // @output -1
+    io:println(b / f); // @output 0
+
+    io:println(c / d); // @output -1
+    io:println(c / e); // @output 0
+    io:println(c / f); // @output 0
+
+    io:println(d / a); // @output 0
+    io:println(d / b); // @output 0
+    io:println(d / c); // @output -1
+
+    io:println(e / a); // @output 0
+    io:println(e / b); // @output -1
+    io:println(e / c); // @output -200
+
+    io:println(f / a); // @output 0
+    io:println(f / b); // @output -10737418
+    io:println(f / c); // @output -2147483647
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, where at least one operand is zero, for optional int:Signed32.
+Labels: multiplicative-expr, int:Signed32, optional-type, DecimalNumber, nil-literal, value:toBalString, unary-minus, numeric-nil-lifting
+
+public function main() {
+    int:Signed32? a = -2147483648;
+    int:Signed32? b = -12342340;
+    int:Signed32? c = -1;
+    int:Signed32? d = -0;
+    int:Signed32? e = 0;
+    int:Signed32? f = 1;
+    int:Signed32? g = 139456264;
+    int:Signed32? h = 2147483647;
+    int:Signed32? i = ();
+
+    io:println(d / a); // @output 0
+    io:println(d / b); // @output 0
+    io:println(d / c); // @output 0
+    io:println(d / f); // @output 0
+    io:println(d / g); // @output 0
+    io:println(d / h); // @output 0
+    io:println((d / i).toBalString()); // @output ()
+
+    io:println(e / a); // @output 0
+    io:println(e / b); // @output 0
+    io:println(e / c); // @output 0
+    io:println(e / f); // @output 0
+    io:println(e / g); // @output 0
+    io:println(e / h); // @output 0
+    io:println((e / i).toBalString()); // @output ()
+
+    io:println((i / d).toBalString()); // @output ()
+    io:println((i / e).toBalString()); // @output ()
+}
+
+Test-Case: panic
+Description: Test 1 for integer division panic on division by zero, for optional int:Signed32.
+Labels: multiplicative-expr, int, int:Signed32, optional-type, DecimalNumber, unary-minus, numeric-nil-lifting
+
+public function main() {
+    int:Signed32? a = -2147483648;
+    int:Signed32 b = -0;
+
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 2 for integer division panic on division by zero, for optional int:Signed32.
+Labels: multiplicative-expr, int, int:Signed32, optional-type, DecimalNumber, unary-minus, numeric-nil-lifting
+
+public function main() {
+    int:Signed32? a = -2147483647;
+    int:Signed32? b = 0;
+
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 3 for integer division panic on division by zero, for optional int:Signed32.
+Labels: multiplicative-expr, int, int:Signed32, optional-type, DecimalNumber, unary-minus, numeric-nil-lifting
+
+public function main() {
+    int:Signed32 a = -0;
+    int:Signed32? b = 0;
+
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 4 for integer division panic on division by zero, for optional int:Signed32.
+Labels: multiplicative-expr, int, int:Signed32, optional-type, DecimalNumber, unary-minus, numeric-nil-lifting
+
+public function main() {
+    int:Signed32? a = 0;
+    int:Signed32? b = -0;
+
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 5 for integer division panic on division by zero, for optional int:Signed32.
+Labels: multiplicative-expr, int, int:Signed32, optional-type, DecimalNumber, unary-minus, numeric-nil-lifting
+
+public function main() {
+    int:Signed32? a = 2147483647;
+    int:Signed32? b = -0;
+
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 6 for integer division panic on division by zero, for optional int:Signed32.
+Labels: multiplicative-expr, int, int:Signed32, optional-type, DecimalNumber, numeric-nil-lifting
+
+public function main() {
+    int:Signed32? a = 2147483610;
+    int:Signed32? b = 0;
+
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 7 for integer division panic on division by zero.
+Labels: multiplicative-expr, int, int:Signed32, optional-type, DecimalNumber, int:MIN_VALUE, numeric-nil-lifting, unary-minus
+
+public function main() {
+    int:Signed32? a = -0;
+    int? b = int:MIN_VALUE / a; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test panic on integer division overflow with int:Signed32.
+Labels: multiplicative-expr, int, int:Signed32, optional-type, DecimalNumber, int:MIN_VALUE, numeric-nil-lifting, unary-minus
+
+public function main() {
+    int? a = int:MIN_VALUE;
+    int:Signed32? b = -1;
+    int? c = a / b; // @panic integer overflow on division
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, for positive non-zero integers,
+             for user-defined subtype of optional int.
+Labels: multiplicative-expr, union-type, DecimalNumber, nil-literal, unary-minus, module-type-defn, optional-type, numeric-nil-lifting
+
+type Ints -2|-1|0|1|2;
+
+public function main() {
+    Ints? a = 1;
+    Ints? b = 2;
+    Ints? c = ();
+
+    io:println(a / a); // @output 1
+    io:println(a / b); // @output 0
+    io:println((a / c).toBalString()); // @output ()
+
+    io:println(b / a); // @output 2
+    io:println(b / b); // @output 1
+    io:println((b / c).toBalString()); // @output ()
+
+    io:println((c / a).toBalString()); // @output ()
+    io:println((c / b).toBalString()); // @output ()
+    io:println((c / c).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, for negative non-zero integers,
+             for user-defined subtype of optional int.
+Labels: multiplicative-expr, union-type, DecimalNumber, nil-literal, unary-minus, module-type-defn, optional-type, numeric-nil-lifting
+
+type Ints -2|-1|0|1|2;
+
+public function main() {
+    Ints? a = -1;
+    Ints? b = -2;
+    Ints? c = ();
+
+    io:println(a / a); // @output 1
+    io:println(a / b); // @output 0
+    io:println((a / c).toBalString()); // @output ()
+
+    io:println(b / a); // @output 2
+    io:println(b / b); // @output 1
+    io:println((b / c).toBalString()); // @output ()
+
+    io:println((c / a).toBalString()); // @output ()
+    io:println((c / b).toBalString()); // @output ()
+    io:println((c / c).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, where one operand is negative
+             and the other is positive, for user-defined subtype of optional int.
+Labels: multiplicative-expr, union-type, DecimalNumber, unary-minus, nil-literal, module-type-defn, optional-type, numeric-nil-lifting
+
+type Ints -2|-1|0|1|2?;
+
+public function main() {
+    Ints a = -1;
+    Ints b = -2;
+    Ints c = 1;
+    Ints d = 2;
+    Ints e = ();
+
+    io:println(a / c); // @output -1
+    io:println(a / d); // @output 0
+    io:println((a / e).toBalString()); // @output ()
+
+    io:println(b / c); // @output -2
+    io:println(b / d); // @output -1
+    io:println((b / e).toBalString()); // @output ()
+
+    io:println(c / a); // @output -1
+    io:println(c / b); // @output 0
+    io:println((c / e).toBalString()); // @output ()
+
+    io:println(d / a); // @output -2
+    io:println(d / b); // @output -1
+    io:println((d / e).toBalString()); // @output ()
+
+    io:println((e / a).toBalString()); // @output ()
+    io:println((e / b).toBalString()); // @output ()
+    io:println((e / c).toBalString()); // @output ()
+    io:println((e / d).toBalString()); // @output ()
+    io:println((e / e).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test integer division non-overflow scenarios, where one operand is zero, for
+             user-defined subtype of optional int.
+Labels: multiplicative-expr, union-type, DecimalNumber, unary-minus, nil-literal, module-type-defn, optional-type, numeric-nil-lifting
+
+type Ints -2|-1|0|1|2;
+
+public function main() {
+    Ints? a = -2;
+    Ints? b = -1;
+    Ints? c = -0;
+    Ints? d = 0;
+    Ints? e = 1;
+    Ints? f = 2;
+    Ints? g = ();
+
+    io:println(c / a); // @output 0
+    io:println(c / b); // @output 0
+    io:println(c / e); // @output 0
+    io:println(c / f); // @output 0
+    io:println((c / g).toBalString()); // @output ()
+
+    io:println(d / a); // @output 0
+    io:println(d / b); // @output 0
+    io:println(d / e); // @output 0
+    io:println(d / f); // @output 0
+    io:println((d / g).toBalString()); // @output ()
+
+    io:println((g / c).toBalString()); // @output ()
+    io:println((g / d).toBalString()); // @output ()
+}
+
+Test-Case: panic
+Description: Test 1 for integer division panic on division by zero, for user-defined subtype of optional int.
+Labels: multiplicative-expr, union-type, DecimalNumber, module-type-defn, optional-type, numeric-nil-lifting
+
+type Ints 0|1|2;
+
+public function main() {
+    Ints? a = 1;
+    Ints? b = 0;
+
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 1 for integer division panic on division by zero, for user-defined subtype of optional int.
+Labels: multiplicative-expr, union-type, DecimalNumber, unary-minus, module-type-defn, optional-type, numeric-nil-lifting
+
+type Ints -2|-1|0|1|2?;
+
+public function main() {
+    Ints a = -1;
+    Ints b = 0;
+    int? c = a / b; // @panic division by zero
+}
+
+Test-Case: panic
+Description: Test 1 for integer division overflow with user-defined subtype of optional int.
+Labels: multiplicative-expr, union-type, DecimalNumber, unary-minus, module-type-defn, optional-type,int:MIN_VALUE, numeric-nil-lifting
+
+type Ints -2|-1|0|1|2;
+
+public function main() {
+    int a = int:MIN_VALUE;
+    Ints? b = -1;
+    int? c = a / b; // @panic integer overflow on division
+}
+
+Test-Case: panic
+Description: Test 2 for integer division overflow with user-defined subtype of optional int.
+Labels: multiplicative-expr, union-type, DecimalNumber, unary-minus, module-type-defn, optional-type,int:MIN_VALUE, numeric-nil-lifting
+
+type Ints -2|-1|0|1|2;
+
+public function main() {
+    int? a = int:MIN_VALUE;
+    Ints? b = -1;
+    int? c = a / b; // @panic integer overflow on division
+}
+
+Test-Case: output
+Description: Test variable reference as integer division operands.
+Labels: multiplicative-expr, int, DecimalNumber, variable-reference-expr
+
+public function main() {
+    int a = 2;
+    int b = a / a;
+    io:println(b); // @output 1
+}
+
+Test-Case: output
+Description: Test field and member access as integer division operands.
+Labels: multiplicative-expr, int, DecimalNumber, record-type, mapping-constructor, array-type, list-constructor, module-type-defn
+
+public function main() {
+    Record c = {x: 10};
+    int[] d = [30, 40];
+    int e = d[0] / c.x;
+    io:println(e); // @output 3
+}
+
+type Record record {
+    int x;
+};
+
+Test-Case: output
+Description: Test function and method call as integer division operands.
+Labels: multiplicative-expr, int, DecimalNumber, function-call-expr, module-class-defn, implicit-new-expr, method-call-expr
+
+public function main() {
+    Class f = new;
+    int g = f.getInt() / getInt();
+    io:println(g); // @output 12
+}
+
+function getInt() returns int {
+    return 10 / 2;
+}
+
+class Class {
+    function getInt() returns int {
+        return 60;
+    }
+}
+
+Test-Case: output
+Description: Test let expression in integer division operands.
+Labels: multiplicative-expr, int, DecimalNumber, let-expr
+
+public function main() {
+    int h = (let int h1 = 40 / 4 in h1) / 5;
+    io:println(h); // @output 2
+}
+
+Test-Case: output
+Description: Test type cast expression in integer division operands.
+Labels: multiplicative-expr, int, DecimalNumber, type-cast-expr
+
+public function main() {
+    int i = <int> 16 / 8;
+    io:println(i); // @output 2
+}
+
+Test-Case: output
+Description: Test unary expressions in integer division operands.
+Labels: multiplicative-expr, int, DecimalNumber, unary-plus, unary-minus, unary-complement
+
+public function main() {
+    int k = +42 / -3;
+    io:println(k); // @output -14
+
+    int l = -(-20 / 5);
+    io:println(l); // @output 4
+
+    int m = ~(20 / 5);
+    io:println(m); // @output -5
+
+    int n = ~20 / 3;
+    io:println(n); // @output -7
+}
+
+Test-Case: output
+Description: Test 1 for multiplicative expression in integer division operands.
+Labels: multiplicative-expr, int, DecimalNumber
+
+public function main() {
+    int o = 808 / 404 % 10 * 4;
+    io:println(o); // @output 8
+}
+
+Test-Case: output
+Description: Test 2 for multiplicative expression in integer division operands.
+Labels: multiplicative-expr, int, DecimalNumber
+
+public function main() {
+    int o = 32 / (404 % 10 * 4);
+    io:println(o); // @output 2
+}
+
+Test-Case: output
+Description: Test additive expressions as integer division operands.
+Labels: multiplicative-expr, int, DecimalNumber, additive-expr
+
+public function main() {
+    int p = (1 + 20) / (3 + 4);
+    io:println(p); // @output 3
+}
+
+Test-Case: output
+Description: Test shift expressions as integer division operands.
+Labels: multiplicative-expr, int, DecimalNumber, shift-expr
+
+public function main() {
+    int p = (100 >> 4) / (1 << 2);
+    io:println(p); // @output 1
+}
+
+Test-Case: output
+Description: Test binary bitwise expressions as integer division operands.
+Labels: multiplicative-expr, int, DecimalNumber, binary-bitwise-expr
+
+public function main() {
+    int p = (2 & 6) / (2 ^ 6);
+    io:println(p); // @output 0
+}
+
+Test-Case: output
+Description: Test conditional expressions as integer division operands.
+Labels: multiplicative-expr, int, DecimalNumber, conditional-expr, nil-literal, union-type, error, optional-type, numeric-nil-lifting
+
+public function main() {
+    int|error a = 12;
+    int? b = ();
+    int c = (a is error ? 2 : a) / (b ?: 2);
+    io:println(c); // @output 6
+}
+
+Test-Case: output
+Description: Test checking expressions as integer division operands.
+Labels: multiplicative-expr, int, DecimalNumber, checking-expr, union-type, error
+
+public function main() returns error? {
+    int|error a = 12;
+    int c = check a / checkpanic a;
+    io:println(c); // @output 1
+}
+
+Test-Case: output
+Description: Test integer division with operands of different int subtypes.
+Labels: multiplicative-expr, int, DecimalNumber, byte, int:Signed8, int:Signed16,
+        int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, module-type-defn, union-type
+
+type Ints -9|9;
+
+public function main() returns error? {
+    int a = -1;
+    byte b = 2;
+    int:Signed8 c = -3;
+    int:Signed16 d = 4;
+    int:Signed32 e = -5;
+    int:Unsigned8 f = 6;
+    int:Unsigned16 g = 7;
+    int:Unsigned32 h = 8;
+    Ints i = -9;
+
+    int v = a / b;
+    io:println(v); // @output 0
+
+    v = a / c;
+    io:println(v); // @output 0
+
+    v = a / d;
+    io:println(v); // @output 0
+
+    v = a / e;
+    io:println(v); // @output 0
+
+    v = a / f;
+    io:println(v); // @output 0
+
+    v = a / g;
+    io:println(v); // @output 0
+
+    v = a / h;
+    io:println(v); // @output 0
+
+    v = a / i;
+    io:println(v); // @output 0
+
+    v = b / a;
+    io:println(v); // @output -2
+
+    v = b / c;
+    io:println(v); // @output 0
+
+    v = b / d;
+    io:println(v); // @output 0
+
+    v = b / e;
+    io:println(v); // @output 0
+
+    v = b / f;
+    io:println(v); // @output 0
+
+    v = b / g;
+    io:println(v); // @output 0
+
+    v = b / h;
+    io:println(v); // @output 0
+
+    v = b / i;
+    io:println(v); // @output 0
+
+    v = c / a;
+    io:println(v); // @output 3
+
+    v = c / b;
+    io:println(v); // @output -1
+
+    v = c / d;
+    io:println(v); // @output 0
+
+    v = c / e;
+    io:println(v); // @output 0
+
+    v = c / f;
+    io:println(v); // @output 0
+
+    v = c / g;
+    io:println(v); // @output 0
+
+    v = c / h;
+    io:println(v); // @output 0
+
+    v = c / i;
+    io:println(v); // @output 0
+
+    v = d / a;
+    io:println(v); // @output -4
+
+    v = d / b;
+    io:println(v); // @output 2
+
+    v = d / c;
+    io:println(v); // @output -1
+
+    v = d / e;
+    io:println(v); // @output 0
+
+    v = d / f;
+    io:println(v); // @output 0
+
+    v = d / g;
+    io:println(v); // @output 0
+
+    v = d / h;
+    io:println(v); // @output 0
+
+    v = d / i;
+    io:println(v); // @output 0
+
+    v = e / a;
+    io:println(v); // @output 5
+
+    v = e / b;
+    io:println(v); // @output -2
+
+    v = e / c;
+    io:println(v); // @output 1
+
+    v = e / d;
+    io:println(v); // @output -1
+
+    v = e / f;
+    io:println(v); // @output 0
+
+    v = e / g;
+    io:println(v); // @output 0
+
+    v = e / h;
+    io:println(v); // @output 0
+
+    v = e / i;
+    io:println(v); // @output 0
+
+    v = f / a;
+    io:println(v); // @output -6
+
+    v = f / b;
+    io:println(v); // @output 3
+
+    v = f / c;
+    io:println(v); // @output -2
+
+    v = f / d;
+    io:println(v); // @output 1
+
+    v = f / e;
+    io:println(v); // @output -1
+
+    v = f / g;
+    io:println(v); // @output 0
+
+    v = f / h;
+    io:println(v); // @output 0
+
+    v = f / i;
+    io:println(v); // @output 0
+
+    v = g / a;
+    io:println(v); // @output -7
+
+    v = g / b;
+    io:println(v); // @output 3
+
+    v = g / c;
+    io:println(v); // @output -2
+
+    v = g / d;
+    io:println(v); // @output 1
+
+    v = g / e;
+    io:println(v); // @output -1
+
+    v = g / f;
+    io:println(v); // @output 1
+
+    v = g / h;
+    io:println(v); // @output 0
+
+    v = g / i;
+    io:println(v); // @output 0
+
+    v = h / a;
+    io:println(v); // @output -8
+
+    v = h / b;
+    io:println(v); // @output 4
+
+    v = h / c;
+    io:println(v); // @output -2
+
+    v = h / d;
+    io:println(v); // @output 2
+
+    v = h / e;
+    io:println(v); // @output -1
+
+    v = h / f;
+    io:println(v); // @output 1
+
+    v = h / g;
+    io:println(v); // @output 1
+
+    v = h / i;
+    io:println(v); // @output 0
+
+    v = i / a;
+    io:println(v); // @output 9
+
+    v = i / b;
+    io:println(v); // @output -4
+
+    v = i / c;
+    io:println(v); // @output 3
+
+    v = i / d;
+    io:println(v); // @output -2
+
+    v = i / e;
+    io:println(v); // @output 1
+
+    v = i / f;
+    io:println(v); // @output -1
+
+    v = i / g;
+    io:println(v); // @output -1
+
+    v = i / h;
+    io:println(v); // @output -1
+}
+
+Test-Case: output
+Description: Test 1 for integer division with operands of different optional int subtypes.
+Labels: multiplicative-expr, int, DecimalNumber, byte, int:Signed8, int:Signed16, 
+        int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, nil-literal, module-type-defn, union-type, optional-type, value:toBalString, numeric-nil-lifting
+
+type Ints -9|9;
+
+public function main() returns error? {
+    int? a = -1;
+    byte? b = 2;
+    int:Signed8? c = -3;
+    int:Signed16? d = 4;
+    int:Signed32? e = -5;
+    int:Unsigned8? f = 6;
+    int:Unsigned16? g = 7;
+    int:Unsigned32? h = 8;
+    Ints? i = -9;
+    int? j = ();
+
+    int? v = a / b;
+    io:println(v); // @output 0
+
+    v = a / c;
+    io:println(v); // @output 0
+
+    v = a / d;
+    io:println(v); // @output 0
+
+    v = a / e;
+    io:println(v); // @output 0
+
+    v = a / f;
+    io:println(v); // @output 0
+
+    v = a / g;
+    io:println(v); // @output 0
+
+    v = a / h;
+    io:println(v); // @output 0
+
+    v = a / i;
+    io:println(v); // @output 0
+
+    v = a / j;
+    io:println(v.toBalString()); // @output ()
+
+    v = b / a;
+    io:println(v); // @output -2
+
+    v = b / c;
+    io:println(v); // @output 0
+
+    v = b / d;
+    io:println(v); // @output 0
+
+    v = b / e;
+    io:println(v); // @output 0
+
+    v = b / f;
+    io:println(v); // @output 0
+
+    v = b / g;
+    io:println(v); // @output 0
+
+    v = b / h;
+    io:println(v); // @output 0
+
+    v = b / i;
+    io:println(v); // @output 0
+
+    v = b / j;
+    io:println(v.toBalString()); // @output ()
+
+    v = c / a;
+    io:println(v); // @output 3
+
+    v = c / b;
+    io:println(v); // @output -1
+
+    v = c / d;
+    io:println(v); // @output 0
+
+    v = c / e;
+    io:println(v); // @output 0
+
+    v = c / f;
+    io:println(v); // @output 0
+
+    v = c / g;
+    io:println(v); // @output 0
+
+    v = c / h;
+    io:println(v); // @output 0
+
+    v = c / i;
+    io:println(v); // @output 0
+
+    v = c / j;
+    io:println(v.toBalString()); // @output ()
+
+    v = d / a;
+    io:println(v); // @output -4
+
+    v = d / b;
+    io:println(v); // @output 2
+
+    v = d / c;
+    io:println(v); // @output -1
+
+    v = d / e;
+    io:println(v); // @output 0
+
+    v = d / f;
+    io:println(v); // @output 0
+
+    v = d / g;
+    io:println(v); // @output 0
+
+    v = d / h;
+    io:println(v); // @output 0
+
+    v = d / i;
+    io:println(v); // @output 0
+
+    v = d / j;
+    io:println(v.toBalString()); // @output ()
+
+    v = e / a;
+    io:println(v); // @output 5
+
+    v = e / b;
+    io:println(v); // @output -2
+
+    v = e / c;
+    io:println(v); // @output 1
+
+    v = e / d;
+    io:println(v); // @output -1
+
+    v = e / f;
+    io:println(v); // @output 0
+
+    v = e / g;
+    io:println(v); // @output 0
+
+    v = e / h;
+    io:println(v); // @output 0
+
+    v = e / i;
+    io:println(v); // @output 0
+
+    v = e / j;
+    io:println(v.toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test 2 for integer division with operands of different optional int subtypes.
+Labels: multiplicative-expr, int, DecimalNumber, byte, int:Signed8, int:Signed16, 
+        int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, nil-literal, module-type-defn, union-type, optional-type, value:toBalString, numeric-nil-lifting
+
+type Ints -9|9;
+
+public function main() returns error? {
+    int? a = -1;
+    byte? b = 2;
+    int:Signed8? c = -3;
+    int:Signed16? d = 4;
+    int:Signed32? e = -5;
+    int:Unsigned8? f = 6;
+    int:Unsigned16? g = 7;
+    int:Unsigned32? h = 8;
+    Ints? i = -9;
+    int? j = ();
+
+    int? v = f / a;
+    io:println(v); // @output -6
+
+    v = f / b;
+    io:println(v); // @output 3
+
+    v = f / c;
+    io:println(v); // @output -2
+
+    v = f / d;
+    io:println(v); // @output 1
+
+    v = f / e;
+    io:println(v); // @output -1
+
+    v = f / g;
+    io:println(v); // @output 0
+
+    v = f / h;
+    io:println(v); // @output 0
+
+    v = f / i;
+    io:println(v); // @output 0
+
+    v = f / j;
+    io:println(v.toBalString()); // @output ()
+
+    v = g / a;
+    io:println(v); // @output -7
+
+    v = g / b;
+    io:println(v); // @output 3
+
+    v = g / c;
+    io:println(v); // @output -2
+
+    v = g / d;
+    io:println(v); // @output 1
+
+    v = g / e;
+    io:println(v); // @output -1
+
+    v = g / f;
+    io:println(v); // @output 1
+
+    v = g / h;
+    io:println(v); // @output 0
+
+    v = g / i;
+    io:println(v); // @output 0
+
+    v = g / j;
+    io:println(v.toBalString()); // @output ()
+
+    v = h / a;
+    io:println(v); // @output -8
+
+    v = h / b;
+    io:println(v); // @output 4
+
+    v = h / c;
+    io:println(v); // @output -2
+
+    v = h / d;
+    io:println(v); // @output 2
+
+    v = h / e;
+    io:println(v); // @output -1
+
+    v = h / f;
+    io:println(v); // @output 1
+
+    v = h / g;
+    io:println(v); // @output 1
+
+    v = h / i;
+    io:println(v); // @output 0
+
+    v = h / j;
+    io:println(v.toBalString()); // @output ()
+
+    v = i / a;
+    io:println(v); // @output 9
+
+    v = i / b;
+    io:println(v); // @output -4
+
+    v = i / c;
+    io:println(v); // @output 3
+
+    v = i / d;
+    io:println(v); // @output -2
+
+    v = i / e;
+    io:println(v); // @output 1
+
+    v = i / f;
+    io:println(v); // @output -1
+
+    v = i / g;
+    io:println(v); // @output -1
+
+    v = i / h;
+    io:println(v); // @output -1
+
+    v = i / j;
+    io:println(v.toBalString()); // @output ()
+
+    v = j / a;
+    io:println(v.toBalString()); // @output ()
+
+    v = j / b;
+    io:println(v.toBalString()); // @output ()
+
+    v = j / c;
+    io:println(v.toBalString()); // @output ()
+
+    v = j / d;
+    io:println(v.toBalString()); // @output ()
+
+    v = j / e;
+    io:println(v.toBalString()); // @output ()
+
+    v = j / f;
+    io:println(v.toBalString()); // @output ()
+
+    v = j / g;
+    io:println(v.toBalString()); // @output ()
+
+    v = j / h;
+    io:println(v.toBalString()); // @output ()
+
+    v = j / i;
+    io:println(v.toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test integer division where at least one operand is of an int subtype union.
+Fail-Issue: ballerina-platform/ballerina-lang#32912
+Labels: multiplicative-expr, int, DecimalNumber, byte, int:Signed8, int:Signed16,
+        int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, module-type-defn, union-type
+
+type T1 1|2;
+
+type T2 int:Signed16|int:Signed32|int:Unsigned8|int:MAX_VALUE;
+
+type T3 int:Unsigned16|int:Unsigned32|byte|int:Signed8;
+
+type T4 T1|T2;
+
+public function main() {
+    T1 a = 1;
+    T2 b = 2;
+    T3 c = 3;
+    T4 d = 4;
+
+    int v = 2 / a;
+    io:println(v); // @output 2
+
+    v = 2 / b;
+    io:println(v); // @output 1
+
+    v = 2 / c;
+    io:println(v); // @output 0
+
+    v = 2 / d;
+    io:println(v); // @output 0
+
+    v = a / a;
+    io:println(v); // @output 1
+
+    v = a / b;
+    io:println(v); // @output 0
+
+    v = a / c;
+    io:println(v); // @output 0
+
+    v = a / d;
+    io:println(v); // @output 0
+
+    v = b / b;
+    io:println(v); // @output 1
+
+    v = b / c;
+    io:println(v); // @output 0
+
+    v = b / d;
+    io:println(v); // @output 0
+
+    v = c / c;
+    io:println(v); // @output 1
+
+    v = c / d;
+    io:println(v); // @output 0
+
+    v = d / d;
+    io:println(v); // @output 1
+}
+
+Test-Case: output
+Description: Test integer division with optional int operand's type written in different ways.
+Labels: multiplicative-expr, int, DecimalNumber, nil-literal, optional-type, module-type-defn, union-type, value:toBalString
+
+type T1 1|()|2;
+
+type T2 1|2?;
+
+public function main() {
+    T1 a = 1;
+    T2 b = 2;
+    ()|int c = ();
+
+    int? v = a / a;
+    io:println(v); // @output 1
+
+    v = a / b;
+    io:println(v); // @output 0
+
+    v = a / c;
+    io:println(v.toBalString()); // @output ()
+
+    v = b / b;
+    io:println(v); // @output 1
+
+    v = b / c;
+    io:println(v.toBalString()); // @output ()
+
+    v = c / c;
+    io:println(v.toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test integer division with HexIntLiterals.
+Labels: multiplicative-expr, int, DecimalNumber, HexIntLiteral
+
+public function main() {
+    int a = 0xdef;
+    int b = a / 0x12;
+    io:println(b); // @output 198
+    io:println(a / 18); // @output 198
+    io:println(0Xdef / 18); // @output 198
+}
