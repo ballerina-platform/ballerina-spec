@@ -757,3 +757,41 @@ function init() returns error? {
     io:println(u.toBalString()); // @output xml`hello world`
     io:println(check s + check t + checkpanic s); // @output hello worldhello
 }
+
+Test-Case: output
+Description: Test xml concatenation with string values with NumericEscape.
+Labels: additive-expr, xml, string, StringNumericEscape
+
+public function main() {
+    xml a = xml `foo`;
+    xml b = xml `<!--bar-->`;
+    string c = "a\u{0040}b";
+    string d = "\u{1E41}";
+
+    xml f = a + c + b + d;
+    io:println(f); // @output fooa@b<!--bar-->ṁ
+
+    io:println(a + c); // @output fooa@b
+
+    io:println(d + b); // @output ṁ<!--bar-->
+}
+
+Test-Case: output
+Description: Test xml concatenation with string values with StringSingleEscape.
+Labels: additive-expr, xml, string, StringSingleEscape, value:toBalString
+
+public function main() {
+    xml a = xml `foo`;
+    xml b = xml `<!--bar-->`;
+    string c = "a\nb";
+    string d = "\\";
+
+    xml f = c + a + b + d;
+    io:println(f); // @output a
+                   // @output bfoo<!--bar-->\
+
+    io:println(a + c); // @output fooa
+                       // @output b 
+
+    io:println(d + b); // @output \<!--bar-->
+}
