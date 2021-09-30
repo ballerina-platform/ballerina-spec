@@ -2595,7 +2595,6 @@ public function main() {
 
 Test-Case: output
 Description: Test using additive expression at module level.
-Fail-Issue: commented on the PR
 Labels: additive-expr, DecimalNumber, int, is-expr, module-const-decl, module-var-decl, optional-type, var,
         value:toBalString
 
@@ -2704,6 +2703,15 @@ public function main() {
 }
 
 Test-Case: output
+Description: Test precedence and associativity with additive expression.
+Labels: additive-expr, binary-bitwise-expr, int, DecimalNumber, multiplicative-expr
+
+public function main() {
+    int a = 2 + 3 * 5 / 12 & 1 - 2 % 3 | 2 + 12;
+    io:println(a); // @output 15
+}
+
+Test-Case: output
 Description: Test multiplicative expressions as integer subtraction operands.
 Labels: additive-expr, DecimalNumber, int, multiplicative-expr
 
@@ -2767,4 +2775,81 @@ Labels: additive-expr, int, int:MAX_VALUE, int:UNSIGNED8_MAX_VALUE
 public function main() {
     int a = int:UNSIGNED8_MAX_VALUE - int:MAX_VALUE;
     io:println(a); // @output -9223372036854775552
+}
+
+Test-Case: error
+Description: Test assigning the result of integer addition to an incompatible type.
+Labels: additive-expr, DecimalNumber, decimal, float, function-call-expr, int, var
+
+public function main(int a, int b) {
+    float _ = a - b; // @error static type of additive-expr with int operands is int
+
+    var a1 = 1 - a;
+    decimal _ = a1; // @error static type of additive-expr with int operands is int
+
+    var a2 = getInt(12 - 2) - b;
+    float _ = a2; // @error static type of additive-expr with int operands is int
+}
+
+function getInt(int i) returns int {
+    return i - 1;
+}
+
+Test-Case: error
+Description: Test assigning the result of integer addition with int? to an incompatible type.
+Labels: additive-expr, DecimalNumber, function-call-expr, int, numeric-nil-lifting, optional-type
+
+public function main(int a, int? b) {
+    int _ = a - b; // @error static type of additive-expr with at least one int? operand is int?
+    int _ = getOptionalInt(1 - 2) - b; // @error static type of additive-expr with at least one int? operand is int?
+    int _ = b - getOptionalInt(1 - 2); // @error static type of additive-expr with at least one int? operand is int?
+    int _ = b - getInt(1); // @error static type of additive-expr with at least one int? operand is int?
+}
+
+function getInt(int i) returns int {
+    return i - 1;
+}
+
+function getOptionalInt(int? i) returns int? {
+    return i - 1;
+}
+
+Test-Case: error
+Description: Test assigning the result of integer addition to a subtype of int.
+Labels: additive-expr, byte, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8,
+        int:Unsigned16, int:Unsigned32, module-type-defn
+
+type Ints 1|2;
+
+public function main(int:Signed8 a, int:Signed16 b, int:Signed32 c, int:Unsigned8 d, int:Unsigned16 e,
+                     int:Unsigned32 f, byte g, Ints h) {
+
+    int:Signed8 _ = a - a; // @error static type of additive-expr with operands of int subtypes is int
+    int:Signed16 _ = b - b; // @error static type of additive-expr with operands of int subtypes is int
+    int:Signed32 _ = c - c; // @error static type of additive-expr with operands of int subtypes is int
+    int:Unsigned8 _ = d - d; // @error static type of additive-expr with operands of int subtypes is int
+    byte _ = b - g; // @error static type of additive-expr with operands of int subtypes is int
+    int:Unsigned16 _ = e - e; // @error static type of additive-expr with operands of int subtypes is int
+    int:Unsigned32 _ = f - f; // @error static type of additive-expr with operands of int subtypes is int
+    Ints _ = d - h; // @error static type of additive-expr with operands of int subtypes is int
+}
+
+Test-Case: error
+Description: Test assigning the result of addition of nillable integers to a subtype of int?.
+Labels: additive-expr, byte, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8,
+        int:Unsigned16, int:Unsigned32, module-type-defn, optional-type
+
+type Ints 1|2;
+
+public function main(int:Signed8? a, int:Signed16? b, int:Signed32? c, int:Unsigned8? d, int:Unsigned16? e,
+                     int:Unsigned32? f, byte? g, Ints? h) {
+
+    int:Signed8? _ = a - a; // @error static type of additive-expr with at least one operand of subtype of int? is int?
+    int:Signed16? _ = b - b; // @error static type of additive-expr with at least one operand of subtype of int? is int?
+    int:Signed32? _ = c - c; // @error static type of additive-expr with at least one operand of subtype of int? is int?
+    int:Unsigned8? _ = d - d; // @error static type of additive-expr with at least one operand of subtype of int? is int?
+    byte? _ = b - g; // @error static type of additive-expr with at least one operand of subtype of int? is int?
+    int:Unsigned16? _ = e - e; // @error static type of additive-expr with at least one operand of subtype of int? is int?
+    int:Unsigned32? _ = f - f; // @error static type of additive-expr with at least one operand of subtype of int? is int?
+    Ints? _ = d - h; // @error static type of additive-expr with at least one operand of subtype of int? is int?
 }
