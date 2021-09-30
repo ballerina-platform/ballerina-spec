@@ -1,0 +1,510 @@
+Test-Case: error
+Description: Test invalid concatenation with string.
+Labels: additive-expr, string, int, nil-type, array-type
+
+function testFunction(string a, int b, () c, string[] d) {
+    string _ = a + b; // @error cannot concatenate string and int
+    string _ = a + c; // @error cannot concatenate string and nil
+    string _ = a + d; // @error cannot concatenate string and array
+    string _ = b + a + a; // @error cannot concatenate string and int
+    string _ = c + a; // @error cannot concatenate string and nil
+    string _ = d + a; // @error cannot concatenate string and array
+}
+
+Test-Case: error
+Description: Test invalid static type of string concatenation.
+Labels: additive-expr, string, int
+
+function testFunction(string a, string b) {
+    int _ = a + b; // @error static type of string concatenation is string
+    int _ = a + b + a; // @error static type of string concatenation is string
+}
+
+Test-Case: error
+Description: Test invalid static type of string concatenation with string:Char.
+Labels: additive-expr, string, int, string:Char
+
+function testFunction(string a, string:Char b) {
+    int _ = a + b; // @error static type of string concatenation is string
+    string:Char _ = b + b; // @error static type of string concatenation is string
+    string:Char _ = b + a; // @error static type of string concatenation is string
+    string:Char _ = b + a + a; // @error static type of string concatenation is string
+}
+
+Test-Case: error
+Description: Test invalid static type of user-defined string subtype concatenation with string and string:Char.
+Labels: additive-expr, string, int, string:Char, module-type-defn, union-type
+
+type Strings "A"|"foo";
+type Chars "A"|"B";
+
+function testFunction(string a, string:Char b, Strings c, Chars d) {
+    Strings _ = a + c; // @error static type of string concatenation is string
+    Strings _ = b + c; // @error static type of string concatenation is string
+    string:Char _ = d + c; // @error static type of string concatenation is string
+    int _ = c + a; // @error static type of string concatenation is string
+    string:Char _i = c + b; // @error static type of string concatenation is string
+    Strings _ = c + d; // @error static type of string concatenation is string
+    Strings _ = c + c; // @error static type of string concatenation is string
+    Chars _ = a + d; // @error static type of string concatenation is string
+    Chars _ = b + d; // @error static type of string concatenation is string
+    int _ = d + a; // @error static type of string concatenation is string
+    string:Char _ = d + b; // @error static type of string concatenation is string
+    Chars _ = d + d; // @error static type of string concatenation is string
+    Chars _ = d + d + d; // @error static type of string concatenation is string
+}
+
+Test-Case: error
+Description: Test invalid optional string concatenation.
+Labels: additive-expr, string, optional-type
+
+function testFunction(string? a, string? b, string c) {
+    string _ = a + b; // @error cannot concatenate optional strings
+    string? _ = a + b; // @error cannot concatenate optional strings
+    string _ = a + c; // @error cannot concatenate string and optional string
+    string _ = c + a + c; // @error cannot concatenate string and optional string
+}
+
+Test-Case: error
+Description: Test invalid optional string:Char concatenation.
+Labels: additive-expr, string, string:Char, optional-type
+
+function testFunction(string:Char? a, string:Char? b, string:Char c) {
+    string:Char _ = a + b; // @error cannot concatenate optional strings
+    string:Char? _ = a + b; // @error cannot concatenate optional strings
+    string:Char _ = a + c; // @error cannot concatenate string and optional string
+    string:Char _ = a + a + c + c; // @error cannot concatenate string and optional string
+}
+
+Test-Case: error
+Description: Test invalid optional user-defined string type concatenation.
+Labels: additive-expr, string, string:Char, optional-type
+
+type Strings "a"|"bc";
+
+function testFunction(Strings? a, Strings? b, Strings c) {
+    Strings _ = a + b; // @error cannot concatenate optional strings
+    Strings? _ = a + b; // @error cannot concatenate optional strings
+    Strings _ = a + c; // @error cannot concatenate string and optional string
+    Strings _ = a + c + b; // @error cannot concatenate string and optional string
+}
+
+Test-Case: error
+Description: Test string concatenation static type via invalid assignment with var.
+Labels: additive-expr, string, string:Char, int, union-type, module-type-defn, var
+
+type Strings "a"|"bc";
+
+function testFunction(string a, string:Char b, Strings c) {
+    var d = a + a;
+    int v1 = d; // @error incompatible types: expected int found string
+    string:Char v2 = d; // @error incompatible types: expected string:Char found string
+
+    var e = a + b;
+    v1 = e; // @error incompatible types: expected int found string
+    v2 = e; // @error incompatible types: expected string:Char found string
+
+    var f = a + c;
+    v1 = f; // @error incompatible types: expected int found string
+    v2 = f; // @error incompatible types: expected string:Char found string
+
+    var g = b + a;
+    v1 = g; // @error incompatible types: expected int found string
+    v2 = g; // @error incompatible types: expected string:Char found string
+
+    var h = b + b;
+    v1 = h; // @error incompatible types: expected int found string
+    v2 = h; // @error incompatible types: expected string:Char found string
+
+    var i = b + c;
+    v1 = i; // @error incompatible types: expected int found string
+    v2 = i; // @error incompatible types: expected string:Char found string
+
+    var j = c + a;
+    v1 = j; // @error incompatible types: expected int found string
+    v2 = j; // @error incompatible types: expected string:Char found string
+
+    var k = c + b;
+    v1 = k; // @error incompatible types: expected int found string
+    v2 = k; // @error incompatible types: expected string:Char found string
+
+    var l = c + c;
+    v1 = l; // @error incompatible types: expected int found string
+    v2 = l; // @error incompatible types: expected string:Char found string
+}
+
+Test-Case: output
+Description: Test string concatenation.
+Labels: additive-expr, string, value:toBalString
+
+function init() {
+    string a = "";
+    string b = "hello ";
+    string c = " world";
+    string d = " from ballerina ";
+
+    string s = a + a;
+    printString(s); // @output ""
+    printString(a + b); // @output "hello "
+    printString(a + c); // @output " world"
+    printString(a + d); // @output " from ballerina "
+
+    printString(b + a); // @output "hello "
+    printString(b + b); // @output "hello hello "
+    printString(b + c); // @output "hello  world"
+    printString(b + d); // @output "hello  from ballerina "
+
+    printString(c + a); // @output " world"
+    printString(c + b); // @output " worldhello "
+    printString(c + c); // @output " world world"
+    printString(c + d); // @output " world from ballerina "
+
+    printString(d + a); // @output " from ballerina "
+    printString(d + b); // @output " from ballerina hello "
+    printString(d + c); // @output " from ballerina  world"
+    printString(d + d); // @output " from ballerina  from ballerina "
+}
+
+function printString(string s) {
+    io:println(s.toBalString());
+}
+
+Test-Case: output
+Description: Test string concatenation with string:Char.
+Labels: additive-expr, string, string:Char, value:toBalString
+
+function init() {
+    string:Char a = "_";
+    string:Char b = "x";
+    string:Char c = " ";
+    string:Char d = "y";
+
+    string s = a + a;
+    printString(s); // @output "__"
+    printString(a + b); // @output "_x"
+    printString(a + c); // @output "_ "
+    printString(a + d); // @output "_y"
+
+    printString(b + a); // @output "x_"
+    printString(b + b); // @output "xx"
+    printString(b + c); // @output "x "
+    printString(b + d); // @output "xy"
+
+    printString(c + a); // @output " _"
+    printString(c + b); // @output " x"
+    printString(c + c); // @output "  "
+    printString(c + d); // @output " y"
+
+    printString(d + a); // @output "y_"
+    printString(d + b); // @output "yx"
+    printString(d + c); // @output "y "
+    printString(d + d); // @output "yy"
+}
+
+function printString(string s) {
+    io:println(s.toBalString());
+}
+
+Test-Case: output
+Description: Test string concatenation with user-defined subtype of string.
+Labels: additive-expr, string, value:toBalString, module-type-defn, union-type
+
+type Chars "a"|"b";
+type Strings "c"|"de";
+
+function init() {
+    Chars a = "a";
+    Chars b = "b";
+    Strings c = "c";
+    Strings d = "de";
+
+    string s = a + a;
+    printString(s); // @output "aa"
+    printString(a + b); // @output "ab"
+    printString(a + c); // @output "ac"
+    printString(a + d); // @output "ade"
+
+    s = b + a;
+    printString(s); // @output "ba"
+    printString(b + b); // @output "bb"
+    printString(b + c); // @output "bc"
+    printString(b + d); // @output "bde"
+
+    s = c + a;
+    printString(c + a); // @output "ca"
+    printString(c + b); // @output "cb"
+    printString(c + c); // @output "cc"
+    printString(c + d); // @output "cde"
+
+    s = d + a;
+    printString(s); // @output "dea"
+    printString(d + b); // @output "deb"
+    printString(d + c); // @output "dec"
+    printString(d + d); // @output "dede"
+}
+
+function printString(string s) {
+    io:println(s.toBalString());
+}
+
+Test-Case: output
+Description: Test concatenation of string:Char and user-defined string subtype variable holding a string:Char.
+Labels: additive-expr, string, string:Char, value:toBalString, module-type-defn, union-type
+
+type Strings "a"|"bc";
+
+function init() {
+    Strings a = "a";
+    string:Char b = "b";
+
+    string s = a + b;
+    printString(s); // @output "ab"
+    printString(b + a); // @output "ba"
+}
+
+function printString(string s) {
+    io:println(s.toBalString());
+}
+
+Test-Case: output
+Description: Test concatenation of string:Char and user-defined string subtype variable holding a non-string:Char value.
+Fail-Issue: ballerina-platform/ballerina-lang#32813
+Labels: additive-expr, string, string:Char, value:toBalString, module-type-defn, union-type
+
+type Strings "a"|"bc";
+
+function init() {
+    Strings a = "bc";
+    string:Char b = "d";
+
+    string s = a + b;
+    printString(s); // @output "bcd"
+    printString(b + a); // @output "dbc"
+}
+
+function printString(string s) {
+    io:println(s.toBalString());
+}
+
+Test-Case: output
+Description: Test concatenation of string:Char and string.
+Fail-Issue: ballerina-platform/ballerina-lang#32814
+Labels: additive-expr, string, string:Char, value:toBalString, module-type-defn, union-type
+
+function init() {
+    string:Char a = "d";
+    string b = "efg";
+    string c = "h";
+
+    string s = a + b;
+    printString(s); // @output "defg"
+    printString(a + c); // @output "dh"
+
+    s = b + a;
+    printString(s); // @output "efgd"
+    printString(c + a); // @output "hd"
+}
+
+function printString(string s) {
+    io:println(s.toBalString());
+}
+
+Test-Case: output
+Description: Test concatenation of string and user-defined string subtype.
+Labels: additive-expr, string, string:Char, value:toBalString, module-type-defn, union-type
+
+type Strings "a"|"bc";
+
+function init() {
+    Strings a = "a";
+    Strings b = "bc";
+    string c = "d";
+    string d = "ef";
+
+    string s = a + c;
+    printString(s); // @output "ad"
+    printString(a + d); // @output "aef"
+
+    s = b + c;
+    printString(s); // @output "bcd"
+    printString(b + d); // @output "bcef"
+
+    s = c + a;
+    printString(s); // @output "da"
+    printString(c + b); // @output "dbc"
+
+    s = d + a;
+    printString(s); // @output "efa"
+    printString(d + b); // @output "efbc"
+}
+
+function printString(string s) {
+    io:println(s.toBalString());
+}
+
+Test-Case: output
+Description: Test concatenation of string with StringSingleEscape.
+Labels: additive-expr, string, StringSingleEscape, value:toBalString
+
+function init() {
+    string a = "a\tb";
+    string b = "\nc";
+    string c = "\\";
+    string d = "\"d\"";
+
+    io:println(a + a); // @output a	ba	b
+    io:println(a + b); // @output a	b
+                       // @output c
+    io:println(a + c); // @output a	b\
+    io:println(a + d); // @output a	b"d"
+
+    io:println((b + a).toBalString()); // @output "
+                                       // @output ca	b"
+    io:println((b + b).toBalString()); // @output "
+                                       // @output c
+                                       // @output c"
+    io:println((b + c).toBalString()); // @output "
+                                       // @output c\"
+    io:println((b + d).toBalString()); // @output "
+                                       // @output c"d""
+
+    io:println(c + a); // @output \a	b
+    io:println(c + b); // @output \
+                       // @output c
+    io:println(c + c); // @output \\
+    io:println(c + d); // @output \"d"
+
+    io:println(d + a); // @output "d"a	b
+    io:println(d + b); // @output "d"
+                       // @output c
+    io:println(d + c); // @output "d"\
+    io:println(d + d); // @output "d""d"
+}
+
+Test-Case: output
+Description: Test concatenation of string with NumericEscape.
+Labels: additive-expr, string, StringNumericEscape, value:toBalString
+
+function init() {
+    string a = "a\u{0040}b";
+    string b = "\u{1E41}";
+
+    io:println(a + a); // @output a@ba@b
+    io:println(a + b); // @output a@bṁ
+
+    io:println(b + a); // @output ṁa@b
+    io:println(b + b); // @output ṁṁ
+}
+
+Test-Case: output
+Description: Test string concatenation with string literal and string template expressions as operands.
+Labels: additive-expr, string, BacktickString
+
+function init() {
+    string name = "ballerina";
+    io:println("hello " + string `world from ${name}`); // @output hello world from ballerina
+}
+
+Test-Case: output
+Description: Test string concatenation with field access expressions as operands.
+Labels: additive-expr, string, field-access-expr, explicit-new-expr, module-class-defn, record-type
+
+function init() {
+    Bar b = {name: "test"};
+    io:println(b.name + (new Foo()).id); // @output testABC
+}
+
+class Foo {
+    string id = "ABC";
+}
+
+type Bar record {|
+    string name;
+|};
+
+Test-Case: output
+Description: Test string concatenation with function call and method call expressions as operands.
+Labels: additive-expr, string, function-call-expr, method-call-expr, implicit-new-expr, explicit-new-expr, module-class-defn
+
+function init() {
+    Class cl = new;
+    io:println(getString() + cl.getString()); // @output foobar
+    io:println(cl.getString() + getString()); // @output barfoo
+    io:println(getString() + getString()); // @output foofoo
+    io:println(cl.getString() + (new Class()).getString()); // @output barbar
+}
+
+function getString() returns string {
+    return "foo";
+}
+
+class Class {
+    function getString() returns string {
+        return "bar";
+    }
+}
+
+Test-Case: output
+Description: Test string concatenation with let expressions as operands.
+Labels: additive-expr, string, let-expr
+
+function init() {
+    string s = (let string a = "hello", string b = "world" in a + " " + b ) + let string a = "!" in a;
+    io:println(s); // @output hello world!
+}
+
+Test-Case: output
+Description: Test string concatenation with type cast expressions as operands.
+Labels: additive-expr, string, type-cast-expr, optional-type, string:Char
+
+function init() {
+    string s = "!";
+    string? t = "hi";
+    io:println(<string> t + <string:Char> s); // @output hi!
+}
+
+Test-Case: output
+Description: Test string concatenation with additive expressions as operands.
+Labels: additive-expr, string, module-type-defn, union-type, string:Char
+
+type Chars "H"|"I";
+
+function init() {
+    Chars s = "H";
+    string:Char t = "e";
+    string u = "llo";
+    string v = " from ballerina";
+    string w = "!";
+
+    string x = (s + t + u) + v + w;
+    io:println(x); // @output Hello from ballerina!
+
+    string y = s + t + u + v + w;
+    io:println(y); // @output Hello from ballerina!
+
+    string z = (s + t) + u + v + w;
+    io:println(z); // @output Hello from ballerina!
+}
+
+Test-Case: output
+Description: Test string concatenation with conditional expressions as operands.
+Labels: additive-expr, string, union-expr, optional-type, error, conditional-expr
+
+function init() {
+    string? s = "hello";
+    string|error t = " world";
+    string u = (s ?: "hi") + (t is error ? "!" : t);
+    io:println(u); // @output hello world
+}
+
+Test-Case: output
+Description: Test string concatenation with checking expressions as operands.
+Labels: additive-expr, string, union-expr, optional-type, error, check, checkpanic
+
+function init() returns error? {
+    string|error s = "hello";
+    string|error t = " world";
+    string u = check s + checkpanic t;
+    io:println(u); // @output hello world
+    io:println(check s + checkpanic t); // @output hello world
+}
