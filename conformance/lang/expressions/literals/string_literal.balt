@@ -2,7 +2,7 @@ Test-Case: output
 Description: Test basic string literals.
 Labels: string
 
-public function main() {
+function init() {
     string a = "Ballerina";
     io:println(a); // @output Ballerina
 
@@ -19,8 +19,8 @@ Test-Case: parser-error
 Description: Test invalid usage of line break in string literal.
 Labels: string
 
-public function main() {
-    string  a = "First String
+function init() {
+    string _ = "First String
                 Second String"; // @error line break is not allowed in string value
 }
 
@@ -28,56 +28,74 @@ Test-Case: parser-error
 Description: Test invalid usage of `\` in string literal.
 Labels: string
 
-public function main() {
-    string a = "\"; // @error invalid usage of backslash
-}
+function init() {
+    string _ = "\"; // @error invalid usage of backslash
 
-Test-Case: parser-error
-Description: Test invalid usage of `"` in string literal.
-Labels: string
-
-public function main() {
-    string  a = """; // @error double quote is not allowed in string value
-}
-
-Test-Case: output
-Description: Test string single escape.
-Labels: string, StringSingleEscape
-
-public function main() {
-    io:println("Hello \t world"); // @output Hello    world
-
-    io:println("Hello \nworld!"); // @output Hello
-                                  // @output world!
-
-    io:println("12345 world \rHello"); // @output Hello world
-
-    io:println("2 \\ two"); // @output 2 \ two
-
-    io:println("\"StringValue\""); // @output "StringValue"
-}
-
-Test-Case: output
-Description: Test using `\` to esacape numeric escape.
-Labels: string
-
-public function main() {
-    io:println("\\u{61}"); // @output \u{61}
+    string _ = "Some text\"; // @error invalid usage of backslash
 }
 
 Test-Case: error
 Description: Test invalid string escape sequence.
 Labels: string
 
-public function main() {
-    string b = "\Ballerina"; // @error `\B` is not a valid escape sequence
+function init() {
+    string _ = "Hello \Ballerina"; // @error `\B` is not a valid escape sequence
+}
+
+Test-Case: parser-error
+Description: Test invalid usage of `"` in string literal.
+Labels: string
+
+function init() {
+    string _ = """; // @error double quote is not allowed in string value
+
+    string _ = "First text " Second text"; // @error double quote is not allowed in string value
+
+    string _ = "This is double quote " "; // @error double quote is not allowed in string value
+}
+
+Test-Case: output
+Description: Test string single escape.
+Labels: string, StringSingleEscape
+
+function init() {
+    io:println("Hello \t world"); // @output Hello 	 world
+    io:println("Hello\tworld"); // @output Hello	world
+    io:println("Hello\t world"); // @output Hello	 world
+
+    io:println("Hello \nworld!"); // @output Hello 
+                                  // @output world!
+    io:println("Hello\nworld!"); // @output Hello
+                                  // @output world!
+    io:println("Hello\n world!"); // @output Hello
+                                  // @output  world!
+
+    io:println("12345 world \rHello"); // @output Hello world 
+    io:println("12345 world\rHello"); // @output Hello world
+    io:println("12345 world\r Hello"); // @output  Hello world
+
+    io:println("2 \\ two"); // @output 2 \ two
+    io:println("2\\two"); // @output 2\two
+    io:println("2\\ two"); // @output 2\ two
+
+    io:println("\"StringValue\""); // @output "StringValue"
+    io:println(" \"StringValue \""); // @output  "StringValue "
+    io:println("\" StringValue\" "); // @output " StringValue"
+}
+
+Test-Case: output
+Description: Test using `\` to esacape numeric escape.
+Labels: string
+
+function init() {
+    io:println("\\u{61}"); // @output \u{61}
 }
 
 Test-Case: output
 Description: Test numeric escape in string literal.
 Labels: string
 
-public function main() {
+function init() {
     string a = "a\u{62}c";
     io:println(a); // @output abc
 
@@ -96,7 +114,7 @@ Test-Case: output
 Description: Test equality of string literals.
 Labels: string
 
-public function main() {
+function init() {
     io:println("Car" == "\u{0043}\u{0061}\u{0072}"); // @output true
 
     io:println("\n" == "\u{000A}"); // @output true
@@ -112,7 +130,7 @@ Test-Case: output
 Description: Test exact equality of string literals.
 Labels: exact-equality, string
 
-public function main() {
+function init() {
     io:println("\n" === "\u{000A}"); // @output true
 
     io:println("COde" !== "COde"); // @output false
@@ -122,136 +140,76 @@ Test-Case: error
 Description: Test invalid hex digit in code point.
 Labels: string
 
-public function main() {
-    string b = "\u{AG}"; // @error `G` is not a valid hex digit
+function init() {
+    string _ = "\u{AG}"; // @error `G` is not a valid hex digit
 }
 
 Test-Case: error
 Description: Test surrogate code points in string literal.
 Labels: string
 
-public function main() {
-    string a = "\u{D800}"; // @error surrogate code points are not allowed
-    string b = "\u{D89F}"; // @error surrogate code points are not allowed
-    string c = "\u{DABF}"; // @error surrogate code points are not allowed
-    string d = "\u{DFFF}"; // @error surrogate code points are not allowed
+function init() {
+    string _ = "\u{D800}"; // @error surrogate code points are not allowed
+    string _ = "\u{D89F}"; // @error surrogate code points are not allowed
+    string _ = "\u{DABF}"; // @error surrogate code points are not allowed
+    string _ = "\u{DFFF}"; // @error surrogate code points are not allowed
 }
 
 Test-Case: output
 Description: Test Unicode noncharacters in string literal.
 Labels: string
 
-public function main() {
+function init() {
     string a = "\u{FFFF}";
     io:println(a); // @output ￿
 
     string b = "\u{FFFE}";
-    io:println(b); // @output ￿
-}
-
-Test-Case: output
-Description: Test type of each constituent item in string value is string.
-Labels: member-access-expr, string
-
-public function main() {
-    string a = "constituent";
-    string b = a[0];
-    io:println(b); // @output c
+    io:println(b); // @output ￾
 }
 
 Test-Case: output
 Description: Test empty string value.
 Labels: string, value:toBalString
 
-public function main() {
+function init() {
     string a = "";
     io:println(a.toBalString()); // @output ""
 }
 
 Test-Case: output
-Description: Test a sequence consisting of a single item v is the same thing as v. A single item is a sequence.
-Labels: string
-
-public function main() {
-    string a = "a";
-    io:println(a); // @output a
-}
-
-Test-Case: output
-Description: Test the type of the values in the iteration sequence of a string value is string.
-Labels: foreach-stmt, string
-
-public function main() {
-    string stringVar = "abc";
-    foreach string char in stringVar {
-        io:println(char); // @output a
-                          // @output b
-                          // @output c
-    }
-}
-
-Test-Case: output
-Description: Test completion value of string value iteration is nil.
-Labels: foreach-stmt, string, string:iterator, value:toBalString, while-stmt
-
-public function main() {
-    string stringVar = "a";
-    any char = "";
-    var iterator = stringVar.iterator();
-    while char != () {
-        char = iterator.next();
-        io:println(char.toBalString()); // @output {"value":"a"}
-                                        // @output ()
-    }
-
-    string stringVar2 = "";
-    io:println(stringVar2.iterator().next().toBalString()); // @output ()
-}
-
-Test-Case: error
-Description: Test the type of the values in the iteration sequence of a string value is string.
-Labels: foreach-stmt, string
-
-public function main() {
-    string stringVar = "abc";
-    foreach int val in stringVar { // @error values in the iteration sequence of a string value is string
-    }
-}
-
-Test-Case: output
-Description: Test concatination of strings that will result in a value looks like numeric escape.
+Description: Test concatenation of strings that will result in a value looks like numeric escape.
 Labels: additive-expr, string
 
-public function main() {
+function init() {
     string a = "\\" + "u{61}";
     io:println(a); // @output \u{61}
 }
 
 Test-Case: error
-Description: Test type missmatch when assigning string literal to variables of type T,
+Description: Test type mismatch when assigning string literal to variables of type T,
              where string is not a sub type of T.
-Labels: byte, flaot, nil-type, string, xml
+Labels: byte, float, nil-type, string, xml
 
-public function main() {
-    int a = "String"; // @error string literal cannot be assigned to a variable of int
+function init() {
+    int _ = "String"; // @error string literal cannot be assigned to a variable of int
 
-    xml b = ""; // @error string literal cannot be assigned to a variable of xml
+    xml _ = ""; // @error string literal cannot be assigned to a variable of xml
 
-    () c = ""; // @error string literal cannot be assigned to a variable of nil
+    () _ = ""; // @error string literal cannot be assigned to a variable of nil
 
-    byte d = "c"; // @error string literal cannot be assigned to a variable of byte
+    byte _ = "c"; // @error string literal cannot be assigned to a variable of byte
 
-    float e = "44.5"; // @error string literal cannot be assigned to a variable of float
+    float _ = "44.5"; // @error string literal cannot be assigned to a variable of float
 }
 
 Test-Case: output
 Description: Test string literal in argument context.
 Labels: function-call-expr, function-defn, string
 
-public function main() {
+function init() {
     printStringLiteral("Spec Tests"); // @output Spec Tests
 
-    printStringLiteral(")(*&^%$#><:~~!`"); // @output)(*&^%$#><:~~!`
+    printStringLiteral(")(*&^%$#><:~~!`"); // @output )(*&^%$#><:~~!`
 
     printStringLiteral("12345\t\u{0039}"); // @output 12345   9
 
@@ -266,7 +224,7 @@ Test-Case: output
 Description: Test string literal in defaultable parameter context.
 Labels: function-call-expr, function-defn, defaultable-param, string
 
-public function main() {
+function init() {
     printString("6564"); // @output 6564
     printString(); // @output Default
 }
@@ -279,7 +237,7 @@ Test-Case: output
 Description: Test string literal in method call expression context.
 Labels: method-call-expr, string
 
-public function main() {
+function init() {
     io:println("some".startsWith("s")); // @output true
 
     io:println("Hello World".substring(6)); // @output World
@@ -291,7 +249,7 @@ Test-Case: output
 Description: Test string literal in type test expression context.
 Labels: is-expr, string
 
-public function main() {
+function init() {
     io:println("Book" is string); // @output true
 
     io:println("1234" !is string); // @output false
@@ -303,7 +261,7 @@ Test-Case: output
 Description: Test string literal in return statement context.
 Labels: string, return-stmt
 
-public function main() {
+function init() {
     io:println(getString1()); // @output Returned String
 
     io:println(getString2()); // @output One
@@ -326,9 +284,9 @@ function getString3() returns string {
 
 Test-Case: output
 Description: Test string literal in match expression context.
-Labels: match-stmt, string
+Labels: match-stmt, string, var
 
-public function main() {
+function init() {
     match "Ballerina" {
         var a => {
             io:println(a); // @output Ballerina
@@ -340,7 +298,7 @@ Test-Case: output
 Description: Test string literal in structural constructor context.
 Labels: list-constructor-expr, mapping-constructor-expr, string, table-constructor-expr
 
-public function main() {
+function init() {
     io:println(["1221", "Ballerina"]); // @output ["1221","Ballerina"]
 
     io:println({name: "Mike", age: "54", "rest": "restData"}); // @output {"name":"Mike","age":"54","rest":"restData"}
@@ -354,7 +312,7 @@ Labels: module-type-defn, string
 
 type STRING_NAME "NAME";
 
-public function main() {
+function init() {
     STRING_NAME a = "NAME";
     io:println(a); // @output NAME
 }
@@ -363,7 +321,7 @@ Test-Case: output
 Description: Test string literal in member access expression context.
 Labels: member-access-expr, string
 
-public function main() {
+function init() {
     io:println("Banana"[0]); // @output B
 
     io:println("564545"[1]); // @output 6
