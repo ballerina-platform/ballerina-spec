@@ -2,7 +2,7 @@ Test-Case: error
 Description: Test multiplicative expression with static type of operands belonging to int and float resulting in an error.
 Labels: multiplicative-expr, int, float
 
-public function main(int a, float b) {
+function errorFunction(int a, float b) {
     int a1 = a * b; // @error * is not allowed with operands of different basic types
     int a2 = a / b; // @error / is not allowed with operands of different basic types
     int a3 = a % b; // @error % is not allowed with operands of different basic types
@@ -15,7 +15,7 @@ Test-Case: error
 Description: Test multiplicative expression with static type of operands belonging to int, float, and decimal resulting in an error.
 Labels: multiplicative-expr, int, float, decimal
 
-public function main(int a, float b, decimal c) {
+function errorFunction(int a, float b, decimal c) {
     int a1 = a * c; // @error * is not allowed with operands of different basic types
     decimal a2 = c / a; // @error / is not allowed with operands of different basic types
     int a3 = a % c; // @error % is not allowed with operands of different basic types
@@ -28,7 +28,7 @@ Test-Case: error
 Description: Test multiplicative expression with static type of operands belonging to different basic types resulting in an error.
 Labels: multiplicative-expr, int, float, decimal, optional-type, numeric-nil-lifting
 
-public function main(int a, float b, decimal c, 
+function errorFunction(int a, float b, decimal c, 
                      int? d, float? e, decimal? f) {
     int a13 = d * e; // @error * is not allowed with operands of different basic types
     int a14 = d / e; // @error / is not allowed with operands of different basic types
@@ -48,7 +48,7 @@ Test-Case: error
 Description: Test the static type of operands belonging to non-numeric basic types resulting in an error.
 Labels: multiplicative-expr, int, string, float, decimal, optional-type, numeric-nil-lifting
 
-public function main(int a, float b, decimal c, int? d, float? e, decimal? f,
+function errorFunction(int a, float b, decimal c, int? d, float? e, decimal? f,
                      string g, string? h) {
     string a1 = g * g; // @error * is not allowed with operands of non-numeric basic types
     string a2 = g / g; // @error / is not allowed with operands of non-numeric basic types
@@ -74,16 +74,14 @@ public function main(int a, float b, decimal c, int? d, float? e, decimal? f,
 Test-Case: error
 Description: Test the static type of operand expressions belonging to different basic types resulting in an error
              when the static type of at least one operand includes a subtype of a numeric type.
-Labels: multiplicative-expr, int, float, decimal, optional-type, 
-        byte, union-type, singleton-type, module-type-defn, numeric-literal,  
-        int-literal, floating-point-literal, DecimalFloatingPointNumber, 
-        int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, numeric-nil-lifting
+Labels: multiplicative-expr, int, float, decimal, optional-type, byte, union-type, singleton-type, module-type-defn, numeric-literal,  
+        int-literal, DecimalFloatingPointNumber, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, numeric-nil-lifting
 
 type Ints 1|2;
 type Floats 2.0|3.0|4.0;
 type Decimals 1d|4.12d;
 
-public function main(int:Signed8 a, int:Signed16 b, int:Signed32 c,
+function errorFunction(int:Signed8 a, int:Signed16 b, int:Signed32 c,
                      int:Unsigned8 d, int:Unsigned16 e, int:Unsigned32 f, 
                      byte g, Ints h, Floats i, Decimals j, 
                      int:Unsigned8? k, Ints? l, Floats? m, Decimals? n) {
@@ -104,7 +102,7 @@ Description: Test for int the static type of the result being the basic type of 
              with inference, where operands are of numeric types.
 Labels: multiplicative-expr, int, float, decimal, var, numeric-literal, int-literal, DecimalNumber
 
-public function main(int a, int b) {
+function errorFunction(int a, int b) {
     var a1 = a * b;
     float a2 = a1; // @error static type of multiplicative-expr with int operands is int
 
@@ -127,7 +125,7 @@ Description: Test for float the static type of the result being the basic type o
              with inference, where operands are of numeric types.
 Labels: multiplicative-expr, int, float, decimal, var, DecimalFloatingPointNumber
 
-public function main(float c, float d) {
+function errorFunction(float c, float d) {
     var a1 = 2.0 * 2.1;
     int a2 = a1; // @error static type of multiplicative-expr with float operands is float
 
@@ -150,7 +148,7 @@ Description: Test for decimal the static type of the result being the basic type
              with inference, where operands are of numeric types.
 Labels: multiplicative-expr, int, float, decimal, var, numeric-literal, DecimalFloatingPointNumber
 
-public function main(decimal e, decimal f) {
+function errorFunction(decimal e, decimal f) {
     var a1 = e * e;
     float a2 = a1; // @error static type of multiplicative-expr with decimal operands is decimal
 
@@ -172,7 +170,7 @@ Test-Case: error
 Description: Test for optional int the static type of the result being the basic type of the operands via invalid assignment.
 Labels: multiplicative-expr, int, optional-type, var, numeric-literal, DecimalNumber, numeric-nil-lifting
 
-public function main(int a, int? b) {
+function errorFunction(int a, int? b) {
     int a1 = a * b; // @error static type of multiplicative-expr with at least one int? operand is int?
     int a2 = getOptionalInt(1 / 2) * b; // @error static type of multiplicative-expr with at least one int? operand is int?
     int a3 = b % getOptionalInt(1 % 2); // @error static type of multiplicative-expr with at least one int? operand is int?
@@ -191,7 +189,7 @@ Test-Case: error
 Description: Test for optional float the static type of the result being the basic type of the operands via invalid assignment.
 Labels: multiplicative-expr, float, optional-type, var, numeric-literal, DecimalFloatingPointNumber, numeric-nil-lifting
 
-public function main(float c, float? d) {
+function errorFunction(float c, float? d) {
     float a1 = d * c; // @error static type of multiplicative-expr with at least one float? operand is float?
     float a2 = getFloat(2.0) * d; // @error static type of multiplicative-expr with at least one float? operand is float?
     float a3 = d % getOptionalFloat(1.0 % 2f); // @error static type of multiplicative-expr with at least one float? operand is float?
@@ -210,7 +208,7 @@ Test-Case: error
 Description: Test for optional decimal the static type of the result being the basic type of the operands via invalid assignment.
 Labels: multiplicative-expr, int, float, decimal, optional-type, var, numeric-literal, DecimalFloatingPointNumber, numeric-nil-lifting
 
-public function main(decimal e, decimal? f) {
+function errorFunction(decimal e, decimal? f) {
     decimal a1 = e * f; // @error static type of multiplicative-expr with at least one int? operand is int?
     decimal a2 = getOptionalDecimal(1d / 2.0d) * e; // @error static type of multiplicative-expr with at least one int? operand is int?
     decimal a3 = f % getOptionalDecimal(()); // @error static type of multiplicative-expr with at least one int? operand is int?
@@ -232,7 +230,7 @@ Labels: multiplicative-expr, int, DecimalNumber, int:Signed8, int:Signed16, int:
 
 type Ints 1|2;
 
-public function main(int:Signed8 a, int:Signed16 b, int:Signed32 c,
+function errorFunction(int:Signed8 a, int:Signed16 b, int:Signed32 c,
                      int:Unsigned8 d, int:Unsigned16 e, int:Unsigned32 f,
                      byte g, Ints h) {
     int:Signed8 a1 = a * a; // @error static type of multiplicative-expr with operands of int subtypes is int
@@ -287,7 +285,7 @@ Labels: multiplicative-expr, int, optional-type, DecimalNumber, int:Signed8, int
 
 type Ints 1|2;
 
-public function main(int:Signed8 a, int:Signed16 b, int:Signed32 c,
+function errorFunction(int:Signed8 a, int:Signed16 b, int:Signed32 c,
                      int:Unsigned8 d, int:Unsigned16 e, int:Unsigned32 f,
                      byte g, Ints h,
                      int:Signed8? i, int:Signed16? j, int:Signed32? k,
@@ -342,7 +340,7 @@ Test-Case: error
 Description: Test contextually-expected type for multiplicative expression with operands with int as expected type, with invalid values.
 Labels: multiplicative-expr, int, DecimalNumber
 
-public function main() {
+function errorFunction() {
     int a1 = 1 * 9223372036854775808; // @error operands for * with int expected type should be int
     int a2 = -9223372036854775809 / 2; // @error operands for / with int expected type should be int
     int a3 = 9223372036854775808 % -92233720368547758070; // @error operands for % with int expected type should be int
@@ -352,7 +350,7 @@ Test-Case: error
 Description: Test contextually-expected type for multiplicative expression with operands with optional int as expected type, with invalid values.
 Labels: multiplicative-expr, int, DecimalNumber, optional-type, numeric-nil-lifting
 
-public function main() {
+function errorFunction() {
     int? a1 = 1 * 9223372036854775808; // @error operands for * with int? expected type should be int
     int? a2 = -9223372036854775809 / 2; // @error operands for / with int? expected type should be int
     int? a3 = 9223372036854775808 % -92233720368547758070; // @error operands for % with int? expected type should be int
@@ -362,7 +360,7 @@ Test-Case: error
 Description: Test contextually-expected type for multiplicative expression with operands with int as expected type, with invalid values.
 Labels: multiplicative-expr, int, HexIntLiteral
 
-public function main() {
+function errorFunction() {
     int a1 = 1 * 0x8000000000000000; // @error operands for * with int expected type should be int
     int a2 = -0x8000000000000001 / 2; // @error operands for / with int expected type should be int
     int a3 = 0x8000000000000000 % -0X4FFFFFFFFFFFFFFF6; // @error operands for % with int expected type should be int
@@ -372,7 +370,7 @@ Test-Case: error
 Description: Test contextually-expected type for multiplicative expression with operands with optional int as expected type, with invalid values.
 Labels: multiplicative-expr, int, HexIntLiteral, optional-type, numeric-nil-lifting
 
-public function main() {
+function errorFunction() {
     int? a1 = 1 * 0x8000000000000000; // @error operands for * with int? expected type should be int
     int? a2 = -0x8000000000000001 / 2; // @error operands for / with int? expected type should be int
     int? a3 = 0x8000000000000000 % -0X4FFFFFFFFFFFFFFF6; // @error operands for % with int? expected type should be int
