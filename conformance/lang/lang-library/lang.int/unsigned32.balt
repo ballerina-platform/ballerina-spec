@@ -1,8 +1,8 @@
 Test-Case: output
 Description: Test Unsigned32 built-in subtype of int.
-Labels: int:Unsigned32
+Labels: int:Unsigned32, DecimalNumber
 
-public function main() {
+function init() {
     int:Unsigned32 a1 = 0;
     int:Unsigned32 a2 = 23526165;
     int:Unsigned32 a3 = 4294967295;
@@ -18,9 +18,9 @@ function testUnsigned32Int(int:Unsigned32 i) {
 
 Test-Case: output
 Description: Test assignability with type Unsigned32.
-Labels: any, int:Unsigned32, is-expr, optional-type, string
+Labels: int:Unsigned32, DecimalNumber, any, int, is-expr, if-else-stmt, optional-type, string
 
-public function main() {
+function init() {
     int:Unsigned32 a1 = 0;
     int:Unsigned32 a2 = 23526165;
     int:Unsigned32 a3 = 4294967295;
@@ -54,9 +54,9 @@ function testAny(any i) {
 
 Test-Case: output
 Description: Test type Unsigned32 value belonging to a type.
-Labels: int:Unsigned32, is-expr
+Labels: int:Unsigned32, DecimalNumber, int, is-expr
 
-public function main() {
+function init() {
     int:Unsigned32 a1 = 130;
 
     io:println(130 is int:Unsigned32); // @output true
@@ -65,9 +65,9 @@ public function main() {
 
 Test-Case: output
 Description: Test equality of type Unsigned32 values.
-Labels: int:Unsigned8, int:Unsigned16, int:Unsigned32
+Labels: int:Unsigned32, DecimalNumber, int, int:Unsigned8, int:Unsigned16, equality
 
-public function main() {
+function init() {
     int:Unsigned32 a1 = 127;
     int:Unsigned32 a2 = 127;
     int:Unsigned32 a3 = 120;
@@ -87,10 +87,10 @@ public function main() {
 
 Test-Case: output
 Description: Test equality of type Unsigned32 values.
-Fail-Issue: ballerina-lang#32788
-Labels: byte, int:Unsigned32
+Fail-Issue: ballerina-platform/ballerina-lang#32788
+Labels: int:Unsigned32, DecimalNumber, byte,  equality
 
-public function main() {
+function init() {
     int:Unsigned32 a1 = 127;
     byte a2 = 127;
 
@@ -99,17 +99,16 @@ public function main() {
 
 Test-Case: error
 Description: Test type Unsigned32 value assignability with incompatible types.
-Labels: int:Unsigned8, int:Unsigned32, string
+Labels: int:Unsigned32, DecimalNumber, int:Unsigned8, string, unary-minus
 
-public function main() {
-    int:Unsigned32 a1 = -1; // @error int is not a subtype of int:Unsigned32
+function errorFunction(int:Unsigned32 a) {
+    int:Unsigned32 _ = -1; // @error int is not a subtype of int:Unsigned32
 
-    int:Unsigned32 a2 = 130;
-    testUnsigned8Int(a2); // @error int:Unsigned32 is not a subtype of int:Unsigned8
+    testUnsigned8Int(a); // @error int:Unsigned32 is not a subtype of int:Unsigned8
 
-    int:Unsigned32 a3 = "A"; // @error string is not a subtype of int:Unsigned32
+    int:Unsigned32 _ = "A"; // @error string is not a subtype of int:Unsigned32
 
-    string b1 = a2; // @error int:Unsigned32 is not a subtype of string
+    string _ = a; // @error int:Unsigned32 is not a subtype of string
 }
 
 function testUnsigned8Int(int:Unsigned8 i) {
@@ -117,18 +116,18 @@ function testUnsigned8Int(int:Unsigned8 i) {
 
 Test-Case: error
 Description: Test assigning too large value to a Unsigned32 type variable.
-Fail-Issue: ballerina-lang#32574
-Labels: int:Unsigned32
+Fail-Issue: ballerina-platform/ballerina-lang#32574
+Labels: int:Unsigned32, DecimalNumber
 
-public function main() {
-    int:Unsigned32 x = 9223372036854775808; // @error too large value
+function errorFunction() {
+    int:Unsigned32 _ = 9223372036854775808; // @error too large value
 }
 
 Test-Case: error
 Description: Test assigning too small value to a Unsigned32 type variable.
-Fail-Issue: ballerina-lang#32574
-Labels: int:Unsigned32, unary-minus
+Fail-Issue: ballerina-platform/ballerina-lang#32574
+Labels: int:Unsigned32, DecimalNumber, unary-minus
 
-public function main() {
-    int:Unsigned32 x = -9223372036854775809; // @error too small value
+function errorFunction() {
+    int:Unsigned32 _ = -9223372036854775809; // @error too small value
 }

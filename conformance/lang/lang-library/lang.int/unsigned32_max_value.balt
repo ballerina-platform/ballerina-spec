@@ -1,8 +1,8 @@
 Test-Case: output
 Description: Test maximum value of Unsigned32 built-in subtype of int.
-Labels: int:UNSIGNED32_MAX_VALUE, is-expr, optional-type, string
+Labels: int:UNSIGNED32_MAX_VALUE, DecimalNumber, is-expr, optional-type, string
 
-public function main() {
+function init() {
     int:UNSIGNED32_MAX_VALUE a = 4294967295;
 
     testIntOrNil(a); // @output 4294967295
@@ -27,18 +27,18 @@ function testIntOrNil(int? i) {
 
 Test-Case: output
 Description: Test UNSIGNED32_MAX_VALUE belonging to a type.
-Labels: int:Unsigned32, int:UNSIGNED32_MAX_VALUE, is-expr
+Labels: int:UNSIGNED32_MAX_VALUE, int:Unsigned32, int, is-expr
 
-public function main() {
+function init() {
     io:println(int:UNSIGNED32_MAX_VALUE is int); // @output true
     io:println(int:UNSIGNED32_MAX_VALUE is int:Unsigned32); // @output true
 }
 
 Test-Case: output
 Description: Test assignability of UNSIGNED32_MAX_VALUE with var.
-Labels: int:UNSIGNED32_MAX_VALUE, is-expr, optional-type, string, var
+Labels: int:UNSIGNED32_MAX_VALUE, is-expr, int, var
 
-public function main() {
+function init() {
     var a = int:UNSIGNED32_MAX_VALUE;
     io:println(a); // @output 4294967295
     io:println(a is int); // @output true
@@ -46,24 +46,24 @@ public function main() {
 
 Test-Case: output
 Description: Test declaring module level variables with UNSIGNED32_MAX_VALUE.
-Labels: int:UNSIGNED32_MAX_VALUE, module-const-decl
+Labels: int:UNSIGNED32_MAX_VALUE, int, module-const-decl
 
 const int a = int:UNSIGNED32_MAX_VALUE;
 
 int b = int:UNSIGNED32_MAX_VALUE;
 
-public function main() {
+function init() {
     io:println(a); // @output 4294967295
     io:println(b); // @output 4294967295
 }
 
 Test-Case: output
 Description: Test defining types with UNSIGNED32_MAX_VALUE.
-Labels: int:UNSIGNED32_MAX_VALUE, module-type-defn, type-reference, union-type
+Labels: int:UNSIGNED32_MAX_VALUE, int:Unsigned16, module-type-defn, union-type
 
 type Const1 int:UNSIGNED32_MAX_VALUE;
 
-public function main() {
+function init() {
     Const1 a1 = 4294967295;
     io:println(a1); // @output 4294967295
 
@@ -73,9 +73,9 @@ public function main() {
 
 Test-Case: output
 Description: Test equality with UNSIGNED32_MAX_VALUE.
-Labels: int:UNSIGNED32_MAX_VALUE
+Labels: int:UNSIGNED32_MAX_VALUE, DecimalNumber, int
 
-public function main() {
+function init() {
     io:println(int:UNSIGNED32_MAX_VALUE == 4294967295); // @output true
 
     int a = 4294967295;
@@ -86,7 +86,7 @@ Test-Case: output
 Description: Test UNSIGNED32_MAX_VALUE as expression in return statement.
 Labels: int:UNSIGNED32_MAX_VALUE, return-stmt
 
-public function main() {
+function init() {
     io:println(getInt()); // @output 4294967295
 }
 
@@ -96,44 +96,44 @@ function getInt() returns int {
 
 Test-Case: output
 Description: Test UNSIGNED32_MAX_VALUE as expression in list constructor.
-Labels: array-type, int:UNSIGNED32_MAX_VALUE, list-constructor-expr
+Labels: int:UNSIGNED32_MAX_VALUE, array-type, int, list-constructor-expr
 
-public function main() {
+function init() {
     int[] arr = [int:UNSIGNED32_MAX_VALUE, int:UNSIGNED32_MAX_VALUE];
     io:println(arr); // @output [4294967295,4294967295]
 }
 
 Test-Case: output
 Description: Test UNSIGNED32_MAX_VALUE as expression in method call expression.
-Labels: int:UNSIGNED32_MAX_VALUE, value:toString(), method-call-expr
+Labels: int:UNSIGNED32_MAX_VALUE, value:toString, method-call-expr
 
-public function main() {
+function init() {
     io:println(int:UNSIGNED32_MAX_VALUE.toString()); // @output 4294967295
 }
 
 Test-Case: output
 Description: Test UNSIGNED32_MAX_VALUE as expression in map constructor.
-Labels: int:UNSIGNED32_MAX_VALUE, mapping-constructor-expr, map-type, string
+Labels: int:UNSIGNED32_MAX_VALUE, int, mapping-constructor-expr, map-type, string
 
-public function main() {
+function init() {
     map<int> intMap = {"One": int:UNSIGNED32_MAX_VALUE, "Two": int:UNSIGNED32_MAX_VALUE};
     io:println(intMap); // @output {"One":4294967295,"Two":4294967295}
 }
 
 Test-Case: output
 Description: Test UNSIGNED32_MAX_VALUE as expression in additive expression.
-Labels: additive-expr, int:UNSIGNED32_MAX_VALUE
+Labels: int:UNSIGNED32_MAX_VALUE, additive-expr
 
-public function main() {
+function init() {
     int a = int:UNSIGNED32_MAX_VALUE + int:UNSIGNED32_MAX_VALUE;
     io:println(a); // @output 8589934590
 }
 
 Test-Case: output
 Description: Test UNSIGNED32_MAX_VALUE as expression in if else statement.
-Labels: int:UNSIGNED32_MAX_VALUE, relational-expr
+Labels: int:UNSIGNED32_MAX_VALUE, DecimalNumber, if-else-stmt, relational-expr
 
-public function main() {
+function init() {
     compare(); // @output true
 }
 
@@ -147,8 +147,8 @@ function compare() {
 
 Test-Case: error
 Description: Test assigning values to subtypes of UNSIGNED32_MAX_VALUE.
-Fail-Issue: ballerina-lang#32804
-Labels: int:UNSIGNED32_MAX_VALUE, module-const-decl, module-type-defn, type-reference, union-type
+Fail-Issue: ballerina-platform/ballerina-lang#32804
+Labels: int:UNSIGNED32_MAX_VALUE, DecimalNumber, int, module-const-decl, module-type-defn
 
 const int A = int:UNSIGNED32_MAX_VALUE;
 
@@ -156,34 +156,34 @@ type Const1 int:UNSIGNED32_MAX_VALUE;
 
 type Const2 A|Const1;
 
-public function main() {
-    Const1 a = 23; // @error int is not a subtype of 4294967295
+function errorFunction() {
+    Const1 _ = 23; // @error int is not a subtype of 4294967295
 
-    Const2 b = 23; // @error int is not a subtype of 4294967295
+    Const2 _ = 23; // @error int is not a subtype of 4294967295
 }
 
 Test-Case: error
 Description: Test assigning invalid value for int:UNSIGNED32_MAX_VALUE type variable.
-Labels: DecimalNumber, int:UNSIGNED32_MAX_VALUE
+Labels: int:UNSIGNED32_MAX_VALUE, DecimalNumber
 
-public function main() {
-    int:UNSIGNED32_MAX_VALUE a = 10; // @error int is not a subtype of 4294967295
+function errorFunction() {
+    int:UNSIGNED32_MAX_VALUE _ = 10; // @error int is not a subtype of 4294967295
 }
 
 Test-Case: error
 Description: Test assigning int:UNSIGNED32_MAX_VALUE to an incompatible type.
-Labels: int:Unsigned32, int:UNSIGNED32_MAX_VALUE, string
+Labels: int:UNSIGNED32_MAX_VALUE, int:Unsigned32, string
 
-public function main() {
-    int:Unsigned32 a = int:UNSIGNED32_MAX_VALUE; // @error int is not a subtype of int:Unsigned32
-    string b = int:UNSIGNED32_MAX_VALUE; // @error int is not a subtype of string
+function errorFunction() {
+    int:Unsigned32 _ = int:UNSIGNED32_MAX_VALUE; // @error int is not a subtype of int:Unsigned32
+    string _ = int:UNSIGNED32_MAX_VALUE; // @error int is not a subtype of string
 }
 
 Test-Case: error
 Description: Test updating int:UNSIGNED32_MAX_VALUE constant value.
-Labels: DecimalNumber, int:UNSIGNED32_MAX_VALUE
+Labels: int:UNSIGNED32_MAX_VALUE, DecimalNumber
 
-public function main() {
+function errorFunction() {
     int:UNSIGNED32_MAX_VALUE = 10; // @error cannot update constant
 }
 
@@ -191,6 +191,6 @@ Test-Case: error
 Description: Test missing int module-prefix with int:UNSIGNED32_MAX_VALUE.
 Labels: DecimalNumber, unary-minus
 
-public function main() {
-    UNSIGNED32_MAX_VALUE a = -100; // @error unknown type
+function errorFunction() {
+    UNSIGNED32_MAX_VALUE _ = -100; // @error unknown type
 }

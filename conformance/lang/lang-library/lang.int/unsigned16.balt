@@ -1,8 +1,8 @@
 Test-Case: output
 Description: Test Unsigned16 built-in subtype of int.
-Labels: int:Unsigned16
+Labels: int:Unsigned16, DecimalNumber
 
-public function main() {
+function init() {
     int:Unsigned16 a1 = 0;
     int:Unsigned16 a2 = 15431;
     int:Unsigned16 a3 = 65535;
@@ -18,9 +18,9 @@ function testUnsigned16Int(int:Unsigned16 i) {
 
 Test-Case: output
 Description: Test assignability with type Unsigned16.
-Labels: int:Signed32, int:Unsigned16, int:Unsigned32, is-expr
+Labels: int:Unsigned16, DecimalNumber, int:Signed32, int, int:Unsigned32, is-expr, optional-type
 
-public function main() {
+function init() {
     int:Unsigned16 a1 = 15431;
     int:Unsigned16 a2 = 65535;
 
@@ -39,9 +39,9 @@ public function main() {
 
 Test-Case: output
 Description: Test assignability with type Unsigned16.
-Labels: any, int:Unsigned16, is-expr, optional-type, string
+Labels: int:Unsigned16, DecimalNumber, any, int, is-expr, optional-type, string
 
-public function main() {
+function init() {
     int:Unsigned16 a1 = 0;
     int:Unsigned16 a2 = 15431;
     int:Unsigned16 a3 = 65535;
@@ -69,9 +69,9 @@ function testAny(any i) {
 
 Test-Case: output
 Description: Test type Unsigned16 value belonging to a type.
-Labels: int:Signed32, int:Unsigned16, int:Unsigned32, is-expr
+Labels: int:Unsigned16, DecimalNumber, int:Signed32, int, int:Unsigned32, is-expr
 
-public function main() {
+function init() {
     int:Unsigned16 a1 = 130;
 
     io:println(130 is int:Unsigned16); // @output true
@@ -82,9 +82,9 @@ public function main() {
 
 Test-Case: output
 Description: Test equality of type Unsigned16 values.
-Labels: int:Unsigned16
+Labels: int:Unsigned16, DecimalNumber, equality
 
-public function main() {
+function init() {
     int:Unsigned16 a1 = 127;
     int:Unsigned16 a2 = 127;
     int:Unsigned16 a3 = 120;
@@ -96,9 +96,9 @@ public function main() {
 
 Test-Case: output
 Description: Test equality of type Unsigned16 values.
-Labels: int:Signed32, int:Unsigned16, int:Unsigned32, int:Unsigned8
+Labels: int:Unsigned16, DecimalNumber, int:Signed32, int, int:Unsigned32, int:Unsigned8, equality
 
-public function main() {
+function init() {
     int:Unsigned16 a1 = 127;
 
     int:Unsigned32 b1 = 127;
@@ -119,10 +119,10 @@ public function main() {
 
 Test-Case: output
 Description: Test equality of type Unsigned16 values.
-Fail-Issue: ballerina-lang#32788
-Labels: byte, int:Unsigned16
+Fail-Issue: ballerina-platform/ballerina-lang#32788
+Labels: int:Unsigned16, DecimalNumber, byte, equality
 
-public function main() {
+function init() {
     int:Unsigned16 a1 = 127;
     byte a2 = 127;
 
@@ -131,17 +131,16 @@ public function main() {
 
 Test-Case: error
 Description: Test type Unsigned16 value assignability with incompatible types.
-Labels: int:Unsigned8, int:Unsigned16, string, unary-minus
+Labels: int:Unsigned16, DecimalNumber, int:Unsigned8, string, unary-minus
 
-public function main() {
-    int:Unsigned16 a1 = -1; // @error int is not a subtype of int:Unsigned16
+function errorFunction(int:Unsigned16 a) {
+    int:Unsigned16 _ = -1; // @error int is not a subtype of int:Unsigned16
 
-    int:Unsigned16 a2 = 130;
-    testUnsigned8Int(a2); // @error int:Unsigned16 is not a subtype of int:Unsigned8
+    testUnsigned8Int(a); // @error int:Unsigned16 is not a subtype of int:Unsigned8
 
-    int:Unsigned16 a3 = "A"; // @error string is not a subtype of int:Unsigned16
+    int:Unsigned16 _ = "A"; // @error string is not a subtype of int:Unsigned16
 
-    string b1 = a2; // @error int:Unsigned16 is not a subtype of string
+    string _ = a; // @error int:Unsigned16 is not a subtype of string
 }
 
 function testUnsigned8Int(int:Unsigned8 i) {
@@ -149,28 +148,28 @@ function testUnsigned8Int(int:Unsigned8 i) {
 
 Test-Case: error
 Description: Test assigning an incompatible int value to type Unsigned16.
-Fail-Issue: ballerina-lang#32508 // no errors for these
-Labels: int:Unsigned16, unary-minus
+Fail-Issue: ballerina-platform/ballerina-lang#32508 // no errors for these
+Labels: int:Unsigned16, DecimalNumber, unary-minus
 
-public function main() {
-    int:Unsigned16 a = -21474770945; // @error int is not a subtype of int:Unsigned16
-    int:Unsigned16 b = -21474836480; // @error int is not a subtype of int:Unsigned16
+function errorFunction() {
+    int:Unsigned16 _ = -21474770945; // @error int is not a subtype of int:Unsigned16
+    int:Unsigned16 _ = -21474836480; // @error int is not a subtype of int:Unsigned16
 }
 
 Test-Case: error
 Description: Test assigning too large value to a Unsigned16 type variable.
-Fail-Issue: ballerina-lang#32574
-Labels: int:Unsigned16
+Fail-Issue: ballerina-platform/ballerina-lang#32574
+Labels: int:Unsigned16, DecimalNumber
 
-public function main() {
-    int:Unsigned16 x = 9223372036854775808; // @error too large value
+function errorFunction() {
+    int:Unsigned16 _ = 9223372036854775808; // @error too large value
 }
 
 Test-Case: error
 Description: Test assigning too small value to a Unsigned16 type variable.
-Fail-Issue: ballerina-lang#32574
-Labels: int:Unsigned16, unary-minus
+Fail-Issue: ballerina-platform/ballerina-lang#32574
+Labels: int:Unsigned16, DecimalNumber, unary-minus
 
-public function main() {
-    int:Unsigned16 x = -9223372036854775809; // @error too small value
+function errorFunction() {
+    int:Unsigned16 _ = -9223372036854775809; // @error too small value
 }

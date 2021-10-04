@@ -1,21 +1,21 @@
 Test-Case: error
 Description: Test missing int module-prefix with signed builtin subtypes of int.
-Labels:DecimalNumber
+Labels: DecimalNumber
 
-public function main() {
-    Signed8 a = 10; // @error unknown type
-    Signed16 b = 10; // @error unknown type
-    Signed32 c = 10; // @error unknown type
+function errorFunction() {
+    Signed8 _ = 10; // @error unknown type
+    Signed16 _ = 10; // @error unknown type
+    Signed32 _ = 10; // @error unknown type
 }
 
 Test-Case: error
 Description: Test missing int module-prefix with unsigned builtin subtypes of int.
 Labels: DecimalNumber
 
-public function main() {
-    Unsigned8 a = 10; // @error unknown type
-    Unsigned16 b = 10; // @error unknown type
-    Unsigned32 c = 10; // @error unknown type
+function errorFunction() {
+    Unsigned8 _ = 10; // @error unknown type
+    Unsigned16 _ = 10; // @error unknown type
+    Unsigned32 _ = 10; // @error unknown type
 }
 
 Test-Case: output
@@ -29,7 +29,7 @@ type SignedTypes int:Signed16|int:Signed32;
 
 type IntType2 IntType|SignedTypes;
 
-public function main() {
+function init() {
     int:Signed8|int:Unsigned32 a1 = 235262;
     io:println(a1); // @output 235262
 
@@ -49,12 +49,12 @@ public function main() {
 
 Test-Case: output
 Description: Test assigning valid values to union of builtin subtypes of int.
-Fail-Issue: ballerina-lang#32686
+Fail-Issue: ballerina-platform/ballerina-lang#32686
 Labels: int:Unsigned8, int:Unsigned32, module-type-defn, type-reference, union-type, unary-minus
 
 type IntType int:Signed8|int:Unsigned32;
 
-public function main() {
+function init() {
     int:Signed8|int:Unsigned32 a = -127;
     IntType b = -127;
 }
@@ -65,7 +65,7 @@ Labels: additive-expr, int:Unsigned8, int:Unsigned32, module-type-defn, type-ref
 
 type IntType int:Signed8|int:Unsigned32;
 
-public function main() {
+function init() {
     int:Signed8|int:Unsigned32 a = 4294967295 + 1;  // @error int is not a subtype of (int:Signed8|int:Unsigned32)
 
     IntType c = 4294967295 + 1;  // @error int is not a subtype of IntType
@@ -73,12 +73,12 @@ public function main() {
 
 Test-Case: output
 Description: Test assigning invalid values to union of builtin subtypes of int.
-Fail-Issue: ballerina-lang#32687
+Fail-Issue: ballerina-platform/ballerina-lang#32687
 Labels: int:Unsigned8, int:Unsigned32, module-type-defn, type-reference, union-type
 
 type IntType int:Signed8|int:Unsigned32;
 
-public function main() {
+function init() {
     int:Signed8|int:Unsigned32 b = 4294967296;  // @error int is not a subtype of (int:Signed8|int:Unsigned32)
 
     IntType d = 4294967296;  // @error int is not a subtype of IntType
@@ -90,7 +90,7 @@ Labels: int:Unsigned8, int:Unsigned32, module-type-defn, type-reference, union-t
 
 type IntType int:Signed8|int:Unsigned32;
 
-public function main() {
+function init() {
     int:Signed8|int:Unsigned32 a = 10;
     io:println(a.toString()); // @output 10
 
@@ -104,7 +104,7 @@ Labels: int:Unsigned8, int:Unsigned32, type-reference, union-type
 
 type IntType int:Signed8|int:Unsigned32;
 
-public function main() {
+function init() {
     io:println(getInt(10)); // @output 10
 }
 

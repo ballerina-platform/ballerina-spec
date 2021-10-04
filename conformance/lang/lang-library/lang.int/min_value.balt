@@ -1,21 +1,20 @@
 Test-Case: output
 Description: Test minimum value of int type.
-Labels: DecimalNumber, additive-expr, int:MIN_VALUE, is-expr, optional-type, string, unary-minus
+Labels: int:MIN_VALUE, DecimalNumber, additive-expr, int, if-else-stmt, is-expr, optional-type, string, unary-minus
 
-public function main() {
+function init() {
     int:MIN_VALUE a = -9223372036854775807 - 1;
+    testIntOrNil(a); // @output -9223372036854775808
 
     int b = int:MIN_VALUE;
     io:println(b); // @output -9223372036854775808
 
-    testIntOrNil(a);
-    testIntOrNil(int:MIN_VALUE);
+    testIntOrNil(int:MIN_VALUE); // @output -9223372036854775808
 }
 
 function testIntOrNil(int? i) {
     if i is int {
-        io:println(i); // @output -9223372036854775808
-                       // @output -9223372036854775808
+        io:println(i);
     } else {
         io:println("nil");
     }
@@ -25,42 +24,42 @@ Test-Case: error
 Description: Test assigning int:MIN_VALUE to an incompatible type.
 Labels: int:MIN_VALUE, int:Unsigned32, string
 
-public function main() {
-    int:Unsigned32 a = int:MIN_VALUE; // @error int is not a subtype of int:Unsigned32
-    string b = int:MIN_VALUE; // @error int is not a subtype of string
+function errorFunction() {
+    int:Unsigned32 _ = int:MIN_VALUE; // @error int is not a subtype of int:Unsigned32
+    string _ = int:MIN_VALUE; // @error int is not a subtype of string
 }
 
 Test-Case: error
 Description: Test assigning -9223372036854775808 for int:MIN_VALUE type variable.
-Fail-Issue: ballerina-lang#32577 // -9223372036854775808 would overflow, but doesn't atm
-Labels: DecimalNumber, int:MIN_VALUE, unary-minus
+Fail-Issue: ballerina-platform/ballerina-lang#32577
+Labels: int:MIN_VALUE, DecimalNumber,  unary-minus
 
-public function main() {
-    int:MIN_VALUE a = -9223372036854775808; // @error integer overflow
+function errorFunction() {
+    int:MIN_VALUE _ = -9223372036854775808; // @error integer overflow
 }
 
 Test-Case: error
 Description: Test assigning too small value for int:MIN_VALUE type variable
-Labels: DecimalNumber, int:MIN_VALUE, unary-minus
+Labels: int:MIN_VALUE, DecimalNumber, unary-minus
 
-public function main() {
-    int:MIN_VALUE a = -9223372036854775809; // @error too small value
+function errorFunction() {
+    int:MIN_VALUE _ = -9223372036854775809; // @error too small value
 }
 
 Test-Case: error
 Description: Test assigning invalid value for int:MIN_VALUE type variable.
-Fail-Issue: ballerina-lang#32513 // no error
-Labels: DecimalNumber, int:MIN_VALUE
+Fail-Issue: ballerina-platform/ballerina-lang#32513
+Labels: int:MIN_VALUE, DecimalNumber
 
-public function main() {
-    int:MIN_VALUE a = 10; // @error int is not a subtype of -9223372036854775808
+function errorFunction() {
+    int:MIN_VALUE _ = 10; // @error int is not a subtype of -9223372036854775808
 }
 
 Test-Case: error
 Description: Test updating int:MIN_VALUE constant value.
-Labels: DecimalNumber, int:MIN_VALUE
+Labels: int:MIN_VALUE, DecimalNumber
 
-public function main() {
+function errorFunction() {
     int:MIN_VALUE = 10; // @error cannot update constant
 }
 
@@ -68,6 +67,6 @@ Test-Case: error
 Description: Test missing int module-prefix with int MIN_VALUE.
 Labels: DecimalNumber, additive-expr, unary-minus
 
-public function main() {
-    MIN_VALUE a = -9223372036854775807 - 1; // @error unknown type
+function errorFunction() {
+    MIN_VALUE _ = -9223372036854775807 - 1; // @error unknown type
 }

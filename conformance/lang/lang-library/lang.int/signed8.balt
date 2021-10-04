@@ -1,8 +1,8 @@
 Test-Case: output
 Description: Test Signed8 built-in subtype of int.
-Labels: int:Signed8, unary-minus
+Labels: int:Signed8, DecimalNumber, unary-minus
 
-public function main() {
+function init() {
     int:Signed8 a1 = -128;
     int:Signed8 a2 = 0;
     int:Signed8 a3 = 127;
@@ -18,9 +18,9 @@ function testSigned8Int(int:Signed8 i) {
 
 Test-Case: output
 Description: Test assignability with type Signed8.
-Labels: int:Signed8, int:Signed16, int:Signed32, unary-minus
+Labels: int:Signed8, DecimalNumber, int, int:Signed16, int:Signed32, is-expr, optional-type, unary-minus
 
-public function main() {
+function init() {
     int:Signed8 a1 = -128;
     int:Signed8 a2 = 0;
     int:Signed8 a3 = 127;
@@ -40,9 +40,9 @@ public function main() {
 
 Test-Case: output
 Description: Test assignability with type Signed8.
-Labels: any, int:Signed8, optional-type, string, unary-minus
+Labels: int:Signed8, any, DecimalNumber, if-else-stmt, int, optional-type, string, unary-minus
 
-public function main() {
+function init() {
     int:Signed8 a1 = -128;
     int:Signed8 a2 = 0;
     int:Signed8 a3 = 127;
@@ -70,9 +70,9 @@ function testAny(any i) {
 
 Test-Case: output
 Description: Test type Signed8 value belonging to a type.
-Labels: int:Signed8, int:Signed32
+Labels: int:Signed8, int:Signed16, int:Signed32, is-expr, int
 
-public function main() {
+function init() {
     int:Signed8 a1 = 100;
 
     io:println(100 is int:Signed8); // @output true
@@ -83,9 +83,9 @@ public function main() {
 
 Test-Case: output
 Description: Test equality of type Signed8 values.
-Labels: int:Signed8, int:Signed16
+Labels: int:Signed8, int:Signed16, int:Signed32, int, DecimalNumber, equality
 
-public function main() {
+function init() {
     int:Signed8 a1 = 125;
     int:Signed8 a2 = 125;
 
@@ -109,19 +109,19 @@ public function main() {
 
 Test-Case: error
 Description: Test type Signed8 value assignability with incompatible types.
-Labels: int:Signed8, int:Unsigned8, int:Unsigned32, string, unary-minus
+Labels: int:Signed8, int:Unsigned8, int:Unsigned32, DecimalNumber, string, unary-minus
 
-public function main() {
-    int:Signed8 a1 = 256; // @error int is not a subtype of int:Signed8
+function errorFunction() {
+    int:Signed8 _ = 256; // @error int is not a subtype of int:Signed8
 
-    int:Signed8 a2 = -279; // @error int is not a subtype of int:Signed8
+    int:Signed8 _ = -279; // @error int is not a subtype of int:Signed8
 
-    int:Signed8 a3 = 100;
-    testUnsigned32Int(a3); // @error int:Signed8 is not a subtype of int:Unsigned32
+    int:Signed8 a = 100;
+    testUnsigned32Int(a); // @error int:Signed8 is not a subtype of int:Unsigned32
 
-    int:Unsigned8 a4 = "A"; // @error string is not a subtype of int:Signed8
+    int:Unsigned8 _ = "A"; // @error string is not a subtype of int:Signed8
 
-    string b1 = a3; // @error int:Signed8 is not a subtype of string
+    string _ = a3; // @error int:Signed8 is not a subtype of string
 }
 
 function testUnsigned32Int(int:Unsigned32 i) {
@@ -129,28 +129,28 @@ function testUnsigned32Int(int:Unsigned32 i) {
 
 Test-Case: error
 Description: Test assigning an incompatible int value to type Signed8.
-Fail-Issue: ballerina-lang#32508
-Labels: int:Signed8, unary-minus
+Fail-Issue: ballerina-platform/ballerina-lang#32508
+Labels: int:Signed8, DecimalNumber, unary-minus
 
-public function main() {
-    int:Signed8 a = -9223372036854775681; // @error int is not a subtype of int:Signed8
-    int:Signed8 b = 9223372036854775807; // @error int is not a subtype of int:Signed8
+function errorFunction() {
+    int:Signed8 _ = -9223372036854775681; // @error int is not a subtype of int:Signed8
+    int:Signed8 _ = 9223372036854775807; // @error int is not a subtype of int:Signed8
 }
 
 Test-Case: error
 Description: Test assigning too large value to a Signed8 type variable.
-Fail-Issue: ballerina-lang#32574
-Labels: int:Signed8
+Fail-Issue: ballerina-platform/ballerina-lang#32574
+Labels: int:Signed8, DecimalNumber
 
-public function main() {
-    int:Signed8 x = 9223372036854775808; // @error too large value
+function errorFunction() {
+    int:Signed8 _ = 9223372036854775808; // @error too large value
 }
 
 Test-Case: error
 Description: Test assigning too small value to a Signed8 type variable.
-Fail-Issue: ballerina-lang#32574
-Labels: int:Signed8, unary-minus
+Fail-Issue: ballerina-platform/ballerina-lang#32574
+Labels: int:Signed8, DecimalNumber, unary-minus
 
-public function main() {
-    int:Signed8 x = -9223372036854775809; // @error too small value
+function errorFunction() {
+    int:Signed8 _ = -9223372036854775809; // @error too small value
 }

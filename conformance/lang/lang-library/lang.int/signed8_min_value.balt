@@ -1,11 +1,11 @@
 Test-Case: output
 Description: Test minimum value of Signed8 built-in subtype of int.
-Labels: DecimalNumber, int:SIGNED8_MIN_VALUE, is-expr, optional-type, string, unary-minus
+Labels: int:SIGNED8_MIN_VALUE, DecimalNumber, if-else-stmt, int, is-expr, optional-type, string, unary-minus
 
-public function main() {
+function init() {
     int:SIGNED8_MIN_VALUE a = -128;
-
     testIntOrNil(a); // @output -128
+
     testIntOrNil(int:SIGNED8_MIN_VALUE); // @output -128
 
     int b = int:SIGNED8_MIN_VALUE;
@@ -22,9 +22,9 @@ function testIntOrNil(int? i) {
 
 Test-Case: output
 Description: Test SIGNED8_MIN_VALUE belonging to a type.
-Labels: int:Signed8, int:Signed16, int:Signed32, int:SIGNED8_MIN_VALUE, is-expr
+Labels: int:SIGNED8_MIN_VALUE, int, int:Signed8, int:Signed16, int:Signed32, is-expr
 
-public function main() {
+function init() {
     io:println(int:SIGNED8_MIN_VALUE is int); // @output true
     io:println(int:SIGNED8_MIN_VALUE is int:Signed8); // @output true
     io:println(int:SIGNED8_MIN_VALUE is int:Signed16); // @output true
@@ -33,9 +33,9 @@ public function main() {
 
 Test-Case: output
 Description: Test assignability of SIGNED8_MIN_VALUE with var.
-Labels: int:SIGNED8_MIN_VALUE, is-expr, optional-type, string, var
+Labels: int:SIGNED8_MIN_VALUE, is-expr, var
 
-public function main() {
+function init() {
     var a = int:SIGNED8_MIN_VALUE;
     io:println(a); // @output -128
     io:println(a is int); // @output true
@@ -43,24 +43,25 @@ public function main() {
 
 Test-Case: output
 Description: Test declaring module level variables with SIGNED8_MIN_VALUE.
-Labels: int:SIGNED8_MIN_VALUE, module-const-decl
+Labels: int:SIGNED8_MIN_VALUE, int, module-const-decl
 
 const int a = int:SIGNED8_MIN_VALUE;
 
 int b = int:SIGNED8_MIN_VALUE;
 
-public function main() {
+function init() {
     io:println(a); // @output -128
     io:println(b); // @output -128
 }
 
 Test-Case: output
 Description: Test defining types with SIGNED8_MIN_VALUE.
-Labels: int:SIGNED8_MIN_VALUE, module-const-decl, module-type-defn, type-reference, unary-minus, union-type
+Labels: int:SIGNED8_MIN_VALUE, DecimalNumber, int:Unsigned16, module-const-decl, module-type-defn, unary-minus,
+        union-type
 
 type Const1 int:SIGNED8_MIN_VALUE;
 
-public function main() {
+function init() {
     Const1 a1 = -128;
     io:println(a1); // @output -128
 
@@ -70,9 +71,9 @@ public function main() {
 
 Test-Case: output
 Description: Test equality with SIGNED8_MIN_VALUE.
-Labels: int:Signed8, int:SIGNED8_MIN_VALUE, unary-minus
+Labels: int:SIGNED8_MIN_VALUE, DecimalNumber, equality, int, int:Signed8, unary-minus
 
-public function main() {
+function init() {
     io:println(int:SIGNED8_MIN_VALUE == -128); // @output true
 
     int a = -128;
@@ -84,9 +85,9 @@ public function main() {
 
 Test-Case: output
 Description: Test SIGNED8_MIN_VALUE as expression in return statement.
-Labels: int:SIGNED8_MIN_VALUE
+Labels: int:SIGNED8_MIN_VALUE, return-stmt
 
-public function main() {
+function init() {
     io:println(getInt()); // @output -128
 }
 
@@ -96,44 +97,44 @@ function getInt() returns int {
 
 Test-Case: output
 Description: Test SIGNED8_MIN_VALUE as expression in list constructor.
-Labels: array-type, int:SIGNED8_MIN_VALUE, list-constructor-expr, unary-minus
+Labels: int:SIGNED8_MIN_VALUE, array-type, int, list-constructor-expr
 
-public function main() {
+function init() {
     int[] arr = [int:SIGNED8_MIN_VALUE, int:SIGNED8_MIN_VALUE];
     io:println(arr); // @output [-128,-128]
 }
 
 Test-Case: output
 Description: Test SIGNED8_MIN_VALUE as expression in method call expression.
-Labels: int:SIGNED8_MIN_VALUE, value:toString(), method-call-expr
+Labels: int:SIGNED8_MIN_VALUE, value:toString, method-call-expr
 
-public function main() {
+function init() {
     io:println(int:SIGNED8_MIN_VALUE.toString()); // @output -128
 }
 
 Test-Case: output
 Description: Test SIGNED8_MIN_VALUE as expression in map constructor.
-Labels: int:SIGNED8_MIN_VALUE, mapping-constructor-expr, map-type, string
+Labels: int:SIGNED8_MIN_VALUE, int, mapping-constructor-expr, map-type, string
 
-public function main() {
+function init() {
     map<int> intMap = {"One": int:SIGNED8_MIN_VALUE, "Two": int:SIGNED8_MIN_VALUE};
     io:println(intMap); // @output {"One":-128,"Two":-128}
 }
 
 Test-Case: output
 Description: Test SIGNED8_MIN_VALUE as expression in additive expression.
-Labels: additive-expr, int:SIGNED8_MIN_VALUE
+Labels: int:SIGNED8_MIN_VALUE, additive-expr, int
 
-public function main() {
+function init() {
     int a = int:SIGNED8_MIN_VALUE + int:SIGNED8_MIN_VALUE;
     io:println(a); // @output -256
 }
 
 Test-Case: output
 Description: Test SIGNED8_MIN_VALUE as expression in if else statement.
-Labels: int:SIGNED8_MIN_VALUE, relational-expr
+Labels: int:SIGNED8_MIN_VALUE, DecimalNumber, if-else-stmt, relational-expr
 
-public function main() {
+function init() {
     compare(); // @output true
 }
 
@@ -147,8 +148,8 @@ function compare() {
 
 Test-Case: error
 Description: Test assigning values to subtypes of SIGNED8_MAX_VALUE.
-Fail-Issue: ballerina-lang#32804
-Labels: DecimalNumber, int:SIGNED8_MIN_VALUE, module-const-decl, module-type-defn, type-reference, union-type
+Fail-Issue: ballerina-platform/ballerina-lang#32804
+Labels: int:SIGNED8_MIN_VALUE, DecimalNumber, module-const-decl, module-type-defn
 
 const int A = int:SIGNED8_MIN_VALUE;
 
@@ -156,34 +157,34 @@ type Const1 int:SIGNED8_MIN_VALUE;
 
 type Const2 A|Const1;
 
-public function main() {
-    Const1 a = 23; // @error int is not a subtype of -128
+function errorFunction() {
+    Const1 _ = 23; // @error int is not a subtype of -128
 
-    Const2 b = 23; // @error int is not a subtype of -128
+    Const2 _ = 23; // @error int is not a subtype of -128
 }
 
 Test-Case: error
 Description: Test assigning invalid value for int:SIGNED8_MIN_VALUE type variable.
-Labels: DecimalNumber, int:SIGNED8_MIN_VALUE
+Labels: int:SIGNED8_MIN_VALUE, DecimalNumber
 
-public function main() {
-    int:SIGNED8_MIN_VALUE a = 10; // @error int is not a subtype of -128
+function errorFunction() {
+    int:SIGNED8_MIN_VALUE _ = 10; // @error int is not a subtype of -128
 }
 
 Test-Case: error
 Description: Test assigning int:SIGNED8_MIN_VALUE to an incompatible type.
-Labels: int:Signed8, int:SIGNED8_MIN_VALUE, string
+Labels: int:SIGNED8_MIN_VALUE, , int:Signed8, string
 
-public function main() {
-    int:Signed8 a = int:SIGNED8_MIN_VALUE; // @error int is not a subtype of int:Signed8
-    string b = int:SIGNED8_MIN_VALUE; // @error int is not a subtype of string
+function errorFunction() {
+    int:Signed8 _ = int:SIGNED8_MIN_VALUE; // @error int is not a subtype of int:Signed8
+    string _ = int:SIGNED8_MIN_VALUE; // @error int is not a subtype of string
 }
 
 Test-Case: error
 Description: Test updating int:SIGNED8_MIN_VALUE constant value.
-Labels: DecimalNumber, int:SIGNED8_MIN_VALUE
+Labels: int:SIGNED8_MIN_VALUE, DecimalNumber
 
-public function main() {
+function errorFunction() {
     int:SIGNED8_MIN_VALUE = 10; // @error cannot update constant
 }
 
@@ -191,6 +192,6 @@ Test-Case: error
 Description: Test missing int module-prefix with int:SIGNED8_MIN_VALUE.
 Labels: DecimalNumber, unary-minus
 
-public function main() {
-    SIGNED8_MIN_VALUE a = -100; // @error unknown type
+function errorFunction() {
+    SIGNED8_MIN_VALUE _ = -100; // @error unknown type
 }

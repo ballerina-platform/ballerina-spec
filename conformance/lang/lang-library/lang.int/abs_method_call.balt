@@ -1,25 +1,21 @@
 Test-Case: error
 Description: Test assigning the result of `abs` function to an incompatible type.
-Labels: function-call-expr, int:abs, int:Signed8, string, method-call-expr
+Labels: int:abs, function-call-expr, DecimalNumber, int, int:Signed8, string, method-call-expr, unary-minus
 
-public function main() {
-    int a1 = -10;
+function errorFunction(int a) {
+    int:Signed8 _ = a.abs(); // @error expects a int:Signed8 value, but abs() returns an int
 
-    int:Signed8 b1 = a1.abs(); // @error expects a int:Signed8 value, but abs() returns an int
+    string _ = a.abs(); // @error expects a string value, but abs() returns an int
 
-    string b2 = a1.abs(); // @error expects a string value, but abs() returns an int
-
-    b2 = int:abs(-10); // @error expects a string value, but abs() returns an int
+    string _ = int:abs(-10); // @error expects a string value, but abs() returns an int
 }
 
 Test-Case: error
 Description: Test passing invalid value to `abs` function.
-Labels: float, function-call-expr, int:abs, string, method-call-expr
+Labels: int:abs, float, function-call-expr, int, string, method-call-expr
 
-public function main() {
-    float a1 = 10.5;
-
-    int b1 = a1.abs(); // @error expects an int value to be operated on
+function errorFunction(float a) {
+    int b1 = a.abs(); // @error expects an int value to be operated on
 
     b1 = int:abs("ABC"); // @error expects an int value to be operated on
 
@@ -30,8 +26,8 @@ public function main() {
 
 Test-Case: error
 Description: Test missing required parameter in `abs` function call.
-Labels: function-call-expr, int:abs
+Labels: int:abs, function-call-expr, int
 
-public function main() {
-    int a = int:abs(); // @error missing value to be operated on
+function errorFunction() {
+    int _ = int:abs(); // @error missing value to be operated on
 }

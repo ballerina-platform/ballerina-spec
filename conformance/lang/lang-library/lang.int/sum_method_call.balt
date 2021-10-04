@@ -1,27 +1,23 @@
 Test-Case: error
 Description: Test assigning the result of `sum` function to an incompatible type.
-Labels: float, function-call-expr, int:Signed8, int:sum, method-call-expr,
+Labels: int:sum, float, function-call-expr, int:Signed8, int, method-call-expr
 
-public function main() {
-    int a1 = 10;
+function errorFunction(int a1) {
+    int:Signed8 _ = a1.sum(10, 20); // @error expects a int:Signed8, but sum() returns an int
 
-    int:Signed8 b1 = a1.sum(10, 20); // @error expects a int:Signed8, but sum() returns an int
+    float _ = a1.sum(20, 30, 40); // @error expects a float, but sum() returns an int
 
-    float b2 = a1.sum(20, 30, 40); // @error expects a float, but sum() returns an int
-
-    b2 = int:sum(10, 20); // @error expects a float, but sum() returns an int
+    float _ = int:sum(10, 20); // @error expects a float, but sum() returns an int
 }
 
 Test-Case: error
 Description: Test passing invalid value to `sum` function.
-Labels: function-call-expr, int:sum, method-call-expr,
+Labels: int:sum, DecimalNumber, float, function-call-expr, int, string, method-call-expr
 
-public function main() {
-    int a1 = 10;
+function errorFunction(int a1) {
+    int _ = a1.sum(10, 10.5); // @error expects int values to sum
 
-    int b1 = a1.sum(10, 10.5); // @error expects int values to sum
-
-    b1 = int:sum(10, "ABC"); // @error expects int values to sum
+    int _ = int:sum(10, "ABC"); // @error expects int values to sum
 }
 
 

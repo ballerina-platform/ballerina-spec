@@ -1,8 +1,8 @@
 Test-Case: output
 Description: Test Signed32 built-in subtype of int.
-Labels: int:Signed32, unary-minus
+Labels: int:Signed32, DecimalNumber, unary-minus
 
-public function main() {
+function init() {
     int:Signed32 a1 = -2147483648;
     int:Signed32 a2 = 145678392;
     int:Signed32 a3 = 2147483647;
@@ -18,9 +18,9 @@ function testSigned32Int(int:Signed32 i) {
 
 Test-Case: output
 Description: Test assignability of type Signed32.
-Labels: int:Signed32, is-expr, optional-type, unary-minus
+Labels: int:Signed32, DecimalNumber, int, is-expr, optional-type, unary-minus
 
-public function main() {
+function init() {
     int:Signed32 a1 = -2147483648;
     int:Signed32 a2 = 145678392;
     int:Signed32 a3 = 2147483647;
@@ -34,9 +34,9 @@ public function main() {
 
 Test-Case: output
 Description: Test assignability of type Signed32.
-Labels: any, int:Signed32, optional-type, string, unary-minus
+Labels: int:Signed32, any, DecimalNumber, int, optional-type, string, unary-minus
 
-public function main() {
+function init() {
     int:Signed32 a1 = -2147483648;
     int:Signed32 a2 = 145678392;
     int:Signed32 a3 = 2147483647;
@@ -64,20 +64,20 @@ function testAny(any i) {
 
 Test-Case: output
 Description: Test int:Signed32 value belonging to a type.
-Labels: int:Signed32, is-expr
+Labels: int:Signed32, DecimalNumber, int, is-expr
 
-public function main() {
+function init() {
     int:Signed32 a1 = 1234521672;
+    io:println(a1 is int); // @output true
 
     io:println(1234521672 is int:Signed32); // @output true
-    io:println(a1 is int); // @output true
 }
 
 Test-Case: output
 Description: Test equality of int:Signed32 values.
-Labels: int:Signed32
+Labels: int:Signed32, DecimalNumber, int, equality, unary-minus
 
-public function main() {
+function init() {
     int:Signed32 a1 = 127;
     int:Signed32 a2 = 127;
 
@@ -95,19 +95,19 @@ public function main() {
 
 Test-Case: error
 Description: Test assignability of type Signed32 with incompatible types.
-Labels: int:Signed8, int:Signed32, string, unary-minus
+Labels: int:Signed32, DecimalNumber, int:Signed8, string, unary-minus
 
-public function main() {
-    int:Signed32 a1 = 21474836488; // @error int is not a subtype of int:Signed32
+function errorFunction() {
+    int:Signed32 _ = 21474836488; // @error int is not a subtype of int:Signed32
 
-    int:Signed32 a2 = -2147483649; // @error int is not a subtype of int:Signed32
+    int:Signed32 _ = -2147483649; // @error int is not a subtype of int:Signed32
 
-    int:Signed32 a3 = 100;
-    testSigned8Int(a3); // @error int:Signed32 is not a subtype of int:Signed8
+    int:Signed32 a = 100;
+    testSigned8Int(a); // @error int:Signed32 is not a subtype of int:Signed8
 
-    int:Signed32 a3 = "A"; // @error string is not a subtype of int:Signed32
+    int:Signed32 _ = "A"; // @error string is not a subtype of int:Signed32
 
-    string b1 = a2; // @error int:Signed32 is not a subtype of string
+    string _ = a2; // @error int:Signed32 is not a subtype of string
 }
 
 function testSigned8Int(int:Signed8 i) {
@@ -115,18 +115,18 @@ function testSigned8Int(int:Signed8 i) {
 
 Test-Case: error
 Description: Test assigning too large value to a Signed32 type variable.
-Fail-Issue: ballerina-lang#32574
-Labels: int:Signed32
+Fail-Issue: ballerina-platform/ballerina-lang#32574
+Labels: int:Signed32, DecimalNumber
 
-public function main() {
-    int:Signed32 x = 9223372036854775808; // @error too large value
+function errorFunction() {
+    int:Signed32 _ = 9223372036854775808; // @error too large value
 }
 
 Test-Case: error
 Description: Test assigning too small value to a Signed32 type variable.
-Fail-Issue: ballerina-lang#32574
-Labels: int:Signed32, unary-minus
+Fail-Issue: ballerina-platform/ballerina-lang#32574
+Labels: int:Signed32, DecimalNumber, unary-minus
 
-public function main() {
-    int:Signed32 x = -9223372036854775809; // @error too small value
+function errorFunction() {
+    int:Signed32 _ = -9223372036854775809; // @error too small value
 }

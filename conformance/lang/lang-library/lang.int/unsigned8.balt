@@ -1,8 +1,8 @@
 Test-Case: output
 Description: Test Unsigned8 built-in subtype of int.
-Labels: int:Unsigned8
+Labels: int:Unsigned8, DecimalNumber
 
-public function main() {
+function init() {
     int:Unsigned8 a1 = 0;
     int:Unsigned8 a2 = 130;
     int:Unsigned8 a3 = 255;
@@ -18,9 +18,9 @@ function testUnsigned8Int(int:Unsigned8 i) {
 
 Test-Case: output
 Description: Test assignability with type Unsigned8.
-Labels: int:Signed16, int:Signed32, int:Unsigned8, is-expr
+Labels: int:Unsigned8, DecimalNumber, int:Signed16, int:Signed32, is-expr
 
-public function main() {
+function init() {
     int:Unsigned8 a1 = 130;
     int:Unsigned8 a2 = 255;
 
@@ -33,9 +33,9 @@ public function main() {
 
 Test-Case: output
 Description: Test assignability with type Unsigned8.
-Labels: byte, int:Unsigned8, int:Unsigned16, int:Unsigned32, is-expr
+Labels: int:Unsigned8, DecimalNumber, byte, int, int:Unsigned16, int:Unsigned32, is-expr
 
-public function main() {
+function init() {
     int:Unsigned8 a1 = 130;
     int:Unsigned8 a2 = 255;
 
@@ -54,9 +54,9 @@ public function main() {
 
 Test-Case: output
 Description: Test assignability with type Unsigned8.
-Labels: int:Unsigned8, is-expr, optional-type
+Labels: int:Unsigned8, DecimalNumber, int, is-expr, optional-type
 
-public function main() {
+function init() {
     int:Unsigned8 a1 = 130;
     int:Unsigned8 a2 = 255;
 
@@ -69,9 +69,9 @@ public function main() {
 
 Test-Case: output
 Description: Test assignability with type Unsigned8.
-Labels: any, int:Unsigned8, is-expr, optional-type, string
+Labels: int:Unsigned8, DecimalNumber, any, int, is-expr, optional-type, string
 
-public function main() {
+function init() {
     int:Unsigned8 a1 = 0;
     int:Unsigned8 a2 = 130;
     int:Unsigned8 a3 = 255;
@@ -99,9 +99,9 @@ function testAny(any i) {
 
 Test-Case: output
 Description: Test type Unsigned8 value belonging to a type.
-Labels: byte, int:Unsigned8, int:Unsigned16, int:Unsigned32, is-expr
+Labels: int:Unsigned8, DecimalNumber, byte, int, int:Unsigned16, int:Unsigned32, int:Signed32, int:Signed16, is-expr
 
-public function main() {
+function init() {
     int:Unsigned8 a1 = 130;
 
     io:println(130 is int:Unsigned8); // @output true
@@ -115,9 +115,9 @@ public function main() {
 
 Test-Case: output
 Description: Test equality of type Unsigned8 values.
-Labels: int:Unsigned8
+Labels: int:Unsigned8, DecimalNumber, equality, int:Unsigned32, int:Unsigned16, int
 
-public function main() {
+function init() {
     int:Unsigned8 a1 = 127;
     int:Unsigned8 a2 = 127;
     int:Unsigned8 a3 = 120;
@@ -138,10 +138,10 @@ public function main() {
 
 Test-Case: output
 Description: Test equality of type Unsigned8 values.
-Fail-Issue: ballerina-lang#32788
-Labels: byte, int:Unsigned8
+Fail-Issue: ballerina-platform/ballerina-lang#32788
+Labels: int:Unsigned8, DecimalNumber, byte, equality
 
-public function main() {
+function init() {
     int:Unsigned8 a1 = 127;
     byte a2 = 127;
 
@@ -150,19 +150,18 @@ public function main() {
 
 Test-Case: error
 Description: Test type Unsigned8 value assignability with incompatible types.
-Labels: int:Signed8, int:Unsigned8, string
+Labels: int:Unsigned8, DecimalNumber, int:Signed8, string, unary-minus
 
-public function main() {
-    int:Unsigned8 a1 = 256; // @error int is not a subtype of int:Unsigned8
+function errorFunction(int:Unsigned8 a) {
+    int:Unsigned8 _ = 256; // @error int is not a subtype of int:Unsigned8
 
-    int:Unsigned8 a2 = -10; // @error int is not a subtype of int:Unsigned8
+    int:Unsigned8 _ = -10; // @error int is not a subtype of int:Unsigned8
 
-    int:Unsigned8 a3 = 130;
-    testSigned8Int(a3); // @error int:Unsigned8 is not a subtype of int:Signed8
+    testSigned8Int(a); // @error int:Unsigned8 is not a subtype of int:Signed8
 
-    int:Unsigned8 a4 = "A"; // @error string is not a subtype of int:Unsigned8
+    int:Unsigned8 _ = "A"; // @error string is not a subtype of int:Unsigned8
 
-    string b1 = a3; // @error int:Unsigned8 is not a subtype of string
+    string _ = a; // @error int:Unsigned8 is not a subtype of string
 }
 
 function testSigned8Int(int:Signed8 i) {
@@ -170,28 +169,28 @@ function testSigned8Int(int:Signed8 i) {
 
 Test-Case: error
 Description: Test assigning an incompatible int value to type Unsigned8.
-Fail-Issue: ballerina-lang#32508
-Labels: int:Unsigned8, unary-minus
+Fail-Issue: ballerina-platform/ballerina-lang#32508
+Labels: int:Unsigned8, DecimalNumber, unary-minus
 
-public function main() {
-    int:Unsigned8 a = -9223372036854775553; // @error int is not a subtype of int:Unsigned8
-    int:Unsigned8 b = -9223372036854775808; // @error int is not a subtype of int:Unsigned8
+function errorFunction() {
+    int:Unsigned8 _ = -9223372036854775553; // @error int is not a subtype of int:Unsigned8
+    int:Unsigned8 _ = -9223372036854775808; // @error int is not a subtype of int:Unsigned8
 }
 
 Test-Case: error
 Description: Test assigning too large value to a Unsigned8 type variable.
-Fail-Issue: ballerina-lang#32574
-Labels: int:Unsigned8
+Fail-Issue: ballerina-platform/ballerina-lang#32574
+Labels: int:Unsigned8, DecimalNumber,
 
-public function main() {
-    int:Unsigned8 x = 9223372036854775808; // @error too large value
+function errorFunction() {
+    int:Unsigned8 _ = 9223372036854775808; // @error too large value
 }
 
 Test-Case: error
 Description: Test assigning too small value to a Unsigned8 type variable.
-Fail-Issue: ballerina-lang#32574
-Labels: int:Unsigned8, unary-minus
+Fail-Issue: ballerina-platform/ballerina-lang#32574
+Labels: int:Unsigned8, DecimalNumber, unary-minus
 
-public function main() {
-    int:Unsigned8 x = -9223372036854775809; // @error too small value
+function errorFunction() {
+    int:Unsigned8 _ = -9223372036854775809; // @error too small value
 }

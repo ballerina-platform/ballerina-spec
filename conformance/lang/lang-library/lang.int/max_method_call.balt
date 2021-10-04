@@ -1,41 +1,37 @@
 Test-Case: error
 Description: Test assigning the result of `max` function to an incompatible type.
-Labels: function-call-expr, int:max, int:Signed8, method-call-expr, string
+Labels: int:max, DecimalNumber, function-call-expr, int:Signed8, method-call-expr, string
 
-public function main() {
-    int a1 = -10;
+function errorFunction(int a) {
+    int:Signed8 _ = a.max(10); // @error expects a int:Signed8 value, but max() returns an int
 
-    int:Signed8 b1 = a1.max(10); // @error expects a int:Signed8 value, but max() returns an int
+    string _ = a.max(); // @error expects a string value, but max() returns an int
 
-    string b2 = a1.max(); // @error expects a string value, but max() returns an int
-
-    b2 = int:max(-10); // @error expects a string value, but max() returns an int
+    string _ = int:max(-10); // @error expects a string value, but max() returns an int
 }
 
 Test-Case: error
 Description: Test passing invalid value to `max` function.
-Labels: function-call-expr, int:max, method-call-expr, string
+Labels: int:max, float, function-call-expr, method-call-expr, string
 
-public function main() {
-    int a1 = 10;
-    int b1 = a1.max(10.5); // @error expects other values to be int
+function errorFunction(int a) {
+    int _ = a.max(10.5); // @error expects other values to be int
 
-    b1 = int:max("ABC"); // @error expects first value to be int
+    int _ = int:max("ABC"); // @error expects first value to be int
 }
 
 Test-Case: error
 Description: Test `max` function on invalid type.
-Labels: int:max, method-call-expr, string
+Labels: int:max, DecimalNumber, method-call-expr, int, string
 
-public function main() {
-    string a1 = "ABC";
-    int b1 = a1.max(10); // @error max() is not defined for string
+function errorFunction(string a) {
+    int _ = a.max(10); // @error max() is not defined for string
 }
 
 Test-Case: error
 Description: Test missing required parameter in `max` function call.
-Labels: function-call-expr, int:max
+Labels: int:max, function-call-expr, int
 
-public function main() {
-    int a = int:max(); // @error missing first int value
+function errorFunction() {
+    int _ = int:max(); // @error missing first int value
 }

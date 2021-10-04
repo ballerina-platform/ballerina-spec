@@ -1,11 +1,11 @@
 Test-Case: output
 Description: Test minimum value of Signed32 built-in subtype of int.
-Labels: int:SIGNED32_MIN_VALUE, is-expr, optional-type, string, unary-minus
+Labels: int:SIGNED32_MIN_VALUE, DecimalNumber, if-else-stmt, int, is-expr, optional-type, string, unary-minus
 
-public function main() {
+function init() {
     int:SIGNED32_MIN_VALUE a = -2147483648;
-
     testIntOrNil(a); // @output -2147483648
+
     testIntOrNil(int:SIGNED32_MIN_VALUE); // @output -2147483648
 
     int b = int:SIGNED32_MIN_VALUE;
@@ -22,18 +22,18 @@ function testIntOrNil(int? i) {
 
 Test-Case: output
 Description: Test SIGNED32_MIN_VALUE belonging to a type.
-Labels: int:Signed16, int:Signed32, int:SIGNED32_MIN_VALUE, is-expr
+Labels: int:SIGNED32_MIN_VALUE, int, int:Signed32, is-expr
 
-public function main() {
+function init() {
     io:println(int:SIGNED32_MIN_VALUE is int); // @output true
     io:println(int:SIGNED32_MIN_VALUE is int:Signed32); // @output true
 }
 
 Test-Case: output
 Description: Test assignability of SIGNED32_MIN_VALUE with var.
-Labels: int:SIGNED32_MIN_VALUE, is-expr, optional-type, string, var
+Labels: int:SIGNED32_MIN_VALUE, int, is-expr, var
 
-public function main() {
+function init() {
     var a = int:SIGNED32_MIN_VALUE;
     io:println(a); // @output -2147483648
     io:println(a is int); // @output true
@@ -41,24 +41,24 @@ public function main() {
 
 Test-Case: output
 Description: Test declaring module level variables with SIGNED32_MIN_VALUE.
-Labels: int:SIGNED32_MIN_VALUE, module-const-decl
+Labels: int:SIGNED32_MIN_VALUE, int, module-const-decl
 
 const int a = int:SIGNED32_MIN_VALUE;
 
 int b = int:SIGNED32_MIN_VALUE;
 
-public function main() {
+function init() {
     io:println(a); // @output -2147483648
     io:println(b); // @output -2147483648
 }
 
 Test-Case: output
 Description: Test defining types with SIGNED32_MIN_VALUE.
-Labels: int:SIGNED32_MIN_VALUE, module-type-defn, type-reference, unary-minus, union-type
+Labels: int:SIGNED32_MIN_VALUE, DecimalNumber, int:Unsigned16, module-type-defn, unary-minus, union-type
 
 type Const1 int:SIGNED32_MIN_VALUE;
 
-public function main() {
+function init() {
     Const1 a1 = -2147483648;
     io:println(a1); // @output -2147483648
 
@@ -68,9 +68,9 @@ public function main() {
 
 Test-Case: output
 Description: Test equality with SIGNED32_MIN_VALUE.
-Labels: int:Signed32, int:SIGNED32_MIN_VALUE, unary-minus
+Labels: int:SIGNED32_MIN_VALUE, DecimalNumber, equality, int, int:Signed32, unary-minus
 
-public function main() {
+function init() {
     io:println(int:SIGNED32_MIN_VALUE == -2147483648); // @output true
 
     int a = -2147483648;
@@ -84,7 +84,7 @@ Test-Case: output
 Description: Test SIGNED32_MIN_VALUE as expression in return statement.
 Labels: int:SIGNED32_MIN_VALUE, return-stmt
 
-public function main() {
+function init() {
     io:println(getInt()); // @output -2147483648
 }
 
@@ -94,44 +94,44 @@ function getInt() returns int {
 
 Test-Case: output
 Description: Test SIGNED32_MIN_VALUE as expression in list constructor.
-Labels: array-type, int:SIGNED32_MIN_VALUE, list-constructor-expr
+Labels: int:SIGNED32_MIN_VALUE, array-type, int, list-constructor-expr
 
-public function main() {
+function init() {
     int[] arr = [int:SIGNED32_MIN_VALUE, int:SIGNED32_MIN_VALUE];
     io:println(arr); // @output [-2147483648,-2147483648]
 }
 
 Test-Case: output
 Description: Test SIGNED32_MIN_VALUE as expression in method call expression.
-Labels: int:SIGNED32_MIN_VALUE, value:toString(), method-call-expr
+Labels: int:SIGNED32_MIN_VALUE, value:toString, method-call-expr
 
-public function main() {
+function init() {
     io:println(int:SIGNED32_MIN_VALUE.toString()); // @output -2147483648
 }
 
 Test-Case: output
 Description: Test SIGNED32_MIN_VALUE as expression in map constructor.
-Labels: int:SIGNED32_MIN_VALUE, mapping-constructor-expr, map-type, string
+Labels: int:SIGNED32_MIN_VALUE, int, mapping-constructor-expr, map-type, string
 
-public function main() {
+function init() {
     map<int> intMap = {"One": int:SIGNED32_MIN_VALUE, "Two": int:SIGNED32_MIN_VALUE};
     io:println(intMap); // @output {"One":-2147483648,"Two":-2147483648}
 }
 
 Test-Case: output
 Description: Test SIGNED32_MIN_VALUE as expression in additive expression.
-Labels: additive-expr, int:SIGNED32_MIN_VALUE
+Labels: int:SIGNED32_MIN_VALUE, additive-expr, int
 
-public function main() {
+function init() {
     int a = int:SIGNED32_MIN_VALUE + int:SIGNED32_MIN_VALUE;
     io:println(a); // @output -4294967296
 }
 
 Test-Case: output
 Description: Test SIGNED32_MIN_VALUE as expression in if else statement.
-Labels: int:SIGNED32_MIN_VALUE, relational-expr
+Labels: int:SIGNED32_MIN_VALUE, DecimalNumber, if-else-stmt, relational-expr
 
-public function main() {
+function init() {
     compare(); // @output true
 }
 
@@ -145,8 +145,8 @@ function compare() {
 
 Test-Case: error
 Description: Test assigning values to subtypes of SIGNED32_MIN_VALUE.
-Fail-Issue: ballerina-lang#32804
-Labels: DecimalNumber, int:SIGNED32_MIN_VALUE, module-const-decl, module-type-defn, type-reference, union-type
+Fail-Issue: ballerina-platform/ballerina-lang#32804
+Labels: int:SIGNED32_MIN_VALUE, DecimalNumber, module-const-decl, module-type-defn
 
 const int A = int:SIGNED32_MIN_VALUE;
 
@@ -154,34 +154,34 @@ type Const1 int:SIGNED32_MIN_VALUE;
 
 type Const2 A|Const1;
 
-public function main() {
-    Const1 a = 23; // @error int is not a subtype of -2147483648
+function errorFunction() {
+    Const1 _ = 23; // @error int is not a subtype of -2147483648
 
-    Const2 b = 23; // @error int is not a subtype of -2147483648
+    Const2 _ = 23; // @error int is not a subtype of -2147483648
 }
 
 Test-Case: error
 Description: Test assigning invalid value for int:SIGNED32_MIN_VALUE type variable.
-Labels: DecimalNumber, int:SIGNED32_MIN_VALUE
+Labels: int:SIGNED32_MIN_VALUE, DecimalNumber
 
-public function main() {
-    int:SIGNED32_MIN_VALUE a = 10; // @error int is not a subtype of -2147483648
+function errorFunction() {
+    int:SIGNED32_MIN_VALUE _ = 10; // @error int is not a subtype of -2147483648
 }
 
 Test-Case: error
 Description: Test assigning int:SIGNED32_MIN_VALUE with an incompatible type.
-Labels: int:Signed32, int:SIGNED32_MIN_VALUE, string
+Labels: int:SIGNED32_MIN_VALUE, int:Signed32, string
 
-public function main() {
-    int:Signed32 a = int:SIGNED32_MIN_VALUE; // @error int is not a subtype of int:Signed32
-    string b = int:SIGNED32_MIN_VALUE; // @error int is not a subtype of string
+function errorFunction() {
+    int:Signed32 _ = int:SIGNED32_MIN_VALUE; // @error int is not a subtype of int:Signed32
+    string _ = int:SIGNED32_MIN_VALUE; // @error int is not a subtype of string
 }
 
 Test-Case: error
 Description: Test updating int:SIGNED32_MIN_VALUE constant value.
-Labels: DecimalNumber, int:SIGNED32_MIN_VALUE
+Labels: int:SIGNED32_MIN_VALUE, DecimalNumber
 
-public function main() {
+function errorFunction() {
     int:SIGNED32_MIN_VALUE = 10; // @error cannot update constant
 }
 
@@ -189,6 +189,6 @@ Test-Case: error
 Description: Test missing int module-prefix with int:SIGNED32_MIN_VALUE.
 Labels: DecimalNumber, unary-minus
 
-public function main() {
-    SIGNED32_MIN_VALUE a = -100; // @error unknown type
+function errorFunction() {
+    SIGNED32_MIN_VALUE _ = -100; // @error unknown type
 }
