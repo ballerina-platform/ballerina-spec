@@ -655,7 +655,7 @@ function init() {
 
 Test-Case: output
 Description: Test integer division non-overflow scenarios, for negative non-zero integers, for int:Signed8.
-Labels: multiplicative-expr, DecimalNumber, int:Signed8, unary-minus
+Labels: multiplicative-expr, DecimalNumber, int:Signed8
 
 function init() {
     int:Signed8 a = 1;
@@ -4011,3 +4011,25 @@ function init() {
     io:println(a / 18); // @output 198
     io:println(0Xdef / 18); // @output 198
 }
+
+Test-Case: output
+Description: Test integer division non-panic scenarios at module-level.
+Labels: multiplicative-expr, int, DecimalNumber
+
+int a = 10;
+int b = 2;
+int c = a / b;
+int d = a / 3;
+int e = 21 / 3;
+
+function init() {
+    io:println(c); // @output 5
+    io:println(d); // @output 3
+    io:println(e); // @output 7
+}
+
+Test-Case: panic
+Description: Test integer division panic at module-level.
+Labels: multiplicative-expr, int, int:MIN_VALUE, DecimalNumber, unary-minus
+
+int a = int:MIN_VALUE / -1; // @panic integer overflow on division
