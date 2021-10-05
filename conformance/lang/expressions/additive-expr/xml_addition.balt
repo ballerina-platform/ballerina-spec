@@ -127,6 +127,32 @@ function errorFunction(xml a, xml:Element b, xml:Comment c, xml:ProcessingInstru
     v2 = q; // @error incompatible types: expected xml:Element found xml<xml:Text>
 }
 
+Test-Case: error
+Description: Test invalid static type of xml union concatenation.
+Fail-Issue: ballerina-platform/ballerina-lang#33059
+Labels: additive-expr, xml, string, xml:Element, xml:Comment, xml:ProcessingInstruction, xml:Text, union-type, xml-type-param
+
+function errorFunction(xml a, xml:Element|xml:Comment b, xml<xml:Text|xml:ProcessingInstruction> c) {
+    string _ = a + b; // @error static type of concatenation is xml
+    xml:Element|xml:Comment _ = b + b; // @error static type of concatenation is xml<xml:Element|xml:Comment>
+    string _ = a + c; // @error static type of xml concatenation is xml
+    string _ = b + c; // @error static type of xml concatenation is xml<xml:Element|xml:Comment|xml:Text|xml:ProcessingInstruction>
+    xml:Text|xml:ProcessingInstruction _ = c + c; // @error static type of xml concatenation is xml<xml:Text|xml:ProcessingInstruction>
+}
+
+Test-Case: error
+Description: Test invalid static type of xml concatenation with sequences of sequences.
+Fail-Issue: ballerina-platform/ballerina-lang#33065
+Labels: additive-expr, xml, string, xml:Element, xml:Comment, xml:ProcessingInstruction, xml:Text, union-type, xml-type-param
+
+function errorFunction(xml a, xml<xml<xml:Element|xml:Comment>> b, xml<xml<xml<xml:Text|xml:ProcessingInstruction>>> c) {
+    string _ = a + b; // @error static type of concatenation is xml
+    xml:Element|xml:Comment _ = b + b; // @error static type of concatenation is xml<xml:Element|xml:Comment>
+    string _ = a + c; // @error static type of concatenation is xml
+    string _ = b + c; // @error static type of concatenation is xml<xml:Element|xml:Comment|xml:Text|xml:ProcessingInstruction>
+    xml:Text|xml:ProcessingInstruction _ = c + c; // @error static type of concatenation is xml<xml:Text|xml:ProcessingInstruction>
+}
+
 Test-Case: output
 Description: Test xml concatenation.
 Labels: additive-expr, xml
@@ -504,6 +530,56 @@ function init() {
     io:println(g.get(2) === e.get(2)); // @output true
     io:println(g.get(3) === f.get(0)); // @output true
     io:println(g.get(4) === f.get(1)); // @output true
+}
+
+Test-Case: output
+Description: Test xml concatenation when an operand is of a union type containing a builtin subtype of xml.
+Fail-Issue: ballerina-platform/ballerina-lang#33059, ballerina-platform/ballerina-lang#33063
+Labels: additive-expr, xml, xml:Element, xml:Comment, xml:ProcessingInstruction, xml:Text, union-type, xml-type-param
+
+function init() {
+    xml:Element|xml:ProcessingInstruction a = xml `<foo>val</foo>`;
+    xml<xml:Comment|xml:Text> b = xml `<!--c1--> <!--c2-->`;
+    xml<xml:Text>|xml<xml:ProcessingInstruction|xml:Element> c = xml `a b c`;
+
+    xml<xml:Element|xml:ProcessingInstruction> d = a + a;
+    io:println(d); // @output <foo>val</foo><foo>val</foo>
+
+    xml<xml:Element|xml:ProcessingInstruction|xml:Comment|xml:Text> e = a + b;
+    io:println(e); // @output <foo>val</foo><!--c1--> <!--c2-->
+
+    xml<xml:Element|xml:ProcessingInstruction|xml:Text> f = a + c;
+    io:println(f); // @output <foo>val</foo>a b c
+
+    xml<xml:Comment|xml:Text> g = b + b;
+    io:println(g); // @output <!--c1--> <!--c2--><!--c1--> <!--c2-->
+
+    xml<xml:Element|xml:ProcessingInstruction|xml:Text> h = c + c;
+    io:println(g); // @output <!--c1--> <!--c2--><!--c1--> <!--c2-->
+}
+
+Test-Case: output
+Description: Test xml concatenation with sequences of sequences.
+Labels: additive-expr, xml, string, xml:Element, xml:Comment, xml:Text, union-type, xml-type-param, is-expr
+
+function init() {
+    xml a = xml `<foo>1</foo>`;
+    xml<xml<xml:Element|xml:Comment>> b = xml `<!--c1--><bar>2</bar>`;
+    xml<xml<xml<xml:Text|xml:Element>>> c = xml `text`;
+
+    xml d = a + b;
+    io:println(d); // @output <foo>1</foo><!--c1--><bar>2</bar>
+
+    xml e = a + c;
+    io:println(e); // @output <foo>1</foo>text
+
+    xml<xml:Element|xml:Comment> f = b + b;
+    io:println(f); // @output <!--c1--><bar>2</bar><!--c1--><bar>2</bar>
+    io:println(f is xml<xml:Element|xml:Comment>); // @output true
+
+    xml<xml:Element|xml:Text|xml:Comment> g = b + c + b;
+    io:println(g); // @output <!--c1--><bar>2</bar>text<!--c1--><bar>2</bar>
+    io:println(g is xml<xml:Element|xml:Text|xml:Comment>); // @output true
 }
 
 Test-Case: output

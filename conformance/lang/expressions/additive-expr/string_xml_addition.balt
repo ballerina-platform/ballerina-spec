@@ -171,6 +171,46 @@ function errorFunction() {
     string _ = g; // @error static type of string and empty xml concatenation is xml:Text
 }
 
+Test-Case: error
+Description: Test invalid static type of string union and xml union concatenation.
+Fail-Issue: ballerina-platform/ballerina-lang#33059
+Labels: additive-expr, string, string:Char, module-type-defn, union-type, singleton-type, xml, xml:Element, xml:Comment, xml:ProcessingInstruction, xml:Text, xml-type-param
+
+type Strings "A"|"foo";
+type Chars "B"|"bar";
+
+function errorFunction(string a, string:Char|Strings b, Strings|Chars c, xml:Element|xml:Comment d, xml<xml:ProcessingInstruction|xml:Text> e, xml f) {
+    string _ = a + d; // @error static type of concatenation is xml<xml:Text|xml:Element|xml:Comment>
+    string _ = b + d; // @error static type of concatenation is xml<xml:Text|xml:Element|xml:Comment>
+    string _ = c + e; // @error static type of concatenation is xml<xml:Text|xml:ProcessingInstruction>
+    string _ = b + f; // @error static type of concatenation is xml
+}
+
+Test-Case: error
+Description: Test additive expression with operands of types that are a subtype of the union of xml and string, but not individually of xml or string.
+Labels: additive-expr, string, string:Char, module-type-defn, union-type, singleton-type, xml, xml:Element, xml:Comment, xml:Text, xml-type-param
+
+type Strings "A"|"foo";
+
+function errorFunction(string:Char|xml a, xml:Element|Strings b, xml<xml:Comment|xml:Text>|string c) {
+    xml _ = a + a; // @error static type of operands have to be a subtype of xml or string
+    xml _ = a + b; // @error static type of operands have to be a subtype of xml or string
+    xml _ = a + c; // @error static type of operands have to be a subtype of xml or string
+    xml _ = b + b; // @error static type of operands have to be a subtype of xml or string
+    xml _ = b + c; // @error static type of operands have to be a subtype of xml or string
+    xml _ = c + c; // @error static type of operands have to be a subtype of xml or string
+}
+
+Test-Case: error
+Description: Test invalid static type of string and xml concatenation with sequences of sequences.
+Fail-Issue: ballerina-platform/ballerina-lang#33066
+Labels: additive-expr, xml, string, xml:Element, xml:Comment, xml:ProcessingInstruction, xml:Text, union-type, xml-type-param
+
+function errorFunction(string a, xml<xml<xml:Element|xml:Comment>> b, xml<xml<xml<xml:Text|xml:ProcessingInstruction>>> c) {
+    string _ = a + b; // @error static type of concatenation is xml<xml:Text|xml:Element|xml:Comment>
+    string _ = a + c; // @error static type of concatenation is xml<xml:Text|xml:ProcessingInstruction>
+}
+
 Test-Case: output
 Description: Test xml concatenation for singleton value and empty string.
 Labels: additive-expr, xml, string
@@ -642,6 +682,78 @@ function init() {
 }
 
 Test-Case: output
+Description: Test string and xml concatenation when an operand is of a union type containing builtin subtypes of string and xml.
+Fail-Issue: ballerina-platform/ballerina-lang#33059
+Labels: additive-expr, string, string:Char, module-type-defn, union-type, singleton-type, xml, xml:Element, xml:Comment, xml:ProcessingInstruction, xml:Text, xml-type-param
+
+type Strings "A"|"foo";
+type Chars "B"|"bar";
+
+function init() {
+    string:Char|Strings a = "M";
+    string:Char|Chars b = "bar";
+    xml:Element|xml:ProcessingInstruction c = xml `<?pi value?>`;
+    xml<xml:Comment|xml:Text> d = xml `<!--c1--> <!--c2-->`;
+
+    xml<xml:Element|xml:ProcessingInstruction|xml:Text> h = a + c;
+    io:println(h); // @output M<?pi value?>
+
+    xml<xml:Text|xml:Comment> i = a + d;
+    io:println(i); // @output M<!--c1--> <!--c2-->
+
+    xml<xml:Element|xml:ProcessingInstruction|xml:Text> j = c + b;
+    io:println(j); // @output <?pi value?>bar
+
+    xml<xml:Text|xml:Comment> k = b + d;
+    io:println(k); // @output bar<!--c1--> <!--c2-->
+}
+
+Test-Case: output
+Description: Test string and xml concatenation with sequences of sequences.
+Labels: additive-expr, xml, string, xml:Element, xml:Comment, xml:ProcessingInstruction, xml:Text, union-type, xml-type-param
+
+function init() {
+    string a = "foo";
+    xml<xml<xml:Element|xml:Comment>> b =  xml `<!--c1--><foo>1</foo>`;
+    xml<xml<xml<xml:Text|xml:ProcessingInstruction>>> c = xml `<?bar val?>text`;
+
+    xml x = a + b;
+    io:println(x); // @output foo<!--c1--><foo>1</foo>
+    io:println(x is xml<xml:Element|xml:Comment|xml:Text>); // @output true
+    io:println(x is xml<xml:Element|xml:Comment>); // @output false
+
+    x = a + c;
+    io:println(x); // @output foo<?bar val?>text
+    io:println(x is xml<xml:Text|xml:ProcessingInstruction>); // @output true
+    io:println(x is xml<xml:Text>); // @output false
+
+    x = b + c;
+    io:println(x); // @output <!--c1--><foo>1</foo><?bar val?>text
+    io:println(x is xml<xml:Text|xml:ProcessingInstruction|xml:Comment|xml:Element>); // @output true
+    io:println(x is xml<xml:ProcessingInstruction|xml:Comment|xml:Element>); // @output false
+}
+
+Test-Case: output
+Description: Test string and xml concatenation with sequences of sequences with exact static types.
+Fail-Issue: ballerina-platform/ballerina-lang#33066
+Labels: additive-expr, xml, string, xml:Element, xml:Comment, xml:ProcessingInstruction, xml:Text, union-type, xml-type-param
+
+function init() {
+    string a = "foo";
+    xml<xml<xml:Element|xml:Comment>> b =  xml `<!--c1--><foo>1</foo>`;
+    xml<xml<xml<xml:Text|xml:ProcessingInstruction>>> c = xml `<?bar val?>text`;
+
+    xml<xml:Element|xml:Comment|xml:Text> x = a + b;
+    io:println(x); // @output foo<!--c1--><foo>1</foo>
+
+    xml<xml:Text|xml:ProcessingInstruction> y = a + c;
+    io:println(y); // @output foo<?bar val?>text
+
+    xml<xml:Text|xml:ProcessingInstruction|xml:Comment|xml:Element> z = b + c;
+    io:println(x); // @output <!--c1--><foo>1</foo><?bar val?>text
+}
+
+Test-Case: output
 Description: Test xml and string concatenation with xml and string literal expressions as operands.
 Fail-Issue: ballerina-platform/ballerina-lang#32975
 Labels: additive-expr, xml, int, string
@@ -791,7 +903,7 @@ public function main() {
                    // @output bfoo<!--bar-->\
 
     io:println(a + c); // @output fooa
-                       // @output b 
+                       // @output b
 
     io:println(d + b); // @output \<!--bar-->
 }
