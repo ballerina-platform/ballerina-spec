@@ -19,7 +19,7 @@ Test-Case: parser-error
 Description: Test invalid usage of line break in string literal.
 Labels: string
 
-function init() {
+function errorFunction() {
     string _ = "First String
                 Second String"; // @error line break is not allowed in string value
 }
@@ -28,7 +28,7 @@ Test-Case: parser-error
 Description: Test invalid usage of `\` in string literal.
 Labels: string
 
-function init() {
+function errorFunction() {
     string _ = "\"; // @error invalid usage of backslash
 
     string _ = "Some text\"; // @error invalid usage of backslash
@@ -38,7 +38,7 @@ Test-Case: error
 Description: Test invalid string escape sequence.
 Labels: string
 
-function init() {
+function errorFunction() {
     string _ = "Hello \Ballerina"; // @error `\B` is not a valid escape sequence
 }
 
@@ -46,7 +46,7 @@ Test-Case: parser-error
 Description: Test invalid usage of `"` in string literal.
 Labels: string
 
-function init() {
+function errorFunction() {
     string _ = """; // @error double quote is not allowed in string value
 
     string _ = "First text " Second text"; // @error double quote is not allowed in string value
@@ -100,14 +100,21 @@ function init() {
     io:println(a); // @output abc
 
     string b = "Hello \u{000A}world!";
-    io:println(b); // @output Hello
+    io:println(b); // @output Hello 
                    // @output world!
-
-    string c = "A \u{5C} B";
-    io:println(c); // @output A \ B
 
     string d = "smile\u{1F642}";
     io:println(d); // @output smile🙂
+}
+
+Test-Case: output
+Description: Test numeric escape in string literal.
+Fail-Issue: ballerina-platform/ballerina-lang#33051
+Labels: string
+
+function init() {
+    string c = "A \u{5C} B";
+    io:println(c); // @output A \ B
 }
 
 Test-Case: output
@@ -140,7 +147,7 @@ Test-Case: error
 Description: Test invalid hex digit in code point.
 Labels: string
 
-function init() {
+function errorFunction() {
     string _ = "\u{AG}"; // @error `G` is not a valid hex digit
 }
 
@@ -148,7 +155,7 @@ Test-Case: error
 Description: Test surrogate code points in string literal.
 Labels: string
 
-function init() {
+function errorFunction() {
     string _ = "\u{D800}"; // @error surrogate code points are not allowed
     string _ = "\u{D89F}"; // @error surrogate code points are not allowed
     string _ = "\u{DABF}"; // @error surrogate code points are not allowed
@@ -190,7 +197,7 @@ Description: Test type mismatch when assigning string literal to variables of ty
              where string is not a sub type of T.
 Labels: byte, float, nil-type, string, xml
 
-function init() {
+function errorFunction() {
     int _ = "String"; // @error string literal cannot be assigned to a variable of int
 
     xml _ = ""; // @error string literal cannot be assigned to a variable of xml
@@ -211,7 +218,7 @@ function init() {
 
     printStringLiteral(")(*&^%$#><:~~!`"); // @output )(*&^%$#><:~~!`
 
-    printStringLiteral("12345\t\u{0039}"); // @output 12345   9
+    printStringLiteral("12345\t\u{0039}"); // @output 12345	9
 
     printStringLiteral("This code point first appeared in version 1.1 of the Unicode® Standard and belongs to the \"Basic Latin\" block which goes from 0x0 to 0x7F."); // @output This code point first appeared in version 1.1 of the Unicode® Standard and belongs to the "Basic Latin" block which goes from 0x0 to 0x7F.
 }
@@ -264,8 +271,8 @@ Labels: string, return-stmt
 function init() {
     io:println(getString1()); // @output Returned String
 
-    io:println(getString2()); // @output One
-                              // @output Two     245
+    io:println(getString2()); // @output One 
+                              // @output Two	245
 
     io:println(getString3()); // @output RBG
 }
