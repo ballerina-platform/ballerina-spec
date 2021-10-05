@@ -2,7 +2,7 @@ Test-Case: error
 Description: Test invalid concatenation with XML.
 Labels: additive-expr, int, xml, nil-type, array-type
 
-function testFunction(xml a, int b, () c, xml[] d) {
+function errorFunction(xml a, int b, () c, xml[] d) {
     xml _ = a + b; // @error cannot concatenate xml and int
     xml _ = a + c; // @error cannot concatenate xml and nil
     xml _ = a + d; // @error cannot concatenate xml and array
@@ -15,7 +15,7 @@ Test-Case: error
 Description: Test invalid static type of XML concatenation.
 Labels: additive-expr, xml, int, string
 
-function testFunction(xml a, xml b) {
+function errorFunction(xml a, xml b) {
     int _ = a + b; // @error static type of xml concatenation is xml
     string _ = a + b + a; // @error static type of xml concatenation is xml
 }
@@ -24,7 +24,7 @@ Test-Case: error
 Description: Test invalid static type of xml concatenation with built-in subtype of xml.
 Labels: additive-expr, xml, int, string, xml:Element, xml:Comment, xml:ProcessingInstruction, xml:Text
 
-function testFunction(xml a, xml:Element b, xml:Comment c, xml:ProcessingInstruction d, xml:Text e) {
+function errorFunction(xml a, xml:Element b, xml:Comment c, xml:ProcessingInstruction d, xml:Text e) {
     int _ = a + b; // @error static type of xml concatenation is xml
     xml:Element _ = a + b; // @error static type of xml concatenation is xml
     xml:Comment _ = a + c; // @error static type of xml concatenation is xml
@@ -37,7 +37,7 @@ Test-Case: error
 Description: Test invalid static type of xml concatenation of operands of built-in subtypes of xml.
 Labels: additive-expr, xml, int, string, xml:Element, xml:Comment, xml:ProcessingInstruction, xml:Text, xml-type-param
 
-function testFunction(xml:Element b, xml:Comment c, xml:ProcessingInstruction d, xml:Text e) {
+function errorFunction(xml:Element b, xml:Comment c, xml:ProcessingInstruction d, xml:Text e) {
     xml:Element _ = b + b; // @error static type of xml:Element concatenation is xml<xml:Element>
     xml<xml:Element> _ = b + d; // @error static type of xml:Element and xml:ProcessingInstruction concatenation is xml<xml:Element|xml:ProcessingInstruction>
     xml:Comment _ = c + c; // @error static type of xml:Comment concatenation is xml<xml:Comment>
@@ -53,7 +53,7 @@ Test-Case: error
 Description: Test invalid optional xml concatenation.
 Labels: additive-expr, xml, optional-type
 
-function testFunction(xml? a, xml? b, xml c) {
+function errorFunction(xml? a, xml? b, xml c) {
     xml _ = a + b; // @error cannot concatenate optional xml
     xml? _ = a + b; // @error cannot concatenate optional xmls
     xml _ = a + c; // @error cannot concatenate xml and optional xml
@@ -64,7 +64,7 @@ Test-Case: error
 Description: Test invalid optional xml subtype concatenation.
 Labels: additive-expr, xml, xml:Element, xml:Comment, xml:ProcessingInstruction, xml:Text, optional-type, union-type
 
-function testFunction(xml? a, xml:Element? b, xml:Comment? c, xml:ProcessingInstruction? d, xml:Text? e) {
+function errorFunction(xml? a, xml:Element? b, xml:Comment? c, xml:ProcessingInstruction? d, xml:Text? e) {
     xml _ = a + b; // @error cannot concatenate optional xml
     xml:Element? _ = a + b; // @error cannot concatenate optional xml
     xml? _ = a + b; // @error cannot concatenate optional xml
@@ -77,7 +77,7 @@ Test-Case: error
 Description: Test xml concatenation static type via invalid assignment with var.
 Labels: additive-expr, xml, xml:Element, xml:Comment, xml:ProcessingInstruction, xml:Text, xml-type-param, var
 
-function testFunction(xml a, xml:Element b, xml:Comment c, xml:ProcessingInstruction d, xml:Text e) {
+function errorFunction(xml a, xml:Element b, xml:Comment c, xml:ProcessingInstruction d, xml:Text e) {
     var f = a + a;
     xml<xml:Element> v1 = f; // @error incompatible types: expected xml<xml:Element> found xml
     xml:Element v2 = f; // @error incompatible types: expected xml:Element found xml
