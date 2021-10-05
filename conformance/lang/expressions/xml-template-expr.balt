@@ -18,7 +18,6 @@ public function main() {
     xml content2 = xml `<b:BOOKs xmlns:b="http://www.w3.org/TR/html4/}">${content1}</b:BOOKs>`;
     io:println(content2); // @output <b:BOOKs xmlns:b="http://www.w3.org/TR/html4/}"><x:BOOK xmlns:x="http://www.w3.org/TR/html4/}"/></b:BOOKs>
 }
-// CDATA test
 
 Test-Case: error
 Description: Test the static type of the interpolated expressions in an attribute value not to be nil.
@@ -80,7 +79,7 @@ public function main() {
 
 Test-Case: error
 Description: Test usage of un-parsable xml content in xml template expression.
-Fail-Issue:
+Fail-Issue: ballerina-platform/ballerina-lang#33074
 Labels: xml-template-expr, xml
 
 public function main() {
@@ -93,7 +92,7 @@ public function main() {
 
 Test-Case: output
 Description: Test if the xml template expr within a const expr is readonly.
-Fail-Issue:
+Fail-Issue: ballerina-platform/ballerina-lang#13944
 Labels: xml-template-expr, xml
 
 import ballerina/io;
@@ -342,7 +341,7 @@ public function main() {
 
 Test-Case: output
 Description: Test usage of interpolated expressions of xml type in xml content.
-Fail-Issue:
+Fail-Issue: ballerina-platform/ballerina-lang#33075
 Labels: xml-template-expr, xml, xml:Element
 
 import ballerina/io;
@@ -359,7 +358,7 @@ public function main() {
 
 Test-Case: output
 Description: Test usage of queries as interpolated expressions in xml content.
-Fail-Issue:
+Fail-Issue: ballerina-platform/ballerina-lang#33076
 Labels: xml-template-expr, xml, query-expr
 
 import ballerina/io;
@@ -380,7 +379,7 @@ public function main() {
 
 Test-Case: output
 Description: Test usage of let expressions as interpolated expressions in xml content.
-Fail-Issue:
+Fail-Issue: ballerina-platform/ballerina-lang#3307633077
 Labels: xml-template-expr, xml, let-expr
 
 import ballerina/io;
@@ -625,15 +624,13 @@ public function main() {
 
 Test-Case: output
 Description: Test usage of transactional expressions as interpolated expressions in xml content.
-Fail-Issue:
+Fail-Issue: ballerina-platform/ballerina-lang#33078
 Labels: xml-template-expr, xml, transactional-expr
 
 import ballerina/io;
 
 public function main() {
 
-    float a = 23.0;
-    float b = 1.0;
     xml z = xml `<A>${xml `<B>${transactional}</B>`}</A>`;
     io:println(z); // @output <A><B>false</B></A>
 }
@@ -716,7 +713,7 @@ function foo() returns error|int {
 
 Test-Case: output
 Description: Test usage of checkpanic expressions as interpolated expressions in xml content.
-Fail-Issue:
+Fail-Issue: ballerina-platform/ballerina-lang#33079
 Labels: xml-template-expr, xml, checkpanic
 
 import ballerina/io;
@@ -762,7 +759,6 @@ public function main() {
     io:println(z); // @output <A><B>false</B></A>
 }
 
-
 Test-Case: error
 Description: Test usage of range expressions as interpolated expressions in xml content.
 Labels: xml-template-expr, xml, range-expr
@@ -772,7 +768,6 @@ public function main() {
     xml z = xml `<A>${xml `<B>${0 ... x}</B>`}</A>`; //@error range expressions are not allowed in interpolated expressions
     z = xml `<A>${xml `<B>${0 ..< x}</B>`}</A>`; //@error range expressions are not allowed in interpolated expressions
 }
-
 
 Test-Case: output
 Description: Test usage of binary bitwise expressions as interpolated expressions in xml content.
@@ -805,7 +800,6 @@ public function main() {
     io:println(z); // @output <A><B>false</B></A>
 }
 
-
 Test-Case: output
 Description: Test usage of equality expressions as interpolated expressions in xml content.
 Labels: xml-template-expr, xml, equality, exact-equality
@@ -831,7 +825,7 @@ public function main() {
 
 Test-Case: output
 Description: Test with CDATA in xml content.
-Fail-Issue:
+Fail-Issue: ballerina-platform/ballerina-lang#33081
 Labels: xml-template-expr, xml
 
 import ballerina/io;
@@ -839,7 +833,6 @@ import ballerina/io;
 public function main() {
     int x = 9;
     int y = 9;
-    int s = 2;
-    xml z = xml `<exampleOfACDATA><![CDATA[character data]]></exampleOfACDATA>`;
-    io:println(z); // @output <exampleOfACDATA><![CDATA[character data]]></exampleOfACDATA>
+    xml z = xml `<exampleOfACDATA><![CDATA[${x}character data${y}]]></exampleOfACDATA>`;
+    io:println(z); // @output <exampleOfACDATA><![CDATA[9character data9]]></exampleOfACDATA>
 }
