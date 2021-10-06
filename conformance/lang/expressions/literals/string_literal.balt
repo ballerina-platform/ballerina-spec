@@ -1,0 +1,344 @@
+Test-Case: output
+Description: Test basic string literals.
+Labels: string
+
+function init() {
+    string a = "Ballerina";
+    io:println(a); // @output Ballerina
+
+    string b = "1234";
+    io:println(b); // @output 1234
+
+    string c = "{name: Kevin}";
+    io:println(c); // @output {name: Kevin}
+
+    io:println("+_)(*&^%$#@!"); // @output +_)(*&^%$#@!
+}
+
+Test-Case: parser-error
+Description: Test invalid usage of line break in string literal.
+Labels: string
+
+function errorFunction() {
+    string _ = "First String
+                Second String"; // @error line break is not allowed in string value
+}
+
+Test-Case: parser-error
+Description: Test invalid usage of `\` in string literal.
+Labels: string
+
+function errorFunction() {
+    string _ = "\"; // @error invalid usage of backslash
+
+    string _ = "Some text\"; // @error invalid usage of backslash
+}
+
+Test-Case: error
+Description: Test invalid string escape sequence.
+Labels: string
+
+function errorFunction() {
+    string _ = "Hello \Ballerina"; // @error `\B` is not a valid escape sequence
+}
+
+Test-Case: parser-error
+Description: Test invalid usage of `"` in string literal.
+Labels: string
+
+function errorFunction() {
+    string _ = """; // @error double quote is not allowed in string value
+
+    string _ = "First text " Second text"; // @error double quote is not allowed in string value
+
+    string _ = "This is double quote " "; // @error double quote is not allowed in string value
+}
+
+Test-Case: output
+Description: Test string single escape.
+Labels: string, StringSingleEscape
+
+function init() {
+    io:println("Hello \t world"); // @output Hello 	 world
+    io:println("Hello\tworld"); // @output Hello	world
+    io:println("Hello\t world"); // @output Hello	 world
+
+    io:println("Hello \nworld!"); // @output Hello 
+                                  // @output world!
+    io:println("Hello\nworld!"); // @output Hello
+                                  // @output world!
+    io:println("Hello\n world!"); // @output Hello
+                                  // @output  world!
+
+    io:println("2 \\ two"); // @output 2 \ two
+    io:println("2\\two"); // @output 2\two
+    io:println("2\\ two"); // @output 2\ two
+
+    io:println("\"StringValue\""); // @output "StringValue"
+    io:println(" \"StringValue \""); // @output  "StringValue "
+    io:println("\" StringValue\" "); // @output " StringValue" 
+}
+
+Test-Case: output
+Description: Test string single escape.
+Fail-Issue: ballerina-platform/ballerina-lang #33088
+Labels: string, StringSingleEscape
+
+function init() {
+    io:println("12345 world \rHello"); // @output Hello world 
+    io:println("12345 world\rHello"); // @output Hello world
+    io:println("12345 world\r Hello"); // @output  Hello world
+}
+
+Test-Case: output
+Description: Test using `\` to esacape numeric escape.
+Labels: string
+
+function init() {
+    io:println("\\u{61}"); // @output \u{61}
+}
+
+Test-Case: output
+Description: Test numeric escape in string literal.
+Labels: string
+
+function init() {
+    string a = "a\u{62}c";
+    io:println(a); // @output abc
+
+    string b = "Hello \u{000A}world!";
+    io:println(b); // @output Hello 
+                   // @output world!
+
+    string d = "smile\u{1F642}";
+    io:println(d); // @output smile🙂
+}
+
+Test-Case: output
+Description: Test numeric escape in string literal.
+Fail-Issue: ballerina-platform/ballerina-lang#33051
+Labels: string
+
+function init() {
+    string c = "A \u{5C} B";
+    io:println(c); // @output A \ B
+}
+
+Test-Case: output
+Description: Test equality of string literals.
+Labels: string
+
+function init() {
+    io:println("Car" == "\u{0043}\u{0061}\u{0072}"); // @output true
+
+    io:println("\n" == "\u{000A}"); // @output true
+
+    io:println("\t" == "\u{0009}"); // @output true
+
+    io:println("\t" == "	"); // @output true
+
+    io:println("\n" != "\u{000A}"); // @output false
+}
+
+Test-Case: output
+Description: Test exact equality of string literals.
+Labels: exact-equality, string
+
+function init() {
+    io:println("\n" === "\u{000A}"); // @output true
+
+    io:println("COde" !== "COde"); // @output false
+}
+
+Test-Case: error
+Description: Test invalid hex digit in code point.
+Labels: string
+
+function errorFunction() {
+    string _ = "\u{AG}"; // @error `G` is not a valid hex digit
+}
+
+Test-Case: error
+Description: Test surrogate code points in string literal.
+Labels: string
+
+function errorFunction() {
+    string _ = "\u{D800}"; // @error surrogate code points are not allowed
+    string _ = "\u{D89F}"; // @error surrogate code points are not allowed
+    string _ = "\u{DABF}"; // @error surrogate code points are not allowed
+    string _ = "\u{DFFF}"; // @error surrogate code points are not allowed
+}
+
+Test-Case: output
+Description: Test Unicode noncharacters in string literal.
+Labels: string
+
+function init() {
+    string a = "\u{FFFF}";
+    io:println(a); // @output ￿
+
+    string b = "\u{FFFE}";
+    io:println(b); // @output ￾
+}
+
+Test-Case: output
+Description: Test empty string value.
+Labels: string, value:toBalString
+
+function init() {
+    string a = "";
+    io:println(a.toBalString()); // @output ""
+}
+
+Test-Case: output
+Description: Test concatenation of strings that will result in a value looks like numeric escape.
+Labels: additive-expr, string
+
+function init() {
+    string a = "\\" + "u{61}";
+    io:println(a); // @output \u{61}
+}
+
+Test-Case: error
+Description: Test type mismatch when assigning string literal to variables of type T,
+             where string is not a sub type of T.
+Labels: byte, float, nil-type, string, xml
+
+function errorFunction() {
+    int _ = "String"; // @error string literal cannot be assigned to a variable of int
+
+    xml _ = ""; // @error string literal cannot be assigned to a variable of xml
+
+    () _ = ""; // @error string literal cannot be assigned to a variable of nil
+
+    byte _ = "c"; // @error string literal cannot be assigned to a variable of byte
+
+    float _ = "44.5"; // @error string literal cannot be assigned to a variable of float
+}
+
+Test-Case: output
+Description: Test string literal in argument context.
+Labels: function-call-expr, function-defn, string
+
+function init() {
+    printStringLiteral("Spec Tests"); // @output Spec Tests
+
+    printStringLiteral(")(*&^%$#><:~~!`"); // @output )(*&^%$#><:~~!`
+
+    printStringLiteral("12345\t\u{0039}"); // @output 12345	9
+
+    printStringLiteral("This code point first appeared in version 1.1 of the Unicode® Standard and belongs to the \"Basic Latin\" block which goes from 0x0 to 0x7F."); // @output This code point first appeared in version 1.1 of the Unicode® Standard and belongs to the "Basic Latin" block which goes from 0x0 to 0x7F.
+}
+
+function printStringLiteral(string str) {
+    io:println(str);
+}
+
+Test-Case: output
+Description: Test string literal in defaultable parameter context.
+Labels: function-call-expr, function-defn, defaultable-param, string
+
+function init() {
+    printString("6564"); // @output 6564
+    printString(); // @output Default
+}
+
+function printString(string str = "Default") {
+    io:println(str);
+}
+
+Test-Case: output
+Description: Test string literal in method call expression context.
+Labels: method-call-expr, string
+
+function init() {
+    io:println("some".startsWith("s")); // @output true
+
+    io:println("Hello World".substring(6)); // @output World
+
+    io:println("ABCD".toLowerAscii()); // @output abcd
+}
+
+Test-Case: output
+Description: Test string literal in type test expression context.
+Labels: is-expr, string
+
+function init() {
+    io:println("Book" is string); // @output true
+
+    io:println("1234" !is string); // @output false
+
+    io:println("\t\n\r\\" is string); // @output true
+}
+
+Test-Case: output
+Description: Test string literal in return statement context.
+Labels: string, return-stmt
+
+function init() {
+    io:println(getString1()); // @output Returned String
+
+    io:println(getString2()); // @output One 
+                              // @output Two	245
+
+    io:println(getString3()); // @output RBG
+}
+
+function getString1() returns string {
+    return "Returned String";
+}
+
+function getString2() returns string {
+    return "One \nTwo\t245";
+}
+
+function getString3() returns string {
+    return "\u{0052}B\u{0047}";
+}
+
+Test-Case: output
+Description: Test string literal in match expression context.
+Labels: match-stmt, string, var
+
+function init() {
+    match "Ballerina" {
+        var a => {
+            io:println(a); // @output Ballerina
+        }
+    }
+}
+
+Test-Case: output
+Description: Test string literal in structural constructor context.
+Labels: list-constructor-expr, mapping-constructor-expr, string, table-constructor-expr
+
+function init() {
+    io:println(["1221", "Ballerina"]); // @output ["1221","Ballerina"]
+
+    io:println({name: "Mike", age: "54", "rest": "restData"}); // @output {"name":"Mike","age":"54","rest":"restData"}
+
+    io:println(table [{id: "003", name: "Mike", age: "54"}]); // @output [{"id":"003","name":"Mike","age":"54"}]
+}
+
+Test-Case: output
+Description: Test string literal in type definition context.
+Labels: module-type-defn, string
+
+type STRING_NAME "NAME";
+
+function init() {
+    STRING_NAME a = "NAME";
+    io:println(a); // @output NAME
+}
+
+Test-Case: output
+Description: Test string literal in member access expression context.
+Labels: member-access-expr, string
+
+function init() {
+    io:println("Banana"[0]); // @output B
+
+    io:println("564545"[1]); // @output 6
+
+    io:println("r4\u{0065}"[2]); // @output e
+}
