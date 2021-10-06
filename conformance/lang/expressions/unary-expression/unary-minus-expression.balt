@@ -30,20 +30,22 @@ public function main() {
 
 Test-Case: panic
 Description: Test unary negative overflow for int.
-Labels: DecimalNumber, int, unary-minus
+Fail-Issue: ballerina-lang#32922
+Labels: DecimalNumber, int, int:MIN_VALUE, unary-minus
 
 public function main() {
-    int a = -9223372036854775808;
+    int a = -int:MIN_VALUE;
     int b = -a; // @panic integer overflow on unary negative
 }
 
 Test-Case: panic
 Description: Test unary negative overflow for int.
-Labels: DecimalNumber, int, multiplicative-expr, unary-minus
+Fail-Issue: ballerina-lang#32922
+Labels: additive-expr, DecimalNumber, int, unary-minus
 
 public function main() {
-    int a = 92233720368532;
-    int b = -(a * 438959438543); // @panic integer overflow on unary negative
+    int a = -9223372036854775807;
+    int b = -(a - 1); // @panic integer overflow on unary negative
 }
 
 Test-Case: output
@@ -64,6 +66,7 @@ public function main() {
 
 Test-Case: output
 Description: Test unary negative expression for positive byte, no overflow scenarios.
+Fail-Issue: ballerina-lang#31826
 Labels: byte, DecimalNumber, unary-minus
 
 public function main() {
@@ -207,8 +210,9 @@ public function main() {
 }
 
 Test-Case: output
-Description: Test unary negative expression for positive user defined sub types of int,
+Description: Test unary negative expression for user defined sub types of positive int,
               no overflow scenarios.
+Fail-Issue: ballerina-lang#32928
 Labels: DecimalNumber, module-type-defn, unary-minus, union-type
 
 type Ints -2|-1|0|1|2;
@@ -226,6 +230,7 @@ public function main() {
 Test-Case: output
 Description: Test unary negative expression for negative user defined sub types of int,
               no overflow scenarios.
+Fail-Issue: ballerina-lang#32928
 Labels: DecimalNumber, module-type-defn, unary-minus, union-type
 
 type Ints -2|-1|0|1|2;
@@ -239,7 +244,24 @@ public function main() {
 }
 
 Test-Case: output
+Description: Test unary negative expression for user defined sub types of integer built in sub types,
+              no overflow scenarios.
+Fail-Issue: ballerina-lang#32928
+Labels: DecimalNumber, module-type-defn, unary-minus, union-type, int:Signed8, int:Unsigned32
+
+type Ints int:Signed8|int:Unsigned32;
+
+public function main() {
+    Ints a = 12;
+    int:Signed8|int:Unsigned32 b = 12;
+
+    io:println(-a); // @output -12
+    io:println(-b); // @output -12
+}
+
+Test-Case: output
 Description: Test unary negative expression for positive optional integers, no overflow scenarios.
+Fail-Issue: ballerina-lang#31701
 Label: DecimalNumber, int, nil-literal, numeric-nil-lifting, optional-type, unary-minus, value:toBalString
 
 public function main() {
@@ -255,6 +277,7 @@ public function main() {
 
 Test-Case: output
 Description: Test unary negative expression for negative optional integers, no overflow scenarios.
+Fail-Issue: ballerina-lang#31701
 Label: DecimalNumber, int, nil-literal, numeric-nil-lifting, optional-type, unary-minus, value:toBalString
 
 public function main() {
@@ -268,6 +291,7 @@ public function main() {
 
 Test-Case: output
 Description: Test unary negative expression for positive optional int:Unsigned8; , no overflow scenarios.
+Fail-Issue: ballerina-lang#31701
 Labels: DecimalNumber, int:Unsigned8, nil-literal, numeric-nil-lifting, optional-type, unary-minus, value:toBalString
 
 public function main() {
@@ -284,6 +308,7 @@ public function main() {
 
 Test-Case: output
 Description: Test unary negative expression for positive optional byte, no overflow scenarios.
+Fail-Issue: ballerina-lang#31701
 Labels: byte, DecimalNumber, nil-literal, numeric-nil-lifting, optional-type, unary-minus, value:toBalString
 
 public function main() {
@@ -300,6 +325,7 @@ public function main() {
 
 Test-Case: output
 Description: Test unary negative expression for positive optional int:Unsigned16, no overflow scenarios.
+Fail-Issue: ballerina-lang#31701
 Labels: DecimalNumber, int:Unsigned16, nil-literal, numeric-nil-lifting, optional-type, unary-minus, value:toBalString
 
 public function main() {
@@ -316,6 +342,7 @@ public function main() {
 
 Test-Case: output
 Description: Test unary negative expression for positive optional int:Unsigned32, no overflow scenarios.
+Fail-Issue: ballerina-lang#31701
 Labels: DecimalNumber, int:Unsigned32, nil-literal, numeric-nil-lifting, optional-type, unary-minus, value:toBalString
 
 public function main() {
@@ -332,6 +359,7 @@ public function main() {
 
 Test-Case: output
 Description: Test unary negative expression for positive optional int:Signed8, no overflow scenarios.
+Fail-Issue: ballerina-lang#31701
 Labels: DecimalNumber, int:Signed8, nil-literal, numeric-nil-lifting, optional-type, unary-minus, value:toBalString
 
 public function main() {
@@ -348,6 +376,7 @@ public function main() {
 
 Test-Case: output
 Description: Test unary negative expression for negative optional int:Signed8, no overflow scenarios.
+Fail-Issue: ballerina-lang#31701
 Labels: DecimalNumber, int:Signed8, nil-literal, numeric-nil-lifting, optional-type, unary-minus, value:toBalString
 
 public function main() {
@@ -364,6 +393,7 @@ public function main() {
 
 Test-Case: output
 Description: Test unary negative expression for positive optional int:Signed16, no overflow scenarios.
+Fail-Issue: ballerina-lang#31701
 Labels: DecimalNumber, int:Signed16, nil-literal, numeric-nil-lifting, optional-type, unary-minus, value:toBalString
 
 public function main() {
@@ -380,6 +410,7 @@ public function main() {
 
 Test-Case: output
 Description: Test unary negative expression for negative optional int:Signed16, no overflow scenarios.
+Fail-Issue: ballerina-lang#31701
 Labels: DecimalNumber, int:Signed16, nil-literal, numeric-nil-lifting, optional-type, unary-minus, value:toBalString
 
 public function main() {
@@ -396,6 +427,7 @@ public function main() {
 
 Test-Case: output
 Description: Test unary negative expression for positive optional int:Signed32, no overflow scenarios.
+Fail-Issue: ballerina-lang#31701
 Labels: DecimalNumber, int:Signed32, nil-literal, numeric-nil-lifting, optional-type, unary-minus, value:toBalString
 
 public function main() {
@@ -412,6 +444,7 @@ public function main() {
 
 Test-Case: output
 Description: Test unary negative expression for negative optional int:Signed32, no overflow scenarios.
+Fail-Issue: ballerina-lang#31701
 Labels: DecimalNumber, int:Signed32, nil-literal, numeric-nil-lifting, optional-type, unary-minus, value:toBalString
 
 public function main() {
@@ -429,8 +462,8 @@ public function main() {
 Test-Case: output
 Description: Test unary negative expression for positive optional user defined sub types of int,
               no overflow scenarios.
+Fail-Issue: ballerina-lang#31701
 Labels: DecimalNumber, module-type-defn, numeric-nil-lifting, optional-type, union-type, unary-minus, value:toBalString
-
 
 type Ints -2|-1|0|1|2;
 
@@ -447,6 +480,7 @@ public function main() {
 Test-Case: output
 Description: Test unary negative expression for negative optional user defined sub types of int,
               no overflow scenarios.
+Fail-Issue: ballerina-lang#31701
 Labels: DecimalNumber, module-type-defn, numeric-nil-lifting, optional-type, union-type, unary-minus, value:toBalString
 
 type Ints -2|-1|0|1|2;
@@ -490,8 +524,19 @@ public function main() {
 }
 
 Test-Case: output
+Description: Test unary negative expression for very large floating point number.
+Label: float, DecimalNumber, unary-minus
+
+public function main() {
+    float a = 25.E1742f;
+    float b = -a;
+    io:println(b); // @output -Infinity
+}
+
+Test-Case: output
 Description: Test unary negative expression for positive user defined sub types of float,
               no overflow scenarios.
+Fail-Issue: ballerina-lang#32928
 Labels: DecimalNumber, module-type-defn, unary-minus, union-type
 
 type Floats -2.0|-1.0|0|1.0|2.0;
@@ -504,6 +549,29 @@ public function main() {
     io:println(-a); // @output -1.0
     io:println(-b); // @output -2.0
     io:println(-c); // @output -0.0
+}
+
+Test-Case: output
+Description: Test unary negative expression for user defined sub types of float
+Fail-Issue: ballerina-lang#32928
+Labels: DecimalNumber, module-type-defn, module-const-decl, unary-minus, union-type
+
+const float A = -10f;
+const float B = -20f;
+
+type Floats1 -2.0|-1.0|0|1.0|2.0;
+
+type Floats2 A|B;
+
+type Floats3 Floats1|Floats2;
+
+public function main() {
+
+    Floats2 a = -10f;
+    Floats3 b = -1.0;
+
+    io:println(-a); // @output 10.0
+    io:println(-b); // @output 1.0
 }
 
 Test-Case: output
@@ -537,7 +605,26 @@ public function main() {
 }
 
 Test-Case: output
+Description: Test unary negative expression for positive user defined sub types of decimals,
+              no overflow scenarios.
+Fail-Issue: ballerina-lang#32928
+Labels: DecimalNumber, module-type-defn, unary-minus, union-type
+
+type Decimals -2.0d|-1.0d|0d|1.0d|2.0d;
+
+public function main() {
+    Decimals a = 1.0;
+    Decimals b = 2.0;
+    Decimals c = 0;
+
+    io:println(-a); // @output -1.0
+    io:println(-b); // @output -2.0
+    io:println(-c); // @output 0
+}
+
+Test-Case: output
 Description: Test unary negative expression for positive optional floats, no overflow scenarios.
+Fail-Issue: ballerina-lang#31701
 Label: DecimalNumber, float, optional-type, nil-literal, numeric-nil-lifting, unary-minus, value:toBalString
 
 public function main() {
@@ -553,6 +640,7 @@ public function main() {
 
 Test-Case: output
 Description: Test unary negative expression for negative optional floats, no overflow scenarios.
+Fail-Issue: ballerina-lang#31701
 Label: DecimalNumber, float, optional-type, nil-literal, numeric-nil-lifting, unary-minus, value:toBalString
 
 public function main() {
@@ -567,6 +655,7 @@ public function main() {
 Test-Case: output
 Description: Test unary negative expression for positive optional user defined sub types of float,
               no overflow scenarios.
+Fail-Issue: ballerina-lang#31701
 Labels: DecimalNumber, float, module-type-defn, numeric-nil-lifting, optional-type, union-type, unary-minus, value:toBalString
 
 type Floats -2.0|-1.0|0|1.0|2.0;
@@ -583,6 +672,7 @@ public function main() {
 
 Test-Case: output
 Description: Test unary negative expression for positive optional decimals, no overflow scenarios.
+Fail-Issue: ballerina-lang#31701
 Label: DecimalNumber, decimal, optional-type, nil-literal, numeric-nil-lifting, unary-minus, value:toBalString
 
 public function main() {
@@ -598,6 +688,7 @@ public function main() {
 
 Test-Case: output
 Description: Test unary negative expression for negative optional decimals, no overflow scenarios.
+Fail-Issue: ballerina-lang#31701
 Label: DecimalNumber, decimal, optional-type, nil-literal, numeric-nil-lifting, unary-minus, value:toBalString
 
 public function main() {
@@ -630,7 +721,7 @@ public function main() {
 
 Test-Case: output
 Description: Test function call as unary negation operand.
-Labels: DecimalNumber, function-call, int, unary-minus
+Labels: DecimalNumber, function-call-expr, int, unary-minus
 
 public function main() {
     int a = -getInt();
