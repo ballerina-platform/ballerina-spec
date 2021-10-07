@@ -1,6 +1,6 @@
 Test-Case: output
 Description: Test the basic type when the numeric-literal includes a FloatTypeSuffix.
-Labels: any, decimal, FloatTypeSuffix, float, int, is-expr
+Labels: any, DecimalFloatingPointNumber, decimal, FloatingPointTypeSuffix, float, int, is-expr
 
 function init() {
     any x = 0f;
@@ -21,7 +21,7 @@ function init() {
 
 Test-Case: error
 Description: Test the basic type when the numeric-literal includes a FloatTypeSuffix, via incompatible assignment.
-Labels: decimal, FloatTypeSuffix, float, int
+Labels: DecimalFloatingPointNumber, decimal, FloatingPointTypeSuffix, float, int
 
 function errorFunction() {
     int _ = 0f; // @error expected an 'int' but found a 'float'
@@ -33,7 +33,7 @@ function errorFunction() {
 
 Test-Case: output
 Description: Test the basic type when the numeric-literal includes a DecimalTypeSuffix.
-Labels: any, DecimalTypeSuffix, decimal, float, int, is-expr
+Labels: any, DecimalFloatingPointNumber, decimal, float, FloatingPointTypeSuffix, int, is-expr
 
 function init() {
     any x = 0d;
@@ -54,7 +54,7 @@ function init() {
 
 Test-Case: error
 Description: Test the basic type when the numeric-literal includes a DecimalTypeSuffix, via incompatible assignment.
-Labels: DecimalTypeSuffix, decimal, float, int
+Labels: DecimalFloatingPointNumber, decimal, float, FloatingPointTypeSuffix, int
 
 function errorFunction() {
     int _ = 0d; // @error expected an 'int' but found a 'decimal'
@@ -99,7 +99,7 @@ function errorFunction() {
 
 Test-Case: output
 Description: Test the basic type when the applicable contextually expected type is a subtype of decimal.
-Labels: DecimalNumber, decimal, int, is-expr, nil-type, string
+Labels: DecimalNumber, DecimalFloatingPointNumber, decimal, int, is-expr, nil-type, string
 
 function init() {
     decimal a = 1.212;
@@ -120,9 +120,19 @@ function init() {
     io:println(e is decimal); // @output true
 }
 
+Test-Case: error
+Description: Test the basic type when the applicable contextually expected type is not a subtype of decimal.
+Labels: decimal, HexIntLiteral, nil-type, string
+
+function errorFunction() {
+    string|decimal _ = 0xabd1; // @error expected a '(string|decimal)' but found a 'int'
+
+    ()|decimal _ = 0x110; // @error expected a '(()|decimal)' but found a 'int'
+}
+
 Test-Case: output
 Description: Test the basic type when the applicable contextually expected type is a subtype of float.
-Labels: DecimalNumber, decimal, float, HexIntLiteral, int, nil-type, is-expr, string
+Labels: DecimalNumber, DecimalFloatingPointNumber, decimal, float, HexIntLiteral, int, nil-type, is-expr, string
 
 function init() {
     int|float x = 1.212;
@@ -150,7 +160,7 @@ function init() {
 Test-Case: output
 Description: Test the basic type when the applicable contextually expected type is not a subtype of either decimal or
              float and the numeric literal is an int-literal.
-Labels: any, decimal, float, HexIntLiteral, int, is-expr
+Labels: any, DecimalNumber, decimal, float, HexIntLiteral, int, is-expr
 
 function init() {
     int|float|decimal x = 212;
@@ -182,7 +192,7 @@ function errorFunction() {
 Test-Case: output
 Description: Test the basic type when the applicable contextually expected type is not a subtype of either decimal or
              float and the numeric literal is not an int-literal.
-Labels: any, decimal, float, int, is-expr
+Labels: any, decimal, DecimalFloatingPointNumber, float, int, is-expr
 
 function init() {
     int|float|decimal x = 4311.1;
