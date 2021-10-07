@@ -34,7 +34,7 @@ function printInt(int x) {
     io:println(x);
 }
 
-Test-Case: error
+Test-Case: parser-error
 Description: Test DecimalNumbers with leading zeros.
 Labels: int
 
@@ -93,7 +93,7 @@ function printInt(int x) {
 
 Test-Case: parser-error
 Description: Test invalid HexIntLiteral.
-Fail-Issue: ballerina-lang#32559
+Fail-Issue: ballerina-platform/ballerina-lang#32559
 Labels: int
 
 function errorFunction() {
@@ -128,7 +128,7 @@ function init() {
 
 Test-Case: output
 Description: Test HexIntLiteral with toString().
-Fail-Issue: ballerina-lang#32769
+Fail-Issue: ballerina-platform/ballerina-lang#32769
 Labels: HexIntLiteral, value:toString
 
 function init() {
@@ -149,7 +149,7 @@ function init() {
 
 Test-Case: output
 Description: Test HexIntLiteral with toBalString().
-Fail-Issue: ballerina-lang#32769
+Fail-Issue: ballerina-platform/ballerina-lang#32769
 Labels: HexIntLiteral, value:toBalString
 
 function init() {
@@ -199,7 +199,7 @@ function errorFunction() {
 }
 
 Test-Case: error
-Description: Numeric value is greater than upper bound.
+Description: Test numeric value greater than upper bound for decimal.
 Labels: DecimalNumber, decimal
 
 function errorFunction() {
@@ -207,7 +207,7 @@ function errorFunction() {
 }
 
 Test-Case: output
-Description: Test DecimalNumbers with equality.
+Description: Test equality for DecimalNumbers.
 Labels: DecimalNumber, equality
 
 function init() {
@@ -217,7 +217,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test HexIntLiteral with equality.
+Description: Test equality for HexIntLiteral.
 Labels: equality, HexIntLiteral
 
 function init() {
@@ -227,13 +227,17 @@ function init() {
 }
 
 Test-Case: output
-Description: Test DecimalNumbers and HexIntLiteral with equality.
+Description: Test equality for DecimalNumbers and HexIntLiteral.
 Labels: DecimalNumber, equality, HexIntLiteral
 
 function init() {
     io:println(0x1234abdef1 == 78193090289); // @output true
 
+    io:println(7819309028 == 0x4abde31); // @output false
+
     io:println(0x1234abdef1 != 7819309028); // @output true
+
+    io:println(9223372036854775807 != 0x7FFFFFFFFFFFFFFF); // @output false
 }
 
 Test-Case: output
@@ -258,7 +262,7 @@ function init() {
 }
 
 Test-Case: error
-Description: Test the basic type when the numeric-literal includes a FloatTypeSuffix.
+Description: Test the basic type when the numeric-literal includes a FloatTypeSuffix, via incompatible assignment.
 Labels: decimal, FloatTypeSuffix, float, int
 
 function errorFunction() {
@@ -291,7 +295,7 @@ function init() {
 }
 
 Test-Case: error
-Description: Test the basic type when the numeric-literal includes a DecimalTypeSuffix.
+Description: Test the basic type when the numeric-literal includes a DecimalTypeSuffix, via incompatible assignment.
 Labels: DecimalTypeSuffix, decimal, float, int
 
 function errorFunction() {
@@ -324,7 +328,7 @@ function init() {
 }
 
 Test-Case: error
-Description: Test the basic type when the numeric-literal is a HexFloatingPointLiteral.
+Description: Test the basic type when the numeric-literal is a HexFloatingPointLiteral, via incompatible assignment.
 Labels: decimal, float, HexFloatingPointLiteral, int
 
 function errorFunction() {
@@ -409,8 +413,8 @@ function init() {
 
 Test-Case: error
 Description: Test the basic type when the applicable contextually expected type is not a subtype of either decimal or
-             float and the numeric literal is an int-literal.
-Fail-Issue: ballerina-lang#32698
+             float and the numeric literal is an int-literal, via incompatible assignment.
+Fail-Issue: ballerina-platform/ballerina-lang#32698
 Labels: DecimalNumber, decimal, float
 
 function errorFunction() {
@@ -458,7 +462,7 @@ function init() {
 
 Test-Case: error
 Description: Test int-literal with invalid type casts.
-Fail-Issue: ballerina-lang#32716
+Fail-Issue: ballerina-platform/ballerina-lang#32716
 Labels: any, boolean, DecimalNumber, HexIntLiteral, type-cast-expr
 
 function errorFunction() {
