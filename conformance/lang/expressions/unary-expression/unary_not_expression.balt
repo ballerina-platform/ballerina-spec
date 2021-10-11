@@ -2,7 +2,7 @@ Test-Case: output
 Description: Test unary not basic operations.
 Labels: unary-not
 
-public function main() {
+function init() {
     io:println(!false); // @output true
 
     io:println(!true); // @output false
@@ -17,9 +17,9 @@ public function main() {
 
 Test-Case: output
 Description: Test unary operand and result static types.
-Labels: is-expr, unary-not
+Labels: function-call-expr, is-expr, unary-not
 
-public function main() {
+function init() {
     io:println(getNegation(true)); // @output false
 
     io:println(!true is boolean); // @output true
@@ -36,14 +36,14 @@ Labels: module-type-defn, unary-not
 
 type BooleanValue true|false;
 
-public function main() {
+function init() {
     BooleanValue trueVal = !false;
     io:println(trueVal); // @output true
 }
 
 Test-Case: output
 Description: Test unary not operations at module level.
-Labels: const, unary-not
+Labels: module-const-decl, unary-not
 
 boolean notFalse = !false;
 boolean notTrue = !true;
@@ -52,7 +52,7 @@ const boolean CONST1 = !false;
 const boolean CONST2 = !CONST1;
 const boolean CONST3 = !!false;
 
-public function main() {
+function init() {
     io:println(notFalse); // @output true
 
     io:println(notTrue); // @output false
@@ -70,7 +70,7 @@ Labels: is-expr, unary-not, var
 
 var notTrue = !true;
 
-public function main() {
+function init() {
     var x1 = !true;
     io:println(x1 is boolean); // @output true
     io:println(notTrue is boolean); // @output true
@@ -82,8 +82,8 @@ Labels: module-type-defn, unary-not
 
 type SwitchOn true|1;
 
-public function main() {
-    int x6 = !false; // @error static type of unary-not expression is boolean
+function errorFunction() {
+    int _ = !false; // @error static type of unary-not expression is boolean
 
     boolean x1 = true;
     SwitchOn x2 = !x1; // @error static type of unary-not expression is boolean
@@ -93,11 +93,11 @@ Test-Case: error
 Description: Test unary not expression assignments resulting in an error at module level.
 Labels: const, unary-not
 
-int intInverse = !false; // @error static type of unary-not expression is boolean
+int _ = !false; // @error static type of unary-not expression is boolean
 
-const string CONST4 = !false; // @error static type of unary-not expression is boolean
+const string _ = !false; // @error static type of unary-not expression is boolean
 
-public function main() {
+function init() {
 }
 
 Test-Case: error
@@ -106,16 +106,16 @@ Labels: module-type-defn, optional-type, tuple-type, unary-not
 
 type BooleanValue true|false;
 
-public function main() {
-    boolean x6 = !1; // @error unary-not is not defined for int
+function init() {
+    boolean _ = !1; // @error unary-not is not defined for int
 
-    boolean x7 = !getBooleanOrNil(); // @error unary-not is not defined for boolean?
+    boolean _ = !getBooleanOrNil(); // @error unary-not is not defined for boolean?
 
     [boolean, boolean] booleanTuple = [true, false];
-    boolean x8 = !booleanTuple; // @error unary-not is not defined for tuple
+    boolean _ = !booleanTuple; // @error unary-not is not defined for tuple
 
     BooleanValue bool = true;
-    boolean x9 = !bool; // @error unary-not is not defined for user defined type
+    boolean _ = !bool; // @error unary-not is not defined for user defined type
 }
 
 function getBooleanOrNil() returns boolean? {
@@ -126,11 +126,11 @@ Test-Case: error
 Description: Test static type of operand belonging to non-boolean type resulting in an error at module level.
 Labels: const, unary-not
 
-boolean booleanInverse = !"false"; // @error unary-not is not defined for string
+boolean _ = !"false"; // @error unary-not is not defined for string
 
-const boolean CONST5 = !1; // @error unary-not is not defined for int
+const boolean _ = !1; // @error unary-not is not defined for int
 
-public function main() {
+function init() {
 }
 
 Test-Case: output
@@ -141,7 +141,7 @@ type Record record {
     boolean x;
 };
 
-public function main() {
+function init() {
     Record b = {x: false};
     boolean c = !b.x;
     io:println(c); // @output true
@@ -151,7 +151,7 @@ Test-Case: output
 Description: Test unary not with member access expression.
 Labels: array-type, list-constructor, member-access-expr, unary-not
 
-public function main() {
+function init() {
     boolean[] d = [true, false];
     boolean e = !d[0] ;
     io:println(e); // @output false
@@ -167,7 +167,7 @@ class Class {
     }
 }
 
-public function main() {
+function init() {
     Class f = new;
     boolean g = !f.getBoolean();
     io:println(g); // @output true
@@ -177,7 +177,7 @@ Test-Case: output
 Description: Test unary not with let expression.
 Labels: let-expr, unary-not
 
-public function main() {
+function init() {
     boolean h = let boolean h1 = !false in h1;
     io:println(h); // @output true
 }
@@ -188,7 +188,7 @@ Labels: module-type-defn, type-cast-expr, unary-not
 
 type BooleanType true|false;
 
-public function main() {
+function init() {
     boolean i = !<boolean>true;
     io:println(i); // @output false
 
@@ -202,7 +202,7 @@ Test-Case: output
 Description: Test unary not with typeof.
 Labels: typeof-expr, typedesc, unary-not
 
-public function main() {
+function init() {
     typedesc j = typeof (!false);
     io:println(j); // @output typedesc true
 }
@@ -211,7 +211,7 @@ Test-Case: output
 Description: Test unary not with checking expression.
 Labels: checking-expr, unary-not
 
-public function main() returns error? {
+function init() returns error? {
     boolean k = !check getBooleanOrError();
     io:println(k); // @output true
 
@@ -227,7 +227,7 @@ Test-Case: output
 Description: Test unary not with logical expression.
 Labels: logical-expr, unary-not
 
-public function main() {
+function init() {
     boolean x = !(false && true);
     io:println(x); // @output true
 
@@ -242,7 +242,7 @@ Test-Case: output
 Description: Test unary not with equality expression.
 Labels: equality-expr, unary-not
 
-public function main() {
+function init() {
     boolean w = !(2.0 == 2.00);
     io:println(w); // @output false
 
@@ -260,7 +260,7 @@ Test-Case: output
 Description: Test unary not with conditional expression.
 Labels: conditional-expr, unary-not
 
-public function main() {
+function init() {
     boolean x = !(getBooleanOptional() ?: false);
     io:println(x); // @output false
 
@@ -276,7 +276,7 @@ Test-Case: output
 Description: Test unary not in a anonymous function.
 Labels: expr-function-body, unary-not
 
-public function main() {
+function init() {
     function () returns boolean lambda = () => !false;
     io:println(lambda()); // @output true
 }
@@ -285,7 +285,7 @@ Test-Case: output
 Description: Test unary not in a match statement.
 Labels: match-stmt, unary-not
 
-public function main() {
+function init() {
     boolean v = true;
     match !v {
         _ => {
