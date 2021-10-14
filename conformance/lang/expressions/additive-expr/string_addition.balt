@@ -151,6 +151,33 @@ function errorFunction(string a, string:Char b, Strings c) {
 }
 
 Test-Case: output
+Description: Test string concatenation with var.
+Labels: additive-expr, string, string:Char, union-type, singleton-type, module-type-defn, var
+
+type Strings "a"|"bc";
+
+function init() {
+    string a = "foo";
+    string:Char b = "A";
+    Strings c = "bc";
+
+    var d = a + a;
+    io:println(d); // @output foofoo
+
+    var e = a + b;
+    io:println(e); // @output fooA
+
+    var f = a + c;
+    io:println(f); // @output foobc
+
+    var g = b + c;
+    io:println(g); // @output Abc
+
+    var h = a + b + c;
+    io:println(h); // @output fooAbc
+}
+
+Test-Case: output
 Description: Test string concatenation.
 Labels: additive-expr, string, value:toBalString
 
@@ -604,4 +631,20 @@ function init() returns error? {
     string u = check s + checkpanic t;
     io:println(u); // @output hello world
     io:println(check s + checkpanic t); // @output hello world
+}
+
+Test-Case: output
+Description: Test string concatenation at module level.
+Labels: additive-expr, module-type-defn, module-var-decl, string, string:Char, union-type
+
+type Strings "foo"|"bar";
+
+string s = "one";
+string:Char t = "2";
+Strings u = "foo";
+
+string str = s + t + u;
+
+function init() returns error? {
+    io:println(str); // @output one2foo
 }

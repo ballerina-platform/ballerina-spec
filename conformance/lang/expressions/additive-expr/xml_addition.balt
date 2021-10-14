@@ -695,3 +695,35 @@ function init() returns error? {
     io:println(u); // @output helloworld<done></done>
     io:println(check t + checkpanic s); // @output world<done></done>hello
 }
+
+Test-Case: output
+Description: Test xml concatenation at module level.
+Labels: additive-expr, module-type-defn, module-var-decl, union-type, xml, xml:Element, xml-type-param
+
+xml:Element x = xml `<elem>value</elem>`;
+xml<xml:Text|xml:Comment> y = xml `<!--C1-->text<!--C2-->`;
+
+xml<xml:Element|xml:Text|xml:Comment> val = x + y;
+
+function init() returns error? {
+    io:println(val); // @output <elem>value</elem><!--C1-->text<!--C2-->
+}
+
+Test-Case: output
+Description: Test xml concatenation with var.
+Labels: additive-expr, var, xml, xml:Element, xml:Comment, xml:ProcessingInstruction, xml:Text, xml-type-param
+
+function init() {
+    xml a = xml `foo`;
+    xml:Element b = xml `<elem>value</elem>`;
+    xml<xml:Comment|xml:ProcessingInstruction|xml:Text> c = xml `<?pi val?><!--c1-->`;
+
+    var e = a + c;
+    io:println(e); // @output foo<?pi val?><!--c1-->
+
+    var f = a + b + c;
+    io:println(f); // @output foo<elem>value</elem><?pi val?><!--c1-->
+
+    var g = b + c;
+    io:println(g); // @output <elem>value</elem><?pi val?><!--c1-->
+}

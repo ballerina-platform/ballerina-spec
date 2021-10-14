@@ -907,3 +907,45 @@ public function main() {
 
     io:println(d + b); // @output \<!--bar-->
 }
+
+Test-Case: output
+Description: Test string and xml concatenation at module level.
+Labels: additive-expr, module-type-defn, module-var-decl, string, string:Char, union-type, xml, xml:Element
+
+type Strings "foo"|"bar";
+
+string s = "one";
+string:Char t = "2";
+Strings u = "foo";
+xml v = xml `text`;
+xml:Element w = xml `<elem>value</elem>`;
+
+xml val = s + t + u + v + w;
+
+function init() returns error? {
+    io:println(val); // @output one2footext<elem>value</elem>
+}
+
+Test-Case: output
+Description: Test xml and string concatenation with var.
+Fail-Issue: ballerina-platform/ballerina-lang#32975
+Labels: additive-expr, string, var, xml, xml:Element
+
+function init() {
+    xml a = xml `foo`;
+    xml:Element b = xml `<elem>value</elem>`;
+    string c = "str";
+    string:Char d = "D";
+
+    var e = a + c;
+    io:println(e); // @output foostr
+
+    var f = a + d;
+    io:println(f); // @output fooD
+
+    var g = b + c + d;
+    io:println(g); // @output <elem>value</elem>strD
+
+    var h = b + d;
+    io:println(h); // @output <elem>value</elem>D
+}
