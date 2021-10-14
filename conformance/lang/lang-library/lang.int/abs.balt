@@ -308,8 +308,8 @@ function init() {
 
 Test-Case: output
 Description: Test `abs` function with user-defined subtypes of int.
-Labels: int:abs, DecimalNumber, function-call-expr, int, method-call-expr, module-const-decl, module-type-defn,
-        union-type, unary-minus, singleton-type
+Labels: int:abs, DecimalNumber, function-call-expr, int, int:Signed8, int:Unsigned32, method-call-expr,
+        module-const-decl, module-type-defn, union-type, unary-minus, singleton-type
 
 const A = -10;
 const B = -20;
@@ -320,11 +320,15 @@ type IntType2 A|B;
 
 type IntType3 IntType1|IntType2;
 
+type IntType4 int:Unsigned32|int:Signed8;
+
 function init() {
     A a1 = -10;
     IntType1 a2 = -30;
     IntType2 a3 = -20;
     IntType3 a4 = -10;
+    int:Unsigned32|int:Signed8 a5 = -12;
+    IntType4 a6 = -23;
 
     int b1 = int:abs(a1);
     testInt(b1); // @output 10
@@ -337,47 +341,18 @@ function init() {
     testInt(a3.abs()); // @output 20
 
     testInt(int:abs(a4)); // @output 10
+
+    testInt(a5.abs()); // @output 12
+
+    testInt(int:abs(a5)); // @output 12
+
+    testInt(a6.abs()); // @output 23
+
+    testInt(int:abs(a6)); // @output 23
 }
 
 function testInt(int i) {
     io:println(i);
-}
-
-Test-Case: output
-Description: Test `abs` function with user-defined subtypes of int.
-Fail-Issue: ballerina-platform/ballerina-lang#32620
-Labels: int:abs, DecimalNumber, int, int:Signed8, int:Unsigned32, module-type-defn, type-reference, method-call-expr
-
-type IntType int:Signed8|int:Unsigned32;
-
-function init() {
-    int:Signed8|int:Unsigned32 a1 = 235262;
-    IntType a2 = 4563;
-
-    int b1 = a1.abs();
-    b1 = a2.abs();
-}
-
-Test-Case: output
-Description: Test `abs` function with int subtypes.
-Fail-Issue: ballerina-platform/ballerina-lang#32620
-Labels: int:abs, DecimalNumber, function-call-expr, int, int:Signed8, int:Unsigned32
-
-function init() {
-    int:Signed8|int:Unsigned32 a1 = 235262;
-    int b1 = int:abs(a1);
-}
-
-Test-Case: output
-Description: Test `abs` function with user-defined subtypes of int.
-Fail-Issue: ballerina-platform/ballerina-lang#32620
-Labels: int:abs, DecimalNumber, function-call-expr, int, int:Signed8, int:Unsigned32, module-type-defn, union-type
-
-type IntType int:Signed8|int:Unsigned32;
-
-function init() {
-    IntType a1 = 4563;
-    int b1 = int:abs(a1);
 }
 
 Test-Case: output

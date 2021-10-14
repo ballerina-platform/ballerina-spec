@@ -248,8 +248,8 @@ function testInt(int i) {
 
 Test-Case: output
 Description: Test `min` function with user-defined subtypes of int.
-Labels: int:min, DecimalNumber, function-call-expr, int, module-const-decl, module-type-defn, union-type,
-        method-call-expr, singleton-type
+Labels: int:min, DecimalNumber, function-call-expr, int, int:Signed8, int:Unsigned32, module-const-decl,
+        module-type-defn, union-type, method-call-expr, singleton-type
 
 const A = 10;
 const B = 20;
@@ -276,47 +276,18 @@ function init() {
     testInt(B.min(a1, a3, a4, a5)); // @output 5
 
     testInt(a3.min(A, a1, a5)); // @output 5
+
+    testInt(a4.min()); // @output 12
+
+    testInt(a5.min()); // @output 5
+
+    testInt(a4.min(a5, a1)); // @output 5
+
+    testInt(int:min(a5, a3, a2)); // @output 4
 }
 
 function testInt(int i) {
     io:println(i);
-}
-
-Test-Case: output
-Description: Test `min` function with user-defined subtypes of int.
-Fail-Issue: ballerina-platform/ballerina-lang#32620
-Labels: int:min, DecimalNumber, int, int:Signed8, int:Unsigned32, module-type-defn, method-call-expr, union-type
-
-type IntType int:Signed8|int:Unsigned32;
-
-function init() {
-    int:Signed8|int:Unsigned32 a1 = 235262;
-    IntType a2 = 4563;
-
-    int b1 = a1.min();
-    b1 = a2.min();
-}
-
-Test-Case: output
-Description: Test `min` function with user-defined subtypes of int.
-Fail-Issue: ballerina-platform/ballerina-lang#32620
-Labels: int:min, DecimalNumber function-call-expr, int, int:Signed8, int:Unsigned32, module-const-decl,
-        module-type-defn, singleton-type, union-type
-
-const A = 10;
-const B = 20;
-
-type IntType1 4|20|30;
-
-type IntType2 A|B;
-
-type IntType3 int:Signed8|int:Unsigned32;
-
-type IntType4 IntType1|IntType2|IntType3;
-
-function init() {
-    IntType3 a = 12;
-    io:println(int:min(a, 3, 25)); // @output 3
 }
 
 Test-Case: output
