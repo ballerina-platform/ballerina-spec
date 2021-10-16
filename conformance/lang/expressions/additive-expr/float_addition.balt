@@ -249,8 +249,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test float addition with floating point literals.
-Labels: additive-expr, floating-point-literal, FloatingPointTypeSuffix, unary-minus, unary-plus
+Description: Test float addition with floating point literals as operands.
+Labels: additive-expr, DecimalFloatingPointNumber, FloatingPointTypeSuffix, unary-minus, unary-plus
 
 function init() {
     io:println(-25.E1742f + -25.E1742f); // @output -Infinity
@@ -296,6 +296,54 @@ function init() {
     io:println(2.345e02 + 25.E1742); // @output Infinity
 
     io:println(25.E1742f + 25.E1742); // @output Infinity
+}
+
+Test-Case: output
+Description: Test float addition with hex floating point literals as operands.
+Labels: additive-expr, HexFloatingPointLiteral, unary-minus
+
+function init() {
+    io:println(-0x1.d5p7 + -0x1.d5p7); // @output -469.0
+    io:println(-0x1.d5p7 + -0x1.8439d70a2d70ap13); // @output -12657.72999988079
+    io:println(-0x1.d5p7 + -0x1.57df3b645a1cbp3); // @output -245.246
+    io:println(-0x1.d5p7 + 0x1.e412904862198p4); // @output -204.24546787
+    io:println(-0x1.d5p7 + 0x1.cbe3p17); // @output 235227.5
+    io:println(-0x1.d5p7 + 0x1.d5p7); // @output 0.0
+
+    io:println(-0x1.8439d70a2d70ap13 + -0x1.d5p7); // @output -12657.72999988079
+    io:println(-0x1.8439d70a2d70ap13 + -0x1.8439d70a2d70ap13); // @output -24846.45999976158
+    io:println(-0x1.8439d70a2d70ap13 + -0x1.57df3b645a1cbp3); // @output -12433.97599988079
+    io:println(-0x1.8439d70a2d70ap13 + 0x1.e412904862198p4); // @output -12392.97546775079
+    io:println(-0x1.8439d70a2d70ap13 + 0x1.cbe3p17); // @output 223038.7700001192
+    io:println(-0x1.8439d70a2d70ap13 + 0x1.d5p7); // @output -12188.72999988079
+
+    io:println(-0x1.57df3b645a1cbp3 + -0x1.d5p7); // @output -245.246
+    io:println(-0x1.57df3b645a1cbp3 + -0x1.8439d70a2d70ap13); // @output -12433.97599988079
+    io:println(-0x1.57df3b645a1cbp3 + -0x1.57df3b645a1cbp3); // @output -21.492
+    io:println(-0x1.57df3b645a1cbp3 + 0x1.e412904862198p4); // @output 19.50853213
+    io:println(-0x1.57df3b645a1cbp3 + 0x1.cbe3p17); // @output 235451.254
+    io:println(-0x1.57df3b645a1cbp3 + 0x1.d5p7); // @output 223.754
+
+    io:println(0x1.e412904862198p4 + -0x1.d5p7); // @output -204.24546787
+    io:println(0x1.e412904862198p4 + -0x1.8439d70a2d70ap13); // @output -12392.97546775079
+    io:println(0x1.e412904862198p4 + -0x1.57df3b645a1cbp3); // @output 19.50853213
+    io:println(0x1.e412904862198p4 + 0x1.e412904862198p4); // @output 60.50906426
+    io:println(0x1.e412904862198p4 + 0x1.cbe3p17); // @output 235492.25453213
+    io:println(0x1.e412904862198p4 + 0x1.d5p7); // @output 264.75453213000003
+
+    io:println(0x1.cbe3p17 + -0x1.d5p7); // @output 235227.5
+    io:println(0x1.cbe3p17 + -0x1.8439d70a2d70ap13); // @output 223038.7700001192
+    io:println(0x1.cbe3p17 + -0x1.57df3b645a1cbp3); // @output 235451.254
+    io:println(0x1.cbe3p17 + 0x1.e412904862198p4); // @output 235492.25453213
+    io:println(0x1.cbe3p17 + 0x1.cbe3p17); // @output 470924.0
+    io:println(0x1.cbe3p17 + 0x1.d5p7); // @output 235696.5
+
+    io:println(0x1.d5p7 + -0x1.d5p7); // @output 0.0
+    io:println(0x1.d5p7 + -0x1.8439d70a2d70ap13); // @output -12188.72999988079
+    io:println(0x1.d5p7 + -0x1.57df3b645a1cbp3); // @output 223.754
+    io:println(0x1.d5p7 + 0x1.e412904862198p4); // @output 264.75453213000003
+    io:println(0x1.d5p7 + 0x1.cbe3p17); // @output 235696.5
+    io:println(0x1.d5p7 + 0x1.d5p7); // @output 469.0
 }
 
 Test-Case: output
@@ -434,7 +482,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test float addition with positive floats of type float?.
+Description: Test float addition when at least one or both of the operands are positive floats or nil
+             of type float?.
 Labels: additive-expr, DecimalFloatingPointNumber, DecimalNumber, float, FloatingPointTypeSuffix, nil-literal,
         numeric-nil-lifting, optional-type, value:toBalString
 
@@ -515,7 +564,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test float addition with negative floats of type float?.
+Description: Test float addition when at least one or both of the operands are negative floats or nil
+             of type float?.
 Labels: additive-expr, DecimalFloatingPointNumber, DecimalNumber, float, FloatingPointTypeSuffix, nil-literal,
         numeric-nil-lifting, optional-type, value:toBalString, unary-minus
 
@@ -596,7 +646,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test float addition when one operand is negative and the other is positive float of type float?.
+Description: Test float addition when one operand is a negative float or nil and the other is a float decimal
+             or nil of type float?.
 Labels: additive-expr, DecimalFloatingPointNumber, float, FloatingPointTypeSuffix, nil-literal, numeric-nil-lifting,
         optional-type, value:toBalString, unary-minus, unary-plus
 
@@ -661,7 +712,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test float addition with user-defined subtypes of float.
+Description: Test float addition with user-defined subtypes of float?.
 Labels: additive-expr, DecimalFloatingPointNumber, float, FloatingPointTypeSuffixm module-const-decl, module-type-defn,
         nil-literal, numeric-nil-lifting, optional-type, value:toBalString, unary-minus, singleton-type, union-type
 

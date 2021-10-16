@@ -192,6 +192,54 @@ function init() {
     io:println(9223372036854775807 + -1); // @output 9223372036854775806
 }
 
+Test-Case: output
+Description: Test integer addition with hex int literals as operands.
+Labels: additive-expr, HexIntLiteral, unary-minus
+
+function init() {
+    io:println(-0xfabd12 + -0xfabd12); // @output -32864804
+    io:println(-0xfabd12 + -0x345); // @output -16433239
+    io:println(-0xfabd12 + -0x12a); // @output -16432700
+    io:println(-0xfabd12 + 0x0325); // @output -16431597
+    io:println(-0xfabd12 + 0xde); // @output -16432180
+    io:println(-0xfabd12 + 0xfffedf); // @output 344525
+
+    io:println(-0x345 + -0xfabd12); // @output -16433239
+    io:println(-0x345 + -0x345); // @output -1674
+    io:println(-0x345 + -0x12a); // @output -1135
+    io:println(-0x345 + 0x0325); // @output -32
+    io:println(-0x345 + 0xde); // @output -615
+    io:println(-0x345 + 0xfffedf); // @output 16776090
+
+    io:println(-0x12a + -0xfabd12); // @output -16432700
+    io:println(-0x12a + -0x345); // @output -1135
+    io:println(-0x12a + -0x12a); // @output -596
+    io:println(-0x12a + 0x0325); // @output 507
+    io:println(-0x12a + 0xde); // @output -76
+    io:println(-0x12a + 0xfffedf); // @output 16776629
+
+    io:println(0x0325 + -0xfabd12); // @output -16431597
+    io:println(0x0325 + -0x345); // @output -32
+    io:println(0x0325 + -0x12a); // @output 507
+    io:println(0x0325 + 0x0325); // @output 1610
+    io:println(0x0325 + 0xde); // @output 1027
+    io:println(0x0325 + 0xfffedf); // @output 16777732
+
+    io:println(0xde + -0xfabd12); // @output -16432180
+    io:println(0xde + -0x345); // @output -615
+    io:println(0xde + -0x12a); // @output -76
+    io:println(0xde + 0x0325); // @output 1027
+    io:println(0xde + 0xde); // @output 444
+    io:println(0xde + 0xfffedf); // @output 16777149
+
+    io:println(0xfffedf + -0xfabd12); // @output 344525
+    io:println(0xfffedf + -0x345); // @output 16776090
+    io:println(0xfffedf + -0x12a); // @output 16776629
+    io:println(0xfffedf + 0x0325); // @output 16777732
+    io:println(0xfffedf + 0xde); // @output 16777149
+    io:println(0xfffedf + 0xfffedf); // @output 33553854
+}
+
 Test-Case: panic
 Description: Test integer addition overflow.
 Labels: additive-expr, int, DecimalNumber
@@ -1239,7 +1287,8 @@ Labels: additive-expr, DecimalNumber, int, int:MIN_VALUE, module-var-decl
 int _ = int:MIN_VALUE + -1; // @panic integer overflow
 
 Test-Case: output
-Description: Test integer addition with positive integers of type int?.
+Description: Test integer addition when at least one or both of the operands are positive integers or nil
+             of type int?.
 Labels: additive-expr, DecimalNumber, int, nil-literal, numeric-nil-lifting, optional-type, value:toBalString
 
 function init() {
@@ -1286,7 +1335,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test integer addition with negative integers of type int?.
+Description: Test integer addition when at least one or both of the operands are negative integers or nil
+             of type int?.
 Labels: additive-expr, DecimalNumber, int, nil-literal, numeric-nil-lifting, optional-type, value:toBalString
 
 function init() {
@@ -1333,7 +1383,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test integer addition where one operand is negative and the other is positive, with integers of type int?.
+Description: Test integer addition when one operand is negative integer or nil and the other is a positive integer
+             or nil of type int?.
 Labels: additive-expr, DecimalNumber, int, nil-literal, numeric-nil-lifting, optional-type, unary-minus, value:toBalString
 
 function init() {
@@ -1396,7 +1447,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test integer addition with integers of type int:Unsigned8?.
+Description: Test integer addition when at least one or both of the operands are integers or nil
+             of type int:Unsigned8?.
 Labels: additive-expr, DecimalNumber, int:Unsigned8, nil-literal, optional-type, value:toBalString, numeric-nil-lifting
 
 function init() {
@@ -1457,7 +1509,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test integer addition with positive integers of byte type.
+Description: Test integer addition when at least one or both of the operands are integers or nil
+             of type byte?.
 Labels: additive-expr, byte, DecimalNumber, nil-literal, optional-type, value:toBalString, numeric-nil-lifting
 
 function init() {
@@ -1518,7 +1571,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test integer addition with integers of type int:Unsigned16?.
+Description: Test integer addition when at least one or both of the operands are integers or nil
+             of type int:Unsigned16?.
 Labels: additive-expr, DecimalNumber, int:Unsigned16, nil-literal, optional-type, value:toBalString, numeric-nil-lifting
 
 function init() {
@@ -1579,7 +1633,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test integer addition with integers of type int:Unsigned32?.
+Description: Test integer addition when at least one or both of the operands are integers or nil
+             of type int:Unsigned32?.
 Labels: additive-expr, DecimalNumber, int:Unsigned32, nil-literal, optional-type, value:toBalString, numeric-nil-lifting
 
 function init() {
@@ -1640,7 +1695,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test integer addition with positive integers of type int:Signed8?.
+Description: Test integer addition when at least one or both of the operands are positive integers or nil
+             of type int:Signed8?.
 Labels: additive-expr, DecimalNumber, int:Signed8, nil-literal, optional-type, value:toBalString, numeric-nil-lifting
 
 function init() {
@@ -1682,7 +1738,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test integer addition with negative integers of type int:Signed8?.
+Description: Test integer addition when at least one or both of the operands are negative integers or nil
+             of type int:Signed8?.
 Labels: additive-expr, DecimalNumber, int:Signed8, nil-literal, numeric-nil-lifting, optional-type, unary-minus, value:toBalString
 
 function init() {
@@ -1724,7 +1781,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test integer addition when one operand is negative and the other is positive integer of type Signed8?.
+Description: Test integer addition when one operand is a negative integer or nil and the other is a positive integer
+             or nil of type Signed8?.
 Labels: additive-expr, DecimalNumber, int:Signed8, nil-literal, numeric-nil-lifting, optional-type, unary-minus, value:toBalString
 
 function init() {
@@ -1806,7 +1864,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test integer addition with positive integers of type int:Signed16?.
+Description: Test integer addition when at least one or both of the operands are positive integers or nil
+             of type int:Signed16?.
 Labels: additive-expr, DecimalNumber, int:Signed16, nil-literal, optional-type, value:toBalString, numeric-nil-lifting
 
 function init() {
@@ -1848,7 +1907,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test integer addition with negative integers of type int:Signed16?.
+Description: Test integer addition when at least one or both of the operands are negative integers or nil
+             of type int:Signed16?.
 Labels: additive-expr, DecimalNumber, int:Signed16, nil-literal, numeric-nil-lifting, optional-type, unary-minus, value:toBalString
 
 function init() {
@@ -1890,7 +1950,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test integer addition when one operand is negative and the other is positive integer of type Signed16?.
+Description: Test integer addition when one operand is a negative integer or nil and the other is a positive integer
+             or nil of type Signed16?.
 Labels: additive-expr, DecimalNumber, int:Signed16, nil-literal, numeric-nil-lifting, optional-type, unary-minus, value:toBalString
 
 function init() {
@@ -1972,7 +2033,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test integer addition with positive integers of type int:Signed32?.
+Description: Test integer addition when at least one or both of the operands are positive integers or nil
+             of type int:Signed32?.
 Labels: additive-expr, DecimalNumber, int:Signed32, nil-literal, optional-type, value:toBalString, numeric-nil-lifting
 
 function init() {
@@ -2014,7 +2076,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test integer addition with negative integers of type int:Signed32?.
+Description: Test integer addition when at least one or both of the operands are negative integers or nil
+             of type int:Signed32?.
 Labels: additive-expr, DecimalNumber, int:Signed32, nil-literal, numeric-nil-lifting, optional-type, unary-minus, value:toBalString
 
 function init() {
@@ -2056,7 +2119,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test integer addition when one operand is negative and the other is positive integer of type Signed32?.
+Description: Test integer addition when one operand is a negative integer or nil and the other is a positive integer
+             or nil of type Signed32?.
 Labels: additive-expr, DecimalNumber, int:Signed32, nil-literal, numeric-nil-lifting, optional-type, unary-minus, value:toBalString
 
 function init() {
@@ -2138,7 +2202,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test integer addition with user-defined subtype of int.
+Description: Test integer addition with user-defined subtype of int?.
 Labels: additive-expr, DecimalNumber, nil-literal, numeric-nil-lifting, optional-type, module-type-defn,
         unary-minus, union-type, value:toBalString, singleton-type
 
@@ -2200,7 +2264,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test integer addition with user-defined subtype of int.
+Description: Test integer addition with user-defined subtype of int?.
 Labels: additive-expr, DecimalNumber, nil-literal, numeric-nil-lifting, optional-type, module-type-defn,
         unary-minus, union-type, value:toBalString, singleton-type
 
@@ -2285,7 +2349,7 @@ function init() {
 }
 
 Test-Case: panic
-Description: Test integer addition overflow with user-defined subtype of int.
+Description: Test integer addition overflow with user-defined subtype of int?.
 Labels: additive-expr, DecimalNumber, int:Unsigned8, int:Signed32, numeric-nil-lifting, optional-type, module-type-defn,
         union-type
 
@@ -2315,7 +2379,7 @@ function init() {
 }
 
 Test-Case: panic
-Description: Test integer addition overflow with user-defined subtype of int.
+Description: Test integer addition overflow with user-defined subtype of int?.
 Labels: additive-expr, DecimalNumber, numeric-nil-lifting, optional-type, module-type-defn, unary-minus,
         singleton-type, union-type
 
@@ -2339,7 +2403,7 @@ function init() {
 }
 
 Test-Case: panic
-Description: Test integer addition overflow with user-defined subtype of int.
+Description: Test integer addition overflow with user-defined subtype of int?.
 Labels: additive-expr, DecimalNumber, int:Unsigned8, int:Signed32, numeric-nil-lifting, optional-type, module-type-defn,
         unary-minus, union-type, singleton-type
 
