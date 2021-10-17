@@ -519,3 +519,25 @@ function compare(int i, int j) {
         io:println(i.sum(j) > 40);
     }
 }
+
+Test-Case: error
+Description: Test assigning the result of `sum` function to an incompatible type.
+Labels: int:sum, float, function-call-expr, int:Signed8, int, method-call-expr
+
+function errorFunction(int a1) {
+    int:Signed8 _ = a1.sum(10, 20); // @error expects a int:Signed8, but sum() returns an int
+
+    float _ = a1.sum(20, 30, 40); // @error expects a float, but sum() returns an int
+
+    float _ = int:sum(10, 20); // @error expects a float, but sum() returns an int
+}
+
+Test-Case: error
+Description: Test passing invalid value to `sum` function.
+Labels: int:sum, DecimalNumber, float, function-call-expr, int, string, method-call-expr
+
+function errorFunction(int a1) {
+    int _ = a1.sum(10, 10.5); // @error expects int values to sum
+
+    int _ = int:sum(10, "ABC"); // @error expects int values to sum
+}
