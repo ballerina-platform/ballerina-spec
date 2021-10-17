@@ -5850,13 +5850,13 @@ Description: Test assigning the result of range expression (exclusive) to an inc
 Labels: range-expr, int, DecimalNumber, object-type, float, record-type, optional-type
 
 function init() {
-    int _ = 1  ..<  10; // @error result of a range expression is an object
+    int _ = 1  ..<  10; // @error expects an int, but the result of a range expression is an object
 
     object {
         public isolated function iterator() returns (object {
             public isolated function next() returns (record {|float value;|}?);
         });
-    } _ = 1  ..<  10; // @error next() of range expression's iterable object returns a record {|int value;|}
+    } _ = 1  ..<  10; // @error expects next() returning record {|float value;|}?, but the next() of range expression's iterable object returns a record {|int value;|}?
 }
 
 Test-Case: error
@@ -5867,11 +5867,11 @@ Labels: range-expr, int, DecimalNumber, object-type, var, record-type, optional-
 function init() {
     var a = 1  ..<  10;
 
-    int _ = a; // @error result of a range expression is an object
+    int _ = a; // @error expects an int, but the result of a range expression is an object
 
     object {
         public isolated function iterator() returns (object {
             public isolated function next() returns (record {|float value;|}?);
         });
-    } _ = a; // @error next() of range expression's iterable object returns a record {|int value;|}
+    } _ = a; // @error expects next() returning record {|float value;|}?, but the next() of range expression's iterable object returns a record {|int value;|}?
 }
