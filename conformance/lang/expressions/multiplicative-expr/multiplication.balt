@@ -4009,3 +4009,111 @@ public function init() {
     io:println(b * a); // @output 2.0
     io:println(b * b); // @output 4.0
 }
+
+Test-Case: output
+Description: Test float multiplication scenarios for union types of user-defined subtypes of float.
+Fail-Issue: ballerina-platform/ballerina-lang#33265
+Labels: multiplicative-expr, float-literal, module-type-defn, union-type, float, FloatTypeSuffix
+
+const A = 1.0f;
+const B = 2.0f;
+
+type Floats1 -2.0f|-1.0f|0.0f|1.0f|2.0f;
+
+type Floats2 A|B;
+
+type Floats3 Floats1|Floats2;
+
+public function init() {
+    Floats2 a = 1.0;
+    B b = 2.0;
+    Floats1|Floats2 c = 2.0f;
+    float|Floats1 d = 20f;
+
+    io:println(a * b); // @output 2.0
+    io:println(a * c); // @output 2.0
+
+    io:println(b * c); // @output 4.0
+
+    io:println(a * d); // @output 20.0
+    io:println(d * a); //@output 20.0
+}
+
+Test-Case: output
+Description: Test decimal multiplication scenarios for union types of user-defined subtypes of decimal.
+Fail-Issue: ballerina-platform/ballerina-lang#33265
+Labels: multiplicative-expr, decimal-literal, module-type-defn, union-type, decimal, DecimalTypeSuffix
+
+const A = 1.0d;
+const B = 2.0d;
+
+type Decimals1 -2.0d|-1.0d|0.0d|1.0d|2.0d;
+
+type Decimals2 A|B;
+
+type Decimals3 Decimals1|Decimals2;
+
+public function init() {
+    Decimals2 a = 1.0;
+    Decimals2 b = 2.0;
+    Decimals1|Decimals2 c = 2.0d;
+    decimal|Decimals1 d = 20.0d;
+
+    io:println(a * b); // @output 2.0
+    io:println(a * c); // @output 2.0
+
+    io:println(b * c); // @output 4.0
+
+    io:println(a * d); // @output 20.0
+    io:println(d * a); //@output 20.0
+}
+
+Test-Case: output
+Description: Test float multiplication scenarios for user-defined nilable subtypes of float.
+Fail-Issue: ballerina-platform/ballerina-lang#31701
+Labels: multiplicative-expr, float-literal, module-type-defn, float, FloatTypeSuffix, unary-minus, unary-plus, optional-type
+
+type Floats -2.0f|-1.0f|0.0f|1.0f|2.0f;
+
+public function init() {
+    Floats? a = 1.0;
+    Floats? b = 2.0;
+    float? c = a * a;
+    float? d = a * b;
+
+    io:println(c); // @output 1.0
+    io:println(a * a); // @output 1.0
+    io:println(d); //@output 2.0
+    io:println(a * b); // @output 2.0
+
+    io:println(b * a); // @output 2.0
+    io:println(b * b); // @output 4.0
+
+    a = -0.0;
+    b = +0.0;
+    Floats? e = 2.0f;
+    io:println(e * a); // @output -0.0
+    io:println(e * b); // @output 0.0
+}
+
+Test-Case: output
+Description: Test decimal multiplication scenarios for user-defined nilable subtypes of decimal.
+Fail-Issue: ballerina-platform/ballerina-lang#31701
+Labels: multiplicative-expr, decimal-literal, module-type-defn, decimal, DecimalTypeSuffix, optional-type
+
+type Decimals -2.0d|-1.0d|0.0d|1.0d|2.0d;
+
+public function init() {
+    Decimals? a = 1.0d;
+    Decimals? b = 2.0d;
+    decimal? c = a * a;
+    decimal? d = a * b;
+
+    io:println(a * a); // @output 1.0
+    io:println(c); // @output 1.0
+    io:println(a * b); // @output 2.0
+    io:println(d); // @output 2.0
+
+    io:println(b * a); // @output 2.0
+    io:println(b * b); // @output 4.0
+}

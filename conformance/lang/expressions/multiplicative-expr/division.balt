@@ -4526,3 +4526,156 @@ public function init() {
     io:println(b / a); // @output 2.0
     io:println(b / b); // @output 1.0
 }
+
+Test-Case: output
+Description: Test float division scenarios for union types of user-defined subtypes of float.
+Fail-Issue: ballerina-platform/ballerina-lang#33265
+Labels: multiplicative-expr, float-literal, module-type-defn, union-type, float, FloatTypeSuffix
+
+const A = 1.0f;
+const B = 2.0f;
+
+type Floats1 -2.0f|-1.0f|0.0f|1.0f|2.0f;
+
+type Floats2 A|B;
+
+type Floats3 Floats1|Floats2;
+
+public function init() {
+    Floats2 a = 1.0;
+    B b = 2.0;
+    Floats1|Floats2 c = 2.0f;
+    float|Floats1 d = 20f;
+
+    io:println(a / b); // @output 0.5
+    io:println(a / c); // @output 0.5
+
+    io:println(b / c); // @output 1.0
+
+    io:println(a / d); // @output 0.05
+    io:println(d / a); //@output 20.0
+}
+
+Test-Case: output
+Description: Test decimal division scenarios for union types of user-defined subtypes of decimal.
+Fail-Issue: ballerina-platform/ballerina-lang#33266
+Labels: multiplicative-expr, decimal-literal, module-type-defn, union-type, decimal, DecimalTypeSuffix
+
+const A = 1.0d;
+const B = 2.0d;
+
+type Decimals1 -2.0d|-1.0d|0.0d|1.0d|2.0d;
+
+type Decimals2 A|B;
+
+type Decimals3 Decimals1|Decimals2;
+
+public function init() {
+    Decimals2 a = 1.0;
+    Decimals2 b = 2.0;
+    Decimals1|Decimals2 c = 2.0d;
+    decimal|Decimals1 d = 20.0d;
+
+    io:println(a / b); // @output 0.5
+    io:println(a / c); // @output 0.5
+
+    io:println(b / c); // @output 1.0
+
+    io:println(a / d); // @output 0.05
+    io:println(d / a); //@output 20.0
+}
+
+Test-Case: output
+Description: Test float division scenarios for user-defined nilable subtypes of float.
+Fail-Issue: ballerina-platform/ballerina-lang#31701
+Labels: multiplicative-expr, float-literal, module-type-defn, float, FloatTypeSuffix, optional-type
+
+type Floats -2.0f|-1.0f|0.0f|1.0f|2.0f;
+
+public function init() {
+    Floats? a = 1.0;
+    Floats? b = 2.0;
+    float? c = a / a;
+    float? d = a / b;
+
+    io:println(c); // @output 1.0
+    io:println(a / a); // @output 1.0
+    io:println(d); //@output 0.5
+    io:println(a / b); // @output 0.5
+
+    io:println(b / a); // @output 2.0
+    io:println(b / b); // @output 1.0
+
+    a = -0.0;
+    b = +0.0;
+    Floats? e = 2.0f;
+    io:println(e / a); // @output -Infinity
+    io:println(e / b); // @output Infinity
+}
+
+Test-Case: output
+Description: Test decimal division scenarios for user-defined nilable subtypes of decimal.
+Fail-Issue: ballerina-platform/ballerina-lang#31701
+Labels: multiplicative-expr, decimal-literal, module-type-defn, decimal, DecimalTypeSuffix, optional-type
+
+type Decimals -2.0d|-1.0d|0.0d|1.0d|2.0d;
+
+public function init() {
+    Decimals? a = 1.0d;
+    Decimals? b = 2.0d;
+    decimal? c = a / a;
+    decimal? d = a / b;
+
+    io:println(a / a); // @output 1.0
+    io:println(c); // @output 1.0
+    io:println(a / b); // @output 0.5
+    io:println(d); // @output 0.5
+
+    io:println(b / a); // @output 2.0
+    io:println(b / b); // @output 1.0
+}
+
+Test-Case: output
+Description: Test float division scenarios for in the module level.
+Fail-Issue: ballerina-platform/ballerina-lang#31701
+Labels: multiplicative-expr, float-literal, module-type-defn, float, FloatTypeSuffix
+
+
+type Floats -2.0f|-1.0f|0.0f|1.0f|2.0f;
+Floats a = 1.0;
+Floats b = 2.0;
+float c = a / a;
+float d = a / b;
+
+public function init() {
+
+    io:println(c); // @output 1.0
+    io:println(a / a); // @output 1.0
+    io:println(d); //@output 0.5
+    io:println(a / b); // @output 0.5
+
+    io:println(b / a); // @output 2.0
+    io:println(b / b); // @output 1.0
+}
+
+Test-Case: output
+Description: Test decimal division scenarios for in the module level.
+Fail-Issue: ballerina-platform/ballerina-lang#31701
+Labels: multiplicative-expr, decimal-literal, module-type-defn, decimal, DecimalTypeSuffix
+
+type Decimals -2.0d|-1.0d|0.0d|1.0d|2.0d;
+Decimals? a = 1.0d;
+Decimals? b = 2.0d;
+decimal? c = a / a;
+decimal? d = a / b;
+
+public function init() {
+
+    io:println(a / a); // @output 1.0
+    io:println(c); // @output 1.0
+    io:println(a / b); // @output 0.5
+    io:println(d); // @output 0.5
+
+    io:println(b / a); // @output 2.0
+    io:println(b / b); // @output 1.0
+}
