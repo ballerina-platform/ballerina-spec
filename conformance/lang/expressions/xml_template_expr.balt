@@ -1,8 +1,8 @@
 Test-Case: error
 Description: Test xml interpolated expression usage in namespace attribute values.
-Labels: xml-template-expr, xml, raw-template-expr
+Labels: xml-template-expr, xml, raw-template-expr, union-type, float, decimal, string, int
 
-public function main() {
+public function init() {
     int|float|boolean|string|decimal someValue = true;
     xml content = xml `<b:BOOK xmlns:b="${someValue}"></b:BOOK>`; // @error xml template expressions are not allowed in namespace attribute values
     content = xml `<b:BOOK xmlns:b="prefix${someValue}suffix"></b:BOOK>`; // @error xml template expressions are not allowed in namespace attribute values
@@ -12,8 +12,7 @@ Test-Case: output
 Description: Test the same xml namespace with different namespace prefix inside the interpolated expression.
 Labels: xml-template-expr, xml
 
-import ballerina/io;
-public function main() {
+public function init() {
     xml content1 = xml `<x:BOOK xmlns:x="http://www.w3.org/TR/html4/}"></x:BOOK>`;
     xml content2 = xml `<b:BOOKs xmlns:b="http://www.w3.org/TR/html4/}">${content1}</b:BOOKs>`;
     io:println(content2); // @output <b:BOOKs xmlns:b="http://www.w3.org/TR/html4/}"><x:BOOK xmlns:x="http://www.w3.org/TR/html4/}"/></b:BOOKs>
@@ -21,9 +20,9 @@ public function main() {
 
 Test-Case: error
 Description: Test the static type of the interpolated expressions in an attribute value not to be nil.
-Labels: xml-template-expr, xml, raw-template-expr, nil-type
+Labels: xml-template-expr, xml, raw-template-expr, nil-type, union-type, float, decimal, string, int
 
-public function main() {
+public function init() {
     () nilValue = ();
     int|float|boolean|string|decimal|() someValue1 = true;
     int?|float?|boolean?|string?|decimal? someValue2 = true;
@@ -35,9 +34,9 @@ public function main() {
 
 Test-Case: error
 Description: Test the static type of the interpolated expressions in content not to be nil.
-Labels: xml-template-expr, xml, raw-template-expr
+Labels: xml-template-expr, xml, raw-template-expr, union-type, float, decimal, string, int
 
-public function main() {
+public function init() {
     () nilValue = ();
     int|float|boolean|string|decimal|() someValue1 = true;
     int?|float?|boolean?|string?|decimal? someValue2 = true;
@@ -49,9 +48,9 @@ public function main() {
 
 Test-Case: error
 Description: Test usage of interpolated expressions of nil type in xml comments.
-Labels: xml-template-expr, xml, xml:Comment
+Labels: xml-template-expr, xml, xml:Comment, optional-type, int
 
-public function main() {
+public function init() {
     int? firstExpr = 1;
     xml<xml:Comment> x3 = xml `<!--Comment${firstExpr}-->`; // @error int? type not allowed in xml comments
     xml<xml:Comment> x3 = xml `<!--Comment${()}-->`; // @error int? type not allowed in xml comments
@@ -59,9 +58,9 @@ public function main() {
 
 Test-Case: error
 Description: Test usage of interpolated expressions of nil type in xml processing instructions.
-Labels: xml-template-expr, xml, xml:ProcessingInstruction
+Labels: xml-template-expr, xml, xml:ProcessingInstruction, optional-type, int
 
-public function main() {
+public function init() {
     int? firstExpr = 1;
     xml<'xml:ProcessingInstruction> x4 = xml `<?xml version="${firstExpr}" encoding="UTF-8" ?>`; // @error int? type not allowed in xml comments
     xml<'xml:ProcessingInstruction> x4 = xml `<?xml version="${()}" encoding="UTF-8" ?>`; // @error int? type not allowed in xml comments
@@ -69,9 +68,9 @@ public function main() {
 
 Test-Case: error
 Description: Test usage of interpolated expressions of nil type in xml text.
-Labels: xml-template-expr, xml, xml:Text
+Labels: xml-template-expr, xml, xml:Text, optional-type, int
 
-public function main() {
+public function init() {
     int? firstExpr = 1;
     xml<xml:Text> x4 = xml `text${firstExpr}`; // @error int? type not allowed in xml text
     xml<xml:Text> x4 = xml `text${()}`; // @error int? type not allowed in xml text
@@ -82,7 +81,7 @@ Description: Test usage of un-parsable xml content in xml template expression.
 Fail-Issue: ballerina-platform/ballerina-lang#33074
 Labels: xml-template-expr, xml
 
-public function main() {
+public function init() {
     xml xmlValue = xml `<BOOK></BOOK`; // @error xml content is not parsable as gt token is missing
     xmlValue = xml `<Book price=65></Book>`; // @error xml content is not parsable as double quotes missing in attribute value
     xmlValue = xml `<-- comment -->`; // @error invalid comment as the exclamation is missing
@@ -95,13 +94,11 @@ Description: Test if the xml template expr within a const expr is readonly.
 Fail-Issue: ballerina-platform/ballerina-lang#13944
 Labels: xml-template-expr, xml
 
-import ballerina/io;
-
- const map<anydata> m = {
+const map<anydata> m = {
         xmlVal : xml `<Book/>`
 };
 
-public function main() {
+public function init() {
     io:println(m["xmlVal"] is readonly); // @output true
 }
 
@@ -109,20 +106,16 @@ Test-Case: output
 Description: Test empty string in xml text.
 Labels: xml-template-expr, xml, xml:Text, value:toBalString
 
-import ballerina/io;
-
-public function main() {
+public function init() {
     xml text = xml ``;
     io:println(text.toBalString()); // @output xml``
 }
 
 Test-Case: output
 Description: Test usage of interpolated expressions in xml comments.
-Labels: xml-template-expr, xml, xml:Comment
+Labels: xml-template-expr, xml, xml:Comment, int
 
-import ballerina/io;
-
-public function main() {
+public function init() {
     int firstExpr = 1;
     xml<xml:Comment> x3 = xml `<!--Comment${firstExpr}-->`;
     io:println(x3); // @output <!--Comment1-->
@@ -131,11 +124,9 @@ public function main() {
 Test-Case: output
 Description: Test the order of the interpolated expressions appear in the xml attributes values after the xml is
              contructed.
-Labels: xml-template-expr, xml, raw-template-expr
+Labels: xml-template-expr, xml, raw-template-expr, int
 
-import ballerina/io;
-
-public function main() {
+public function init() {
     int firstExpr = 1;
     int secondExpr = 2;
     int thirdExpr = 3;
@@ -148,11 +139,9 @@ public function main() {
 
 Test-Case: output
 Description: Test the order of the interpolated expressions appear in the xml content after the xml is contructed.
-Labels: xml-template-expr, xml, xml:Element, raw-template-expr
+Labels: xml-template-expr, xml, xml:Element, raw-template-expr, int
 
-import ballerina/io;
-
-public function main() {
+public function init() {
     int firstExpr = 1;
     int secondExpr = 2;
     int thirdExpr = 3;
@@ -166,11 +155,9 @@ public function main() {
 Test-Case: output
 Description: Test the order of the interpolated expressions appear in both the xml content and attribute values after
              the xml is contructed.
-Labels: xml-template-expr, xml, xml:Element
+Labels: xml-template-expr, xml, xml:Element, int
 
-import ballerina/io;
-
-public function main() {
+public function init() {
     int firstExpr = 1;
     int secondExpr = 2;
     int thirdExpr = 3;
@@ -185,9 +172,7 @@ Test-Case: output
 Description: Test usage of interpolated expressions of int type in xml text.
 Labels: xml-template-expr, xml, xml:Text, int
 
-import ballerina/io;
-
-public function main() {
+public function init() {
     int firstExpr = 1;
     xml<xml:Text> x = xml `text${firstExpr}`;
     io:println(x); // @output text1
@@ -200,9 +185,7 @@ Test-Case: output
 Description: Test usage of interpolated expressions of float type in xml text.
 Labels: xml-template-expr, xml, xml:Text, float
 
-import ballerina/io;
-
-public function main() {
+public function init() {
     float firstExpr = 1.0;
     xml<xml:Text> x = xml `text${firstExpr}`;
     io:println(x); // @output text1.0
@@ -215,9 +198,7 @@ Test-Case: output
 Description: Test usage of interpolated expressions of decimal type in xml text.
 Labels: xml-template-expr, xml, xml:Text, decimal
 
-import ballerina/io;
-
-public function main() {
+public function init() {
     decimal firstExpr = 1.0;
     xml<xml:Text> x = xml `text${firstExpr}`;
     io:println(x); // @output text1.0
@@ -230,9 +211,7 @@ Test-Case: output
 Description: Test usage of interpolated expressions of boolean type in xml text.
 Labels: xml-template-expr, xml, xml:Text, boolean
 
-import ballerina/io;
-
-public function main() {
+public function init() {
     boolean firstExpr = true;
     xml<xml:Text> x = xml `text-${firstExpr}`;
     io:println(x); // @output text-true
@@ -245,9 +224,7 @@ Test-Case: output
 Description: Test usage of interpolated expressions of string type in xml text.
 Labels: xml-template-expr, xml, xml:Text, string
 
-import ballerina/io;
-
-public function main() {
+public function init() {
     string firstExpr = "stringVal";
     xml<xml:Text> x = xml `text-${firstExpr}`;
     io:println(x); // @output text-stringVal
@@ -264,9 +241,7 @@ Test-Case: output
 Description: Test usage of interpolated expressions of type int in xml comments.
 Labels: xml-template-expr, xml, xml:Comment, int
 
-import ballerina/io;
-
-public function main() {
+public function init() {
     int firstExpr = 1;
     xml<xml:Comment> x3 = xml `<!--Comment${firstExpr}-->`;
     io:println(x3); // @output <!--Comment1-->
@@ -279,9 +254,7 @@ Test-Case: output
 Description: Test usage of interpolated expressions of float type in xml comment.
 Labels: xml-template-expr, xml, xml:Comment, float
 
-import ballerina/io;
-
-public function main() {
+public function init() {
     float firstExpr = 2.0;
     xml<xml:Comment> x = xml `<!--Comment${firstExpr}-->`;
     io:println(x); // @output <!--Comment2.0-->
@@ -294,9 +267,7 @@ Test-Case: output
 Description: Test usage of interpolated expressions of decimal type in xml comment.
 Labels: xml-template-expr, xml, xml:Comment, decimal
 
-import ballerina/io;
-
-public function main() {
+public function init() {
     decimal firstExpr = 2.0;
     xml<xml:Comment> x = xml `<!--Comment${firstExpr}-->`;
     io:println(x); // @output <!--Comment2.0-->
@@ -309,9 +280,7 @@ Test-Case: output
 Description: Test usage of interpolated expressions of boolean type in xml comment.
 Labels: xml-template-expr, xml, xml:Comment, boolean
 
-import ballerina/io;
-
-public function main() {
+public function init() {
     boolean firstExpr = false;
     xml<xml:Comment> x = xml `<!--Comment${firstExpr}-->`;
     io:println(x); // @output <!--Commentfalse-->
@@ -324,9 +293,7 @@ Test-Case: output
 Description: Test usage of interpolated expressions of string type in xml comment.
 Labels: xml-template-expr, xml, xml:Comment, string
 
-import ballerina/io;
-
-public function main() {
+public function init() {
     string firstExpr = "stringVal";
     xml<xml:Comment> x = xml `<!--Comment${firstExpr}-->`;
     io:println(x); // @output <!--CommentstringVal-->
@@ -344,9 +311,7 @@ Description: Test usage of interpolated expressions of xml type in xml content.
 Fail-Issue: ballerina-platform/ballerina-lang#33075
 Labels: xml-template-expr, xml, xml:Element
 
-import ballerina/io;
-
-public function main() {
+public function init() {
     int|decimal|float|string|boolean firstExpr = 34;
     xml<xml:Element> secondExpr = xml `<Book>"${firstExpr}"</Book>`;
     xml<xml:Element> x = xml `<Books>${secondExpr}</Books>`;
@@ -361,9 +326,7 @@ Description: Test usage of queries as interpolated expressions in xml content.
 Fail-Issue: ballerina-platform/ballerina-lang#33076
 Labels: xml-template-expr, xml, query-expr
 
-import ballerina/io;
-
-public function main() {
+public function init() {
     xml x = xml `<Books>${xml `<Book>"${from var char in "Ballerina" select char}"</Book>`}</Books>`;
     io:println(x); // @output <Books><Book>"Ballerina"</Book></Books>
 
@@ -382,9 +345,7 @@ Description: Test usage of let expressions as interpolated expressions in xml co
 Fail-Issue: ballerina-platform/ballerina-lang#33077
 Labels: xml-template-expr, xml, let-expr
 
-import ballerina/io;
-
-public function main() {
+public function init() {
     xml x = xml `<Books>${xml `<Book>"${let int y = 5 in y}"</Book>`}</Books>`;
     io:println(x); // @output <Books><Book>"5"</Book></Books>
 
@@ -402,15 +363,13 @@ Test-Case: output
 Description: Test usage of field access expressions as interpolated expressions in xml content.
 Labels: xml-template-expr, xml, field-access-expr
 
-import ballerina/io;
-
 type Book record {
     string name;
     float price;
     string author;
 };
 
-public function main() {
+public function init() {
     Book book = {name : "Ballerina", price: 20.0, author: "James"};
 
     xml x = xml `<Books>${xml `<Book>"${book.name}"</Book>`}</Books>`;
@@ -437,7 +396,7 @@ type Book record {
     string coAuthor?;
 };
 
-public function main() {
+public function init() {
     Book book = {name : "Ballerina", price: 20.0, author: "James", coAuthor: "Sanjiva"};
 
     xml x = xml `<Books>${xml `<Book>"${book?.coAuthor}"</Book>`}</Books>`; // @error static type of the interpolated expressions in xml content should not be nil
@@ -465,7 +424,7 @@ map<string> authors = {
 
 table<Book> key<string> tbl = table key(name) [{name: "Ballerina", price: 45.0, author: "James"}];
 
-public function main() {
+public function init() {
     xml x = xml `<Books>${xml `<Book>"${tbl["Ballerina"]?.name}"</Book>`}</Books>`; // @error static type of the interpolated expressions in xml content should not be nil
     xml<xml:Comment> y = xml `<!--${authors["author1"]}-->`; // @error static type of the interpolated expressions in comments should not be nil
     xml z = xml `<Books>${xml `<Book author="${authors["author1"]}"></Book>`}</Books>`; // @error static type of the expressions in attribute values should not be nil
@@ -476,9 +435,7 @@ Test-Case: output
 Description: Test usage of function call expressions as interpolated expressions in xml content.
 Labels: xml-template-expr, xml, function-call-expr
 
-import ballerina/io;
-
-public function main() {
+public function init() {
     xml x = xml `<Books>${xml `<Book>"${getBookName()}"</Book>`}</Books>`;
     io:println(x); // @output <Books><Book>"Ballerina"</Book></Books>
 
@@ -512,7 +469,7 @@ Test-Case: error
 Description: Test usage of function call expressions which can return nil values as interpolated expressions in xml content.
 Labels: xml-template-expr, xml, function-call-expr, nil-type
 
-public function main() {
+public function init() {
     xml x = xml `<Books>${xml `<Book>"${getBookName()}"</Book>`}</Books>`; // @error static type of the interpolated expressions in xml content should not be nil
     xml<xml:Comment> y = xml `<!--${getAuthorName()}-->`; // @error static type of the interpolated expressions in comments should not be nil
     xml z = xml `<Books>${xml `<Book author="${getAuthorName()}">${getPrice()}</Book>`}</Books>`; // @error static type of the expressions in attribute values should not be nil
@@ -539,8 +496,6 @@ Test-Case: output
 Description: Test usage of method call expressions as interpolated expressions in xml content.
 Labels: xml-template-expr, xml, method-call-expr, string:toUpperAscii, module-class-defn
 
-import ballerina/io;
-
 class MyClass {
     function getAuthorName() returns string {
         return "James";
@@ -551,7 +506,7 @@ class MyClass {
     }
 }
 
-public function main() {
+public function init() {
     MyClass myClass = new;
 
     xml x = xml `<Books>${xml `<Book>"${"ballerina".toUpperAscii()}"</Book>`}</Books>`;
@@ -571,9 +526,7 @@ Test-Case: output
 Description: Test usage of multiplicative expressions as interpolated expressions in xml content.
 Labels: xml-template-expr, xml, multiplicative-expr
 
-import ballerina/io;
-
-public function main() {
+public function init() {
     xml z = xml `<Books>${xml `<Book>${23.0 * 1.0}</Book>`}</Books>`;
     io:println(z); // @output <Books><Book>"23.0"</Book></Books>
 
@@ -587,9 +540,7 @@ Test-Case: output
 Description: Test usage of additive expressions as interpolated expressions in xml content.
 Labels: xml-template-expr, xml, additive-expr
 
-import ballerina/io;
-
-public function main() {
+public function init() {
     xml z = xml `<Books>${xml `<Book>${23.0 + 1.0}</Book>`}</Books>`;
     io:println(z); // @output <Books><Book>"24.0"</Book></Books>
 
@@ -603,9 +554,7 @@ Test-Case: output
 Description: Test usage of relational expressions as interpolated expressions in xml content.
 Labels: xml-template-expr, xml, relational-expr
 
-import ballerina/io;
-
-public function main() {
+public function init() {
 
     float a = 23.0;
     float b = 1.0;
@@ -627,9 +576,7 @@ Description: Test usage of transactional expressions as interpolated expressions
 Fail-Issue: ballerina-platform/ballerina-lang#33078
 Labels: xml-template-expr, xml, transactional-expr
 
-import ballerina/io;
-
-public function main() {
+public function init() {
 
     xml z = xml `<A>${xml `<B>${transactional}</B>`}</A>`;
     io:println(z); // @output <A><B>false</B></A>
@@ -639,9 +586,7 @@ Test-Case: output
 Description: Test usage of conditional expressions as interpolated expressions in xml content.
 Labels: xml-template-expr, xml, conditional-expr
 
-import ballerina/io;
-
-public function main() {
+public function init() {
 
     float a = 23.0;
     float b = 1.0;
@@ -653,9 +598,7 @@ Test-Case: output
 Description: Test usage of string template expressions as interpolated expressions in xml content.
 Labels: xml-template-expr, xml, string-template-expr
 
-import ballerina/io;
-
-public function main() {
+public function init() {
 
     float a = 23.0;
     float b = 1.0;
@@ -667,7 +610,7 @@ Test-Case: error
 Description: Test usage of structural constructor expressions as interpolated expressions in xml content.
 Labels: xml-template-expr, xml, list-constructor-expr
 
-public function main() {
+public function init() {
     xml z = xml `<A>${xml `<B>${[0, 2, 1, 4, 5]}</B>`}</A>`; // @error structural constructor expressions are not allowed in interpolated expressions
 }
 
@@ -675,7 +618,7 @@ Test-Case: error
 Description: Test usage of new expressions as interpolated expressions in xml content.
 Labels: xml-template-expr, xml, new-expr
 
-public function main() {
+public function init() {
     xml z = xml `<A>${xml `<B>${new stream<record{}>}</B>`}</A>`; // @error new expressions are not allowed in interpolated expressions
 }
 
@@ -683,9 +626,7 @@ Test-Case: output
 Description: Test usage of check expressions as interpolated expressions in xml content.
 Labels: xml-template-expr, xml, check-expr
 
-import ballerina/io;
-
-public function main() returns error? {
+public function init() returns error? {
     int|error val = foo();
     xml z = xml `<A>${xml `<B>${check foo()}</B>`}</A>`;
     io:println(z); // @output <A><B>23</B></A>
@@ -699,9 +640,7 @@ Test-Case: output
 Description: Test usage of check expressions as interpolated expressions in xml content.
 Labels: xml-template-expr, xml, check
 
-import ballerina/io;
-
-public function main() returns error? {
+public function init() returns error? {
     int|error val = foo();
     xml z = xml `<A>${xml `<B>${check foo()}</B>`}</A>`;
     io:println(z); // @output <A><B>23</B></A>
@@ -716,9 +655,7 @@ Description: Test usage of checkpanic expressions as interpolated expressions in
 Fail-Issue: ballerina-platform/ballerina-lang#33079
 Labels: xml-template-expr, xml, checkpanic
 
-import ballerina/io;
-
-public function main() {
+public function init() {
     int|error val = foo();
     xml z = xml `<A>${xml `<B>${checkpanic foo()}</B>`}</A>`;
     io:println(z); // @output <A><B>23</B></A>
@@ -732,7 +669,7 @@ Test-Case: error
 Description: Test usage of typeof expressions as interpolated expressions in xml content.
 Labels: xml-template-expr, xml, typeof-expr
 
-public function main() {
+public function init() {
     int x = 9;
     xml z = xml `<A>${xml `<B>${typeof x}</B>`}</A>`; // @error typeof expressions are not allowed in interpolated expressions
 }
@@ -741,9 +678,7 @@ Test-Case: output
 Description: Test usage of unary expressions as interpolated expressions in xml content.
 Labels: xml-template-expr, xml, unary-complement, unary-minus, unary-plus, unary-not
 
-import ballerina/io;
-
-public function main() {
+public function init() {
     int x = 9;
     xml z = xml `<A>${xml `<B>${-x}</B>`}</A>`;
     io:println(z); // @output <A><B>-9</B></A>
@@ -763,7 +698,7 @@ Test-Case: error
 Description: Test usage of range expressions as interpolated expressions in xml content.
 Labels: xml-template-expr, xml, range-expr
 
-public function main() {
+public function init() {
     int x = 9;
     xml z = xml `<A>${xml `<B>${0 ... x}</B>`}</A>`; //@error range expressions are not allowed in interpolated expressions
     z = xml `<A>${xml `<B>${0 ..< x}</B>`}</A>`; //@error range expressions are not allowed in interpolated expressions
@@ -773,9 +708,7 @@ Test-Case: output
 Description: Test usage of binary bitwise expressions as interpolated expressions in xml content.
 Labels: xml-template-expr, xml, binary-bitwise-expr
 
-import ballerina/io;
-
-public function main() {
+public function init() {
     int x = 9;
     int y = 23;
     xml z = xml `<A>${xml `<B>${x | y}</B>`}</A>`;
@@ -792,9 +725,7 @@ Test-Case: output
 Description: Test usage of type test expressions as interpolated expressions in xml content.
 Labels: xml-template-expr, xml, is-expr
 
-import ballerina/io;
-
-public function main() {
+public function init() {
     int|string x = 9;
     xml z = xml `<A>${xml `<B>${x is string}</B>`}</A>`;
     io:println(z); // @output <A><B>false</B></A>
@@ -804,9 +735,7 @@ Test-Case: output
 Description: Test usage of equality expressions as interpolated expressions in xml content.
 Labels: xml-template-expr, xml, equality, exact-equality
 
-import ballerina/io;
-
-public function main() {
+public function init() {
     int x = 9;
     int y = 9;
     int s = 2;
@@ -828,9 +757,7 @@ Description: Test with CDATA in xml content.
 Fail-Issue: ballerina-platform/ballerina-lang#33081
 Labels: xml-template-expr, xml
 
-import ballerina/io;
-
-public function main() {
+public function init() {
     int x = 9;
     int y = 9;
     xml z = xml `<exampleOfACDATA><![CDATA[${x}character data${y}]]></exampleOfACDATA>`;
