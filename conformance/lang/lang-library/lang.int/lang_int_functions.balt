@@ -1,0 +1,38 @@
+Test-Case: output
+Description: Test chained lang.int functions.
+Labels: int:abs, int:max, int:min, int:sum, DecimalNumber, function-call-expr, int, method-call-expr, unary-minus
+
+function init() {
+    int a1 = -100;
+
+    int b1 = a1.max(-200).abs().sum(300, 400).max(12, 1234);
+    testInt(b1); // @output 1234
+
+    testInt(int:max(int:max(a1, -200).abs().max(400), 300).sum(123).max(12, 500)); // @output 523
+
+    b1 = a1.sum(-200).abs().sum(300);
+    testInt(b1); // @output 600
+
+    testInt(int:sum(int:sum(a1, -200).abs().sum(400), 300)); // @output 1000
+
+    b1 = a1.min(-200).abs().sum(300, 400).max(5, 200).min(12, 1234);
+    testInt(b1); // @output 12
+
+    testInt(int:min(int:min(a1, -200).abs().min(400), 300).max(12, 300).sum(123).min(12, 500)); // @output 12
+}
+
+function testInt(int i) {
+    io:println(i);
+}
+
+Test-Case: output
+Description: Test chained lang.int functions.
+Labels: int:abs, int:max, int:min, int:sum, int:toHexString, DecimalNumber, function-call-expr, int, method-call-expr,
+        unary-minus
+
+function init() {
+    int a1 = -100;
+
+    string b1 = a1.max(-200).abs().sum(300, 400).min(12, 1234).toHexString();
+    io:println(b1); // @output c
+}
