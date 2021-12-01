@@ -298,6 +298,17 @@ point; more precisely, it must be a hexadecimal numeral denoting an integer
 </p>
 
 <pre
+class="grammar">RestrictedIdentifier := AsciiLetter RestrictedFollowingChar* RestrictedIdentifierWord*
+RestrictedIdentifierWord := <code>_</code> RestrictedFollowingChar+
+RestrictedFollowingChar := AsciiLetter | AsciiDigit
+</pre>
+
+<p>
+Identifiers used for the names of organizations and modules are restricted to
+<code>RestrictedIdentifier</code>.
+</p>
+
+<pre
 class="grammar">TokenWhiteSpace := (Comment | WhiteSpaceChar)*
 Comment := <code>//</code> AnyCharButNewline*
 AnyCharButNewline := ^ 0xA
@@ -9062,8 +9073,9 @@ other-decl :=
 class="grammar">import-decl := <code>import</code> [org-name <code>/</code>] module-name [<code>as</code> import-prefix] <code>;</code>
 import-prefix := module-prefix | <code>_</code>
 module-prefix := identifier | predeclared-prefix
-org-name := identifier
-module-name := identifier (<code>.</code> identifier)*
+org-name := import-identifier
+module-name := import-identifier (<code>.</code> import-identifier)*
+import-identifier := RestrictedIdentifier
 
 qualified-identifier := module-prefix <code>:</code> identifier
 </pre>
@@ -10361,6 +10373,9 @@ more than one basic type..</p>
 <section>
 <h3>Summary of changes from 2021R1 to 2022R1</h3>
 <ol>
+<li>The identifiers of organizations and modules refererenced in import
+declarations are restricted to ASCII alpha-numberic characters with underscores
+separating words.</li>
 <li>Floating pointer literals are not allowed to end with a trailing dot.</li>
 <li>Add the <code>!is</code> operator.</li>
 <li>Allow <code>null</code> as a type descriptor.</li>
