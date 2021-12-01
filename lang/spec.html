@@ -8291,7 +8291,7 @@ A <code>do-stmt</code> is executed by executing its
 class="grammar">match-stmt := <code>match</code> action-or-expr <code>{</code> match-clause+ <code>}</code>
 match-clause :=
   match-pattern-list [match-guard] <code>=></code> statement-block
-match-guard := <code>if</code> expression
+match-guard := <code>if</code> match-guard-expr
 </pre>
 <p>
 A match statement selects a statement block to execute based on which patterns a
@@ -8323,6 +8323,23 @@ The scope of any variables created in a match-pattern-list of a match-clause is
 both the match-guard, if any, and the statement-block in that match-clause. The
 static type of the expression in match-guard must be a subtype of boolean.
 </p>
+
+<pre
+class="grammar">match-guard-expr := expression
+</pre>
+<p>
+A match-guard-expr must not include a <code>function-call-expr</code> or
+<code>method-call-expr</code> unless either
+</p>
+<ul>
+<li>the static type of the <code>action-or-expr</code> following
+<code>match</code> is a subtype of <code>readonly</code>; or</li>
+<li>the function or method being called is <code>isolated</code> and the static
+type of every argument to the function or method is a subtype of
+<code>readonly</code>; in the case of a method-call-expr, the static type of the
+object whose method is being called must also be a subtype of
+<code>readonly</code>.</li>
+</ul>
 
 <pre
 class="grammar">match-pattern-list := 
@@ -10403,6 +10420,8 @@ separating words.</li>
 is applied to the body of a while statement.</li>
 <li>Conditional variable type narrowing is now done for a <code>where</code> clause in a
 query expression or action.</li>
+<li>A function call is only allowed with an expression in a match-guard when
+there is no possibility that it can mutate the value being matched.</li>
 </ol>
 </section>
 <section>
