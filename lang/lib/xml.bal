@@ -80,7 +80,7 @@ public isolated function iterator(xml<ItemType> x) returns object {
 # `x` does not have an item with index `i`.
 #
 # + x - the xml sequence 
-# + k - the index
+# + i - the index
 # + return - the item with index `i` in `x`
 public isolated function get(xml<ItemType> x, int i) returns ItemType = external;
 
