@@ -1575,12 +1575,6 @@ the field is also on. The read-only bit of a field is part of the read-only
 aspect of the mapping value's shape.
 </p>
 <p>
-A mapping is iterable: the iteration sequence consists of the members of the
-mapping and the iteration completion value is always nil. The order of the iteration
-sequence is implementation-dependent, but implementations are encouraged to
-preserve and use the order in which the fields were added.
-</p>
-<p>
 The type of mapping values can be described by two kinds of type descriptors.
 </p>
 
@@ -1599,6 +1593,15 @@ constraint is not merely that the value looks like T<sub><em>f</em></sub>.
 <p>
 Both kinds of type descriptor are covariant in the types of their members.
 </p>
+<p>
+A mapping value is iterable: the iteration sequence consists of the members of
+the mapping value and the iteration completion value is always nil. When the
+inherent type of a mapping value is equivalent to a
+<code>map-type-descriptor</code>, the order of iteration must correspond to the
+order in which fields were added. In other cases, the order of the iteration
+sequence is implementation-dependent.
+</p>
+
 <section>
 <h5>Map types</h5>
 <p>
@@ -4547,6 +4550,13 @@ member of the mapping with the specified name after the mapping has been
 constructed. If the modification is incompatible with the inherent type, then
 the mapping-constructor-expr will panic. The modifications are performed in the
 order in which the computed-name-fields occur in the mapping-constructor-expr.
+</p>
+<p>
+When the inherent type is equivalent to a map-type-descriptor, the order in
+which fields are added to mapping value being constructed (and thus the
+iteration order of the fields) is the same as the order of the fields in the
+mapping-constructor-expr, except that all fields specified by a
+computed-named-field are added after all other fields.
 </p>
 <p>
 If the applicable contextually expected type is a subtype of readonly, then the
@@ -10373,6 +10383,7 @@ more than one basic type..</p>
 <section>
 <h3>Summary of changes from 2021R1 to 2022R1</h3>
 <ol>
+<li>Maps are required to preserve insertion order.</li>
 <li>The static typing rules for <code>==</code> and <code>!=</code> have been
 relaxed to require only one operand to be <code>anydata</code>.</li>
 <li>The identifiers of organizations and modules refererenced in import
