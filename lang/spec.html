@@ -1484,8 +1484,9 @@ that the value for all members must belong to, and optionally, a length.
 </p>
 
 <pre
-class="grammar">array-type-descriptor := member-type-descriptor <code>[</code> [ array-length ] <code>]</code>
-member-type-descriptor := type-descriptor
+class="grammar">array-type-descriptor := array-member-type-descriptor array-dimension+
+array-dimension := <code>[</code> [ array-length ] <code>]</code>
+array-member-type-descriptor := type-descriptor <em>but not</em> array-type-descriptor
 array-length :=
    int-literal
    | constant-reference-expr
@@ -1496,6 +1497,22 @@ inferred-array-length := <code>*</code>
 A type <code>T[]</code> contains a list shape if all members of the list shape
 are in <code>T</code>. A type <code>T[n]</code> contains a list shape if in
 addition the length of the list shape is n.
+</p>
+<p>
+When an <code>array-type-descriptor</code> includes multiple
+<code>array-dimension</code>s, the <code>array-dimension</code>s are interpreted
+so that the order of the dimensions in the <code>array-type-descriptor</code> is
+consistent with the order of the dimensions in a
+<code>member-access-expr</code>. Specifically, a type
+<code>T[n<sub>1</sub>]...[n<sub>k - 1</sub>][n<sub>k</sub>]</code> is
+interpreted as <code>(T[n<sub>k</sub>])[n<sub>1</sub>]...[n<sub>k -
+1</sub>]</code>. Thus, for a value <code>v</code> of type <code>T[M][N]</code>,
+a member-access-expr <code>v[i][j]</code> will evaluate to an value of type
+<code>T</code> if and only if 0 &#x2264; <code>i</code> &#x2264; <code>M</code>
+and 0 &#x2264; <code>j</code> &#x2264; <code>N</code>. An
+<code>array-type-descriptor</code> is parsed to include all following
+<code>array-dimension</code>s: an <code>array-type-descriptor</code> is not
+recognized as <code>array-member-type-descriptor</code>.
 </p>
 <p>
 A <code>constant-reference-expr</code> in an <code>array-length</code> must
@@ -10433,6 +10450,9 @@ query expression or action.</li>
 there is no possibility that it can mutate the value being matched.</li>
 <li>A member of an enum declaration can have the same identifier as a member of
 another enum declaration.</li>
+<li>The interpretation of multiple dimensions in an array-type-descriptor has
+been changed to make the order of dimensions in the type-descriptor consistent
+with the order of dimensions in an expression that accesses the array.</li>
 </ol>
 </section>
 <section>
