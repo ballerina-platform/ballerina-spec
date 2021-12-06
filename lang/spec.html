@@ -247,7 +247,7 @@ code points:
 <li>surrogates (0xD800 to 0xDFFF)</li>
 <li>non-characters (the 66 code points that Unicode designates as
 non-characters)</li>
-<li>C0 control characters (0x0 to 0x1F and 0x1F) other than whitespace (0x9,
+<li>C0 control characters (0x0 to 0x1F and 0x1F) other than white space (0x9,
 0xA, 0xC, 0xD)</li>
 <li>C1 control characters (0x80 to 0x9F)</li>
 </ul>
@@ -318,6 +318,17 @@ WhiteSpaceChar := 0x9 | 0xA | 0xD | 0x20
 <code>TokenWhiteSpace</code> is implicitly allowed on the right hand side of
 productions for non-terminals whose names start with a lower-case letter.
 </p>
+
+<pre
+class="grammar">NoSpaceColon := <code>:</code>
+</pre>
+<p>
+When <code>NoSpaceColon</code> is used in a production,
+<code>TokenWhiteSpace</code> is not allowed immediately before or after the
+colon. When a literal <code>:</code> is used in a production, white space is
+handled in the same was as for any other character.
+</p>
+
 </section>
 <section>
 <h2 id="values_types">5. Values, types and variables</h2>
@@ -5078,7 +5089,7 @@ is not a class or stream type.
 <pre
 class="grammar">variable-reference-expr := variable-reference
 variable-reference := identifier | qualified-identifier | xml-qualified-name
-xml-qualified-name := xml-namespace-prefix <code>:</code> identifier
+xml-qualified-name := xml-namespace-prefix NoSpaceColon identifier
 </pre>
 <p>
 A variable-reference can refer to a variable, a parameter, a constant (defined
@@ -6800,8 +6811,8 @@ class="grammar">xml-name-pattern := xml-atomic-name-pattern [<code>|</code> xml-
 xml-atomic-name-pattern :=
   <code>*</code>
   | identifier
-  | xml-namespace-prefix <code>:</code> identifier
-  | xml-namespace-prefix <code>:</code> <code>*</code>
+  | xml-namespace-prefix NoSpaceColon identifier
+  | xml-namespace-prefix NoSpaceColon <code>*</code>
 </pre>
 
 <p>
@@ -9224,7 +9235,7 @@ org-name := import-identifier
 module-name := import-identifier (<code>.</code> import-identifier)*
 import-identifier := RestrictedIdentifier
 
-qualified-identifier := module-prefix <code>:</code> identifier
+qualified-identifier := module-prefix NoSpaceColon identifier
 </pre>
 <p>
 If org-name is omitted, it is defaulted from the organization of the importing
@@ -10533,6 +10544,7 @@ relaxed to require only one operand to be <code>anydata</code>.</li>
 declarations are restricted to ASCII alpha-numberic characters with underscores
 separating words.</li>
 <li>Floating pointer literals are not allowed to end with a trailing dot.</li>
+<li>No white space is allowed within a qualified name.</li>
 <li>Add the <code>!is</code> operator.</li>
 <li>Allow <code>null</code> as a type descriptor.</li>
 <li>An object type is not allowed to include a class with private members.</li>
