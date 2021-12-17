@@ -7239,7 +7239,7 @@ is called concurrently on multiple strands.
 </section>
 </section>
 <section>
-<h3>Statement execution</h3>
+<h3>Statements</h3>
 
 <pre
 class="grammar">statement := 
@@ -7264,28 +7264,6 @@ class="grammar">statement :=
    | return-stmt
    | fork-stmt
 </pre>
-<p>
-The execution of any statement may involve the evaluation of actions and
-expressions, and the execution of substatements. The following sections
-describes how each kind of statement is evaluated, assuming that the evaluation
-of those expressions and actions completes normally, and assuming that the
-execution of any substatements does not cause termination of the current worker.
-Except where explicitly stated to the contrary, statements handle abrupt
-completion of the evaluation of expressions and actions as follows. There are
-two possibilities.
-</p>
-<ul>
-<li>If the abrupt termination is a check-fail with associated value e, then
-control flow is transferred as if by a <code>fail-stmt</code> with an expression
-that evaluates to e.</li>
-<li>If the abrupt termination is a panic with associated value, then the current
-worker is terminated as if by a <code>panic-stmt</code> with an expression that
-evaluates to e.</li>
-</ul>
-<p>
-If the execution of a substatement causes termination of the current worker,
-then the execution of the statement terminates at that point.
-</p>
 
 <pre
 class="grammar">
@@ -7300,14 +7278,80 @@ regular-compound-stmt :=
 A <code>regular-compound-stmt</code> can be combined with an
 <code>on-fail-clause</code> to make a <code>stmt-with-on-fail</code>.
 </p>
+
+<section>
+<h4>Statement execution</h4>
+<p>
+The execution of a statement completes in one of three ways:
+</p>
+<ul>
+<li>it may complete normally;</li>
+<li>it may complete by terminating the current worker; or</li>
+<li>it may complete by transferring control within the same worker.</li>
+</ul>
+<p>
+When the execution of a statement involves the evaluation of an action or an
+expression, and that evaluation completes abruptly, then, except where
+explicitly stated to the contrary, the execution of the statement completes as
+follows.
+</p>
+<ul>
+<li>If the abrupt completion is a check-fail with associated value e, then
+control flow is transferred as if by a <code>fail-stmt</code> with an expression
+that evaluates to e.</li>
+<li>If the abrupt completion is a panic with associated value e, then the
+current worker is terminated as if by a <code>panic-stmt</code> with an
+expression that evaluates to e.</li>
+</ul>
+<p>
+The following sections describe for each kind of statement any other cases in
+which the execution of that kind of statement does not completely normally.
+</p>
+</section>
+
+<section>
+<h4>Statement blocks</h4>
 <pre
 class="grammar">
 statement-block := <code>{</code> statement* <code>}</code>
 </pre>
 <p>
-A <code>statement-block</code> is a syntactic grouping of statements, which are
-executed sequentially.
+A <code>statement-block</code> is executed by executing its
+<code>statement</code>s sequentially. This means that when the execution of one
+<code>statement</code> completes normally, the immediately following
+<code>statement</code> is executed. However, when the executon
+<code>statement</code> does not complete normally, then none of the following
+<code>statement</code>s in the <code>statement-block</code> are executed. The
+execution of the <code>statement-block</code> completes normally if and only if
+the execution of all of its <code>statement</code>s completes normally.
 </p>
+</section>
+
+<section>
+<h4>Unreachability</h4>
+<p>
+A statement is <em>reachable</em> if the analysis described in this section
+determines that there is a possibility that the statement will be executed. It
+is a compile error if a <code>statement</code> is not reachable.
+</p>
+<p>
+The analysis proceeds by determining recursively for each statement whether it
+is possible for the statement to complete normally, assuming that the statement
+is reachable. Each <code>statement</code> in a <code>statement-block</code>
+after the first <code>statement</code> is reachable only if it is possible for
+all of the preceding <code>statement</code>s to complete normally.
+</p>
+<p>
+When the execution of a statement or a transfer of control is conditional on the
+result of evaluating an expression, then the analysis assumes that it is
+possible for the statement to be executed or control to be transferred, unless
+the static type of the expression makes it impossible. Similarly, when the
+evaluation of a subexpression is conditional on the result of previously
+evaluating another subexpression, then the analysis assumes that the second
+evaluation is possible unles the static type of the first subexpression makes it
+impossible.
+</p>
+</section>
 
 </section>
 
@@ -8635,15 +8679,15 @@ result of calling c.iterator()</li>
 </ol>
 </li>
 <li>call i.next() resulting in a value n</li>
-<li>if n is nil, then terminate execution of the foreach statement</li>
+<li>if n is nil, then the execution of the foreach statement completes normally</li>
 <li>match typed-binding-pattern to n.value causing assignments to any variables
 that were created in typed-binding-pattern</li>
 <li>execute statement-block with the variable bindings from step 5 in scope; in the
 course of so doing
 <ol>
-<li>the execution of a break-stmt terminates execution of the foreach statement</li>
-<li>the execution of a continue-stmt causes execution to proceed immediately to
-step 3</li>
+<li>the execution of a break-stmt causes execution of the foreach statement to
+complete normally</li>
+<li>the execution of a continue-stmt causes a transfer of control to step 3</li>
 </ol>
 </li>
 <li>go back to step 3</li>
@@ -8678,9 +8722,9 @@ In more detail, a while statement executes as follows:
 statement;</li>
 <li>execute statement-block; in the course of so doing
 <ol>
-<li>the execution of a break-stmt results in termination of execution of the
-while statement</li>
-<li>the execution of a continue-stmt causes execution to proceed immediately to
+<li>the execution of a break-stmt results in the execution of the
+while statement completing normally</li>
+<li>the execution of a continue-stmt causes a transfer of control to
 step 1</li>
 </ol>
 </li>
@@ -8697,10 +8741,10 @@ The static type of <code>expression</code> must be a subtype of boolean.
 class="grammar">continue-stmt := <code>continue</code> <code>;</code>
 </pre>
 <p>
-A continue statement is only allowed if it is lexically within a
-while-stmt or a foreach-stmt. Executing a continue statement causes execution of
-the nearest enclosing while-stmt or foreach-stmt to jump to the end of the
-outermost statement-block in the while-stmt or foreach-stmt.
+A continue statement is only allowed if it is lexically within a while-stmt or a
+foreach-stmt. Execution a continue statement results in a transfer of control
+that causes the execution of the outermost statement-block in the nearest
+enclosing while-stmt or foreach-stmt to complete normally.
 </p>
 </section>
 <section>
@@ -8709,9 +8753,10 @@ outermost statement-block in the while-stmt or foreach-stmt.
 <pre class="grammar">break-stmt := <code>break</code> <code>;</code>
 </pre>
 <p>
-A break statement is only allowed if it is lexically within a
-while-stmt or a foreach-stmt. Executing a break statement causes the nearest
-enclosing while-stmt or foreach-stmt to terminate.
+A break statement is only allowed if it is lexically within a while-stmt or a
+foreach-stmt. Execution of a break statement results in a transfer of control
+that causes the execution of nearest enclosing while-stmt or foreach-stmt to
+complete normally.
 </p>
 </section>
 </section>
@@ -10561,6 +10606,7 @@ been changed to make the order of dimensions in the type-descriptor consistent
 with the order of dimensions in an expression that accesses the array.</li>
 <li>The static type of an expression now has singleton type when all its
 subexpressions have singleton type.</li>
+<li>Unreachable statements are now an error.</li>
 </ol>
 </section>
 <section>
