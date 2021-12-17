@@ -8063,6 +8063,42 @@ the expression in a where-clause apply within all following clauses in that
 query-expr or query-action</li>
 </ul>
 <p>
+Given a statement or statement-block S, and a variable x that is in-scope for S
+and has static type Tx, we define how to determine a narrowed type for x implied
+by the normal completion of S as follows.
+</p>
+<ul>
+<li>When it is not possible for S to complete normally, then the narrowed type for x implied by the normal completion of S is never (the empty type).</li>
+<li>If S has the form <code>{</code> S<sub>1</sub> S<sub>2</sub> ...
+S<sub>n</sub> <code>}</code>, then the narrowed type for x implied by the normal
+completion of S is the narrowed type for x implied by the normal completion of
+S<sub>n</sub>.</li>
+<li>If S has the form <code>do</code> B, the narrowed type for x implied by the
+normal completion of S is the narrowed type for x implied by the normal
+completion of B.</li>
+<li>If S has the form <code>if</code> E B<sub>1</sub> <code>else</code>
+B<sub>2</sub>, the narrowed type for x implied by the normal completion of S is
+the union of T<sub>1</sub> and T<sub>2</sub>, where T<sub>1</sub> is the
+narrowed type for x implied by the normal completion of B<sub>1</sub> and
+T<sub>2</sub> is the narrowed type for x implied by the normal completion of
+B<sub>2</sub>. (The truth or falsity of E may imply a narrowed type for x that
+applies in B<sub>1</sub> or B<sub>2</sub>, which may affect the narrowed type
+for x implied by the normal completion of B<sub>1</sub> or B<sub>2</sub>.)</li>
+<li>Otherwise, the narrowed type for x implied by the completion of S is Tx.</li>
+</ul>
+<p>
+The narrowed types implied by the normal completion of a statement are applied
+within a statement-block as follows: in a statement-block <code>{</code>
+S<sub>1</sub> S<sub>2</sub> ... Sn <code>}</code>, for each i in 2,..., n, the
+narrowed types implied by the normal completion of S<sub>i - 1</sub> apply to
+S<sub>i</sub>.
+</p>
+<p>
+In the above rules, a if-else-stmt without an <code>else</code> clause is
+treated as if it had an <code>else</code> followed by an empty statement-block,
+and <code>else if</code> clause is treated like a nested if-else-stmt.
+</p>
+<p>
 The narrowed type for a variable x ceases to apply as soon as there is a
 possibility of x being assigned to.
 </p>
