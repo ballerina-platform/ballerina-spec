@@ -8445,7 +8445,30 @@ of this type.
 A binding pattern within a destructuring assignment must not refer to a variable
 declared by a module-var-decl that includes <code>isolated</code>.
 </p>
-
+<p>
+Note that a destucturing-assignment-stmt with a wildcard-binding-pattern can
+be used to ensure that a a variable has been narrowed as expected.
+</p>
+<pre>
+type T X|Y|Z;
+function foo(T v) {
+   if v is X {
+       handleX(v);
+   }
+   else if v is Y {
+       handleY(v);
+   }
+   else {
+     Z _ = v;
+     handleOther(v);
+   }
+}
+</pre>
+<p>
+If <code>T</code> is subsequently modified to add another possibility in
+addition to <code>X</code>, <code>Y</code> and <code>Z</code>, then
+<code>foo</code> will get a compile error.
+</p>
 </section>
 </section>
 <section>
