@@ -3818,15 +3818,12 @@ class="grammar">expression :=
    | let-expr
    | type-cast-expr
    | typeof-expr
-   | unary-expr
-   | multiplicative-expr
-   | additive-expr
-   | shift-expr
+   | unary-logical-expr
+   | nil-lifted-expr
    | range-expr
    | relational-expr
    | is-expr
    | equality-expr
-   | binary-bitwise-expr
    | logical-expr
    | conditional-expr
    | checking-expr
@@ -4135,6 +4132,48 @@ types.
 </p>
 </section>
 <section>
+<h4 id="nil_lifting">Nil lifting</h4>
+
+<pre
+class="grammar">nil-lifted-expr := 
+  unary-numeric-expr
+  | multiplicative-expr
+  | additive-expr
+  | shift-expr
+  | binary-bitwise-expr
+</pre>
+<p>
+A <code>nil-lifted-expr</code> supports nil lifting for its operands. This means
+that the operators used in a <code>nil-lifted-expr</code> have two forms: an
+underlying form and a lifted form. The underlying form of the operator is used
+when the static type of the subexpressions for all operands does not allow nil;
+this form of the operator is described in the section for each kind of operator.
+The lifted form of the operator is used when the static type of the
+subexpressions for one or more operands does allow nil; the semantics of this
+form of the operator are derived from the underlying form as described in this
+section.
+</p>
+<p>
+A <code>nil-lifted-expr</code> is evaluated by evaluating the subexpressions for
+each operand. If the result of any of these evaluations is nil, then the result
+of the <code>nil-lifted-expr</code> is nil. Otherwise, the evaluation is
+completed in the same way as with the underlying form of the operator.
+</p>
+<p>
+The static types of the operand subexpressions with nil removed must be valid
+for the underlying form of the operator. The static type of the
+<code>nil-lifted-expr</code> is T<code>?</code>, where T is what the static type
+of the <code>nil-lifted-expr</code> would be if nil was removed from the static
+type of the operand subexpressions, except that the usual <a
+href="#singleton_rules">singleton typing</a> rules are not applied in computing
+T. (The singleton typing rules are applied to the static types before the
+removal of nil and thus have no effect, because the lifted form of the operator
+is never applicable when all operands have singleton type.)
+</p>
+
+</section>
+
+<section>
 <h4>Isolated expressions</h4>
 <p>
 Ballerina defines requirements for when an expression is <em>isolated</em>. If
@@ -4200,15 +4239,12 @@ class="grammar">const-expr :=
    | structural-constructor-expr
    | constant-reference-expr
    | type-cast-expr
-   | unary-expr
-   | multiplicative-expr
-   | additive-expr
-   | shift-expr
+   | unary-logical-expr
+   | nil-lifted-expr
    | range-expr
    | relational-expr
    | is-expr
    | equality-expr
-   | binary-bitwise-expr
    | logical-expr
    | conditional-expr
    | <code>(</code> const-expr <code>)</code>
@@ -5829,10 +5865,6 @@ static type of <code>expression</code>.
 <section>
 <h3>Unary expression</h3>
 
-<pre
-class="grammar">unary-expr := unary-numeric-expr | unary-logical-expr
-</pre>
-
 <section>
 <h4>Unary numeric expression</h4>
 <pre
@@ -5841,6 +5873,11 @@ class="grammar">unary-numeric-expr :=
    | <code>-</code> expression
    | <code>~</code> expression
 </pre>
+<p>
+The operators occurring in a <code>unary-numeric-expr</code> have both lifted
+form, which is specified in the <a href="#nil_lifting">Nil lifting</a> section,
+and an underlying form, which is specified in this section.
+</p>
 <p>
 The unary <code>-</code> operator performs negation. The static type of the
 operand must be a number; the static type of the result is the basic type of the
@@ -5901,7 +5938,10 @@ class="grammar">multiplicative-expr :=
 </pre>
 <p>
 The <code>*</code> operator performs multiplication; the <code>/</code> operator
-performs division; the <code>%</code> operator performs remainder.
+performs division; the <code>%</code> operator performs remainder. These
+operators have both lifted form, which is specified in the <a
+href="#nil_lifting">Nil lifting</a> section, and an underlying form, which is
+specified in this section.
 </p>
 <p>
 The static type of both operand expressions is required to be a subtype of the
@@ -5979,7 +6019,9 @@ class="grammar">additive-expr :=
 </pre>
 <p>
 The <code>+</code> operator is used for both addition and concatenation; the
-<code>-</code> operator is used for subtraction.
+<code>-</code> operator is used for subtraction. These operators have both
+lifted form, which is specified in the <a href="#nil_lifting">Nil lifting</a>
+section, and an underlying form, which is specified in this section.
 </p>
 <p>
 It is required that either:
@@ -6048,11 +6090,15 @@ class="grammar">shift-expr :=
    expression <code>&gt;&gt;&gt;</code> expression
 </pre>
 <p>
-A shift-expr performs a bitwise shift. Both operand expressions must have static
-type that is a subtype of int. The left hand operand is the value to be shifted;
-the right hand value is the shift amount; all except the bottom 6 bits of the
-shift amount are masked out (as if by x &amp; 0x3F). Then a bitwise shift is
-performed depending on the operator:
+A shift-expr performs a bitwise shift. The shift operators have both lifted
+form, which is specified in the <a href="#nil_lifting">Nil lifting</a> section,
+and an underlying form, which is specified in this section.
+</p>
+<p>
+Both operand expressions must have static type that is a subtype of int. The
+left hand operand is the value to be shifted; the right hand value is the shift
+amount; all except the bottom 6 bits of the shift amount are masked out (as if
+by x &amp; 0x3F). Then a bitwise shift is performed depending on the operator:
 </p>
 <ul>
 <li><code>&lt;&lt;</code> performs a left shift, the bits shifted in on the
@@ -6242,6 +6288,9 @@ bitwise-or-expr := expression <code>|</code> expression
 </pre>
 <p>
 A binary-bitwise-expr does a bitwise AND, XOR, or OR operation on its operands.
+These operators have both lifted form, which is specified in the <a
+href="#nil_lifting">Nil lifting</a> section, and an underlying form, which is
+specified in this section.
 </p>
 <p>
 The static type of both operands must be a subtype of int. The static type of
@@ -8413,12 +8462,15 @@ is potentially uninitialized.
 </p>
 <p>
 Let T1 be the static type of lvexpr, and let T2 be the static type of
-action-expr. Then let T3 be the static type of an expression E1 BinaryOp E2
-where E1 has type T1 and E2 has type T2. It is a compile error if T3 is not a
+action-expr. Let E be an expression E1 BinaryOperator E2, where E1 has type T1
+and E2 has type T2. E must be valid according to the static typing rules
+applicable to the underlying form of the BinaryOperator (not the lifted form
+described in the <a href="#nil_lifting">Nil lifting</a> section). Let T be the
+static type of E according to those rules. It is a compile error if T is not a
 subtype of T1.
 </p>
 <p>
-It is executed as follows:
+A compound-assignment-stmt is executed as follows:
 </p>
 <ol>
 <li>execute action-or-expr to get a value <var>v2</var>;</li>
@@ -10692,6 +10744,7 @@ subexpressions have singleton type.</li>
 <li>Conditional variable type narrowing is now smarter. In particular, the types
 of variables can be narrowed in statements following an <code>if</code>
 statement that contains <code>return</code>.</li>
+<li>Many expressions now perform nil lifting.</li>
 </ol>
 </section>
 <section>
