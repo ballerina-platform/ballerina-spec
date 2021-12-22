@@ -4300,30 +4300,29 @@ class="grammar">literal :=
 numeric-literal := int-literal | floating-point-literal
 </pre>
 <p>
-A numeric-literal represents a value belonging to one of the basic types
-int, float or decimal. The basic type to which the value belongs is determined
-as follows:
+A numeric-literal represents a value belonging to one of the basic types int,
+float or decimal. The basic type to which the value belongs is determined in
+three stages.
 </p>
+<ol>
+<li>The syntactic form of numeric literal determines which of int, float and
+decimal are candidates:
 <ul>
-<li>if the numeric-literal includes a <code>FloatTypeSuffix</code>, then the
-basic type is float;</li>
+<li>if the numeric-literal includes a <code>FloatTypeSuffix</code> or is a
+<code>HexFloatingPointLiteral</code>, then the the only candidate is float;</li>
 <li>if the numeric-literal includes a <code>DecimalTypeSuffix</code>, then the
-basic type is decimal;</li>
-<li>if the numeric-literal is a <code>HexFloatingPointLiteral</code>, then the
-basic type is float;</li>
-<li>otherwise, the basic type depends on the applicable expected numeric type
-(where the possible basic types are int, float and decimal):
-<ul>
-<li>if the applicable contextually expected type is a subtype of decimal, then
-the basic type is decimal;</li>
-<li>if the applicable contextually expected type is a subtype of float, then the
-basic type is float;</li>
-<li>otherwise, if the numeric literal is an int-literal, then the basic type is
-int;</li>
-<li>otherwise, the basic type is float.</li>
+only candidate is decimal;</li>
+<li>otherwise, if the numeric-literal is a <code>floating-point-literal</code>,
+the candidates are float and decimal;</li>
+<li>otherwise, all three basic types are candidates.</li>
 </ul>
 </li>
-</ul>
+<li>Any candidate basic type N such that the intersection of N with the
+contextually expected type is empty is eliminated, unless this would eliminate
+all candidates remaining after the first stage.</li>
+<li>From remaining candidates, the first in the order int, float, decimal is
+selected.</li>
+</ol>
 <p>
 The precise type of a numeric-literal is the singleton type containing just the
 shape of the value that the numeric-literal represents. The broad type is
@@ -10775,6 +10774,9 @@ statement that contains <code>return</code>.</li>
 <li>Variable type narrowing in a match statement has been improved to work
 better for types that are partially readonly.</li>
 <li>Many expressions now perform nil lifting.</li>
+<li>The rules for determining the basic type of a numeric literal have been
+revised to work better in the case where the contextually expected type allows
+two of the three possible numeric basic types.</li>
 </ol>
 </section>
 <section>
