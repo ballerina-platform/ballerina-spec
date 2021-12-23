@@ -8161,8 +8161,14 @@ treated as if it had an <code>else</code> followed by an empty statement-block,
 and <code>else if</code> clause is treated like a nested if-else-stmt.
 </p>
 <p>
-The narrowed type for a variable x ceases to apply as soon as there is a
-possibility of x being assigned to.
+A narrowed type for a variable x implied by an expression in which x occurs
+ceases to apply in a region of code where there is a possibility at runtime that
+x has been assigned to since the evaluation of the expression. It is an error if
+this results in the type of a variable reference being affected by assignments
+that lexically follow the variable reference. Specifically, when a variable x is
+narrowed outside a while-stmt, foreach-stmt or query-action S, an assignment to
+x within S must not result in the possibility of x having being assigned to when
+the statement-block of S completes normally or when a continue-stmt is executed.
 </p>
 
 </section>
@@ -10777,6 +10783,8 @@ better for types that are partially readonly.</li>
 <li>The rules for determining the basic type of a numeric literal have been
 revised to work better in the case where the contextually expected type allows
 two of the three possible numeric basic types.</li>
+<li>Restrictions have been introduced on assigning within a loop to a variable
+whose type has been narrowed outside the loop.</li>
 </ol>
 </section>
 <section>
