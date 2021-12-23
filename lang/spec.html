@@ -5183,12 +5183,29 @@ that when called will call the method with <code>self</code> bound to
 <var>obj</var>; the isolated bit of the new function value is set if and only if
 the isolated bits of both <var>obj</var> and the method are set; the type
 descriptor of the new function value will have the same annotations as the type
-descriptor of the method. The rest of this subsection applies when T is not a
-subtype of the object basic type.
+descriptor of the method.
 </p>
 <p>
 Let T' be the intersection of T and basic type mapping, let K be the singleton type
 containing just the string field-name, and let M be the member type for K in T'.
+</p>
+<p>
+If the following all apply:
+</p>
+<ul>
+<li>the type descriptor for T is not lax;</li>
+<li>T is a subtype of the mapping basic type (i.e. T' is the same as T);</li>
+<li>K is not a required key type for T;</li>
+<li>the type descriptor for T includes field-name as an
+individual-field-descriptor (or, if the type descriptor is a union, at least one
+member of the union does so);</li>
+<li>M does not include nil;</li>
+</ul>
+<p>
+then the field-access-expr is treated as an optional-field-access-expr.
+Otherwise, the rest of this section applies.
+</p>
+<p>
 The compile-time requirements on the field-access-expr depend on whether the
 type descriptor describing T is lax:
 </p>
@@ -10785,6 +10802,9 @@ revised to work better in the case where the contextually expected type allows
 two of the three possible numeric basic types.</li>
 <li>Restrictions have been introduced on assigning within a loop to a variable
 whose type has been narrowed outside the loop.</li>
+<li>Optional fields can be accessed using the <code>.</code> operator as well as
+the <code>?.</code> operator, when the type of the accessed field does not allow
+nil.</li>
 </ol>
 </section>
 <section>
