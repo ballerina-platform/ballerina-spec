@@ -71,7 +71,7 @@ public isolated function codePointCompare(string str1, string str2) returns int 
 # + strs - strings to be joined
 # + return - a string consisting of all of `strs` concatenated in order
 #     with `separator` in between them
-public isolated function join(string separator, string... strs) returns string = external;
+public isolated function 'join(string separator, string... strs) returns string = external;
 
 # Finds the first occurrence of one string in another string.
 #

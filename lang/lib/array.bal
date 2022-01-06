@@ -61,7 +61,7 @@ public isolated function enumerate(Type[] arr) returns [int, Type][] = external;
 # + arr - the array
 # + func - a function to apply to each member
 # + return - new array containing result of applying `func` to each member of `arr` in order
-public isolated function map(Type[] arr, @isolatedParam function(Type val) returns Type1 func) returns Type1[] = external;
+public isolated function 'map(Type[] arr, @isolatedParam function(Type val) returns Type1 func) returns Type1[] = external;
 
 # Applies a function to each member of an array.
 # The function `func` is applied to each member of array `arr` in order.

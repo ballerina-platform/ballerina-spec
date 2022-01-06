@@ -74,7 +74,7 @@ public isolated function close(stream<Type,CompletionType> stm) returns Completi
 # + stm - the stream
 # + func - a function to apply to each member
 # + return - new stream containing result of applying `func` to each member of `stm` in order
-public isolated function map(stream<Type,CompletionType> stm, @isolatedParam function(Type val) returns Type1 func)
+public isolated function 'map(stream<Type,CompletionType> stm, @isolatedParam function(Type val) returns Type1 func)
    returns stream<Type1,CompletionType> = external;
 
 # Applies a function to each member of a stream.
