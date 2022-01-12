@@ -54,18 +54,13 @@ jobs:
           git checkout $GITHUB_REF -b tmp
           cd lang
           make all
+          mv build/spec.html build/index.html
           
       - name: Copy new spec to ballerina-dev-website
-        run: |
-          cp -r lang/build/lib/ ballerina-dev-website/spec/lang/draft/$NEW_FOLDER
-          cp -r lang/build/style/ ballerina-dev-website/spec/lang/draft/$NEW_FOLDER
-          cp -r lang/build/spec.html ballerina-dev-website/spec/lang/draft/$NEW_FOLDER/index.html
+        run: cp -r lang/build/ ballerina-dev-website/spec/lang/draft/$NEW_FOLDER
 
       - name: Copy new spec to ballerina-prod-website
-        run: |
-          cp -r lang/build/lib/ ballerina-platform.github.io/spec/lang/draft/$NEW_FOLDER
-          cp -r lang/build/style/ ballerina-platform.github.io/spec/lang/draft/$NEW_FOLDER
-          cp -r lang/build/spec.html ballerina-platform.github.io/spec/lang/draft/$NEW_FOLDER/index.html
+        run: cp -r lang/build/ ballerina-platform.github.io/spec/lang/draft/$NEW_FOLDER
 
       - name: Update the list of draft specs in ballerina-dev-website
         run: python3 .github/scripts/append.py ballerina-dev-website/_data/draft_spec.json $NEW_FOLDER
