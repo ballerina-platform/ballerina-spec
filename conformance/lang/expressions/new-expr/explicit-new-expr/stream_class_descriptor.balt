@@ -1,0 +1,167 @@
+Test-Case: error
+Description: Test new-expression to create a stream without type descriptors.
+Labels: new-expr, stream-type-descriptor
+
+function init() {
+    var _ = new stream<>(); // @error missing type descriptor
+}
+
+Test-Case: error
+Description: Test new-expression to create a stream with incompatible type-descriptor.
+Labels: new-expr, stream-type-descriptor
+
+function init() {
+    stream<int> _ = new stream<string>(); // @error incompatible types: expected 'stream<int>', found 'stream<string>'
+}
+
+Test-Case: output
+Description: Test new-expression to create a stream with incompatible type-descriptor.
+Fail-Issue: ballerina-platform/ballerina-lang/issues/34963
+Labels: new-expr, stream-type-descriptor
+
+function init() {
+    stream s = new stream<string, error?>();
+    io:println(s); // @output stream <stream<int,error?>>
+}
+
+Test-Case: output
+Description: Test new-expression to create a empty streams.
+Labels: new-expr, stream-type-descriptor, int-type-descriptor
+
+type IntRecord record {|
+    int value;
+|};
+
+function getRecordValue(IntRecord|error? returnedVal) returns int|error? {
+    if (returnedVal is IntRecord) {
+        return returnedVal.value;
+    } else {
+        return returnedVal;
+    }
+}
+
+function init() {
+    stream<int, error?> emptyStream = new stream<int, error?>();
+    int|error? d = getRecordValue(emptyStream.next());
+    io:println(d); // @output
+}
+
+Test-Case: output
+Description: Test new-expr to create a stream without completion type
+Labels: new-expr, stream-type-descriptor
+
+type IntRecord record {|
+    int value;
+|};
+
+function getRecordValue(IntRecord? returnedVal) returns int? {
+    if (returnedVal is IntRecord) {
+        return returnedVal.value;
+    } else {
+        return returnedVal;
+    }
+}
+
+function init() {
+    stream<int> emptyStream = new stream<int>();
+    int? d = getRecordValue(emptyStream.next());
+    io:println(d); // @output
+}
+
+Test-Case: output
+Description: Test new-expression with int streams.
+Labels: new-expr, stream-type-descriptor, int-type-descriptor
+
+type IntRecord record {|
+    int value;
+|};
+
+function getRecordValue(IntRecord|error? returnedVal) returns int|error? {
+    if (returnedVal is IntRecord) {
+        return returnedVal.value;
+    } else {
+        return returnedVal;
+    }
+}
+
+class NumbersGenerator {
+    int i = 0;
+    public isolated function next() returns IntRecord|error? {
+        self.i += 1;
+        return { value: self.i };
+    }
+}
+
+function init() {
+    NumbersGenerator numbersGenerator = new;
+    stream<int, error?> numberStream = new stream<int, error?>(numbersGenerator);
+    int|error? a = getRecordValue(numberStream.next());
+    int|error? b = getRecordValue(numberStream.next());
+    io:println(a); // @output 1
+    io:println(b); // @output 2
+}
+
+Test-Case: output
+Description: Test closing of stream created with new-expression.
+Labels: new-expr, stream-type-descriptor, int-type-descriptor
+
+type IntRecord record {|
+    int value;
+|};
+
+function getRecordValue(IntRecord|error? returnedVal) returns int|error? {
+    if (returnedVal is IntRecord) {
+        return returnedVal.value;
+    } else {
+        return returnedVal;
+    }
+}
+
+class NumbersGenerator {
+    int i = 0;
+    public isolated function next() returns IntRecord|error? {
+        self.i += 1;
+        return { value: self.i };
+    }
+}
+
+function init() {
+    NumbersGenerator numbersGenerator = new;
+    stream<int, error?> numberStream = new stream<int, error?>(numbersGenerator);
+    int|error? a = getRecordValue(numberStream.next());
+    int|error? b = getRecordValue(numberStream.next());
+    io:println(a); // @output 1
+    io:println(b); // @output 2
+    error? closed = numberStream.close();
+    io:println(closed is ()); // @output true
+}
+
+Test-Case: panic
+Description: Test closed stream next.
+// Fail-Issue: ballerina-platform/ballerina-lang/issues/34934
+Labels: new-expr, stream-type-descriptor
+
+function init() {
+    stream<int, error?> newStream = new stream<int, error?>();
+    error? closed = newStream.close();
+    var _ = newStream.next(); // @panic
+}
+
+Test-Case: error
+Description: Test completion type with distinct error.
+Labels: new-expr, stream-type-descriptor
+
+type ErrorA distinct error;
+
+type ErrorB distinct error;
+
+type IntRecord record {|
+    int value;
+|};
+
+function init() {
+    stream<int, ErrorA?> numberStream = new stream<int, ErrorA?>();
+    IntRecord|ErrorA? b = numberStream.next();
+    IntRecord|ErrorB? a = numberStream.next(); // @error incompatible types: expected '(IntRecord|ErrorB)?', found '(record {| int value; |}|ErrorA)?'
+    ErrorB? closed = numberStream.close(); // @error incompatible types: expected 'ErrorB?', found 'ErrorA?'
+}
