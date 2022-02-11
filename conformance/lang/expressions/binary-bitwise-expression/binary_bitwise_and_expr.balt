@@ -252,7 +252,7 @@ function init() {
     io:println(b & h); // @output 5
 
     io:println(c & c); // @output -21474836
-    io:println(c & d); // @output -21474836
+    io:println(c & d); // @output -21475288
     io:println(c & e); // @output 100
     io:println(c & f); // @output 4
     io:println(c & g); // @output 20712
@@ -295,7 +295,7 @@ function init() {
 
     int _ = 433d & 7d; // @error static type of both operands must be a subtype of int
 
-    int _ = a & b;
+    int _ = a & b; // @error static type of both operands must be a subtype of int
 
     int _ = getFloat1() & getFloat2(); // @error static type of both operands must be a subtype of int
 }
@@ -329,9 +329,9 @@ function init() {
 }
 
 Test-Case: error
-Description: Test error in bitwise and expression where the operands are user defined type T
-             where the T is not a subtype of int.
-Labels: binary-bitwise-expr, DecimalNumber, int, module-type-defn
+Description: Test error in bitwise and expression where the operands are user-defined type T where the T is not a 
+             subtype of int.
+Labels: binary-bitwise-expr, DecimalNumber, decimal, int, module-type-defn, union-type
 
 type MyType int|decimal;
 
@@ -418,8 +418,8 @@ function init() {
     int:Unsigned8 g = d & f;
     io:println(g); // @output 40
 
-    int:Unsigned8 h = f & g;
-    io:println(h); // @output 40
+    int:Unsigned8 h = b & f;
+    io:println(h); // @output 12
 
     byte i = f & g;
     io:println(i); // @output 40
@@ -428,7 +428,7 @@ function init() {
 Test-Case: output
 Description: Test if the type of either operand is a subtype of int:UnsignedK when K is 8, 16 or 32, then the static
              type of the result is int:UnsignedN where N is the smallest such K via inference.
-Labels: binary-bitwise-expr, DecimalNumber, int, int:Unsigned8, int:Unsigned16, int:Unsigned32, var
+Labels: binary-bitwise-expr, byte, DecimalNumber, int, int:Unsigned8, int:Unsigned16, int:Unsigned32, var
 
 function init() {
     int a = 9876;
@@ -459,7 +459,8 @@ function init() {
 Test-Case: error
 Description: Test if the type of either operand is a subtype of int:UnsignedK when K is 8, 16 or 32, then the static
              type of the result is int:UnsignedN where N is the smallest such K using invalid assignment.
-Labels: binary-bitwise-expr, DecimalNumber, int, int:Unsigned8, int:Unsigned16, int:Unsigned32, int:Signed8, int:Signed32
+Labels: binary-bitwise-expr, byte, DecimalNumber, int, int:Unsigned8, int:Unsigned16, int:Unsigned32, int:Signed8, 
+        int:Signed32
 
 function init() {
     int a = 4343;
@@ -477,12 +478,12 @@ function init() {
     byte _ = g & h; // @error smallest K of the operands is 16, hence the static type of the result is Unsigned16
 
     int:Signed8 k = 12;
-    int:Signed16 l = 4434;
-    int:Signed8 _ = k & l; // @error the static type of the result is int
+    int:Signed16 m = 4434;
+    int:Signed8 _ = k & m; // @error the static type of the result is int
 
     int:Unsigned16 n = 12;
-    int:Unsigned16 o = 4434;
-    int:Signed16 _ = n & o; // @error the static type of the result is Unsigned16
+    int:Unsigned16 p = 4434;
+    int:Signed16 _ = n & p; // @error the static type of the result is Unsigned16
 
     int:Unsigned32 q = 12;
     int:Unsigned16 r = 4434;
@@ -492,8 +493,8 @@ function init() {
 Test-Case: error
 Description: Test if the type of either operand is a subtype of int:UnsignedK when K is 8, 16 or 32, then the static
              type of the result is int:UnsignedN where N is the smallest such K via invalid assignment with inference.
-Labels: binary-bitwise-expr,  DecimalNumber, int, int:Unsigned8, int:Unsigned16, int:Unsigned32, int:Signed8, 
-        int:Signed32, var
+Labels: binary-bitwise-expr, DecimalNumber, int, int:Unsigned8, int:Unsigned16, int:Unsigned32, int:Signed8, 
+        int:Signed16, var
 
 function init() {
     int a = 4343;
@@ -514,8 +515,8 @@ function init() {
     byte _ = result3; // @error smallest K of the operands is 16
 
     int:Signed8 k = 12;
-    int:Signed16 l = 4434;
-    var result4 = k & l;
+    int:Signed16 m = 4434;
+    var result4 = k & m;
     int:Signed8 _ = result4; // @error the static type of the result is int
 }
 
@@ -554,7 +555,7 @@ function init() {
     printResult(b & h); // @output 5
 
     printResult(c & c); // @output -21474836
-    printResult(c & d); // @output -21474836
+    printResult(c & d); // @output -21475288
     printResult(c & e); // @output 100
     printResult(c & f); // @output 4
     printResult(c & g); // @output 20712
@@ -587,7 +588,7 @@ function printResult(int? result) {
 
 Test-Case: output
 Description: Test bitwise and expression evaluates to nil when either operand is nil.
-Labels: binary-bitwise-expr, byte,  DecimalNumber, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, 
+Labels: binary-bitwise-expr, byte, DecimalNumber, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, 
         int:Unsigned16, int:Unsigned32, nil-literal, numeric-nil-lifting, optional-type, unary-minus, value:toBalString
 
 function init() {
@@ -606,61 +607,61 @@ function init() {
     int? i = ();
     byte? j = ();
     int:Signed32? k = ();
-    int:Unsigned16? l = ();
+    int:Unsigned16? m = ();
 
-    printResult((a & i)); // @output ()
-    printResult((a & j)); // @output ()
-    printResult((k & a)); // @output ()
-    printResult((l & a)); // @output ()
+    printResult(a & i); // @output ()
+    printResult(a & j); // @output ()
+    printResult(k & a); // @output ()
+    printResult(m & a); // @output ()
 
-    printResult((b & i)); // @output ()
-    printResult((b & j)); // @output ()
-    printResult((b & k)); // @output ()
-    printResult((b & l)); // @output ()
+    printResult(b & i); // @output ()
+    printResult(b & j); // @output ()
+    printResult(b & k); // @output ()
+    printResult(b & m); // @output ()
 
-    printResult((c & i)); // @output ()
-    printResult((c & j)); // @output ()
-    printResult((k & c)); // @output ()
-    printResult((c & l)); // @output ()
+    printResult(c & i); // @output ()
+    printResult(c & j); // @output ()
+    printResult(k & c); // @output ()
+    printResult(c & m); // @output ()
 
-    printResult((d & i)); // @output ()
-    printResult((d & j)); // @output ()
-    printResult((d & k)); // @output ()
-    printResult((d & l)); // @output ()
+    printResult(d & i); // @output ()
+    printResult(d & j); // @output ()
+    printResult(d & k); // @output ()
+    printResult(d & m); // @output ()
 
-    printResult((e & i)); // @output ()
-    printResult((e & j)); // @output ()
-    printResult((e & k)); // @output ()
-    printResult((e & l)); // @output ()
+    printResult(e & i); // @output ()
+    printResult(e & j); // @output ()
+    printResult(e & k); // @output ()
+    printResult(e & m); // @output ()
 
-    printResult((f & i)); // @output ()
-    printResult((f & j)); // @output ()
-    printResult((f & k)); // @output ()
-    printResult((f & l)); // @output ()
+    printResult(f & i); // @output ()
+    printResult(f & j); // @output ()
+    printResult(f & k); // @output ()
+    printResult(f & m); // @output ()
 
-    printResult((g & i)); // @output ()
-    printResult((g & j)); // @output ()
-    printResult((g & k)); // @output ()
-    printResult((g & l)); // @output ()
+    printResult(g & i); // @output ()
+    printResult(g & j); // @output ()
+    printResult(g & k); // @output ()
+    printResult(g & m); // @output ()
 
-    printResult((h & i)); // @output ()
-    printResult((h & j)); // @output ()
-    printResult((h & k)); // @output ()
-    printResult((h & l)); // @output ()
+    printResult(h & i); // @output ()
+    printResult(h & j); // @output ()
+    printResult(h & k); // @output ()
+    printResult(h & m); // @output ()
 
-    printResult((i & i)); // @output ()
-    printResult((i & j)); // @output ()
-    printResult((i & k)); // @output ()
-    printResult((i & l)); // @output ()
+    printResult(i & i); // @output ()
+    printResult(i & j); // @output ()
+    printResult(i & k); // @output ()
+    printResult(i & m); // @output ()
 
-    printResult((j & j)); // @output ()
-    printResult((j & k)); // @output ()
-    printResult((j & l)); // @output ()
+    printResult(j & j); // @output ()
+    printResult(j & k); // @output ()
+    printResult(j & m); // @output ()
 
-    printResult((k & k)); // @output ()
-    printResult((k & l)); // @output ()
+    printResult(k & k); // @output ()
+    printResult(k & m); // @output ()
 
-    printResult((l & l)); // @output ()
+    printResult(m & m); // @output ()
 }
 
 function printResult(int? result) {
@@ -668,9 +669,10 @@ function printResult(int? result) {
 }
 
 Test-Case: output
-Description: Test the static type of bitwise and expression will be a nillable type when at least one operand is nillable.
-Labels: binary-bitwise-expr, byte,  DecimalNumber, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, 
-        int:Unsigned16, int:Unsigned32, nil-literal, numeric-nil-lifting, optional-type, value:toBalString, var
+Description: Test the static type of bitwise and expression will be a nillable type when at least one operand is 
+             nillable via inference.
+Labels: binary-bitwise-expr, byte, DecimalNumber, int, int:Unsigned8, int:Unsigned16, int:Unsigned32, nil-literal, 
+        numeric-nil-lifting, optional-type, value:toBalString, var
 
 function init() {
     int? a = 9876;
@@ -698,22 +700,22 @@ function init() {
     int? result5 = i & j;
     io:println(result5); // @output 4366
 
-    int l = 5454545343;
-    byte? m = 43;
-    byte? result6 = l & m;
+    int m = 5454545343;
+    byte? n = 43;
+    byte? result6 = m & n;
     io:println(result6); // @output 43
 
-    int o = 5454545343;
-    byte? p = ();
-    int:Unsigned8? result7 = o & p;
+    int q = 5454545343;
+    byte? r = ();
+    int:Unsigned8? result7 = q & r;
     io:println(result7.toBalString()); // @output ()
 }
 
 Test-Case: error
 Description: Test the static type of bitwise and expression will be a nillable type when at least one operand is nillable
              via inference and invalid assignments.
-Labels: binary-bitwise-expr, byte,  DecimalNumber, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, 
-        int:Unsigned16, int:Unsigned32, nil-literal, numeric-nil-lifting, optional-type, var
+Labels: binary-bitwise-expr, byte, DecimalNumber, int, int:Unsigned8, int:Unsigned16, int:Unsigned32, nil-literal, 
+        numeric-nil-lifting, optional-type, var
 
 function init() {
     int? a = 9876;
@@ -736,19 +738,19 @@ function init() {
     int? j = 5454;
     int _ = i & j; // @error the static type of the result is int?
 
-    int l = 5454545343;
-    byte? m = 43;
-    byte _ = l & m; // @error the static type of the result is byte?
+    int m = 5454545343;
+    byte? n = 43;
+    byte _ = m & n; // @error the static type of the result is byte?
 
-    int o = 5454545343;
-    byte? p = ();
-    int:Unsigned8 _ = o & p; // @error the static type of the result is byte?
+    int p = 5454545343;
+    byte? q = ();
+    int:Unsigned8 _ = p & q; // @error the static type of the result is byte?
 }
 
 Test-Case: output
 Description: Test bitwise and expression at module level.
 Labels: binary-bitwise-expr, byte, DecimalNumber, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, 
-        int:Unsigned16, int:Unsigned32, unary-minus
+        int:Unsigned16, int:Unsigned32, module-init-var-decl, unary-minus
 
 int a = 43;
 
@@ -964,9 +966,9 @@ function printResult(int? result) {
 }
 
 Test-Case: output
-Description: Test bitwise and expression where the operands are user defined type T where the T is a subtype of int.
-Labels: binary-bitwise-expr, DecimalNumber, int, module-type-defn, int:Signed8, int:Signed32, int:Unsigned16, 
-        int:Unsigned32, unary-minus
+Description: Test bitwise and expression where the operands are user-defined type T where the T is a subtype of int.
+Labels: binary-bitwise-expr, byte, DecimalNumber, int, module-type-defn, int:Signed8, int:Signed32, int:Unsigned16, 
+        int:Unsigned32, singleton-type, unary-minus, union-type
 
 type MyType int;
 
@@ -978,6 +980,8 @@ type MyType4 byte|int:Signed8;
 
 type MyUnionType MyType2|MyType4;
 
+type MySingletonUnionType 1|2|3;
+
 function init() {
     MyType a = 5;
     MyType b = 433;
@@ -986,6 +990,7 @@ function init() {
     MyType3 e = -34;
     MyType4 f = -76;
     MyUnionType g = 75;
+    MySingletonUnionType h = 2;
 
     printResult(a & b); // @output 1
     printResult(a & 12345); // @output 1
@@ -994,6 +999,7 @@ function init() {
     printResult(a & e); // @output 4
     printResult(a & f); // @output 4
     printResult(a & g); // @output 1
+    printResult(a & h); // @output 0
 
     printResult(b & b); // @output 433
     printResult(b & 12345); // @output 49
@@ -1002,26 +1008,33 @@ function init() {
     printResult(b & e); // @output 400
     printResult(b & f); // @output 432
     printResult(b & g); // @output 1
+    printResult(b & h); // @output 0
 
     printResult(c & c); // @output 765
     printResult(c & d); // @output 248
     printResult(c & e); // @output 732
     printResult(c & f); // @output 692
-    printResult(c & g); // @output 73
+    printResult(c & h); // @output 0
 
     printResult(d & d); // @output 4344
     printResult(d & e); // @output 4312
     printResult(d & f); // @output 4272
     printResult(d & g); // @output 72
+    printResult(d & h); // @output 0
 
     printResult(e & e); // @output -34
     printResult(e & f); // @output -108
     printResult(e & g); // @output 74
+    printResult(e & h); // @output 2
 
     printResult(f & f); // @output -76
     printResult(f & g); // @output 0
+    printResult(f & h); // @output 0
 
     printResult(g & g); // @output 75
+    printResult(g & h); // @output 2
+
+    printResult(h & h); // @output 2
 }
 
 function printResult(int result) {
@@ -1060,7 +1073,7 @@ function printResult(int result) {
 
 Test-Case: output
 Description: Test float literal as operands with type cast.
-Labels: binary-bitwise-expr, DecimalNumber, DecimalFloatingPointNumber, int, float, type-cast-expr
+Labels: any, binary-bitwise-expr, DecimalNumber, DecimalFloatingPointNumber, int, float, type-cast-expr
 
 function init() {
     float a = 4.6434;
@@ -1085,8 +1098,8 @@ function printResult(int result) {
 
 Test-Case: output
 Description: Test field access and optional field access expression as operands.
-Labels: binary-bitwise-expr, DecimalNumber, int, module-type-defn, field-access-expr, numeric-nil-lifting, optional-field-access-expr,
-       optional-type, record-type
+Labels: binary-bitwise-expr, DecimalNumber, int, module-type-defn, field-access-expr, mapping-constructor-expr, 
+        numeric-nil-lifting, optional-field-access-expr, optional-type, record-type
 
 type Person record {|
     int id;
@@ -1110,7 +1123,7 @@ function printResult(int? result) {
 
 Test-Case: output
 Description: Test member access expression as operands.
-Labels: binary-bitwise-expr, DecimalNumber, int, member-access-expr
+Labels: array-type, binary-bitwise-expr, DecimalNumber, int, list-constructor-expr, member-access-expr
 
 function init() {
     int[] a = [33, 22, 535334343];
@@ -1132,7 +1145,7 @@ Labels: binary-bitwise-expr, DecimalNumber, function-call-expr, int
 
 function init() {
     int a = getInt() & getInt();
-    io:println(a); // @output 3
+    io:println(a); // @output 43
 
     int b = getInt() & getInt16();
     io:println(b); // @output 1
@@ -1239,8 +1252,8 @@ function init() {
     printResult((54 >> 1) & (534 >> 1)); // @output 11
     printResult(54 >> 1 & 534 >> 1); // @output 11
 
-    printResult((-54 >>> 1) & (-534 >>> 1)); // @output 2147483365
-    printResult(-54 >>> 1 & -534 >>> 1); // @output 2147483365
+    printResult((-54 >>> 1) & (-534 >>> 1)); // @output 9223372036854775525
+    printResult(-54 >>> 1 & -534 >>> 1); // @output 9223372036854775525
 
     printResult(43 & 534 << 2); // @output 8
     printResult(43 & (534 << 2)); // @output 8
@@ -1308,7 +1321,7 @@ function printResult(int result) {
 }
 
 Test-Case: parser-error
-Description: Test syntax errors in bitwise and expression
+Description: Test syntax errors in bitwise and expression.
 Labels: binary-bitwise-expr, DecimalNumber
 
 function init() {

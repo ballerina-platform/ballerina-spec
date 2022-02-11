@@ -124,13 +124,13 @@ function init() {
     int:Signed32 c = 5454545;
     int:Signed32 d = -341345678;
 
-    io:println(a | b); // @output 20
-    io:println(b | a); // @output 20
-    io:println(b | c); // @output 16
-    io:println(c | b); // @output 16
+    io:println(a | b); // @output 988030
+    io:println(b | a); // @output 988030
+    io:println(b | c); // @output 5454583
+    io:println(c | b); // @output 5454583
     io:println(c | c); // @output 5454545
     io:println(d | d); // @output -341345678
-    io:println(c | d); // @output 211536
+    io:println(c | d); // @output -336102669
 }
 
 Test-Case: output
@@ -249,6 +249,9 @@ function init() {
     io:println(b | c); // @output -21474835
     io:println(b | d); // @output -449
     io:println(b | e); // @output 101
+    io:println(b | f); // @output 21474837
+    io:println(b | g); // @output 54527
+    io:println(b | h); // @output 255
 
     io:println(c | c); // @output -21474836
     io:println(c | d); // @output -2
@@ -275,22 +278,6 @@ function init() {
     io:println(h | h); // @output 255
 }
 
-Test-Case: output
-Description: Test bitwise or expression where the operands are byte and int:UnsignedK.
-Fail-Issue: ballerina-platform/ballerina-lang#32884
-Labels: binary-bitwise-expr, byte, DecimalNumber, int, int:Unsigned8, int:Unsigned16, int:Unsigned32
-
-function init() {
-    byte b = 5;
-    int:Unsigned32 f = 21474836;
-    int:Unsigned16 g = 54522;
-    int:Unsigned8 h = 255;
-
-    io:println(b | f); // @output 21474837
-    io:println(b | g); // @output 54527
-    io:println(b | h); // @output 255
-}
-
 Test-Case: error
 Description: Test the static type of both operands must be a subtype of int via invalid numeric operand types.
 Labels: binary-bitwise-expr, DecimalNumber, DecimalFloatingPointNumber, float, FloatingPointTypeSuffix
@@ -307,7 +294,7 @@ function init() {
 
     int _ = 433d | 7d; // @error static type of both operands must be a subtype of int
 
-    int _ = a | b;
+    int _ = a | b; // @error static type of both operands must be a subtype of int
 
     int _ = getFloat1() | getFloat2(); // @error static type of both operands must be a subtype of int
 }
@@ -340,9 +327,9 @@ function init() {
 }
 
 Test-Case: error
-Description: Test error in bitwise or expression where the operands are user defined type T
+Description: Test error in bitwise or expression where the operands are user-defined type T
              where the T is not a subtype of int.
-Labels: binary-bitwise-expr, DecimalNumber, int, module-type-defn
+Labels: binary-bitwise-expr, DecimalNumber, decimal, int, module-type-defn, union-type
 
 type MyType int|decimal;
 
@@ -422,29 +409,21 @@ function init() {
     int:Unsigned8 i = 2;
     int:Unsigned32 j = h | i;
     io:println(j); // @output 67
-}
 
-Test-Case: output
-Description: Test if the type of both operands is a subtype of int:UnsignedK when K is 8, 16 or 32, then the static
-             type of the result is int:UnsignedN where N is the smallest such K.
-Fail-Issue: ballerina-platform/ballerina-lang#32888
-Labels: binary-bitwise-expr, DecimalNumber, int:Unsigned8, int:Unsigned16, int:Unsigned32
+    int:Unsigned32 k = 548677654;
+    int:Unsigned16 m = 4344;
+    int:Unsigned32 n = k | m;
+    io:println(n); // @output 548681982
 
-function init() {
-    int:Unsigned32 a = 548677654;
-    int:Unsigned16 b = 4344;
-    int:Unsigned32 c = a | b;
-    io:println(c); // @output 548681982
+    int:Unsigned8 p = 44;
+    int:Unsigned16 q = 9876;
+    int:Unsigned16 r = p | q;
+    io:println(r); // @output 9916
 
-    int:Unsigned8 d = 44;
-    int:Unsigned16 e = 9876;
-    int:Unsigned16 g = d | e;
-    io:println(g); // @output 9916
-
-    int:Unsigned32 h = 5343435;
-    int:Unsigned8 i = 2;
-    int:Unsigned32 j = h | i;
-    io:println(j); // @output 5343435
+    int:Unsigned32 s = 5343435;
+    int:Unsigned8 t = 2;
+    int:Unsigned32 u = s | t;
+    io:println(u); // @output 5343435
 }
 
 Test-Case: output
@@ -493,36 +472,28 @@ function init() {
     byte _ = g | h; // @error the static type of the result is int
 
     int:Signed8 k = 12;
-    int:Signed16 l = 4434;
-    int:Signed8 _ = k | l; // @error the static type of the result is int
+    int:Signed16 m = 4434;
+    int:Signed8 _ = k | m; // @error the static type of the result is int
 
     int:Unsigned16 n = 12;
-    int:Unsigned16 o = 4434;
-    int:Signed16 _ = n | o; // @error the smallest suck K is 16 hence, the static type of the result is Unsigned16
+    int:Unsigned16 p = 4434;
+    int:Signed16 _ = n | p; // @error the smallest suck K is 16 hence, the static type of the result is Unsigned16
 
     int:Unsigned32 q = 12;
     int:Unsigned16 r = 4434;
     int:Unsigned8 _ = q | r; // @error the smallest suck K is 32 hence, the static type of the result is Unsigned32
-}
+    
+    int:Unsigned32 s = 4343;
+    int:Unsigned16 t = 8;
+    int:Unsigned16 _ = s | t; // @error the smallest suck K is 32 hence, the static type of the result is Unsigned32
 
-Test-Case: error
-Description: Test if the type of both operands is a subtype of int:UnsignedK when K is 8, 16 or 32, then the static
-             type of the result is int:UnsignedN where N is the smallest such K using invalid assignment.
-Fail-Issue: ballerina-platform/ballerina-lang#32888
-Labels: binary-bitwise-expr, byte, DecimalNumber, int:Unsigned8, int:Unsigned16, int:Unsigned32
+    int:Unsigned16 u = 4343;
+    int:Unsigned8 v = 8;
+    int:Unsigned8 _ = u | v; // @error the smallest suck K is 16 hence, the static type of the result is Unsigned16
 
-function init() {
-    int:Unsigned32 a = 4343;
-    int:Unsigned16 b = 8;
-    int:Unsigned16 _ = a | b; // @error the smallest suck K is 32 hence, the static type of the result is Unsigned32
-
-    int:Unsigned16 d = 4343;
-    int:Unsigned8 e = 8;
-    int:Unsigned8 _ = d | e; // @error the smallest suck K is 16 hence, the static type of the result is Unsigned16
-
-    int:Unsigned16 g = 4343;
-    int:Unsigned8 h = 8;
-    byte _ = g | h; // @error the smallest suck K is 16 hence, the static type of the result is Unsigned16
+    int:Unsigned16 w = 4343;
+    int:Unsigned8 x = 8;
+    byte _ = w | x; // @error the smallest suck K is 16 hence, the static type of the result is Unsigned16
 }
 
 Test-Case: error
@@ -549,13 +520,13 @@ function init() {
     byte _ = result3; // @error the static type of the result is int
 
     int:Signed8 k = 12;
-    int:Signed16 l = 4434;
-    var result4 = k | l;
+    int:Signed16 m = 4434;
+    var result4 = k | m;
     int:Signed8 _ = result4; // @error the static type of the result is int
 
     int:Unsigned16 n = 12;
-    int:Unsigned16 o = 4434;
-    var result5 = n | o;
+    int:Unsigned16 p = 4434;
+    var result5 = n | p;
     int:Signed16 _ = result5; // @error the smallest suck K is 16 hence, the static type of the result is Unsigned16
 
     int:Unsigned32 q = 12;
@@ -645,61 +616,61 @@ function init() {
     int? i = ();
     byte? j = ();
     int:Signed32? k = ();
-    int:Unsigned16? l = ();
+    int:Unsigned16? m = ();
 
     printResult(a | i); // @output ()
     printResult(a | j); // @output ()
     printResult(k | a); // @output ()
-    printResult(l | a); // @output ()
+    printResult(m | a); // @output ()
 
     printResult(b | i); // @output ()
     printResult(b | j); // @output ()
     printResult(b | k); // @output ()
-    printResult(b | l); // @output ()
+    printResult(b | m); // @output ()
 
     printResult(c | i); // @output ()
     printResult(c | j); // @output ()
     printResult(k | c); // @output ()
-    printResult(c | l); // @output ()
+    printResult(c | m); // @output ()
 
     printResult(d | i); // @output ()
     printResult(d | j); // @output ()
     printResult(d | k); // @output ()
-    printResult(d | l); // @output ()
+    printResult(d | m); // @output ()
 
     printResult(e | i); // @output ()
     printResult(e | j); // @output ()
     printResult(e | k); // @output ()
-    printResult(e | l); // @output ()
+    printResult(e | m); // @output ()
 
     printResult(f | i); // @output ()
     printResult(f | j); // @output ()
     printResult(f | k); // @output ()
-    printResult(f | l); // @output ()
+    printResult(f | m); // @output ()
 
     printResult(g | i); // @output ()
     printResult(g | j); // @output ()
     printResult(g | k); // @output ()
-    printResult(g | l); // @output ()
+    printResult(g | m); // @output ()
 
     printResult(h | i); // @output ()
     printResult(h | j); // @output ()
     printResult(h | k); // @output ()
-    printResult(h | l); // @output ()
+    printResult(h | m); // @output ()
 
     printResult(i | i); // @output ()
     printResult(i | j); // @output ()
     printResult(i | k); // @output ()
-    printResult(i | l); // @output ()
+    printResult(i | m); // @output ()
 
     printResult(j | j); // @output ()
     printResult(j | k); // @output ()
-    printResult(j | l); // @output ()
+    printResult(j | m); // @output ()
 
     printResult(k | k); // @output ()
-    printResult(k | l); // @output ()
+    printResult(k | m); // @output ()
 
-    printResult(l | l); // @output ()
+    printResult(m | m); // @output ()
 }
 
 function printResult(int? result) {
@@ -707,9 +678,10 @@ function printResult(int? result) {
 }
 
 Test-Case: output
-Description: Test the static type of bitwise or expression will be a nillable type when at least one operand is nillable.
-Labels: binary-bitwise-expr, byte,  DecimalNumber, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, 
-        int:Unsigned16, int:Unsigned32, nil-literal, numeric-nil-lifting, optional-type, value:toBalString, var
+Description: Test the static type of bitwise or expression will be a nillable type when at least one operand is \
+             nillable via inference.
+Labels: binary-bitwise-expr, byte, DecimalNumber, int, int:Unsigned8, int:Unsigned16, int:Unsigned32, nil-literal, 
+        numeric-nil-lifting, optional-type, value:toBalString, var
        
 function init() {
     int? a = 9876;
@@ -737,22 +709,22 @@ function init() {
     int? result5 = i | j;
     io:println(result5); // @output 46431
 
-    int l = 5454545343;
-    byte? m = 43;
-    int? result6 = l | m;
+    int m = 5454545343;
+    byte? p = 43;
+    int? result6 = m | p;
     io:println(result6); // @output 5454545343
 
-    int o = 5454545343;
-    byte? p = ();
-    int? result7 = o | p;
+    int q = 5454545343;
+    byte? r = ();
+    int? result7 = q | r;
     io:println(result7.toBalString()); // @output ()
 }
 
 Test-Case: error
 Description: Test the static type of bitwise or expression will be a nillable type when at least one operand is nillable
              via inference and invalid assignments.
-Labels: binary-bitwise-expr, byte,  DecimalNumber, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, 
-        int:Unsigned16, int:Unsigned32, nil-literal, numeric-nil-lifting, optional-type, var
+Labels: binary-bitwise-expr, byte, DecimalNumber, int, int:Unsigned8, int:Unsigned16, int:Unsigned32, nil-literal, 
+        numeric-nil-lifting, optional-type, var
 
 function init() {
     int? a = 9876;
@@ -775,19 +747,19 @@ function init() {
     int? j = 5454;
     int _ = i | j; // @error the static type of the result is int?
 
-    int l = 5454545343;
-    byte? m = 43;
-    int _ = l | m; // @error the static type of the result is int?
+    int m = 5454545343;
+    byte? n = 43;
+    int _ = m | n; // @error the static type of the result is int?
 
-    int o = 5454545343;
-    byte? p = ();
-    int _ = o | p; // @error the static type of the result is int?
+    int p = 5454545343;
+    byte? q = ();
+    int _ = p | q; // @error the static type of the result is int?
 }
 
 Test-Case: output
 Description: Test bitwise or expression at module level.
 Labels: binary-bitwise-expr, byte,  DecimalNumber, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, 
-        int:Unsigned16, int:Unsigned32, unary-minus
+        int:Unsigned16, int:Unsigned32, module-init-var-decl, unary-minus
 
 int a = 43;
 
@@ -813,6 +785,10 @@ int result8 = b | b;
 int result9 = b | c;
 int result10 = b | d;
 int result11 = b | e;
+int result12 = b | f;
+int result13 = b | g;
+int result14 = b | h;
+
 
 int result15 = c | c;
 int result16 = c | d;
@@ -833,8 +809,11 @@ int result28 = e | g;
 int result29 = e | h;
 
 int result30 = f | f;
+int result31 = f | g;
+int result32 = f | h;
 
 int result33 = g | g;
+int result34 = g | h;
 
 int result35 = h | h;
 
@@ -851,6 +830,9 @@ function init() {
     printResult(result9); // @output -21474835
     printResult(result10); // @output -449
     printResult(result11); // @output 101
+    printResult(result12); // @output 21474837
+    printResult(result13); // @output 54527
+    printResult(result14); // @output 255
 
     printResult(result15); // @output -21474836
     printResult(result16); // @output -2
@@ -871,59 +853,13 @@ function init() {
     printResult(result29); // @output 255
 
     printResult(result30); // @output 21474836
-
-    printResult(result33); // @output 54522
-
-    printResult(result35); // @output 255
-}
-
-function printResult(int result) {
-    io:println(result);
-}
-
-Test-Case: output
-Description: Test bitwise or expression at module level.
-Fail-Issue: ballerina-platform/ballerina-lang#32888
-Labels: binary-bitwise-expr, DecimalNumber, int, int:Unsigned8, int:Unsigned16, int:Unsigned32,
-
-int:Unsigned32 f = 21474836;
-int:Unsigned16 g = 54522;
-int:Unsigned8 h = 255;
-
-int result31 = f | g;
-int result32 = f | h;
-
-int result34 = g | h;
-
-function init() {
     printResult(result31); // @output 21495550
     printResult(result32); // @output 21475071
+
+    printResult(result33); // @output 54522
     printResult(result34); // @output 54527
-}
 
-function printResult(int result) {
-    io:println(result);
-}
-
-Test-Case: output
-Description: Test bitwise or expression at module level.
-Fail-Issue: ballerina-platform/ballerina-lang#32884
-Labels: binary-bitwise-expr, byte, DecimalNumber, int, int:Unsigned8, int:Unsigned16, int:Unsigned32
-
-byte b = 5;
-
-int:Unsigned32 f = 21474836;
-int:Unsigned16 g = 54522;
-int:Unsigned8 h = 255;
-
-int result12 = b | f;
-int result13 = b | g;
-int result14 = b | h;
-
-function init() {
-    printResult(result12); // @output 21474837
-    printResult(result13); // @output 54527
-    printResult(result14); // @output 255
+    printResult(result35); // @output 255
 }
 
 function printResult(int result) {
@@ -959,6 +895,9 @@ int? result8 = b | b;
 int? result9 = b | c;
 int? result10 = b | d;
 int? result11 = b | e;
+int? result12 = b | f;
+int? result13 = b | g;
+int? result14 = b | h;
 
 int? result15 = c | c;
 int? result16 = c | d;
@@ -979,8 +918,11 @@ int? result28 = e | g;
 int? result29 = e | h;
 
 int? result30 = f | f;
+int? result31 = f | g;
+int? result32 = f | h;
 
 int? result33 = g | g;
+int? result34 = g | h;
 
 int? result35 = h | h;
 
@@ -997,6 +939,9 @@ function init() {
     printResult(result9); // @output -21474835
     printResult(result10); // @output -449
     printResult(result11); // @output 101
+    printResult(result12); // @output 21474837
+    printResult(result13); // @output 54527
+    printResult(result14); // @output 255
 
     printResult(result15); // @output -21474836
     printResult(result16); // @output -2
@@ -1017,8 +962,11 @@ function init() {
     printResult(result29); // @output 255
 
     printResult(result30); // @output 21474836
+    printResult(result31); // @output 21495550
+    printResult(result32); // @output 21475071
 
     printResult(result33); // @output 54522
+    printResult(result34); // @output 54527
 
     printResult(result35); // @output 255
 }
@@ -1028,58 +976,9 @@ function printResult(int? result) {
 }
 
 Test-Case: output
-Description: Test nil lifting for bitwise or operator at module level.
-Fail-Issue: ballerina-platform/ballerina-lang#32888
-Labels: binary-bitwise-expr,  DecimalNumber, int, int:Unsigned8, int:Unsigned16, int:Unsigned32,
-
-int:Unsigned32? f = 21474836;
-int:Unsigned16? g = 54522;
-int:Unsigned8? h = 255;
-
-int? result31 = f | g;
-int? result32 = f | h;
-
-int? result34 = g | h;
-
-function init() {
-    printResult(result31); // @output 21495550
-    printResult(result32); // @output 21475071
-    printResult(result34); // @output 54527
-}
-
-function printResult(int? result) {
-    io:println(result);
-}
-
-Test-Case: output
-Description: Test nil lifting for bitwise or operator at module level.
-Fail-Issue: ballerina-platform/ballerina-lang#32884
-Labels: binary-bitwise-expr, byte,  DecimalNumber, int,, int:Unsigned8, int:Unsigned16, int:Unsigned32
-
-byte? b = 5;
-
-int:Unsigned32? f = 21474836;
-int:Unsigned16? g = 54522;
-int:Unsigned8? h = 255;
-
-int? result12 = b | f;
-int? result13 = b | g;
-int? result14 = b | h;
-
-function init() {
-    printResult(result12); // @output 21474837
-    printResult(result13); // @output 54527
-    printResult(result14); // @output 255
-}
-
-function printResult(int? result) {
-    io:println(result);
-}
-
-Test-Case: output
-Description: Test bitwise or expression where the operands are user defined type T where the T is a subtype of int.
-Labels: binary-bitwise-expr,  DecimalNumber, int, module-type-defn, int:Signed8, int:Signed32, int:Unsigned16, 
-        int:Unsigned32, unary-minus
+Description: Test bitwise or expression where the operands are user-defined type T where the T is a subtype of int.
+Labels: binary-bitwise-expr, byte, DecimalNumber, int, module-type-defn, int:Signed8, int:Signed32, int:Unsigned16, 
+        int:Unsigned32, singleton-type, unary-minus, union-type
 
 type MyType int;
 
@@ -1091,6 +990,8 @@ type MyType4 byte|int:Signed8;
 
 type MyUnionType MyType2|MyType4;
 
+type MySingletonUnionType 1|2|3;
+
 function init() {
     MyType a = 5;
     MyType b = 433;
@@ -1099,6 +1000,7 @@ function init() {
     MyType3 e = -34;
     MyType4 f = -76;
     MyUnionType g = 75;
+    MySingletonUnionType h = 2;
 
     printResult(a | b); // @output 437
     printResult(a | 12345); // @output 12349
@@ -1107,6 +1009,7 @@ function init() {
     printResult(a | e); // @output -33
     printResult(a | f); // @output -75
     printResult(a | g); // @output 79
+    printResult(a | h); // @output 7
 
     printResult(b | b); // @output 433
     printResult(b | 12345); // @output 12729
@@ -1115,17 +1018,17 @@ function init() {
     printResult(b | e); // @output -1
     printResult(b | f); // @output -75
     printResult(b | g); // @output 507
+    printResult(b | h); // @output 435
 
     printResult(c | c); // @output 765
     printResult(c | d); // @output 4861
     printResult(c | e); // @output -1
     printResult(c | f); // @output -3
     printResult(c | g); // @output 767
-
-    printResult(d | d); // @output 4344
-    printResult(d | g); // @output 4347
+    printResult(c | h); // @output 767
 
     printResult(g | g); // @output 75
+    printResult(g | h); // @output 75
 }
 
 function printResult(int result) {
@@ -1133,7 +1036,7 @@ function printResult(int result) {
 }
 
 Test-Case: output
-Description: Test bitwise or expression where the operands are user defined type T where the T is a subtype of int.
+Description: Test bitwise or expression where the operands are user-defined type T where the T is a subtype of int.
 Fail-Issue: ballerina-platform/ballerina-lang#32888
 Labels: binary-bitwise-expr,  DecimalNumber, module-type-defn, int:Signed8, int:Signed32, int:Unsigned16, 
         int:Unsigned32, unary-minus
@@ -1146,12 +1049,18 @@ type MyType4 byte|int:Signed8;
 
 type MyUnionType MyType2|MyType4;
 
+type MySingletonUnionType 1|2|3;
+
 function init() {
     MyType2 d = 4344;
     MyType3 e = -34;
     MyType4 f = -76;
     MyUnionType g = 75;
+    MySingletonUnionType h = 2;
 
+    printResult(d | d); // @output 4344
+    printResult(d | g); // @output 4347
+    printResult(d | h); // @output 4346
     printResult(d | e); // @output -2
     printResult(d | f); // @output -4
 
@@ -1199,7 +1108,7 @@ function printResult(int result) {
 
 Test-Case: output
 Description: Test float literal as operands with type cast.
-Labels: binary-bitwise-expr, DecimalNumber, DecimalFloatingPointNumber, int, float, type-cast-expr
+Labels: any, binary-bitwise-expr, DecimalNumber, DecimalFloatingPointNumber, int, float, type-cast-expr
 
 function init() {
     float a = 4.6434;
@@ -1224,8 +1133,8 @@ function printResult(int result) {
 
 Test-Case: output
 Description: Test field access and optional field access expression as operands with type cast.
-Labels: binary-bitwise-expr, DecimalNumber, int, module-type-defn, field-access-expr, numeric-nil-lifting, optional-field-access-expr,
-       optional-type, record-type
+Labels: binary-bitwise-expr, DecimalNumber, int, module-type-defn, field-access-expr, mapping-constructor-expr, 
+        numeric-nil-lifting, optional-field-access-expr, optional-type, record-type
 
 type Person record {|
     int id;
@@ -1249,7 +1158,7 @@ function printResult(int result) {
 
 Test-Case: output
 Description: Test member access expression as operands.
-Labels: binary-bitwise-expr,  DecimalNumber, int, member-access-expr
+Labels: array-type, binary-bitwise-expr, DecimalNumber, int, list-constructor-expr, member-access-expr
 
 function init() {
     int[] a = [33, 22, 535334343];
@@ -1447,7 +1356,7 @@ function printResult(int result) {
 }
 
 Test-Case: parser-error
-Description: Test syntax errors in bitwise or expression
+Description: Test syntax errors in bitwise or expression.
 Labels: binary-bitwise-expr, DecimalNumber
 
 function init() {
