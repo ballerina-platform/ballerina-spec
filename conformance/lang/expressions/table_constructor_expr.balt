@@ -818,7 +818,7 @@ function errorFunction() {
 
 Test-Case: error
 Description: Test incompatible members in table constructor expressions with a key-specifier, when the mapping constructor has variable-name, computed-name, and spread fields
-Fail-Issue: ballerina-platform/ballerina-spec#35014
+Fail-Issue: ballerina-platform/ballerina-lang#35014
 Labels: key-specifier, table-constructor-expr, table-type, int, string, record-type, module-type-defn, mapping-constructor-expr, boolean-literal
 
 type Employee record {|
@@ -1230,4 +1230,253 @@ Labels: key-specifier, table-constructor-expr, mapping-constructor-expr, var
 
 function errorFunction() {
     var _ = table key(a) []; // @error a table constructor expression cannot have an empty row list when there is no contextually-expected type
+}
+
+Test-Case: error
+Description: Test error for different key specifiers in the contextually-expected type and table constructor.
+Labels: key-specifier, int, float, mapping-constructor-expr, record-type, string, table-constructor-expr
+
+type Employee record {|
+    readonly int id;
+    readonly string name;
+    float salary;
+|};
+
+function errorFunction() {
+    table<Employee> key(id) _ = table key(name) [ // @error mismatch between key specifiers in the contextually-expected type and table constructor
+        {id: 1, name: "Em", salary: 100.0}
+    ];
+}
+
+Test-Case: output
+Description: Test the key sequence of the table value being the same as that of its inherent type.
+Labels: float, is-expr, key-specifier, table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr
+
+type Employee record {|
+    readonly int id;
+    readonly string name;
+    float salary;
+|};
+
+type Person record {|
+    readonly anydata id;
+    readonly anydata name;
+    float salary;
+|};
+
+function init() {
+    table<Employee> key(id) t1 = table [
+        {id: 1, name: "Jo", salary: 100.0}
+    ];
+
+    int[] keys1 = t1.keys();
+    io:println(keys1[0]); // @output 1
+    io:println(keys1[0] is int); // @output true
+
+    table<Employee> key(id, name) t2 = table key(id, name) [
+        {id: 1, name: "Jo", salary: 100.0},
+        {id: 2, name: "Jo", salary: 100.0}
+    ];
+    table<Person> key(id, name) t3 = t2;
+    [anydata, anydata][] keys2 = t3.keys();
+    io:println(keys2[0]); // @output [1,"Jo"]
+    io:println(keys2[0] is [int, string]); // @output true
+
+    var t4 = table key(id, name) [
+        {id: 10, name: "Em", salary: 100.0},
+        {id: 22, name: "Jo", salary: 100.0}
+    ];
+    [int, string][] keys4 = t4.keys();
+    [int, string] k = keys4[0];
+    io:println(k); // @output [10,"Em"] 
+    io:println(k is [int, string]); // @output true
+}
+
+Test-Case: error
+Description: Test the field(s) specified in the key specifier not being readonly in the record.
+Fail-Issue: ballerina-platform/ballerina-lang#33049
+Labels: float, key-specifier, table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr
+
+type Employee record {|
+    int id;
+    string name;
+    float salary;
+|};
+
+function errorFunction() {
+    table<Employee> _ = table key(id) [ // @error field 'id' used in the key specifier is not a readonly field
+        {id: 1, name: "Jo", salary: 100.0}
+    ];
+
+    table<Employee> _ = table key(id, name) [ // @error fields 'id' and 'name' used in the key specifier are not readonly fields
+        {id: 1, name: "Jo", salary: 100.0}
+    ];
+}
+
+Test-Case: error
+Description: Test rows not having a specific field for key specifier field(s).
+Fail-Issue: ballerina-platform/ballerina-lang#35014
+Labels: key-specifier, table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr
+
+type Employee record {|
+    readonly int id;
+    readonly string name;
+    float salary;
+|};
+
+type Person record {
+    readonly int id;
+    readonly string name;
+    float salary?;
+};
+
+function errorFunction() {
+    record {| int id; |} r1 = {id: 123};
+
+    table<Employee> _ = table key(id) [
+        {...r1, name: "Emily", salary: 100.0} // @error missing a specific field for key field 'id'
+    ];
+
+    table<Employee> _ = table key(id, name) [
+        {...r1, name: "Emily", salary: 100.0} // @error missing a specific field for key field 'id'
+    ];
+
+    record { int id; string name; never salary?; } r2 = {id: 123, name: "Emily"};
+
+    table<Person> _ = table key(id, name) [
+        {...r2, salary: 100.0} // @error missing specific fields for key fields 'id' and 'name'
+    ];
+}
+
+Test-Case: error
+Description: Test rows not having a constant expression as the value for key specifier field(s).
+Fail-Issue: ballerina-platform/ballerina-lang#33049
+Labels: key-specifier, table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr
+
+type Employee record {|
+    readonly int id;
+    readonly string name;
+    float salary;
+|};
+
+function errorFunction() {
+    int id = 1;
+
+    table<Employee> _ = table key(id) [
+        {id: id, name: "Jo", salary: 100.0}, // @error a constant expression is required as the value for key field 'id'
+        {id, name: "Jo", salary: 100.0} // @error a constant expression is required as the value for key field 'id'
+    ];
+
+    string name = "Emily";
+
+    table<Employee> _ = table key(id, name) [
+        {id: id, name: name, salary: 100.0}, // @error a constant expression is required as the value for key fields 'id' and 'name
+        {id, name, salary: 100.0}, // @error a constant expression is required as the value for key fields 'id' and 'name
+        {id: id, name: "Jo", salary: 100.0}, // @error a constant expression is required as the value for key field 'id'
+        {id: 1, name, salary: 100.0} // @error a constant expression is required as the value for key field 'name'
+    ];
+}
+
+Test-Case: output
+Description: Test different constant expressions as the values for key fields.
+Labels: additive-expr, float, is-expr, key-specifier, table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr, unary-not, xml
+
+type Employee record {|
+    readonly int|string|xml|boolean id;
+    readonly string name;
+    float salary?;
+|};
+
+const CONST = "constant";
+
+function init() {
+    table<Employee> t = table key(id) [
+        {id: 1, name: "Jo", salary: 100.0},
+        {id: string `foo${CONST}`, name: "Em"},
+        {id: xml `xml text`, name: "Em"},
+        {id: !false, name: "Em"},
+        {id: 1 + 2, name: "Amy"}
+    ];
+
+    io:println(t.length()); // @output 5
+}
+
+Test-Case: error
+Description: Test different non constant expressions as the values for key fields.
+Fail-Issue: ballerina-platform/ballerina-lang#35043, ballerina-platform/ballerina-lang#32957
+Labels: additive-expr, float, key-specifier, table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr, unary-not, xml
+
+type Employee record {|
+    readonly int|string|xml|boolean id;
+    readonly string name;
+    float salary?;
+|};
+
+const CONST = "constant";
+
+function errorFunction() {
+    int i = 1;
+    boolean b = false;
+
+    table<Employee> _ = table key(id) [
+        {id: string `foo${i}`, name: "Em"}, // @error a constant expression is required as the value for key field 'id'
+        {id: xml `xml text ${i}`, name: "Em"}, // @error a constant expression is required as the value for key field 'id'
+        {id: !b, name: "Em"}, // @error a constant expression is required as the value for key field 'id'
+        {id: 1 + i, name: "Amy"} // @error a constant expression is required as the value for key field 'id'
+    ];
+}
+
+Test-Case: error
+Description: Test error on more than one row having the same value for key fields, with literal expressions.
+Labels: additive-expr, float, key-specifier, table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr
+
+type Employee record {|
+    readonly int|string id;
+    readonly string name;
+    float salary?;
+|};
+
+function errorFunction() {
+    table<Employee> _ = table key(id) [
+        {id: "foo", name: "Em"},
+        {id: 2, name: "Em"},
+        {id: "foo", name: "Em"}, // @error duplicate row with key '"foo"'
+        {id: 2, name: "Amy"} // @error duplicate row with key '2'
+    ];
+
+    table<Employee> _ = table key(id, name) [
+        {id: "foo", name: "Em"},
+        {id: 2, name: "Em"},
+        {id: 2, name: "Em"}, // @error duplicate row with key '[2, "Em"]'
+        {id: 2, name: "Em"} // @error duplicate row with key '[2, "Em"]'
+    ];
+}
+
+Test-Case: error
+Description: Test error on more than one row having the same value for key fields, with non literal expressions.
+Fail-Issue: ballerina-platform/ballerina-lang#35044
+Labels: additive-expr, float, key-specifier, table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr
+
+type Employee record {|
+    readonly int|string id;
+    readonly string name;
+    float salary?;
+|};
+
+const CONST = "foo";
+
+function errorFunction() {
+    table<Employee> _ = table key(id) [
+        {id: "foo", name: "Em"},
+        {id: 2, name: "Em"},
+        {id: CONST, name: "Em"}, // @error duplicate row with key '"foo"'
+        {id: 1 + 1, name: "Amy"} // @error duplicate row with key '2'
+    ];
+
+    table<Employee> _ = table key(id, name) [
+        {id: "foo", name: "Em"},
+        {id: 2, name: "Em"},
+        {id: 2, name: string `Em`}, // @error duplicate row with key '[2, "Em"]'
+        {id: 1 + 1, name: "Em"} // @error duplicate row with key '[2, "Em"]'
+    ];
 }
