@@ -1,0 +1,329 @@
+Test-Case: output
+Description: Test nil literal '()' with nil type descriptor and toBalString().
+Labels: nil-literal, nil-type, value:toBalString
+
+public function main() {
+    () x = ();
+    io:println(x.toBalString()); // @output ()
+
+    io:println(().toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test nil literal 'null' with nil type descriptor and toBalString().
+Labels: nil-type, null, value:toBalString
+
+public function main() {
+    () x = null;
+    io:println(x.toBalString()); // @output ()
+
+    io:println(null.toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test nil literal '()' with toString().
+Labels: nil-literal, nil-type, value:toString
+
+public function main() {
+    () x = ();
+    io:println(x); // @output
+
+    io:println(().toString()); // @output
+}
+
+Test-Case: output
+Description: Test nil literal 'null' with toString().
+Labels: nil-type, null, value:toString
+
+public function main() {
+    () x = null;
+    io:println(x); // @output
+
+    io:println(null.toString()); // @output
+}
+
+Test-Case: output
+Description: Test equality of the nil literals.
+Labels: equality, nil-literal, null
+
+public function main() {
+    io:println(null == null); // @output true
+
+    io:println(null != null); // @output false
+
+    io:println(() == ()); // @output true
+
+    io:println(() != ()); // @output false
+
+    io:println(null == ()); // @output true
+
+    io:println(null != ()); // @output false
+}
+
+Test-Case: output
+Description: Test exact-equality of the nil literalS.
+Labels: exact-equality, nil-literal, null
+
+public function main() {
+    io:println(null === null); // @output true
+
+    io:println(null !== null); // @output false
+
+    io:println(() === ()); // @output true
+
+    io:println(() !== ()); // @output false
+
+    io:println(null === ()); // @output true
+
+    io:println(null !== ()); // @output false
+}
+
+Test-Case: output
+Description: Test nil literal '()' with is-expr.
+Labels: is-expr, nil-literal, nil-type
+
+public function main() {
+    io:println(() is ()); // @output true
+}
+
+Test-Case: output
+Description: Test nil literal 'null' with is-expr.
+Labels: is-expr, nil-type, null
+
+public function main() {
+    io:println(null is ()); // @output true
+}
+
+Test-Case: output
+Description: Test different nil literal '()' representations with nil type descriptor.
+Labels: nil-literal, nil-type, value:toBalString
+
+public function main() {
+    () x = ( );
+    io:println(x.toBalString()); // @output ()
+
+    x = (    );
+    io:println(x.toBalString()); // @output ()
+
+    x = (
+    );
+    io:println(x.toBalString()); // @output ()
+
+    x = (());
+    io:println(x.toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test different nil literal 'null' representations with nil type descriptor.
+Labels: nil-type, null, value:toBalString
+
+public function main() {
+    () x = (null);
+    io:println(x.toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test nil literal '()' with function call.
+Labels: function-call-expr, nil-literal, nil-type, value:toBalString
+
+public function main() {
+    testNil(()); // @output ()
+}
+
+function testNil(() x) {
+    io:println(x.toBalString());
+}
+
+Test-Case: output
+Description: Test nil literal 'null' with function call.
+Labels: function-call-expr, nil-type, null, value:toBalString
+
+public function main() {
+    testNil(null); // @output ()
+}
+
+function testNil(() x) {
+    io:println(x.toBalString());
+}
+
+Test-Case: output
+Description: Test nil literal '()' with valid type casts.
+Labels: nil-literal, nil-type, type-cast-expr, value:toBalString
+
+public function main() {
+    io:println((<()> ()).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test nil literal 'null' with valid type casts.
+Labels: nil-type, null, type-cast-expr, value:toBalString
+
+public function main() {
+    io:println((<()> null).toBalString()); // @output ()
+}
+
+Test-Case: error
+Description: Test nil literal '()' with invalid type casts.
+Labels: any, boolean, decimal, float, int, nil-literal, string, type-cast-expr
+
+public function main() {
+    any x = <boolean> (); // @error '()' cannot be cast to 'boolean'
+
+    x = <decimal> (); // @error '()' cannot be cast to 'decimal'
+
+    x = <float> (); // @error '()' cannot be cast to 'float'
+
+    x = <int> (); // @error '()' cannot be cast to 'int'
+
+    x = <string> (); // @error '()' cannot be cast to 'string'
+}
+
+Test-Case: error
+Description: Test nil literal 'null' with invalid type casts.
+Labels: any, boolean, decimal, float, int, null, string, type-cast-expr
+
+public function main() {
+    any x = <boolean> null; // @error '()' cannot be cast to 'boolean'
+
+    x = <decimal> null; // @error '()' cannot be cast to 'decimal'
+
+    x = <float> null; // @error '()' cannot be cast to 'float'
+
+    x = <int> null; // @error '()' cannot be cast to 'int'
+
+    x = <string> null; // @error '()' cannot be cast to 'string'
+}
+
+Test-Case: output
+Description: Test nil literal '()' with interpolation in template expressions.
+Labels: nil-literal, raw-template-expr
+
+public function main() {
+    io:println(`${()}`); // @output
+}
+
+Test-Case: output
+Description: Test nil literal 'null' with interpolation in template expressions.
+Labels: null, raw-template-expr
+
+public function main() {
+    io:println(`${null}`); // @output
+}
+
+Test-Case: output
+Description: Test nil literals as members of structural constructors.
+Labels: list-constructor-expr, mapping-constructor-expr, nil-literal, null, value:toBalString
+
+public function main() {
+    io:println([(), null].toBalString()); // @output [(),()]
+
+    io:println({"c" : (), "b" : null}.toBalString()); // @output {"c":(),"b":()}
+}
+
+Test-Case: output
+Description: Test nil literal '()' with return statement.
+Labels: nil-literal, nil-type, return-stmt, value:toBalString
+
+public function main() {
+    io:println(testNil().toBalString()); // @output ()
+}
+
+function testNil() returns () {
+    return ();
+}
+
+Test-Case: output
+Description: Test nil literal 'null' with return statement.
+Labels: nil-type, null, return-stmt, value:toBalString
+
+public function main() {
+    io:println(testNil().toBalString()); // @output ()
+}
+
+function testNil() returns () {
+    return null;
+}
+
+Test-Case: output
+Description: Test nil literal '()' with optional type descriptor.
+Labels: boolean, decimal, float, int, nil-literal, optional-type, value:toBalString
+
+public function main() {
+    boolean? a = ();
+    io:println(a.toBalString()); // @output ()
+
+    decimal? b = ();
+    io:println(b.toBalString()); // @output ()
+
+    float? c = ();
+    io:println(c.toBalString()); // @output ()
+
+    int? d = ();
+    io:println(d.toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test nil literal 'null' with optional type descriptor.
+Labels: boolean, decimal, float, int, null, optional-type, value:toBalString
+
+public function main() {
+    boolean? a = null;
+    io:println(a.toBalString()); // @output ()
+
+    decimal? b = null;
+    io:println(b.toBalString()); // @output ()
+
+    float? c = null;
+    io:println(c.toBalString()); // @output ()
+
+    int? d = null;
+    io:println(d.toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test nil literal 'null' with json type descriptor.
+Labels: null, json, value:toBalString
+
+public function main() {
+    json x = null;
+    io:println(x.toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test nil literal '()' with json type descriptor.
+Labels: nil-literal, json, value:toBalString
+
+public function main() {
+    json x = ();
+    io:println(x.toBalString()); // @output ()
+}
+
+Test-Case: error
+Description: Test invalid nil literals.
+Labels: nil-type
+
+public function main() {
+    () a = Null; // @error expected a '()', but found an undefined symbol 'Null'
+
+    () b = NULL; // @error expected a '()', but found an undefined symbol 'NULL'
+
+    () c = nul; // @error expected a '()', but found an undefined symbol 'nul'
+
+    () d = nil; // @error expected a '()', but found an undefined symbol 'nil'
+
+    () e = Nil; // @error expected a '()', but found an undefined symbol 'Nil'
+}
+
+Test-Case: parser-error
+Description: Test invalid nil literals.
+Labels: nil-type
+
+public function main() {
+    () f = ()); // @error missing '(' token
+
+    () g = ((); // @error missing ')' token
+
+    () f = ); // @error missing '(' token
+
+    () g = (; // @error missing ')' token
+}
