@@ -31,7 +31,7 @@ Description: Test 3 for list-constructor-expr occurring within a const-expr will
              that has its read-only bit on.
 Fail-Issue: ballerina-platform/ballerina-lang#13944
 Labels: module-const-decl, list-constructor-expr, mapping-constructor-expr, member-access-expr, is-expr, array-type,
-        map-type, readonly-type
+        map-type, readonly-type, string
 
 const map<int[]> keyValues = {even: [2, 4, 6], odd: [1, 3, 5]};
 
@@ -43,13 +43,12 @@ function init() {
 Test-Case: output
 Description: Test inherent type of the created list when the applicable contextually expected type
              is a list-type-descriptor of any.
-Labels: list-constructor-expr, typeof-expr, any, union-type, array-type, tuple-type
+Labels: list-constructor-expr, is-expr, any, union-type, array-type, tuple-type, string, singleton-type, DecimalNumber
 
 function init() {
     any a1 = [];
     io:println(a1 is (any|error)[]); // @output true
     io:println(a1 is any[]); // @output false
-    // io:println(a1 is []); // @output false TODO
 
     any a2 = [1, 2, 3];
     io:println(a2 is (any|error)[]); // @output true
@@ -66,7 +65,7 @@ function init() {
     io:println(a4 is any[]); // @output false
     io:println(a4 is [1, 2, 3]); // @output false
 
-    any|any[] a5 = [1, 2, 3];  // TODO: move to new one with int[]|byte[]
+    any|any[] a5 = [1, 2, 3];  // TODO: move to new one with int[]|byte[]?
     io:println(a5 is (any|error)[]); // @output true
     io:println(a5 is any[]); // @output false
     io:println(a5 is [1, 2, 3]); // @output false
@@ -84,12 +83,12 @@ function init() {
 Test-Case: output
 Description: Test inherent type of the created list when the applicable contextually expected type
              is a list-type-descriptor of anydata.
-Labels: list-constructor-expr, typeof-expr, anydata, union-type, array-type, tuple-type
+Labels: list-constructor-expr, is-expr, anydata, union-type, array-type, tuple-type, string, singleton-type,
+        DecimalNumber, string
 
 function init() {
     anydata a1 = [];
     io:println(a1 is anydata[]); // @output true
-    // io:println(a1 is []); // @output false TODO
 
     anydata a2 = [1, 2, 3];
     io:println(a2 is anydata[]); // @output true
@@ -120,12 +119,11 @@ function init() {
 Test-Case: output
 Description: Test inherent type of the created list when the applicable contextually expected type
              is a list-type-descriptor of json.
-Labels: list-constructor-expr, typeof-expr, union-type, array-type, tuple-type, json
+Labels: list-constructor-expr, is-expr, union-type, array-type, tuple-type, json, singleton-type, DecimalNumber, string
 
 function init() {
     json a1 = [];
     io:println(a1 is json[]); // @output true
-    // io:println(a1 is []); // @output false
 
     json a2 = [true, 2, "foo"];
     io:println(a2 is json[]); // @output true
@@ -152,12 +150,12 @@ function init() {
 Test-Case: output
 Description: Test 1 for inherent type of the created list when the applicable contextually expected type
              is a list-type-descriptor with different types.
-Labels: list-constructor-expr, typeof-expr, array-type, tuple-type, byte, float, decimal, string, boolean
+Labels: list-constructor-expr, is-expr, array-type, tuple-type, byte, float, decimal, string, boolean,
+        FloatingPointTypeSuffix, DecimalFloatingPointNumber, singleton-type, DecimalNumber
 
 function init() {
     int[] a1 = [];
     io:println(a1 is int[]); // @output true
-    // io:println(a1 is []); // @output false TODO
 
     int[] a2 = [1, 2, 3];
     io:println(a2 is int[]); // @output true
@@ -198,16 +196,14 @@ function init() {
 Test-Case: output
 Description: Test 2 for inherent type of the created list when the applicable contextually expected type
              is a list-type-descriptor with different types.
-Labels: list-constructor-expr, typeof-expr, array-type, tuple-type, byte, string, boolean
+Labels: list-constructor-expr, is-expr, array-type, tuple-type, byte, string, boolean, singleton-type, DecimalNumber
 
 function init() {
     [int, int, int] t1 = [];
     io:println(t1 is [int, int, int]); // @output true
-    // io:println(t1 is []); // @output false TODO
 
     [int...] t2 = [];
     io:println(t2 is [int...]); // @output true
-    // io:println(t2 is []); // @output false TODO
 
     [int, int, int] t3 = [1, 2, 3];
     io:println(t3 is [int, int, int]); // @output true
@@ -253,7 +249,8 @@ function init() {
 Test-Case: output
 Description: Test inherent type of the created list when the applicable contextually expected type
              is a list-type-descriptor with readonly.
-Labels: list-constructor-expr, typeof-expr, array-type, tuple-type, readonly-type, intersection-type, string
+Labels: list-constructor-expr, is-expr, array-type, tuple-type, readonly-type, intersection-type, string,
+        singleton-type, DecimalNumber
 
 function init() {
     readonly & int[] a1 = [1, 2, 3];
@@ -268,7 +265,8 @@ function init() {
 Test-Case: output
 Description: Test inherent type of the created list when the applicable contextually expected type
              is a list-type-descriptor with optional types.
-Labels: list-constructor-expr, typeof-expr, array-type, tuple-type, optional-type, union-type, string, boolean
+Labels: list-constructor-expr, is-expr, array-type, tuple-type, optional-type, union-type, string, boolean, nil-literal,
+        nil-type, singleton-type, DecimalNumber
 
 function init() {
     int?[] a1 = [1, 2, 3];
@@ -320,7 +318,8 @@ function init() {
 Test-Case: output
 Description: Test 1 for inherent type of the created list when the applicable contextually expected type
              is a list-type-descriptor of unions.
-Labels: list-constructor-expr, typeof-expr, array-type, tuple-type, union-type, string, decimal, boolean, byte
+Labels: list-constructor-expr, is-expr, array-type, tuple-type, union-type, string, decimal, boolean, byte,
+        singleton-type, DecimalNumber, DecimalFloatingPointNumber
 
 function init() {
     (int|string|decimal|boolean)[] a1 = [2.0, "foo", false, true];
@@ -356,7 +355,8 @@ Test-Case: output
 Description: Test 2 for inherent type of the created list when the applicable contextually expected type
              is a list-type-descriptor of unions.
 Fail-Issue: ballerina-platform/ballerina-lang#33143
-Labels: list-constructor-expr, typeof-expr, array-type, tuple-type, union-type, string, decimal, boolean, byte
+Labels: list-constructor-expr, is-expr, array-type, tuple-type, union-type, string, boolean, byte,
+        singleton-type, DecimalNumber
 
 function init() {
     [(int|byte)[], int] t1 = [[23, 700], 17];
@@ -383,8 +383,8 @@ function init() {
 Test-Case: output
 Description: Test inherent type of the created list when the applicable contextually expected type
              is a list-type-descriptor of user-defined type.
-Labels: module-type-defn, list-constructor-expr, typeof-expr, array-type, tuple-type, union-type, singleton-type,
-        boolean
+Labels: module-type-defn, list-constructor-expr, is-expr, array-type, tuple-type, union-type, singleton-type,
+        DecimalNumber, boolean
 
 type Ints 0|1|2|3;
 
@@ -403,8 +403,8 @@ function init() {
 Test-Case: output
 Description: Test inherent type of the created list when the applicable contextually expected type
              is a list-type-descriptor of record or map.
-Labels: module-type-defn, list-constructor-expr, mapping-constructor-expr, typeof-expr, array-type, tuple-type,
-        map-type, string
+Labels: module-type-defn, list-constructor-expr, mapping-constructor-expr, is-expr, array-type, tuple-type,
+        map-type, string, record-type, singleton-type, DecimalNumber
 
 type Student record {|
     int id;
@@ -434,7 +434,7 @@ function init() {
 Test-Case: output
 Description: Test inherent type of the created list when the applicable contextually expected type
              is a list-type-descriptor, where the contextually expected type is a union.
-Labels: list-constructor-expr, typeof-expr, array-type, tuple-type, union-type, byte, decimal
+Labels: list-constructor-expr, is-expr, array-type, tuple-type, union-type, byte, decimal, string, singleton-type, DecimalNumber
 
 function init() {
     int[]|int|byte|decimal a1 = [1, 2, 3];
@@ -452,7 +452,7 @@ Test-Case: output
 Description: Test when the applicable contextually expected type is a union type descriptor,
              any members of the union that do not contain list shapes of length N will be ignored,
              where N is the number of expressions in the expr-list.
-Labels: list-constructor-expr, typeof-expr, array-type, tuple-type, union-type, byte
+Labels: list-constructor-expr, is-expr, array-type, tuple-type, union-type, byte, singleton-type, DecimalNumber
 
 function init() {
     int[2]|int[3]|byte[] a1 = [1, 2, 3, 4];
@@ -549,7 +549,7 @@ Description: Test when there is no contextually expected type, then the inherent
              with a member-type-descriptor for each expression in the expr-list,
              where the type of each member-type-descriptor will be the broad type of the corresponding expression
              in the expr-list.
-Labels: list-constructor-expr, typeof-expr, var, boolean-literal
+Labels: list-constructor-expr, is-expr, var, boolean-literal, var, singleton-type, DecimalNumber, tuple-type, string
 
 function init() {
     var a1 = [1, 2, 3];
@@ -577,7 +577,8 @@ function init() {
 Test-Case: output
 Description: Test 1 when there is a contextually expected type, then the type that the inherent type
              requires for each list member provides the contextually expected type for the expression for the member.
-Labels: list-constructor-expr, typeof-expr, member-access-expr, array-type, tuple-type, byte, string
+Labels: list-constructor-expr, is-expr, member-access-expr, array-type, tuple-type, byte, string, singleton-type,
+        DecimalNumber
 
 function init() {
     int[] a1 = [1, 2, 3];
@@ -616,7 +617,9 @@ Test-Case: output
 Description: Test 2 when there is a contextually expected type, then the type that the inherent type
              requires for each list member provides the contextually expected type for the expression for the member.
 Fail-Issue: ballerina-platform/ballerina-lang# // TODO: verify and create an issue
-Labels: list-constructor-expr, typeof-expr, member-access-expr, array-type, tuple-type, union-type, optional-type, string
+Labels: list-constructor-expr, is-expr, member-access-expr, array-type, tuple-type, union-type, optional-type, string,
+        singleton-type, DecimalNumber
+
 function init() {
     int?[] a1 = [1, 2, 3];
 
@@ -666,8 +669,8 @@ function init() {
 Test-Case: output
 Description: Test few cases for, a member of list being able to fill automatically
              when the FillMember abstract operation succeed on it.
-Labels: list-constructor-expr, array-type, tuple-type, string, boolean
-// split, array and tuple.
+Labels: list-constructor-expr, array-type, tuple-type, string, boolean // split, array and tuple. TODO
+
 function init() {
     int[5] a1 = [1, 2, 3];
     io:println(a1); // @output [1,2,3,0,0]
@@ -689,8 +692,8 @@ function init() {
 
 Test-Case: output
 Description: Test list-constructor-expr in module-var-decl.
-Labels: module-init-var-decl, list-constructor-expr, typeof-expr, array-type, tuple-type, union-type, byte, boolean,
-        string
+Labels: module-init-var-decl, list-constructor-expr, is-expr, array-type, tuple-type, union-type, byte, boolean,
+        string, module-init-var-decl
 
 int[] a1 = [1, 2, 3];
 int[][] a2 = [[0, 2, 3], [8, 1, 2], [7, 1, 1]];
@@ -731,68 +734,59 @@ function init() {
     io:println(t5 is [(int|byte)[], (boolean|string)[], (boolean|string)[]]); // @output false
 }
 
-Test-Case: output // TODO: add label to rest of test here on.
+Test-Case: output
 Description: Test literals as list-constructor expressions.
-Labels: list-constructor-expr
+Labels: list-constructor-expr, is-expr, HexFloatingPointLiteral, DecimalFloatingPointNumber, FloatingPointTypeSuffix,
+        singleton-type, byte-array-literal, decimal, boolean, string, byte, float, nil-literal, nil-type, tuple-type
 
 function init() {
-    var arr = [11, 2.0d, true, base64 `bGlnaHQgd29y`, (), "foo", 0x12, 7e-56, 0X21.5, 3.9];
-
-    io:println(arr is [int, decimal, boolean, byte[], (), string, byte, float, float, float]); // @output true
-    io:println(arr is [11, 2.0d, true, byte[], (), "foo", 0x12, 7e-56, 0X21.5, 3.9]); // @output false}
+    io:println([11, 2.0d, true, base64 `bGlnaHQgd29y`, (), "foo", 0x12, 7e-56, 0X21.5, 3.9] is [int, decimal, boolean, byte[], (), string, byte, float, float, float]); // @output true
+    io:println([11, 2.0d, true, base64 `bGlnaHQgd29y`, (), "foo", 0x12, 7e-56, 0X21.5, 3.9] is [11, 2.0d, true, byte[], (), "foo", 0x12, 7e-56, 0X21.5, 3.9]); // @output false
+}
 
 Test-Case: output
 Description: Test string-template-expr as list-constructor expressions.
-Labels: list-constructor-expr
+Labels: list-constructor-expr, is-expr, singleton-type, string, BacktickString, tuple-type
 
 function init() {
-    var arr = [string `Hello ${10 * 3}!!`, "foo", string `\u{61}NT`, "bar"];
-
-    io:println(arr is [string, string, string, string]); // @output true
-    io:println(arr is ["Hello 30!!", "foo", "\u{61}NT", "bar"]); // @output false
+    io:println([string `Hello ${10 * 3}!!`, "foo", string `\u{61}NT`, "bar"] is [string, string, string, string]); // @output true
+    io:println([string `Hello ${10 * 3}!!`, "foo", string `\u{61}NT`, "bar"] is ["Hello 30!!", "foo", "\u{61}NT", "bar"]); // @output false
 }
 
 Test-Case: output
 Description: Test xml-template-expr as list-constructor expressions.
-Labels: list-constructor-expr
+Labels: list-constructor-expr, is-expr, tuple-type, BacktickString, xml, xml:Element, xml:Text, xml:Comment
 
 function init() {
-    var arr = [xml `<name>Mike</name>`, xml `${7 + 3}`, xml `<!-- hello -->`];
-
-    io:println(arr is [xml:Element, xml:Text, xml:Comment]); // @output true
+    io:println([xml `<name>Mike</name>`, xml `${7 + 3}`, xml `<!-- hello -->`] is [xml:Element, xml:Text, xml:Comment]); // @output true
 }
 
 Test-Case: output
 Description: Test raw-template-expr as list-constructor expressions.
-Labels: list-constructor-expr
+Labels: list-constructor-expr, is-expr, tuple-type, raw-template-expr, object:RawTemplate
 
 function init() {
-    var arr = [`x + y = ${2 + 3}`, `Count:${1}`, `INSERT INTO Details VALUES (${"Foo"}, ${20})`];
-
-    io:println(arr is [object:RawTemplate, object:RawTemplate, object:RawTemplate]); // @output true
+    io:println([`x + y = ${2 + 3}`, `Count:${1}`, `INSERT INTO Details VALUES (${"Foo"}, ${20})`] is [object:RawTemplate, object:RawTemplate, object:RawTemplate]); // @output true
 }
 
 Test-Case: output
 Description: Test structural-constructor-expr as list-constructor expressions.
-Labels: list-constructor-expr
+Labels: list-constructor-expr, table-constructor-expr, mapping-constructor-expr, tuple-type, string, record-type, table-type
 
 function init() {
-    var arr = [
+    io:println([
         [23, "foo"],
         table key(id) [
                 {id: 1, name: "Frank", age: 54},
                 {id: 2, name: "John", age: 47}
             ],
         {a: 1, b: "bar", c: true}
-    ];
-
-    io:println(arr is [[int, string], table<record {|readonly int id; string name; int age;|}> key(id), record {|int a; string b; boolean c;|}]); // @output true
-    io:println(arr is [[23, "foo"], table<record {|readonly int id; string name; int age;|}> key(id), record {|int a; string b; boolean c;|}]); // @output false
+    ] is [[int, string], table<record {|readonly int id; string name; int age;|}> key(id), record {|int a; string b; boolean c;|}]); // @output true
 }
 
 Test-Case: output
 Description: Test object-constructor-expr as list-constructor expressions.
-Labels: list-constructor-expr
+Labels: list-constructor-expr, is-expr, object-constructor-expr, array-type
 
 function init() {
     io:println([
@@ -817,7 +811,7 @@ function init() {
 
 Test-Case: output
 Description: Test as new-expr list-constructor expressions.
-Labels: list-constructor-expr
+Labels: list-constructor-expr, is-expr, implicit-new-expr, explicit-new-expr, new-expr, module-class-defn, array-type
 
 class Student {
     int i;
@@ -835,7 +829,7 @@ function init() {
 
 Test-Case: output
 Description: Test variable-reference-expr as list-constructor expressions.
-Labels: list-constructor-expr
+Labels: list-constructor-expr, is-expr, string, decimal, DecimalFloatingPointNumber, tuple-type, array-type, singleton-type
 
 function init() {
     string name = "Ballerina";
@@ -848,7 +842,8 @@ function init() {
 
 Test-Case: output
 Description: Test field-access-expr as list-constructor expressions.
-Labels: list-constructor-expr
+Labels: list-constructor-expr,  mapping-constructor-expr, field-access-expr, is-expr, module-type-defn, record-type,
+        string, singleton-type, DecimalNumber, tuple-type
 
 type Employee record {|
     int id;
@@ -864,7 +859,8 @@ function init() {
 
 Test-Case: output
 Description: Test optional-field-access as list-constructor expressions.
-Labels: list-constructor-expr
+Labels: list-constructor-expr, mapping-constructor-expr, optional-field-access-expr, is-expr, module-type-defn,
+        record-type, string, singleton-type, optional-type, tuple-type
 
 type Employee record {|
     int id;
@@ -882,7 +878,8 @@ function init() {
 
 Test-Case: output
 Description: Test annot-access-expr as list-constructor expressions.
-Labels: list-constructor-expr
+Labels: list-constructor-expr, annotation-decl, module-type-defn, record-type, string, mapping-constructor-expr,
+        typedesc-type, annot-access-expr, singleton-type, optional-type, is-expr, tuple-type
 
 annotation v1 on type;
 
@@ -904,7 +901,7 @@ function init() {
 
 Test-Case: output
 Description: Test member-access-expr as list-constructor expressions.
-Labels: list-constructor-expr
+Labels: list-constructor-expr, member-access-expr, is-expr, array-type, byte
 
 function init() {
     int[] arr = [1, 2, 3, 4, 5];
@@ -921,7 +918,7 @@ function init() {
 
 Test-Case: output
 Description: Test function-call-expr as list-constructor expressions.
-Labels: list-constructor-expr
+Labels: list-constructor-expr, function-call-expr, is-expr, boolean, singleton-type, tuple-type
 
 function init() {
     io:println([isSameNumber(3, 2), isSameNumber(4, 4)] is [boolean, boolean]); // @output true
@@ -934,7 +931,7 @@ function isSameNumber(int a, int b) returns boolean {
 
 Test-Case: output
 Description: Test method-call-expr as list-constructor expressions.
-Labels: list-constructor-expr
+Labels: list-constructor-expr, method-call-expr, is-expr, value:toString, tuple-type, singleton-type, string
 
 function init() {
     io:println(["Hello".toString(), "World".toString()] is [string, string]); // @output true
@@ -943,15 +940,15 @@ function init() {
 
 Test-Case: output
 Description: Test error-constructor-expr as list-constructor expressions.
-Labels: list-constructor-expr
+Labels: list-constructor-expr, error-constructor-expr, is-expr, error-type, tuple-type
 
 function init() {
     io:println([error("Oh, NO!"), error("OMG!")] is [error,error]); // @output true
 }
 
 Test-Case: output
-Description: Test error-constructor-expr as list-constructor expressions.
-Labels: list-constructor-expr
+Description: Test anonymous-function-expr as list-constructor expressions.
+Labels: list-constructor-expr, anonymous-function-expr, is-expr, module-type-defn, byte, array-type, function-type
 
 type func function () returns int;
 
@@ -969,7 +966,7 @@ function init() {
 
 Test-Case: output
 Description: Test let-expr as list-constructor expressions.
-Labels: list-constructor-expr
+Labels: list-constructor-expr, let-expr, is-expr, boolean, singleton-type, tuple-type, multiplicative-expr
 
 function init() {
     io:println([
@@ -989,7 +986,7 @@ function init() {
 
 Test-Case: output
 Description: Test type-cast-expr as list-constructor expressions.
-Labels: list-constructor-expr
+Labels: list-constructor-expr, type-cast-expr, is-expr, byte, optional-type, tuple-type, singleton-type
 
 function init() {
     byte? b = 221;
@@ -1000,7 +997,7 @@ function init() {
 
 Test-Case: output
 Description: Test typeof-expr as list-constructor expressions.
-Labels: list-constructor-expr
+Labels: list-constructor-expr, typeof-expr, is-expr, string, typedesc-type, tuple-type
 
 function init() {
     io:println([typeof 11, typeof "foo"] is [typedesc, typedesc]); // @output true
@@ -1008,16 +1005,17 @@ function init() {
 
 Test-Case: output
 Description: Test unary-expr as list-constructor expressions.
-Labels: list-constructor-expr
+Labels: list-constructor-expr, is-expr, unary-complement, unary-minus, unary-plus, unary-not, boolean, singleton-type,
+        tuple-type
 
 function init() {
     io:println([+11, -2, !true, ~0] is [int, int, boolean, int]); // @output true
     io:println([+11, -2, !true, ~0] is [11, -2, false, -1]); // @output false
 }
 
-Test-Case: output
+Test-Case: output // TODO: add label to rest of test here on.
 Description: Test multiplicative-expr as list-constructor expressions.
-Labels: list-constructor-expr
+Labels: list-constructor-expr, is-expr, multiplicative-expr, byte, tuple-type
 
 function init() {
     io:println([3 * 2, 4 / 2, 5 % 2] is [int, int, int]); // @output true
@@ -1026,7 +1024,7 @@ function init() {
 
 Test-Case: output
 Description: Test additive-expr as list-constructor expressions.
-Labels: list-constructor-expr
+Labels: list-constructor-expr, is-expr, additive-expr, byte, tuple-type
 
 function init() {
     io:println([1 + 7, 6 - 3] is [int, int]); // @output true
@@ -1035,7 +1033,7 @@ function init() {
 
 Test-Case: output
 Description: Test shift-expr as list-constructor expressions.
-Labels: list-constructor-expr
+Labels: list-constructor-expr, is-expr, shift-expr, tuple-type, singleton-type, DecimalNumber, unary-minus
 
 function init() {
     io:println([1 << 2, -64 >> 2, 256 >>> 2] is [int, int, int]); // @output true
@@ -1044,7 +1042,7 @@ function init() {
 
 Test-Case: output
 Description: Test range-expr as list-constructor expressions.
-Labels: list-constructor-expr
+Labels: list-constructor-expr, is-expr, range-expr, record-type, object-type, array-type, isolated-method
 
 function init() {
     io:println([0 ... 2, 1 ..< 3] is object {
@@ -1056,7 +1054,7 @@ function init() {
 
 Test-Case: output
 Description: Test relational-expr as list-constructor expressions.
-Labels: list-constructor-expr
+Labels: list-constructor-expr, is-expr, relational-expr, boolean, singleton-type, tuple-type
 
 function init() {
     io:println([11 <= 11, 2 < 3, 3 > 5, 7 >= 4] is [boolean, boolean, boolean, boolean]); // @output true
@@ -1065,7 +1063,7 @@ function init() {
 
 Test-Case: output
 Description: Test is-expr as list-constructor expressions.
-Labels: list-constructor-expr
+Labels: list-constructor-expr, is-expr, boolean, singleton-type, tuple-type, byte
 
 function init() {
     io:println([3 is byte, 3 is 3] is [boolean, boolean]); // @output true
@@ -1074,7 +1072,7 @@ function init() {
 
 Test-Case: output
 Description: Test equality-expr as list-constructor expressions.
-Labels: list-constructor-expr
+Labels: list-constructor-expr, is-expr, equality, boolean, singleton-type, tuple-type
 
 function init() {
     io:println([3 == 3, 4 != 4, 6 === 6, 1 !== 1] is [boolean, boolean, boolean, boolean]); // @output true
@@ -1083,7 +1081,7 @@ function init() {
 
 Test-Case: output
 Description: Test binary-bitwise-expr as list-constructor expressions.
-Labels: list-constructor-expr
+Labels: list-constructor-expr, is-expr, binary-bitwise-expr, singleton-type, tuple-type
 
 function init() {
     io:println([3 & 0, 4 | 0, 2 ^ 0] is [int, int, int]); // @output true
@@ -1092,7 +1090,7 @@ function init() {
 
 Test-Case: output
 Description: Test logical-expr as list-constructor expressions.
-Labels: list-constructor-expr
+Labels: list-constructor-expr, is-expr, logical-expr, boolean, singleton-type, tuple-type
 
 function init() {
     io:println([true && false, true || false] is [boolean, boolean]); // @output true
@@ -1101,7 +1099,8 @@ function init() {
 
 Test-Case: output
 Description: Test conditional-expr as list-constructor expressions.
-Labels: list-constructor-expr
+Labels: list-constructor-expr, is-expr, ternary-conditional-expr, binary-conditional-expr, optional-type, singleton-type,
+        tuple-type
 
 function init() {
     int? num = 5;
@@ -1111,7 +1110,8 @@ function init() {
 
 Test-Case: output
 Description: Test checking-expr as list-constructor expressions.
-Labels: list-constructor-expr
+Labels: list-constructor-expr, is-expr, union-type, error-type, check, checkpanic, checking-expr, tuple-type,
+        singleton-type
 
 function init() returns error? {
     int|error n = 7;
@@ -1121,7 +1121,7 @@ function init() returns error? {
 
 Test-Case: output
 Description: Test trap-expr as list-constructor expressions.
-Labels: list-constructor-expr
+Labels: list-constructor-expr, is-expr, trap-expr, error-constructor-expr, union-type, tuple-type, error-type
 
 function init() {
     io:println([trap 23, trap error("Oops!")] is [(int|error), error]); // @output true
@@ -1131,7 +1131,7 @@ function init() {
 Test-Case: output
 Description: Test query-expr as list-constructor expressions.
 Fail-Issue: ballerina-platform/ballerina-lang#33085
-Labels: list-constructor-expr
+Labels: list-constructor-expr, is-expr, query-expr, multiplicative-expr, array-type, singleton-type, tuple-type
 
 function init() {
     io:println([
@@ -1154,7 +1154,7 @@ function init() {
 Test-Case: output
 Description: Test transactional-expr as list-constructor expressions.
 Fail-Issue: ballerina-platform/ballerina-lang#33087
-Labels: list-constructor-expr
+Labels: list-constructor-expr, is-expr, transactional-expr, string, boolean, singleton-type, tuple-type
 
 function init() {
     io:println(["transaction1", "transaction_description_1", transactional] is [string, string, boolean]); // @output true
@@ -1163,7 +1163,8 @@ function init() {
 
 Test-Case: output
 Description: Test braced-expr as list-constructor expressions.
-Labels: list-constructor-expr
+Labels: list-constructor-expr, is-expr, string, unary-plus, unary-minus, HexIntLiteral, additive-expr, singleton-type,
+        tuple-type
 
 function init() {
     io:println([("String"), (+1), (-0x34), (true), (1 + 5)] is [string, int, int, boolean, int]); // @output true
