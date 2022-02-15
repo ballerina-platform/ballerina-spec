@@ -1,6 +1,6 @@
 Test-Case: output
 Description: Test basic mapping constructor expression.
-Label: mapping-constructor-expr, string
+Label: boolean-literal, DecimalFloatingPointNumber, DecimalNumber, mapping-constructor-expr, nil-literal, string
 
 function init() {
     io:println({a: "value a", b: "value b"}); // @output {"a":"value a","b":"value b"}
@@ -19,7 +19,8 @@ function init() {
 
 Test-Case: output
 Description: Test a specific-field that consists of just a variable name x is equivalent to a field x: x.
-Label: mapping-constructor-expr, string
+Label:  any, byte, DecimalFloatingPointNumber, DecimalNumber, float, mapping-constructor-expr, map-type, nil-literal, 
+        string
 
 function init() {
     int c = 45;
@@ -44,7 +45,7 @@ function printResult(any result) {
 
 Test-Case: output
 Description: Test basic mapping constructor expression with rest fields.
-Label: mapping-constructor-expr, string
+Label: any, boolean-literal, byte, DecimalNumber, mapping-constructor-expr, map-type, string
 
 function init() {
     int a = 45;
@@ -66,7 +67,7 @@ function printResult(map<any> result) {
 
 Test-Case: output
 Description: Test basic mapping constructor expression with readonly specific fields.
-Label: mapping-constructor-expr, string
+Label: any, boolean-literal, byte, DecimalNumber, mapping-constructor-expr, map-type, readonly, string
 
 function init() {
     int a = 45;
@@ -86,7 +87,7 @@ function printResult(map<any> result) {
 
 Test-Case: error
 Description: Test Duplicate specific fields are not allowed.
-Label: mapping-constructor-expr, string
+Label: any, boolean-literal, DecimalNumber, mapping-constructor-expr, map-type, string
 
 function errorFunction() {
     map<any> _ = {fieldB1: 454, fieldB1: "some string"}; // @error Duplicate key `fieldB1`
@@ -129,7 +130,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test Duplicate specific fields are not allowed.
 Fail-Issue: ballerina-platform/ballerina-lang#33046
-Label: mapping-constructor-expr, string
+Label: any, boolean-literal, DecimalNumber, mapping-constructor-expr, map-type, string
 
 function errorFunction() {
     map<any> _ = {a\\: 454, "a\\": false}; // @error Duplicate key `a\`
@@ -137,7 +138,8 @@ function errorFunction() {
 
 Test-Case: output
 Description: Test usage of spread field in mapping constructor using closed record types.
-Label: mapping-constructor-expr, string
+Label: any, boolean, boolean-literal, DecimalNumber, error-type, error-constructor-expr, mapping-constructor-expr, map-type
+       record-type, spread-field, string
 
 function init() {
     record {|int fieldA1; boolean fieldA2;|} a = {fieldA1: 4534, fieldA2: false};
@@ -163,7 +165,8 @@ function printResult(map<any|error> result) {
 
 Test-Case: output
 Description: Test usage of spread field in mapping constructor using open record types.
-Label: mapping-constructor-expr, string
+Label: any, boolean, boolean-literal, DecimalNumber, mapping-constructor-expr, map-type, record-type, spread-field, 
+       string
 
 function init() {
     map<string> c = {fName: "John", lName: "Wick"};
@@ -182,7 +185,8 @@ function printResult(map<any> result) {
 
 Test-Case: output
 Description: Test mapping value of spread field contains spread field.
-Label: mapping-constructor-expr, string
+Label: any, boolean, boolean-literal, DecimalNumber, mapping-constructor-expr, map-type, record-type, spread-field, 
+       string
 
 type MyRecord record {|int fieldA1; boolean fieldA2;|};
 
@@ -202,16 +206,17 @@ function printResult(map<any|error> result) {
 Test-Case: error
 Description: Test the static type of the expression in a spread-field must allow only mapping values.
              i.e. must be a subtype of map<any|error>.
-Label: mapping-constructor-expr, string
+Label: any, array-type, boolean, boolean-literal, DecimalFloatingPointNumber, DecimalNumber, float, list-constructor-expr, mapping-constructor-expr, map-type, record-type, spread-field, 
+       string
 
 function errorFunction() {
     float arg = 44.3;
     int a = 5;
     boolean b = false;
     string c = "Ballerina";
-    int[] d = [1,32];
-    map<string>[] e = [{a:"Hello"}];
-    record {|int a;|}[] f = [{a:765}];
+    int[] d = [1, 32];
+    map<string>[] e = [{a: "Hello"}];
+    record {|int a;|}[] f = [{a: 765}];
 
     map<any> _ = {field1: true, field2: 4345, ...arg}; // static type of the spread-field must be a subtype of map<any|error>
     map<any> _ = {...arg, field1: true, field2: 4345}; // static type of the spread-field must be a subtype of map<any|error>
