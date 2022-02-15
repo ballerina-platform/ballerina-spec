@@ -16,7 +16,7 @@ function init() {
 
 Test-Case: output
 Description: Test basic bitwise and expression using HexIntLiteral.
-Labels: binary-bitwise-expr, HexIntLiteral, DecimalNumber
+Labels: binary-bitwise-expr, DecimalNumber, HexIntLiteral
 
 function init() {
     io:println(0xAB55 & 0x0032); // @output 16
@@ -40,7 +40,7 @@ function init() {
 
 Test-Case: output
 Description: Test basic bitwise and expression for negative integer values using HexIntLiteral.
-Labels: binary-bitwise-expr, HexIntLiteral, unary-minus
+Labels: binary-bitwise-expr, DecimalNumber, HexIntLiteral, unary-minus
 
 function init() {
     io:println(0xDB55 & -0x0032); // @output 56132
@@ -78,7 +78,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test bitwise and expression always evaluates to value V when the value of both operands are V.
+Description: Test bitwise and expression always evaluates to value v when the value of both operands are v.
 Labels: binary-bitwise-expr, DecimalNumber, int, unary-minus, unary-plus
 
 function init() {
@@ -99,7 +99,7 @@ function init() {
 
 Test-Case: output
 Description: Test bitwise and expression where the operands are a subtype of int using byte.
-Labels: binary-bitwise-expr, DecimalNumber, int
+Labels: binary-bitwise-expr, byte, DecimalNumber, int
 
 function init() {
     int a = 987996;
@@ -115,7 +115,7 @@ function init() {
 
 Test-Case: output
 Description: Test bitwise and expression where the operands are a subtype of int using Signed32.
-Labels: binary-bitwise-expr, DecimalNumber, int int:Signed32, unary-minus
+Labels: binary-bitwise-expr, DecimalNumber, int, int:Signed32, unary-minus
 
 function init() {
     int a = 987996;
@@ -220,7 +220,8 @@ function init() {
 
 Test-Case: output
 Description: Test bitwise and expression where the operands are a subtype of int.
-Labels: binary-bitwise-expr, byte, DecimalNumber, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32
+Labels: binary-bitwise-expr, byte, DecimalNumber, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, 
+        int:Unsigned16, int:Unsigned32, unary-minus
 
 function init() {
     int a = 43;
@@ -469,13 +470,13 @@ function init() {
 
     int d = 9876;
     int:Unsigned32 e = 5454;
-    int:Unsigned16 _ = d & e; // @error smallest K of the operands is 32, hence the static type of the result is Unsigned32
+    int:Unsigned16 _ = d & e; // @error smallest K of the operands is 32; the static type of the result is Unsigned32
 
     int g = 9876;
     int:Unsigned16 h = 5454;
-    int:Unsigned8 _ = g & h; // @error smallest K of the operands is 16, hence the static type of the result is Unsigned16
+    int:Unsigned8 _ = g & h; // @error smallest K of the operands is 16;the static type of the result is Unsigned16
 
-    byte _ = g & h; // @error smallest K of the operands is 16, hence the static type of the result is Unsigned16
+    byte _ = g & h; // @error smallest K of the operands is 16; the static type of the result is Unsigned16
 
     int:Signed8 k = 12;
     int:Signed16 m = 4434;
@@ -493,7 +494,7 @@ function init() {
 Test-Case: error
 Description: Test if the type of either operand is a subtype of int:UnsignedK when K is 8, 16 or 32, then the static
              type of the result is int:UnsignedN where N is the smallest such K via invalid assignment with inference.
-Labels: binary-bitwise-expr, DecimalNumber, int, int:Unsigned8, int:Unsigned16, int:Unsigned32, int:Signed8, 
+Labels: binary-bitwise-expr, byte, DecimalNumber, int, int:Unsigned8, int:Unsigned16, int:Unsigned32, int:Signed8, 
         int:Signed16, var
 
 function init() {
@@ -505,14 +506,14 @@ function init() {
     int d = 9876;
     int:Unsigned32 e = 5454;
     var result2 = d & e;
-    int:Unsigned16 _ = result2; // @error smallest K of the operands is 32
+    int:Unsigned16 _ = result2; // @error smallest K of the operands is 32; the static type of the result is Unsigned32
 
     int g = 9876;
     int:Unsigned16 h = 5454;
     var result3 = g & h;
-    int:Unsigned8 _ = result3; // @error smallest K of the operands is 16
+    int:Unsigned8 _ = result3; // @error smallest K of the operands is 16; the static type of the result is Unsigned16
 
-    byte _ = result3; // @error smallest K of the operands is 16
+    byte _ = result3; // @error smallest K of the operands is 16; the static type of the result is Unsigned16
 
     int:Signed8 k = 12;
     int:Signed16 m = 4434;

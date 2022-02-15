@@ -16,7 +16,7 @@ function init() {
 
 Test-Case: output
 Description: Test basic bitwise or expression using HexIntLiteral.
-Labels: binary-bitwise-expr, HexIntLiteral
+Labels: binary-bitwise-expr, DecimalNumber, HexIntLiteral
 
 function init() {
     io:println(0xAB55 | 0x0032); // @output 43895
@@ -40,7 +40,7 @@ function init() {
 
 Test-Case: output
 Description: Test basic bitwise or expression for negative integer values using HexIntLiteral.
-Labels: binary-bitwise-expr, HexIntLiteral, unary-minus
+Labels: binary-bitwise-expr, DecimalNumber, HexIntLiteral, unary-minus
 
 function init() {
     io:println(0xDB55 | -0x0032); // @output -33
@@ -51,7 +51,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test applying binary bitwise or operation for value V with 0 results in the same value V.
+Description: Test applying binary bitwise or operation for value v with 0 results in the same value v.
 Labels: binary-bitwise-expr, DecimalNumber, int, signed-zero, unary-minus, unary-plus
 
 function init() {
@@ -79,7 +79,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test bitwise or expression always evaluates to value V when the value of both operands are V.
+Description: Test bitwise or expression always evaluates to value v when the value of both operands are v.
 Labels: binary-bitwise-expr, DecimalNumber, int, unary-minus, unary-plus
 
 function init() {
@@ -100,7 +100,7 @@ function init() {
 
 Test-Case: output
 Description: Test bitwise or expression where the operands are a subtype of int using byte.
-Labels: binary-bitwise-expr, DecimalNumber, int,
+Labels: binary-bitwise-expr, byte, DecimalNumber, int
 
 function init() {
     int a = 987996;
@@ -222,7 +222,7 @@ function init() {
 Test-Case: output
 Description: Test bitwise or expression where the operands are a subtype of int.
 Labels: binary-bitwise-expr, byte, DecimalNumber, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, 
-        int:Unsigned16, int:Unsigned32
+        int:Unsigned16, int:Unsigned32, unary-minus
 
 function init() {
     int a = 43;
@@ -454,7 +454,7 @@ function init() {
 Test-Case: error
 Description: Test if the type of both operands is a subtype of int:UnsignedK when K is 8, 16 or 32, then the static
              type of the result is int:UnsignedN where N is the smallest such K using invalid assignment.
-Labels: binary-bitwise-expr, DecimalNumber, int, int:Unsigned8, int:Unsigned16, int:Unsigned32
+Labels: binary-bitwise-expr, byte, DecimalNumber, int, int:Unsigned8, int:Unsigned16, int:Unsigned32
 
 function init() {
     int a = 4343;
@@ -477,29 +477,29 @@ function init() {
 
     int:Unsigned16 n = 12;
     int:Unsigned16 p = 4434;
-    int:Signed16 _ = n | p; // @error the smallest suck K is 16 hence, the static type of the result is Unsigned16
+    int:Signed16 _ = n | p; // @error the smallest suck K is 16; the static type of the result is Unsigned16
 
     int:Unsigned32 q = 12;
     int:Unsigned16 r = 4434;
-    int:Unsigned8 _ = q | r; // @error the smallest suck K is 32 hence, the static type of the result is Unsigned32
+    int:Unsigned8 _ = q | r; // @error the smallest suck K is 32; the static type of the result is Unsigned32
     
     int:Unsigned32 s = 4343;
     int:Unsigned16 t = 8;
-    int:Unsigned16 _ = s | t; // @error the smallest suck K is 32 hence, the static type of the result is Unsigned32
+    int:Unsigned16 _ = s | t; // @error the smallest suck K is 32; the static type of the result is Unsigned32
 
     int:Unsigned16 u = 4343;
     int:Unsigned8 v = 8;
-    int:Unsigned8 _ = u | v; // @error the smallest suck K is 16 hence, the static type of the result is Unsigned16
+    int:Unsigned8 _ = u | v; // @error the smallest suck K is 16; the static type of the result is Unsigned16
 
     int:Unsigned16 w = 4343;
     int:Unsigned8 x = 8;
-    byte _ = w | x; // @error the smallest suck K is 16 hence, the static type of the result is Unsigned16
+    byte _ = w | x; // @error the smallest suck K is 16; the static type of the result is Unsigned16
 }
 
 Test-Case: error
 Description: Test if the type of both operands is a subtype of int:UnsignedK when K is 8, 16 or 32, then the static
              type of the result is int:UnsignedN where N is the smallest such K via invalid assignment with inference.
-Labels: binary-bitwise-expr, DecimalNumber, int, int:Unsigned8, int:Unsigned16, int:Unsigned32, var
+Labels: binary-bitwise-expr, byte, DecimalNumber, int, int:Unsigned8, int:Unsigned16, int:Unsigned32, var
 
 function init() {
     int a = 4343;
@@ -527,12 +527,12 @@ function init() {
     int:Unsigned16 n = 12;
     int:Unsigned16 p = 4434;
     var result5 = n | p;
-    int:Signed16 _ = result5; // @error the smallest suck K is 16 hence, the static type of the result is Unsigned16
+    int:Signed16 _ = result5; // @error the smallest suck K is 16; the static type of the result is Unsigned16
 
     int:Unsigned32 q = 12;
     int:Unsigned16 r = 4434;
     var result6 = q | r;
-    int:Unsigned8 _ = result6; // @error the smallest suck K is 32 hence, the static type of the result is Unsigned32
+    int:Unsigned8 _ = result6; // @error the smallest suck K is 32; the static type of the result is Unsigned32
 }
 
 Test-Case: output
@@ -758,7 +758,7 @@ function init() {
 
 Test-Case: output
 Description: Test bitwise or expression at module level.
-Labels: binary-bitwise-expr, byte,  DecimalNumber, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, 
+Labels: binary-bitwise-expr, byte, DecimalNumber, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, 
         int:Unsigned16, int:Unsigned32, module-init-var-decl, unary-minus
 
 int a = 43;
@@ -1038,7 +1038,7 @@ function printResult(int result) {
 Test-Case: output
 Description: Test bitwise or expression where the operands are user-defined type T where the T is a subtype of int.
 Fail-Issue: ballerina-platform/ballerina-lang#32888
-Labels: binary-bitwise-expr,  DecimalNumber, module-type-defn, int:Signed8, int:Signed32, int:Unsigned16, 
+Labels: binary-bitwise-expr, byte, DecimalNumber, module-type-defn, int:Signed8, int:Signed32, int:Unsigned16, 
         int:Unsigned32, unary-minus
 
 type MyType2 int:Signed32|int:Unsigned16;
