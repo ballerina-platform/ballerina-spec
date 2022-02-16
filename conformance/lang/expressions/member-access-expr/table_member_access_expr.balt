@@ -1,0 +1,1144 @@
+Test-Case: output
+Description: Test whether the static type of key expression is a subtype of K when the static type of the
+             container expression is table<R> key<K>.
+Labels: member-access-expr, module-type-decl, record-type, table-type, module-const-decl, union-type,
+        table-constructor-expr, int:Signed8, int:Signed16, int:Signed32, readonly-type
+
+type Person record {|
+    readonly int id;
+    string name;
+    int age;
+|};
+
+type PersonTable table<Person> key(id);
+
+const idx = 2;
+
+type IdxType1 1|3;
+
+type IdxType2 idx|IdxType1;
+
+function init() {
+    PersonTable tbl = table [
+            {id: 1, name: "John", age: 23},
+            {id: 2, name: "Anne", age: 40},
+            {id: 3, name: "Melina", age: 27}
+        ];
+
+    io:println(tbl[2]); // @output {"id":2,"name":"Anne","age":40}
+
+    io:println(tbl[idx]); // @output {"id":2,"name":"Anne","age":40}
+
+    int:Signed32 idx1 = 1;
+    io:println(tbl[idx1]); // @output {"id":1,"name":"John","age":23}
+
+    int:Signed8|int:Signed16 idx2 = 1;
+    io:println(tbl[idx2]); // @output {"id":1,"name":"John","age":23}
+
+    IdxType1 idx3 = 3;
+    io:println(tbl[idx3]); // @output {"id":3,"name":"Melina","age":27}
+
+    IdxType2 idx4 = 2;
+    io:println(tbl[idx4]); // @output {"id":2,"name":"Anne","age":40}
+}
+
+Test-Case: output
+Description: Test whether the static type of multi key expression is a subtype of K when the static type of the
+             container expression is table<R> key<K>.
+Labels: member-access-expr, module-type-decl, record-type, table-type, union-type, table-constructor-expr, byte,
+        tuple-type, string, int, list-constructor-expr, readonly-type
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable table<Person> key(id, name);
+
+type IdxType1 [1, "John"]|[2, "Anne"];
+
+function init() {
+    PersonTable tbl = table [
+            {id: 1, name: "John", age: 23},
+            {id: 1, name: "Anne", age: 40},
+            {id: 3, name: "Melina", age: 27}
+        ];
+
+    io:println(tbl[1, "Anne"]); // @output {"id":1,"name":"Anne","age":40}
+
+    [int, string] idx1 = [3, "Melina"];
+    io:println(tbl[idx1]); // @output {"id":3,"name":"Melina","age":27}
+
+    IdxType1 idx2 = [1, "John"];
+    io:println(tbl[idx2]); // @output {"id":1,"name":"John","age":23}
+
+    byte idx3 = 1;
+    string nm = "Anne";
+    io:println(tbl[idx3, nm]); // @output {"id":1,"name":"Anne","age":40}
+}
+
+Test-Case: output
+Description: Test the result of evaluating member access expression when basic type of the evaluated value of the
+             container expression is a single keyed table.
+Labels: member-access-expr, module-type-decl, record-type, table-type, table-constructor-expr, int, string,
+        readonly-type
+
+type Person record {|
+    readonly int id;
+    string name;
+    int age;
+|};
+
+type PersonTable1 table<Person> key(id);
+
+function init() {
+    PersonTable1 tbl1 = table [
+            {id: 1, name: "John", age: 23},
+            {id: 2, name: "Anne", age: 40},
+            {id: 3, name: "Melina", age: 27}
+        ];
+
+    io:println(tbl1[1]); // @output {"id":1,"name":"John","age":23}
+
+    int idx2 = 3;
+    io:println(tbl1[idx2]); // @output {"id":3,"name":"Melina","age":27}
+}
+
+Test-Case: output
+Description: Test the result of evaluating member access expression when basic type of the evaluated value of the
+             container expression is a multi keyed table.
+Labels: member-access-expr, module-type-decl, record-type, table-type, table-constructor-expr, tuple-type,
+        int, string, list-constructor-expr, readonly-type
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable2 table<Person> key(id, name);
+
+function init() {
+    PersonTable2 tbl2 = table [
+            {id: 3, name: "John", age: 23},
+            {id: 4, name: "Anne", age: 40},
+            {id: 4, name: "Melina", age: 27}
+        ];
+
+    io:println(tbl2[4, "Anne"]); // @output {"id":4,"name":"Anne","age":40}
+
+    [int, string] idx3 = [4, "Melina"];
+    io:println(tbl2[idx3]); // @output {"id":4,"name":"Melina","age":27}
+}
+
+Test-Case: output
+Description: Test the result of evaluating member access expression when the container expression of is a
+             single keyed table that does not contain a member with the specified key.
+Labels: member-access-expr, module-type-decl, record-type, table-type, table-constructor-expr, int, string,
+        value:toBalString
+
+type Person record {|
+    readonly int id;
+    string name;
+    int age;
+|};
+
+type PersonTable1 table<Person> key(id);
+
+function init() {
+    PersonTable1 tbl1 = table [
+            {id: 1, name: "John", age: 23},
+            {id: 2, name: "Anne", age: 40},
+            {id: 3, name: "Melina", age: 27}
+        ];
+
+    io:println(tbl1[4].toBalString()); // @output ()
+
+    int idx2 = -1;
+    io:println(tbl1[idx2].toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test the result of evaluating member access expression when the container expression of is a
+             multi keyed table that does not contain a member with the specified key.
+Labels: member-access-expr, module-type-decl, record-type, table-type, table-constructor-expr, tuple-type,
+        int, string, list-constructor-expr, value:toBalString
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable2 table<Person> key(id, name);
+
+function init() {
+    PersonTable2 tbl2 = table [
+            {id: 3, name: "John", age: 23},
+            {id: 4, name: "Anne", age: 40},
+            {id: 4, name: "Melina", age: 27}
+        ];
+
+    io:println(tbl2[3, "Anne"].toBalString()); // @output ()
+
+    [int, string] idx3 = [4, "Mike"];
+    io:println(tbl2[idx3].toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test the static type of member access expression when the container expression is of static type table
+             with a single key.
+Labels: member-access-expr, module-type-decl, record-type, table-type, table-constructor-expr, int, string,
+        value:toBalString, readonly-type
+
+type Person record {|
+    readonly int id;
+    string name;
+    int age;
+|};
+
+type PersonTable1 table<Person> key(id);
+
+function init() {
+    PersonTable1 tbl1 = table [
+            {id: 1, name: "John", age: 23},
+            {id: 2, name: "Anne", age: 40},
+            {id: 3, name: "Melina", age: 27}
+        ];
+
+    Person? p1 = tbl1[3];
+    io:println(p1); // @output {"id":3,"name":"Melina","age":27}
+
+    Person? p2 = tbl1[4];
+    io:println(p2.toBalString()); // @output ()
+
+    int idx2 = 2;
+    Person? p3 = tbl1[idx2];
+    io:println(p3); // @output {"id":2,"name":"Anne","age":40}
+
+    record {|
+        readonly int id;
+        string name;
+        int age;
+    |}? p4 = tbl1[idx2];
+    io:println(p4); // @output {"id":2,"name":"Anne","age":40}
+}
+
+Test-Case: output
+Description: Test the static type of member access expression when the container expression is of static type table
+             with multiple keys.
+Labels: member-access-expr, module-type-decl, record-type, table-type, table-constructor-expr, tuple-type,
+        int, string, list-constructor-expr, value:toBalString, readonly-type
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable2 table<Person> key(id, name);
+
+function init() {
+    PersonTable2 tbl2 = table [
+            {id: 3, name: "John", age: 23},
+            {id: 4, name: "Anne", age: 40},
+            {id: 4, name: "Melina", age: 27}
+        ];
+
+    Person? p4 = tbl2[4, "Anne"];
+    io:println(p4); // @output {"id":4,"name":"Anne","age":40}
+
+    Person? p5 = tbl2[4, "Mike"];
+    io:println(p5.toBalString()); // @output ()
+
+    [int, string] idx3 = [4, "Melina"];
+    Person? p6 = tbl2[idx3];
+    io:println(p6); // @output {"id":4,"name":"Melina","age":27}
+
+    record {|
+        readonly int id;
+        readonly string name;
+        int age;
+    |}? p7 = tbl2[idx3];
+    io:println(p7); // @output {"id":4,"name":"Melina","age":27}
+}
+
+Test-Case: output
+Description: Test variable reference expression as container expression of basic type table.
+Labels: member-access-expr, module-type-decl, record-type, table-type, table-constructor-expr, int, string,
+        readonly-type, variable-reference-expr
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable2 table<Person> key(id, name);
+
+function init() {
+    PersonTable2 tbl2 = table [
+            {id: 3, name: "John", age: 23},
+            {id: 4, name: "Anne", age: 40},
+            {id: 4, name: "Melina", age: 27}
+        ];
+
+    io:println(tbl2[4, "Anne"]); // @output {"id":4,"name":"Anne","age":40}
+}
+
+Test-Case: output
+Description: Test field access expression as container expression of basic type table.
+Labels: member-access-expr, field-access-expr, module-type-decl, record-type, table-type, table-constructor-expr,
+        int, string, readonly-type, mapping-constructor-expr
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable table<Person> key(id, name);
+
+type Queue record {
+    PersonTable tbl;
+};
+
+function init() {
+    PersonTable personTbl = table [
+            {id: 3, name: "John", age: 23},
+            {id: 4, name: "Anne", age: 40},
+            {id: 4, name: "Melina", age: 27}
+        ];
+
+    Queue queue = {tbl: personTbl};
+
+    io:println(queue.tbl[4, "Anne"]); // @output {"id":4,"name":"Anne","age":40}
+}
+
+Test-Case: output
+Description: Test member access expression as container expression of basic type table.
+Labels: member-access-expr, module-type-decl, record-type, table-type, table-constructor-expr, array-type
+        int, string, list-constructor-expr, readonly-type
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable table<Person> key(id, name);
+
+function init() {
+    PersonTable tbl = table [
+            {id: 3, name: "John", age: 23},
+            {id: 4, name: "Anne", age: 40},
+            {id: 4, name: "Melina", age: 27}
+        ];
+
+    PersonTable[] arr = [
+        tbl,
+        table [
+                {id: 1, name: "Mike", age: 20},
+                {id: 2, name: "Tobi", age: 12},
+                {id: 3, name: "Frank", age: 15}
+            ]
+    ];
+
+    io:println(arr[1][3, "Frank"]); // @output {"id":3,"name":"Frank","age":15}
+}
+
+Test-Case: output
+Description: Test function call expression as container expression of basic type table.
+Labels: member-access-expr, function-call-expr, module-type-decl, record-type, table-type, table-constructor-expr,
+        int, string, readonly-type
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable table<Person> key(id, name);
+
+function init() {
+    io:println(getTable()[3, "Frank"]); // @output {"id":3,"name":"Frank","age":15}
+}
+
+function getTable() returns PersonTable {
+    return table [
+            {id: 1, name: "Mike", age: 20},
+            {id: 2, name: "Tobi", age: 12},
+            {id: 3, name: "Frank", age: 15}
+        ];
+
+}
+
+Test-Case: output
+Description: Test method call expression as container expression of basic type table.
+Labels: member-access-expr, method-call-expr, module-class-defn, explicit-new-expr, module-type-decl, record-type,
+        table-type, table-constructor-expr, int, string, readonly-type
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable table<Person> key(id, name);
+
+class Class {
+    function getTable() returns PersonTable {
+        return table [
+                {id: 1, name: "Mike", age: 20},
+                {id: 2, name: "Tobi", age: 12},
+                {id: 3, name: "Frank", age: 15}
+            ];
+
+    }
+}
+
+function init() {
+    Class cls = new();
+    io:println(cls.getTable()[2, "Tobi"]); // @output {"id":2,"name":"Tobi","age":12}
+}
+
+Test-Case: output
+Description: Test let expression expression as container expression of basic type array.
+Labels: member-access-expr, let-expr, module-type-decl, record-type, table-type, table-constructor-expr,
+        int, string, readonly-type
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable table<Person> key(id, name);
+
+function init() {
+    io:println((
+        let PersonTable tbl = table [
+                {id: 1, name: "Mike", age: 20},
+                {id: 2, name: "Tobi", age: 12},
+                {id: 3, name: "Frank", age: 15}
+            ]
+        in tbl)[2, "Tobi"]); // @output {"id":2,"name":"Tobi","age":12}
+}
+
+Test-Case: output
+Description: Test type cast expression as container expression of basic type table.
+Labels: member-access-expr, optional-type, type-cast-expr, module-type-decl, record-type, table-type,
+        table-constructor-expr, int, string, readonly-type
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable table<Person> key(id, name);
+
+function init() {
+    PersonTable? tbl = table [
+            {id: 1, name: "Mike", age: 20},
+            {id: 2, name: "Tobi", age: 12},
+            {id: 3, name: "Frank", age: 15}
+        ];
+
+    io:println((<PersonTable>tbl)[1, "Mike"]); // @output {"id":1,"name":"Mike","age":20}
+}
+
+Test-Case: output
+Description: Test conditional expression as container expression of basic type table.
+Labels: member-access-expr, conditional-expr, module-type-decl, record-type, table-type,
+        table-constructor-expr, int, string, readonly-type, boolean
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable table<Person> key(id, name);
+
+function init() {
+    PersonTable tbl1 = table [
+            {id: 1, name: "Mike", age: 15},
+            {id: 2, name: "Tobi", age: 16},
+            {id: 3, name: "Frank", age: 14}
+        ];
+
+    PersonTable tbl2 = table [
+            {id: 3, name: "Mike", age: 30},
+            {id: 4, name: "Tobi", age: 25},
+            {id: 5, name: "Frank", age: 45}
+        ];
+
+    boolean isTeenager = false;
+
+    io:println((isTeenager ? tbl1 : tbl2)[3, "Mike"]); // @output {"id":3,"name":"Mike","age":30}
+}
+
+Test-Case: output
+Description: Test checking expression as container expression of basic type table.
+Labels: member-access-expr, check, checkpanic, error, union-type, module-type-decl, record-type, table-type,
+        table-constructor-expr, int, string, readonly-type
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable table<Person> key(id, name);
+
+function init() returns error? {
+    PersonTable|error tbl = table [
+            {id: 1, name: "Mike", age: 15},
+            {id: 2, name: "Tobi", age: 16},
+            {id: 3, name: "Frank", age: 14}
+        ];
+
+    io:println((check tbl)[1, "Mike"]); // @output {"id":1,"name":"Mike","age":15}
+    io:println((checkpanic tbl)[3, "Frank"]); // @output {"id":3,"name":"Frank","age":14}
+}
+
+Test-Case: output
+Description: Test literals in key expression with container expression of basic type table.
+Labels: member-access-expr, module-type-decl, record-type, table-type, table-constructor-expr,
+        int, string, readonly-type
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable table<Person> key(id, name);
+
+function init() {
+    PersonTable tbl = table [
+            {id: 1, name: "Mike", age: 15},
+            {id: 2, name: "Tobi", age: 16},
+            {id: 3, name: "Frank", age: 14}
+        ];
+
+    io:println(tbl[[1, "Mike"]]); // @output {"id":1,"name":"Mike","age":15}
+}
+
+Test-Case: output
+Description: Test field access expression in key expression with container expression of basic type table.
+Labels: member-access-expr, field-access-expr, module-type-decl, record-type, table-type, table-constructor-expr,
+        int, string, readonly-type
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable table<Person> key(id, name);
+
+type Record record {|
+    int id;
+    string name;
+|};
+
+function init() {
+    PersonTable tbl = table [
+            {id: 1, name: "Mike", age: 15},
+            {id: 2, name: "Tobi", age: 16},
+            {id: 3, name: "Frank", age: 14}
+        ];
+
+    Record rec = {id: 3, name: "Frank"};
+
+    io:println(tbl[[rec.id, rec.name]]); // @output {"id":3,"name":"Frank","age":14}
+}
+
+Test-Case: output
+Description: Test member access expression in key expression with container expression of basic type table.
+Labels: member-access-expr, module-type-decl, array-type, record-type, table-type, table-constructor-expr,
+        list-constructor-expr, int, string, readonly-type
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable table<Person> key(id, name);
+
+function init() {
+    PersonTable tbl = table [
+            {id: 1, name: "Mike", age: 15},
+            {id: 2, name: "Tobi", age: 16},
+            {id: 3, name: "Frank", age: 14}
+        ];
+
+    int[] ids = [1, 2, 3, 4, 5];
+    string[] names = ["Frank", "Tobi"];
+
+    io:println(tbl[[ids[1], names[1]]]); // @output {"id":2,"name":"Tobi","age":16}
+}
+
+Test-Case: output
+Description: Test functional call in key expression with container expression of basic type table.
+Labels: member-access-expr, function-call-expr, module-type-decl, record-type, table-type, table-constructor-expr,
+        int, string, readonly-type
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable table<Person> key(id, name);
+
+function init() {
+    PersonTable tbl = table [
+            {id: 1, name: "Mike", age: 15},
+            {id: 2, name: "Tobi", age: 16},
+            {id: 3, name: "Frank", age: 14}
+        ];
+
+    io:println(tbl[[getIndex(), getName()]]); // @output {"id":3,"name":"Frank","age":14}
+}
+
+function getIndex() returns int {
+    return 3;
+}
+
+function getName() returns string {
+    return "Frank";
+}
+
+Test-Case: output
+Description: Test method call in key expression with container expression of basic type list.
+Labels: member-access-expr, explicit-new-expr, module-class-defn, method-call-expr, module-type-decl,
+        record-type, table-type, table-constructor-expr, int, string, readonly-type
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable table<Person> key(id, name);
+
+class Member {
+    function getIndex() returns int {
+        return 3;
+    }
+
+    function getName() returns string {
+        return "Frank";
+    }
+}
+
+function init() {
+    PersonTable tbl = table [
+            {id: 1, name: "Mike", age: 15},
+            {id: 2, name: "Tobi", age: 16},
+            {id: 3, name: "Frank", age: 14}
+        ];
+
+    Member mem = new();
+
+    io:println(tbl[[mem.getIndex(), mem.getName()]]); // @output {"id":3,"name":"Frank","age":14}
+}
+
+Test-Case: output
+Description: Test let expression int key expression with container expression of basic type table.
+Labels: member-access-expr, let-expr, module-type-decl, record-type, table-type, table-constructor-expr,
+        int, string, readonly-type
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable table<Person> key(id, name);
+
+function init() {
+    PersonTable tbl = table [
+            {id: 1, name: "Mike", age: 15},
+            {id: 2, name: "Tobi", age: 16},
+            {id: 3, name: "Frank", age: 14}
+        ];
+
+    io:println(tbl[[let int i = 1 + 2 in i, let string i = "Frank" in i]]); // @output {"id":3,"name":"Frank","age":14}
+}
+
+Test-Case: output
+Description: Test type cast expression in key expression with container expression of basic type table.
+Labels: member-access-expr, type-cast-expr, module-type-decl, record-type, table-type, table-constructor-expr,
+        int, string, readonly-type
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable table<Person> key(id, name);
+
+function init() {
+    PersonTable tbl = table [
+            {id: 1, name: "Mike", age: 15},
+            {id: 2, name: "Tobi", age: 16},
+            {id: 3, name: "Frank", age: 14}
+        ];
+
+    io:println(tbl[[<int>1, <string>"Mike"]]); // @output {"id":1,"name":"Mike","age":15}
+}
+
+Test-Case: output
+Description: Test unary numeric expression in key expression with container expression of basic type table.
+Labels: member-access-expr, unary-numeric-expr, DecimalNumber, module-type-decl, record-type, table-type,
+        table-constructor-expr, int, string, readonly-type
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable table<Person> key(id, name);
+
+function init() {
+    PersonTable tbl = table [
+            {id: 1, name: "Mike", age: 15},
+            {id: 2, name: "Tobi", age: 16},
+            {id: 3, name: "Frank", age: 14}
+        ];
+
+    io:println(tbl[[+3, "Frank"]]); // @output {"id":3,"name":"Frank","age":14}
+    io:println(tbl[[-(-1), "Mike"]]); // @output {"id":1,"name":"Mike","age":15}
+    io:println(tbl[[~(-3), "Tobi"]]); // @output {"id":2,"name":"Tobi","age":16}
+}
+
+Test-Case: output
+Description: Test additive expression in key expression with container expression of basic type table.
+Labels: member-access-expr, additive-expr, DecimalNUmber, module-type-decl, record-type, table-type,
+        table-constructor-expr, int, string, readonly-type
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable table<Person> key(id, name);
+
+function init() {
+    PersonTable tbl = table [
+            {id: 1, name: "Mike", age: 15},
+            {id: 2, name: "Tobi", age: 16},
+            {id: 3, name: "Frank", age: 14}
+        ];
+
+    io:println(tbl[[1 + 2, "Fra" + "nk"]]); // @output {"id":3,"name":"Frank","age":14}
+}
+
+Test-Case: output
+Description: Test checking expression in key expression with container expression of basic type table.
+Labels: member-access-expr, check, checkpanic, error, module-type-decl, record-type, table-type,
+        table-constructor-expr, int, string, readonly-type
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable table<Person> key(id, name);
+
+function init() returns error? {
+    PersonTable tbl = table [
+            {id: 1, name: "Mike", age: 15},
+            {id: 2, name: "Tobi", age: 16},
+            {id: 3, name: "Frank", age: 14}
+        ];
+
+    int|error id = 3;
+    string|error nm = "Frank";
+    io:println(tbl[[check id, checkpanic nm]]); // @output {"id":3,"name":"Frank","age":14}
+}
+
+Test-Case: output
+Description: Test conditional expression as key expression with container expression of basic type list.
+Labels: member-access-expr, conditional-expr, is-expr, optional-type, module-type-decl, record-type, table-type,
+        table-constructor-expr, int, string, readonly-type
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable table<Person> key(id, name);
+
+function init() {
+    PersonTable tbl = table [
+            {id: 1, name: "Mike", age: 15},
+            {id: 2, name: "Tobi", age: 16},
+            {id: 3, name: "Frank", age: 14}
+        ];
+
+    int? id = 3;
+    string? nm = "Frank";
+    io:println(tbl[id is int ? id : 0, nm is string ? nm : ""]); // @output {"id":3,"name":"Frank","age":14}
+}
+
+Test-Case: output
+Description: Test member access expression at module level.
+Labels: member-access-expr, module-var-decl,  module-type-decl, record-type, table-type, table-constructor-expr,
+        int, string, readonly-type
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable table<Person> key(id, name);
+
+PersonTable tbl = table [
+        {id: 1, name: "Mike", age: 15},
+        {id: 2, name: "Tobi", age: 16},
+        {id: 3, name: "Frank", age: 14}
+    ];
+
+Person? p = tbl[2, "Tobi"];
+
+function init() {
+    io:println(p); // @output {"id":2,"name":"Tobi","age":16}
+}
+
+Test-Case: output
+Description: Test member access expression when the basic type of the container expression is inferred as table.
+Labels: member-access-expr, var, module-type-decl, record-type, table-constructor-expr, int, string, readonly-type
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+function init() {
+    var tbl = table key(id, name) [
+        {id: 1, name: "Mike", age: 15},
+        {id: 2, name: "Tobi", age: 16},
+        {id: 3, name: "Frank", age: 14}
+    ];
+
+    io:println(tbl[1, "Mike"]); // @output {"id":1,"name":"Mike","age":15}
+}
+
+Test-Case: output
+Description: Test member access expression with container expression of basic type table as array member.
+Labels: member-access-expr, module-type-decl, record-type, table-type, table-constructor-expr, int, string,
+        readonly-type, optional-type, array-type, list-constructor-expr
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable table<Person> key(id, name);
+
+function init() {
+    PersonTable tbl1 = table [
+            {id: 1, name: "Mike", age: 15},
+            {id: 2, name: "Tobi", age: 16},
+            {id: 3, name: "Frank", age: 14}
+        ];
+
+    Person?[] arr = [tbl1[1, "Mike"], tbl1[3, "Frank"]];
+
+    io:println(arr[0]); // @output {"id":1,"name":"Mike","age":15}
+}
+
+Test-Case: output
+Description: Test member access expression with container expression of basic type table as default expression
+             for a field.
+Labels: member-access-expr, module-var-decl, module-type-decl, record-type, table-type, table-constructor-expr,
+        int, string, readonly-type
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable table<Person> key(id, name);
+
+final PersonTable & readonly tbl = table [
+        {id: 1, name: "Mike", age: 15},
+        {id: 2, name: "Tobi", age: 16},
+        {id: 3, name: "Frank", age: 14}
+    ];
+
+type Record record {|
+    Person? a = tbl[3, "Frank"];
+|};
+
+function init() {
+    Record rec = {};
+    io:println(rec.a); // @output {"id":1,"name":"Mike","age":15}
+}
+
+Test-Case: output
+Description: Test member access expression with container expression of basic type table as defaultable
+             function parameter.
+Labels: member-access-expr, defaultable-param, function-call-expr, module-var-decl, module-type-decl, record-type,
+        table-constructor-expr, table-type, int, string, readonly-type
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable table<Person> key(id, name);
+
+final PersonTable & readonly tbl = table [
+        {id: 1, name: "Mike", age: 15},
+        {id: 2, name: "Tobi", age: 16},
+        {id: 3, name: "Frank", age: 14}
+    ];
+
+function init() {
+    io:println(func()); // @output {"id":1,"name":"Mike","age":15}
+}
+
+function func(Person? a = tbl[1, "Mike"]) returns Person? {
+    return a;
+}
+
+Test-Case: output
+Description: Test member access expression with container expression of basic type table as expression in
+             return statement.
+Labels: member-access-expr, return-stmt, function-call-expr, module-type-decl, record-type, table-constructor-expr,
+        table-type, int, string, readonly-type
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable table<Person> key(id, name);
+
+function init() {
+    PersonTable tbl = table [
+            {id: 1, name: "Mike", age: 15},
+            {id: 2, name: "Tobi", age: 16},
+            {id: 3, name: "Frank", age: 14}
+        ];
+
+    io:println(func(tbl)); // @output {"id":1,"name":"Mike","age":15}
+}
+
+function func(PersonTable tbl) returns Person? {
+    return tbl[1, "Mike"];
+}
+
+Test-Case: error
+Description: Test assigning a value to member access expression.
+Labels: member-access-expr, module-type-decl, record-type, table-type, table-constructor-expr, int, string,
+        readonly-type
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable table<Person> key(id);
+
+function errorFunction() {
+    PersonTable tbl = table [
+            {id: 1, name: "Mike", age: 15},
+            {id: 2, name: "Tobi", age: 16},
+            {id: 3, name: "Frank", age: 14}
+        ];
+
+    tbl[1] = {id: 1, name: "Mike", age: 20}; // @error cannot update table with member access expression
+}
+
+Test-Case: error
+Description: Test key expression with invalid static type.
+Labels: member-access-expr, module-type-decl, record-type, table-type, table-constructor-expr, int, string,
+        readonly-type
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable table<Person> key(id, name);
+
+function errorFunction() {
+    PersonTable tbl = table [
+            {id: 1, name: "Mike", age: 15},
+            {id: 2, name: "Tobi", age: 16},
+            {id: 3, name: "Frank", age: 14}
+        ];
+
+    _ = tbl["1", "Mike"]; // @error invalid key constraint
+}
+
+Test-Case: error
+Description: Test assigning result of member access expression to an invalid type.
+Labels: member-access-expr, module-type-decl, record-type, table-type, table-constructor-expr, int,
+        string, readonly-type
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable table<Person> key(id, name);
+
+function errorFunction() {
+    PersonTable tbl = table [
+            {id: 1, name: "Mike", age: 15},
+            {id: 2, name: "Tobi", age: 16},
+            {id: 3, name: "Frank", age: 14}
+        ];
+
+    Person _ = tbl[1, "Mike"]; // @error expected Person, static type of the accessed value is Person?
+}
+
+Test-Case: error
+Description: Test accessing members of a keyless table.
+Labels: member-access-expr, module-type-decl, record-type, map-type, table-type, table-constructor-expr
+
+type PersonTable table<map<string>>;
+
+function errorFunction() {
+    PersonTable tbl = table [
+            {fname: "Mike", lname: "Smith"},
+            {fname: "James", lname: "Clark"}
+        ];
+
+    _ = tbl["Mike", "Smith"]; // @error member access not supported for keyless table
+}
+
+Test-Case: error
+Description: Test accessing members of an invalid structure using multi key expression.
+Labels: member-access-expr, module-type-decl, record-type, table-type, table-constructor-expr, optional-type
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable table<Person> key(id, name);
+
+function errorFunction() {
+    PersonTable? tbl = table [
+            {id: 1, name: "Mike", age: 15},
+            {id: 2, name: "Tobi", age: 16},
+            {id: 3, name: "Frank", age: 14}
+        ];
+
+    _ = tbl[1, "Mike"]; // @error member access with multi-key expression is only allowed with subtypes of table
+}
+
+Test-Case: error
+Description: Test accessing members of an invalid structure.
+Labels: member-access-expr, module-type-decl, record-type, table-type, table-constructor-expr
+
+type Person record {|
+    readonly int id;
+    string name;
+    int age;
+|};
+
+type PersonTable table<Person> key(id);
+
+function errorFunction() {
+    PersonTable? tbl = table [
+            {id: 1, name: "Mike", age: 15},
+            {id: 2, name: "Tobi", age: 16},
+            {id: 3, name: "Frank", age: 14}
+        ];
+
+    Person _ = tbl[1]; // @error expected Person, static type of the accessed value is Person?
+}
+
+Test-Case: error
+Description: Test missing key expression in member access expression.
+Labels: member-access-expr, module-type-decl, record-type, table-type, table-constructor-expr
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable table<Person> key(id, name);
+
+function errorFunction() {
+    PersonTable tbl = table [
+            {id: 1, name: "Mike", age: 15},
+            {id: 2, name: "Tobi", age: 16},
+            {id: 3, name: "Frank", age: 14}
+        ];
+
+    _ = tbl[]; // @error expected a key constraint of type [int,string]
+}
+
+Test-Case: error
+Description: Test using a multi key expression to access member of a single keyed table.
+Fail-Issue: ballerina-platform/ballerina-lang#35077
+Labels: member-access-expr, module-type-decl, record-type, table-type, table-constructor-expr
+
+type Person record {|
+    readonly int id;
+    string name;
+    int age;
+|};
+
+type PersonTable1 table<Person> key(id);
+
+function errorFunction() {
+    PersonTable1 tbl1 = table [
+            {id: 1, name: "John", age: 23},
+            {id: 2, name: "Anne", age: 40},
+            {id: 3, name: "Melina", age: 27}
+        ];
+
+    _ = tbl1[1, "Anne"]; // @error invalid key expression
+}
+
+Test-Case: error
+Description: Test using a single key expression to access member of a multi keyed table.
+Labels: member-access-expr, module-type-decl, record-type, table-type, table-constructor-expr
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable1 table<Person> key(id, name);
+
+function errorFunction() {
+    PersonTable1 tbl1 = table [
+            {id: 1, name: "John", age: 23},
+            {id: 2, name: "Anne", age: 40},
+            {id: 3, name: "Melina", age: 27}
+        ];
+
+    _ = tbl1[1]; // @error invalid key expression
+}
