@@ -1,0 +1,600 @@
+Test-Case: output
+Description: Test whether the static type of key expression is subtype of int when the basic type of the
+             container expression is an array.
+Labels: member-access-expr, array-type, int, list-constructor-expr, module-type-decl, module-const-decl, union-type
+
+const i1 = 0;
+const i2 = 5;
+
+type IntType1 3|4;
+
+type IntType2 i1|i2;
+
+function init() {
+    int[8] arr = [10, 20, 30, 40, 50, 60, 70, 80];
+
+    int i0 = 0;
+    io:println(arr[i0]); // @output 10
+
+    IntType1 i3 = 4;
+    io:println(arr[i3]); // @output 50
+
+    io:println(arr[i1]); // @output 10
+
+    IntType2 i4 = 5;
+    io:println(arr[i4]); // @output 60
+}
+
+Test-Case: output
+Description: Test whether the static type of key expression is subtype of int when the basic type of the
+             container expression is an array.
+Fail-Issue: ballerina-platform/ballerina-lang#35045
+Labels: member-access-expr, array-type, int, list-constructor-expr, module-type-decl, byte, int:Signed8,
+        int:Signed16, int:Signed32, union-type
+
+type IntType1 int:Signed8|int:Signed16;
+
+function init() {
+    int[8] arr = [10, 20, 30, 40, 50, 60, 70, 80];
+
+    int:Signed8 i1 = 1;
+    io:println(arr[i1]); // @output 20
+
+    byte i2 = 2;
+    io:println(arr[i2]); // @output 30
+
+    int:Signed32|int:Signed16 i3 = 3;
+    io:println(arr[i3]); // @output 40
+
+    IntType1 i4 = 5;
+    io:println(arr[i4]); // @output 60
+}
+
+Test-Case: output
+Description: Test the result of evaluating a member access expression when basic type of the evaluated value of the
+             container expression is an array.
+Labels: member-access-expr, module-type-decl, record-type, table-type, array-type, int, string, union-type,
+        list-constructor-expr, mapping-constructor-expr, table-constructor-expr
+
+type Record record {|
+    readonly int a;
+    string b?;
+|};
+
+type RecordTable table<Record> key(a);
+
+function init() {
+    int[8] intArr = [10, 20, 30, 40, 50, 60, 70, 80];
+    io:println(intArr[6]); // @output 70
+
+    (int|string)[4] arr = [1, "ABC", "DEF", 2];
+    io:println(arr[1]); // @output ABC
+
+    Record[3] recArr = [{a: 1, b: "ABC"}, {a: 2}, {a: 3, b: "DEF"}];
+    io:println(recArr[2]); // @output {"a":3,"b":"DEF"}
+
+    RecordTable[2] tableArr = [
+        table [
+                {a: 1, b: "ABC"},
+                {a: 2},
+                {a: 3, b: "DEF"}
+            ],
+        table [
+                {a: 4},
+                {a: 5, b: "GHI"},
+                {a: 6}
+            ]
+    ];
+    io:println(tableArr[1]); // @output [{"a":4},{"a":5,"b":"GHI"},{"a":6}]
+}
+
+Test-Case: panic
+Description: Test the result of evaluating a member access expression when the evaluated value(k) of the
+             key expression is less than 0 with container expression whose basic type is an array (k < 0).
+Labels: member-access-expr, array-type, list-constructor-expr, int, unary-minus
+
+function init() {
+    int[8] intArr = [10, 20, 30, 40, 50, 60, 70, 80];
+
+    io:println(intArr[-3]); // @panic index out of range
+}
+
+Test-Case: panic
+Description: Test the result of evaluating a member access expression when the evaluated value(k) of the
+             key expression is equal to the length of the evaluated value(c) of the
+             container expression whose basic type is an array (k = length(c)).
+Labels: member-access-expr, array-type, list-constructor-expr, int
+
+function init() {
+    int[8] intArr = [10, 20, 30, 40, 50, 60, 70, 80];
+
+    io:println(intArr[8]); // @panic index out of range
+}
+
+Test-Case: panic
+Description: Test the result of evaluating a member access expression when the evaluated value(k) of the
+             key expression is greater than the length of the evaluated value(c) of the
+             container expression whose basic type is an array (k > length(c)).
+Labels: member-access-expr, array-type, list-constructor-expr, int
+
+function init() {
+    int[8] intArr = [10, 20, 30, 40, 50, 60, 70, 80];
+
+    io:println(intArr[10]); // @panic index out of range
+}
+
+Test-Case: output
+Description: Test the static type of member access expression when the container expression is of basic type list.
+Labels: member-access-expr, module-type-decl, record-type, table-type, array-type, int, string, union-type,
+        list-constructor-expr, mapping-constructor-expr, table-constructor-expr
+
+type Record record {|
+    readonly int a;
+    string b?;
+|};
+
+type RecordTable table<Record> key(a);
+
+function init() {
+    int[8] intArr = [10, 20, 30, 40, 50, 60, 70, 80];
+    int _ = intArr[6];
+
+    (int|string)[4] arr = [1, "ABC", "DEF", 2];
+    int|string _ = arr[2];
+
+    Record[3] recArr = [{a: 1, b: "ABC"}, {a: 2}, {a: 3, b: "DEF"}];
+    Record _ = recArr[2];
+
+    RecordTable[2] tableArr = [
+        table [
+                {a: 1, b: "ABC"},
+                {a: 2},
+                {a: 3, b: "DEF"}
+            ],
+        table [
+                {a: 4},
+                {a: 5, b: "GHI"},
+                {a: 6}
+            ]
+    ];
+    RecordTable _ = tableArr[1];
+}
+
+Test-Case: output
+Description: Test variable reference expression as container expression of basic type list.
+Labels: member-access-expr, array-type, int, list-constructor-expr, variable-reference-expr
+
+function init() {
+    int[8] intArr = [10, 20, 30, 40, 50, 60, 70, 80];
+    io:println(intArr[5]); // @output 60
+}
+
+Test-Case: output
+Description: Test field access expression as container expression of basic type list.
+Labels: member-access-expr, array-type, string, list-constructor-expr, field-access-expr, mapping-constructor-expr,
+        record-type, module-type-decl
+
+type Record record {|
+    string[3] cities;
+|};
+
+function init() {
+    Record rec = {cities: ["NY", "CL", "SF"]};
+    io:println(rec.cities[1]); // @output CL
+}
+
+Test-Case: output
+Description: Test member access expression as container expression of basic type list.
+Labels: member-access-expr, array-type, string, list-constructor-expr
+
+function init() {
+    string[2][] strArr = [["HeLlO", "BaLlErInA", "WoRlD"], ["ABC", "DEF"]];
+    io:println(strArr[0][1]); // @output BaLlErInA
+}
+
+Test-Case: output
+Description: Test function call expression as container expression of basic type list.
+Labels: member-access-expr, function-call-expr, array-type, int, list-constructor-expr
+
+function init() {
+    io:println(getArr()[2]); // @output 30
+}
+
+function getArr() returns int[4] {
+    return [10, 20, 30, 40];
+}
+
+Test-Case: output
+Description: Test method call expression as container expression of basic type list.
+Labels: member-access-expr, method-call-expr, module-class-defn, explicit-new-expr, array-type, int,
+        list-constructor-expr
+
+class Array {
+    function getArr() returns int[4] {
+        return [10, 20, 30, 40];
+    }
+}
+
+function init() {
+    Array arr = new Array();
+    io:println(arr.getArr()[2]); // @output 30
+}
+
+Test-Case: output
+Description: Test let expression expression as container expression of basic type list.
+Labels: member-access-expr, let-expr, array-type, int, list-constructor-expr
+
+function init() {
+    io:println((let int[4] b = [10, 20, 30, 40] in b)[3]); // @output 40
+}
+
+Test-Case: output
+Description: Test type cast expression as container expression of basic type list.
+Labels: member-access-expr, optional-type, type-cast-expr, array-type, int, list-constructor-expr
+
+function init() {
+    int[4]? value = [10, 20, 30, 40];
+    io:println((<int[4]>value)[3]); // @output 40
+}
+
+Test-Case: output
+Description: Test conditional expression as container expression of basic type list.
+Labels: member-access-expr, conditional-expr, array-type, int, list-constructor-expr, relational-expr
+
+function init() {
+    int[3] a1 = [5, 6, 7];
+    int[3] a2 = [11, 12, 13];
+    int x = 5;
+
+    io:println((x < 10 ? a1 : a2)[2]); // @output 7
+}
+
+Test-Case: output
+Description: Test checking expression as container expression of basic type list.
+Labels: member-access-expr, check, checkpanic, error-type, array-type, int, list-constructor-expr, union-type
+
+function init() returns error? {
+    int[5]|error val = [10, 20, 30, 40, 50];
+    io:println((check val)[3]); // @output 40
+    io:println((checkpanic val)[3]); // @output 40
+}
+
+Test-Case: output
+Description: Test query expression as container expression of basic type list.
+Labels: member-access-expr, query-expr, array-type, list-constructor-expr, int, multiplicative-expr
+
+function init() {
+    int[5] arr = [1, 2, 3, 4, 5];
+    io:println((from int i in arr select i * 10)[4]); // @output 50
+}
+
+Test-Case: output
+Description: Test int literal as key expression with container expression of basic type list.
+Labels: member-access-expr, array-type, list-constructor-expr, int, DecimalNumber
+
+function init() {
+    int[5] arr = [1, 2, 3, 4, 5];
+    io:println(arr[4]); // @output 5
+}
+
+Test-Case: output
+Description: Test variable reference as key expression with container expression of basic type list.
+Labels: member-access-expr, variable-reference-expr, array-type, list-constructor-expr, int
+
+function init() {
+    int[5] arr = [1, 2, 3, 4, 5];
+    int index = 4;
+
+    io:println(arr[index]); // @output 5
+}
+
+Test-Case: output
+Description: Test field access expression as key expression with container expression of basic type list.
+Labels: member-access-expr, field-access-expr, record-type, mapping-constructor-expr, array-type,
+        list-constructor-expr, int
+
+type Record record {|
+    int index;
+|};
+
+function init() {
+    int[5] arr = [1, 2, 3, 4, 5];
+    Record rec = {index: 1};
+
+    io:println(arr[rec.index]); // @output 2
+}
+
+Test-Case: output
+Description: Test member access expression as key expression with container expression of basic type list.
+Labels: member-access-expr, array-type, int, list-constructor-expr
+
+function init() {
+    int[5] arr = [1, 2, 3, 4, 5];
+    io:println(arr[arr[3]]); // @output 5
+}
+
+Test-Case: output
+Description: Test functional call as key expression with container expression of basic type list.
+Labels: member-access-expr, function-call-expr, array-type, int, list-constructor-expr
+
+function init() {
+    int[5] arr = [1, 2, 3, 4, 5];
+    io:println(arr[getPosition()]); // @output 3
+}
+
+function getPosition() returns int {
+    return 2;
+}
+
+Test-Case: output
+Description: Test method call as key expression with container expression of basic type list.
+Labels: member-access-expr, explicit-new-expr, module-class-defn, method-call-expr, array-type,
+        int, list-constructor-expr
+
+class Position {
+    function getPosition(int pos) returns int {
+        return pos + 1;
+    }
+}
+
+function init() {
+    int[5] arr = [1, 2, 3, 4, 5];
+    Position pos = new Position();
+
+    io:println(arr[pos.getPosition(2)]); // @output 4
+}
+
+Test-Case: output
+Description: Test let expression as key expression with container expression of basic type list.
+Labels: member-access-expr, let-expr, array-type, int, list-constructor-expr
+
+function init() {
+    int[5] arr = [1, 2, 3, 4, 5];
+    io:println(arr[let int i = 1 + 2 in i]); // @output 4
+}
+
+Test-Case: output
+Description: Test type cast expression as key expression with container expression of basic type list.
+Labels: member-access-expr, type-cast-expr, array-type, int, list-constructor-expr
+
+function init() {
+    int[5] arr = [1, 2, 3, 4, 5];
+    io:println(arr[<int> 4]); // @output 5
+}
+
+Test-Case: output
+Description: Test unary numeric expression as key expression with container expression of basic type list.
+Labels: member-access-expr, unary-numeric-expr, DecimalNumber, array-type, int, list-constructor-expr
+
+function init() {
+    int[5] arr = [1, 2, 3, 4, 5];
+
+    io:println(arr[+4]); // @output 5
+    io:println(arr[-(-3)]); // @output 4
+    io:println(arr[~(-3)]); // @output 3
+}
+
+Test-Case: output
+Description: Test additive expression as key expression with container expression of basic type list.
+Labels: member-access-expr, additive-expr, DecimalNUmber, array-type, int, list-constructor-expr
+
+function init() {
+    int[5] arr = [1, 2, 3, 4, 5];
+
+    io:println(arr[2 + 1]); // @output 4
+    io:println(arr[4 - 2]); // @output 3
+}
+
+Test-Case: output
+Description: Test multiplicative expression as key expression with container expression of basic type list.
+Labels: member-access-expr, multiplicative-expr, DecimalNumber, array-type, int, list-constructor-expr
+
+function init() {
+    int[5] arr = [1, 2, 3, 4, 5];
+
+    io:println(arr[2 * 1]); // @output 3
+    io:println(arr[4 / 2]); // @output 3
+    io:println(arr[5 % 2]); // @output 2
+}
+
+Test-Case: output
+Description: Test shift expression as key expression with container expression of basic type list.
+Labels: member-access-expr, shift-expr, DecimalNumber, array-type, int, list-constructor-expr
+
+function init() {
+    int[5] arr = [1, 2, 3, 4, 5];
+
+    io:println(arr[1 << 2]); // @output 5
+    io:println(arr[4 >> 2]); // @output 2
+}
+
+Test-Case: output
+Description: Test binary bitwise expression as key expression with container expression of basic type list.
+Labels: member-access-expr, binary-bitwise-expr, DecimalNumber, array-type, int, list-constructor-expr
+
+function init() {
+    int[5] arr = [1, 2, 3, 4, 5];
+
+    io:println(arr[2 & 6]); // @output 3
+    io:println(arr[2 ^ 6]); // @output 5
+}
+
+Test-Case: output
+Description: Test checking expression as key expression with container expression of basic type list.
+Labels: member-access-expr, check, checkpanic, error-type, array-type, int, list-constructor-expr, union-type
+
+function init() returns error? {
+    int[5] arr = [1, 2, 3, 4, 5];
+    int|error pos = 3;
+
+    io:println(arr[check pos]); // @output 4
+    io:println(arr[checkpanic pos]); // @output 4
+}
+
+Test-Case: output
+Description: Test conditional expression as key expression with container expression of basic type list.
+Labels: member-access-expr, conditional-expr, is-expr, optional-type, array-type, int, list-constructor-expr
+
+function init() {
+    int[5] arr = [1, 2, 3, 4, 5];
+    int? pos = 3;
+
+    io:println(arr[pos is int ? pos : 0]); // @output 4
+}
+
+Test-Case: output
+Description: Test member access expression at module level.
+Labels: member-access-expr, module-var-decl, array-type, int, list-constructor-expr
+
+int[5] arr = [1, 2, 3, 4, 5];
+
+int num = arr[0];
+
+function init() {
+    io:println(num); // @output 1
+}
+
+Test-Case: output
+Description: Test member access expression when the basic type of the container expression is inferred as list.
+Labels: member-access-expr, is-expr, var, array-type, list-constructor-expr
+
+function init() {
+    var arr = [1, 2, 3, 4, 5];
+    io:println(arr is int[5]); // @output true
+    io:println(arr[1]); // @output 2
+}
+
+Test-Case: output
+Description: Test member access expression with container expression of basic type list as array member.
+Labels: member-access-expr, array-type, int, list-constructor-expr
+
+function init() {
+    int[5] arr = [1, 2, 3, 4, 5];
+    int[] anotherArr = [arr[3], arr[0], arr[4]];
+
+    io:println(anotherArr[1]); // @output 1
+}
+
+Test-Case: output
+Description: Test member access expression with container expression of basic type list as default expression
+             for a field.
+Labels: member-access-expr, module-var-decl, record-type, module-type-decl, mapping-constructor-expr,
+        array-type, int, list-constructor-expr, final
+
+final int[5] & readonly arr = [1, 2, 3, 4, 5];
+
+type Record record {|
+    int a = arr[2];
+|};
+
+function init() {
+    Record rec = {};
+    io:println(rec.a); // @output 3
+}
+
+Test-Case: output
+Description: Test member access expression with container expression of basic type list as defaultable
+             function parameter.
+Labels: member-access-expr, defaultable-param, function-call-expr, module-var-decl, array-type, int,
+        list-constructor-expr, readonly-type
+
+final int[5] & readonly arr = [1, 2, 3, 4, 5];
+
+function init() {
+    io:println(getInt()); // @output 5
+}
+
+function getInt(int a = arr[4]) returns int {
+    return a;
+}
+
+Test-Case: output
+Description: Test member access expression with container expression of basic type list as expression in
+             return statement.
+Labels: member-access-expr, return-stmt, function-call-expr, array-type, int, list-constructor-expr
+
+function init() {
+    io:println(getInt([1, 2, 3, 4, 5])); // @output 5
+}
+
+function getInt(int[5] arr) returns int {
+    return arr[4];
+}
+
+Test-Case: output
+Description: Test assigning a value to member access expression.
+Labels: member-access-expr, array-type, int, list-constructor-expr
+
+function init() {
+    int[3] arr = [1, 2, 3];
+    arr[1] = 12;
+    io:println(arr[1]); // @output 12
+}
+
+Test-Case: error
+Description: Test key expression with invalid static type.
+Labels: member-access-expr, array-type, int, list-constructor-expr, string
+
+type SomeType "2"|"3";
+
+const c = "4";
+
+function errorFunction() {
+    int[5] arr = [1, 2, 3, 4, 5];
+
+    _ = arr["1"]; // @error expected a value of subtype int as key
+
+    string a = "2";
+    _ = arr[a]; // @error expected a value of subtype int as key
+
+    SomeType b = "3";
+    _ = arr[b]; // @error expected a value of subtype int as key
+
+    _ = arr[c]; // @error expected a value of subtype int as key
+}
+
+Test-Case: error
+Description: Test assigning result of member access expression to an invalid type.
+Labels: member-access-expr, array-type, int, list-constructor-expr
+
+function errorFunction() {
+    int[3] arr = [1, 2, 3];
+    string _ = arr[1]; // @error expected string, static type of the accessed value is int
+}
+
+Test-Case: error
+Description: Test using a value greater than the size of a sealed array as the key.
+Labels: member-access-expr, array-type, int, list-constructor-expr
+
+function errorFunction() {
+    int[3] arr = [1, 2, 3];
+    _ = arr[4]; // @error list index out of range
+    _ = arr[-1]; // @error list index out of range
+}
+
+Test-Case: error
+Description: Test accessing members of an invalid structure.
+Labels: member-access-expr, array-type, int, list-constructor-expr, optional-type
+
+function errorFunction() {
+    int[3]? arr = [1, 2, 3];
+    _ = arr[1]; // @error int[]? does not support member access
+}
+
+Test-Case: error
+Description: Test missing key expression in member access expression.
+Labels: member-access-expr, array-type, int, list-constructor-expr
+
+function errorFunction() {
+    int[3] arr = [1, 2, 3];
+    _ = arr[]; // @error missing key expression
+}
+
+Test-Case: error
+Description: Test assigning an invalid value to member access expression.
+Labels: member-access-expr, array-type, int, list-constructor-expr, string
+
+function errorFunction() {
+    int[3] arr = [1, 2, 3];
+    arr[1] = "12"; // @error expected an int value, found a string
+}
