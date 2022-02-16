@@ -1,0 +1,711 @@
+Test-Case: output
+Description: Test whether the static type of key expression is subtype of int when the static type of the
+             container expression is a string.
+Labels: member-access-expr, byte, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8,
+        int:Unsigned32, string
+
+function init() {
+    string str = "HeLlO-WoRlD!";
+
+    int i0 = 0;
+    io:println(str[i0]); // @output H
+
+    int:Signed8 i1 = 1;
+    io:println(str[i1]); // @output e
+
+    int:Signed16 i2 = 2;
+    io:println(str[i2]); // @output L
+
+    int:Signed32 i3 = 3;
+    io:println(str[i3]); // @output l
+
+    int:Unsigned8 i4 = 4;
+    io:println(str[i4]); // @output O
+
+    int:Unsigned16 i5 = 5;
+    io:println(str[i5]); // @output -
+
+    int:Unsigned32 i6 = 6;
+    io:println(str[i6]); // @output W
+
+    byte i7 = 7;
+    io:println(str[i7]); // @output o
+
+    io:println(str[0]); // @output H
+}
+
+Test-Case: output
+Description: Test whether the static type of key expression is a subtype of int when the static type of the
+             container expression is a string.
+Labels: member-access-expr, byte, int, int:Signed8, int:Signed16, int:Unsigned8, int:Unsigned32, string
+
+const i8 = 8;
+
+type IntType1 int:Signed8|int:Signed16;
+
+type IntType2 i8|10;
+
+function init() {
+    string str = "HeLlO-WoRlD!";
+
+    io:println(str[i8]); // @output R
+
+    IntType1 i9 = 9;
+    io:println(str[i9]); // @output l
+
+    IntType2 i10 = 10;
+    io:println(str[i10]); // @output D
+
+    1|2 i11 = 1;
+    io:println(str[i11]); // @output e
+
+    int:Unsigned8|int:Unsigned32 i12 = 2;
+    io:println(str[i12]); // @output L
+
+    int:Unsigned16|byte i13 = 6;
+    io:println(str[i13]); // @output W
+}
+
+Test-Case: output
+Description: Test whether the static type of key expression is a subtype of int when the static type of the
+             container expression is a string:Char.
+Labels: member-access-expr, byte, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned32,
+        string:Char
+
+function init() {
+    string:Char str = "H";
+
+    int i0 = 0;
+    io:println(str[i0]); // @output H
+
+    int:Signed8 i1 = 0;
+    io:println(str[i1]); // @output H
+
+    int:Signed16 i2 = 0;
+    io:println(str[i2]); // @output H
+
+    int:Signed32 i3 = 0;
+    io:println(str[i3]); // @output H
+
+    int:Unsigned8 i4 = 0;
+    io:println(str[i4]); // @output H
+
+    int:Unsigned16 i5 = 0;
+    io:println(str[i5]); // @output H
+
+    int:Unsigned32 i6 = 0;
+    io:println(str[i6]); // @output H
+
+    byte i7 = 0;
+    io:println(str[i7]); // @output H
+
+    io:println(str[0]); // @output H
+}
+
+Test-Case: output
+Description: Test whether the static type of key expression is a subtype of int when the static type of the
+             container expression is a string:Char.
+Labels: member-access-expr, byte, int, int:Signed8, int:Signed16, int:Unsigned8, int:Unsigned32, module-type-decl,
+        module-const-decl, string:Char, union-type
+
+const i8 = 0;
+
+type IntType1 int:Signed8|int:Signed16;
+
+type IntType2 i8|10;
+
+function init() {
+    string:Char str = "H";
+
+    io:println(str[i8]); // @output H
+
+    IntType1 i9 = 0;
+    io:println(str[i9]); // @output H
+
+    IntType1 i10 = 0;
+    io:println(str[i10]); // @output H
+
+    0|2 i11 = 0;
+    io:println(str[i11]); // @output H
+
+    int:Unsigned8|int:Unsigned32 i12 = 0;
+    io:println(str[i12]); // @output H
+
+    int:Unsigned16|byte i13 = 0;
+    io:println(str[i13]); // @output H
+}
+
+Test-Case: output
+Description: Test whether the static type of key expression is a subtype of int when the static type of the
+             container expression is a user defined subtype of string.
+Labels: member-access-expr, byte, int, int:Signed8, int:Signed16, int:Unsigned8, int:Unsigned32,
+        module-type-decl, module-const-decl, string, union-type
+
+const i8 = 0;
+
+type IntType1 int:Signed8|int:Signed16;
+
+type IntType2 i8|3;
+
+const str1 = "BaLleRiNa";
+const str2 = "Swan Lake";
+
+type StringType1 "Hello"|"World";
+
+type StringType2 str1|str2;
+
+function init() {
+    io:println(str1[i8]); // @output B
+
+    IntType1 i9 = 2;
+    io:println(str2[i9]); // @output a
+
+    StringType1 str3 = "Hello";
+    IntType2 i10 = 3;
+    io:println(str3[i10]); // @output l
+
+    StringType2 str4 = "BaLleRiNa";
+    0|2 i11 = 2;
+    io:println(str4[i11]); // @output L
+
+    string:Char|"ABC" str5 = "ABC";
+    int:Unsigned8|int:Unsigned32 i12 = 1;
+    io:println(str5[i12]); // @output B
+
+    str1|StringType1 str6 = "World";
+    int:Unsigned16|byte i13 = 0;
+    io:println(str6[i13]); // @output W
+}
+
+Test-Case: output
+Description: Test the result of evaluating a member access expression when basic type of the evaluated value of the
+             container expression is string.
+Labels: member-access-expr, string, string:length
+
+function init() {
+    string str = "Ballerina";
+
+    string value = str[5];
+    io:println(value); // @output r
+    io:println(value.length()); // @output 1
+}
+
+Test-Case: output
+Description: Test the result of evaluating a member access expression when basic type of the evaluated value of the
+             container expression is string:Char.
+Labels: member-access-expr, is-expr, string, string:Char, string:length
+
+function init() {
+    string:Char str = "B";
+    io:println(str[0] is string); // @output true
+
+    string value = str[0];
+    io:println(value.length()); // @output 1
+}
+
+Test-Case: output
+Description: Test the result of evaluating a member access expression when basic type of the evaluated value of the
+             container expression is a user defined subtype of string.
+Labels: member-access-expr, is-expr, module-type-decl, module-const-decl, string, string:length, union-type
+
+const str1 = "BaLleRiNa";
+const str2 = "Swan Lake";
+
+type StringType1 "Hello"|"World";
+
+type StringType2 str1|str2;
+
+type StringType3 StringType1|StringType2;
+
+function init() {
+    io:println(str1[5] is string); // @output true
+
+    string value = str1[5];
+
+    io:println(value); // @output R
+    io:println(value.length()); // @output 1
+
+    StringType1 str3 = "Hello";
+
+    io:println(str3[4] is string); // @output true
+
+    value = str3[4];
+
+    io:println(value); // @output o
+    io:println(value.length()); // @output 1
+
+    StringType2 str4 = "Swan Lake";
+
+    io:println(str4[5] is string); // @output true
+
+    value = str4[5];
+
+    io:println(value); // @output L
+    io:println(value.length()); // @output 1
+
+    StringType3 str5 = "BaLleRiNa";
+
+    io:println(str5[5] is string); // @output true
+
+    value = str5[5];
+
+    io:println(value); // @output R
+    io:println(value.length()); // @output 1
+}
+
+Test-Case: panic
+Description: Test the result of evaluating a member access expression when the evaluated value(k) of the
+             key expression is less than 0 with container expression whose basic type is string (k < 0).
+Labels: member-access-expr, string, unary-minus
+
+function init() {
+    string str = "Hello";
+    io:println(str[-3]); // @panic index out of range
+}
+
+Test-Case: panic
+Description: Test the result of evaluating a member access expression when the evaluated value(k) of the
+             key expression is equal to the length of the evaluated string value(c) of the
+             container expression whose basic type is string (k = length(c)).
+Labels: member-access-expr, string
+
+function init() {
+    string str = "Hello";
+    io:println(str[5]); // @panic index out of range
+}
+
+Test-Case: panic
+Description: Test the result of evaluating a member access expression when the evaluated value(k) of the
+             key expression is greater than the length of the evaluated string value(c) of the
+             container expression whose basic type is string (k > length(c)).
+Labels: member-access-expr, string
+
+function init() {
+    string str = "Hello";
+    io:println(str[10]); // @panic index out of range
+}
+
+Test-Case: output
+Description: Test the static type of member access expression when static type of the container expression is
+             a subtype of string.
+Labels: member-access-expr, is-expr, module-type-decl, module-const-decl, string, string:Char, union-type
+
+const str1 = "BaLleRiNa";
+const str2 = "Swan Lake";
+
+type StringType1 "Hello"|"World";
+
+type StringType2 str1|str2;
+
+type StringType3 StringType1|StringType2;
+
+function init() {
+    string str = "NutCracker";
+    string:Char value = str[5];
+    io:println(value); // @output a
+    io:println(str[5] is string:Char); // @output true
+
+    string:Char char = "B";
+    value = char[0];
+    io:println(value); // @output B
+    io:println(char[0] is string:Char); // @output true
+
+    value = str1[5];
+    io:println(value); // @output R
+    io:println(str1[5] is string:Char); // @output true
+
+    StringType1 str3 = "Hello";
+    value = str3[4];
+    io:println(value); // @output o
+    io:println(str3[4] is string:Char); // @output true
+
+    StringType2 str4 = "Swan Lake";
+    value = str4[5];
+    io:println(value); // @output L
+    io:println(str4[5] is string:Char); // @output true
+
+    StringType3 str5 = "BaLleRiNa";
+    value = str5[5];
+    io:println(value); // @output R
+    io:println(str5[5] is string:Char); // @output true
+}
+
+Test-Case: output
+Description: Test string literal as container expression of static type string.
+Labels: member-access-expr, string
+
+function init() {
+    io:println("SwanLake"[5]); // @output a
+}
+
+Test-Case: output
+Description: Test string template expression as container expression of static type string.
+Labels: member-access-expr, string-template-expr
+
+function init() {
+    io:println(string `SwanLake`[5]); // @output a
+}
+
+Test-Case: output
+Description: Test variable reference expression as container expression of static type string.
+Labels: member-access-expr, string, variable-reference-expr
+
+function init() {
+    string str = "Krasinski";
+    io:println(str[5]); // @output n
+}
+
+Test-Case: output
+Description: Test field access expression as container expression of static type string.
+Labels: member-access-expr, field-access-expr, mapping-constructor-expr, module-type-decl, record-type, string
+
+type Record record {|
+    string name;
+|};
+
+function init() {
+    Record rec = {name: "Krasinski"};
+    io:println(rec.name[5]); // @output n
+}
+
+Test-Case: output
+Description: Test member access expression as container expression of static type string.
+Labels: member-access-expr, string
+
+function init() {
+    string str = "Hello";
+
+    io:println(str[1][0]); // @output e
+}
+
+Test-Case: output
+Description: Test function call expression as container expression of static type string.
+Labels: member-access-expr, function-call-expr, string
+
+function init() {
+    io:println(getString()[4]); // @output E
+}
+
+function getString() returns string {
+    return "BaLlErInA";
+}
+
+Test-Case: output
+Description: Test method call expression as container expression of static type string.
+Labels: member-access-expr, method-call-expr, module-class-defn, explicit-new-expr, string
+
+class Dog {
+    function getName(string name) returns string {
+        return name + " Cooper";
+    }
+}
+
+function init() {
+    Dog dog = new Dog();
+    io:println(dog.getName("Max")[2]); // @output x
+}
+
+Test-Case: output
+Description: Test let expression expression as container expression of static type string.
+Labels: member-access-expr, let-expr, string
+
+function init() {
+    io:println((let string b = "HeLlO" in b)[3]); // @output l
+}
+
+Test-Case: output
+Description: Test type cast expression as container expression of static type string.
+Labels: member-access-expr, string, optional-type, type-cast-expr
+
+function init() {
+    string? value = "NutCracker";
+    io:println((<string>value)[3]); // @output C
+}
+
+Test-Case: output
+Description: Test additive expression as container expression of static type string.
+Labels: member-access-expr, additive-expr, string
+
+function init() {
+    io:println(("Hello" + "World")[6]); // @output o
+}
+
+Test-Case: output
+Description: Test conditional expression as container expression of static type string.
+Labels: member-access-expr, conditional-expr, string, is-expr, optional-type
+
+function init() returns error? {
+    string? msg = "Hello WORLD";
+    io:println((msg is string ? "SwanLake" : "NutCracker")[4]); // @output L
+}
+
+Test-Case: output
+Description: Test checking expression as container expression of static type string.
+Labels: member-access-expr, check, checkpanic, error, string, union-type
+
+function init() returns error? {
+    string|error msg = "Hello WORLD";
+    io:println((check msg)[8]); // @output R
+    io:println((checkpanic msg)[8]); // @output R
+}
+
+Test-Case: output
+Description: Test query expression as container expression of static type string.
+Labels: member-access-expr, query-expr, array-type, list-constructor-expr, string
+
+function init() returns error? {
+    string[] msg = ["H", "E", "L", "L", "O"];
+    io:println((from string letter in msg select letter)[4]); // @output O
+}
+
+Test-Case: output
+Description: Test int literal as key expression with container expression of static type string.
+Labels: member-access-expr, string, DecimalNumber
+
+function init() returns error? {
+    string str = "Hello World";
+    io:println(str[1]); // @output e
+}
+
+Test-Case: output
+Description: Test variable reference as key expression with container expression of static type string.
+Labels: member-access-expr, variable-reference-expr, string, int
+
+function init() returns error? {
+    string str = "Hello World";
+    int i = 1;
+    io:println(str[i]); // @output e
+}
+
+Test-Case: output
+Description: Test field access expression as key expression with container expression of static type string.
+Labels: member-access-expr, field-access-expr, record-type, mapping-constructor-expr, int, string
+
+type Record record {|
+    int index;
+|};
+
+function init() {
+    string str = "Hello!";
+    Record rec = {index: 1};
+    io:println(str[rec.index]); // @output e
+}
+
+Test-Case: output
+Description: Test member access expression as key expression with container expression of static type string.
+Labels: member-access-expr, array-type, int, list-constructor-expr, string
+
+function init() {
+    string str = "Hello!";
+    int[] indices = [0, 1, 2];
+    io:println(str[indices[2]]); // @output l
+}
+
+Test-Case: output
+Description: Test functional call as key expression with container expression of static type string.
+Labels: member-access-expr, function-call-expr, int, string
+
+function init() {
+    string str = "Hello!";
+    io:println(str[getPosition()]); // @output l
+}
+
+function getPosition() returns int {
+    return 2;
+}
+
+Test-Case: output
+Description: Test method call as key expression with container expression of static type string.
+Labels: member-access-expr, explicit-new-expr, module-class-defn, method-call-expr, int, string
+
+class Position {
+    function getPosition(int pos) returns int {
+        return pos + 1;
+    }
+}
+
+function init() {
+    string str = "Hello!";
+    Position pos = new Position();
+    io:println(str[pos.getPosition(3)]); // @output o
+}
+
+Test-Case: output
+Description: Test let expression as key expression with container expression of static type string.
+Labels: member-access-expr, let-expr, int, string
+
+function init() {
+    string str = "Hello!";
+    io:println(str[let int i = 1 + 2 in i]); // @output l
+}
+
+Test-Case: output
+Description: Test type cast expression as key expression with container expression of static type string.
+Labels: member-access-expr, type-cast-expr, int, string
+
+function init() {
+    string str = "Hello!";
+    io:println(str[<int> 4]); // @output o
+}
+
+Test-Case: output
+Description: Test unary numeric expression as key expression with container expression of static type string.
+Labels: member-access-expr, unary-numeric-expr, string, DecimalNumber
+
+function init() {
+    string str = "Hello!";
+    io:println(str[+4]); // @output o
+    io:println(str[-(-5)]); // @output !
+    io:println(str[~(-5)]); // @output o
+}
+
+Test-Case: output
+Description: Test additive expression as key expression with container expression of static type string.
+Labels: member-access-expr, additive-expr, DecimalNUmber, string
+
+function init() {
+    string str = "Hello!";
+    io:println(str[0 + 1]); // @output e
+    io:println(str[3 - 2]); // @output e
+}
+
+Test-Case: output
+Description: Test multiplicative expression as key expression with container expression of static type string.
+Labels: member-access-expr, multiplicative-expr, DecimalNumber, string
+
+function init() {
+    string str = "Hello!";
+    io:println(str[1 * 2]); // @output l
+    io:println(str[4 / 2]); // @output l
+    io:println(str[5 % 2]); // @output e
+}
+
+Test-Case: output
+Description: Test shift expression as key expression with container expression of static type string.
+Labels: member-access-expr, shift-expr, DecimalNumber, string
+
+function init() {
+    string str = "Hello!";
+    io:println(str[1 << 2]); // @output o
+    io:println(str[4 >> 2]); // @output e
+}
+
+Test-Case: output
+Description: Test binary bitwise expression as key expression with container expression of static type string.
+Labels: member-access-expr, binary-bitwise-expr, DecimalNumber, string
+
+function init() {
+    string str = "Hello!";
+    io:println(str[2 & 6]); // @output l
+    io:println(str[2 ^ 6]); // @output o
+}
+
+Test-Case: output
+Description: Test checking expression as key expression with container expression of static type string.
+Labels: member-access-expr, check, checkpanic, error, int, string, union-type
+
+function init() returns error? {
+    string str = "Hello!";
+    int|error pos = 3;
+
+    io:println(str[check pos]); // @output l
+    io:println(str[checkpanic pos]); // @output l
+}
+
+Test-Case: output
+Description: Test conditional expression as key expression with container expression of static type string.
+Labels: member-access-expr, conditional-expr, string, is-expr, optional-type, int
+
+function init() {
+    string str = "Hello!";
+    int? pos = 5;
+    io:println(str[pos is int ? pos : 0]); // @output !
+}
+
+Test-Case: output
+Description: Test member access expression at module level.
+Labels: member-access-expr, string, string:Char, module-var-decl
+
+string str = "Hello";
+
+string:Char char = str[3];
+
+function init() {
+    io:println(char); // @output l
+}
+
+Test-Case: output
+Description: Test member access expression when the basic type of the container expression is inferred as string.
+Labels: member-access-expr, string, is-expr, var
+
+function init() {
+    var str = "Hello";
+    io:println(str is string); // @output true
+    io:println(str[3]); // @output l
+}
+
+Test-Case: output
+Description: Test member access expression with container expression of basic type string as array member.
+Labels: member-access-expr, array-type, string, string:Char, list-constructor-expr
+
+function init() {
+    string str = "Hello";
+
+    string:Char[] charArr = [str[3], str[1], str[0]];
+    io:println(charArr[1]); // @output e
+}
+
+Test-Case: output
+Description: Test member access expression with container expression of basic type string as default expression
+             for a field.
+Labels: member-access-expr, module-var-decl, record-type, string, string:Char, module-type-decl,
+        mapping-constructor-expr, final
+
+final string str = "Hello";
+
+type Record record {|
+    string:Char char = str[4];
+|};
+
+function init() {
+    Record rec = {};
+    io:println(rec.char); // @output o
+}
+
+Test-Case: output
+Description: Test member access expression with container expression of basic type string as defaultable
+             function parameter.
+Labels: member-access-expr, defaultable-param, function-call-expr, module-var-decl, string, string:Char, final
+
+final string str = "Hello";
+
+function init() {
+    io:println(getCharacter()); // @output o
+}
+
+function getCharacter(string:Char char = str[4]) returns string {
+    return char;
+}
+
+Test-Case: output
+Description: Test member access expression with container expression of basic type string as expression in
+             return statement.
+Labels: member-access-expr, return-stmt, string, string:Char, function-call-expr
+
+function init() {
+    io:println(getCharacter("Hello")); // @output e
+}
+
+function getCharacter(string str) returns string:Char {
+    return str[1];
+}
+
+Test-Case: error
+Description: Test key expression with invalid static type.
+Labels: member-access-expr, string
+
+function errorFunction() {
+    string str = "Hello";
+
+    io:println(str["1"]); // @error expected a value of subtype int
+}
