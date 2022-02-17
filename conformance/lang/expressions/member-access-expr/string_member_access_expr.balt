@@ -700,6 +700,38 @@ function getCharacter(string str) returns string:Char {
     return str[1];
 }
 
+Test-Case: output
+Description: Test accessing members of a member access expression.
+Labels: member-access-expr, string, int, array-type, tuple-type, list-constructor-expr, module-type-decl, record-type,
+        mapping-constructor-expr
+
+type Record record {
+    string[][] a;
+};
+
+function init() {
+    string str = "Hello";
+    io:println(str[1][0][0][0][0]); // @output e
+
+    string[][] arr1 = [["ABC", "DEF"], ["XYZ", "UVW", "GHI"], ["LMN", "PQR"]];
+    io:println(arr1[1][2][2][0][0]); // @output I
+
+    [int, [string...]] t1 = [1, ["ABC", "DEF", "XYZ", "UVW", "GHI"]];
+    io:println(t1[1][2][0][0][0]); // @output X
+
+    Record rec = {a: [["ABC", "DEF"], ["XYZ", "UVW", "GHI"], ["LMN", "PQR"]]};
+    io:println(rec["a"][1][2][2][0][0]); // @output I
+}
+
+Test-Case: error
+Description: Test assigning a value to member access expression.
+Labels: member-access-expr, string
+
+function errorFunction() {
+    string str = "Hello";
+    str[3] = "L"; // @error type 'string' does not support member access for assignment
+}
+
 Test-Case: error
 Description: Test key expression with invalid static type.
 Labels: member-access-expr, string
@@ -707,5 +739,32 @@ Labels: member-access-expr, string
 function errorFunction() {
     string str = "Hello";
 
-    io:println(str["1"]); // @error expected a value of subtype int
+    io:println(str["1"]); // @error expected a value of subtype int as key
+}
+
+Test-Case: error
+Description: Test assigning result of member access expression to an invalid type.
+Labels: member-access-expr, string, int
+
+function errorFunction() {
+    string str = "Hello";
+    int _ str[3]; // @error expected int, found string:Char
+}
+
+Test-Case: error
+Description: Test accessing members of an invalid structure.
+Labels: member-access-expr, string, optional-type
+
+function errorFunction() {
+    string? str = "Hello";
+    _ = str[3]; // @error type 'string?' does not support member access
+}
+
+Test-Case: error
+Description: Test missing key expression in member access expression.
+Labels: member-access-expr, string
+
+function errorFunction() {
+    string str = "Hello";
+    _ = str[]; // @error missing key expression
 }
