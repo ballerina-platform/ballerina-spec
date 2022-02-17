@@ -1,0 +1,431 @@
+Test-Case: output
+Description: Test let-expr, when type-descriptor is a nil-type-descriptor which is a simple-type-descriptor.
+Labels: let-expr, module-class-defn, nil-literal, nil-type, return-stmt, union-type, boolean, record-type,
+        list-constructor-expr, mapping-constructor-expr, table-constructor-expr, query-expr
+        object-constructor-expr, new-expr, function-call-expr, method-call-expr, error-constructor-expr,
+        type-cast-expr, typeof-expr, unary-logical-expr, is-expr, equality-expr, logical-expr, conditional-expr
+
+class NilClass {
+    null n;
+    function init(null n) {
+        self.n = n;
+    }
+
+    function getNil() returns () {
+        return self.n;
+    }
+
+    function isNil(int? i) returns boolean {
+        return i == ();
+    }
+}
+
+type Record record {|
+    int|boolean? i;
+|};
+
+function init() {
+    io:println(() == let null n = null in n); // @output true
+    io:println(() == let () n = () in n); // @output true
+    io:println(() == let null n = () in n); // @output true
+
+    io:println(let null n = () in [n, n, n]); // @output [null,null,null]
+    io:println(let null n = () in [n, [n, n]]); // @output [null,[null,null]]
+
+    io:println(let null nx = (), null ny = () in {"n": nx, n1: nx, ny, ["a"]: [nx, ny]});
+    // @output {"n":null,"n1":null,"ny":null,"a":[null,null]}
+    io:println(let null nx = (), null ny = () in {"n": {nx, ny}}); // @output {"n":{"nx":null,"ny":null}}
+    Record r = let null n = () in {i: n};
+    io:println(r); // @output {"i":null}
+
+    io:println(let null n = () in table key(n1) [{n1: "N1", n2: n}, {n1: "N2", n2: n}]);
+    // @output [{"n1":"N1","n2":null},{"n1":"N2","n2":null}]
+
+    //var obj = let null n = () in object {
+    //    null nx = n;
+    //    function init() {
+    //        io:println(self.nx == ());
+    //    }
+    //};
+    //io:println(obj.nx == ());
+
+    var obj1 = let null n = () in new NilClass(n);
+    io:println(obj1.getNil() == ()); // @output true
+    NilClass obj2 = let null n = () in new (n);
+    io:println(obj2.getNil() == ()); // @output true
+
+    io:println(let null n = () in isNil(n)); // @output true
+
+    NilClass obj3 = new(null);
+    io:println(let null n = () in obj3.isNil(n)); // @output true
+
+    io:println(let null n = null in error("Message", n, n = n)); // @output error("Message",n=null)
+    io:println(let null n = null in error("Message", error("Message", n = n), n = n));
+    // @output error("Message",error("Message",n=null),n=null)
+
+    io:println(() == let null n1 = null in let null n2 = n1 in n2); // @output true
+    io:println(let null n1 = null in let null n2 = n1 in error("Message", n1, n = n2));
+    // @output error("Message",n=null)
+
+    io:println(() == let null n = null in <()>n); // @output true
+
+    io:println(let null n = null in typeof n); // @output typedesc ()
+
+    io:println(let null n = null in !(n == ())); // @output false
+
+    io:println(let null n = null in n is null); // @output true
+
+    io:println(let null n = null in n == null); // @output true
+    io:println(let null n = null in n != null); // @output false
+    io:println(let null n = null in n === null); // @output true
+    io:println(let null n = null in n !== null); // @output false
+
+    io:println(let null n = null in n == () ? true : false); // @output true
+
+    var a = let null n = null in from var i in [1, n, 2, n] select i;
+    io:println(a); // @output [1,null,2,null]
+    var b = let null n1 = null, null n2 = null in from var i in [1, n1, 2, n2] select i;
+    io:println(b); // @output [1,null,2,null]
+    var c = let null n = null in from var i in [1, n, 2, n]
+                                let int? x = i
+                                select x;
+    io:println(c); // @output [1,null,2,null]
+    var d = let null n = null in from var x in [
+                                                {id: 1, name: "X"},
+                                                {id: 2, name: n}
+                                            ]
+                                join var y in [
+                                                {id: 1, name: "Y"},
+                                                {id: 3, name: n}
+                                            ]
+                                on x.name equals y.name
+                                select x.id.toString() + " " + y.id.toString();
+    io:println(d); // @output ["2 3"]
+}
+
+function trueFunc() returns boolean {
+    return true;
+}
+
+function isNil(int? i) returns boolean {
+    return i == ();
+}
+
+Test-Case: output
+Description: Test let-expr, when type-descriptor is a boolean-type-descriptor which is a simple-type-descriptor.
+Labels: let-expr, module-class-defn, return-stmt, union-type, boolean, record-type, list-constructor-expr,
+        mapping-constructor-expr, table-constructor-expr, object-constructor-expr, new-expr, function-call-expr,
+        method-call-expr
+
+type Record record {|
+    int|boolean? i;
+|};
+
+class BoolClass {
+    boolean b1;
+    boolean b2;
+
+    function init(boolean b1, boolean b2) {
+        self.b1 = b1;
+        self.b2 = b2;
+    }
+
+    function foo() returns boolean {
+        return self.b1 && !self.b2;
+    }
+}
+
+function init() {
+    io:println(let boolean b = true in b); // @output true
+
+    io:println(let boolean b1 = true, boolean b2 = false in [b1, b2, b1]); // @output [true,false,true]
+    io:println(let boolean b1 = true, boolean b2 = false in [b2, [b1, b2]]); // @output [false,[true,false]]
+
+    io:println(let boolean b1 = true, boolean b2 = false in {"b": b1, b1: b1, b2, ["a"]: [b1, b2]});
+        // @output {"b":true,"b1":true,"b2":false,"a":[true,false]}
+    io:println(let boolean b1 = true, boolean b2 = false in {"b": {b1, b2}}); // @output {"b":{"b1":true,"b2":false}}
+    Record r = let boolean b = false in {i: b};
+    io:println(r); // @output {"i":false}
+    io:println(let boolean b1 = true, boolean b2 = !b1 in {"b": {b1, b2}}); // @output {"b":{"b1":true,"b2":false}}
+
+    io:println(let boolean b1 = true, boolean b2 = true
+        in table key(name) [{isValid: b1, name: "XX"}, {isValid: b2, name: "YY"}]);
+        // @output [{"isValid":true,"name":"XX"},{"isValid":true,"name":"YY"}]
+    var d = let boolean b1 = true, boolean b2 = false in table key(name) [{isValid: b1 && b2, name: "XX"}];
+    io:println(d); // @output [{"isValid":false,"name":"XX"}]
+
+    //object { public boolean b; } obj = let boolean b1 = true in object {
+    //                                                                public boolean b = b1; };
+
+    BoolClass boolObj = let boolean b1 = true, boolean b2 = false in new BoolClass(b1, b2);
+    io:println(boolObj.foo()); // @output true
+
+    io:println(let boolean b = true in isTrue(b)); // @output true
+
+    io:println(let boolean b1 = false in let boolean b2 = b1 in b2); // @output false
+    io:println(let boolean b1 = true in let boolean b2 = b1 in [b1, b2]); // @output [true,true]
+}
+
+function isTrue(boolean b) returns boolean {
+    return b;
+}
+
+Test-Case: output
+Description: Test let-expr, when type-descriptor is a int-type-descriptor or floating-point-type-descriptor which are
+             simple-type-descriptors.
+Labels: let-expr, list-constructor-expr, type-cast-expr, function-call-expr, DecimalFloatingPointNumber, int, float,
+        decimal
+
+function init() {
+    io:println(let int i = 2, float f = 2.2f, decimal d = 1.2d in i + <int>f + <int>d); // @output 5
+    io:println(let int i = 2, float f = 2.2f, decimal d = 1.2d in [i, f, d]); // @output [2,2.2,1.2]
+    io:println(let decimal d = 12e43d in d.abs()); // @output 1.2E+44
+    //io:println(let int i = 2, int j = 3 in foo(i) + bar(j));
+    //io:println(() == let int i = 2, int j = 3 in foo(i) + baz(j));
+}
+
+function foo(int? i) returns int? {
+    return i;
+}
+
+function bar(int i) returns int? {
+    return i;
+}
+
+function baz(int i) returns int? {
+    return;
+}
+
+Test-Case: output
+Description: Test let-expr, when type-descriptor is a string-type-descriptor which are sequence-type-descriptor.
+Labels: let-expr, record-type, array-type, string, function-call-expr, table-constructor-expr
+
+type Names record {|
+    string country;
+    string[] names;
+|};
+
+function init() {
+    io:println(let string s = "\u{0633}" in s); // @output س
+    io:println(let string s = "ABC \u{0633} CDE \u{0644} DEF \u{0644} XYZ" in s); // @output ABC س CDE ل DEF ل XYZ
+
+    record {| string myField; |} r = let string smiley = "h😀llo" in {myField: smiley};
+    io:println(r.myField); // @output h😀llo
+
+    var c = let string str = "ABCDEF" in str[1];
+    io:println(c); // @output B
+
+    io:println(() == let string str = "ABCDEF", string subStr = "PQR" in str.indexOf(subStr)); // @output true
+    io:println(let string str = "abc" in str.toUpperAscii()); // @output ABC
+    io:println(let string firstName = "John", string lastName = "Smith"
+        in string `Hello ${lastName}, ${firstName} !!!`); // @output Hello Smith, John !!!
+
+    table<Names> tbNames = table [];
+    _ = let Names val = let string[] names = ["Sam", "John", "Ann"] in {country: "Ireland", names: names}
+        in tbNames.add(val);
+    io:println(tbNames); // @output [{"country":"Ireland","names":["Sam","John","Ann"]}]
+
+    var strSplit = let string str = "ABCD" in from string s in str select s;
+    io:println(strSplit); // @output ABCD
+}
+
+Test-Case: output
+Description: Test let-expr, when type-descriptor is a xml-type-descriptor which are sequence-type-descriptor.
+Labels: let-expr, xml, xml:Element, xml:ProcessingInstruction, xml:Comment, xml:Text, xml-type-parameter
+
+function init() {
+    xmlns "foo" as ns;
+    io:println(let xml x1 = xml `<ns:root></ns:root>` in x1.<*>); // @output <ns:root xmlns:ns="foo"></ns:root>
+    io:println(let xml x1 = xml `<ns:root></ns:root>` in x1.<ns:*>); // @output <ns:root xmlns:ns="foo"></ns:root>
+    io:println(let xml x1 = xml `<ns:root></ns:root>` in x1.<ns:root>); // @output <ns:root xmlns:ns="foo"></ns:root>
+    io:println(let string v1 = "interpolation1", string v2 = "interpolation2"
+        in (xml `text1${v1}<foo>foo</foo>text2${v2}<!--comment ${v2}-->text3`).toString());
+    // @output text1interpolation1<foo>foo</foo>text2interpolation2<!--comment interpolation2-->text3
+    io:println(let xml<'xml:ProcessingInstruction> x1 = xml `<?foo?><?faa?>` in x1.toString());
+    // @output <?foo ?><?faa ?>
+    io:println(let string v = "str" in (xml `text1 ${v}`).toString()); // @output text1 str
+    io:println(let string v1 = "11", string v2 = "22" in (xml `aaa${v1}bbb${v2}ccc`).toString());
+    // @output aaa11bbb22ccc
+    io:println(let string v1 = "11", string v2 = "22" in (xml `<!--aaa${v1}bbb${v2}ccc-->`).toString());
+    // @output <!--aaa11bbb22ccc-->
+    io:println(let string v1 = "11", string v2 = "22" in (xml `<?foo aaa${v1}bbb${v2}ccc?>`).toString());
+    // @output <?foo aaa11bbb22ccc?>
+    io:println(let string v1 = "11", string v2 = "22" in (xml `<foo bar="aaa${v1}bb'b${v2}ccc?"/>`).toString());
+    // @output <foo bar="aaa11bb'b22ccc?"></foo>
+    io:println(let int i = 42, float f = 3.14, decimal d = 31.4444, string s = "this-is-a-string",
+    xml elem = xml `<abc/>` in (xml `<elem>${i}|${f}|${d}|${s}|${elem}</elem>`).toString());
+    // @output <elem>42|3.14|31.4444|this-is-a-string|<abc></abc></elem>
+}
+
+Test-Case: output
+Description: Test let-expr, when type-descriptor is a list-type-descriptor and tuple-type-descriptor
+             which are structured-type-descriptor.
+Labels: let-expr, list-constructor-expr, mapping-constructor-expr, function-call-expr
+
+function init() {
+    io:println(let var l = ["A", 2] in l[0]); // @output A
+    io:println(let var l = [["A", 2], ["B", 3, "C"]] in l[1][2]); // @output C
+    io:println(() == let map<any> addressOne = {city: "Colombo", "country": "SriLanka"}, map<any>[] array = []
+        in array.push(addressOne)); // @output true
+    io:println(let int[] arr = [23, 34] in arr.length()); // @output 2
+    io:println(let [int, boolean][3] sealedArray = [[2, true], [3, false], [6, true]]
+        in sealedArray.length()); // @output 3
+    io:println(() == let [int, string...] x = [1, "a", "b"] in x.push("2")); // @output true
+}
+
+Test-Case: output
+Description: Test let-expr, when type-descriptor is a mapping-type-descriptor which is a structured-type-descriptor.
+Labels: let-expr, mapping-constructor-expr
+
+function init() {
+    io:println(let map<any> animals = {"animal1":"Lion", "animal2":"Cat"} in animals.get("animal1")); // @output Lion
+    io:println(let map<any> animals = {"animal1":"Lion", "animal2":"Cat"} in animals.keys());
+    // @output ["animal1","animal2"]
+    io:println(let map<any> animals = {"animal1":"Lion", "animal2":"Cat"} in animals.entries());
+    // @output {"animal1":["animal1","Lion"],"animal2":["animal2","Cat"]}
+    io:println(let string i = "i", float f = 2.0, map<anydata> b = {s: "hello", [i]: 1, f: f}
+        in b["s"] == "hello" && b["i"] == 1 && b["f"] == 2.0); // @output true
+    io:println(let map<any> list1 = {"item1": "item1"} in list1["item1"] is string); // @output true
+    io:println(let map<any> address = {country: "SriLanka"}, map<any> info = {name: "Supun", address: address}
+        in (<map<any>> (info["address"]))["country"]); // @output SriLanka
+}
+
+Test-Case: output
+Description: Test let-expr, when type-descriptor is a record-type-descriptor which is a structured-type-descriptor.
+Labels: let-expr, record-type, mapping-constructor-expr
+
+type Department record {
+    string dptName = "";
+    Person[] employees = [];
+};
+
+type Person record {|
+    string name = "default name";
+    Family family = {};
+|};
+
+type Family record {
+    string spouse = "";
+    int noOfChildren = 0;
+    string[] children = [];
+};
+
+type Student record {
+    int id;
+    string name?;
+};
+
+function init() {
+    io:println(let Family family1 = {spouse: "Ann", noOfChildren: 0}, Person emp1 = {family: family1},
+        Person[] emps = [emp1], Department dpt = {dptName: "HR", employees: emps} in dpt.employees[0].family);
+    // @output {"spouse":"Ann","noOfChildren":0,"children":[]}
+    io:println(let Family family1 = {spouse: "Ann", noOfChildren: 0}, Person emp1 = {family: family1}
+        in emp1.entries());
+    // @output {"name":["name","default name"],"family":["family",{"spouse":"Ann","noOfChildren":0,"children":[]}]}
+    io:println(let Student s = {id : 1, name : "Andrew"} in s.removeIfHasKey("name")); // @output Andrew
+    io:println(() == let Student s = {id : 1, name : "Andrew"} in s.removeIfHasKey("firstName")); // @output true
+}
+
+Test-Case: output
+Description: Test let-expr, when type-descriptor is a table-type-descriptor which is a structured-type-descriptor.
+Labels: let-expr, record-type, table-constructor-expr
+
+type Foo record {
+    readonly map<string> m;
+    int age;
+};
+
+type Student record {|
+    readonly string name;
+    int id?;
+    Address address;
+|};
+
+type Address record {
+    string city;
+    string? country;
+};
+
+function init() {
+    io:println(let table<map<any>> tbl = table [{ id: 13 , name: "Emm", lname: "Dean" }] in tbl);
+    // @output [{"id":13,"name":"Emm","lname":"Dean"}]
+    io:println(() == let table<Foo> key(m) tbl = table [{m: {"AAA": "DDDD"}, age: 31 }]
+        in tbl.add({ m: {"CCC":"EEEE"}, age: 34 })); // @output true
+    io:println(let table<Student> key(name) tbl = table [{name: "Amy", id: 1234, address:
+        {"street": "Main Street", "city": "Colombo", "country": ()}}] in tbl["Amy"]["address"]["country"] == ());
+    // @output true
+}
+
+Test-Case: output
+Description: Test let-expr with query expressions.
+Labels: let-expr, record-type, array-type, list-constructor-expr
+
+type Department record {|
+   int id;
+   string name;
+|};
+
+type Person record {|
+   int id;
+   string fname;
+   string lname;
+|};
+
+type DeptPerson record {|
+   string fname;
+   string lname;
+   string? dept;
+|};
+
+Person[] personList = [
+    {id: 1, fname: "Alex", lname: "George"}
+];
+
+Department[] deptList = [
+    {id: 1, name:"HR"}
+];
+
+function init() {
+    var l = let Person[] personList = [{id: 1, fname: "Sam", lname: "George"}],
+                   Department[] deptList = [{id: 1, name:"HR"}] in
+                   from var person in personList
+                        join var {id: deptId, name: deptName} in deptList
+                        on person.id equals deptId
+                        select {
+                            fname : person.fname,
+                            lname : person.lname,
+                            dept : deptName
+                        };
+    io:println(l); // @output [{"fname":"Sam","lname":"George","dept":"HR"}]
+}
+
+Test-Case: parser-error
+Description: let-expr with missing tokens
+Labels: let-expr
+
+function errorFunction() {
+    io:println(let int i in i); // @error missing equal token
+                                // @error missing identifier
+    io:println(let i = 2 in i); // @error unknown type 'i'
+                                // @error missing identifier
+                                // @error undefined symbol 'i'
+    io:println(let int i = 2 i); // @error missing in keyword
+    io:println(let int i = 2 int j = 2 in i + j); // @error missing comma token
+    io:println(let in i); // @error missing let variable declaration
+                          // @error undefined symbol 'i'
+    io:println(let i); // @error unknown type 'i'
+                       // @error missing equal token
+                       // @error missing identifier
+                       // @error missing identifier
+                       // @error missing identifier
+                       // @error missing in keyword
+}
+
+Test-Case: error
+Description: let-expr when variables are declared outside its' scope
+Labels: let-expr
+
+function errorFunction() {
+    int i = 2;
+    io:println(let int i = 2 in i); // @error redeclared symbol 'i'
+}
