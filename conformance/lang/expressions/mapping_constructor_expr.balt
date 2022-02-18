@@ -9,7 +9,7 @@ function init() {
 
     io:println({number: 0, value: "value b"}); // @output {"number":0,"value":"value b"}
 
-    io:println({a: 325, b: "value b", c: 5.453, d: ()}); // @output {"a":5,"b":"value b","c":5.453,"d":null}
+    io:println({a: 325, b: "value b", c: 5.453, d: ()}); // @output {"a":325,"b":"value b","c":5.453,"d":null}
     
     map<any> mapVar = {'5var: 5, \u{0041}B: "AB", සිංහල: true, abcd\-\>efg: "abcdefg", _special: 5454};
     io:println(mapVar); // @output {"5var":5,"AB":"AB","සිංහල":true,"abcd->efg":"abcdefg","_special":5454}
@@ -71,7 +71,6 @@ Labels: any, boolean-literal, byte, mapping-constructor-expr, map-type, readonly
 
 function init() {
     int a = 45;
-    byte b = 128;
 
     printResult({readonly fieldA: true, "a": "fdfd", readonly "b": 43}); // @output {"fieldA":true,"b":43,"a":"fdfd"}
 
@@ -125,14 +124,7 @@ function errorFunction() {
     map<any> _ = {fieldA: 545, a, "field field": "monitor", "fieldB": true, "field field": 544}; // @error Duplicate key `field field`
 
     map<any> _ = {field\u{0043}: 454, "field\u{0043}": false}; // @error Duplicate key `fieldC`
-}
-
-Test-Case: error
-Description: Test Duplicate specific fields are not allowed.
-Fail-Issue: ballerina-platform/ballerina-lang#33046
-Labels: any, boolean-literal, mapping-constructor-expr, map-type, string
-
-function errorFunction() {
+    
     map<any> _ = {a\\: 454, "a\\": false}; // @error Duplicate key `a\`
 }
 
@@ -218,33 +210,33 @@ function errorFunction() {
     map<string>[] e = [{a: "Hello"}];
     record {|int a;|}[] f = [{a: 765}];
 
-    map<any> _ = {field1: true, field2: 4345, ...arg}; // static type of the spread-field must be a subtype of map<any|error>
-    map<any> _ = {...arg, field1: true, field2: 4345}; // static type of the spread-field must be a subtype of map<any|error>
-    map<any> _ = {field1: true, ...arg, field2: 4345}; // static type of the spread-field must be a subtype of map<any|error>
+    map<any> _ = {field1: true, field2: 4345, ...arg}; // @error static type of the spread-field must be a subtype of map<any|error>
+    map<any> _ = {...arg, field1: true, field2: 4345}; // @error static type of the spread-field must be a subtype of map<any|error>
+    map<any> _ = {field1: true, ...arg, field2: 4345}; // @error static type of the spread-field must be a subtype of map<any|error>
 
-    map<any> _ = {field1: true, field2: 4345, ...a}; // static type of the spread-field must be a subtype of map<any|error>
-    map<any> _ = {...a, field1: true, field2: 4345}; // static type of the spread-field must be a subtype of map<any|error>
-    map<any> _ = {field1: true, ...a, field2: 4345}; // static type of the spread-field must be a subtype of map<any|error>
+    map<any> _ = {field1: true, field2: 4345, ...a}; // @error static type of the spread-field must be a subtype of map<any|error>
+    map<any> _ = {...a, field1: true, field2: 4345}; // @error static type of the spread-field must be a subtype of map<any|error>
+    map<any> _ = {field1: true, ...a, field2: 4345}; // @error static type of the spread-field must be a subtype of map<any|error>
 
-    map<any> _ = {field1: true, field2: 4345, ...c}; // static type of the spread-field must be a subtype of map<any|error>
-    map<any> _ = {...c, field1: true, field2: 4345}; // static type of the spread-field must be a subtype of map<any|error>
-    map<any> _ = {field1: true, ...c, field2: 4345}; // static type of the spread-field must be a subtype of map<any|error>
+    map<any> _ = {field1: true, field2: 4345, ...c}; // @error static type of the spread-field must be a subtype of map<any|error>
+    map<any> _ = {...c, field1: true, field2: 4345}; // @error static type of the spread-field must be a subtype of map<any|error>
+    map<any> _ = {field1: true, ...c, field2: 4345}; // @error static type of the spread-field must be a subtype of map<any|error>
 
-    map<any> _ = {field1: true, field2: 4345, ...d}; // static type of the spread-field must be a subtype of map<any|error>
-    map<any> _ = {...d, field1: true, field2: 4345}; // static type of the spread-field must be a subtype of map<any|error>
-    map<any> _ = {field1: true, ...d, field2: 4345}; // static type of the spread-field must be a subtype of map<any|error>
+    map<any> _ = {field1: true, field2: 4345, ...d}; // @error static type of the spread-field must be a subtype of map<any|error>
+    map<any> _ = {...d, field1: true, field2: 4345}; // @error static type of the spread-field must be a subtype of map<any|error>
+    map<any> _ = {field1: true, ...d, field2: 4345}; // @error static type of the spread-field must be a subtype of map<any|error>
 
-    map<any> _ = {field1: true, field2: 4345, ...e}; // static type of the spread-field must be a subtype of map<any|error>
-    map<any> _ = {...e, field1: true, field2: 4345}; // static type of the spread-field must be a subtype of map<any|error>
-    map<any> _ = {field1: true, ...e, field2: 4345}; // static type of the spread-field must be a subtype of map<any|error>
+    map<any> _ = {field1: true, field2: 4345, ...e}; // @error static type of the spread-field must be a subtype of map<any|error>
+    map<any> _ = {...e, field1: true, field2: 4345}; // @error static type of the spread-field must be a subtype of map<any|error>
+    map<any> _ = {field1: true, ...e, field2: 4345}; // @error static type of the spread-field must be a subtype of map<any|error>
 
-    map<any> _ = {field1: true, field2: 4345, ...f}; // static type of the spread-field must be a subtype of map<any|error>
-    map<any> _ = {...f, field1: true, field2: 4345}; // static type of the spread-field must be a subtype of map<any|error>
-    map<any> _ = {field1: true, ...f, field2: 4345}; // static type of the spread-field must be a subtype of map<any|error>
+    map<any> _ = {field1: true, field2: 4345, ...f}; // @error static type of the spread-field must be a subtype of map<any|error>
+    map<any> _ = {...f, field1: true, field2: 4345}; // @error static type of the spread-field must be a subtype of map<any|error>
+    map<any> _ = {field1: true, ...f, field2: 4345}; // @error static type of the spread-field must be a subtype of map<any|error>
 
-    map<any> _ = {field1: true, ...d, ...b}; // static type of the spread-field must be a subtype of map<any|error>
-    map<any> _ = {...a, field1: true, ...c}; // static type of the spread-field must be a subtype of map<any|error>
-    map<any> _ = {field1: true, ...e, field2: 4345, ...d, ...e, ...f}; // static type of the spread-field must be a subtype of map<any|error>
+    map<any> _ = {field1: true, ...d, ...b}; // @error static type of the spread-field must be a subtype of map<any|error>
+    map<any> _ = {...a, field1: true, ...c}; // @error static type of the spread-field must be a subtype of map<any|error>
+    map<any> _ = {field1: true, ...e, field2: 4345, ...d, ...e, ...f}; // @error static type of the spread-field must be a subtype of map<any|error>
 }
 
 Test-Case: error
@@ -554,7 +546,7 @@ function init() {
 
     printTypeOfResult({field1: 0, field2: "mouse", field3: false}); // @output true
 
-    printTypeOfResult({field1: 0, field2: "mouse", "field3": false}); // @output  true
+    printTypeOfResult({field1: 0, field2: "mouse", "field3": false}); // @output true
 
     printTypeOfResult({field1: 6756, field2: "cat", field3: false}); // @output true
 
@@ -932,11 +924,11 @@ function init() {
     int fieldA = 543543;
     string fieldB = "Some string";
     var map1 = {fieldA, readonly fieldB};
-    io:println(map1 is record {| int fieldA; readonly string fieldB; |});
+    io:println(map1 is record {| int fieldA; readonly string fieldB; |}); // @output true
     
     readonly & int[2] intArr = [1, 2];
     var map2 = {readonly fieldA: intArr};
-    io:println(map2 is record {| readonly readonly & int[2] fieldA;|});
+    io:println(map2 is record {| readonly readonly & int[2] fieldA;|}); // @output true
 }
 
 Test-Case: output
@@ -1011,7 +1003,7 @@ function errorFunction() {
     record {|int fieldA;|} _ = {fieldA: 2, readonly fieldC}; // @error fieldC is not refined in the record
 }
 
-Test-Case: error
+Test-Case: output
 Description: Test If the inherent type descriptor is a record type descriptor, a field will be added to the 
              constructed value using the default value from the type descriptor for any field that is not specified 
              explicitly in the mapping constructor and that has a default value.  
@@ -1027,7 +1019,7 @@ type MyRecord2 record {
     boolean myField2;
 };
 
-function errorFunction() {
+function init() {
     record {|int fieldA; string fieldB = "default";|} a = {fieldA: 2};
     printResult(a); // @output {"fieldA":2,"fieldB":"default"}
     printResult(a is record {|int fieldA; string fieldB = "default";|}); // @output true
@@ -1044,23 +1036,10 @@ function errorFunction() {
     printResult(d); // @output {"myField1":5,"myField2":false}
     printResult(d is MyRecord2); // @output true
     printResult(d is MyRecord1); // @output false
-}
-
-function printResult(any result) {
-    io:println(result);
-}
-
-Test-Case: error
-Description: Test If the inherent type descriptor is a record type descriptor, a field will be added to the 
-             constructed value using the default value from the type descriptor for any field that is not specified 
-             explicitly in the mapping constructor and that has a default value.
-Fail-Issue: ballerina-platform/ballerina-lang#33162
-Labels: any, is-expr, mapping-constructor-expr, record-type, string
-
-function errorFunction() {
-    record {|int fieldA; string fieldB = "default";|} b = {readonly fieldA: 2};
-    printResult(b); // @output {"fieldA":2,"fieldB":"default"}
-    printResult(b is record {readonly int fieldA; string fieldB = "default";}); // @output true
+    
+    record {|int fieldA; string fieldB = "default";|} e = {readonly fieldA: 2};
+    printResult(e); // @output {"fieldA":2,"fieldB":"default"}
+    printResult(e is record {readonly int fieldA; string fieldB = "default";}); // @output true
 }
 
 function printResult(any result) {
@@ -1222,18 +1201,19 @@ Labels: any, boolean-literal, computed-name-field, mapping-constructor-expr, map
 
 function init() {
     string fieldName = "fieldA";
-    printResult({fieldA: true, "fieldB": "bottle", [fieldName] : false, [fieldName] : 12345}); // @output {"fieldA":false,"fieldB":"bottle"}
+    printResult({fieldA: true, "fieldB": "bottle", [fieldName] : false, [fieldName] : 12345}); // @output {"fieldA":12345,"fieldB":"bottle"}
     printResult({fieldA: true, "fieldB": "bottle", [fieldName] : 12345, [fieldName] : false}); // @output {"fieldA":false,"fieldB":"bottle"}
     printResult({[fieldName] : 12345, fieldA: true, "fieldB": "bottle", [fieldName] : false}); // @output {"fieldA":false,"fieldB":"bottle"}
+    printResult({[fieldName] : 12345, fieldA: true, "fieldB": "bottle"}); // @output {"fieldA":12345,"fieldB":"bottle"}
 
     fieldName = "fieldB";
-    printResult({fieldA: true, "fieldB": "bottle", [fieldName] : false, [fieldName] : 12345}); // @output {"fieldA":true,"fieldB":false}
+    printResult({fieldA: true, "fieldB": "bottle", [fieldName] : false, [fieldName] : 12345}); // @output {"fieldA":true,"fieldB":12345}
     printResult({fieldA: true, "fieldB": "bottle", [fieldName] : 12345, [fieldName] : false}); // @output {"fieldA":true,"fieldB":false}
 
     fieldName = "fieldC";
     int fieldC = 54445;
     map<any> mapVar = {fieldA: true, fieldC, "fieldB": "bottle", [fieldName] : "some string", [fieldName] : false};
-    printResult(mapVar); // @output {"fieldA":true,"fieldC":"some string","fieldB":"bottle"}
+    printResult(mapVar); // @output {"fieldA":true,"fieldC":false,"fieldB":"bottle"}
 }
 
 function printResult(map<any> result) {
@@ -1595,6 +1575,7 @@ function init() {
 
 Test-Case: output
 Description: Test mapping constructor expression containing xml attribute access and optional attribute access as expressions.
+Fail-Issue: ballerina-platform/ballerina-lang#35116
 Labels: mapping-constructor-expr, module-init-var-decl, string, var, xml:Element, xml-required-attribute-access-expr,
        xml-optional-attribute-access-expr
 
@@ -1677,7 +1658,7 @@ Labels: error-constructor-expr, mapping-constructor-expr, string, var
 
 function init() {
     var mapVar = {fieldA: error("error message")};
-    io:println(mapVar); // @output {"fieldA":{"field1":0},"field1":0,"Ballerina":45545}
+    io:println(mapVar); // @output {"fieldA":error("error message")}
 }
 
 Test-Case: output
@@ -1745,7 +1726,7 @@ Labels: additive-expr, computed-name-field, DecimalNumber, mapping-constructor-e
 
 function init() {
     var mapVar = {fieldA: 4343 + 3, fieldB: 4343 - 3, ["field" +"C"]: 67};
-    io:println(mapVar); // @output {"fieldA":13029,"fieldB":1447,"fieldC":2}
+    io:println(mapVar); // @output {"fieldA":4346,"fieldB":4340,"fieldC":67}
 }
 
 Test-Case: output
