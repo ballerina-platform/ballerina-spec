@@ -41,13 +41,13 @@ function init() {
     io:println(let null n = () in table key(n1) [{n1: "N1", n2: n}, {n1: "N2", n2: n}]);
     // @output [{"n1":"N1","n2":null},{"n1":"N2","n2":null}]
 
-    //var obj = let null n = () in object {
-    //    null nx = n;
-    //    function init() {
-    //        io:println(self.nx == ());
-    //    }
-    //};
-    //io:println(obj.nx == ());
+    var obj = let null n = () in object {
+        null nx = n;
+        function init() {
+            io:println(self.nx == ()); // @output true
+        }
+    };
+    io:println(obj.nx == ()); // @output true
 
     var obj1 = let null n = () in new NilClass(n);
     io:println(obj1.getNil() == ()); // @output true
@@ -154,8 +154,9 @@ function init() {
     var d = let boolean b1 = true, boolean b2 = false in table key(name) [{isValid: b1 && b2, name: "XX"}];
     io:println(d); // @output [{"isValid":false,"name":"XX"}]
 
-    //object { public boolean b; } obj = let boolean b1 = true in object {
-    //                                                                public boolean b = b1; };
+    object { public boolean b; } obj = let boolean b1 = true in object {
+                                                                    public boolean b = b1; };
+    io:println(obj.b); // @output true
 
     BoolClass boolObj = let boolean b1 = true, boolean b2 = false in new BoolClass(b1, b2);
     io:println(boolObj.foo()); // @output true
@@ -180,8 +181,8 @@ function init() {
     io:println(let int i = 2, float f = 2.2f, decimal d = 1.2d in i + <int>f + <int>d); // @output 5
     io:println(let int i = 2, float f = 2.2f, decimal d = 1.2d in [i, f, d]); // @output [2,2.2,1.2]
     io:println(let decimal d = 12e43d in d.abs()); // @output 1.2E+44
-    //io:println(let int i = 2, int j = 3 in foo(i) + bar(j));
-    //io:println(() == let int i = 2, int j = 3 in foo(i) + baz(j));
+    io:println(let int i = 2, int j = 3 in foo(i) + bar(j)); // @output 5
+    io:println(() == let int i = 2, int j = 3 in foo(i) + baz(j)); // @output true
 }
 
 function foo(int? i) returns int? {
@@ -198,7 +199,7 @@ function baz(int i) returns int? {
 
 Test-Case: output
 Description: Test let-expr, when type-descriptor is a string-type-descriptor which are sequence-type-descriptor.
-Labels: let-expr, record-type, array-type, string, function-call-expr, table-constructor-expr
+Labels: let-expr, record-type, array-type, string, function-call-expr, table-constructor-expr, module-type-decl
 
 type Names record {|
     string country;
@@ -260,7 +261,7 @@ function init() {
 Test-Case: output
 Description: Test let-expr, when type-descriptor is a list-type-descriptor and tuple-type-descriptor
              which are structured-type-descriptor.
-Labels: let-expr, list-constructor-expr, mapping-constructor-expr, function-call-expr
+Labels: let-expr, list-constructor-expr, mapping-constructor-expr, function-call-expr, var, map-type, any, array-type
 
 function init() {
     io:println(let var l = ["A", 2] in l[0]); // @output A
@@ -275,7 +276,7 @@ function init() {
 
 Test-Case: output
 Description: Test let-expr, when type-descriptor is a mapping-type-descriptor which is a structured-type-descriptor.
-Labels: let-expr, mapping-constructor-expr
+Labels: let-expr, mapping-constructor-expr, map-type, any, anydata, map:get, map:keys, map:entries, member-access-expr
 
 function init() {
     io:println(let map<any> animals = {"animal1":"Lion", "animal2":"Cat"} in animals.get("animal1")); // @output Lion
@@ -292,7 +293,7 @@ function init() {
 
 Test-Case: output
 Description: Test let-expr, when type-descriptor is a record-type-descriptor which is a structured-type-descriptor.
-Labels: let-expr, record-type, mapping-constructor-expr
+Labels: let-expr, record-type, mapping-constructor-expr, module-type-decl, list-constructor-expr, array-type
 
 type Department record {
     string dptName = "";
@@ -328,7 +329,7 @@ function init() {
 
 Test-Case: output
 Description: Test let-expr, when type-descriptor is a table-type-descriptor which is a structured-type-descriptor.
-Labels: let-expr, record-type, table-constructor-expr
+Labels: let-expr, record-type, table-constructor-expr, module-type-decl,
 
 type Foo record {
     readonly map<string> m;
@@ -358,7 +359,7 @@ function init() {
 
 Test-Case: output
 Description: Test let-expr with query expressions.
-Labels: let-expr, record-type, array-type, list-constructor-expr
+Labels: let-expr, record-type, array-type, list-constructor-expr, module-type-decl,
 
 type Department record {|
    int id;
@@ -423,9 +424,58 @@ function errorFunction() {
 
 Test-Case: error
 Description: let-expr when variables are declared outside its' scope
-Labels: let-expr
+Labels: let-expr, int
 
 function errorFunction() {
     int i = 2;
     io:println(let int i = 2 in i); // @error redeclared symbol 'i'
+}
+
+Test-Case: error
+Description: let-expr when the type of let-var-decl does not match
+Labels: let-expr
+
+function errorFunction() {
+    io:println(let string i = "2", int j = 3 in i + j); // @error operator '+' not defined for 'string' and 'int'
+    io:println(let int i = 2 in foo(i)); // @error incompatible types: expected 'string?', found 'int'
+    io:println(let var i = 2 in foo(i)); // @error incompatible types: expected 'string?', found 'int'
+}
+
+function foo(string? s) returns string? {
+    return s;
+}
+
+Test-Case: output
+Description: Test let-expr as an isolated expression
+Labels: let-expr, module-type-decl, lock-stmt, function-call-expr
+
+isolated int x = 2;
+
+isolated function bar(int i) returns int {
+    return i;
+}
+
+isolated function init() {
+    lock {
+        x = let int i = 20 in i;
+        io:println(x); // @output 20
+        x = let int i = 22 in bar(i);
+        io:println(x); // @output 22
+    }
+}
+
+Test-Case: error
+Description: Test error cases when let-expr is an isolated expression
+Labels: let-expr, module-type-decl, lock-stmt, function-call-expr
+
+isolated int x = 2;
+
+function bar(int i) returns int {
+    return i;
+}
+
+isolated function errorFunction() {
+    lock {
+        x = let int i = 22 in bar(i); // @error invalid invocation of a non-isolated function in a 'lock' statement with restricted variable usage and invalid invocation of a non-isolated function in an 'isolated' function
+    }
 }
