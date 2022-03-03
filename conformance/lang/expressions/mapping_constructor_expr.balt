@@ -364,8 +364,8 @@ Test-Case: output
 Description: Test If there is a contextually expected type, then the inherent type of the newly created mapping is 
              derived from the applicable contextually expected type. If the applicable contextually expected type 
              is a mapping type descriptor, then that used as the inherent type using variable declaration.
-Labels: any, boolean-literal, is-expr, mapping-constructor-expr, map-type, module-type-defn, record-rest-descriptor, 
-       record-type, record-type-inclusion, spread-field, string
+Labels: any, anydata, boolean-literal, is-expr, mapping-constructor-expr, map-type, module-type-defn, 
+        record-rest-descriptor, record-type, record-type-inclusion, spread-field, string
 
 type MyRecord record {|
     int myField1;
@@ -394,13 +394,13 @@ function init() {
     any var4 = d;
     io:println(var4 is record {|int field1; string field2; boolean field3?;|}); // @output true
 
-    record {|int field1; string field2;boolean...; |} e = {field1: 23, field2: "Car", "field3": false};
+    record {|int field1; string field2; boolean...; |} e = {field1: 23, field2: "Car", "field3": false};
     any var5 = e;
-    io:println(var5 is record {|int field1; string field2;boolean...; |}); // @output true
+    io:println(var5 is record {|int field1; string field2; boolean...; |}); // @output true
 
-    record {|int field1; string field2;boolean...; |} f = {field1: 23, field2: "Car"};
+    record {|int field1; string field2; boolean...; |} f = {field1: 23, field2: "Car"};
     any var6 = f;
-    io:println(var6 is record {|int field1; string field2;boolean...; |}); // @output true
+    io:println(var6 is record {|int field1; string field2; boolean...; |}); // @output true
 
     record {|int field1; *MyRecord;|} g = {field1: 43, myField1: 3443, myField2: false};
     any var7 = g;
@@ -451,7 +451,7 @@ Test-Case: output
 Description: Test if the applicable contextually expected type is a mapping type descriptor, then that used as the 
              inherent type with readonly specific fields.
 Fail-Issue: ballerina-platform/ballerina-lang#24489
-Labels: any, boolean-literal, is-expr, mapping-constructor-expr, map-type, module-const-decl, module-type-defn, 
+Labels: any, anydata, boolean-literal, is-expr, mapping-constructor-expr, map-type, module-const-decl, module-type-defn, 
        readonly-field, record-rest-descriptor, record-type, string
 
 type MyRecord2 record {
@@ -464,7 +464,7 @@ const int MYINT = 6;
 function init() {
     map<string> a = {fieldA1: "String1", readonly fieldA2: "String2"};
     any var1 = a;
-    io:println(var1 is record {|readonly "String2" fieldA2;string...; |}); // @output true
+    io:println(var1 is record {|readonly "String2" fieldA2; string...; |}); // @output true
 
     record {|int field1; string field2; boolean field3;|} b = {readonly field1: 0, field2: "mouse", readonly field3: false};
     any var2 = b;
@@ -472,7 +472,7 @@ function init() {
 
     record {int field1; string field2; boolean field3;} i = {field1: 0, readonly field2: "mouse", field3: false};
     any var9 = i;
-    io:println(var9 is record {|int field1; readonly "mouse" field2; boolean field3;anydata...; |}); // @output true
+    io:println(var9 is record {|int field1; readonly "mouse" field2; boolean field3; anydata...; |}); // @output true
 
     MyRecord2 o = {readonly myField1: 776777777, myField2: true, "other": false};
     any var15 = o;
@@ -480,14 +480,14 @@ function init() {
 
     json p = {readonly myField1: 776777777, myField2: true, "other": false};
     any var16 = p;
-    io:println(var16 is record {|readonly 776777777 myField1;json...; |}); // @output true
+    io:println(var16 is record {|readonly 776777777 myField1; json...; |}); // @output true
 
     any q = {myField1: 776777777, readonly myField2: true, "other": false};
     any var17 = q;
-    io:println(var17 is record {|readonly true myField2;any...; |}); // @output true
+    io:println(var17 is record {|readonly true myField2; any...; |}); // @output true
 
     map<int> r = {readonly field1: MYINT};
-    io:println(r is record {|readonly 6 field1;int...; |}); // @output true
+    io:println(r is record {|readonly 6 field1; int...; |}); // @output true
 }
 
 Test-Case: output
@@ -499,7 +499,7 @@ function init() {
     string fieldA2 = "qwerty";
     map<string> a = {fieldA1: "String1", readonly fieldA2};
     any var1 = a;
-    io:println(var1 is record {|readonly string fieldA2;string...; |}); // @output true
+    io:println(var1 is record {|readonly string fieldA2; string...; |}); // @output true
 
     int myInt = 54;
     record {|int field1; string field2;|} b = {readonly field1: myInt, readonly field2: getString()};
@@ -588,8 +588,8 @@ function init() {
 Test-Case: output
 Description: Test if the applicable contextually expected type is a mapping type descriptor, then that used as the 
              inherent type using union with other types.
-Labels: any, array-type, boolean-literal, float, is-expr, json, mapping-constructor-expr, map-type, module-type-defn, 
-       record-rest-descriptor, record-type, record-type-inclusion, string, union-type, xml
+Labels: any, anydata, array-type, boolean-literal, float, is-expr, json, mapping-constructor-expr, map-type, 
+        module-type-defn, record-rest-descriptor, record-type, record-type-inclusion, string, union-type, xml
 
 type MyRecord1 record {|
     int myField1;
@@ -616,7 +616,7 @@ function init() {
     record {|int field1; string field2; boolean field3?;|}|int[] d = {field1: 0, field2: "mouse"};
     io:println(d is record {| int field1; string field2; boolean field3?; |}); //@output true
 
-    record {|int field1; string field2;boolean...; |}|float e = {field1: 23, field2: "Car", "field3": false};
+    record {|int field1; string field2; boolean...; |}|float e = {field1: 23, field2: "Car", "field3": false};
     io:println(e is record {| int field1; string field2; boolean...; |}); //@output true
 
     record {|int field1; *MyRecord1;|}|string g = {field1: 43, myField1: 3443, myField2: false};
@@ -645,7 +645,7 @@ Test-Case: output
 Description: Test if the applicable contextually expected type is a union type descriptor, then any members of the 
              union that are inconsistent with the field names specified in a specific-field in the 
              mapping-constructor-expr will be ignored.
-Labels: boolean-literal, is-expr, mapping-constructor-expr, map-type, module-type-defn, record-rest-descriptor, 
+Labels: anydata, boolean-literal, is-expr, mapping-constructor-expr, map-type, module-type-defn, record-rest-descriptor, 
        record-type, record-type-inclusion, string, union-type
 
 type MyRecord1 record {|
@@ -673,7 +673,7 @@ function init() {
     record {|int field1; string field2; boolean field3?;|}|record {||} d = {field1: 0, field2: "mouse"};
     io:println(d is record {| int field1; string field2; boolean field3?; |}); // @output true
 
-    record {|int field1; string field2;boolean...; |}|record {|string field2;|} e = {field1: 23, field2: "Car", "field3": false};
+    record {|int field1; string field2; boolean...; |}|record {|string field2;|} e = {field1: 23, field2: "Car", "field3": false};
     io:println(e is record {| int field1; string field2; boolean...; |}); // @output true
 
     record {|int field1; *MyRecord1;|}|record {|int field1;|} g = {field1: 43, myField1: 3443, myField2: false};
@@ -723,7 +723,7 @@ function errorFunction() {
 
     record {|int field1; string field2; boolean field3?;|}|record {|int field1; int field2;|} _ = {field1: 0, field2: "mouse"}; // @error remaining type is a union
 
-    record {|string field2;boolean...; |}|record {|string field2;int...; |} _ = {field2: "Car", "field3": false}; // @error remaining type is a union
+    record {|string field2; boolean...; |}|record {|string field2; int...; |} _ = {field2: "Car", "field3": false}; // @error remaining type is a union
     
     record {string field2;}|record {int field2;} _ = {field2: "Car", "field3": false}; // @error remaining type is a union
 
@@ -772,7 +772,7 @@ function errorFunction() {
 
     record {|int field1; string field2; boolean field3?;|}|record {|int field1; string field2;|} _ = {field1: 0, field2: "mouse"}; // @error ambiguous type; remaining type is a union
 
-    record {|string field2;boolean...; |}|record {|string field2;boolean...; |} _ = {field2: "Car", "field3": false}; // @error ambiguous type; remaining type is a union
+    record {|string field2; boolean...; |}|record {|string field2; boolean...; |} _ = {field2: "Car", "field3": false}; // @error ambiguous type; remaining type is a union
 
     record {string field2;}|record {string field2;} _ = {field2: "Car", "field3": false}; // @error ambiguous type; remaining type is a union
 
@@ -961,7 +961,7 @@ Labels: boolean-literal, computed-name-field, is-expr, mapping-constructor-expr,
 function init() {
     string targetField1 = "fieldB";
     var a = {fieldA: 2, fieldB: "string", [targetField1] : "some other string"};
-    io:println(a is record {|int fieldA; string fieldB;string...; |}); //@output true
+    io:println(a is record {|int fieldA; string fieldB; string...; |}); //@output true
     io:println(a); // @output {"fieldA":2,"fieldB":"some other string"}
 
     var b = {fieldA: 2, [targetField1] : "some other string", [targetField1] : true, [targetField1] : 3};
@@ -970,19 +970,19 @@ function init() {
 
     string targetField2 = "fieldC";
     var c = {fieldA: 2, [targetField1] : "some other string", [targetField2] : true, [targetField1] : 3};
-    io:println(c is record {|int fieldA;(string|boolean|int)...; |}); //@output true
+    io:println(c is record {|int fieldA; (string|boolean|int)...; |}); //@output true
     io:println(c); // @output {"fieldA":2,"fieldB":3,"fieldC":true}
 
     var d = {fieldA: 2, fieldB: "string", [targetField1] : "some other string", [targetField2] : true};
-    io:println(d is record {|int fieldA; string fieldB;(string|boolean)...; |}); //@output true
+    io:println(d is record {|int fieldA; string fieldB; (string|boolean)...; |}); //@output true
     io:println(d); // @output {"fieldA":2,"fieldB":"some other string","fieldC":true}
 
     var e = {fieldA: 2, "fieldB": "string", [targetField1] : "some other string"};
-    io:println(e is record {|int fieldA; string fieldB;string...; |}); //@output true
+    io:println(e is record {|int fieldA; string fieldB; string...; |}); //@output true
     io:println(e); // @output {"fieldA":2,"fieldB":"some other string"}
 
     var f = {"fieldA": 2, readonly fieldB: "string", [targetField1] : "some other string"};
-    io:println(f is record {|int fieldA; readonly string fieldB;string...; |}); //@output true
+    io:println(f is record {|int fieldA; readonly string fieldB; string...; |}); //@output true
     io:println(f); // @output {"fieldA":2,"fieldB":"some other string"}
 }
 
@@ -1095,7 +1095,7 @@ function errorFunction() {
         field3 // @error contextually expected type for `field3` is boolean
     };
 
-    record {|int field1;string...; |} _ = {
+    record {|int field1; string...; |} _ = {
         field1: "Ballerina", // @error contextually expected type for `field1` is int
         "field2": 544 // @error contextually expected type for `field2` is string
     };
@@ -1146,7 +1146,7 @@ function errorFunction() {
     record {|int field1?; string field2?;|} _ = {...b}; // @error CEP for the spread field is `map<int|string>`
 
     record {|int field1; string field2;|} c = {field1: 4, field2: "Laptop"};
-    record {|int field3;string...; |} var4 = {field3: 45434, ...c}; // @error CEP for the spread field is `map<string>`
+    record {|int field3; string...; |} var4 = {field3: 45434, ...c}; // @error CEP for the spread field is `map<string>`
 }
 
 Test-Case: output
@@ -1855,7 +1855,7 @@ Test-Case: parser-error
 Description: Test syntax errors in mapping constructor
 Labels: any, mapping-constructor-expr, map-type, readonly-field, string
 
-function init() {
+function errorFunction() {
     map<any> _ = {5 : 5}; //@error field name should be an identifer
 
     map<any> _ = {getFieldName () : 5}; //@error field name should be an identifer
