@@ -1,6 +1,6 @@
 Test-Case: error
 Description: Test table constructor expression without the table keyword and key specifier, parsed as list constructor.
-Labels: table-constructor-expr, table-type, map-type, any, list-constructor-expr
+Labels: table-type, map-type, any, list-constructor-expr
 
 function errorFunction() {
     table<map<any>> _ = []; // @error incompatible type: expected table, found empty list
@@ -88,7 +88,7 @@ function fn() returns record {} {
 
 Test-Case: output
 Description: Test table constructor expression with no key-specifier, when there is a single applicable contextually-expected type, and no rows.
-Labels: table-constructor-expr, table-type, record-type, int, string, module-type-defn, mapping-constructor-expr
+Labels: table-constructor-expr, table-type, record-type, int, is-expr, string, method-call-expr, module-type-defn, table:length
 
 type Employee record {
     int id;
@@ -111,7 +111,7 @@ function init() {
 
 Test-Case: output
 Description: Test table constructor expression with no key-specifier, when there is a single applicable contextually-expected type.
-Labels: table-constructor-expr, table-type, record-type, int, string, module-type-defn, mapping-constructor-expr, is-expr
+Labels: table-constructor-expr, table-type, record-type, int, string, module-type-defn, mapping-constructor-expr, is-expr, table:length
 
 type Employee record {
     int id;
@@ -201,7 +201,7 @@ function errorFunction() {
 
 Test-Case: error
 Description: Test incompatible members in table constructor expressions with no key-specifier, when the mapping constructor has variable-name, computed-name, and spread fields
-Labels: table-constructor-expr, table-type, int, string, record-type, module-type-defn, mapping-constructor-expr, boolean-literal
+Labels: table-constructor-expr, table-type, int, string, record-type, module-type-defn, mapping-constructor-expr, boolean-literal, spread-field, computed-name-field
 
 type Employee record {|
     int id;
@@ -305,7 +305,7 @@ function errorFunction() {
 
 Test-Case: output
 Description: Test table constructor expression with no key-specifier, when the contextually-expected type is a union including non-table types.
-Labels: table-constructor-expr, table-type, record-type, int, string, module-type-defn, mapping-constructor-expr, type-cast-expr
+Labels: table-constructor-expr, table-type, record-type, int, string, module-type-defn, mapping-constructor-expr, type-cast-expr, table:length, union-type
 
 type Employee record {
     int id;
@@ -330,7 +330,7 @@ function init() {
 Test-Case: output
 Description: Test when there is no contextually-expected type the member type of the inherent type being derived from the the static type of the expressions for the members, for a table constructor expression with no key-specifier. The member type will be the smallest record type that is a supertype of the static types of all the expressions in the row-list.
              Test for when all the members are of the same type.
-Labels: table-constructor-expr, table-type, record-type, string, mapping-constructor-expr, var
+Labels: table-constructor-expr, table-type, record-type, string, mapping-constructor-expr, var, table:length
 
 function init() {
     var v1 = table [
@@ -357,7 +357,7 @@ function init() {
 Test-Case: output
 Description: Test when there is no contextually-expected type the member type of the inherent type being derived from the the static type of the expressions for the members, for a table constructor expression with no key-specifier. The member type will be the smallest record type that is a supertype of the static types of all the expressions in the row-list.
              Test for when members are of different types.
-Labels: table-constructor-expr, table-type, record-type, int, string, boolean, mapping-constructor-expr, var
+Labels: table-constructor-expr, table-type, record-type, int, string, boolean, mapping-constructor-expr, var, table:length
 
 function init() {
     var v1 = table [
@@ -376,7 +376,7 @@ function init() {
 Test-Case: output
 Description: Test when there is no contextually-expected type the member type of the inherent type being derived from the the static type of the expressions for the members, for a table constructor expression with no key-specifier. The member type will be the smallest record type that is a supertype of the static types of all the expressions in the row-list.
              Test for when members are of different types and the mapping constructor has variable-name fields.
-Labels: table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr, var
+Labels: table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr, var, table:length
 
 function init() {
     int id = 2;
@@ -398,7 +398,7 @@ function init() {
 Test-Case: output
 Description: Test when there is no contextually-expected type the member type of the inherent type being derived from the the static type of the expressions for the members, for a table constructor expression with no key-specifier. The member type will be the smallest record type that is a supertype of the static types of all the expressions in the row-list.
              Test for when members are of different types and the mapping constructor has computed-name fields.
-Labels: table-constructor-expr, table-type, record-type, int, boolean, string, mapping-constructor-expr, var
+Labels: table-constructor-expr, table-type, record-type, int, boolean, string, mapping-constructor-expr, var, table:length, computed-name-field, union-type
 
 function init() {
     string s1 = "id";
@@ -420,7 +420,7 @@ function init() {
 Test-Case: output
 Description: Test when there is no contextually-expected type the member type of the inherent type being derived from the the static type of the expressions for the members, for a table constructor expression with no key-specifier. The member type will be the smallest record type that is a supertype of the static types of all the expressions in the row-list.
              Test for when members are of different types and the mapping constructor has a map spread field.
-Labels: table-constructor-expr, table-type, record-type, int, boolean, string, mapping-constructor-expr, var
+Labels: table-constructor-expr, table-type, record-type, int, boolean, string, mapping-constructor-expr, var, table:length, spread-field, union-type
 
 function init() {
     map<int> m = {a: 1, b: 2};
@@ -440,7 +440,7 @@ function init() {
 Test-Case: output
 Description: Test when there is no contextually-expected type the member type of the inherent type being derived from the the static type of the expressions for the members, for a table constructor expression with no key-specifier. The member type will be the smallest record type that is a supertype of the static types of all the expressions in the row-list.
              Test for when members are of different types and the mapping constructor has a record spread field.
-Labels: table-constructor-expr, table-type, record-type, int, boolean, string, mapping-constructor-expr, var
+Labels: table-constructor-expr, table-type, record-type, int, boolean, string, mapping-constructor-expr, var, table:length, spread-field
 
 function init() {
     record {|int a; int b?; int c?;|} m = {a: 1, b: 2};
@@ -460,7 +460,7 @@ function init() {
 Test-Case: output
 Description: Test when there is no contextually-expected type the member type of the inherent type being derived from the the static type of the expressions for the members, for a table constructor expression with no key-specifier. The member type will be the smallest record type that is a supertype of the static types of all the expressions in the row-list.
              Test for when members are of different types and the mapping constructor has a record spread field with never-typed fields.
-Labels: table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr, var
+Labels: table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr, var, table:length, spread-field
 
 function init() {
     record {int a; int b?; int c?; never name?;} m = {a: 1, b: 2};
@@ -480,7 +480,7 @@ function init() {
 Test-Case: output
 Description: Test when there is no contextually-expected type the member type of the inherent type being derived from the the static type of the expressions for the members, for a table constructor expression with no key-specifier. The member type will be the smallest record type that is a supertype of the static types of all the expressions in the row-list.
              Test for when members are of types that share fields with the same name.
-Labels: table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr, var
+Labels: table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr, var, table:length, union-type
 
 function init() {
     var v1 = table [
@@ -498,7 +498,7 @@ function init() {
 Test-Case: output
 Description: Test when there is no contextually-expected type the member type of the inherent type being derived from the the static type of the expressions for the members, for a table constructor expression with no key-specifier. The member type will be the smallest record type that is a supertype of the static types of all the expressions in the row-list.
              Test for when members are of types that share fields with the same name, and have computed-field names and spread fields.
-Labels: table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr, var
+Labels: table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr, var, table:length, spread-field, computed-name-field, union-type
 
 function init() {
     record {string a; int b?;} m = {a: "str", b: 2};
@@ -572,7 +572,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test the derived type for a table constructor expression with no key-specifier via invalid assignment.
              Test for when members are of different types and the mapping constructor has computed-name fields.
-Labels: table-constructor-expr, table-type, record-type, int, boolean, string, mapping-constructor-expr, var
+Labels: table-constructor-expr, table-type, record-type, int, boolean, string, mapping-constructor-expr, var, computed-name-field, union-type
 
 function errorFunction() {
     string s1 = "id";
@@ -589,7 +589,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test the derived type for a table constructor expression with no key-specifier via invalid assignment.
              Test for when members are of different types and the mapping constructor has a map spread field.
-Labels: table-constructor-expr, table-type, record-type, int, boolean, string, mapping-constructor-expr, var
+Labels: table-constructor-expr, table-type, record-type, int, boolean, string, mapping-constructor-expr, var, spread-field, union-type
 
 function errorFunction() {
     map<int> m = {a: 1, b: 2};
@@ -606,7 +606,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test the derived type for a table constructor expression with no key-specifier via invalid assignment.
              Test for when members are of different types and the mapping constructor has a record spread field.
-Labels: table-constructor-expr, table-type, record-type, int, boolean, string, mapping-constructor-expr, var
+Labels: table-constructor-expr, table-type, record-type, int, boolean, string, mapping-constructor-expr, var, spread-field
 
 function errorFunction() {
     record {|int a; int b?; int c?;|} m = {a: 1, b: 2};
@@ -622,7 +622,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test the derived type for a table constructor expression with no key-specifier via invalid assignment.
              Test for when members are of different types and the mapping constructor has a record spread field with never-typed fields.
-Labels: table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr, var
+Labels: table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr, var, spread-field
 
 function errorFunction() {
     record {int a; int b?; int c?; never name?;} m = {a: 1, b: 2};
@@ -637,7 +637,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test the derived type for a table constructor expression with no key-specifier via invalid assignment.
              Test for when members are of types that share fields with the same name.
-Labels: table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr, var
+Labels: table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr, var, union-type
 
 function errorFunction() {
     var v1 = table [
@@ -650,7 +650,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test the derived type for a table constructor expression with no key-specifier via invalid assignment.
              Test for when members are of types that share fields with the same name, and have computed-field names and spread fields.
-Labels: table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr, var
+Labels: table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr, var, spread-field, computed-name-field, union-type
 
 function errorFunction() {
     record {string a; int b?;} m = {a: "str", b: 2};
@@ -692,7 +692,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test non-const spread-expr field for key field in table constructor without a key sequence when the key sequence is present in the applicable contextually-expected type.
 Fail-Issue: ballerina-platform/ballerina-lang#35038
-Labels: table-constructor-expr, mapping-constructor-expr, table-type
+Labels: table-constructor-expr, mapping-constructor-expr, table-type, spread-field
 
 function errorFunction() {
     record {|int id;|} r = {id: 1234};
@@ -705,7 +705,7 @@ function errorFunction() {
 
 Test-Case: output
 Description: Test table constructor expression with a key-specifier, when there is a single applicable contextually-expected type, and no rows.
-Labels: key-specifier, table-constructor-expr, table-type, record-type, int, string, module-type-defn, mapping-constructor-expr
+Labels: key-specifier, table-constructor-expr, table-type, record-type, int, string, module-type-defn, mapping-constructor-expr, table:length
 
 type Employee record {
     readonly int id;
@@ -728,7 +728,7 @@ function init() {
 
 Test-Case: output
 Description: Test table constructor expression with a key-specifier, when there is a single applicable contextually-expected type.
-Labels: key-specifier, table-constructor-expr, table-type, record-type, int, string, module-type-defn, mapping-constructor-expr, is-expr
+Labels: key-specifier, table-constructor-expr, table-type, record-type, int, string, module-type-defn, mapping-constructor-expr, is-expr, table:length
 
 type Employee record {
     int id;
@@ -819,7 +819,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test incompatible members in table constructor expressions with a key-specifier, when the mapping constructor has variable-name, computed-name, and spread fields
 Fail-Issue: ballerina-platform/ballerina-lang#35014
-Labels: key-specifier, table-constructor-expr, table-type, int, string, record-type, module-type-defn, mapping-constructor-expr, boolean-literal
+Labels: key-specifier, table-constructor-expr, table-type, int, string, record-type, module-type-defn, mapping-constructor-expr, boolean-literal, spread-field, computed-name-field
 
 type Employee record {|
     readonly int id;
@@ -923,7 +923,7 @@ function errorFunction() {
 
 Test-Case: output
 Description: Test table constructor expression with a key-specifier, when the contextually-expected type is a union including non-table types.
-Labels: key-specifier, table-constructor-expr, table-type, record-type, int, string, module-type-defn, mapping-constructor-expr, type-cast-expr
+Labels: key-specifier, table-constructor-expr, table-type, record-type, int, string, module-type-defn, mapping-constructor-expr, type-cast-expr, table:length, union-type
 
 type Employee record {
     int id;
@@ -948,7 +948,7 @@ function init() {
 Test-Case: output
 Description: Test when there is no contextually-expected type the member type of the inherent type being derived from the the static type of the expressions for the members, for a table constructor expression with a key-specifier. The member type will be the smallest record type that is a supertype of the static types of all the expressions in the row-list.
              Test for when all the members are of the same type.
-Labels: key-specifier, table-constructor-expr, table-type, record-type, string, mapping-constructor-expr, var
+Labels: key-specifier, table-constructor-expr, table-type, record-type, string, mapping-constructor-expr, var, table:length
 
 function init() {
     var v1 = table key(name) [
@@ -976,7 +976,7 @@ function init() {
 Test-Case: output
 Description: Test when there is no contextually-expected type the member type of the inherent type being derived from the the static type of the expressions for the members, for a table constructor expression with a key-specifier. The member type will be the smallest record type that is a supertype of the static types of all the expressions in the row-list.
              Test for when members are of different types.
-Labels: key-specifier, table-constructor-expr, table-type, record-type, int, string, boolean, mapping-constructor-expr, var
+Labels: key-specifier, table-constructor-expr, table-type, record-type, int, string, boolean, mapping-constructor-expr, var, table:length
 
 function init() {
     var v1 = table key (code) [
@@ -997,7 +997,7 @@ function init() {
 Test-Case: output
 Description: Test when there is no contextually-expected type the member type of the inherent type being derived from the the static type of the expressions for the members, for a table constructor expression with a key-specifier. The member type will be the smallest record type that is a supertype of the static types of all the expressions in the row-list.
              Test for when members are of different types and the mapping constructor has variable-name fields.
-Labels: key-specifier, table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr, var
+Labels: key-specifier, table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr, var, table:length, is-expr, boolean
 
 function init() {
     int id = 2;
@@ -1022,7 +1022,7 @@ function init() {
 Test-Case: output
 Description: Test when there is no contextually-expected type the member type of the inherent type being derived from the the static type of the expressions for the members, for a table constructor expression with a key-specifier. The member type will be the smallest record type that is a supertype of the static types of all the expressions in the row-list.
              Test for when members are of different types and the mapping constructor has computed-name fields.
-Labels: key-specifier, table-constructor-expr, table-type, record-type, int, boolean, string, mapping-constructor-expr, var
+Labels: key-specifier, table-constructor-expr, table-type, record-type, int, boolean, string, mapping-constructor-expr, var, table:length, computed-name-field, union-type
 
 function init() {
     string s1 = "id";
@@ -1046,7 +1046,7 @@ function init() {
 Test-Case: output
 Description: Test when there is no contextually-expected type the member type of the inherent type being derived from the the static type of the expressions for the members, for a table constructor expression with a key-specifier. The member type will be the smallest record type that is a supertype of the static types of all the expressions in the row-list.
              Test for when members are of different types and the mapping constructor has a record spread field.
-Labels: key-specifier, table-constructor-expr, table-type, record-type, int, boolean, string, mapping-constructor-expr, never, var
+Labels: key-specifier, table-constructor-expr, table-type, record-type, int, boolean, string, mapping-constructor-expr, never, var, table:length, spread-field, union-type
 
 function init() {
     record {|int a; int b?; int c?; never d?;|} m = {a: 1, b: 2};
@@ -1067,7 +1067,7 @@ function init() {
 Test-Case: output
 Description: Test when there is no contextually-expected type the member type of the inherent type being derived from the the static type of the expressions for the members, for a table constructor expression with a key-specifier. The member type will be the smallest record type that is a supertype of the static types of all the expressions in the row-list.
              Test for when members are of types that share fields with the same name.
-Labels: key-specifier, table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr, var
+Labels: key-specifier, table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr, var, table:length, union-type
 
 function init() {
     var v1 = table key(a) [
@@ -1086,7 +1086,7 @@ function init() {
 Test-Case: output
 Description: Test when there is no contextually-expected type the member type of the inherent type being derived from the the static type of the expressions for the members, for a table constructor expression with a key-specifier. The member type will be the smallest record type that is a supertype of the static types of all the expressions in the row-list.
              Test for when members are of types that share fields with the same name, and have computed-field names and spread fields.
-Labels: key-specifier, table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr, never, var
+Labels: key-specifier, table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr, never, var, table:length, spread-field, computed-name-field, anydata, union-type, boolean
 
 function init() {
     record {string a; int b?; never d?;} m = {a: "str", b: 2};
@@ -1162,7 +1162,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test the derived type for a table constructor expression with a key-specifier via invalid assignment.
              Test for when members are of different types and the mapping constructor has computed-name fields.
-Labels: key-specifier, table-constructor-expr, table-type, record-type, int, boolean, string, mapping-constructor-expr, var
+Labels: key-specifier, table-constructor-expr, table-type, record-type, int, boolean, string, mapping-constructor-expr, var, computed-name-field, union-type
 
 function errorFunction() {
     string s1 = "id";
@@ -1180,7 +1180,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test the derived type for a table constructor expression with a key-specifier via invalid assignment.
              Test for when members are of different types and the mapping constructor has a record spread field.
-Labels: key-specifier, table-constructor-expr, table-type, record-type, int, boolean, string, mapping-constructor-expr, var
+Labels: key-specifier, table-constructor-expr, table-type, record-type, int, boolean, string, mapping-constructor-expr, var, spread-field
 
 function errorFunction() {
     record {|never d?; int a; int b?; int c?;|} m = {a: 1, b: 2};
@@ -1196,7 +1196,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test the derived type for a table constructor expression with a key-specifier via invalid assignment.
              Test for when members are of types that share fields with the same name.
-Labels: key-specifier, table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr, var
+Labels: key-specifier, table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr, var, union-type
 
 function errorFunction() {
     var v1 = table key(a) [
@@ -1209,7 +1209,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test the derived type for a table constructor expression with a key-specifier via invalid assignment.
              Test for when members are of types that share fields with the same name, and have computed-field names and spread fields.
-Labels: key-specifier, table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr, never, var
+Labels: key-specifier, table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr, never, var, spread-field, computed-name-field, union-type
 
 function errorFunction() {
     record {string a; int b?; never d?;} m = {a: "str", b: 2};
@@ -1250,7 +1250,7 @@ function errorFunction() {
 
 Test-Case: output
 Description: Test the key sequence of the table value being the same as that of its inherent type.
-Labels: float, is-expr, key-specifier, table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr
+Labels: array-type, float, is-expr, key-specifier, table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr, tuple-type, DecimalFloatingPointNumber, float, anydata
 
 type Employee record {|
     readonly int id;
@@ -1316,7 +1316,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test rows not having a specific field for key specifier field(s).
 Fail-Issue: ballerina-platform/ballerina-lang#35014
-Labels: key-specifier, table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr
+Labels: key-specifier, table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr, spread-field
 
 type Employee record {|
     readonly int id;
@@ -1351,7 +1351,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test rows not having a constant expression as the value for key specifier field(s).
 Fail-Issue: ballerina-platform/ballerina-lang#33049
-Labels: key-specifier, table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr
+Labels: key-specifier, table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr, float
 
 type Employee record {|
     readonly int id;
@@ -1379,7 +1379,7 @@ function errorFunction() {
 
 Test-Case: output
 Description: Test different constant expressions as the values for key fields.
-Labels: additive-expr, float, is-expr, key-specifier, table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr, unary-not, xml
+Labels: additive-expr, float, is-expr, key-specifier, table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr, unary-not, xml, table:length, module-const-decl, xml-template-expr, string-template-expr, union-type
 
 type Employee record {|
     readonly int|string|xml|boolean id;
@@ -1404,7 +1404,7 @@ function init() {
 Test-Case: error
 Description: Test different non constant expressions as the values for key fields.
 Fail-Issue: ballerina-platform/ballerina-lang#35043, ballerina-platform/ballerina-lang#32957
-Labels: additive-expr, float, key-specifier, table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr, unary-not, xml
+Labels: additive-expr, float, key-specifier, table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr, unary-not, xml, module-const-decl, boolean, xml-template-expr, string-template-expr, union-type
 
 type Employee record {|
     readonly int|string|xml|boolean id;
@@ -1428,7 +1428,7 @@ function errorFunction() {
 
 Test-Case: error
 Description: Test error on more than one row having the same value for key fields, with literal expressions.
-Labels: additive-expr, float, key-specifier, table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr
+Labels: additive-expr, float, key-specifier, table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr, union-type
 
 type Employee record {|
     readonly int|string id;
@@ -1455,7 +1455,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test error on more than one row having the same value for key fields, with non literal expressions.
 Fail-Issue: ballerina-platform/ballerina-lang#35044
-Labels: additive-expr, float, key-specifier, table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr
+Labels: additive-expr, float, key-specifier, table-constructor-expr, table-type, record-type, int, string, mapping-constructor-expr, module-const-decl, string-template-expr, union-type
 
 type Employee record {|
     readonly int|string id;
