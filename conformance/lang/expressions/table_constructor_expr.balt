@@ -87,6 +87,40 @@ function fn() returns record {} {
 }
 
 Test-Case: output
+Description: Test members of the table coming from evaluating each mapping-constructor-expr in the row-list in order for a table constructor expression with no key-specifier.
+Labels: array-type, array:push, foreach-stmt, int, is-expr, iterable-table, method-call-expr, module-type-defn, 
+        record-type, string, table-constructor-expr, table-type, table:length
+
+type Employee record {
+    int id;
+    string name;
+};
+
+function init() {
+    table<Employee> t = table [
+        {id: id(2), name: "Jane"}, // @output 2
+        {id: id(1), name: "Amy"} // @output 1
+    ];
+
+    io:println(t.length()); // @output 2
+    io:println(t is table<Employee>); // @output true
+
+    Employee[] arr = [];
+
+    foreach Employee emp in t {
+        arr.push(emp);    
+    }
+    io:println(arr.length()); // @output 2
+    io:println(arr[0]); // @output {"id":2,"name":"Jane"}
+    io:println(arr[1]); // @output {"id":1,"name":"Amy"}
+}
+
+function id(int id) returns int {
+    io:println(id);
+    return id;
+}
+
+Test-Case: output
 Description: Test table constructor expression with no key-specifier, when there is a single applicable contextually-expected type, and no rows.
 Labels: int, is-expr, method-call-expr, module-type-defn, record-type, string, table-constructor-expr, table-type, 
         table:length
@@ -535,6 +569,25 @@ function init() {
     io:println(t is table<record {int a?; int|string b?; anydata c?;}>); // @output false
 }
 
+Test-Case: output
+Description: Test when there is no contextually-expected type the member type of the inherent type being derived from the the static type of the expressions for the members, for a table constructor expression with no key-specifier. The member type will be the smallest record type that is a supertype of the static types of all the expressions in the row-list.
+             Test for when members are of types that share fields with the same name, and have readonly fields.
+Fail-Issue: ballerina-platform/ballerina-lang#35339
+Labels: int, mapping-constructor-expr, record-type, readonly-field, table-constructor-expr, table-type, table:length, union-type, var
+
+function init() {
+    var v1 = table [
+        {a: 1, readonly b: "str", readonly c: true},
+        {c: 2, a: 3, readonly b: 1.0}
+    ];
+    table<record {| int a; readonly string|float b; boolean|int c; |}> t1 = v1;
+    table<record {}> t = t1;
+
+    io:println(v1.length()); // @output 2
+    io:println(t is table<record {| int a; readonly string|float b; boolean|int c; |}>); // @output true
+    io:println(t is table<record {| int a; readonly string|float b; readonly boolean|int c; |}>); // @output false
+}
+
 Test-Case: error
 Description: Test the derived type for a table constructor expression with no key-specifier via invalid assignment.
              Test for when all the members are of the same type.
@@ -687,6 +740,20 @@ function errorFunction() {
 }
 
 Test-Case: error
+Description: Test the derived type for a table constructor expression with no key-specifier via invalid assignment.
+             Test for when members are of types that share fields with the same name, and have readonly fields.
+Fail-Issue: ballerina-platform/ballerina-lang#35339
+Labels: int, mapping-constructor-expr, record-type, readonly-field, table-constructor-expr, table-type, table:length, union-type, var
+
+function errorFunction() {
+    var v1 = table [
+        {a: 1, readonly b: "str", readonly c: true},
+        {c: 2, a: 3, readonly b: 1.0}
+    ];
+    table<record {| int a; readonly string|float b; readonly boolean|int c; |}> _ = v1; // @error expected 'table<record {| int a; readonly (string|float) b; readonly (boolean|int) c; |}>', found 'table<record {| int a; readonly (string|float) b; (boolean|int) c; |}>'
+}
+
+Test-Case: error
 Description: Test error for table constructor expression with no key-specifier with an empty row list and no contextually-expected type.
 Labels: mapping-constructor-expr, table-constructor-expr, var
 
@@ -722,6 +789,40 @@ function errorFunction() {
         {...r, name: "Jo"}, // @error id via spread field is not a const-expr
         {name: "Jo", ...r} // @error id via spread field is not a const-expr
     ];
+}
+
+Test-Case: output
+Description: Test members of the table coming from evaluating each mapping-constructor-expr in the row-list in order for a table constructor expression with a key-specifier.
+Labels: array-type, array:push, foreach-stmt, int, is-expr, iterable-table, key-specifier, method-call-expr, module-type-defn, 
+        record-type, string, table-constructor-expr, table-type, table:length
+
+type Employee record {
+    int id;
+    readonly string name;
+};
+
+function init() {
+    table<Employee> t = table key(name) [
+        {id: id(2), name: "Jane"}, // @output 2
+        {id: id(1), name: "Amy"} // @output 1
+    ];
+
+    io:println(t.length()); // @output 2
+    io:println(t is table<Employee>); // @output true
+
+    Employee[] arr = [];
+
+    foreach Employee emp in t {
+        arr.push(emp);    
+    }
+    io:println(arr.length()); // @output 2
+    io:println(arr[0]); // @output {"id":2,"name":"Jane"}
+    io:println(arr[1]); // @output {"id":1,"name":"Amy"}
+}
+
+function id(int id) returns int {
+    io:println(id);
+    return id;
 }
 
 Test-Case: output
@@ -1146,6 +1247,24 @@ function init() {
     io:println(t is table<record {int a?; int|string b?; anydata c?;}>); // @output false
 }
 
+Test-Case: output
+Description: Test when there is no contextually-expected type the member type of the inherent type being derived from the the static type of the expressions for the members, for a table constructor expression with a key-specifier. The member type will be the smallest record type that is a supertype of the static types of all the expressions in the row-list.
+             Test for when members are of types that share fields with the same name, and have readonly fields.
+Labels: int, key-specifier, mapping-constructor-expr, record-type, readonly-field, table-constructor-expr, table-type, table:length, union-type, var
+
+function init() {
+    var v1 = table key(b) [
+        {a: 1, readonly b: "str", readonly c: true},
+        {c: 2, a: 3, readonly b: 1.0}
+    ];
+    table<record {| int a; readonly string|float b; boolean|int c; |}> t1 = v1;
+    table<record {}> t = t1;
+
+    io:println(v1.length()); // @output 2
+    io:println(t is table<record {| int a; readonly string|float b; boolean|int c; |}>); // @output true
+    io:println(t is table<record {| int a; readonly string|float b; readonly boolean|int c; |}>); // @output false
+}
+
 Test-Case: error
 Description: Test the derived type for a table constructor expression with a key-specifier via invalid assignment.
              Test for when all the members are of the same type.
@@ -1264,6 +1383,20 @@ function errorFunction() {
         {[s1]: true, d: 3, c: 2, [s2]: false}
     ];
     table<record {int|string|boolean a?; int|string b?; int c?; readonly int d;}> key(d) _ = v1; // @error expected 'table<record {| (int|string|boolean) a?; (int|string) b?; int c?; readonly int d; anydata...; |}> key(d)', found 'table<record {| readonly int d; (int|string|boolean) a?; (int|boolean) b?; anydata c?; anydata...; |}> key(d)'
+}
+
+Test-Case: error
+Description: Test the derived type for a table constructor expression with a key-specifier via invalid assignment.
+             Test for when members are of types that share fields with the same name, and have readonly fields.
+Labels: int, key-specifier, mapping-constructor-expr, record-type, readonly-field, table-constructor-expr, table-type, table:length, union-type, var
+
+function errorFunction() {
+    var v1 = table key(b) [
+        {a: 1, readonly b: "str", readonly c: true},
+        {c: 2, a: 3, readonly b: 1.0}
+    ];
+    table<record {| int a; readonly string|float b; readonly boolean|int c; |}> _ = v1; // @error expected 'table<record {| int a; readonly (string|float) b; readonly (boolean|int) c; |}>', found 'table<record {| int a; readonly (string|float) b; (boolean|int) c; |}> key(b)'
+    table<record {| int a; readonly string|float b; readonly boolean|int c; |}> key(b) _ = v1; // @error expected 'table<record {| int a; readonly (string|float) b; readonly (boolean|int) c; |}> key(b)', found 'table<record {| int a; readonly (string|float) b; (boolean|int) c; |}> key(b)'
 }
 
 Test-Case: error
