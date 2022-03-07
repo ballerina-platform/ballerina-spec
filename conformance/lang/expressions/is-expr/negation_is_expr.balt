@@ -421,6 +421,7 @@ function init() {
 
 Test-Case: output
 Description: Test xml attribute access expression as expression in type test expression.
+Fail-Issue: ballerina-platform/ballerina-lang#33243
 Labels: is-expr, xml-attribute-access-expr, string, error, union-type, module-type-decl, xmlns-decl-stmt,
         nil-type, optional-type
 
@@ -453,9 +454,7 @@ function init() {
 
     xml:Element x3 = xml `<elem xmlns="ns-uri" attr="val" xml:space="default"></elem>`;
     io:println(x3.attr !is string); // @output false
-    //io:println(x3?.attr !is string); // @output false
     io:println(x3.attrNon !is error); // @output false
-    //io:println(x3?.attrNon !is ()); // @output false
 
     xml<xml:Element> x4 = xml `<elem xmlns="ns-uri" attr="val" xml:space="default"></elem>`;
     io:println(x4.attr !is string); // @output false
@@ -465,7 +464,19 @@ function init() {
 }
 
 Test-Case: output
+Description: Test xml attribute access expression as expression in type test expression.
+Fail-Issue: ballerina-platform/ballerina-lang#35190
+Labels: is-expr, xml:Element, xml-optional-attribute-access-expr, string, nil-type
+
+function init() {
+    xml:Element x3 = xml `<elem xmlns="ns-uri" attr="val" xml:space="default"></elem>`;
+    io:println(x3?.attr !is string); // @output false
+    io:println(x3?.attrNon !is ()); // @output false
+}
+
+Test-Case: output
 Description: Test annotation access expression as expression in type test expression.
+Fail-Issue: ballerina-platform/ballerina-lang#33243
 Labels: is-expr, annot-access-expr, module-type-decl, record-type, mapping-constrcutor-expr, annotation-decl,
         module-class-decl, explicit-new-expr, typeof-expr, typedesc-type, any, array-type
 
@@ -712,8 +723,8 @@ function init() {
     io:println(!(a == 5) !is false); // @output true
 
     string|int b = 10;
-    io:println(!(b !is int) !is true); // @output true
-    io:println(!(b !is int) !is false); // @output false
+    io:println(!(b !is int) !is true); // @output false
+    io:println(!(b !is int) !is false); // @output true
 
     io:println(!TRUE !is true); // @output true
     io:println(!TRUE !is false); // @output false
@@ -889,8 +900,8 @@ function init() {
     int? a = 5;
 
     io:println(a !is int !is boolean); // @output false
-    io:println(a !is int !is true); // @output false
-    io:println(a !is int !is TRUE); // @output false
+    io:println(a !is int !is true); // @output true
+    io:println(a !is int !is TRUE); // @output true
 }
 
 Test-Case: output
@@ -937,17 +948,17 @@ function init() {
 
 Test-Case: output
 Description: Test conditional expression as expression in type test expression.
-Labels: is-expr, module-const-decl, conditional-expr, int, optiona-type
+Labels: is-expr, module-const-decl, conditional-expr, int, optional-type
 
 const ONE = 1;
 
 function init() {
     int? a = 5;
 
-    io:println((a !is int ? 1 : 2) !is 1); // @output false
-    io:println((a !is int ? 1 : 2) !is ONE); // @output false
+    io:println((a !is int ? 1 : 2) !is 1); // @output true
+    io:println((a !is int ? 1 : 2) !is ONE); // @output true
     io:println((a !is int ? 1 : 2) !is int); // @output false
-    io:println((a !is int ? 1 : 2) !is 1|0); // @output false
+    io:println((a !is int ? 1 : 2) !is 1|0); // @output true
 }
 
 Test-Case: output
@@ -1419,7 +1430,7 @@ Test-Case: output
 Description: Test distinct type as type descriptor in type test expression.
 Labels: is-expr, module-class-decl, module-type-decl, object-type, object-constructor-expr, explicit-new-expr
 
-type Obj1 distinct object {
+type Object1 distinct object {
     int a;
     function f1();
 };
@@ -1437,7 +1448,7 @@ distinct class Class2 {
 }
 
 function init() {
-    Obj1 c = object {
+    Object1 c = object {
         int a = 10;
         function f1() {
 
@@ -1681,57 +1692,52 @@ type F D|E;
 
 function init() {
     io:println(f1({a: 1})); // @output 2
-    io:println(f2({a: 1})); // @output 2
-    io:println(f3({i: "A"})); // @output 4
-    io:println(f4({i: "A"})); // @output 4
+    io:println(f2({a: 1})); // @output 1
+    io:println(f3({i: "A"})); // @output 3
+    io:println(f4({i: "A"})); // @output 3
 }
 
 function f1(A|B x) returns int {
-    if x !is A {
+    if x !is B {
         return 1;
-    } else if x !is B {
-        return 2;
     }
-    return 3;
+    return 2;
 }
 
 function f2(C x) returns int {
     if x !is A {
         return 1;
-    } else if x !is B {
-        return 2;
     }
-    return 3;
+    return 2;
 }
 
 function f3(F x) returns int {
     if x !is D {
         return 3;
-    } else if x !is E {
-        return 4;
     }
+    return 4;
 }
 
 function f4(D|E x) returns int {
     if x !is D {
         return 3;
-    } else if x !is E {
-        return 4;
     }
+    return 4;
 }
 
 Test-Case: output
 Description: Test inferring the type of the result of type test expression with var.
-Labels: is-expr, var
+Labels: is-expr, var, DecimalNumber, int
 
 function init() {
     var a = 1 !is int;
-    boolean _ = a;
+    boolean b = a;
+    io:println(b); // @output false
 }
 
 Test-Case: output
 Description: Test type test expression at module level.
-Labels: is-expr, int, boolean
+Labels: is-expr, int, boolean, DecimalNumber
 
 boolean b = 1 !is int;
 
@@ -1741,8 +1747,16 @@ function init() {
 
 Test-Case: error
 Description: Test assigning the result of type test expression to an incompatible type.
-Labels: is-expr, int
+Labels: is-expr, int, DecimalNumber
 
 function init() {
     int _ = 1 !is int; // @error expected 'int', found 'boolean'
+}
+
+Test-Case: error
+Description: Test using an unknown type as the type descriptor.
+Labels: is-expr, boolean, DecimalNumber
+
+function errorFunction() {
+    boolean _ = 1 !is expr; // @error unknown type 'expr'
 }

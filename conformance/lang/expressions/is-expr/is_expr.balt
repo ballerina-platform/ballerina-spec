@@ -453,9 +453,7 @@ function init() {
 
     xml:Element x3 = xml `<elem xmlns="ns-uri" attr="val" xml:space="default"></elem>`;
     io:println(x3.attr is string); // @output true
-    //io:println(x3?.attr is string); // @output true
     io:println(x3.attrNon is error); // @output true
-    //io:println(x3?.attrNon is ()); // @output true
 
     xml<xml:Element> x4 = xml `<elem xmlns="ns-uri" attr="val" xml:space="default"></elem>`;
     io:println(x4.attr is string); // @output true
@@ -465,7 +463,19 @@ function init() {
 }
 
 Test-Case: output
+Description: Test xml attribute access expression as expression in type test expression.
+Fail-Issue: ballerina-platform/ballerina-lang#35190
+Labels: is-expr, xml:Element, xml-optional-attribute-access-expr, string, nil-type
+
+function init() {
+    xml:Element x3 = xml `<elem xmlns="ns-uri" attr="val" xml:space="default"></elem>`;
+    io:println(x3?.attr is string); // @output true
+    io:println(x3?.attrNon is ()); // @output true
+}
+
+Test-Case: output
 Description: Test annotation access expression as expression in type test expression.
+Fail-Issue: ballerina-platform/ballerina-lang#33243
 Labels: is-expr, annot-access-expr, module-type-decl, record-type, mapping-constrcutor-expr, annotation-decl,
         module-class-decl, explicit-new-expr, typeof-expr, typedesc-type, any, array-type
 
@@ -937,7 +947,7 @@ function init() {
 
 Test-Case: output
 Description: Test conditional expression as expression in type test expression.
-Labels: is-expr, module-const-decl, conditional-expr, int, optiona-type
+Labels: is-expr, module-const-decl, conditional-expr, int, optional-type
 
 const ONE = 1;
 
@@ -1419,7 +1429,7 @@ Test-Case: output
 Description: Test distinct type as type descriptor in type test expression.
 Labels: is-expr, module-class-decl, module-type-decl, object-type, object-constructor-expr, explicit-new-expr
 
-type Obj1 distinct object {
+type Object1 distinct object {
     int a;
     function f1();
 };
@@ -1437,7 +1447,7 @@ distinct class Class2 {
 }
 
 function init() {
-    Obj1 c = object {
+    Object1 c = object {
         int a = 10;
         function f1() {
 
@@ -1722,16 +1732,17 @@ function f4(D|E x) returns int {
 
 Test-Case: output
 Description: Test inferring the type of the result of type test expression with var.
-Labels: is-expr, var
+Labels: is-expr, var, DecimalNumber, int
 
 function init() {
     var a = 1 is int;
-    boolean _ = a;
+    boolean b = a;
+    io:println(b); // @output true
 }
 
 Test-Case: output
 Description: Test type test expression at module level.
-Labels: is-expr, int, boolean
+Labels: is-expr, int, boolean, DecimalNumber
 
 boolean b = 1 is int;
 
@@ -1741,8 +1752,16 @@ function init() {
 
 Test-Case: error
 Description: Test assigning the result of type test expression to an incompatible type.
-Labels: is-expr, int
+Labels: is-expr, int, DecimalNumber
 
-function init() {
+function errorFunction() {
     int _ = 1 is int; // @error expected 'int', found 'boolean'
+}
+
+Test-Case: error
+Description: Test using an unknown type as the type descriptor.
+Labels: is-expr, boolean, DecimalNumber
+
+function errorFunction() {
+    boolean _ = 1 is expr; // @error unknown type 'expr'
 }
