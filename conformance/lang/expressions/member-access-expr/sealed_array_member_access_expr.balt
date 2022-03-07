@@ -1,7 +1,7 @@
 Test-Case: output
 Description: Test whether the static type of key expression is subtype of int when the basic type of the
              container expression is an array.
-Labels: member-access-expr, array-type, int, list-constructor-expr, module-type-decl, module-const-decl, union-type
+Labels: member-access-expr, array-type, int, list-constructor-expr, module-type-defn, module-const-decl, union-type
 
 const i1 = 0;
 const i2 = 5;
@@ -29,7 +29,7 @@ Test-Case: output
 Description: Test whether the static type of key expression is subtype of int when the basic type of the
              container expression is an array.
 Fail-Issue: ballerina-platform/ballerina-lang#35045
-Labels: member-access-expr, array-type, int, list-constructor-expr, module-type-decl, byte, int:Signed8,
+Labels: member-access-expr, array-type, int, list-constructor-expr, module-type-defn, byte, int:Signed8,
         int:Signed16, int:Signed32, union-type
 
 type IntType1 int:Signed8|int:Signed16;
@@ -53,7 +53,7 @@ function init() {
 Test-Case: output
 Description: Test the result of evaluating a member access expression when basic type of the evaluated value of the
              container expression is an array.
-Labels: member-access-expr, module-type-decl, record-type, table-type, array-type, int, string, union-type,
+Labels: member-access-expr, module-type-defn, record-type, table-type, array-type, int, string, union-type,
         list-constructor-expr, mapping-constructor-expr, table-constructor-expr
 
 type Record record {|
@@ -125,7 +125,7 @@ function init() {
 
 Test-Case: output
 Description: Test the static type of member access expression when the container expression is of basic type list.
-Labels: member-access-expr, module-type-decl, record-type, table-type, array-type, int, string, union-type,
+Labels: member-access-expr, module-type-defn, record-type, table-type, array-type, int, string, union-type,
         list-constructor-expr, mapping-constructor-expr, table-constructor-expr
 
 type Record record {|
@@ -137,13 +137,16 @@ type RecordTable table<Record> key(a);
 
 function init() {
     int[8] intArr = [10, 20, 30, 40, 50, 60, 70, 80];
-    int _ = intArr[6];
+    int x1 = intArr[6];
+    io:println(x1); // @output 70
 
     (int|string)[4] arr = [1, "ABC", "DEF", 2];
-    int|string _ = arr[2];
+    int|string x2 = arr[2];
+    io:println(x2); // @output DEF
 
     Record[3] recArr = [{a: 1, b: "ABC"}, {a: 2}, {a: 3, b: "DEF"}];
-    Record _ = recArr[2];
+    Record x3 = recArr[2];
+    io:println(x3); // @output {"a":3,"b":"DEF"}
 
     RecordTable[2] tableArr = [
         table [
@@ -157,7 +160,8 @@ function init() {
                 {a: 6}
             ]
     ];
-    RecordTable _ = tableArr[1];
+    RecordTable x4 = tableArr[1];
+    io:println(x4); // @output [{"a":4},{"a":5,"b":"GHI"},{"a":6}]
 }
 
 Test-Case: output
@@ -172,7 +176,7 @@ function init() {
 Test-Case: output
 Description: Test field access expression as container expression of basic type list.
 Labels: member-access-expr, array-type, string, list-constructor-expr, field-access-expr, mapping-constructor-expr,
-        record-type, module-type-decl
+        record-type, module-type-defn
 
 type Record record {|
     string[3] cities;
@@ -364,7 +368,7 @@ function init() {
 
 Test-Case: output
 Description: Test unary numeric expression as key expression with container expression of basic type list.
-Labels: member-access-expr, unary-numeric-expr, DecimalNumber, array-type, int, list-constructor-expr
+Labels: member-access-expr, unary-plus, unary-minus, unary-complement, DecimalNumber, array-type, int, list-constructor-expr
 
 function init() {
     int[5] arr = [1, 2, 3, 4, 5];
@@ -376,7 +380,7 @@ function init() {
 
 Test-Case: output
 Description: Test additive expression as key expression with container expression of basic type list.
-Labels: member-access-expr, additive-expr, DecimalNUmber, array-type, int, list-constructor-expr
+Labels: member-access-expr, additive-expr, DecimalNumber, array-type, int, list-constructor-expr
 
 function init() {
     int[5] arr = [1, 2, 3, 4, 5];
@@ -445,7 +449,7 @@ function init() {
 
 Test-Case: output
 Description: Test member access expression at module level.
-Labels: member-access-expr, module-var-decl, array-type, int, list-constructor-expr
+Labels: member-access-expr, module-init-var-decl, array-type, int, list-constructor-expr
 
 int[5] arr = [1, 2, 3, 4, 5];
 
@@ -469,7 +473,7 @@ function init() {
 Test-Case: output
 Description: Test member access expression with container expression of basic type list as default expression
              for a field.
-Labels: member-access-expr, module-var-decl, record-type, module-type-decl, mapping-constructor-expr,
+Labels: member-access-expr, module-init-var-decl, record-type, module-type-defn, mapping-constructor-expr,
         array-type, int, list-constructor-expr, readonly-type
 
 final int[5] & readonly arr = [1, 2, 3, 4, 5];
@@ -486,7 +490,7 @@ function init() {
 Test-Case: output
 Description: Test member access expression with container expression of basic type list as defaultable
              function parameter.
-Labels: member-access-expr, defaultable-param, function-call-expr, module-var-decl, array-type, int,
+Labels: member-access-expr, defaultable-param, function-call-expr, module-init-var-decl, array-type, int,
         list-constructor-expr, readonly-type
 
 final int[5] & readonly arr = [1, 2, 3, 4, 5];
