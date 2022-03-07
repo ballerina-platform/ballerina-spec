@@ -347,7 +347,7 @@ Description: Test whether the static type of key expression is a subtype of int 
              container expression is a user defined subtype of xml.
 Fail-Issue: ballerina-platform/ballerina-lang#35008
 Labels: member-access-expr, byte, int, int:Signed8, int:Signed16, int:Unsigned8, int:Unsigned32,
-        module-type-decl, module-const-decl, xml, union-type
+        module-type-defn, module-const-decl, xml, union-type
 
 const i8 = 0;
 
@@ -423,7 +423,7 @@ function init() {
     io:println(seq[4] is xml); // @output true
     io:println(seq[4].length()); // @output 1
 
-    io:println(seq[5]); // @output<name>Dan Brown</name>
+    io:println(seq[5]); // @output <name>Dan Brown</name>
     io:println(seq[5] is xml); // @output true
     io:println(seq[5].length()); // @output 1
 }
@@ -503,7 +503,7 @@ Test-Case: output
 Description: Test the result of evaluating a member access expression when basic type of the evaluated value of the
              container expression is a user defined subtype of xml.
 Labels: member-access-expr, is-expr, xml, xml:ProcessingInstruction, xml:Element, xml:Comment, xml:length, union-type,
-        module-type-decl
+        module-type-defn
 
 type XmlType1 xml<xml:Element|xml:ProcessingInstruction>;
 
@@ -528,7 +528,7 @@ Description: Test the result of evaluating a member access expression when basic
              container expression is a builtin subtype of xml and evaluated value (k) of the key expression is greater
              than or equal to its length (k >= length(c)).
 Labels: member-access-expr, xml:ProcessingInstruction, xml:Element, xml:Comment, value:toBalString, union-type,
-        module-type-decl
+        module-type-defn
 
 type XmlType1 xml<xml:Element|xml:ProcessingInstruction>;
 
@@ -558,6 +558,8 @@ Test-Case: output
 Description: Test the static type of member access expression when static type of the container expression is
              a subtype of xml<M>.
 Labels: member-access-expr, is-expr, union-type, xml, xml:Element, xml:Comment, xml:Text, xml:ProcessingInstruction
+
+type XmlType2 xml:Comment;
 
 function init() {
     xml seq = xml `<?xml-stylesheet type="text/xsl" href="style.xsl"?><name>Sherlock Holmes</name><!--Comment--><name>Enid Blyton</name>Some Text<name>Dan Brown</name>`;
@@ -590,7 +592,7 @@ Test-Case: output
 Description: Test the static type of member access expression when static type of the container expression is
              a subtype of xml<M>.
 Fail-Issue: ballerina-platform/ballerina-lang#35019
-Labels: member-access-expr, is-expr, module-type-decl, union-type, xml, xml:Element, xml:Comment, xml:Text,
+Labels: member-access-expr, is-expr, module-type-defn, union-type, xml, xml:Element, xml:Comment, xml:Text,
         xml:ProcessingInstruction
 
 type XmlType1 xml<xml:Element|xml:ProcessingInstruction>;
@@ -840,7 +842,7 @@ function init() {
 
 Test-Case: output
 Description: Test unary numeric expression as key expression with container expression whose static type is xml.
-Labels: member-access-expr, unary-numeric-expr, xml, DecimalNumber
+Labels: member-access-expr, unary-plus, unary-minus, unary-complement, xml, DecimalNumber
 
 function init() {
     xml val = xml `<!--Some Comment--><name>Enid Blyton</name>Some Text<name>Dan Brown</name>`;
@@ -851,7 +853,7 @@ function init() {
 
 Test-Case: output
 Description: Test additive expression as key expression with container expression whose static type is xml.
-Labels: member-access-expr, additive-expr, DecimalNUmber, xml
+Labels: member-access-expr, additive-expr, DecimalNumber, xml
 
 function init() {
     xml val = xml `<!--Some Comment--><name>Enid Blyton</name>Some Text<name>Dan Brown</name>`;
@@ -909,12 +911,12 @@ Labels: member-access-expr, conditional-expr, xml, is-expr, optional-type, int
 function init() {
     xml val = xml `<!--Some Comment--><name>Enid Blyton</name>Some Text<name>Dan Brown</name>`;
     int? pos = 1;
-    io:println(val[pos is int ? pos : 0]); // @output <name>Enid Blyton</name>!
+    io:println(val[pos is int ? pos : 0]); // @output <name>Enid Blyton</name>
 }
 
 Test-Case: output
 Description: Test member access expression at module level.
-Labels: member-access-expr, xml, module-var-decl
+Labels: member-access-expr, xml, module-init-var-decl
 
 xml val = xml `<!--Some Comment--><name>Enid Blyton</name>Some Text<name>Dan Brown</name>`;
 
@@ -948,8 +950,8 @@ function init() {
 Test-Case: output
 Description: Test member access expression with container expression of basic type xml as default expression
              for a field.
-Labels: member-access-expr, module-var-decl, record-type, xml, module-type-decl, mapping-constructor-expr,
-        final, readonly
+Labels: member-access-expr, module-init-var-decl, record-type, xml, module-type-defn, mapping-constructor-expr,
+        readonly-type
 
 final xml & readonly val = xml `<!--Some Comment--><name>Enid Blyton</name>Some Text<name>Dan Brown</name>`;
 
@@ -965,7 +967,7 @@ function init() {
 Test-Case: output
 Description: Test member access expression with container expression of basic type xml as defaultable
              function parameter.
-Labels: member-access-expr, defaultable-param, function-call-expr, module-var-decl, xml, final, readonly
+Labels: member-access-expr, defaultable-param, function-call-expr, module-init-var-decl, xml, readonly-type
 
 final xml & readonly val = xml `<!--Some Comment--><name>Enid Blyton</name>Some Text<name>Dan Brown</name>`;
 
