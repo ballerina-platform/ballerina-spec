@@ -1,6 +1,6 @@
 Test-Case: output
 Description: Test whether the transactional expression is being evaluated in transaction mode.
-Labels: transactional-expr, check-expr, optional-type, error, transaction-stmt, commit-stmt
+Labels: transactional-expr, check, optional-type, error, transaction-stmt, commit-action
 
 function init() returns error? {
     io:println(transactional); // output false
@@ -14,7 +14,7 @@ function init() returns error? {
 
 Test-Case: output
 Description: Test whether the transactional expression is being evaluated in transaction mode.
-Labels: transactional-expr, check-expr, optional-type, error, transaction-stmt, commit-stmt, function-call-expr,
+Labels: transactional-expr, check, optional-type, error, transaction-stmt, commit-action, function-call-expr,
         transactional-function
 
 function init() returns error? {
@@ -32,7 +32,7 @@ transactional function f1() {
 
 Test-Case: output
 Description: Test whether the transactional expression is being evaluated in transaction mode.
-Labels: transactional-expr, check-expr, optional-type, error, transaction-stmt, commit-stmt, function-call-expr,
+Labels: transactional-expr, check, optional-type, error, transaction-stmt, commit-action, function-call-expr,
         transactional-function
 
 function init() returns error? {
@@ -50,7 +50,8 @@ function init() returns error? {
 
 Test-Case: output
 Description: Test whether the transactional expression is being evaluated in transaction mode.
-Labels: transactional-expr, check-expr, optional-type, error, transaction-stmt, commit-stmt, transaction:onCommit
+Labels: transactional-expr, check, optional-type, error, transaction-stmt, commit-action, transaction:onCommit,
+        isolated-function, var, explicit-anonymous-function-expr, transaction:Info
 
 function init() returns error? {
     var onCommitFunc = isolated function(transaction:Info? info) {
@@ -67,8 +68,9 @@ function init() returns error? {
 
 Test-Case: output
 Description: Test whether the transactional expression is being evaluated in transaction mode.
-Labels: transactional-expr, check-expr, optional-type, error, int, transaction-stmt, rollback-stmt, commit-stmt,
-        transaction:onRollback
+Labels: transactional-expr, check, optional-type, error, int, transaction-stmt, rollback-stmt, commit-action,
+        transaction:onRollback, var, explicit-anonymous-function-expr, isolated-function, transaction:Info, is-expr,
+        if-else-stmt
 
 function init() returns error? {
     var onRollbackFunc = isolated function(transaction:Info? info, error? cause, boolean willTry) {
@@ -94,7 +96,7 @@ function init() returns error? {
 
 Test-Case: output
 Description: Test whether the transactional expression is being evaluated in transaction mode.
-Labels: transactional-expr, check-expr, optional-type, error, int, transaction-stmt, commit-stmt, worker-stmt
+Labels: transactional-expr, check, optional-type, error, int, transaction-stmt, commit-action, transactional-worker
 
 function init() returns error? {
     transaction {
@@ -112,8 +114,8 @@ transactional function f1() {
 
 Test-Case: output
 Description: Test whether the transactional expression is being evaluated in transaction mode.
-Labels: transactional-expr, module-class-decl, explicit-new-expr, method-call-expr, check-expr, optional-type, error,
-        int, transaction-stmt, commit-stmt,
+Labels: transactional-expr, module-class-defn, explicit-new-expr, method-call-expr, check, optional-type, error,
+        int, transaction-stmt, commit-action,
 
 class Class {
     transactional function f1() {
@@ -132,8 +134,8 @@ function init() returns error? {
 
 Test-Case: output
 Description: Test whether the transactional expression is being evaluated in transaction mode.
-Labels: transactional-expr, module-type-decl, object-type, object-constructor-expr, method-call-expr,
-        check-expr, optional-type, error, int, transaction-stmt, commit-stmt
+Labels: transactional-expr, module-type-defn, object-type, object-constructor-expr, method-call-expr,
+        check, optional-type, error, int, transaction-stmt, commit-action
 
 type ClientObj client object {
     transactional function f1();
@@ -161,8 +163,8 @@ function init() returns error? {
 
 Test-Case: output
 Description: Test whether the transactional expression is being evaluated in transaction mode.
-Labels: transactional-expr, module-type-decl, object-type, object-constructor-expr, method-call-expr,
-        check-expr, optional-type, error, int, transaction-stmt, commit-stmt
+Labels: transactional-expr, module-type-defn, object-type, object-constructor-expr, method-call-expr,
+        check, optional-type, error, int, transaction-stmt, commit-action
 
 type ServiceObj service object {
     transactional function f1();
@@ -186,7 +188,7 @@ function init() returns error? {
 
 Test-Case: output
 Description: Test whether the transactional expression is being evaluated in transaction mode.
-Labels: transactional-expr, check-expr, optional-type, error, int, retry-transaction-stmt, commit-stmt, error:Retriable
+Labels: transactional-expr, check, optional-type, error, int, retry-transaction-stmt, commit-action, error:Retriable
 
 
 function init() returns error? {
@@ -218,8 +220,8 @@ function trxErrorInRetry() returns error {
 
 Test-Case: output
 Description: Test transactional expression as expression in if statement.
-Labels: transactional-expr, if-else-stmt, compound-assignment-stmt, check-expr, optional-type, error, int,
-        transaction-stmt, commit-stmt
+Labels: transactional-expr, if-else-stmt, compound-assignment-stmt, check, optional-type, error, int,
+        transaction-stmt, commit-action
 
 function init() returns error? {
     int a = 10;
@@ -251,8 +253,8 @@ transactional function f1() returns int {
 
 Test-Case: output
 Description: Test transactional expression as expression in if statement.
-Labels: transactional-expr, if-else-stmt, compound-assignment-stmt, check-expr, optional-type, error, int,
-        transaction-stmt, commit-stmt, rollback-stmt
+Labels: transactional-expr, if-else-stmt, compound-assignment-stmt, check, optional-type, error, int,
+        transaction-stmt, commit-action, rollback-stmt
 
 function init() returns error? {
     int a = 10;
@@ -282,8 +284,8 @@ function init() returns error? {
 
 Test-Case: output
 Description: Test transactional expression as expression in if statement.
-Labels: transactional-expr, if-else-stmt, check-expr, optional-type, error, int, transaction-stmt, commit-stmt,
-        rollback-stmt, optional-type, int, is-expr, logical-expr, unary-logical-expr, function-call-expr, additive-expr
+Labels: transactional-expr, if-else-stmt, check, optional-type, error, int, transaction-stmt, commit-action,
+        rollback-stmt, is-expr, logical-expr, unary-not, function-call-expr, additive-expr
 
 function init() returns error? {
     int? a = 10;
@@ -308,8 +310,8 @@ function init() returns error? {
 
 Test-Case: output
 Description: Test transactional expression as expression in if statement.
-Labels: transactional-expr, if-else-stmt, check-expr, optional-type, error, int, transaction-stmt, commit-stmt,
-        rollback-stmt, optional-type, int, is-expr, logical-expr, unary-logical-expr, function-call-expr, additive-expr
+Labels: transactional-expr, if-else-stmt, check, optional-type, error, int, transaction-stmt, commit-action,
+        rollback-stmt, is-expr, logical-expr, unary-not, function-call-expr, additive-expr
 
 function init() returns error? {
     int? a = 10;
@@ -343,8 +345,8 @@ transactional function f1() returns int? {
 
 Test-Case: output
 Description: Test transactional expression as expression in if statement.
-Labels: transactional-expr, if-else-stmt, compound-assignment-stmt, check-expr, optional-type, error, int,
-        transaction-stmt, commit-stmt, , unary-logical-expr
+Labels: transactional-expr, if-else-stmt, compound-assignment-stmt, check, optional-type, error, int,
+        transaction-stmt, commit-action, logical-expr
 
 function init() returns error? {
     int a = 10;
@@ -395,7 +397,7 @@ function init() returns error? {
 Test-Case: output
 Description: Test transactional expression as expression in type test expression.
 Fail-Issue: ballerina-platform/ballerina-lang#35214
-Labels: transactional-expr, module-const-decl, module-type-decl, union-type, is-expr, boolean, int
+Labels: transactional-expr, module-const-decl, module-type-defn, union-type, is-expr, boolean, int
 
 const TRUE = true;
 const FALSE = false;
@@ -435,7 +437,7 @@ function init() {
 
 Test-Case: output
 Description: Test transactional expression with let expression.
-Labels: transactional-expr, boolean, let-expr, check-expr, error, optional-type, transaction-stmt, commit-stmt
+Labels: transactional-expr, boolean, let-expr, check, error, optional-type, transaction-stmt, commit-action
 
 function init() returns error? {
     transaction {
@@ -447,7 +449,7 @@ function init() returns error? {
 
 Test-Case: output
 Description: Test transactional expression with return statement.
-Labels: transactional-expr, boolean, let-expr, check-expr, error, optional-type, transaction-stmt, commit-stmt,
+Labels: transactional-expr, boolean, let-expr, check, error, optional-type, transaction-stmt, commit-action,
         return-stmt, function-call-expr
 
 function init() returns error? {
@@ -464,7 +466,7 @@ function f1() returns boolean {
 
 Test-Case: output
 Description: Test transactional expression with type case expression.
-Labels: transactional-expr, boolean, check-expr, error, optional-type, transaction-stmt, commit-stmt, type-cast-expr
+Labels: transactional-expr, boolean, check, error, optional-type, transaction-stmt, commit-action, type-cast-expr
 
 function init() returns error? {
     transaction {
@@ -484,7 +486,7 @@ function init() {
 
 Test-Case: output
 Description: Test transactional expression with unary logical expression.
-Labels: transactional-expr, check-expr, error, optional-type, transaction-stmt, commit-stmt, unary-logical-expr
+Labels: transactional-expr, check, error, optional-type, transaction-stmt, commit-action, unary-not
 
 function init() returns error? {
     transaction {
@@ -496,7 +498,7 @@ function init() returns error? {
 
 Test-Case: output
 Description: Test transactional expression with equality expression.
-Labels: transactional-expr, check-expr, error, optional-type, transaction-stmt, commit-stmt, equality-expr, boolean
+Labels: transactional-expr, check, error, optional-type, transaction-stmt, commit-action, equality, exact-equality, boolean
 
 function init() returns error? {
     boolean b = true;
@@ -511,7 +513,7 @@ function init() returns error? {
 
 Test-Case: output
 Description: Test transactional expression with logical expression.
-Labels: transactional-expr, check-expr, error, optional-type, transaction-stmt, commit-stmt, logical-expr, boolean
+Labels: transactional-expr, check, error, optional-type, transaction-stmt, commit-action, logical-expr, boolean
 
 function init() returns error? {
     boolean b = true;
@@ -526,7 +528,7 @@ function init() returns error? {
 
 Test-Case: output
 Description: Test transactional expression with logical expression.
-Labels: transactional-expr, check-expr, error, optional-type, transaction-stmt, commit-stmt, conditional-expr
+Labels: transactional-expr, check, error, optional-type, transaction-stmt, commit-action, conditional-expr
 
 function init() returns error? {
     transaction {
@@ -551,6 +553,6 @@ Test-Case: error
 Description: Test assigning the result of transactional expression to an invalid type.
 Labels: transactional-expr, int
 
-function init() {
+function errorFunction() {
     int _ = transactional; // @error expected 'int', found 'boolean'
 }
