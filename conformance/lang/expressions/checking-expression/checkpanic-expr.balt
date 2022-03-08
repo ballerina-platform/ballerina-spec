@@ -1,0 +1,1050 @@
+Test-Case: output
+Description: Test checkpanic-expr with basic types.
+Labels: int, float, decimal, string, nil-type, nil-literal, error-type, decimal, DecimalFloatingPointNumber, DecimalNumber,
+        FloatingPointTypeSuffix, HexFloatingPointLiteral, HexIntLiteral, checkpanic, function-defn, function-call-expr, return-stmt,
+        union-type, optional-type, int:MAX_VALUE, int:MIN_VALUE
+
+function init() {
+    io:println(fn1(0)); // @output 0
+    io:println(fn1(int:MAX_VALUE)); // @output 9223372036854775807
+    io:println(fn1(int:MIN_VALUE)); // @output -9223372036854775808
+    io:println(fn1(0x123Ffab1)); // @output 306182833
+    io:println(fn1(-0X123a)); // @output -4666
+
+    io:println(fn2(0.0001)); // @output 1.0E-4
+    io:println(fn2(-0.0001)); // @output -1.0E-4
+    io:println(fn2(0x1.21abc)); // @output 1.1315269470214844
+    io:println(fn2(121.121f)); // @output 121.121
+
+    io:println(fn3(1231d)); // @output 1231
+    io:println(fn3(12.12)); // @output 12.12
+    io:println(fn3(-123d)); // @output -123
+
+    io:println(fn4("0.000")); // @output 0.000
+    io:println(fn4("abc")); // @output abc
+
+    io:println(fn5(null)); // @output
+    io:println(fn5(())); // @output
+}
+
+function fn1(int x) returns error|int {
+    int y = checkpanic x;
+    return y;
+}
+
+function fn2(float x) returns error|float {
+    float y = checkpanic x;
+    return y;
+}
+
+function fn3(decimal x) returns error|decimal {
+    decimal y = checkpanic x;
+    return y;
+}
+
+function fn4(string x) returns error|string {
+    string y = checkpanic x;
+    return y;
+}
+
+function fn5(() x) returns error? {
+    () y = checkpanic x;
+    return y;
+}
+
+Test-Case: output
+Description: Test checkpanic-expr with literal values.
+Labels: error-type, optional-type, checkpanic, nil-type, nil-literal, decimal, DecimalFloatingPointNumber, DecimalNumber, float,
+        FloatingPointTypeSuffix, HexFloatingPointLiteral, HexIntLiteral, function-defn, function-call-expr, return-stmt,
+        value:toBalString(), int, additive-epr, unary-minus
+
+function init() {
+    error? x1 = fn1(); // @output 123
+                       // @output 9223372036854775807
+                       // @output -9223372036854775808
+                       // @output 1223617
+                       // @output -11256097
+
+    error? x2 = fn2(); // @output 12.3
+                       // @output 9.223372036854776E18
+                       // @output -92233.82036854776
+                       // @output 18.670913696289062
+                       // @output -171.75440979003906
+
+    error? x3 = fn3(); // @output 12.3
+                       // @output 9223372036854775807
+                       // @output -92233.82036854775807
+
+    error? x4 = fn4(); // @output
+                       // @output 9223372036854775807d
+
+    error? x5 = fn5(); // @output
+                       // @output ()
+}
+
+function fn1() returns error? {
+    int a1 = checkpanic 123;
+    io:println(a1);
+    int a2 = checkpanic 9223372036854775807;
+    io:println(a2);
+    int a3 = checkpanic (-9223372036854775807 - 1);
+    io:println(a3);
+    int a4 = checkpanic 0x12abC1;
+    io:println(a4);
+    int a5 = checkpanic -0xAbc121;
+    io:println(a5);
+}
+
+function fn2() returns error? {
+    float a1 = checkpanic 12.3;
+    io:println(a1);
+    float a2 = checkpanic 9223372036854775807;
+    io:println(a2);
+    float a3 = checkpanic (-92233.72036854775807 - .1);
+    io:println(a3);
+    float a4 = checkpanic 0x12.abC1;
+    io:println(a4);
+    float a5 = checkpanic -0xAb.c121;
+    io:println(a5);
+}
+
+function fn3() returns error? {
+    decimal a1 = checkpanic 12.3d;
+    io:println(a1);
+    decimal a2 = checkpanic 9223372036854775807d;
+    io:println(a2);
+    decimal a3 = checkpanic (-92233.72036854775807d - .1d);
+    io:println(a3);
+}
+
+function fn4() returns error? {
+    string a1 = checkpanic "";
+    io:println(a1);
+    string a2 = checkpanic "9223372036854775807d";
+    io:println(a2);
+}
+
+function fn5() returns error? {
+    () a1 = checkpanic ();
+    io:println(a1);
+    () a2 = checkpanic null;
+    io:println(a2.toBalString());
+}
+
+Test-Case: output
+Description: Test checkpanic-expr with string template expressions.
+Labels: checkpanic, string, function-defn, function-call-expr, return-stmt, optional-type, DecimalNumber, string-template-expr,
+        int
+
+function init() {
+    error? x1 = fn1(); // @output 224
+                       // @output ab
+                       // @output a
+}
+
+function fn1() returns error? {
+    string a1 = checkpanic (string`${12 + 212 - 0}`);
+    io:println(a1);
+    string a2 = checkpanic (string`${"a" + "b"}`);
+    io:println(a2);
+    string a3 = checkpanic (string`${string `${"a"}`}`);
+    io:println(a3);
+}
+
+Test-Case: error
+Description: Test the static type of the checkpanic-expr when it is used with string template expressions.
+Labels: decimal, DecimalNumber, float, string, function-defn, function-call-expr, return-stmt, optional-type, checkpanic,
+        string-template-expr, error-type, int
+
+function errorFunction() {
+    error? x1 = fn1(); // @error expected '(int|error)' but found 'string'
+                       // @error expected '(float|error)' but found 'string'
+                       // @error expected '(decimal|error)' but found 'string'
+}
+
+function fn1() returns error? {
+    int _ = checkpanic (string`${12 + 212 - 0}`);
+    float _ = checkpanic (string`${"a" + "b"}`);
+    decimal _ = checkpanic (string`${string `${"a"}`}`);
+}
+
+Test-Case: output
+Description: Test checkpanic-expr with structural constructor expressions.
+Fail-Issue: ballerina-platform/ballerina-lang#35162
+Labels: array-type, decimal, DecimalFloatingPointNumber, DecimalNumber, float, FloatingPointTypeSuffix, HexIntLiteral,
+        list-constructor-expr, mapping-constructor-expr, string, byte, int:MAX_VALUE, int:MIN_VALUE, function-defn,
+        function-call-expr, return-stmt, union-type, optional-type, map-type, readonly-type, checkpanic, spread-field, unary-minus,
+        table-constructor-expr, table-type, record-type, checkpanic, int
+
+function init() {
+    error? x1 = listConstructor(); // @output [1,2,3,-18,-9223372036854775808]
+                                   // @output [1.2,-0.21,102,-21]
+                                   // @output ["1","b","+"]
+                                   // @output [["1","b","+"]]
+                                   // @output [["1","b","+"]]
+
+    error? x2 = mappingConstructor(); // @output {"a":1,"b":12,"3":5,"max":9223372036854775807}
+                                   // @output {"x":1.21,"y":2.0,"z":-212}
+                                   // @output {"0":0,"255":255,"hex":18}
+                                   // @output {"b":"b","a":"a"}
+                                   // @output {"b":"b","a":"a"}
+
+    error? x3 = tableConstructor(); // @output [{"name":"John","salary":100},{"name":"Jane","salary":200.2}]
+}
+
+function listConstructor() returns error? {
+    int[] a1 = checkpanic [1, 2, 3, -0x12, int:MIN_VALUE];
+    io:println(a1);
+    (float|decimal)[] a2 = checkpanic [1.2, -0.21, 102d, -21d];
+    io:println(a2);
+    string[3] a3 = checkpanic ["1", "b", "+"];
+    io:println(a3);
+    string[][]|error a4 = checkpanic [checkpanic ["1", checkpanic "b", "+"]];
+    io:println(a4);
+    string[2][4]|error a5 = checkpanic [checkpanic ["1", checkpanic "b", "+"]];
+    io:println(a5);
+}
+
+function mappingConstructor() returns error? {
+    map<int> a1 = checkpanic {a: 1, b: 12, '3: 5, max: int:MAX_VALUE};
+    io:println(a1);
+    map<(float|decimal)> a2 = checkpanic {x: 1.21, y: 2f, z: -212d};
+    io:println(a2);
+    map<byte> a3 = checkpanic {'0: 0, '255: 255, hex: 0x12};
+    io:println(a3);
+    map<string> a4 = checkpanic {[checkpanic "a"]: "a", b: checkpanic "b"};
+    io:println(a4);
+    map<string> a5 = checkpanic {...a4};
+    io:println(a5);
+}
+
+type Employee record {
+    readonly string name;
+    decimal salary;
+};
+
+function tableConstructor() returns error? {
+    table<Employee> key(name) a1 =  checkpanic table [{name: "John", salary: checkpanic 100},
+                                                  {name: "Jane", salary: checkpanic 200.2}];
+    io:println(a1);
+}
+
+Test-Case: error
+Description: Test the static type of the checkpanic-expr when it is used with structural constructor expressions.
+Labels: array-type, byte, decimal, DecimalFloatingPointNumber, DecimalNumber, float, int:MAX_VALUE, int:MIN_VALUE
+        FloatingPointTypeSuffix, HexIntLiteral, list-constructor-expr, checkpanic, int
+        mapping-constructor-expr, nil-type, string, function-defn, function-call-expr, union-type, optional-type
+
+function errorFunction() {
+    error? x1 = listConstructor(); // @error expected '(int|error)' but found '[int,int,int,int,int]'
+                                   // @error expected '((float|decimal)[2]|error)' but found '[float,float,decimal,decimal]'
+                                   // @error expected '(()[3]|error)' but found '[string,string,string]'
+                                   // @error expected '(string[]|error)' but found '[[string,string,string]]'
+                                   // @error expected '(string[2][1]|error)' but found '[[string,string,string]]'
+
+    error? x2 = mappingConstructor(); // @error incompatible mapping constructor expression for type 'int|error'
+                                      // @error incompatible mapping constructor expression for type 'int|error'
+                                      // @error incompatible mapping constructor expression for type 'byte|error'
+                                      // @error incompatible mapping constructor expression for type 'map<map<string>>|error'
+}
+
+function listConstructor() returns error? {
+    int _ = checkpanic [1, 2, 3, -0x12, int:MIN_VALUE];
+    (float|decimal)[2] _ = checkpanic [1.2, -0.21, 102d, -21d];
+    ()[3] _ = checkpanic ["1", "b", "+"];
+    string[] _ = checkpanic [checkpanic ["1", checkpanic "b", "+"]];
+    string[2][1] _ = checkpanic [checkpanic ["1", checkpanic "b", "+"]];
+}
+
+function mappingConstructor() returns error? {
+    int _ = checkpanic {a: 1, b: 12, '3: 5, max: int:MAX_VALUE};
+    int _ = checkpanic {x: 1.21, y: 2f, z: -212d};
+    byte _ = checkpanic {'0: 0, '255: 255, hex: 0x12};
+    map<string> _ = checkpanic {[checkpanic "a"]: "a", b: checkpanic "b"};
+    map<map<string>> _ = checkpanic {...a4};
+}
+
+Test-Case: output
+Description: Test checkpanic-expr with object constructor expressions.
+Fail-Issue: ballerina-platform/ballerina-lang#35205
+Labels: boolean, int, , DecimalNumber, field-access-expr, float,
+        , , , json, list-constructor-expr,
+        mapping-constructor-expr, nil-literal, readonly-type, string
+
+function init() {
+    error? x1 = objectConstructor(); // @output 1
+                                     // @output abc
+                                     // @output true
+}
+
+type Object1 object {
+    public int a;
+};
+
+Object1|error obj = object{
+    public int a = 1;
+};
+
+function objectConstructor() returns error? {
+    Object1 obj = checkpanic object{
+        public int a = 1;
+        public string b = "abc";
+        public boolean c = true;
+    };
+
+    io:println(obj.a);
+    io:println(obj.b);
+    io:println(obj.c);
+}
+
+Test-Case: error
+Description: Test the static type of the checkpanic-expr when it is used with object constructor expressions.
+Fail-Issue: ballerina-platform/ballerina-lang#35205
+Labels: boolean, string, object-type, error-type, function-defn, function-call-expr, optional-type
+
+function errorFunction() {
+    error? x1 = objectConstructor(); // @error expected 'Object1' but found 'object { string b; }'
+}
+
+type Object1 object {
+    boolean c;
+};
+
+function objectConstructor() returns error? {
+    Object1 _ = checkpanic object{
+        string b = "abc";
+    };
+}
+
+Test-Case: output
+Description: Test checkpanic-expr with new expressions.
+Labels: checkpanic, DecimalNumber, field-access-expr, error-type, int, explicit-new-expr, module-class-defn,
+        error-type, function-defn, function-call-expr, optional-type
+
+function init() {
+    error? x1 = file(); // @output 10
+}
+
+class File {
+    int i = 10;
+}
+
+function file() returns error? {
+    File f = checkpanic new File();
+    io:println(f.i);
+}
+
+Test-Case: error
+Description: Test the static type of the checkpanic-expr when it is used with new expressions.
+Labels: int, error-type, function-defn, function-call-expr, optional-type, module-class-defn, DecimalNumber
+
+function init() {
+    error? x1 = file(); // @error expected '(int|error)' but found 'File'
+}
+
+class File {
+    int i = 10;
+}
+
+function file() returns error? {
+    int _ = checkpanic new File();
+}
+
+Test-Case: output
+Description: Test checkpanic-expr with field-access, optional-field-access and member-access expressions.
+Labels: array-type, boolean, decimal, DecimalFloatingPointNumber, DecimalNumber, field-access-expr, float,
+        json, list-constructor-expr, function-defn, function-call-expr, optional-type,
+        error-type, mapping-constructor-expr, string, optional-field-access-expr, checkpanic, unary-not
+
+function init() {
+    error? x1 = fieldAccess(); // @output 2
+                               // @output 2
+                               // @output abc
+                               // @output abc
+                               // @output [true,false,false]
+                               // @output [true,false,false]
+                               // @output 21
+                               // @output 21
+    io:println(x1); // @output key 'b1' not found in JSON mapping
+
+    error? x2 = memberAccess(); // @output 2
+                                // @output abc
+                                // @output [true,false,false]
+                                // @output [true,false,false]
+                                // @output 1
+
+    io:println(x2); // @output JSON value is not a mapping
+}
+
+type Rec record {
+    int x;
+    string y;
+    boolean[3] z;
+};
+
+Rec rec = {x: 2, y: "abc", z: [true, false, !true], "a": []};
+
+function fieldAccess() returns error? {
+    json j1 = {a: 21, b: true};
+
+    int i1 = checkpanic rec.x;
+    io:println(i1);
+    int i2 = checkpanic rec?.x;
+    io:println(i2);
+
+    string s1  =checkpanic rec.y;
+    io:println(s1);
+    string s2  =checkpanic rec?.y;
+    io:println(s2);
+
+    boolean[] b1 = checkpanic rec.z;
+    io:println(b1);
+    boolean[] b2 = checkpanic rec?.z;
+    io:println(b2);
+
+    int i3 = checkpanic j1.a;
+    io:println(i3);
+    int i4 = checkpanic j1?.a;
+    io:println(i4);
+
+    boolean b3 = checkpanic j1.b1;
+    io:println(b3);
+    boolean b4 = checkpanic j1?.b1;
+    io:println(b4);
+
+    string _ = checkpanic j1.c;
+}
+
+function memberAccess() returns error? {
+    json[] j1 = [1, 2, "a", 1.0, [1, 2, 3]];
+
+    int i1 = checkpanic rec["x"];
+    io:println(i1);
+
+    string s1  =checkpanic rec["y"];
+    io:println(s1);
+
+    boolean[] b1 = checkpanic rec["z"];
+    io:println(b1);
+
+    anydata a1 = checkpanic rec["a"];
+    io:println(b1);
+
+    int i3 = checkpanic j1[0];
+    io:println(i3);
+
+    json _ = checkpanic j1[4].a;
+}
+
+Test-Case: error
+Description: Test the static type of the checkpanic-expr when it is used with field-access, optional-field-access and
+             member-access expressions. ***
+Labels: boolean, decimal, DecimalFloatingPointNumber, DecimalNumber, field-access-expr, float,
+        FloatingPointTypeSuffix, HexFloatingPointLiteral, HexIntLiteral, json, list-constructor-expr,
+        mapping-constructor-expr, nil-literal, readonly-type, string
+
+function init() {
+    error? x1 = file(); // @error expected '(int|error)' but found 'File'
+}
+
+class File {
+    public int i = 10;
+}
+
+function file() returns error? {
+    int f = checkpanic new File();
+}
+
+Test-Case: panic
+Description: Test checkpanic-expr with function call expressions. Test case 1.
+Labels: boolean, DecimalNumber, error-type, function-defn, function-call-expr, optional-type, checkpanic, return-stmt, if-else-stmt
+        error-constructor-expr, string
+
+function init() {
+    error? x1 = testFunction1();
+}
+
+function testFunction1() returns error? {
+    checkpanic fn(); // @panic error!
+}
+
+function fn() returns error {
+    io:println("function");
+    return error("error1!");
+}
+
+Test-Case: panic
+Description: Test checkpanic-expr with function call expressions. Test case 2.
+Labels: boolean, DecimalNumber, error-type, function-defn, function-call-expr, optional-type, checkpanic, return-stmt, if-else-stmt
+        error-constructor-expr, string
+
+function init() {
+    error? x2 = testFunction2();
+}
+
+function testFunction2() returns error? {
+    checkpanic fn1();
+}
+
+function fn1() returns error? {
+    checkpanic fn2();
+}
+
+function fn2() returns error? {
+    _ = checkpanic fn3() + checkpanic fn4(2);
+}
+
+function fn3() returns error|int {
+    return checkpanic fn4(1); // @panic error2
+}
+
+function fn4(int i) returns error|int {
+    if i > 1 {
+        return error("error2");
+    }
+    return 2;
+}
+
+Test-Case: panic
+Description: Test checkpanic-expr with function call expressions. Test case 3.
+Labels: boolean, DecimalNumber, error-type, function-defn, function-call-expr, optional-type, checkpanic, return-stmt, if-else-stmt
+        error-constructor-expr, string, trap-expr
+
+function init() {
+    error? x3 = testFunction3(5); // @output 5
+                                  // @output 4
+                                  // @output 3
+                                  // @output 2
+                                  // @output 1
+                                  // @output 0
+                                  // @output function
+    io:println(x3); // @output error("error1!")
+}
+
+function fn() returns error {
+    io:println("function");
+    return error("error1!");
+}
+
+function testFunction3(int i) returns error? {
+    return trap (checkpanic recursiveFn(i));
+}
+
+function recursiveFn(int i) returns error? {
+    io:println(i);
+    if i == 0 {
+        checkpanic fn();
+    }
+    checkpanic recursiveFn(i - 1);
+}
+
+Test-Case: panic
+Description: Test checkpanic-expr with method call expressions.
+Labels: boolean, DecimalNumber, nil-literal, string, error-type, module-class-defn, explicit-new-expr, checkpanic, returm-stmt,
+        function-defn, function-call-expr, optional-type, checkpanic, return-stmt, if-else-stmt, relational-expr
+
+function init() {
+    error? x2 = methodCall(1);
+}
+
+class C1 {
+    C2 c2 = new();
+
+    public function method1(int i) returns error? {
+        checkpanic self.c2.method2(i); // @panic error1
+    }
+}
+
+class C2 {
+    public int x = 1;
+
+    public function method2(int i) returns error? {
+        if i == 0 {
+            return;
+        }
+        return error("error1");
+    }
+}
+
+function methodCall(int i) returns error? {
+    C1 c1 = new();
+    checkpanic c1.method1(i);
+}
+
+Test-Case: error
+Description: Test checkpanic-expr with error constructor expressions.
+Labels: DecimalNumber, function-defn, function-call-expr, optional-type, checkpanic, return-stmt, int, string
+
+function errorFunction() {
+    error? x1 = errorConstructorExpr(0);
+}
+
+function errorConstructorExpr(int i) returns error {
+    error c = checkpanic error("a"); // expression of type 'never' or equivalent to type 'never' not allowed here
+}
+
+Test-Case: panic
+Description: Test checkpanic-expr with an anonymous function expression.
+Labels: int, DecimalNumber, function-defn, function-call-expr, optional-type, checkpanic, return-stmt, var
+
+function init() {
+    error? x1 = fnCall(0);
+}
+
+function fnCall(int i) returns error? {
+    var fn = checkpanic function(int b) returns error? {return error("error1");};
+    int? a = checkpanic fn(1); // @panic error1
+}
+
+Test-Case: panic
+Description: Test checkpanic-expr with let expression.
+Labels: union-type, unary-minus, json, DecimalNumber, function-defn, function-call-expr, optional-type, checkpanic, return-stmt,
+        relational-expr, if-else-stmt, string
+
+function init() {
+    error? x1 = letExpr(-2);
+}
+
+function letExpr(int i) returns error? {
+    json _ = checkpanic (let int s = - checkpanic fn1(i) in fn2(s)); // @panic Invalid Number 1
+}
+
+function fn1(int i) returns error|int {
+    if i >= 0 {
+        return i;
+    }
+    return error("Invalid Number 1");
+}
+
+function fn2(int i) returns error|int {
+    if i >= 0 {
+        return i;
+    }
+    return error("Invalid Number 2");
+}
+
+Test-Case: panic
+Description: Test checkpanic-expr with let expression.
+Labels: union-type, unary-minus, json, DecimalNumber, function-defn, function-call-expr, optional-type, checkpanic, return-stmt,
+        relational-expr, if-else-stmt, string
+
+function init() {
+    error? x2 = letExpr(2);
+}
+
+function letExpr(int i) returns error? {
+    json _ = checkpanic (let int s = - checkpanic fn1(i) in fn2(s)); // @panic Invalid Number 2
+}
+
+function fn1(int i) returns error|int {
+    if i >= 0 {
+        return i;
+    }
+    return error("Invalid Number 1");
+}
+
+function fn2(int i) returns error|int {
+    if i >= 0 {
+        return i;
+    }
+    return error("Invalid Number 2");
+}
+
+Test-Case: output
+Description: Test checkpanic-expr with type-cast expression.
+Labels: relational-expr, int, string, unary-minus, json, union-type, function-defn, function-call-expr, optional-type,
+        checkpanic, return-stmt, if-else-stmt, error-type
+
+function init() {
+    error? x2 = typeCast(0);
+}
+
+function typeCast(int i) returns error? {
+    error|int x = i;
+    if i == 0 {
+        x = error("Invalid Number");
+    }
+    json _ = checkpanic (<int> checkpanic x); // @panic Invalid Number
+}
+
+Test-Case: output
+Description: Test checkpanic-expr with typeof expression.
+Labels: any, DecimalNumber, typeof-expr, string, function-defn, function-call-expr, optional-type, checkpanic, unary-minus
+
+function init() {
+    error? x1 = typeOfTest(-1); // @output -1
+    io:println(x1); // @output
+    error? x2 = typeOfTest("0"); // @output 0
+    io:println(x2); // @output
+}
+
+function typeOfTest(any i) returns error? {
+    io:println(checkpanic (typeof i));
+}
+
+Test-Case: output
+Description: Test checkpanic-expr with unary expression, multiplicative expression, additive expression, shift expression,
+             binary bitwise expression and logical expression.
+Labels: int, float, decimal, error-type, DecimalFloatingPointNumber, DecimalNumber, additive-expr, binary-bitwise-expr,
+        checkpanic, function-defn, function-call-expr, FloatingPointTypeSuffix, unary-plus, unary-minus, unary-not, unary-complement,
+        optional-type, multiplicative-expr, shift-expr, int:MAX_VALUE, int:MIN_VALUE
+
+function init() {
+    error? x1 = testAdditiveExpr1(1, 3); // @output 4
+                                         // @output -2
+    io:println(x1); // @output
+    error? x2 = testAdditiveExpr1(4611686018427387903, 4611686018427387904); // @output 9223372036854775807
+                                                                             // @output -1
+    io:println(x2); // @output
+    error? x3 = testAdditiveExpr2(1.0, 3.0); // @output 4.0
+                                             // @output -2.0
+    io:println(x3); // @output
+    error? x4 = testAdditiveExpr3(1.0d, 3.0d); // @output 4.0
+                                               // @output -2.0
+    io:println(x4); // @output
+
+    error? x5 = testUnaryExpr1(123); // @output 123
+                                     // @output -123
+                                     // @output -124
+    io:println(x5); // @output
+    error? x6 = testUnaryExpr2(9.01); // @output 9.01
+                                      // @output -9.01
+    io:println(x6); // @output
+    error? x7 = testUnaryExpr3(9.123); // @output 9.123
+                                       // @output -9.123
+    io:println(x7); // @output
+    error? x8 = testUnaryExpr4(true); // @output false
+    io:println(x8); // @output
+    error? x9 = testUnaryExpr4(false); // @output true
+    io:println(x9); // @output
+
+    error? x10 = testMultiplicativeExpr1(10, 3); // @output 30
+                                                 // @output 3
+                                                 // @output 1
+    io:println(x10); // @output
+    error? x11 = testMultiplicativeExpr2(10.0, 3.0); // @output 30.0
+                                                     // @output 3.3333333333333335
+                                                     // @output 1.0
+    io:println(x11); // @output
+    error? x12 = testMultiplicativeExpr3(10d, 3.0d); // @output 30.0
+                                                     // @output 3.333333333333333333333333333333333
+                                                     // @output 1.0
+    io:println(x12); // @output
+
+    error? x13 = testBitwiseExpr(1, 3); // @output 1
+                                        // @output 3
+                                        // @output 2
+    io:println(x13); // @output1
+    error? x14 = testBitwiseExpr(int:MIN_VALUE, -1); // @output -9223372036854775808
+                                                     // @output -2
+                                                     // @output -9223372036854775807
+    io:println(x14); // @output
+
+    error? x15 = testShiftExpr(-1, 3); // @output -8
+                                       // @output -1
+                                       // @output 2305843009213693951
+    io:println(x15); // @output
+    error? x16 = testShiftExpr(int:MAX_VALUE, 1); // @output -2
+                                                  // @output 4611686018427387903
+                                                  // @output 4611686018427387903
+    io:println(x16); // @output
+}
+
+function testAdditiveExpr1(int a, int b) returns error? {
+    int x1 = checkpanic (a + b);
+    io:println(x1);
+    int x2 = checkpanic (a - b);
+    io:println(x2);
+}
+
+function testAdditiveExpr2(float a, float b) returns error? {
+    float x1 = checkpanic (a + b);
+    io:println(x1);
+    float x2 = checkpanic (a - b);
+    io:println(x2);
+}
+
+function testAdditiveExpr3(decimal a, decimal b) returns error? {
+    decimal x1 = checkpanic (a + b);
+    io:println(x1);
+    decimal x2 = checkpanic (a - b);
+    io:println(x2);
+}
+
+function testUnaryExpr1(int a) returns error? {
+    int x1 = checkpanic (+a);
+    io:println(x1);
+    int x2 = checkpanic (-a);
+    io:println(x2);
+    int x3 = checkpanic (~a);
+    io:println(x3);
+}
+
+function testUnaryExpr2(float a) returns error? {
+    float x1 = checkpanic (+a);
+    io:println(x1);
+    float x2 = checkpanic (-a);
+    io:println(x2);
+}
+
+function testUnaryExpr3(decimal a) returns error? {
+    decimal x1 = checkpanic (+a);
+    io:println(x1);
+    decimal x2 = checkpanic (-a);
+    io:println(x2);
+}
+
+function testUnaryExpr4(boolean a) returns error? {
+    boolean x1 = checkpanic (!a);
+    io:println(x1);
+}
+
+function testMultiplicativeExpr1(int a, int b) returns error? {
+    int x1 = checkpanic (a * b);
+    io:println(x1);
+    int x2 = checkpanic (a / b);
+    io:println(x2);
+    int x3 = checkpanic (a % b);
+    io:println(x3);
+}
+
+function testMultiplicativeExpr2(float a, float b) returns error? {
+    float x1 = checkpanic (a * b);
+    io:println(x1);
+    float x2 = checkpanic (a / b);
+    io:println(x2);
+    float x3 = checkpanic (a % b);
+    io:println(x3);
+}
+
+function testMultiplicativeExpr3(decimal a, decimal b) returns error? {
+    decimal x1 = checkpanic (a * b);
+    io:println(x1);
+    decimal x2 = checkpanic (a / b);
+    io:println(x2);
+    decimal x3 = checkpanic (a % b);
+    io:println(x3);
+}
+
+function testBitwiseExpr(int a, int b) returns error? {
+    int x1 = checkpanic (a & b);
+    io:println(x1);
+    int x2 = checkpanic (a | b);
+    io:println(x2);
+    int x3 = checkpanic (a ^ b);
+    io:println(x3);
+}
+
+function testShiftExpr(int a, int b) returns error? {
+    int x1 = checkpanic (a << b);
+    io:println(x1);
+    int x2 = checkpanic (a >> b);
+    io:println(x2);
+    int x3 = checkpanic (a >>> b);
+    io:println(x3);
+}
+
+Test-Case: output
+Description: Test checkpanic-expr with type test expression.
+Labels: boolean, DecimalFloatingPointNumber, DecimalNumber,  nil-literal, string, function-defn, function-call-expr,
+        optional-type, checkpanic, int, float, is-expr
+
+function init() {
+    error? x1 = typeTestExpr(1); // @output true
+                                 // @output false
+                                 // @output false
+                                 // @output false
+    io:println(x1); // @output
+
+    error? x2 = typeTestExpr(1.0); // @output false
+                                   // @output true
+                                   // @output false
+                                   // @output false
+    io:println(x2); // @output
+
+    error? x3 = typeTestExpr("1"); // @output false
+                                   // @output false
+                                   // @output true
+                                   // @output false
+    io:println(x3); // @output
+
+    error? x4 = typeTestExpr(()); // @output false
+                                  // @output false
+                                  // @output false
+                                  // @output true
+    io:println(x4); // @output
+}
+
+function typeTestExpr(anydata a) returns error? {
+    boolean x1 = checkpanic (a is int);
+    io:println(x1);
+    boolean x2 = checkpanic (a is float);
+    io:println(x2);
+    boolean x3 = checkpanic (a is string);
+    io:println(x3);
+    boolean x4 = checkpanic (a is ());
+    io:println(x4);
+}
+
+Test-Case: panic
+Description: Test checkpanic-expr with trap expression. Test case 1.
+Labels: DecimalNumber, float, FloatingPointTypeSuffix, string, function-defn, function-call-expr, optional-type, checkpanic,
+        int, error-type, trap-expr, anydata, typecast-expr, multiplicative-expr
+
+function init() {
+    error? x2 = testTrapExpr1("1.0");
+}
+
+function testTrapExpr1(anydata a) returns error? {
+    int x = checkpanic (trap (<int> a)); // @panic incompatible types: 'string' cannot be cast to 'int'
+}
+
+Test-Case: panic
+Description: Test checkpanic-expr with trap expression. Test case 2.
+Labels: DecimalNumber, float, FloatingPointTypeSuffix, string, function-defn, function-call-expr, optional-type, checkpanic,
+        int, error-type, trap-expr, anydata, typecast-expr, multiplicative-expr
+
+function init() {
+    error? x4 = testTrapExpr2(1, 0);
+}
+
+function testTrapExpr2(int a, int b) returns error? {
+    int x = checkpanic (trap (a/b)); // @panic DivisionByZero
+}
+
+Test-Case: output
+Description: Test checkpanic-expr with trap expression. Test case 3.
+Labels: DecimalNumber, string, function-defn, function-call-expr, checkpanic,
+        int, error-type, trap-expr, return-stmt, error-constructor-expr
+
+function init() {
+    error|int x4 = testTrapExpr2();
+    io:println(x4); // @output error("ERROR1")
+}
+
+function testTrapExpr2() returns error|int {
+    error|int a = error("ERROR1");
+    return trap (checkpanic a);
+}
+
+Test-Case: output
+Description: Test checkpanic-expr with conditional expression. Test case 1.
+Labels: boolean, DecimalNumber, string, function-defn, function-call-expr, optional-type, checkpanic,
+        int, error-type, typecast-expr, union-type, error-constructor-expr, binary-conditional-expr, ternary-conditional-expr
+
+function init() {
+    error? x1 = testTernaryExpr(1, 2, false); // @output 2
+    io:println(x1); // @output
+    error? x3 = testTernaryExpr(error("ERROR"), 2, false); // @output 2
+    io:println(x3); // @output
+
+    error? x4 = testElvisExpr(1, 2); // @output 1
+    io:println(x4); // @output
+    error? x5 = testElvisExpr(1, error("ERROR")); // @output 1
+    io:println(x5); // @output
+}
+
+function testTernaryExpr(error|int a, int b, boolean c) returns error? {
+    int x = checkpanic (c? a:b);
+    io:println(x);
+}
+
+function testElvisExpr(int? a, int|error b) returns error? {
+    int x = checkpanic (a ?:b);
+    io:println(x);
+}
+
+Test-Case: panic
+Description: Test checkpanic-expr with conditional expression. Test case 2.
+Labels: boolean, string, function-defn, function-call-expr, optional-type, checkpanic,
+        int, error-type, error-constructor-expr, ternary-conditional-expr
+
+function init() {
+    error? x7 = testTernaryExpr(error("ERROR1"), error("ERROR2"), false);
+}
+
+function testTernaryExpr(error a, error b, boolean c) returns error? {
+    int x = checkpanic (c? a:b); // @panic ERROR2
+}
+
+Test-Case: panic
+Description: Test checkpanic-expr with conditional expression. Test case 3.
+Labels: boolean, string, function-defn, function-call-expr, optional-type, checkpanic,
+        int, error-type, error-constructor-expr, ternary-conditional-expr
+
+function init() {
+    error? x7 = testTernaryExpr(error("ERROR1"), error("ERROR2"), true);
+}
+
+function testTernaryExpr(error a, error b, boolean c) returns error? {
+    int x = checkpanic (c? a:b); // @panic ERROR1
+}
+
+Test-Case: panic
+Description: Test checkpanic-expr with conditional expression. Test case 4.
+Labels: string, function-defn, function-call-expr, optional-type, checkpanic,
+        int, error-type, error-constructor-expr, binary-conditional-expr
+
+function init() {
+    error? x8 = testElvisExpr2(error("ERROR1"), error("ERROR2"));
+}
+
+function testElvisExpr2(error? a, error b) returns error? {
+    int x = checkpanic (a ?:b); // @panic ERROR1
+}
+
+Test-Case: error
+Description: Test checkpanic-expr when it is used to convert json to simple types. Test case 1.
+Labels: boolean, decimal, DecimalFloatingPointNumber, DecimalNumber, field-access-expr, float, FloatingPointTypeSuffix,
+        HexFloatingPointLiteral, HexIntLiteral, json, mapping-constructor-expr, nil-literal, string, unary-minus,
+        function-defn, function-call-expr, optional-type, checkpanic, unary-not, int:MAX_VALUE, int:MIN_VALUE, map-type
+
+json j1 = {i1: int:MAX_VALUE, i2:int:MIN_VALUE, i3: 0x12a, f1: 12.121, f2: -2122.1, f3: -0x12.1ab, d1: 12.212d, d2: -212.1d};
+json j2 = {t: true, f: false, t2: !false};
+json j3 = {s1: "abc", s2: "123"};
+json j4 = {n1: null, n2: ()};
+
+map<json> mapj1 = {i1: int:MAX_VALUE, i2: int:MIN_VALUE, i3: 0x12a, f1: 12.121, f2: -2122.1, f3: -0x12.1ab, d1: 12.212d, d2: -212.1d};
+map<json> mapj2 = {t: true, f: false, t2: !false};
+map<json> mapj3 = {s1: "abc", s2: "123"};
+map<json> mapj4 = {n1: null, n2: ()};
+
+function errorFunction() returns error? {
+    int _ = checkpanic j1.i1; // @error incompatible types: expected '(int|error)', found '(json|error)'
+    int _ = checkpanic j1.i2; // @error incompatible types: expected '(int|error)', found '(json|error)'
+    int _ = checkpanic j1.i3; // @error incompatible types: expected '(int|error)', found '(json|error)'
+    float _ = checkpanic j1.f1; // @error incompatible types: expected '(float|error)', found '(json|error)'
+    float _ = checkpanic j1.f2; // @error incompatible types: expected '(float|error)', found '(json|error)'
+    float _ = checkpanic j1.f3; // @error incompatible types: expected '(float|error)', found '(json|error)'
+    decimal _ = checkpanic j1.d1; // @error incompatible types: expected '(decimal|error)', found '(json|error)'
+    decimal _ = checkpanic j1.d2; // @error incompatible types: expected '(decimal|error)', found '(json|error)'
+
+    boolean _ = checkpanic j2.t; // @error incompatible types: expected '(boolean|error)', found '(json|error)'
+    boolean _ = checkpanic j2.f; // @error incompatible types: expected '(boolean|error)', found '(json|error)'
+    boolean _ = checkpanic j2.t; // @error incompatible types: expected '(boolean|error)', found '(json|error)'
+
+    string _ = checkpanic j3.s1; // @error incompatible types: expected '(string|error)', found '(json|error)'
+    string _ = checkpanic j3.s2; // @error incompatible types: expected '(string|error)', found '(json|error)'
+
+    () _ = checkpanic j4.n1; // @error incompatible types: expected 'error?', found '(json|error)'
+    () _ = checkpanic j4.n2; // @error incompatible types: expected 'error?', found '(json|error)'
+
+    int _ = checkpanic mapj1.i1; // @error incompatible types: expected '(int|error)', found '(json|error)'
+    int _ = checkpanic mapj1.i2; // @error incompatible types: expected '(int|error)', found '(json|error)'
+    int _ = checkpanic mapj1.i3; // @error incompatible types: expected '(int|error)', found '(json|error)'
+    float _ = checkpanic mapj1.f1; // @error incompatible types: expected '(float|error)', found '(json|error)'
+    float _ = checkpanic mapj1.f2; // @error incompatible types: expected '(float|error)', found '(json|error)'
+    float _ = checkpanic mapj1.f3; // @error incompatible types: expected '(float|error)', found '(json|error)'
+    decimal _ = checkpanic mapj1.d1; // @error incompatible types: expected '(decimal|error)', found '(json|error)'
+    decimal _ = checkpanic mapj1.d2; // @error incompatible types: expected '(decimal|error)', found '(json|error)'
+
+    boolean _ = checkpanic mapj2.t; // @error incompatible types: expected '(boolean|error)', found '(json|error)'
+    boolean _ = checkpanic mapj2.f; // @error incompatible types: expected '(boolean|error)', found '(json|error)'
+    boolean _ = checkpanic mapj2.t; // @error incompatible types: expected '(boolean|error)', found '(json|error)'
+
+    string _ = checkpanic mapj3.s1; // @error incompatible types: expected '(string|error)', found '(json|error)'
+    string _ = checkpanic mapj3.s2; // @error incompatible types: expected '(string|error)', found '(json|error)'
+
+    () _ = checkpanic mapj4.n1; // @error incompatible types: expected 'error?', found '(json|error)'
+    () _ = checkpanic mapj4.n2; // @error incompatible types: expected 'error?', found '(json|error)'
+}
