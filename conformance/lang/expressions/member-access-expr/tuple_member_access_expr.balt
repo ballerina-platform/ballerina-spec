@@ -1,3 +1,13 @@
+Test-Case: parser-error
+Description: Test missing key expression in member access expression.
+Labels: member-access-expr, tuple-type, int, string, list-constructor-expr
+
+function errorFunction() {
+    [int, string] t = [10, "CL"];
+
+    _ = t[]; // @error missing key expression
+}
+
 Test-Case: output
 Description: Test whether the static type of key expression is subtype of int when the basic type of the
              container expression is a tuple.
@@ -31,7 +41,7 @@ function init() {
 Test-Case: output
 Description: Test whether the static type of key expression is subtype of int when the basic type of the
              container expression is a tuple.
-Fail-Issue: ballerina-platform/ballerina-lang#35045
+Fail-Issue: ballerina-platform/ballerina-lang#33346
 Labels: member-access-expr, tuple-type, int, string, float, list-constructor-expr, module-type-defn, byte, int:Signed8,
         int:Signed16, int:Signed32, union-type
 
@@ -51,6 +61,37 @@ function init() {
 
     IntType1 i4 = 5;
     io:println(t[i4]); // @output 40.5
+}
+
+Test-Case: error
+Description: Test key expression with invalid static type.
+Labels: member-access-expr, tuple-type, int, list-constructor-expr, string, any, union-type, float,
+        DecimalFloatingPointNumber
+
+type SomeType "1"|"3";
+
+const c = "1";
+
+function errorFunction() {
+    [int, string] t = [10, "CL"];
+
+    _ = t["1"]; // @error expected a value of subtype int as key
+
+    string a = "1";
+    _ = t[a]; // @error expected a value of subtype int as key
+
+    SomeType b = "1";
+    _ = t[b]; // @error expected a value of subtype int as key
+
+    _ = t[c]; // @error expected a value of subtype int as key
+
+    any d = 1;
+    _ = t[d]; // @error expected a value of subtype int as key
+
+    int|float e = 2;
+    _ = t[e]; // @error expected a value of subtype int as key
+
+    _ = t[2.0]; // @error expected a value of subtype int as key
 }
 
 Test-Case: output
@@ -144,6 +185,33 @@ function init() {
 
     float i7 = t[6];
     io:println(i7); // @output 30.5
+}
+
+Test-Case: error
+Description: Test assigning result of member access expression to an invalid type.
+Labels: member-access-expr, tuple-type, int, string, list-constructor-expr
+
+function errorFunction() {
+    [int, string] t = [10, "CL"];
+
+    string _ = t[0]; // @error expected string, found int
+
+    int _ = t[1]; // @error expected int, found string
+}
+
+Test-Case: error
+Description: Test assigning result of member access expression to an invalid type.
+Fail-Issue: ballerina-platform/ballerina-lang#35079
+Labels: member-access-expr, tuple-type, int, string, list-constructor-expr
+
+function errorFunction() {
+    [int, string, boolean...] t = [10, "CL", true];
+    int idx = 2;
+
+    string _ = t[idx]; // @error expected string, found (int|string|boolean)
+
+    [boolean...] p = [true, false, true];
+    string _ = p[idx]; // @error expected string, found boolean
 }
 
 Test-Case: output
@@ -496,55 +564,6 @@ function init() {
 }
 
 Test-Case: error
-Description: Test key expression with invalid static type.
-Labels: member-access-expr, tuple-type, int, list-constructor-expr, string
-
-type SomeType "1"|"3";
-
-const c = "1";
-
-function errorFunction() {
-    [int, string] t = [10, "CL"];
-
-    _ = t["1"]; // @error expected a value of subtype int as key
-
-    string a = "1";
-    _ = t[a]; // @error expected a value of subtype int as key
-
-    SomeType b = "1";
-    _ = t[b]; // @error expected a value of subtype int as key
-
-    _ = t[c]; // @error expected a value of subtype int as key
-}
-
-Test-Case: error
-Description: Test assigning result of member access expression to an invalid type.
-Labels: member-access-expr, tuple-type, int, string, list-constructor-expr
-
-function errorFunction() {
-    [int, string] t = [10, "CL"];
-
-    string _ = t[0]; // @error expected string, found int
-
-    int _ = t[1]; // @error expected int, found string
-}
-
-Test-Case: error
-Description: Test assigning result of member access expression to an invalid type.
-Fail-Issue: ballerina-platform/ballerina-lang#35079
-Labels: member-access-expr, tuple-type, int, string, list-constructor-expr
-
-function errorFunction() {
-    [int, string, boolean...] t = [10, "CL", true];
-    int idx = 2;
-
-    string _ = t[idx]; // @error expected string, found (int|string|boolean)
-
-    [boolean...] p = [true, false, true];
-    string _ = p[idx]; // @error expected string, found boolean
-}
-
-Test-Case: error
 Description: Test using a value greater/less than the size of a tuple as the key.
 Labels: member-access-expr, tuple-type, int, string, list-constructor-expr
 
@@ -563,16 +582,6 @@ function errorFunction() {
     [int, string]? t = [10, "CL"];
 
     _ = t[0]; // @error type [int,string]? does not support member access
-}
-
-Test-Case: error
-Description: Test missing key expression in member access expression.
-Labels: member-access-expr, tuple-type, int, string, list-constructor-expr
-
-function errorFunction() {
-    [int, string] t = [10, "CL"];
-
-    _ = t[]; // @error missing key expression
 }
 
 Test-Case: error

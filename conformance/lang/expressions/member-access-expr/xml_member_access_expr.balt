@@ -1,3 +1,12 @@
+Test-Case: parser-error
+Description: Test missing key expression in member access expression.
+Labels: member-access-expr, xml
+
+function errorFunction() {
+    xml e = xml `<name>Enid Blyton</name><name>Dan Brown</name>`;
+    _ = e[]; // @error missing key expression
+}
+
 Test-Case: output
 Description: Test whether the static type of key expression is a subtype of int when the static type of the
              container expression is an xml.
@@ -394,6 +403,24 @@ function init() {
     io:println(ele4[0]); // @output <name>Enid Blyton</name>
 }
 
+Test-Case: error
+Description: Test key expression with invalid static type.
+Labels: member-access-expr, xml, any, int, float, union-type, DecimalFloatingPointNumber
+
+function errorFunction() {
+    xml e = xml `<name>Enid Blyton</name><name>Dan Brown</name>`;
+    _ = e["0"]; // @error expected a value of subtype int as key
+
+    any a = 1;
+    _ = e[a]; // @error expected a value of subtype int as key
+
+    int|float b = 2;
+    _ = e[b]; // @error expected a value of subtype int as key
+
+    _ = e[2.0]; // @error expected a value of subtype int as key
+}
+
+
 Test-Case: output
 Description: Test the result of evaluating a member access expression when basic type of the evaluated value of the
              container expression is an xml.
@@ -612,6 +639,15 @@ function init() {
 
     xml<xml:Element|xml:Comment|xml:Text> xml5 = xml `<name>Enid Blyton</name><name>Dan Brown</name>`;
     xml:Element|xml:Comment|xml:Text mem5 = xml5[0];
+}
+
+Test-Case: error
+Description: Test assigning result of member access expression to an invalid type.
+Labels: member-access-expr, xml, string
+
+function errorFunction() {
+    xml e = xml `<name>Enid Blyton</name><name>Dan Brown</name>`;
+    string _ = e[1]; // @error @error expected string, found xml
 }
 
 Test-Case: output
@@ -1030,24 +1066,6 @@ function errorFunction() {
 }
 
 Test-Case: error
-Description: Test key expression with invalid static type.
-Labels: member-access-expr, xml
-
-function errorFunction() {
-    xml e = xml `<name>Enid Blyton</name><name>Dan Brown</name>`;
-    _ = e["0"]; // @error expected a value of subtype int as key
-}
-
-Test-Case: error
-Description: Test assigning result of member access expression to an invalid type.
-Labels: member-access-expr, xml, string
-
-function errorFunction() {
-    xml e = xml `<name>Enid Blyton</name><name>Dan Brown</name>`;
-    string _ = e[1]; // @error @error expected string, found xml
-}
-
-Test-Case: error
 Description: Test accessing members of an invalid structure.
 Fail-Issue: ballerina-platform/ballerina-lang#35032
 Labels: member-access-expr, xml, optional-type
@@ -1055,13 +1073,4 @@ Labels: member-access-expr, xml, optional-type
 function errorFunction() {
     xml? e = xml `<name>Enid Blyton</name><name>Dan Brown</name>`;
     _ = e[1]; // @error type 'xml?' does not support member access
-}
-
-Test-Case: error
-Description: Test missing key expression in member access expression.
-Labels: member-access-expr, xml
-
-function errorFunction() {
-    xml e = xml `<name>Enid Blyton</name><name>Dan Brown</name>`;
-    _ = e[]; // @error missing key expression
 }

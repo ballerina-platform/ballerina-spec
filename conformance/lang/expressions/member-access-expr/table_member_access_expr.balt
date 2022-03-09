@@ -1,3 +1,25 @@
+Test-Case: parser-error
+Description: Test missing key expression in member access expression.
+Labels: member-access-expr, module-type-defn, record-type, table-type, table-constructor-expr
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable table<Person> key(id, name);
+
+function errorFunction() {
+    PersonTable tbl = table [
+            {id: 1, name: "Mike", age: 15},
+            {id: 2, name: "Tobi", age: 16},
+            {id: 3, name: "Frank", age: 14}
+        ];
+
+    _ = tbl[]; // @error expected a key constraint of type [int,string]
+}
+
 Test-Case: output
 Description: Test whether the static type of key expression is a subtype of K when the static type of the
              container expression is table<R> key<K>.
@@ -76,6 +98,29 @@ function init() {
     byte idx3 = 1;
     string nm = "Anne";
     io:println(tbl[idx3, nm]); // @output {"id":1,"name":"Anne","age":40}
+}
+
+Test-Case: error
+Description: Test key expression with invalid static type.
+Labels: member-access-expr, module-type-defn, record-type, table-type, table-constructor-expr, int, string,
+        readonly-type
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable table<Person> key(id, name);
+
+function errorFunction() {
+    PersonTable tbl = table [
+            {id: 1, name: "Mike", age: 15},
+            {id: 2, name: "Tobi", age: 16},
+            {id: 3, name: "Frank", age: 14}
+        ];
+
+    _ = tbl["1", "Mike"]; // @error invalid key constraint
 }
 
 Test-Case: output
@@ -262,6 +307,29 @@ function init() {
         int age;
     |}? p7 = tbl2[idx3];
     io:println(p7); // @output {"id":4,"name":"Melina","age":27}
+}
+
+Test-Case: error
+Description: Test assigning result of member access expression to an invalid type.
+Labels: member-access-expr, module-type-defn, record-type, table-type, table-constructor-expr, int,
+        string, readonly-type
+
+type Person record {|
+    readonly int id;
+    readonly string name;
+    int age;
+|};
+
+type PersonTable table<Person> key(id, name);
+
+function errorFunction() {
+    PersonTable tbl = table [
+            {id: 1, name: "Mike", age: 15},
+            {id: 2, name: "Tobi", age: 16},
+            {id: 3, name: "Frank", age: 14}
+        ];
+
+    Person _ = tbl[1, "Mike"]; // @error expected Person, static type of the accessed value is Person?
 }
 
 Test-Case: output
@@ -972,52 +1040,6 @@ function errorFunction() {
 }
 
 Test-Case: error
-Description: Test key expression with invalid static type.
-Labels: member-access-expr, module-type-defn, record-type, table-type, table-constructor-expr, int, string,
-        readonly-type
-
-type Person record {|
-    readonly int id;
-    readonly string name;
-    int age;
-|};
-
-type PersonTable table<Person> key(id, name);
-
-function errorFunction() {
-    PersonTable tbl = table [
-            {id: 1, name: "Mike", age: 15},
-            {id: 2, name: "Tobi", age: 16},
-            {id: 3, name: "Frank", age: 14}
-        ];
-
-    _ = tbl["1", "Mike"]; // @error invalid key constraint
-}
-
-Test-Case: error
-Description: Test assigning result of member access expression to an invalid type.
-Labels: member-access-expr, module-type-defn, record-type, table-type, table-constructor-expr, int,
-        string, readonly-type
-
-type Person record {|
-    readonly int id;
-    readonly string name;
-    int age;
-|};
-
-type PersonTable table<Person> key(id, name);
-
-function errorFunction() {
-    PersonTable tbl = table [
-            {id: 1, name: "Mike", age: 15},
-            {id: 2, name: "Tobi", age: 16},
-            {id: 3, name: "Frank", age: 14}
-        ];
-
-    Person _ = tbl[1, "Mike"]; // @error expected Person, static type of the accessed value is Person?
-}
-
-Test-Case: error
 Description: Test accessing members of a keyless table.
 Labels: member-access-expr, module-type-defn, record-type, map-type, table-type, table-constructor-expr
 
@@ -1074,28 +1096,6 @@ function errorFunction() {
         ];
 
     Person _ = tbl[1]; // @error expected Person, static type of the accessed value is Person?
-}
-
-Test-Case: error
-Description: Test missing key expression in member access expression.
-Labels: member-access-expr, module-type-defn, record-type, table-type, table-constructor-expr
-
-type Person record {|
-    readonly int id;
-    readonly string name;
-    int age;
-|};
-
-type PersonTable table<Person> key(id, name);
-
-function errorFunction() {
-    PersonTable tbl = table [
-            {id: 1, name: "Mike", age: 15},
-            {id: 2, name: "Tobi", age: 16},
-            {id: 3, name: "Frank", age: 14}
-        ];
-
-    _ = tbl[]; // @error expected a key constraint of type [int,string]
 }
 
 Test-Case: error

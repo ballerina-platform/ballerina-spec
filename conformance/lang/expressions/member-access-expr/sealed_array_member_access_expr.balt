@@ -1,3 +1,12 @@
+Test-Case: parser-error
+Description: Test missing key expression in member access expression.
+Labels: member-access-expr, array-type, int, list-constructor-expr
+
+function errorFunction() {
+    int[3] arr = [1, 2, 3];
+    _ = arr[]; // @error missing key expression
+}
+
 Test-Case: output
 Description: Test whether the static type of key expression is subtype of int when the basic type of the
              container expression is an array.
@@ -28,7 +37,7 @@ function init() {
 Test-Case: output
 Description: Test whether the static type of key expression is subtype of int when the basic type of the
              container expression is an array.
-Fail-Issue: ballerina-platform/ballerina-lang#35045
+Fail-Issue: ballerina-platform/ballerina-lang#33346
 Labels: member-access-expr, array-type, int, list-constructor-expr, module-type-defn, byte, int:Signed8,
         int:Signed16, int:Signed32, union-type
 
@@ -48,6 +57,37 @@ function init() {
 
     IntType1 i4 = 5;
     io:println(arr[i4]); // @output 60
+}
+
+Test-Case: error
+Description: Test key expression with invalid static type.
+Labels: member-access-expr, array-type, int, list-constructor-expr, string, any, union-type, float,
+        DecimalFloatingPointNumber
+
+type SomeType "2"|"3";
+
+const c = "4";
+
+function errorFunction() {
+    int[5] arr = [1, 2, 3, 4, 5];
+
+    _ = arr["1"]; // @error expected a value of subtype int as key
+
+    string a = "2";
+    _ = arr[a]; // @error expected a value of subtype int as key
+
+    SomeType b = "3";
+    _ = arr[b]; // @error expected a value of subtype int as key
+
+    _ = arr[c]; // @error expected a value of subtype int as key
+
+    any d = 1;
+    _ = arr[d]; // @error expected a value of subtype int as key
+
+    int|float e = 2;
+    _ = arr[e]; // @error expected a value of subtype int as key
+
+    _ = arr[2.0]; // @error expected a value of subtype int as key
 }
 
 Test-Case: output
@@ -162,6 +202,15 @@ function init() {
     ];
     RecordTable x4 = tableArr[1];
     io:println(x4); // @output [{"a":4},{"a":5,"b":"GHI"},{"a":6}]
+}
+
+Test-Case: error
+Description: Test assigning result of member access expression to an invalid type.
+Labels: member-access-expr, array-type, int, list-constructor-expr
+
+function errorFunction() {
+    int[3] arr = [1, 2, 3];
+    string _ = arr[1]; // @error expected string, static type of the accessed value is int
 }
 
 Test-Case: output
@@ -527,37 +576,6 @@ function init() {
 }
 
 Test-Case: error
-Description: Test key expression with invalid static type.
-Labels: member-access-expr, array-type, int, list-constructor-expr, string
-
-type SomeType "2"|"3";
-
-const c = "4";
-
-function errorFunction() {
-    int[5] arr = [1, 2, 3, 4, 5];
-
-    _ = arr["1"]; // @error expected a value of subtype int as key
-
-    string a = "2";
-    _ = arr[a]; // @error expected a value of subtype int as key
-
-    SomeType b = "3";
-    _ = arr[b]; // @error expected a value of subtype int as key
-
-    _ = arr[c]; // @error expected a value of subtype int as key
-}
-
-Test-Case: error
-Description: Test assigning result of member access expression to an invalid type.
-Labels: member-access-expr, array-type, int, list-constructor-expr
-
-function errorFunction() {
-    int[3] arr = [1, 2, 3];
-    string _ = arr[1]; // @error expected string, static type of the accessed value is int
-}
-
-Test-Case: error
 Description: Test using a value greater than the size of a sealed array as the key.
 Labels: member-access-expr, array-type, int, list-constructor-expr
 
@@ -574,15 +592,6 @@ Labels: member-access-expr, array-type, int, list-constructor-expr, optional-typ
 function errorFunction() {
     int[3]? arr = [1, 2, 3];
     _ = arr[1]; // @error int[]? does not support member access
-}
-
-Test-Case: error
-Description: Test missing key expression in member access expression.
-Labels: member-access-expr, array-type, int, list-constructor-expr
-
-function errorFunction() {
-    int[3] arr = [1, 2, 3];
-    _ = arr[]; // @error missing key expression
 }
 
 Test-Case: error

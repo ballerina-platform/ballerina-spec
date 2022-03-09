@@ -1,3 +1,12 @@
+Test-Case: parser-error
+Description: Test missing key expression in member access expression.
+Labels: member-access-expr, string
+
+function errorFunction() {
+    string str = "Hello";
+    _ = str[]; // @error missing key expression
+}
+
 Test-Case: output
 Description: Test whether the static type of key expression is subtype of int when the static type of the
              container expression is a string.
@@ -177,6 +186,25 @@ function init() {
     io:println(str6[i13]); // @output W
 }
 
+Test-Case: error
+Description: Test key expression with invalid static type.
+Labels: member-access-expr, string, int, union-type, any
+
+function errorFunction() {
+    string str = "Hello";
+
+    _ = str["1"]; // @error expected a value of subtype int as key
+
+    string a = "1";
+    _ = str[a]; // @error expected a value of subtype int as key
+
+    int|string b = 1;
+    _ = str[b]; // @error expected a value of subtype int as key
+
+    any c = 1;
+    _ = str[c]; // @error expected a value of subtype int as key
+}
+
 Test-Case: output
 Description: Test the result of evaluating a member access expression when basic type of the evaluated value of the
              container expression is string.
@@ -328,6 +356,15 @@ function init() {
     value = str5[5];
     io:println(value); // @output R
     io:println(str5[5] is string:Char); // @output true
+}
+
+Test-Case: error
+Description: Test assigning result of member access expression to an invalid type.
+Labels: member-access-expr, string, int
+
+function errorFunction() {
+    string str = "Hello";
+    int _ str[3]; // @error expected int, found string:Char
 }
 
 Test-Case: output
@@ -733,38 +770,10 @@ function errorFunction() {
 }
 
 Test-Case: error
-Description: Test key expression with invalid static type.
-Labels: member-access-expr, string
-
-function errorFunction() {
-    string str = "Hello";
-
-    io:println(str["1"]); // @error expected a value of subtype int as key
-}
-
-Test-Case: error
-Description: Test assigning result of member access expression to an invalid type.
-Labels: member-access-expr, string, int
-
-function errorFunction() {
-    string str = "Hello";
-    int _ str[3]; // @error expected int, found string:Char
-}
-
-Test-Case: error
 Description: Test accessing members of an invalid structure.
 Labels: member-access-expr, string, optional-type
 
 function errorFunction() {
     string? str = "Hello";
     _ = str[3]; // @error type 'string?' does not support member access
-}
-
-Test-Case: error
-Description: Test missing key expression in member access expression.
-Labels: member-access-expr, string
-
-function errorFunction() {
-    string str = "Hello";
-    _ = str[]; // @error missing key expression
 }

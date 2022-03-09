@@ -1,3 +1,17 @@
+Test-Case: parser-error
+Description: Test missing key expression in member access expression.
+Labels: member-access-expr, module-type-defn, mapping-constructor-expr, int, string, record-type
+
+type Record record {|
+    int id;
+    string name;
+|};
+
+function errorFunction() {
+    Record p1 = {id: 1, name: "Mike"};
+    _ = p1[]; // @error missing key expression
+}
+
 Test-Case: output
 Description: Test whether the static type of key expression is subtype of string when the basic type of the
              container expression is a record.
@@ -26,6 +40,28 @@ function init() {
 
     StringType1 idf2 = "name";
     io:println(p1[idf2]); // @output John
+}
+
+Test-Case: error
+Description: Test key expression with invalid static type.
+Labels: member-access-expr, module-type-defn, record-type, mapping-constructor-expr, int, any, union-type, string
+
+type Person record {|
+    int id;
+    string name;
+|};
+
+function errorFunction() {
+    Person p1 = {id: 5, name: "Mike"};
+
+    int a = 1;
+    _ = p1[a]; // @error expected a key of type string, found int
+
+    int|string b = "id";
+    _ = p1[b]; // @error expected a key of type string, found (int|string)
+
+    any c = "id";
+    _ = p1[c]; // @error expected a key of type string, found any
 }
 
 Test-Case: output
@@ -212,6 +248,21 @@ function init() {
 
     int? id = p["id"];
     io:println(id.toBalString()); // @output ()
+}
+
+Test-Case: error
+Description: Test assigning result of member access expression to an invalid type.
+Labels: member-access-expr, module-type-defn, record-type, mapping-constructor-expr, string
+
+type Person record {|
+    int id;
+    string name;
+|};
+
+function errorFunction() {
+    Person p1 = {id: 5, name: "Mike"};
+
+    string _ = p1["id"]; // @error expected a string, static type of the accessed value is int
 }
 
 Test-Case: output
@@ -633,36 +684,6 @@ function init() {
 
     p1["id"] = 7;
     io:println(p1["id"]); // @output 7
-}
-
-Test-Case: error
-Description: Test key expression with invalid static type.
-Labels: member-access-expr, module-type-defn, record-type, mapping-constructor-expr, int
-
-type Person record {|
-    int id;
-    string name;
-|};
-
-function errorFunction() {
-    Person p1 = {id: 5, name: "Mike"};
-
-    _ = p1[1]; // @error expected a key of type string, found int
-}
-
-Test-Case: error
-Description: Test assigning result of member access expression to an invalid type.
-Labels: member-access-expr, module-type-defn, record-type, mapping-constructor-expr, string
-
-type Person record {|
-    int id;
-    string name;
-|};
-
-function errorFunction() {
-    Person p1 = {id: 5, name: "Mike"};
-
-    string _ = p1["id"]; // @error expected a string, static type of the accessed value is int
 }
 
 Test-Case: error
