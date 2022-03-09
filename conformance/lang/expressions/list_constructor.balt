@@ -13,7 +13,53 @@ function errorFunction() {
 }
 
 Test-Case: output
-Description: Test 1 for list-constructor-expr occurring within a const-expr will construct a structural value
+Description: Test basic list constructor expression.
+Labels: list-constructor-expr, string
+
+function init() {
+    io:println([]); // @output []
+    io:println([1, 2, 3]); // @output [1,2,3]
+    io:println(["A", 2, true]); // @output ["A",2,true]
+}
+
+Test-Case: output
+Description: Test basic list constructor expression.
+Labels: list-constructor-expr, string, array-type, tuple-type
+
+function init() {
+    int[] a1 = [1, 2, 3];
+    io:println(a1); // @output [1,2,3]
+
+    [int, string] a2 = [1,"foo"];
+    io:println(a2); // @output [1,"foo"]
+}
+
+Test-Case: output
+Description: Test list-constructor-expr creates a new list value.
+Labels: list-constructor-expr, exact-equality
+
+function init() {
+    io:println([1, 2] === [1, 2]); // @output false
+}
+
+Test-Case: output
+Description: Test members of the list come from evaluating each expression in the expr-list in order.
+Labels: module-init-var-decl, list-constructor-expr, function-call-expr, array-type, additive-expr
+
+int n = 0;
+
+function init() {
+    int[] arr = [foo(), foo(), foo()];
+    io:println(arr); // @output [1,2,3]
+}
+
+function foo() returns int {
+    n = n + 1;
+    return n;
+}
+
+Test-Case: output
+Description: Test list-constructor-expr occurring within a const-expr will construct a structural value
              that has its read-only bit on.
 Fail-Issue: ballerina-platform/ballerina-lang#13944
 Labels: module-const-decl, list-constructor-expr, is-expr, array-type, readonly-type, string
@@ -27,7 +73,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test 2 for list-constructor-expr occurring within a const-expr will construct a structural value
+Description: Test list-constructor-expr occurring within a const-expr will construct a structural value
              that has its read-only bit on.
 Fail-Issue: ballerina-platform/ballerina-lang#13944
 Labels: module-const-decl, list-constructor-expr, is-expr, tuple-type, readonly-type, string, boolean
@@ -41,7 +87,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test 3 for list-constructor-expr occurring within a const-expr will construct a structural value
+Description: Test list-constructor-expr occurring within a const-expr will construct a structural value
              that has its read-only bit on.
 Fail-Issue: ballerina-platform/ballerina-lang#13944
 Labels: module-const-decl, list-constructor-expr, mapping-constructor-expr, member-access-expr, is-expr, array-type,
@@ -52,6 +98,25 @@ const map<int[]> keyValues = {even: [2, 4, 6], odd: [1, 3, 5]};
 function init() {
     io:println(keyValues["odd"] is readonly); // @output true
     io:println(keyValues["even"] is readonly); // @output true
+}
+
+Test-Case: output
+Description: Test if there is a contextually expected type, then the inherent type of the newly created list
+             is derived from the applicable contextually expected type
+Labels: list-constructor-expr, byte, array-type, tuple-type, union-type, singleton-type, is-expr
+
+function init() {
+    int[] a1 = [1, 2, 3];
+    io:println(a1 is int[]); // @output true
+    io:println(a1 is byte[]); // @output false
+
+    byte[] a2 = [1, 2, 3];
+    io:println(a2 is byte[]); // @output true
+    io:println(a2 is (1|2|3)[]); // @output false
+
+    [int, byte, 3] a3 = [1, 2, 3];
+    io:println(a3 is [int, byte, 3]); // @output true
+    io:println(a3 is [int, 2, 3]); // @output false
 }
 
 Test-Case: output
@@ -110,6 +175,7 @@ Labels: list-constructor-expr, is-expr, anydata, union-type, array-type, string
 function init() {
     anydata a1 = [];
     io:println(a1 is anydata[]); // @output true
+    io:println(a1 is anydata[0]); // @output false
 
     anydata a2 = [1, 2, 3];
     io:println(a2 is anydata[]); // @output true
@@ -131,7 +197,7 @@ function init() {
 Test-Case: output
 Description: Test inherent type of the created list when the applicable contextually expected type
              is a list-type-descriptor with anydata members.
-Labels: list-constructor-expr, is-expr, anydata, union-type, tuple-type, string, singleton-type, string
+Labels: list-constructor-expr, is-expr, anydata, union-type, tuple-type, string, singleton-type
 
 function init() {
     [anydata, anydata, anydata] t1 = [13, 25, "foo"];
@@ -145,13 +211,14 @@ function init() {
 }
 
 Test-Case: output
-Description: Test 1 for inherent type of the created list when the applicable contextually expected type
+Description: Test inherent type of the created list when the applicable contextually expected type
              is a list-type-descriptor of json.
 Labels: list-constructor-expr, is-expr, union-type, array-type, json, string
 
 function init() {
     json a1 = [];
     io:println(a1 is json[]); // @output true
+    io:println(a1 is json[0]); // @output false
 
     json a2 = [true, 2, "foo"];
     io:println(a2 is json[]); // @output true
@@ -167,7 +234,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test 2 for inherent type of the created list when the applicable contextually expected type
+Description: Test inherent type of the created list when the applicable contextually expected type
              is a list-type-descriptor of json.
 Labels: list-constructor-expr, is-expr, union-type, tuple-type, json, singleton-type, string
 
@@ -183,7 +250,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test 1 for inherent type of the created list when the applicable contextually expected type
+Description: Test inherent type of the created list when the applicable contextually expected type
              is a list-type-descriptor with different types.
 Labels: list-constructor-expr, is-expr, array-type, byte, float, decimal, FloatingPointTypeSuffix,
         DecimalFloatingPointNumber
@@ -191,6 +258,7 @@ Labels: list-constructor-expr, is-expr, array-type, byte, float, decimal, Floati
 function init() {
     int[] a1 = [];
     io:println(a1 is int[]); // @output true
+    io:println(a1 is int[0]); // @output false
 
     int[] a2 = [1, 2, 3];
     io:println(a2 is int[]); // @output true
@@ -214,7 +282,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test 2 for inherent type of the created list when the applicable contextually expected type
+Description: Test inherent type of the created list when the applicable contextually expected type
              is a list-type-descriptor with different types.
 Labels: list-constructor-expr, is-expr, array-type, byte, boolean, union-type, singleton-type, DecimalNumber
 
@@ -229,7 +297,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test 3 for inherent type of the created list when the applicable contextually expected type
+Description: Test inherent type of the created list when the applicable contextually expected type
              is a list-type-descriptor with different types.
 Labels: list-constructor-expr, is-expr, tuple-type, byte, string, boolean, singleton-type, DecimalNumber
 
@@ -273,7 +341,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test 4 for inherent type of the created list when the applicable contextually expected type
+Description: Test inherent type of the created list when the applicable contextually expected type
              is a list-type-descriptor with different types.
 Labels: list-constructor-expr, is-expr, array-type, tuple-type, string, boolean, singleton-type, DecimalNumber
 
@@ -310,7 +378,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test 1 for inherent type of the created list when the applicable contextually expected type
+Description: Test inherent type of the created list when the applicable contextually expected type
              is a list-type-descriptor with optional types.
 Labels: list-constructor-expr, is-expr, array-type, optional-type, union-type, string, boolean, nil-literal, nil-type
 
@@ -339,7 +407,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test 2 for inherent type of the created list when the applicable contextually expected type
+Description: Test inherent type of the created list when the applicable contextually expected type
              is a list-type-descriptor with optional types.
 Labels: list-constructor-expr, is-expr, tuple-type, optional-type, union-type, string, boolean, nil-literal,
         nil-type, singleton-type
@@ -370,7 +438,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test 1 for inherent type of the created list when the applicable contextually expected type
+Description: Test inherent type of the created list when the applicable contextually expected type
              is a list-type-descriptor of union.
 Labels: list-constructor-expr, is-expr, array-type, union-type, string, decimal, boolean, byte,
         singleton-type, DecimalNumber, DecimalFloatingPointNumber
@@ -387,7 +455,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test 2 for inherent type of the created list when the applicable contextually expected type
+Description: Test inherent type of the created list when the applicable contextually expected type
              is a list-type-descriptor of union.
 Labels: list-constructor-expr, is-expr, tuple-type, union-type, string, decimal, boolean, DecimalFloatingPointNumber
 
@@ -402,7 +470,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test 3 for inherent type of the created list when the applicable contextually expected type
+Description: Test inherent type of the created list when the applicable contextually expected type
              is a list-type-descriptor of union.
 Labels: list-constructor-expr, is-expr, array-type, tuple-type, union-type, byte,
         singleton-type, DecimalNumber, DecimalFloatingPointNumber
@@ -440,7 +508,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test 1 for inherent type of the created list when the applicable contextually expected type
+Description: Test inherent type of the created list when the applicable contextually expected type
              is a list-type-descriptor of user-defined type.
 Labels: module-type-defn, list-constructor-expr, is-expr, array-type, union-type, singleton-type,
         DecimalNumber
@@ -455,7 +523,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test 2 for inherent type of the created list when the applicable contextually expected type
+Description: Test inherent type of the created list when the applicable contextually expected type
              is a list-type-descriptor of user-defined type.
 Labels: module-type-defn, list-constructor-expr, is-expr, tuple-type, union-type, singleton-type, DecimalNumber, boolean
 
@@ -469,7 +537,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test 1 for inherent type of the created list when the applicable contextually expected type
+Description: Test inherent type of the created list when the applicable contextually expected type
              is a list-type-descriptor of record or map.
 Labels: module-type-defn, list-constructor-expr, mapping-constructor-expr, is-expr, array-type, map-type, string,
         record-type, singleton-type
@@ -492,7 +560,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test 2 for inherent type of the created list when the applicable contextually expected type
+Description: Test inherent type of the created list when the applicable contextually expected type
              is a list-type-descriptor of record or map.
 Labels: module-type-defn, list-constructor-expr, mapping-constructor-expr, is-expr, tuple-type, map-type, string,
         record-type, singleton-type
@@ -514,7 +582,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test 1 for inherent type of the created list when the applicable contextually expected type
+Description: Test inherent type of the created list when the applicable contextually expected type
              is a list-type-descriptor, where the contextually expected type is a union.
 Labels: list-constructor-expr, is-expr, array-type, union-type, byte, decimal, string, singleton-type, DecimalNumber
 
@@ -526,7 +594,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test 2 for inherent type of the created list when the applicable contextually expected type
+Description: Test inherent type of the created list when the applicable contextually expected type
              is a list-type-descriptor, where the contextually expected type is a union.
 Labels: list-constructor-expr, is-expr, tuple-type, union-type, byte, decimal, string
 
@@ -537,7 +605,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test 1 for the applicable contextually expected type being a union type descriptor,
+Description: Test the applicable contextually expected type being a union type descriptor,
              where any members of the union that do not contain list shapes of length N is ignored.
 Labels: list-constructor-expr, is-expr, array-type, union-type, byte, singleton-type, DecimalNumber
 
@@ -558,7 +626,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test 2 for the applicable contextually expected type being a union type descriptor,
+Description: Test the applicable contextually expected type being a union type descriptor,
              where any members of the union that do not contain list shapes of length N is ignored.
 Labels: list-constructor-expr, is-expr, tuple-type, union-type, byte
 
@@ -578,7 +646,7 @@ function init() {
 }
 
 Test-Case: error
-Description: Test 1 for the compile-time error when the applicable contextually expected type does not leave
+Description: Test the compile-time error when the applicable contextually expected type does not leave
              a single list type descriptor.
 Labels: list-constructor-expr, array-type, tuple-type, union-type
 
@@ -593,7 +661,7 @@ function errorFunction() {
 }
 
 Test-Case: error
-Description: Test 2 for the compile-time error when the applicable contextually expected type does not leave
+Description: Test the compile-time error when the applicable contextually expected type does not leave
              a single list type descriptor.
 Labels: list-constructor-expr, array-type, tuple-type, union-type, byte, string, boolean
 
@@ -621,7 +689,7 @@ function errorFunction() {
 }
 
 Test-Case: error
-Description: Test 3 for the compile-time error when the applicable contextually expected type does not leave
+Description: Test the compile-time error when the applicable contextually expected type does not leave
              a single list type descriptor.
 Fail-Issue: ballerina-platform/ballerina-lang#33056
 Labels: list-constructor-expr, array-type, tuple-type, union-type, byte, string, boolean
@@ -669,7 +737,7 @@ function init() {
 
 Test-Case: error
 Description: Test when there is a contextually expected type, then the type that the inherent type
-             requires for each list member provides the contextually expected type for the expression for the member 1.
+             requires for each list member provides the contextually expected type for the expression for the member.
 Labels: list-constructor-expr, member-access-expr, array-type, DecimalFloatingPointNumber, byte, float, union-type,
         optional-type, unary-minus
 
@@ -695,7 +763,7 @@ function errorFunction() {
 
 Test-Case: error
 Description: Test when there is a contextually expected type, then the type that the inherent type
-             requires for each list member provides the contextually expected type for the expression for the member 2.
+             requires for each list member provides the contextually expected type for the expression for the member.
 Labels: list-constructor-expr, member-access-expr, array-type, byte, string, singleton-type, union-type
 
 function errorFunction() {
@@ -719,7 +787,7 @@ function errorFunction() {
 }
 
 Test-Case: output
-Description: Test 1 for, a member of list being able to fill automatically when the FillMember abstract operation succeed on it.
+Description: Test a member of list being able to fill automatically when the FillMember abstract operation succeed on it.
 Labels: list-constructor-expr, array-type
 
 function init() {
@@ -728,7 +796,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test 2 for, a member of list being able to fill automatically when the FillMember abstract operation succeed on it.
+Description: Test a member of list being able to fill automatically when the FillMember abstract operation succeed on it.
 Labels: list-constructor-expr, tuple-type, string, boolean
 
 function init() {
@@ -737,7 +805,7 @@ function init() {
 }
 
 Test-Case: error
-Description: Test 1 for a member of list being unable to fill automatically as the FillMember abstract operation fails on it.
+Description: Test a member of list being unable to fill automatically as the FillMember abstract operation fails on it.
 Labels: list-constructor-expr, array-type, union-type, string
 
 function errorFunction() {
@@ -745,7 +813,7 @@ function errorFunction() {
 }
 
 Test-Case: error
-Description: Test 2 for a member of list being  unable to fill automatically as the FillMember abstract operation fails on it.
+Description: Test a member of list being  unable to fill automatically as the FillMember abstract operation fails on it.
 Labels: list-constructor-expr, tuple-type, union-type, boolean, string
 
 function errorFunction() {
@@ -753,7 +821,7 @@ function errorFunction() {
 }
 
 Test-Case: output
-Description: Test 1 for list-constructor-expr in module-var-decl.
+Description: Test list-constructor-expr in module-var-decl.
 Labels: module-init-var-decl, list-constructor-expr, is-expr, array-type, byte
 
 int[] a1 = [1, 2, 3];
@@ -770,7 +838,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test 2 for list-constructor-expr in module-var-decl.
+Description: Test list-constructor-expr in module-var-decl.
 Labels: module-init-var-decl, list-constructor-expr, is-expr, tuple-type, byte
 
 [int, int, int] t1 = [1, 2, 3];
@@ -786,7 +854,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test 3 for list-constructor-expr in module-var-decl.
+Description: Test list-constructor-expr in module-var-decl.
 Labels: module-init-var-decl, list-constructor-expr, is-expr, array-type, tuple-type, union-type, byte, boolean,
         string
 
@@ -1019,7 +1087,8 @@ function init() {
 
 Test-Case: output
 Description: Test anonymous-function-expr as list-constructor expressions.
-Labels: list-constructor-expr, anonymous-function-expr, is-expr, module-type-defn, byte, array-type, function-type
+Labels: list-constructor-expr, explicit-anonymous-function-expr, infer-anonymous-function-expr, is-expr,
+        module-type-defn, byte, array-type, function-type
 
 type func function () returns int;
 
