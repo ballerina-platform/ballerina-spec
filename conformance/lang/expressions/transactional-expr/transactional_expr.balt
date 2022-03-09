@@ -190,7 +190,6 @@ Test-Case: output
 Description: Test whether the transactional expression is being evaluated in transaction mode.
 Labels: transactional-expr, check, optional-type, error, int, retry-transaction-stmt, commit-action, error:Retriable
 
-
 function init() returns error? {
     int a = 10;
 
@@ -216,6 +215,19 @@ function init() returns error? {
 
 function trxErrorInRetry() returns error {
     return error error:Retriable("TransactionError");
+}
+
+Test-Case: output
+Description: Test whether the transactional expression is being evaluated in transaction mode.
+Fail-Issue: ballerina-platform/ballerina-lang#33087
+Labels: transactional-expr, function-call-expr
+
+function init() {
+    someFunc(); // @output false
+}
+
+function someFunc() {
+    io:println(transactional);
 }
 
 Test-Case: output
@@ -396,7 +408,7 @@ function init() returns error? {
 
 Test-Case: output
 Description: Test transactional expression as expression in type test expression.
-Fail-Issue: ballerina-platform/ballerina-lang#35214
+Fail-Issue: ballerina-platform/ballerina-lang#33087
 Labels: transactional-expr, module-const-decl, module-type-defn, union-type, is-expr, boolean, int
 
 const TRUE = true;
@@ -416,7 +428,7 @@ function init() {
 
 Test-Case: output
 Description: Test assigning the result of transactional expression to a variable.
-Fail-Issue: ballerina-platform/ballerina-lang#35214
+Fail-Issue: ballerina-platform/ballerina-lang#33087
 Labels: transactional-expr, boolean
 
 function init() {
@@ -426,7 +438,7 @@ function init() {
 
 Test-Case: output
 Description: Test assigning the result of transactional expression to var.
-Fail-Issue: ballerina-platform/ballerina-lang#35214
+Fail-Issue: ballerina-platform/ballerina-lang#33087
 Labels: transactional-expr, boolean, var
 
 function init() {
@@ -477,7 +489,7 @@ function init() returns error? {
 
 Test-Case: output
 Description: Test transactional expression with typeof expression.
-Fail-Issue: ballerina-platform/ballerina-lang#35214
+Fail-Issue: ballerina-platform/ballerina-lang#33087
 Labels: transactional-expr, typeof-expr
 
 function init() {
@@ -540,7 +552,7 @@ function init() returns error? {
 
 Test-Case: output
 Description: Test transactional expression at module level.
-Fail-Issue: ballerina-platform/ballerina-lang#35214
+Fail-Issue: ballerina-platform/ballerina-lang#33087
 Labels: transactional-expr, boolean
 
 boolean a = transactional;
