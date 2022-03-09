@@ -1666,6 +1666,64 @@ function init() {
 }
 
 Test-Case: output
+Description: Test subtyping with type test expression.
+Labels: is-expr, module-type-defn, map-type, array-type, record-type, table-type, readonly-type, union-type,
+        tuple-type, int, float, string, boolean, any, anydata, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8,
+        int:Unsigned16, int:Unsigned32, byte, list-constructor-expr, table-constructor-expr, mapping-constructor-expr
+
+type UnionType map<int>|int[];
+
+type Record record {|
+    readonly int x;
+    [float, string] y;
+|};
+
+type TableType table<Record> key(x);
+
+type Record2 record {|
+    int|string x;
+    [float|int, string] y;
+|};
+
+function init() {
+    int|string a = 10;
+    io:println(a !is int); // @output false
+    io:println(a !is string); // @output true
+
+    UnionType b = [1, 2, 3];
+    io:println(b !is int[]); // @output false
+    io:println(b !is map<int>); // @output true
+
+    [int, int, int] c = [1, 2, 3];
+    io:println(c !is UnionType); // @output false
+
+    int d = 12;
+    io:println(d !is int:Signed8); // @output false
+    io:println(d !is int:Signed16); // @output false
+    io:println(d !is int:Signed32); // @output false
+    io:println(d !is int:Unsigned8); // @output false
+    io:println(d !is int:Unsigned16); // @output false
+    io:println(d !is int:Unsigned32); // @output false
+    io:println(d !is byte); // @output false
+
+    any e = table key(x) [{x: 1, y: [10.2, "A"]}];
+    io:println(e !is TableType); // @output false
+    io:println(e !is table<map<float|string>>); // @output true
+    io:println(e !is table<Record> key<int>); // @output false
+    io:println(e !is anydata); // @output false
+
+    record {|readonly int x; [float, string] y;|} f = {x: 1, y: [10.2, "A"]};
+    io:println(f !is Record); // @output false
+    io:println(f !is record {|int x;(float|string)[] y; |}); // @output false
+    io:println(f !is record {|int x;(float|string)[]...; |}); // @output false
+    io:println(f !is record {int x; [float, string] y;}); // @output false
+    io:println(f !is Record2); // @output false
+
+    boolean g = true;
+    io:println(g !is true); // @output false
+}
+
+Test-Case: output
 Description: Test using type test expression in if else statement.
 Labels: is-expr, module-type-defn, record-type, readonly-type, mapping-constructor-expr, if-else-stmt, union-type
 
@@ -1725,6 +1783,112 @@ function f4(D|E x) returns int {
 }
 
 Test-Case: output
+Description: Test using type test expression in query expression.
+Labels: is-expr, array-type, optional-type, int, query-expr, list-constructor-expr, logical-expr, multiplicative-expr,
+        nil-type, nil-literal
+
+function init() {
+    int?[] arr = [1, (), 2, 3];
+    int[] a = from var i in arr
+        where i !is ()
+        select i * 100;
+    io:println(a); // @output [100,200,300]
+
+    int[] b = from var i in arr
+        let string? str = ()
+        where i !is () && str !is ()
+        select i * 100;
+    io:println(b); // @output []
+}
+
+Test-Case: output
+Description: Test using type test expression in query action.
+Labels: is-expr, array-type, optional-type, int, query-action, list-constructor-expr, logical-expr, multiplicative-expr,
+        check, error-type, additive-expr, nil-type, nil-literal
+
+function init() returns error? {
+    int?[] arr = [1, (), 2, 3];
+    int sum = 0;
+    _ = check from var i in arr
+        where i !is ()
+        do {
+            sum = sum + i * 100;
+        };
+    io:println(sum); // @output 600
+
+    sum = 0;
+    _ = check from var i in arr
+        let string? str = ()
+        where i !is () && str !is string
+        do {
+            sum = sum + i * 200;
+        };
+    io:println(sum); // @output 1200
+}
+
+Test-Case: output
+Description: Test using type test expression in ternary conditional expression.
+Labels: is-expr, ternary-conditional-expr, optional-type, int, DecimalNumber, logical-expr, nil-type
+
+function init() {
+    int? a = 10;
+    io:println(a !is () ? 1 : 2); // @output 1
+    io:println(a !is () && a !is 10 ? 1 : 2); // @output 2
+}
+
+Test-Case: output
+Description: Test using type test expression in while.
+Labels: is-expr, while-stmt, if-else-stmt, relational-expr, optional-type, int, additive-expr, break-stmt, nil-type
+
+function init() {
+    int? a = 10;
+    while a !is () {
+        if a > 20 {
+            break;
+        }
+        a = a + 1;
+    }
+    io:println(a); // @output 21
+}
+
+Test-Case: output
+Description: Test using type test expression in logical expression.
+Labels: is-expr, logical-expr, optional-type, int, string, nil-type
+
+function init() {
+    int? a = 10;
+    string? b = "A";
+    io:println(a is int && b is ()); // @output false
+    io:println(a is () || b is string); // @output true
+}
+
+Test-Case: output
+Description: Test using type test expression in return statement.
+Labels: is-expr, return-stmt, optional-type, int, function-call-expr, boolean, nil-type
+
+function init() {
+    io:println(isInt(12)); // @output false
+}
+
+function isInt(int? a) returns boolean {
+    return a is ();
+}
+
+Test-Case: output
+Description: Test using type test expression in defaultable function parameter.
+Labels: is-expr, defaultable-param, module-init-var-decl, optional-type, int, function-call-expr, boolean
+
+int? a = 10;
+
+function init() {
+    io:println(isInt()); // @output false
+}
+
+function isInt(boolean x = a !is int) returns boolean {
+    return x;
+}
+
+Test-Case: output
 Description: Test inferring the type of the result of type test expression with var.
 Labels: is-expr, var, DecimalNumber, int
 
@@ -1736,7 +1900,7 @@ function init() {
 
 Test-Case: output
 Description: Test type test expression at module level.
-Labels: is-expr, int, boolean, DecimalNumber
+Labels: is-expr, int, boolean, DecimalNumber, module-init-var-decl
 
 boolean b = 1 !is int;
 
