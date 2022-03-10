@@ -1,3 +1,12 @@
+Test-Case: parser-error
+Description: Test syntax errors in bitwise or expression.
+Labels: binary-bitwise-expr, DecimalNumber
+
+function init() {
+    int _ = | 434343; // @error missing LHS operand
+    int _ = 34665677665 | ; // @error missing RHS operand
+}
+
 Test-Case: output
 Description: Test basic bitwise or expression.
 Labels: binary-bitwise-expr, DecimalNumber
@@ -80,7 +89,7 @@ function init() {
 
 Test-Case: output
 Description: Test bitwise or expression always evaluates to value v when the value of both operands are v.
-Labels: binary-bitwise-expr, DecimaNumber, int, unary-minus, unary-plus
+Labels: binary-bitwise-expr, DecimalNumber, int, unary-minus, unary-plus
 
 function init() {
     int a = 99443;
@@ -454,7 +463,7 @@ function init() {
 Test-Case: error
 Description: Test if the type of both operands is a subtype of int:UnsignedK when K is 8, 16 or 32, then the static
              type of the result is int:UnsignedN where N is the smallest such K using invalid assignment.
-Labels: binary-bitwise-expr, byte, int, int:Unsigned8, int:Unsigned16, int:Unsigned32
+Labels: binary-bitwise-expr, byte, int, int:Signed8, int:Signed16, int:Unsigned8, int:Unsigned16, int:Unsigned32
 
 function errorFunction() {
     int a = 4343;
@@ -477,29 +486,29 @@ function errorFunction() {
 
     int:Unsigned16 n = 12;
     int:Unsigned16 p = 4434;
-    int:Signed16 _ = n | p; // @error the smallest suck K is 16; the static type of the result is Unsigned16
+    int:Signed16 _ = n | p; // @error the static type of the result is Unsigned16
 
     int:Unsigned32 q = 12;
     int:Unsigned16 r = 4434;
-    int:Unsigned8 _ = q | r; // @error the smallest suck K is 32; the static type of the result is Unsigned32
+    int:Unsigned8 _ = q | r; // @error the static type of the result is Unsigned32
     
     int:Unsigned32 s = 4343;
     int:Unsigned16 t = 8;
-    int:Unsigned16 _ = s | t; // @error the smallest suck K is 32; the static type of the result is Unsigned32
+    int:Unsigned16 _ = s | t; // @error the static type of the result is Unsigned32
 
     int:Unsigned16 u = 4343;
     int:Unsigned8 v = 8;
-    int:Unsigned8 _ = u | v; // @error the smallest suck K is 16; the static type of the result is Unsigned16
+    int:Unsigned8 _ = u | v; // @error the static type of the result is Unsigned16
 
     int:Unsigned16 w = 4343;
     int:Unsigned8 x = 8;
-    byte _ = w | x; // @error the smallest suck K is 16; the static type of the result is Unsigned16
+    byte _ = w | x; // @error the static type of the result is Unsigned16
 }
 
 Test-Case: error
 Description: Test if the type of both operands is a subtype of int:UnsignedK when K is 8, 16 or 32, then the static
              type of the result is int:UnsignedN where N is the smallest such K via invalid assignment with inference.
-Labels: binary-bitwise-expr, byte, int, int:Unsigned8, int:Unsigned16, int:Unsigned32, var
+Labels: binary-bitwise-expr, byte, int, int:Signed8, int:Signed16, int:Unsigned8, int:Unsigned16, int:Unsigned32, var
 
 function errorFunction() {
     int a = 4343;
@@ -527,18 +536,18 @@ function errorFunction() {
     int:Unsigned16 n = 12;
     int:Unsigned16 p = 4434;
     var result5 = n | p;
-    int:Signed16 _ = result5; // @error the smallest suck K is 16; the static type of the result is Unsigned16
+    int:Signed16 _ = result5; // @error the static type of the result is Unsigned16
 
     int:Unsigned32 q = 12;
     int:Unsigned16 r = 4434;
     var result6 = q | r;
-    int:Unsigned8 _ = result6; // @error the smallest suck K is 32; the static type of the result is Unsigned32
+    int:Unsigned8 _ = result6; // @error the static type of the result is Unsigned32
 }
 
 Test-Case: output
 Description: Test nil lifting for bitwise or operator.
 Labels: binary-bitwise-expr, byte, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8,
-        int:Unsigned16, int:Unsigned32, numeric-nil-lifting
+        int:Unsigned16, int:Unsigned32, numeric-nil-lifting, optional-type, unary-minus
 
 function init() {
     int? a = 43;
@@ -598,7 +607,7 @@ function printResult(int? result) {
 Test-Case: output
 Description: Test bitwise or expression evaluates to nil when either operand is nil.
 Labels: binary-bitwise-expr, byte, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, 
-        int:Unsigned16, int:Unsigned32, numeric-nil-lifting, value:toBalString
+        int:Unsigned16, int:Unsigned32, nil-literal, numeric-nil-lifting, optional-type, unary-minus, value:toBalString
 
 function init() {
     int? a = 43;
@@ -678,7 +687,7 @@ function printResult(int? result) {
 }
 
 Test-Case: output
-Description: Test the static type of bitwise or expression will be a nillable type when at least one operand is \
+Description: Test the static type of bitwise or expression will be a nillable type when at least one operand is
              nillable via inference.
 Labels: binary-bitwise-expr, byte, int, int:Unsigned8, int:Unsigned16, int:Unsigned32, nil-literal, 
         numeric-nil-lifting, optional-type, value:toBalString, var
@@ -869,7 +878,7 @@ function printResult(int result) {
 Test-Case: output
 Description: Test nil lifting for bitwise or operator at module level.
 Labels: binary-bitwise-expr, byte, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, 
-        int:Unsigned16, int:Unsigned32, unary-minus
+        int:Unsigned16, int:Unsigned32, numeric-nil-lifting, optional-type, unary-minus
 
 int? a = 43;
 
@@ -1027,49 +1036,23 @@ function init() {
     printResult(c | g); // @output 767
     printResult(c | h); // @output 767
 
-    printResult(g | g); // @output 75
-    printResult(g | h); // @output 75
-}
-
-function printResult(int result) {
-    io:println(result);
-}
-
-Test-Case: output
-Description: Test bitwise or expression where the operands are user-defined type T where the T is a subtype of int.
-Fail-Issue: ballerina-platform/ballerina-lang#32888
-Labels: binary-bitwise-expr, byte, module-type-defn, int:Signed8, int:Signed32, int:Unsigned16, 
-        int:Unsigned32, unary-minus
-
-type MyType2 int:Signed32|int:Unsigned16;
-
-type MyType3 int:Unsigned32|int:Signed8;
-
-type MyType4 byte|int:Signed8;
-
-type MyUnionType MyType2|MyType4;
-
-type MySingletonUnionType 1|2|3;
-
-function init() {
-    MyType2 d = 4344;
-    MyType3 e = -34;
-    MyType4 f = -76;
-    MyUnionType g = 75;
-    MySingletonUnionType h = 2;
-
     printResult(d | d); // @output 4344
-    printResult(d | g); // @output 4347
-    printResult(d | h); // @output 4346
     printResult(d | e); // @output -2
     printResult(d | f); // @output -4
-
+    printResult(d | g); // @output 4347
+    printResult(d | h); // @output 4346
+    
     printResult(e | e); // @output -34
     printResult(e | f); // @output -2
     printResult(e | g); // @output -33
-
+    printResult(e | h); // @output -34
+    
     printResult(f | f); // @output -76
     printResult(f | g); // @output -1
+    printResult(f | h); // @output -74
+    
+    printResult(g | g); // @output 75
+    printResult(g | h); // @output 75
 }
 
 function printResult(int result) {
@@ -1353,13 +1336,4 @@ function getData(int? data) returns int|error {
 
 function printResult(int result) {
     io:println(result);
-}
-
-Test-Case: parser-error
-Description: Test syntax errors in bitwise or expression.
-Labels: binary-bitwise-expr, DecimalNumber
-
-function init() {
-    int _ = | 434343; // @error missing LHS operand
-    int _ = 34665677665 | ; // @error missing RHS operand
 }
