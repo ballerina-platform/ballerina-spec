@@ -28,12 +28,14 @@ jobs:
           array=($(echo $GITHUB_REF | tr "/" "\n"))
           len=${#array[@]}
           echo "${array[len-1]}"
+          if [ -d "${array[len-1]}" ]; then rm -Rf "${array[len-1]}"; fi
           mkdir "${array[len-1]}"
           echo "NEW_FOLDER=${array[len-1]}" >> $GITHUB_ENV
 
       - name: Make new folder location in ballerina-prod-website
         run: |
           cd ballerina-platform.github.io/spec/lang/draft
+          if [ -d "${NEW_FOLDER}" ]; then rm -Rf "${NEW_FOLDER}"; fi
           mkdir "${NEW_FOLDER}"
 
       - name: Update the latest to new url in ballerina-dev-website
