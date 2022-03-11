@@ -77,18 +77,22 @@ public isolated function min(float... xs) returns float = external;
 # + return - absolute value of `x`
 public isolated function abs(float x) returns float = external;
 
-# Round a float value to the closest integral value.
-# Returns the float value that is a mathematical integer and closest to `x`.
-# If there are two such values, choose the one that is even
+# Round a float value to a specified number of digits.
+# Returns the float value that is an integral multiple of 10 raised to the power of `-fractionDigits` and closest to `x`.
+# If there are two such values, choose the one whose final digit is even
 # (this is the round-to-nearest rounding mode, which is the default for IEEE and for Ballerina).
-# Same as Java Math.rint method
-# Same as .NET Math.Round method
+# A value of `fractionDigits` greater than 0 thus corresponds to the number of digits after the decimal
+# point being `fractionDigits`; a value of 0 for `fractionDigits` rounds to an integer.
+# If `x` is NaN, +0, -0, +∞ or -∞, then the result is `x``.
+# When `fractionDigits` is 0, this is
+# the same as Java Math.rint method, .NET Math.Round method and
 # IEEE roundToIntegralTiesToEven operation
-# Note that `<int>x` is the same as `<int>x.round()`
+# Note that `<int>x` is the same as `<int>x.round(0)`.
 #
 # + x - float value to operate on
-# + return - closest float value to `x` that is a mathematical integer
-public isolated function round(float x) returns float = external;
+# + fractionDigits - the number of digits after the decimal point
+# + return - float value closest to `x` that is an integral multiple of 10 raised to the power of `-fractionDigits`
+public isolated function round(float x, int fractionDigits = 0) returns float = external;
 
 # Rounds a float down to the closest integral value.
 #
