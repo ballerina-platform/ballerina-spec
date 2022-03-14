@@ -290,6 +290,8 @@ public isolated function toFixedString(float x, int? fractionDigits = ()) return
 # except that it will always include an exponent and there will be exactly
 # one digit before the decimal point.
 # But if `x` is NaN or infinite, the result will be the same as `value:toString`.
+# The digit before the decimal point will be zero only if all other digits
+# are zero.
 # This will panic if fractionDigits is less than 0.
 # If `fractionDigits` is zero, there will be no decimal point.
 # Any necessary rounding will use the roundTiesToEven rounding direction.
