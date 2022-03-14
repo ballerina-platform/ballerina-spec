@@ -436,6 +436,34 @@ function init() {
 }
 
 Test-Case: output
+Description: Test if the type of either operand is a subtype of int:UnsignedK when K is 8, 16 or 32, then the static
+             type of the result is int:UnsignedN where N is the smallest such K when at least type of one operand is a 
+             singleton.
+Fail-Issue: ballerina-platform/ballerina-lang#35458
+Labels: binary-bitwise-expr, byte, int:Unsigned8, int:Unsigned16, int:Unsigned32
+
+function init() {
+    int r = 5454;
+    2 s = 2;
+    int:Unsigned8 t = r | s;
+    io:println(t); // @output 5454
+
+    256 u = 256;
+    int:Unsigned16 v = r | u;
+    io:println(v); // @output 5454
+
+    545444 w = 545444;
+    int:Unsigned32 x = r | w;
+    io:println(x); // @output 546798
+
+    int:Unsigned16 y = s | u;
+    io:println(y); // @output 2
+
+    int:Unsigned32 z = s | w;
+    io:println(z); // @output 6
+}
+
+Test-Case: output
 Description: Test if the type of both operands is a subtype of int:UnsignedK when K is 8, 16 or 32, then the static
              type of the result is int:UnsignedN where N is the smallest such K via inference.
 Labels: binary-bitwise-expr, int:Unsigned8, int:Unsigned16, int:Unsigned32, var
@@ -999,7 +1027,78 @@ type MyType4 byte|int:Signed8;
 
 type MyUnionType MyType2|MyType4;
 
+function init() {
+    MyType a = 5;
+    MyType b = 433;
+    int c = 765;
+    MyType2 d = 4344;
+    MyType3 e = -34;
+    MyType4 f = -76;
+    MyUnionType g = 75;
+
+    printResult(a | b); // @output 437
+    printResult(a | 12345); // @output 12349
+    printResult(a | c); // @output 765
+    printResult(a | d); // @output 4349
+    printResult(a | e); // @output -33
+    printResult(a | f); // @output -75
+    printResult(a | g); // @output 79
+
+    printResult(b | b); // @output 433
+    printResult(b | 12345); // @output 12729
+    printResult(b | c); // @output 1021
+    printResult(b | d); // @output 4601
+    printResult(b | e); // @output -1
+    printResult(b | f); // @output -75
+    printResult(b | g); // @output 507
+
+    printResult(c | c); // @output 765
+    printResult(c | d); // @output 4861
+    printResult(c | e); // @output -1
+    printResult(c | f); // @output -3
+    printResult(c | g); // @output 767
+
+    printResult(d | d); // @output 4344
+    printResult(d | e); // @output -2
+    printResult(d | f); // @output -4
+    printResult(d | g); // @output 4347
+    
+    printResult(e | e); // @output -34
+    printResult(e | f); // @output -2
+    printResult(e | g); // @output -33
+    
+    printResult(f | f); // @output -76
+    printResult(f | g); // @output -1
+    
+    printResult(g | g); // @output 75
+}
+
+function printResult(int result) {
+    io:println(result);
+}
+
+Test-Case: output
+Description: Test bitwise or expression where the operands are user-defined type T where the T is a subtype of int 
+             when the type of at least on operand is a singleton.
+Fail-Issue: ballerina-platform/ballerina-lang#35458
+Labels: binary-bitwise-expr, byte, int, module-type-defn, int:Signed8, int:Signed32, int:Unsigned16, 
+        int:Unsigned32, singleton-type, unary-minus, union-type
+        
+type MyType int;
+
+type MyType2 int:Signed32|int:Unsigned16;
+
+type MyType3 int:Unsigned32|int:Signed8;
+
+type MyType4 byte|int:Signed8;
+
+type MyUnionType MyType2|MyType4;
+
 type MySingletonUnionType 1|2|3;
+
+type MySingletonUnionType2 1|256;
+
+type MySingletonUnionType3 1|545444;
 
 function init() {
     MyType a = 5;
@@ -1009,50 +1108,66 @@ function init() {
     MyType3 e = -34;
     MyType4 f = -76;
     MyUnionType g = 75;
+
     MySingletonUnionType h = 2;
+    MySingletonUnionType2 i = 256;
+    MySingletonUnionType3 j = 545444;
 
-    printResult(a | b); // @output 437
-    printResult(a | 12345); // @output 12349
-    printResult(a | c); // @output 765
-    printResult(a | d); // @output 4349
-    printResult(a | e); // @output -33
-    printResult(a | f); // @output -75
-    printResult(a | g); // @output 79
-    printResult(a | h); // @output 7
+    int:Unsigned8 var1 = a | h;
+    io:println(var1); // @output 7
+    int:Unsigned16 var2 = a | i;
+    io:println(var2); // @output 261
+    int:Unsigned32 var3 = a | j;
+    io:println(var3); // @output 545445
 
-    printResult(b | b); // @output 433
-    printResult(b | 12345); // @output 12729
-    printResult(b | c); // @output 1021
-    printResult(b | d); // @output 4601
-    printResult(b | e); // @output -1
-    printResult(b | f); // @output -75
-    printResult(b | g); // @output 507
-    printResult(b | h); // @output 435
+    int:Unsigned8 var4 = b | h;
+    io:println(var4); // @output 435
+    int:Unsigned16 var5 = b | i;
+    io:println(var5); // @output 433
+    int:Unsigned32 var6 = b | j;
+    io:println(var6); // @output 545717
 
-    printResult(c | c); // @output 765
-    printResult(c | d); // @output 4861
-    printResult(c | e); // @output -1
-    printResult(c | f); // @output -3
-    printResult(c | g); // @output 767
-    printResult(c | h); // @output 767
+    int:Unsigned8 var7 = c | h;
+    io:println(var7); // @output 767
+    int:Unsigned16 var8 = c | i;
+    io:println(var8); // @output 1021
+    int:Unsigned32 var9 = c | j;
+    io:println(var9); // @output 545533
 
-    printResult(d | d); // @output 4344
-    printResult(d | e); // @output -2
-    printResult(d | f); // @output -4
-    printResult(d | g); // @output 4347
-    printResult(d | h); // @output 4346
-    
-    printResult(e | e); // @output -34
-    printResult(e | f); // @output -2
-    printResult(e | g); // @output -33
-    printResult(e | h); // @output -34
-    
-    printResult(f | f); // @output -76
-    printResult(f | g); // @output -1
-    printResult(f | h); // @output -74
-    
-    printResult(g | g); // @output 75
-    printResult(g | h); // @output 75
+    int:Unsigned8 var10 = d | h;
+    io:println(var10); // @output 4346
+    int:Unsigned16 var11 = d | i;
+    io:println(var11); // @output 4600
+    int:Unsigned32 var12 = d | j;
+    io:println(var12); // @output 545532
+
+    int:Unsigned8 var13 = e | h;
+    io:println(var13); // @output -34
+    int:Unsigned16 var14 = e | i;
+    io:println(var14); // @output -34
+    int:Unsigned32 var15 = e | j;
+    io:println(var15); // @output -2
+
+    int:Unsigned8 var16 = f | h;
+    io:println(var16); // @output -74
+    int:Unsigned16 var17 = f | i;
+    io:println(var17); // @output -76
+    int:Unsigned32 var18 = f | j;
+    io:println(var18); // @output -76
+
+    int:Unsigned8 var19 = g | h;
+    io:println(var19); // @output 75
+    int:Unsigned16 var20 = g | i;
+    io:println(var20); // @output 331
+    int:Unsigned32 var21 = g | j;
+    io:println(var21); // @output 545519
+
+    int:Unsigned8 var22 = h | h;
+    io:println(var22); // @output 2
+    int:Unsigned16 var23 = h | i;
+    io:println(var23); // @output 258
+    int:Unsigned32 var24 = h | j;
+    io:println(var24); // @output 545446
 }
 
 function printResult(int result) {
