@@ -283,7 +283,7 @@ public isolated function fromBitsInt(int x) returns float = external;
 # + fractionDigits - number of digits following the decimal point; `()` means to use
 #    the minimum number of digits required to accurately represent the value
 # + return - string representation of `x` in fixed-point notation 
-public isolated function toFixedString(float x, int? fractionDigits = ()) returns string = external;
+public isolated function toFixedString(float x, int? fractionDigits) returns string = external;
 
 # Returns a string that represents `x` using scientific notation.
 # The returned string will be in the same format used by `value:toString`,
@@ -304,4 +304,4 @@ public isolated function toFixedString(float x, int? fractionDigits = ()) return
 # + fractionDigits - number of digits following the decimal point; `()` means to use
 #    the minimum number of digits required to accurately represent the value
 # + return - string representation of `x` in scientific notation 
-public isolated function toExpString(float x, int? fractionDigits = ()) returns string = external;
+public isolated function toExpString(float x, int? fractionDigits) returns string = external;
