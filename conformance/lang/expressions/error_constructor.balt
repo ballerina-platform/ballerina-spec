@@ -18,7 +18,7 @@ function errorFunction() {
 
 Test-Case: output
 Description: Test error constructor constructing a new error value.
-Labels: error-constructor-expr, error-type, map-type, anydata, module-type-defn, is-expr, string
+Labels: error-constructor-expr, error-type, error-type-parameter, map-type, anydata, module-type-defn, is-expr, string
 
 type E error<map<anydata>>;
 
@@ -51,7 +51,7 @@ function errorFunction() {
 
 Test-Case: error
 Description: Test the effect of specified error-type-reference is same as making the contextually expected type be that specified type reference.
-Labels: error-constructor-expr, record-type, error-type, var, string, module-type-defn
+Labels: error-constructor-expr, record-type, error-type, error-type-parameter, var, string, module-type-defn
 
 type E error<record {|string message;|}>;
 
@@ -66,7 +66,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test when there is no applicable contextually expected type,
              then it is the same as if there were a contextually expected type of error.
-Labels: error-constructor-expr, module-type-defn, record-type, error-type, string, var
+Labels: error-constructor-expr, module-type-defn, record-type, error-type, error-type-parameter, string, var
 
 type E error<record {|string message?;|}>;
 
@@ -92,7 +92,7 @@ function errorFunction() {
 
 Test-Case: error
 Description: Test the first positional-arg is of type string, and the second positional-arg is of type error?
-Labels: error-constructor-expr, module-type-defn, record-type, error-type, optional-type, string
+Labels: error-constructor-expr, module-type-defn, record-type, error-type, error-type-parameter, optional-type, string
 
 type E error<record {|string message?;|}>;
 
@@ -108,8 +108,8 @@ function errorFunction() {
 
 Test-Case: output
 Description: Test the second positional-arg is by default nil and specified type otherwise.
-Labels: error-constructor-expr, module-type-defn, record-type, error-type, exact-equality, error:message, error:cause,
-        nil-literal, string, method-call-expr, is-expr
+Labels: error-constructor-expr, module-type-defn, record-type, error-type, error-type-parameter, exact-equality,
+        error:message, error:cause, nil-literal, string, method-call-expr, is-expr
 
 type E error<record {|string message?;|}>;
 
@@ -144,7 +144,7 @@ Description: Test evaluating the error-constructor-expr constructs a new immutab
              the static type of each named-arg must be a subtype of value:Cloneable.
 Labels: error-constructor-expr, module-type-defn, record-type, error-type, string, is-expr, map-type, intersection-type,
          readonly-type, error:detail, value:Cloneable, method-call-expr, list-constructor-expr, DecimalFloatingPointNumber,
-         member-access-expr
+         member-access-expr, error-type-parameter
 
 type E error<record {|string message; boolean fatal?;|}>;
 
@@ -210,7 +210,7 @@ function errorFunction() {
 
 Test-Case: error
 Description: Test the arg-name of every named-arg must be specified as the field-name of an individual-field-descriptor occurring in type descriptor D of the detail mapping.
-Labels: error-constructor-expr, module-type-defn, record-type, record-rest-descriptor, error-type, string
+Labels: error-constructor-expr, module-type-defn, record-type, record-rest-descriptor, error-type, error-type-parameter, string
 
 type E1 error<record {string message?;}>;
 
@@ -297,7 +297,7 @@ function errorFunction() {
 Test-Case: output
 Description: Test specifying the arg-name of every named-arg as the field-name of an individual-field-descriptor occurring in type descriptor D of the detail mapping.
 Labels: error-constructor-expr, module-type-defn, record-type, record-rest-descriptor, error-type, string, error:detail,
-        method-call-expr
+        method-call-expr, error-type-parameter
 
 type E1 error<record {string message?; boolean fatal?; string msg;}>;
 
@@ -328,7 +328,7 @@ function init() {
 
 Test-Case: output
 Description: Test allowing named-arg when the type descriptor D of the detail mapping does not have any individual fields.
-Labels: error-constructor-expr, module-type-defn, record-type, error-type, string, error:detail, method-call-expr
+Labels: error-constructor-expr, module-type-defn, record-type, error-type, string, error:detail, method-call-expr, error-type-parameter
 
 type E1 error<record {}>;
 
@@ -358,7 +358,7 @@ function init() {
 Test-Case: output
 Description: Test fields with default values will also be added to the detail record in the same way as
              the mapping-constructor-expr adds fields with default values based on the contextually expected type.
-Labels: error-constructor-expr, module-type-defn, record-type, error-type, string
+Labels: error-constructor-expr, module-type-defn, record-type, error-type, string, error-type-parameter
 
 type R1 record {
     string errorCode;
@@ -405,7 +405,7 @@ function init() {
 
 Test-Case: error
 Description: Test error constructor when the applicable contextually expected type is an intersection-type-descriptor.
-Labels: error-constructor-expr, module-type-defn, record-type, error-type, intersection-type, string
+Labels: error-constructor-expr, module-type-defn, record-type, error-type, intersection-type, string, error-type-parameter
 
 type E1 error<record {int code;}>;
 
@@ -421,7 +421,7 @@ function init() {
 Test-Case: output
 Description: Test error constructor when the contextually expected type is a union.
 Labels: error-constructor-expr, module-type-defn, record-type, error-type, union-type, map-type, string, is-expr,
-        if-else-stmt, error:detail, method-call-expr
+        if-else-stmt, error:detail, method-call-expr, error-type-parameter
 
 type E error<record {int code;}>;
 
@@ -435,7 +435,7 @@ function init() {
 
 Test-Case: error
 Description: Test error constructor when the contextually expected type is a union.
-Labels: error-constructor-expr, module-type-defn, record-type, error-type, distinct, union-type, map-type, string
+Labels: error-constructor-expr, module-type-defn, record-type, error-type, distinct, union-type, map-type, string, error-type-parameter
 
 type E1 distinct error<record {int code;}>;
 
@@ -449,7 +449,7 @@ function errorFunction() {
 Test-Case: output
 Description: Test error constructor when the contextually expected type is a union.
 Labels: error-constructor-expr, module-type-defn, record-type, error-type, distinct, union-type, map-type, string,
-        is-expr, if-else-stmt, error:detail, method-call-expr
+        is-expr, if-else-stmt, error:detail, method-call-expr, error-type-parameter
 
 type E1 distinct error<record {int code;}>;
 
@@ -473,7 +473,7 @@ function init() {
 Test-Case: output
 Description: Test error constructor when the contextually expected type is a union.
 Labels: error-constructor-expr, module-type-defn, record-type, error-type, intersection-type, union-type, map-type,
-        string, is-expr, if-else-stmt, error:detail, method-call-expr
+        string, is-expr, if-else-stmt, error:detail, method-call-expr, error-type-parameter
 
 type E1 error<record {int code;}>;
 
@@ -499,7 +499,7 @@ Test-Case: output
 Description: Test error constructor when the contextually expected type is a union.
 Fail-Issue: ballerina-platform/ballerinalang#29345
 Labels: error-constructor-expr, module-type-defn, record-type, error-type, intersection-type, union-type, error:detail,
-        method-call-expr, string
+        method-call-expr, string, error-type-parameter
 
 type E1 error<record {int code;}>;
 
@@ -514,7 +514,7 @@ function init() {
 
 Test-Case: error
 Description: Test error constructor when the contextually expected type is a union.
-Labels: error-constructor-expr, module-type-defn, record-type, error-type, distinct, union-type, string, byte
+Labels: error-constructor-expr, module-type-defn, record-type, error-type, distinct, union-type, string, byte, error-type-parameter
 
 type E1 distinct error<record {int code;}>;
 
@@ -529,7 +529,7 @@ function errorFunction() {
 
 Test-Case: output
 Description: Test error constructor when the contextually expected type is a union.
-Labels: error-constructor-expr, module-type-defn, record-type, error-type, distinct, union-type, string, is-expr
+Labels: error-constructor-expr, module-type-defn, record-type, error-type, distinct, union-type, string, is-expr, error-type-parameter
 
 type E1 distinct error<record {int code;}>;
 
@@ -546,7 +546,7 @@ function init() {
 Test-Case: output
 Description: Test type-ids of the constructed error value are those induced by applicable contextually expected type.
 Labels: error-constructor-expr, module-type-defn, record-type, error-type, distinct, intersection-type, string,
-        is-expr
+        is-expr, error-type-parameter
 
 type E1 distinct error<record {int code;}>;
 
@@ -569,7 +569,7 @@ function init() {
 Test-Case: output
 Description: Test nested error constructor.
 Labels: error-constructor-expr, module-type-defn, record-type, error-type, string, method-call-expr, if-else-stmt,
-        optional-type, is-expr, error:message, error:cause, error:detail
+        optional-type, is-expr, error:message, error:cause, error:detail, error-type-parameter
 
 type E error<record {|string message?; boolean fatal?;|}>;
 
