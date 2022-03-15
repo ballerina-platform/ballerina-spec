@@ -1,5 +1,5 @@
 Test-Case: output
-Description: Test unary negative expression for positive integers, no overflow scenarios.
+Description: Test unary negative expression for positive integers with no overflow scenarios.
 Labels: DecimalNumber, int, unary-minus
 
 function init() {
@@ -269,7 +269,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test unary negative expression for user-defined sub-types of integer built-in sub-types,
+Description: Test unary negative expression for user-defined subtypes of integer built-in subtypes,
               no overflow scenarios.
 Labels: DecimalNumber, module-type-defn, unary-minus, union-type, int:Signed8, int:Unsigned32
 
@@ -312,7 +312,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test unary negative expression for positive optional int:Unsigned8; , no overflow scenarios.
+Description: Test unary negative expression for positive optional int:Unsigned8; no overflow scenarios.
 Labels: DecimalNumber, int:Unsigned8, nil-literal, numeric-nil-lifting, optional-type, unary-minus, value:toBalString
 
 function init() {
@@ -512,6 +512,7 @@ function init() {
     float b = 101.5;
     float c = 0;
     float d = 922439289.0;
+
     io:println(-a); // @output -1.0
     io:println(-b); // @output -101.5
     io:println(-c); // @output -0.0
@@ -536,7 +537,7 @@ Description: Test unary negative expression for very large floating point number
 Labels: DecimalFloatingPointNumber, float, unary-minus, FloatingPointTypeSuffix
 
 function init() {
-    float a = 1.0/0;
+    float a = 1.0 / 0;
     float b = -a;
     io:println(b); // @output -Infinity
 }
@@ -954,13 +955,14 @@ Description: Test the static type of operands belonging to non-numeric basic typ
             in unary expression.
 Labels: string, unary-minus
 
-function errorFunction(string a) {
+function errorFunction(string a, anydata n) {
     string _ = -a; // @error - is not allowed with operands of non-numeric basic types
+    int _ = -"12"; // @error - is not allowed with operands of non-numeric basic types
+    _ = -n; // @error - is not allowed with operands of non-numeric basic types
 }
 
 Test-Case: error
-Description: Test for int the static type of the result being the basic type of the operands via invalid assignment
-             with inference, where operands are of numeric types.
+Description: Test the static type of the result is the basic type of the static type of the operand, for int type operands via invalid assignment with inference
 Labels: decimal, int, float, unary-minus, var
 
 function errorFunction(int a) {
@@ -972,8 +974,7 @@ function errorFunction(int a) {
 }
 
 Test-Case: error
-Description: Test for float the static type of the result being the basic type of the operands via invalid assignment
-             with inference, where operands are of numeric types.
+Description: Test the static type of the result is the basic type of the static type of the operand, for float type operands via invalid assignment with inference
 Labels: decimal, int, float, unary-minus, var
 
 function errorFunction(float c) {
@@ -985,8 +986,7 @@ function errorFunction(float c) {
 }
 
 Test-Case: error
-Description: Test for decimal the static type of the result being the basic type of the operands via invalid assignment
-             with inference, where operands are of numeric types.
+Description: Test the static type of the result is the basic type of the static type of the operand, for decimal type operands via invalid assignment with inference
 Labels: decimal, int, float, unary-minus, var
 
 function errorFunction(decimal c) {
@@ -1002,7 +1002,7 @@ Description: Test for optional type the static type of the result being the basi
 Labels: decimal, int, float, optional-type, unary-minus
 
 function errorFunction(int? a, float? b, decimal? c) {
-    int _ = -a; // @error static type of unary-minus expression int? operand is int?
+    int _ = -a; // @error incompatible types: expected 'int', found 'int?'
     float _ = -b; // @error static type of unary-minus expression float? operand is int?
     decimal _ = -c; // @error static type of unary-minus expression decimal? operand is int?
 }
@@ -1033,6 +1033,8 @@ function errorFunction(int:Signed8 a, int:Signed16 b, int:Signed32 c,
     byte _ = -g; // @error static type of unary-minus expression with operands of int subtypes is int
 
     Ints _ = -h; // @error static type of unary-minus expression with operands of int subtypes is int
+
+    1 _ = -1;; // @error static type of unary-minus expression with operands of int subtypes is int
 }
 
 Test-Case: error
@@ -1061,4 +1063,6 @@ function errorFunction(int:Signed8? a, int:Signed16? b, int:Signed32? c,
     byte? _ = -g; // @error static type of unary-minus expression with operands of optional int subtypes is int optional
 
     Ints? _ = -h; // @error static type of unary-minus expression with operands of optional int subtypes is int optional
+
+    1? _ = -1; // @error static type of unary-minus expression with operands of optional int subtypes is int optional
 }
