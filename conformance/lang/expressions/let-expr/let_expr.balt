@@ -8,12 +8,19 @@ function init() {
 }
 
 Test-Case: output
-Description: Test nil-type, boolean and string in let-var-decl.
-Labels: let-expr, nil-literal, nil-type, boolean, boolean-literal, string, function-call-expr
+Description: Test nil-type, boolean in let-var-decl.
+Labels: let-expr, nil-literal, nil-type, boolean, boolean-literal, function-call-expr
 
 function init() {
     io:println(let null n = null in n.toBalString()); // @output ()
     io:println(let boolean b = true in b); // @output true
+}
+
+Test-Case: output
+Description: Test StringNumericEscape in the expression of let-var-decl.
+Labels: let-expr, string, StringNumericEscape, function-call-expr
+
+function init() {
     io:println(let string s = "\u{0633}" in s); // @output س
     io:println(let string s = "ABC \u{0633} CDE \u{0644} DEF \u{0644} XYZ" in s); // @output ABC س CDE ل DEF ل XYZ
 }
@@ -27,8 +34,6 @@ function init() {
     io:println(let null n = () in [n, [n, n]]); // @output [null,[null,null]]
     io:println(let boolean b1 = true, boolean b2 = false in [b1, b2, b1]); // @output [true,false,true]
     io:println(let boolean b1 = true, boolean b2 = false in [b2, [b1, b2]]); // @output [false,[true,false]]
-    var c = let string str = "ABCDEF" in str[1];
-    io:println(c); // @output B
 }
 
 Test-Case: output
@@ -85,7 +90,7 @@ function init() {
 
 Test-Case: output
 Description: Test let-expr when expression after `in` is a table-constructor-expr.
-Labels: let-expr, string, boolean, boolean-literal, record-type, function-call-expr, table-constructor-expr
+Labels: let-expr, string, boolean, boolean-literal, record-type, array-type, function-call-expr, table-constructor-expr
 
 type Names record {|
     string country;
@@ -96,8 +101,7 @@ function init() {
     io:println(let null n = () in table key(n1) [{n1: "N1", n2: n}, {n1: "N2", n2: n}]); // @output [{"n1":"N1","n2":null},{"n1":"N2","n2":null}]
     io:println(let boolean b1 = true, boolean b2 = true
         in table key(name) [{isValid: b1, name: "XX"}, {isValid: b2, name: "YY"}]); // @output [{"isValid":true,"name":"XX"},{"isValid":true,"name":"YY"}]
-    var d = let boolean b1 = true, boolean b2 = false in table key(name) [{isValid: b1 && b2, name: "XX"}];
-    io:println(d); // @output [{"isValid":false,"name":"XX"}]
+    io:println(let boolean b1 = true, boolean b2 = false in table key(name) [{isValid: b1 && b2, name: "XX"}]); // @output [{"isValid":false,"name":"XX"}]
     table<Names> tbNames = table [];
     _ = let Names val = let string[] names = ["Sam", "John", "Ann"] in {country: "Ireland", names: names} in tbNames.add(val);
     io:println(tbNames); // @output [{"country":"Ireland","names":["Sam","John","Ann"]}]
@@ -354,7 +358,7 @@ function init() {
 
 Test-Case: output
 Description: Test let-expr, when type-descriptor is a list-type-descriptor.
-Labels: let-expr, list-constructor-expr, function-call-expr, var, array-type
+Labels: let-expr, list-constructor-expr, function-call-expr, var, array-type, member-access-expr
 
 function init() {
     io:println(let var l = ["A", 2] in l[0]); // @output A
@@ -363,6 +367,7 @@ function init() {
     io:println(let [int, boolean][3] sealedArray = [[2, true], [3, false], [6, true]]
         in sealedArray.length()); // @output 3
     io:println(() == let [int, string...] x = [1, "a", "b"] in x.push("2")); // @output true
+    io:println(let string str = "ABCDEF" in str[1]); // @output B
 }
 
 Test-Case: output
@@ -534,7 +539,7 @@ function foo(string? s) returns string? {
 
 Test-Case: output
 Description: Test let-expr being an isolated expression, when the expression following `in` is isolated.
-             Referenced variables bound by a let-var-decls are initialized using isolated expressions.
+             Referenced variables bound by let-var-decls are initialized using isolated expressions.
 Labels: let-expr, function-call-expr, int
 
 isolated int x = 2;
@@ -561,33 +566,35 @@ isolated function init() {
 }
 
 Test-Case: error
-Description: Test error cases when let-expr is an isolated expression.
-             Non isolated expressions cannot be used to initialize let-var-decl
-Labels: let-expr, function-call-expr
+Description: Test error cases when let-expr is assigned to an isolated expression.
+             Non isolated expressions cannot be used to initialize let-var-decl when expression following in is isolated.
+Labels: let-expr, function-call-expr, array-type
 
-isolated int x = 2;
-int y = 2;
+isolated int[] x = [];
 
-isolated function bar(int i) returns int {
-    return i;
+function foo() {
+    lock {
+        int[] y = [23];
+        x = let int[] i = y in i; // @error invalid attempt to transfer out a value from a 'lock' statement with restricted variable usage: expected an isolated expression and invalid attempt to transfer a value into a 'lock' statement with restricted variable usage
+    }
 }
 
-isolated function errorFunction() {
-    lock {
-        x = let int i = y in bar(i); // @error invalid access of mutable storage in an 'isolated' function
-    }
+function errorFunction() {
+    foo();
 }
 
 Test-Case: output
 Description: Test behaviour if the typed-binding-pattern uses var.
              The type of the variable should be inferred from the precise static type of the expression following =.
-Labels: let-expr, function-call-expr, additive-expr
+Fail-Issue: ballerina-platform/ballerina-lang#35527
+Labels: let-expr, var, function-call-expr, string-literal
 
-function bar(int i) returns int {
-    return i;
+type X "char_X";
+
+function foo(X x) returns boolean {
+    return x == "char_X";
 }
 
 function init() {
-    io:println(let var i = 2 in bar(i)); // @output 2
-    io:println(let var i = 2, var j = 3 in i + j); // @output 5
+    _ = let var x = "char_X" in foo(x); // @output true
 }
