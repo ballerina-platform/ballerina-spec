@@ -1,19 +1,78 @@
 Test-Case: output
-Description: Test xml required attribute access expressions when xml-attribute-name is an identifier.
-Labels: xml-required-attribute-access-expr, xml-navigate-expr
+Description: Test xml-required-attribute-access-expr when xml-attribute-name is an identifier and
+             expression is a variable reference which refer to xml root element.
+Labels: xml, xml-required-attribute-access-expr, string
 
 function init() {
     xml x = xml `<root attr="attr-val"></root>`;
     io:println(x.attr); // @output attr-val
-    io:println(x.<root>.attr); // @output attr-val
 
     x = xml `<root attr="attr-val"/>`;
     io:println(x.attr); // @output attr-val
 
     x = xml `<root attr='attr-val'></root>`;
     io:println(x.attr); // @output attr-val
+}
 
-    x = xml `<messages id="10">
+Test-Case: output
+Description: Test xml-required-attribute-access-expr when xml-attribute-name is an identifier and
+             expression is a filter expression which starts from xml root element.
+Labels: xml, xml-required-attribute-access-expr, string, xml-filter-expr
+
+function init() {
+    xml x = xml `<root attr="attr-val"></root>`;
+    io:println(x.<root>.attr); // @output attr-val
+}
+
+Test-Case: output
+Description: Test xml-required-attribute-access-expr when xml-attribute-name is a qualified-identifier and
+             expression is a variable reference which refer to xml root element.
+Labels: xml, xml-required-attribute-access-expr, string
+
+function init() {
+    xml x = xml `<root xml:space="attr-val"></root>`;
+    io:println(x.xml:space); // @output attr-val
+
+    x = xml `<root xml:space="attr-val"/>`;
+    io:println(x.xml:space); // @output attr-val
+
+    x = xml `<root xml:space='attr-val'></root>`;
+    io:println(x.xml:space); // @output attr-val
+}
+
+Test-Case: output
+Description: Test xml-required-attribute-access-expr when xml-attribute-name is a qualified-identifier and
+             expression is a filter expression which starts from xml root element.
+Labels: xml, xml-required-attribute-access-expr, string, xml-filter-expr
+
+function init() {
+    xml x = xml `<root xml:space="attr-val"></root>`;
+    io:println(x.<root>.xml:space); // @output attr-val
+
+    x = xml `<root xml:space="attr-val"/>`;
+    io:println(x.xml:space); // @output attr-val
+
+    x = xml `<root xml:space='attr-val'></root>`;
+    io:println(x.xml:space); // @output attr-val
+}
+
+Test-Case: output
+Description: Test xml-required-attribute-access-expr when xml-attribute-name is an identifier and
+             expression has only a root element with multiple attributes.
+Labels: xml, xml-required-attribute-access-expr
+
+function init() {
+    xml x = xml `<root id1='10' id2='11'/>`;
+    io:println(x.id1); // @output 10
+}
+
+Test-Case: output
+Description: Test xml-required-attribute-access-expr when xml-attribute-name is an identifier and
+             expression is a variable reference.
+Labels: xml, xml-required-attribute-access-expr, string
+
+function init() {
+    xml x = xml `<messages id="10">
                     <note id="11">
                         <to>Tove</to>
                     </note>
@@ -22,8 +81,6 @@ function init() {
                     </note>
                 </messages>`;
     io:println(x.id); // @output 10
-    io:println(x.<messages>.id); // @output 10
-    io:println(x/*.<note>[0].id); // @output 11
 
     x = xml `<messages id1="10" id2="101" id3="102">
                     <note id1="11">
@@ -37,9 +94,55 @@ function init() {
                     </note>
                 </messages>`;
     io:println(x.id3); // @output 102
+}
 
-    x = xml `<root id1='10' id2='11'/>`;
-    io:println(x.id1); // @output 10
+Test-Case: output
+Description: Test xml-required-attribute-access-expr when xml-attribute-name is an identifier and
+             expression is a filter expression.
+Labels: xml, xml-required-attribute-access-expr, string, xml-filter-expr
+
+function init() {
+    xml x = xml `<messages id="10">
+                    <note id="11">
+                        <to>Tove</to>
+                    </note>
+                    <note id="12">
+                        <to>Jani</to>
+                    </note>
+                </messages>`;
+    io:println(x.<messages>.id); // @output 10
+
+    x = xml
+        `<items id='9'>
+            <book id='10'>
+                <name>A Study in Scarlet</name>
+                <author id='11'><name>Arthur Conan Doyle<Date id='12'></Date></name></author>
+            </book>
+            <planner id='13'>Daily Planner<kind id='14'>day</kind><pages id='15'>365</pages></planner>
+            <book id='20'>
+                <name>The Sign of Four</name>
+                <author><name>Arthur Conan Doyle</name></author>
+            </book>
+            <pen><kind>marker</kind><color id='21'>blue</color></pen>
+        </items>`;
+    io:println(x.<items>.id); // @output 9
+}
+
+Test-Case: output
+Description: Test xml-required-attribute-access-expr when xml-attribute-name is an identifier and
+             expression is a xml-step-expr.
+Labels: xml, xml-required-attribute-access-expr, string, xml-filter-expr, xml-step-expr, xml-qualified-name
+
+function init() {
+    xml x = xml `<messages id="10">
+                    <note id="11">
+                        <to>Tove</to>
+                    </note>
+                    <note id="12">
+                        <to>Jani</to>
+                    </note>
+                </messages>`;
+    io:println(x/*.<note>[0].id); // @output 11
 
     x = xml `<messages>
                     <note id="11">
@@ -72,7 +175,6 @@ function init() {
             </book>
             <pen><kind>marker</kind><color id='21'>blue</color></pen>
         </items>`;
-    io:println(x.<items>.id); // @output 9
     io:println(x.<items>/<book>[0].id); // @output 10
     io:println(x.<items>/<book>[1].id); // @output 20
     io:println(x.<items>/<book>[0]/<author>.id); // @output 11
@@ -93,23 +195,56 @@ function init() {
 }
 
 Test-Case: output
-Description: Test xml required attribute access expressions when xml-attribute-name is a xml-qualified-name.
-Labels: xml-required-attribute-access-expr, xml-navigate-expr, xmlns-decl
+Description: Test xml-required-attribute-access-expr when xml-attribute-name is a xml-qualified-name and
+             expression is a variable reference which refer to xml root element.
+Labels: xml, xml-required-attribute-access-expr, xmlns-decl, string, xml-filter-expr, xml-qualified-name
 
 xmlns "NSURL" as ns;
 
 function init() {
     xml x = xml `<root ns:attr="attr-val"></root>`;
     io:println(x.ns:attr); // @output attr-val
-    io:println(x.<root>.ns:attr); // @output attr-val
 
     x = xml `<root ns:attr="attr-val"/>`;
     io:println(x.ns:attr); // @output attr-val
 
     x = xml `<root ns:attr='attr-val'></root>`;
     io:println(x.ns:attr); // @output attr-val
+}
 
-    x = xml `<messages ns:id="10">
+Test-Case: output
+Description: Test xml-required-attribute-access-expr when xml-attribute-name is a xml-qualified-name and
+             expression is a filter expression which starts from xml root element.
+Labels: xml, xml-required-attribute-access-expr, xmlns-decl, string, xml-filter-expr, xml-qualified-name
+
+xmlns "NSURL" as ns;
+
+function init() {
+    xml x = xml `<root ns:attr="attr-val"></root>`;
+    io:println(x.<root>.ns:attr); // @output attr-val
+}
+
+Test-Case: output
+Description: Test xml-required-attribute-access-expr when xml-attribute-name is a xml-qualified-name and
+             expression has only a root element with multiple attributes.
+Labels: xml, xml-required-attribute-access-expr, xmlns-decl, xml-qualified-name
+
+xmlns "NSURL" as ns;
+
+function init() {
+    xml x = xml `<root ns:id1='10' ns:id2='11'/>`;
+    io:println(x.ns:id1); // @output 10
+}
+
+Test-Case: output
+Description: Test xml-required-attribute-access-expr when xml-attribute-name is a xml-qualified-name and
+             expression is a variable reference.
+Labels: xml, xml-required-attribute-access-expr, xmlns-decl, string, xml-filter-expr, xml-step-expr, xml-qualified-name
+
+xmlns "NSURL" as ns;
+
+function init() {
+    xml x = xml `<messages ns:id="10">
                     <note ns:id="11">
                         <to>Tove</to>
                     </note>
@@ -118,8 +253,6 @@ function init() {
                     </note>
                 </messages>`;
     io:println(x.ns:id); // @output 10
-    io:println(x.<messages>.ns:id); // @output 10
-    io:println(x/*.<note>[0].ns:id); // @output 11
 
     x = xml `<messages ns:id1="10" ns:id2="101" ns:id3="102">
                     <note ns:id1="11">
@@ -133,9 +266,59 @@ function init() {
                     </note>
                 </messages>`;
     io:println(x.ns:id3); // @output 102
+}
 
-    x = xml `<root ns:id1='10' ns:id2='11'/>`;
-    io:println(x.ns:id1); // @output 10
+Test-Case: output
+Description: Test xml-required-attribute-access-expr when xml-attribute-name is a xml-qualified-name and
+             expression is a filter expression.
+Labels: xml, xml-required-attribute-access-expr, xmlns-decl, string, xml-filter-expr, xml-qualified-name
+
+xmlns "NSURL" as ns;
+
+function init() {
+    xml x = xml `<messages ns:id="10">
+                    <note ns:id="11">
+                        <to>Tove</to>
+                    </note>
+                    <note ns:id="12">
+                        <to>Jani</to>
+                    </note>
+                </messages>`;
+    io:println(x.<messages>.ns:id); // @output 10
+
+    x = xml
+        `<items ns:id='9'>
+            <book ns:id='10'>
+                <name>A Study in Scarlet</name>
+                <author ns:id='11'><name>Arthur Conan Doyle<Date ns:id='12'></Date></name></author>
+            </book>
+            <planner ns:id='13'>Daily Planner<kind ns:id='14'>day</kind><pages ns:id='15'>365</pages></planner>
+            <book id='20'>
+                <name>The Sign of Four</name>
+                <author><name>Arthur Conan Doyle</name></author>
+            </book>
+            <pen><kind>marker</kind><color ns:id='21'>blue</color></pen>
+        </items>`;
+    io:println(x.<items>.ns:id); // @output 9
+}
+
+Test-Case: output
+Description: Test xml-required-attribute-access-expr when xml-attribute-name is a xml-qualified-name and
+             expression is a xml-step-expr.
+Labels: xml, xml-required-attribute-access-expr, xmlns-decl, string, xml-step-expr, xml-qualified-name
+
+xmlns "NSURL" as ns;
+
+function init() {
+    xml x = xml `<messages ns:id="10">
+                    <note ns:id="11">
+                        <to>Tove</to>
+                    </note>
+                    <note ns:id="12">
+                        <to>Jani</to>
+                    </note>
+                </messages>`;
+    io:println(x/*.<note>[0].ns:id); // @output 11
 
     x = xml `<messages>
                     <note ns:id="11">
@@ -168,7 +351,6 @@ function init() {
             </book>
             <pen><kind>marker</kind><color ns:id='21'>blue</color></pen>
         </items>`;
-    io:println(x.<items>.ns:id); // @output 9
     io:println(x.<items>/<book>[0].ns:id); // @output 10
     io:println(x.<items>/<book>[1].id); // @output 20
     io:println(x.<items>/<book>[0]/<author>.ns:id); // @output 11
@@ -189,22 +371,22 @@ function init() {
 }
 
 Test-Case: error
-Description: Test xml required attribute access expressions when value is not a singleton xml element.
-Labels: xml-required-attribute-access-expr
+Description: Test xml-required-attribute-access-expr when value is not a singleton xml element.
+Labels: xml, xml-required-attribute-access-expr
 
 function errorFunction() {
     xml x = xml `xml text=text`;
-    io:println(x.text); // @error error("{ballerina/lang.xml}XMLOperationError",message="invalid xml attribute access on xml text")
+    _ = x.text; // @error error("{ballerina/lang.xml}XMLOperationError",message="invalid xml attribute access on xml text")
     x = xml `<!--I am a comment=comment-->`;
-    io:println(x.comment); // @error error("{ballerina/lang.xml}XMLOperationError",message="invalid xml attribute access on xml comment")
+    _ = x.comment; // @error error("{ballerina/lang.xml}XMLOperationError",message="invalid xml attribute access on xml comment")
     x = xml `<?target data=data?>`;
-    io:println(x.data); // @error error("{ballerina/lang.xml}XMLOperationError",message="invalid xml attribute access on xml pi")
+    _ = x.data; // @error error("{ballerina/lang.xml}XMLOperationError",message="invalid xml attribute access on xml pi")
 }
 
 Test-Case: error
-Description: Test xml required attribute access expressions when value is empty
+Description: Test xml-required-attribute-access-expr when value is empty
 Fail-Issue: ballerina-platform/ballerina-lang#35139
-Labels: xml-required-attribute-access-expr, xml-navigate-expr
+Labels: xml, xml-required-attribute-access-expr, string, xml-filter-expr, xml-step-expr
 
 function errorFunction() {
     xml x = xml `<message id="10">
@@ -215,14 +397,14 @@ function errorFunction() {
                             <to>Jani</to>
                         </note>
                     </message>`;
-    io:println(x.<messages>.id);
-    io:println(x.<message>/<notes>[0].id);
-    io:println(x.<message>/<notes>[1].id);
+    _ = x.<messages>.id;
+    _ = x.<message>/<notes>[0].id;
+    _ = x.<message>/<notes>[1].id;
 }
 
 Test-Case: error
-Description: Test xml required attribute access expressions when attribute name does not exist.
-Labels: xml-required-attribute-access-expr, xml-navigate-expr
+Description: Test xml-required-attribute-access-expr when attribute name does not exist.
+Labels: xml, xml-required-attribute-access-expr, string, xml-filter-expr, xml-step-expr
 
 function errorFunction() {
     xml x = xml `<message id="10">
@@ -233,21 +415,20 @@ function errorFunction() {
                             <to>Jani</to>
                         </note>
                     </message>`;
-    io:println(x.<message>.ids); // @error error("{ballerina/lang.xml}XMLOperationError",message="attribute 'ids' not found")
-    io:println(x.<message>/<note>[0].ids); // @error error("{ballerina/lang.xml}XMLOperationError",message="attribute 'ids' not found")
-    io:println(x.<message>/<note>[1].ids); // @error error("{ballerina/lang.xml}XMLOperationError",message="attribute 'ids' not found")
+    _ = x.<message>.ids; // @error error("{ballerina/lang.xml}XMLOperationError",message="attribute 'ids' not found")
+    _ = x.<message>/<note>[0].ids; // @error error("{ballerina/lang.xml}XMLOperationError",message="attribute 'ids' not found")
+    _ = x.<message>/<note>[1].ids; // @error error("{ballerina/lang.xml}XMLOperationError",message="attribute 'ids' not found")
 }
 
 Test-Case: output
-Description: Test xml optional attribute access expressions when xml-attribute-name is an identifier.
-Labels: xml-optional-attribute-access-expr, xml-navigate-expr
+Description: Test xml-optional-attribute-access-expr when xml-attribute-name is an identifier and
+             expression is a variable reference which refer to xml root element.
+Labels: xml, xml-optional-attribute-access-expr, string
 
 function init() {
     xml x = xml `<root attr="attr-val"></root>`;
     io:println(x?.attr); // @output attr-val
     io:println(x?.attrx == ()); // @output true
-    io:println(x.<root>?.attr); // @output attr-val
-    io:println(x.<root>?.attrx == ()); // @output true
 
     x = xml `<root attr="attr-val"/>`;
     io:println(x?.attr); // @output attr-val
@@ -256,8 +437,36 @@ function init() {
     x = xml `<root attr='attr-val'></root>`;
     io:println(x.attr); // @output attr-val
     io:println(x?.attrx == ()); // @output true
+}
 
-    x = xml `<messages id="10">
+Test-Case: output
+Description: Test xml-optional-attribute-access-expr when xml-attribute-name is an identifier and
+             expression is a filter expression which starts from xml root element.
+Labels: xml, xml-optional-attribute-access-expr, string
+
+function init() {
+    xml x = xml `<root attr="attr-val"></root>`;
+    io:println(x.<root>?.attr); // @output attr-val
+    io:println(x.<root>?.attrx == ()); // @output true
+}
+
+Test-Case: output
+Description: Test xml-optional-attribute-access-expr when xml-attribute-name is an identifier and
+             expression has only a root element with multiple attributes.
+Labels: xml, xml-optional-attribute-access-expr
+
+function init() {
+    xml x = xml `<root id1='10' id2='11'/>`;
+    io:println(x?.id1); // @output 10
+}
+
+Test-Case: output
+Description: Test xml-optional-attribute-access-expr when xml-attribute-name is an identifier and
+             expression is a variable reference.
+Labels: xml, xml-optional-attribute-access-expr, string, xml-filter-expr, xml-step-expr
+
+function init() {
+    xml x = xml `<messages id="10">
                     <note id="11">
                         <to>Tove</to>
                     </note>
@@ -267,8 +476,6 @@ function init() {
                 </messages>`;
     io:println(x?.id); // @output 10
     io:println(x?.idx == ()); // @output true
-    io:println(x.<messages>?.id); // @output 10
-    io:println(x.<messages>?.idx == ()); // @output true
 
     x = xml `<messages id1="10" id2="101" id3="102">
                     <note id1="11">
@@ -282,11 +489,49 @@ function init() {
                     </note>
                 </messages>`;
     io:println(x?.id3); // @output 102
+}
 
-    x = xml `<root id1='10' id2='11'/>`;
-    io:println(x?.id1); // @output 10
+Test-Case: output
+Description: Test xml-optional-attribute-access-expr when xml-attribute-name is an identifier and
+             expression is a filter expression.
+Labels: xml, xml-optional-attribute-access-expr, string, xml-filter-expr, xml-step-expr
 
-    x = xml `<messages>
+function init() {
+    xml x = xml `<messages id="10">
+                    <note id="11">
+                        <to>Tove</to>
+                    </note>
+                    <note id="12">
+                        <to>Jani</to>
+                    </note>
+                </messages>`;
+    io:println(x.<messages>?.id); // @output 10
+    io:println(x.<messages>?.idx == ()); // @output true
+
+    x = xml
+        `<items id='9'>
+            <book id='10'>
+                <name>A Study in Scarlet</name>
+                <author id='11'><name>Arthur Conan Doyle<Date id='12'></Date></name></author>
+            </book>
+            <planner id='13'>Daily Planner<kind id='14'>day</kind><pages id='15'>365</pages></planner>
+            <book id='20'>
+                <name>The Sign of Four</name>
+                <author><name>Arthur Conan Doyle</name></author>
+            </book>
+            <pen><kind>marker</kind><color id='21'>blue</color></pen>
+        </items>`;
+    io:println(x.<items>?.id); // @output 9
+    io:println(x.<items>?.idx == ()); // @output true
+}
+
+Test-Case: output
+Description: Test xml-optional-attribute-access-expr when xml-attribute-name is an identifier and
+             expression is a xml-step-expr.
+Labels: xml, xml-optional-attribute-access-expr, string, xml-filter-expr, xml-step-expr
+
+function init() {
+    xml x = xml `<messages>
                     <note id="11">
                         <to>Tove</to>
                     </note>
@@ -320,8 +565,6 @@ function init() {
             </book>
             <pen><kind>marker</kind><color id='21'>blue</color></pen>
         </items>`;
-    io:println(x.<items>?.id); // @output 9
-    io:println(x.<items>?.idx == ()); // @output true
     io:println(x.<items>/<book>[0]?.id); // @output 10
     io:println(x.<items>/<book>[0]?.idx == ()); // @output true
     io:println(x.<items>/<book>[1]?.id); // @output 20
@@ -353,9 +596,9 @@ function init() {
 }
 
 Test-Case: output
-Description: Test xml optional attribute access expressions when xml-attribute-name is an identifier.
+Description: Test xml-optional-attribute-access-expr when xml-attribute-name is an identifier.
 Fail-Issue: ballerina-platform/ballerina-lang#35146
-Labels: xml-optional-attribute-access-expr, xml-navigate-expr
+Labels: xml, xml-optional-attribute-access-expr, string, xml-step-expr
 
 function init() {
     xml x = xml `<messages id="10">
@@ -368,4 +611,16 @@ function init() {
                 </messages>`;
     io:println(x/*.<note>[0]?.id); // @output 11
     io:println(x/*.<note>[0]?.idx == ()); // @output true
+}
+
+Test-Case: error
+Description: Test xml-attribute-access-expr when static type of expression is not a subtype of xml.
+Labels: xml, xml-required-attribute-access-expr, xml-optional-attribute-access-expr, int, string, xml:Text, union-type
+
+function errorFunction() {
+    xml|int x1 = xml `<root attr="attr-val"></root>`;
+    _ = x1.attr; // @error invalid operation: type '(xml|int)' does not support field access
+    xml|xml:Text x2 = xml `<root attr="attr-val"></root>`;
+    _ = x2.attr; // @error invalid operation: type '(xml|xml:Text)' does not support field access
+    _ = x2?.attr1; // @error invalid operation: type '(xml|xml:Text)' does not support optional field access
 }
