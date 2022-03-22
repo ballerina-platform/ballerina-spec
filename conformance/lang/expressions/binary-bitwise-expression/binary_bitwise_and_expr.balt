@@ -1,0 +1,1451 @@
+Test-Case: parser-error
+Description: Test syntax errors in bitwise and expression.
+Labels: binary-bitwise-expr, DecimalNumber
+
+function init() {
+    int _ = & 434343; // @error missing LHS operand
+    int _ = 34665677665 & ; // @error missing RHS operand
+}
+
+Test-Case: output
+Description: Test basic bitwise and expression.
+Labels: binary-bitwise-expr, DecimalNumber
+
+function init() {
+    io:println(9 & 6); // @output 0
+    io:println(6 & 9); // @output 0
+    io:println(99999999 & 6); // @output 6
+    io:println(5 & 7568888); // @output 0
+    io:println(54545 & 7568888); // @output 21776
+    io:println(99943949334943 & 99943949334943); // @output 99943949334943
+
+    io:println(9223372036854775807 & 9223372036854775807); // @output 9223372036854775807
+    io:println(9223372036854775807 & 3); // @output 3
+}
+
+Test-Case: output
+Description: Test basic bitwise and expression using HexIntLiteral.
+Labels: binary-bitwise-expr, DecimalNumber, HexIntLiteral
+
+function init() {
+    io:println(0xAB55 & 0x0032); // @output 16
+    io:println(0xABF5 & 50); // @output 48
+    io:println(645 & 0xDBF5); // @output 645
+}
+
+Test-Case: output
+Description: Test basic bitwise and expression with negative integer values.
+Labels: binary-bitwise-expr, DecimalNumber, unary-minus
+
+function init() {
+    io:println(-89 & 6); // @output 6
+    io:println(6 & -9); // @output 6
+    io:println(-43554 & -6); // @output -43558
+
+    io:println(-9223372036854775808 & -9223372036854775808); // @output -9223372036854775808
+    io:println(-9223372036854775808 & 3); // @output 0
+    io:println(-9223372036854775808 & 9223372036854775807); // @output 0
+}
+
+Test-Case: output
+Description: Test basic bitwise and expression for negative integer values using HexIntLiteral.
+Labels: binary-bitwise-expr, DecimalNumber, HexIntLiteral, unary-minus
+
+function init() {
+    io:println(0xDB55 & -0x0032); // @output 56132
+    io:println(-0x1C55 & -0x123F); // @output -7807
+    io:println(-0xABF5 & -540); // @output -44032
+    io:println(5656 & -0XBCDE); // @output 512
+    io:println(5656 & 0XBCDE); // @output 5144
+}
+
+Test-Case: output
+Description: Test bitwise and expression always evaluates to 0 when at least one operand is 0.
+Labels: binary-bitwise-expr, DecimalNumber, int, signed-zero, unary-minus, unary-plus
+
+function init() {
+    int a = 53443;
+    int b = 0;
+    int c = +0;
+    int d = -0;
+
+    io:println(543434343434 & 0); // @output 0
+    io:println(0 & 787654322); // @output 0
+    io:println(0 & 0); // @output 0
+    io:println(0 & a); // @output 0
+    io:println(a & 0); // @output 0
+    io:println(a & b); // @output 0
+    io:println(b & 6453564654); // @output 0
+    io:println(b & b); // @output 0
+    io:println(-4434353 & b); // @output 0
+    io:println(94434843 & c); // @output 0
+    io:println(-6534353 & d); // @output 0
+    io:println(c & c); // @output 0
+    io:println(d & d); // @output 0
+    io:println(-0 & -0); // @output 0
+    io:println(+0 & +0); // @output 0
+}
+
+Test-Case: output
+Description: Test bitwise and expression always evaluates to value v when the value of both operands are v.
+Labels: binary-bitwise-expr, DecimalNumber, int, unary-minus, unary-plus
+
+function init() {
+    int a = 99443;
+    int b = 99443;
+    int c = -223;
+
+    io:println(543434343434 & 543434343434); // @output 543434343434
+    io:println(0 & 0); // @output 0
+    io:println(a & a); // @output 99443
+    io:println(a & b); // @output 99443
+    io:println(b & a); // @output 99443
+    io:println(3 & 3); // @output 3
+    io:println(-3 & -3); // @output -3
+    io:println(c & c); // @output -223
+    io:println(+987654321 & +987654321); // @output 987654321
+}
+
+Test-Case: output
+Description: Test bitwise and expression where the operands are a subtype of int using byte.
+Labels: binary-bitwise-expr, byte, int
+
+function init() {
+    int a = 987996;
+    byte b = 54;
+    byte c = 99;
+
+    io:println(a & b); // @output 20
+    io:println(b & a); // @output 20
+    io:println(b & c); // @output 34
+    io:println(c & b); // @output 34
+    io:println(c & c); // @output 99
+}
+
+Test-Case: output
+Description: Test bitwise and expression where the operands are a subtype of int using Signed32.
+Labels: binary-bitwise-expr, int, int:Signed32, unary-minus
+
+function init() {
+    int a = 987996;
+    int:Signed32 b = 54;
+    int:Signed32 c = 5454545;
+    int:Signed32 d = -341345678;
+
+    io:println(a & b); // @output 20
+    io:println(b & a); // @output 20
+    io:println(b & c); // @output 16
+    io:println(c & b); // @output 16
+    io:println(c & c); // @output 5454545
+    io:println(d & d); // @output -341345678
+    io:println(c & d); // @output 211536
+}
+
+Test-Case: output
+Description: Test bitwise and expression where the operands are a subtype of int using Signed16.
+Labels: binary-bitwise-expr, int, int:Signed16, unary-minus
+
+function init() {
+    int a = 387953196;
+    int:Signed16 b = 987;
+    int:Signed16 c = 7764;
+    int:Signed16 d = -9876;
+
+    io:println(a & b); // @output 520
+    io:println(b & a); // @output 520
+    io:println(b & c); // @output 592
+    io:println(c & b); // @output 592
+    io:println(c & c); // @output 7764
+    io:println(d & d); // @output -9876
+    io:println(c & d); // @output 6212
+}
+
+Test-Case: output
+Description: Test bitwise and expression where the operands are a subtype of int using Signed8.
+Labels: binary-bitwise-expr, int, int:Signed8, unary-minus
+
+function init() {
+    int a = 387953196;
+    int:Signed8 b = 97;
+    int:Signed8 c = 64;
+    int:Signed8 d = -23;
+
+    io:println(a & b); // @output 32
+    io:println(b & a); // @output 32
+    io:println(b & c); // @output 64
+    io:println(c & b); // @output 64
+    io:println(c & c); // @output 64
+    io:println(d & d); // @output -23
+    io:println(c & d); // @output 64
+}
+
+Test-Case: output
+Description: Test bitwise and expression where the operands are a subtype of int using Unsigned32.
+Labels: binary-bitwise-expr, int, int:Unsigned32
+
+function init() {
+    int a = 987996;
+    int:Unsigned32 b = 54;
+    int:Unsigned32 c = 5454545;
+
+    io:println(a & b); // @output 20
+    io:println(b & a); // @output 20
+    io:println(b & c); // @output 16
+    io:println(c & b); // @output 16
+    io:println(c & c); // @output 5454545
+}
+
+Test-Case: output
+Description: Test bitwise and expression where the operands are a subtype of int using Unsigned16.
+Labels: binary-bitwise-expr, int, int:Unsigned16
+
+function init() {
+    int a = 387953196;
+    int:Unsigned16 b = 987;
+    int:Unsigned16 c = 7764;
+
+    io:println(a & b); // @output 520
+    io:println(b & a); // @output 520
+    io:println(b & c); // @output 592
+    io:println(c & b); // @output 592
+    io:println(c & c); // @output 7764
+}
+
+Test-Case: output
+Description: Test bitwise and expression where the operands are a subtype of int using Unsigned8.
+Labels: binary-bitwise-expr, int, int:Unsigned8
+
+function init() {
+    int a = 387953196;
+    int:Unsigned8 b = 97;
+    int:Unsigned8 c = 64;
+
+    io:println(a & b); // @output 32
+    io:println(b & a); // @output 32
+    io:println(b & c); // @output 64
+    io:println(c & b); // @output 64
+    io:println(c & c); // @output 64
+}
+
+Test-Case: output
+Description: Test bitwise and expression where the operands are a subtype of int.
+Labels: binary-bitwise-expr, byte, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, 
+        int:Unsigned16, int:Unsigned32, unary-minus
+
+function init() {
+    int a = 43;
+
+    byte b = 5;
+
+    int:Signed32 c = -21474836;
+    int:Signed16 d = -454;
+    int:Signed8 e = 100;
+
+    int:Unsigned32 f = 21474836;
+    int:Unsigned16 g = 54522;
+    int:Unsigned8 h = 255;
+
+    io:println(a & b); // @output 1
+    io:println(a & c); // @output 40
+    io:println(a & d); // @output 42
+    io:println(a & e); // @output 32
+    io:println(a & f); // @output 0
+    io:println(a & g); // @output 42
+    io:println(a & h); // @output 43
+
+    io:println(b & b); // @output 5
+    io:println(b & c); // @output 4
+    io:println(b & d); // @output 0
+    io:println(b & e); // @output 4
+    io:println(b & f); // @output 4
+    io:println(b & g); // @output 0
+    io:println(b & h); // @output 5
+
+    io:println(c & c); // @output -21474836
+    io:println(c & d); // @output -21475288
+    io:println(c & e); // @output 100
+    io:println(c & f); // @output 4
+    io:println(c & g); // @output 20712
+    io:println(c & h); // @output 236
+
+    io:println(d & d); // @output -454
+    io:println(d & e); // @output 32
+    io:println(d & f); // @output 21474832
+    io:println(d & g); // @output 54330
+    io:println(d & h); // @output 58
+
+    io:println(e & e); // @output 100
+    io:println(e & f); // @output 4
+    io:println(e & g); // @output 96
+    io:println(e & h); // @output 100
+
+    io:println(f & f); // @output 21474836
+    io:println(f & g); // @output 33808
+    io:println(f & h); // @output 20
+
+    io:println(g & g); // @output 54522
+    io:println(g & h); // @output 250
+
+    io:println(h & h); // @output 255
+}
+
+Test-Case: error
+Description: Test the static type of both operands must be a subtype of int via invalid numeric operand types.
+Labels: binary-bitwise-expr, DecimalNumber, DecimalFloatingPointNumber, float, FloatingPointTypeSuffix
+
+function errorFunction() {
+    float a = 5445.4;
+    float b = 5445.4;
+
+    int _ = 5 & 7.5; // @error static type of both operands must be a subtype of int
+
+    int _ = 433.4 & 7.5; // @error static type of both operands must be a subtype of int
+
+    int _ = 434.446e+2f & 95.446e+2f; // @error static type of both operands must be a subtype of int
+
+    int _ = 433d & 7d; // @error static type of both operands must be a subtype of int
+
+    int _ = a & b; // @error static type of both operands must be a subtype of int
+
+    int _ = getFloat1() & getFloat2(); // @error static type of both operands must be a subtype of int
+}
+
+function getFloat1() returns float {
+    return 99.4;
+}
+
+function getFloat2() returns float {
+    return 43.8;
+}
+
+Test-Case: error
+Description: Test the static type of both operands must be a subtype of int via invalid other operand types.
+Labels: binary-bitwise-expr, list-constructor-expr, mapping-constructor-expr, map-type, nil-literal, string
+
+function errorFunction() {
+    map<int> a = {};
+    map<int> b = {};
+
+    int _ = () & (); // @error static type of both operands must be a subtype of int
+
+    int _ = "5" & "6"; // @error static type of both operands must be a subtype of int
+
+    int _ = [1] & [2]; // @error static type of both operands must be a subtype of int
+
+    int _ = {name: "mike"} & {name: "Jone"}; // @error static type of both operands must be a subtype of int
+
+    int _ = a & b; // @error static type of both operands must be a subtype of int
+}
+
+Test-Case: error
+Description: Test error in bitwise and expression where the operands are user-defined type T where the T is not a 
+             subtype of int.
+Labels: binary-bitwise-expr, DecimalNumber, decimal, int, module-type-defn, union-type
+
+type MyType int|decimal;
+
+function errorFunction() {
+    MyType a = 5;
+    MyType b = 433;
+    int c = 765;
+
+    int _ = a & b; // @error MyType is not a subtype of int
+    int _ = a & 12345; // @error MyType is not a subtype of int
+    int _ = b & c; // @error MyType is not a subtype of int
+    int _ = a & c; // @error MyType is not a subtype of int
+}
+
+Test-Case: output
+Description: Test if the type of either operand is a subtype of int:UnsignedK when K is 8, 16 or 32, then the static
+             type of the result is int:UnsignedN where N is the smallest such K with Unsigned32.
+Labels: binary-bitwise-expr, int, int:Unsigned32
+
+function init() {
+    int a = 9876;
+    int:Unsigned32 b = 5454;
+    printResult(a & b); // @output 1028
+
+    int:Unsigned32 c = 9994444;
+    int:Unsigned32 d = 999999999;
+    printResult(c & d); // @output 9994444
+}
+
+function printResult(int:Unsigned32 result) {
+    io:println(result);
+}
+
+Test-Case: output
+Description: Test if the type of either operand is a subtype of int:UnsignedK when K is 8, 16 or 32, then the static
+             type of the result is int:UnsignedN where N is the smallest such K with Unsigned16.
+Labels: binary-bitwise-expr, int, int:Unsigned16
+
+function init() {
+    int a = 33334567654;
+    int:Unsigned16 b = 213;
+    printResult(a & b); // @output 196
+
+    int:Unsigned16 c = 43343;
+    int:Unsigned16 d = 213;
+    printResult(c & d); // @output 69
+}
+
+function printResult(int:Unsigned16 result) {
+    io:println(result);
+}
+
+Test-Case: output
+Description: Test if the type of either operand is a subtype of int:UnsignedK when K is 8, 16 or 32, then the static
+             type of the result is int:UnsignedN where N is the smallest such K with Unsigned8.
+Labels: binary-bitwise-expr, int, int:Unsigned8
+
+function init() {
+    int a = 987996;
+    int:Unsigned8 b = 54;
+    printResult(a & b); // @output 20
+
+    int:Unsigned8 c = 94;
+    int:Unsigned8 d = 99;
+    printResult(c & d); // @output 66
+}
+
+function printResult(int:Unsigned8 result) {
+    io:println(result);
+}
+
+Test-Case: output
+Description: Test if the type of either operand is a subtype of int:UnsignedK when K is 8, 16 or 32, then the static
+             type of the result is int:UnsignedN where N is the smallest such K.
+Labels: binary-bitwise-expr, byte, int:Signed8, int:Signed16, int:Unsigned8, int:Unsigned16, int:Unsigned32
+
+function init() {
+    int:Unsigned32 b = 5454;
+    int:Unsigned16 d = 4344;
+    int:Unsigned16 e = b & d;
+    io:println(e); // @output 4168
+
+    int:Unsigned8 f = 44;
+    int:Unsigned8 g = d & f;
+    io:println(g); // @output 40
+
+    int:Unsigned8 h = b & f;
+    io:println(h); // @output 12
+
+    byte i = f & g;
+    io:println(i); // @output 40
+    
+    int:Signed8 j = 4;
+    int:Unsigned32 k = 33;
+    int:Unsigned32 m = j & k;
+    io:println(m); // @output 0
+
+    int:Signed16 n = -24;
+    int:Unsigned32 p = 33;
+    int:Unsigned32 q = n & p;
+    io:println(q); // @output 32
+}
+
+Test-Case: output
+Description: Test if the type of either operand is a subtype of int:UnsignedK when K is 8, 16 or 32, then the static
+             type of the result is int:UnsignedN where N is the smallest such K when at least type of one operand is a 
+             singleton.
+Fail-Issue: ballerina-platform/ballerina-lang#35458
+Labels: binary-bitwise-expr, byte, int:Unsigned8, int:Unsigned16, int:Unsigned32
+
+function init() {
+    int r = 5454;
+    2 s = 2;
+    int:Unsigned8 t = r & s;
+    io:println(t); // @output 2
+
+    256 u = 256;
+    int:Unsigned16 v = r & u;
+    io:println(v); // @output 256
+
+    545444 w = 545444;
+    int:Unsigned32 x = r & w;
+    io:println(x); // @output 4100
+
+    int:Unsigned16 y = s & u;
+    io:println(y); // @output 0
+
+    int:Unsigned32 z = s & w;
+    io:println(z); // @output 0
+}
+
+Test-Case: output
+Description: Test if the type of either operand is a subtype of int:UnsignedK when K is 8, 16 or 32, then the static
+             type of the result is int:UnsignedN where N is the smallest such K via inference.
+Labels: binary-bitwise-expr, byte, int, int:Unsigned8, int:Unsigned16, int:Unsigned32, var
+
+function init() {
+    int a = 9876;
+    int:Unsigned32 b = 5454;
+    var c = a & b;
+    int:Unsigned32 result1 = c;
+    io:println(result1); // @output 1028
+
+    int:Unsigned16 d = 4344;
+    var e = b & d;
+    int:Unsigned16 result2 = e;
+    io:println(result2); // @output 4168
+
+    int:Unsigned8 f = 44;
+    var g = d & f;
+    int:Unsigned8 result3 = g;
+    io:println(result3); // @output 40
+
+    var h = f & g;
+    int:Unsigned8 result4 = h;
+    io:println(result4); // @output 40
+
+    var i = f & g;
+    byte result5 = h;
+    io:println(result5); // @output 40
+}
+
+Test-Case: error
+Description: Test if the type of either operand is a subtype of int:UnsignedK when K is 8, 16 or 32, then the static
+             type of the result is int:UnsignedN where N is the smallest such K using invalid assignment.
+Labels: binary-bitwise-expr, byte, int, int:Signed8, int:Signed16, int:Unsigned8, int:Unsigned16, int:Unsigned32
+
+function errorFunction() {
+    int a = 4343;
+    int b = 8;
+    int:Unsigned32 _ = a & b; // @error the static type of the result is int
+
+    int d = 9876;
+    int:Unsigned32 e = 5454;
+    int:Unsigned16 _ = d & e; // @error the static type of the result is Unsigned32
+
+    int g = 9876;
+    int:Unsigned16 h = 5454;
+    int:Unsigned8 _ = g & h; // @error the static type of the result is Unsigned16
+
+    byte _ = g & h; // @error the static type of the result is Unsigned16
+
+    int:Signed8 k = 12;
+    int:Signed16 m = 4434;
+    int:Signed8 _ = k & m; // @error the static type of the result is int
+
+    int:Unsigned16 n = 12;
+    int:Unsigned16 p = 4434;
+    int:Signed16 _ = n & p; // @error the static type of the result is Unsigned16
+
+    int:Unsigned32 q = 12;
+    int:Unsigned16 r = 4434;
+    int:Unsigned8 _ = q & r; // @error the static type of the result is Unsigned16
+}
+
+Test-Case: error
+Description: Test if the type of either operand is a subtype of int:UnsignedK when K is 8, 16 or 32, then the static
+             type of the result is int:UnsignedN where N is the smallest such K via invalid assignment with inference.
+Labels: binary-bitwise-expr, byte, int, int:Signed8, int:Signed16, int:Unsigned8, int:Unsigned16, int:Unsigned32, var
+
+function errorFunction() {
+    int a = 4343;
+    int b = 8;
+    var result1 = a & b;
+    int:Unsigned32 _ = result1; // @error the static type of the result is int
+
+    int d = 9876;
+    int:Unsigned32 e = 5454;
+    var result2 = d & e;
+    int:Unsigned16 _ = result2; // @error the static type of the result is Unsigned32
+
+    int g = 9876;
+    int:Unsigned16 h = 5454;
+    var result3 = g & h;
+    int:Unsigned8 _ = result3; // @error the static type of the result is Unsigned16
+
+    byte _ = result3; // @error the static type of the result is Unsigned16
+
+    int:Signed8 k = 12;
+    int:Signed16 m = 4434;
+    var result4 = k & m;
+    int:Signed8 _ = result4; // @error the static type of the result is int
+}
+
+Test-Case: output
+Description: Test nil lifting for bitwise and operator.
+Labels: binary-bitwise-expr, byte, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, 
+        int:Unsigned16, int:Unsigned32, numeric-nil-lifting, optional-type, unary-minus
+
+function init() {
+    int? a = 43;
+
+    byte? b = 5;
+
+    int:Signed32? c = -21474836;
+    int:Signed16? d = -454;
+    int:Signed8? e = 100;
+
+    int:Unsigned32? f = 21474836;
+    int:Unsigned16? g = 54522;
+    int:Unsigned8? h = 255;
+
+    printResult(a & b); // @output 1
+    printResult(a & c); // @output 40
+    printResult(a & d); // @output 42
+    printResult(a & e); // @output 32
+    printResult(a & f); // @output 0
+    printResult(a & g); // @output 42
+    printResult(a & h); // @output 43
+
+    printResult(b & b); // @output 5
+    printResult(b & c); // @output 4
+    printResult(b & d); // @output 0
+    printResult(b & e); // @output 4
+    printResult(b & f); // @output 4
+    printResult(b & g); // @output 0
+    printResult(b & h); // @output 5
+
+    printResult(c & c); // @output -21474836
+    printResult(c & d); // @output -21475288
+    printResult(c & e); // @output 100
+    printResult(c & f); // @output 4
+    printResult(c & g); // @output 20712
+    printResult(c & h); // @output 236
+
+    printResult(d & d); // @output -454
+    printResult(d & e); // @output 32
+    printResult(d & f); // @output 21474832
+    printResult(d & g); // @output 54330
+    printResult(d & h); // @output 58
+
+    printResult(e & e); // @output 100
+    printResult(e & f); // @output 4
+    printResult(e & g); // @output 96
+    printResult(e & h); // @output 100
+
+    printResult(f & f); // @output 21474836
+    printResult(f & g); // @output 33808
+    printResult(f & h); // @output 20
+
+    printResult(g & g); // @output 54522
+    printResult(g & h); // @output 250
+
+    printResult(h & h); // @output 255
+}
+
+function printResult(int? result) {
+    io:println(result);
+}
+
+Test-Case: output
+Description: Test bitwise and expression evaluates to nil when either operand is nil.
+Labels: binary-bitwise-expr, byte, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, 
+        int:Unsigned16, int:Unsigned32, nil-literal, numeric-nil-lifting, optional-type, unary-minus, value:toBalString
+
+function init() {
+    int? a = 43;
+
+    byte? b = 5;
+
+    int:Signed32? c = -21474836;
+    int:Signed16? d = -454;
+    int:Signed8? e = 100;
+
+    int:Unsigned32? f = 21474836;
+    int:Unsigned16? g = 54522;
+    int:Unsigned8? h = 255;
+
+    int? i = ();
+    byte? j = ();
+    int:Signed32? k = ();
+    int:Unsigned16? m = ();
+
+    printResult(a & i); // @output ()
+    printResult(a & j); // @output ()
+    printResult(k & a); // @output ()
+    printResult(m & a); // @output ()
+
+    printResult(b & i); // @output ()
+    printResult(b & j); // @output ()
+    printResult(b & k); // @output ()
+    printResult(b & m); // @output ()
+
+    printResult(c & i); // @output ()
+    printResult(c & j); // @output ()
+    printResult(k & c); // @output ()
+    printResult(c & m); // @output ()
+
+    printResult(d & i); // @output ()
+    printResult(d & j); // @output ()
+    printResult(d & k); // @output ()
+    printResult(d & m); // @output ()
+
+    printResult(e & i); // @output ()
+    printResult(e & j); // @output ()
+    printResult(e & k); // @output ()
+    printResult(e & m); // @output ()
+
+    printResult(f & i); // @output ()
+    printResult(f & j); // @output ()
+    printResult(f & k); // @output ()
+    printResult(f & m); // @output ()
+
+    printResult(g & i); // @output ()
+    printResult(g & j); // @output ()
+    printResult(g & k); // @output ()
+    printResult(g & m); // @output ()
+
+    printResult(h & i); // @output ()
+    printResult(h & j); // @output ()
+    printResult(h & k); // @output ()
+    printResult(h & m); // @output ()
+
+    printResult(i & i); // @output ()
+    printResult(i & j); // @output ()
+    printResult(i & k); // @output ()
+    printResult(i & m); // @output ()
+
+    printResult(j & j); // @output ()
+    printResult(j & k); // @output ()
+    printResult(j & m); // @output ()
+
+    printResult(k & k); // @output ()
+    printResult(k & m); // @output ()
+
+    printResult(m & m); // @output ()
+}
+
+function printResult(int? result) {
+    io:println(result.toBalString());
+}
+
+Test-Case: output
+Description: Test the static type of bitwise and expression will be a nillable type when at least one operand is 
+             nillable via inference.
+Labels: binary-bitwise-expr, byte, int, int:Unsigned8, int:Unsigned16, int:Unsigned32, nil-literal, 
+        numeric-nil-lifting, optional-type, value:toBalString, var
+
+function init() {
+    int? a = 9876;
+    int:Unsigned32 b = 5454;
+    var c = a & b;
+    int:Unsigned32? result1 = c;
+    io:println(result1); // @output 1028
+
+    int:Unsigned16? d = 4344;
+    var e = b & d;
+    int:Unsigned16? result2 = e;
+    io:println(result2); // @output 4168
+
+    int:Unsigned8? f = 44;
+    var g = d & f;
+    int:Unsigned8? result3 = g;
+    io:println(result3); // @output 40
+
+    var h = f & g;
+    int:Unsigned8? result4 = h;
+    io:println(result4); // @output 40
+
+    int i = 45343;
+    int? j = 5454;
+    int? result5 = i & j;
+    io:println(result5); // @output 4366
+
+    int m = 5454545343;
+    byte? n = 43;
+    byte? result6 = m & n;
+    io:println(result6); // @output 43
+
+    int q = 5454545343;
+    byte? r = ();
+    int:Unsigned8? result7 = q & r;
+    io:println(result7.toBalString()); // @output ()
+}
+
+Test-Case: error
+Description: Test the static type of bitwise and expression will be a nillable type when at least one operand is nillable
+             via inference and invalid assignments.
+Labels: binary-bitwise-expr, byte, int, int:Unsigned8, int:Unsigned16, int:Unsigned32, nil-literal, 
+        numeric-nil-lifting, optional-type, var
+
+function errorFunction() {
+    int? a = 9876;
+    int:Unsigned32 b = 5454;
+    var c = a & b;
+    int:Unsigned32 _ = c; // @error the static type of the result is int:Unsigned32?
+
+    int:Unsigned16? d = 4344;
+    var e = b & d;
+    int:Unsigned16 _ = e; // @error the static type of the result is int:Unsigned16?
+
+    int:Unsigned8? f = 44;
+    var g = d & f;
+    int:Unsigned8 _ = g; // @error the static type of the result is int:Unsigned8?
+
+    var h = f & g;
+    int:Unsigned8 _ = h; // @error the static type of the result is int:Unsigned8?
+
+    int i = 45343;
+    int? j = 5454;
+    int _ = i & j; // @error the static type of the result is int?
+
+    int m = 5454545343;
+    byte? n = 43;
+    byte _ = m & n; // @error the static type of the result is byte?
+
+    int p = 5454545343;
+    byte? q = ();
+    int:Unsigned8 _ = p & q; // @error the static type of the result is byte?
+}
+
+Test-Case: output
+Description: Test bitwise and expression at module level.
+Labels: binary-bitwise-expr, byte, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, 
+        int:Unsigned16, int:Unsigned32, module-init-var-decl, unary-minus
+
+int a = 43;
+
+byte b = 5;
+
+int:Signed32 c = -21474836;
+int:Signed16 d = -454;
+int:Signed8 e = 100;
+
+int:Unsigned32 f = 21474836;
+int:Unsigned16 g = 54522;
+int:Unsigned8 h = 255;
+
+int result1 = a & b;
+int result2 = a & c;
+int result3 = a & d;
+int result4 = a & e;
+int result5 = a & f;
+int result6 = a & g;
+int result7 = a & h;
+
+int result8 = b & b;
+int result9 = b & c;
+int result10 = b & d;
+int result11 = b & e;
+int result12 = b & f;
+int result13 = b & g;
+int result14 = b & h;
+
+int result15 = c & c;
+int result16 = c & d;
+int result17 = c & e;
+int result18 = c & f;
+int result19 = c & g;
+int result20 = c & h;
+
+int result21 = d & d;
+int result22 = d & e;
+int result23 = d & f;
+int result24 = d & g;
+int result25 = d & h;
+
+int result26 = e & e;
+int result27 = e & f;
+int result28 = e & g;
+int result29 = e & h;
+
+int result30 = f & f;
+int result31 = f & g;
+int result32 = f & h;
+
+int result33 = g & g;
+int result34 = g & h;
+
+int result35 = h & h;
+
+function init() {
+    printResult(result1); // @output 1
+    printResult(result2); // @output 40
+    printResult(result3); // @output 42
+    printResult(result4); // @output 32
+    printResult(result5); // @output 0
+    printResult(result6); // @output 42
+    printResult(result7); // @output 43
+
+    printResult(result8); // @output 5
+    printResult(result9); // @output 4
+    printResult(result10); // @output 0
+    printResult(result11); // @output 4
+    printResult(result12); // @output 4
+    printResult(result13); // @output 0
+    printResult(result14); // @output 5
+
+    printResult(result15); // @output -21474836
+    printResult(result16); // @output -21475288
+    printResult(result17); // @output 100
+    printResult(result18); // @output 4
+    printResult(result19); // @output 20712
+    printResult(result20); // @output 236
+
+    printResult(result21); // @output -454
+    printResult(result22); // @output 32
+    printResult(result23); // @output 21474832
+    printResult(result24); // @output 54330
+    printResult(result25); // @output 58
+
+    printResult(result26); // @output 100
+    printResult(result27); // @output 4
+    printResult(result28); // @output 96
+    printResult(result29); // @output 100
+
+    printResult(result30); // @output 21474836
+    printResult(result31); // @output 33808
+    printResult(result32); // @output 20
+
+    printResult(result33); // @output 54522
+    printResult(result34); // @output 250
+
+    printResult(result35); // @output 255
+}
+
+function printResult(int result) {
+    io:println(result);
+}
+
+Test-Case: output
+Description: Test nil lifting for bitwise and operator at module level.
+Labels: binary-bitwise-expr, byte, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, 
+        int:Unsigned16, int:Unsigned32, module-init-var-decl, numeric-nil-lifting, optional-type, unary-minus
+
+int? a = 43;
+
+byte? b = 5;
+
+int:Signed32? c = -21474836;
+int:Signed16? d = -454;
+int:Signed8? e = 100;
+
+int:Unsigned32? f = 21474836;
+int:Unsigned16? g = 54522;
+int:Unsigned8? h = 255;
+
+int? result1 = a & b;
+int? result2 = a & c;
+int? result3 = a & d;
+int? result4 = a & e;
+int? result5 = a & f;
+int? result6 = a & g;
+int? result7 = a & h;
+
+int? result8 = b & b;
+int? result9 = b & c;
+int? result10 = b & d;
+int? result11 = b & e;
+int? result12 = b & f;
+int? result13 = b & g;
+int? result14 = b & h;
+
+int? result15 = c & c;
+int? result16 = c & d;
+int? result17 = c & e;
+int? result18 = c & f;
+int? result19 = c & g;
+int? result20 = c & h;
+
+int? result21 = d & d;
+int? result22 = d & e;
+int? result23 = d & f;
+int? result24 = d & g;
+int? result25 = d & h;
+
+int? result26 = e & e;
+int? result27 = e & f;
+int? result28 = e & g;
+int? result29 = e & h;
+
+int? result30 = f & f;
+int? result31 = f & g;
+int? result32 = f & h;
+
+int? result33 = g & g;
+int? result34 = g & h;
+
+int? result35 = h & h;
+
+function init() {
+    printResult(result1); // @output 1
+    printResult(result2); // @output 40
+    printResult(result3); // @output 42
+    printResult(result4); // @output 32
+    printResult(result5); // @output 0
+    printResult(result6); // @output 42
+    printResult(result7); // @output 43
+
+    printResult(result8); // @output 5
+    printResult(result9); // @output 4
+    printResult(result10); // @output 0
+    printResult(result11); // @output 4
+    printResult(result12); // @output 4
+    printResult(result13); // @output 0
+    printResult(result14); // @output 5
+
+    printResult(result15); // @output -21474836
+    printResult(result16); // @output -21475288
+    printResult(result17); // @output 100
+    printResult(result18); // @output 4
+    printResult(result19); // @output 20712
+    printResult(result20); // @output 236
+
+    printResult(result21); // @output -454
+    printResult(result22); // @output 32
+    printResult(result23); // @output 21474832
+    printResult(result24); // @output 54330
+    printResult(result25); // @output 58
+
+    printResult(result26); // @output 100
+    printResult(result27); // @output 4
+    printResult(result28); // @output 96
+    printResult(result29); // @output 100
+
+    printResult(result30); // @output 21474836
+    printResult(result31); // @output 33808
+    printResult(result32); // @output 20
+
+    printResult(result33); // @output 54522
+    printResult(result34); // @output 250
+
+    printResult(result35); // @output 255
+}
+
+function printResult(int? result) {
+    io:println(result);
+}
+
+Test-Case: output
+Description: Test bitwise and expression where the operands are user-defined type T where the T is a subtype of int.
+Labels: binary-bitwise-expr, byte, int, module-type-defn, int:Signed8, int:Signed32, int:Unsigned16, 
+        int:Unsigned32, singleton-type, unary-minus, union-type
+
+type MyType int;
+
+type MyType2 int:Signed32|int:Unsigned16;
+
+type MyType3 int:Unsigned32|int:Signed8;
+
+type MyType4 byte|int:Signed8;
+
+type MyUnionType MyType2|MyType4;
+
+function init() {
+    MyType a = 5;
+    MyType b = 433;
+    int c = 765;
+    MyType2 d = 4344;
+    MyType3 e = -34;
+    MyType4 f = -76;
+    MyUnionType g = 75;
+
+    printResult(a & b); // @output 1
+    printResult(a & 12345); // @output 1
+    printResult(a & c); // @output 5
+    printResult(a & d); // @output 0
+    printResult(a & e); // @output 4
+    printResult(a & f); // @output 4
+    printResult(a & g); // @output 1
+
+    printResult(b & b); // @output 433
+    printResult(b & 12345); // @output 49
+    printResult(b & c); // @output 177
+    printResult(b & d); // @output 176
+    printResult(b & e); // @output 400
+    printResult(b & f); // @output 432
+    printResult(b & g); // @output 1
+
+    printResult(c & c); // @output 765
+    printResult(c & d); // @output 248
+    printResult(c & e); // @output 732
+    printResult(c & f); // @output 692
+
+    printResult(d & d); // @output 4344
+    printResult(d & e); // @output 4312
+    printResult(d & f); // @output 4272
+    printResult(d & g); // @output 72
+
+    printResult(e & e); // @output -34
+    printResult(e & f); // @output -108
+    printResult(e & g); // @output 74
+
+    printResult(f & f); // @output -76
+    printResult(f & g); // @output 0
+
+    printResult(g & g); // @output 75
+}
+
+function printResult(int result) {
+    io:println(result);
+}
+
+Test-Case: output
+Description: Test bitwise and expression where the operands are user-defined type T where the T is a subtype of int 
+             when the type of at least on operand is a singleton.
+Fail-Issue: ballerina-platform/ballerina-lang#35458
+Labels: binary-bitwise-expr, byte, int, module-type-defn, int:Signed8, int:Signed32, int:Unsigned16, 
+        int:Unsigned32, singleton-type, unary-minus, union-type
+        
+type MyType int;
+
+type MyType2 int:Signed32|int:Unsigned16;
+
+type MyType3 int:Unsigned32|int:Signed8;
+
+type MyType4 byte|int:Signed8;
+
+type MyUnionType MyType2|MyType4;
+
+type MySingletonUnionType 1|2|3;
+
+type MySingletonUnionType2 1|256;
+
+type MySingletonUnionType3 1|545444;
+
+function init() {
+    MyType a = 5;
+    MyType b = 433;
+    int c = 765;
+    MyType2 d = 4344;
+    MyType3 e = -34;
+    MyType4 f = -76;
+    MyUnionType g = 75;
+
+    MySingletonUnionType h = 2;
+    MySingletonUnionType2 i = 256;
+    MySingletonUnionType3 j = 545444;
+
+    int:Unsigned8 var1 = a & h;
+    io:println(var1); // @output 0
+    int:Unsigned16 var2 = a & i;
+    io:println(var2); // @output 0
+    int:Unsigned32 var3 = a & j;
+    io:println(var3); // @output 4
+
+    int:Unsigned8 var4 = b & h;
+    io:println(var4); // @output 0
+    int:Unsigned16 var5 = b & i;
+    io:println(var5); // @output 256
+    int:Unsigned32 var6 = b & j;
+    io:println(var6); // @output 160
+
+    int:Unsigned8 var7 = c & h;
+    io:println(var7); // @output 0
+    int:Unsigned16 var8 = c & i;
+    io:println(var8); // @output 0
+    int:Unsigned32 var9 = c & j;
+    io:println(var9); // @output 676
+
+    int:Unsigned8 var10 = d & h;
+    io:println(var10); // @output 0
+    int:Unsigned16 var11 = d & i;
+    io:println(var11); // @output 0
+    int:Unsigned32 var12 = d & j;
+    io:println(var12); // @output 4256
+
+    int:Unsigned8 var13 = e & h;
+    io:println(var13); // @output 2
+    int:Unsigned16 var14 = e & i;
+    io:println(var14); // @output 256
+    int:Unsigned32 var15 = e & j;
+    io:println(var15); // @output 545412
+
+    int:Unsigned8 var16 = f & h;
+    io:println(var16); // @output 0
+    int:Unsigned16 var17 = f & i;
+    io:println(var17); // @output 256
+    int:Unsigned32 var18 = f & j;
+    io:println(var18); // @output 545444
+
+    int:Unsigned8 var19 = g & h;
+    io:println(var19); // @output 2
+    int:Unsigned16 var20 = g & i;
+    io:println(var20); // @output 0
+    int:Unsigned32 var21 = g & j;
+    io:println(var21); // @output 0
+
+    int:Unsigned8 var22 = h & h;
+    io:println(var22); // @output 2
+    int:Unsigned16 var23 = h & i;
+    io:println(var23); // @output 0
+    int:Unsigned32 var24 = h & j;
+    io:println(var24); // @output 0
+}
+
+function printResult(int result) {
+    io:println(result);
+}
+
+Test-Case: output
+Description: Test module constant reference expression as operands.
+Labels: binary-bitwise-expr, byte, int, module-const-decl, unary-minus
+
+const VALUE1 = 5;
+const VALUE2 = 43433;
+
+const int VALUE4 = 654454;
+const byte VALUE5 = 65;
+
+function init() {
+    int value3 = -9876533;
+
+    printResult(VALUE1 & VALUE2); // @output 1
+    printResult(VALUE1 & value3); // @output 1
+    printResult(value3 & VALUE2); // @output 2441
+    printResult(VALUE1 & VALUE1); // @output 5
+    printResult(VALUE2 & VALUE2); // @output 43433
+
+    printResult(VALUE1 & VALUE4); // @output 4
+    printResult(VALUE1 & VALUE5); // @output 1
+    printResult(value3 & VALUE5); // @output 65
+    printResult(VALUE5 & VALUE5); // @output 65
+    printResult(VALUE4 & VALUE4); // @output 654454
+}
+
+function printResult(int result) {
+    io:println(result);
+}
+
+Test-Case: output
+Description: Test float literal as operands with type cast.
+Labels: any, binary-bitwise-expr, DecimalFloatingPointNumber, int, float, type-cast-expr
+
+function init() {
+    float a = 4.6434;
+    float b = 53;
+    printResult(<int>a & <int>b); // @output 5
+
+    int c = 54322;
+    float d = 7.3;
+    printResult(c & <int>d); // @output 2
+    printResult(<int>d & c); // @output 2
+
+    any e = 65.65;
+    any f = 1235.465;
+    printResult(<int> e & <int> f); // @output 66
+    printResult(<int> a & <int> e); // @output 0
+    printResult(<int> f & c); // @output 1042
+}
+
+function printResult(int result) {
+    io:println(result);
+}
+
+Test-Case: output
+Description: Test field access and optional field access expression as operands.
+Labels: binary-bitwise-expr, int, module-type-defn, field-access-expr, mapping-constructor-expr, 
+        numeric-nil-lifting, optional-field-access-expr, optional-type, record-type
+
+type Person record {|
+    int id;
+    int age?;
+|};
+
+function init() {
+    Person p1 = {id: 33, age: 54};
+    Person p2 = {id: 21, age: 23};
+
+    printResult(p1.id & p2.id); // @output 1
+
+    printResult(p1?.age & p2?.age); // @output 22
+
+    printResult(p1.id & p2?.age); // @output 1
+}
+
+function printResult(int? result) {
+    io:println(result);
+}
+
+Test-Case: output
+Description: Test member access expression as operands.
+Labels: array-type, binary-bitwise-expr, int, list-constructor-expr, member-access-expr
+
+function init() {
+    int[] a = [33, 22, 535334343];
+
+    printResult(a[0] & a[1]); // @output 0
+    printResult(a[0] & a[2]); // @output 1
+    printResult(a[1] & a[2]); // @output 6
+    printResult(a[2] & a[2]); // @output 535334343
+    printResult(a[2] & 0); // @output 0
+}
+
+function printResult(int result) {
+    io:println(result);
+}
+
+Test-Case: output
+Description: Test function call expression as operands.
+Labels: binary-bitwise-expr, function-call-expr, int
+
+function init() {
+    int a = getInt() & getInt();
+    io:println(a); // @output 43
+
+    int b = getInt() & getInt16();
+    io:println(b); // @output 1
+
+    int c = getInt() & getInt32();
+    io:println(c); // @output 34
+
+    int d = getInt16() & getInt32();
+    io:println(d); // @output 256
+}
+
+function getInt() returns int {
+    return 43;
+}
+
+function getInt32() returns int:Signed32 {
+    return 44322;
+}
+
+function getInt16() returns int:Signed16 {
+    return 897;
+}
+
+Test-Case: output
+Description: Test method call expression as operands.
+Labels: binary-bitwise-expr, implicit-new-expr, int, method-call-expr, module-class-defn
+
+class Car {
+    function getCurrentSpeed() returns int {
+        return 56;
+    }
+
+    function getRimSize() returns int {
+        return 18;
+    }
+}
+
+function init() {
+    Car c1 = new;
+    printResult(c1.getCurrentSpeed() & c1.getCurrentSpeed()); // @output 56
+    printResult(c1.getCurrentSpeed() & c1.getRimSize()); // @output 16
+    printResult(53 & c1.getRimSize()); // @output 16
+}
+
+function printResult(int result) {
+    io:println(result);
+}
+
+Test-Case: output
+Description: Test multiplicative expression as operands.
+Labels: binary-bitwise-expr, DecimalNumber, multiplicative-expr
+
+function init() {
+    printResult((54 * 5) & (534 * 2)); // @output 12
+    printResult(54 * 5 & 534 * 2); // @output 12
+
+    printResult((54 / 5) & (534 / 2)); // @output 10
+    printResult(54 / 5 & 534 / 2); // @output 10
+
+    printResult((54 % 5) & (534 % 2)); // @output 0
+    printResult(54 % 5 & 534 % 2); // @output 0
+
+    printResult(43 & 534 % 8); // @output 2
+    printResult(43 & (534 % 8)); // @output 2
+
+    printResult(54 % 5 & 534); // @output 4
+    printResult((54 % 5) & 534); // @output 4
+}
+
+function printResult(int result) {
+    io:println(result);
+}
+
+Test-Case: output
+Description: Test additive expression as operands.
+Labels: additive-expr, DecimalNumber, binary-bitwise-expr
+
+function init() {
+    printResult((54 + 5) & (534 + 2)); // @output 24
+    printResult(54 + 5 & 534 + 2); // @output 24
+
+    printResult((54 - 5) & (534 - 2)); // @output 16
+    printResult(54 - 5 & 534 - 2); // @output 16
+
+    printResult(43 & 534 + 8); // @output 10
+    printResult(43 & (534 + 8)); // @output 10
+
+    printResult(54 - 5 & 534); // @output 16
+    printResult((54 - 5) & 534); // @output 16
+}
+
+function printResult(int result) {
+    io:println(result);
+}
+
+Test-Case: output
+Description: Test shift expression as operands.
+Labels: binary-bitwise-expr, DecimalNumber, shift-expr, unary-minus
+
+function init() {
+    printResult((54 << 1) & (534 << 2)); // @output 72
+    printResult(54 << 1 & 534 << 2); // @output 72
+
+    printResult((54 >> 1) & (534 >> 1)); // @output 11
+    printResult(54 >> 1 & 534 >> 1); // @output 11
+
+    printResult((-54 >>> 1) & (-534 >>> 1)); // @output 9223372036854775525
+    printResult(-54 >>> 1 & -534 >>> 1); // @output 9223372036854775525
+
+    printResult(43 & 534 << 2); // @output 8
+    printResult(43 & (534 << 2)); // @output 8
+
+    printResult(54 >> 5 & 534); // @output 0
+    printResult((54 >> 5) & 534); // @output 0
+}
+
+function printResult(int result) {
+    io:println(result);
+}
+
+Test-Case: output
+Description: Test bitwise expression as operands.
+Labels: binary-bitwise-expr, DecimalNumber
+
+function init() {
+    printResult(54 & 5 & 534 & 2); // @output 0
+    printResult(((54 & 1) & 534) & 2); // @output 0
+
+    printResult(54 ^ 1 & 534 ^ 1); // @output 55
+    printResult(54 ^ (1 & 534) ^ 1); // @output 55
+
+    printResult(767 | 1 & 934 | 1); // @output 767
+    printResult(767 | (1 & 934) | 1); // @output 767
+
+    printResult(43 & 534 & 2); // @output 2
+    printResult((43 & 534) & 2); // @output 2
+
+    printResult(54 | 5 & 534); // @output 54
+    printResult(54 | (5 & 534)); // @output 54
+
+    printResult(4341 | 1 & 234 ^ 1); // @output 4341
+    printResult(4341 | ((1 & 234) ^ 1)); // @output 4341
+}
+
+function printResult(int result) {
+    io:println(result);
+}
+
+Test-Case: output
+Description: Test check expression as operands.
+Labels: binary-bitwise-expr, check, checkpanic, DecimalNumber, error-type, if-else-stmt, int, optional-type
+
+function init() returns error? {
+    printResult(check getData(4) & 5); // @output 4
+    printResult(5 & check getData(4)); // @output 4
+    printResult(check getData(52) & check getData(52)); // @output 52
+
+    printResult(checkpanic getData(4) & 5); // @output 4
+    printResult(5 & checkpanic getData(4)); // @output 4
+    printResult(checkpanic getData(52) & checkpanic getData(52)); // @output 52
+}
+
+function getData(int? data) returns int|error {
+    if data is int {
+        return data;
+    } else {
+        return error("No data");
+    }
+}
+
+function printResult(int result) {
+    io:println(result);
+}
