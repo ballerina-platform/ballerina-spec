@@ -1,3 +1,33 @@
+Test-Case: parser-error
+Description: Test syntax errors in mapping constructor
+Labels: any, mapping-constructor-expr, map-type, readonly-field, string
+
+function errorFunction() {
+    map<any> _ = {5 : 5}; //@error field name should be an identifer
+
+    map<any> _ = {getFieldName () : 5}; //@error field name should be an identifer
+
+    map<any> _ = {fieldA "fddfd"}; //@error missing colon
+
+    map<any> _ = {fieldA: "fddfd", }; //@error specific field
+
+    map<any> _ = {fieldA: "fddfd", fieldB:}; //@error missing value expression
+
+    map<any> _ = {fieldA: "fddfd", "fieldB"}; //@error missing colon and value expression
+
+    map<any> _ = {fieldA: "fddfd", ...}; //@error missing spread field
+
+    map<any> _ = {[fieldA: "fddfd"}; //@error missing close bracket
+
+    map<any> _ = {fieldA]: "fddfd"}; //@error missing open bracket
+
+    map<any> a = {["fieldA"]}; //@error missing colon and value expression
+
+    map<any> _ = {readonly }; //@error missing specific field
+
+    map<any> _ = {fieldA: "fddfd"; //@error missing close brace
+}
+
 Test-Case: output
 Description: Test basic mapping constructor expression.
 Labels: DecimalFloatingPointNumber, mapping-constructor-expr, nil-literal, string
@@ -20,7 +50,7 @@ function init() {
 Test-Case: output
 Description: Test a specific-field that consists of just a variable name x is equivalent to a field x: x.
 Labels: any, byte, DecimalFloatingPointNumber, float, mapping-constructor-expr, map-type, nil-literal, 
-        string
+        record-type, string
 
 function init() {
     int c = 45;
@@ -67,7 +97,7 @@ function printResult(map<any> result) {
 
 Test-Case: output
 Description: Test basic mapping constructor expression with readonly specific fields.
-Labels: any, byte, mapping-constructor-expr, map-type, readonly-field, string
+Labels: any, mapping-constructor-expr, map-type, readonly-field, string
 
 function init() {
     int a = 45;
@@ -130,8 +160,8 @@ function errorFunction() {
 
 Test-Case: output
 Description: Test usage of spread field in mapping constructor using closed record types.
-Labels: any, error-type, error-constructor-expr, mapping-constructor-expr, map-type
-       record-type, spread-field, string
+Labels: any, boolean, error-type, error-constructor-expr, mapping-constructor-expr, map-type
+       record-type, spread-field, string, union-type
 
 function init() {
     record {|int fieldA1; boolean fieldA2;|} a = {fieldA1: 4534, fieldA2: false};
@@ -530,7 +560,7 @@ type MyRecord2 record {
 function init() {
     printTypeOfResult({fieldA1: "String1", fieldA2: "String2"}); // @output true
 
-    printTypeOfResult({field1: 0, field2: "mouse", field3: false}); // @output true
+    printTypeOfResult2({field1: 0, field2: "mouse", field3: false}); // @output true
 
     printTypeOfResult({field1: 0, field2: "mouse", field3: false}); // @output true
 
@@ -538,29 +568,35 @@ function init() {
 
     printTypeOfResult({field1: 23, field2: "Car", "field3": false}); // @output true
 
-    printTypeOfResult({field1: 23, field2: "Car"}); // @output true
+    printTypeOfResult2({field1: 23, field2: "Car"}); // @output true
 
-    printTypeOfResult({field1: 43, myField1: 3443, myField2: false}); // @output true
+    printTypeOfResult3({field1: 43, myField1: 3443}); // @output true
 
     printTypeOfResult({myField1: 776777777, myField2: true}); // @output true
 
-    printTypeOfResult({field1: 0, field2: "mouse", field3: false}); // @output true
-
     printTypeOfResult({field1: 0, field2: "mouse", "field3": false}); // @output true
 
-    printTypeOfResult({field1: 6756, field2: "cat", field3: false}); // @output true
+    printTypeOfResult2({field1: 6756, field2: "cat", field3: false}); // @output true
 
     printTypeOfResult({field1: 6756, field2: "cat", "other": "false"}); // @output true
 
     printTypeOfResult({field1: 43, myField1: 3443, myField2: false}); // @output true
 
-    printTypeOfResult({field1: 43, myField1: 3443, myField2: false, "other": 43434}); // @output true
+    printTypeOfResult3({field1: 43, myField1: 3443, "other": 43434}); // @output true
 
     printTypeOfResult({myField1: 776777777, myField2: true, "other": false}); // @output true
 }
 
 function printTypeOfResult(map<any>|int[] result) {
     io:println(result is map<any>);
+}
+
+function printTypeOfResult2(record {|int field1; string field2; boolean field3?;|}|string result) {
+    io:println(result is record {|int field1; string field2; boolean field3?;|});
+}
+
+function printTypeOfResult3(map<int>|int result) {
+    io:println(result is map<int>);
 }
 
 Test-Case: panic
@@ -645,7 +681,7 @@ Test-Case: output
 Description: Test if the applicable contextually expected type is a union type descriptor, then any members of the 
              union that are inconsistent with the field names specified in a specific-field in the 
              mapping-constructor-expr will be ignored.
-Labels: anydata, is-expr, mapping-constructor-expr, map-type, module-type-defn, record-rest-descriptor, 
+Labels: anydata, is-expr, mapping-constructor-expr, map-type, module-type-defn, never, record-rest-descriptor, 
        record-type, record-type-inclusion, string, union-type
 
 type MyRecord1 record {|
@@ -658,6 +694,11 @@ type MyRecord2 record {
     boolean myField2;
 };
 
+type MyRecord3 record {
+    never name;
+    string color;
+};
+
 type UnionRecord MyRecord1|MyRecord2;
 
 function init() {
@@ -665,31 +706,40 @@ function init() {
     io:println(a is map<string>); // @output true
 
     record {|string fieldA; int fieldB;|}|record {|string fieldC; int fieldD;|} b = {fieldA: "String1", fieldB: 44};
-    io:println(b is record {| string fieldA; int fieldB; |}); // @output true
+    io:println(b is record {|string fieldA; int fieldB;|}); // @output true
 
     record {|int field1; string field2; boolean field3?;|}|record {||} c = {field1: 0, field2: "mouse", field3: false};
-    io:println(c is record {| int field1; string field2; boolean field3?; |}); // @output true
+    io:println(c is record {|int field1; string field2; boolean field3?;|}); // @output true
 
     record {|int field1; string field2; boolean field3?;|}|record {||} d = {field1: 0, field2: "mouse"};
-    io:println(d is record {| int field1; string field2; boolean field3?; |}); // @output true
+    io:println(d is record {|int field1; string field2; boolean field3?;|}); // @output true
 
     record {|int field1; string field2; boolean...; |}|record {|string field2;|} e = {field1: 23, field2: "Car", "field3": false};
-    io:println(e is record {| int field1; string field2; boolean...; |}); // @output true
+    io:println(e is record {|int field1; string field2; boolean...; |}); // @output true
 
     record {|int field1; *MyRecord1;|}|record {|int field1;|} g = {field1: 43, myField1: 3443, myField2: false};
-    io:println(g is record {| int field1; int myField1; boolean myField2; |}); // @output true
+    io:println(g is record {|int field1; int myField1; boolean myField2;|}); // @output true
 
     MyRecord1|record {|int otherField;|} h = {myField1: 776777777, myField2: true};
     io:println(h is MyRecord1); // @output true
 
     record {boolean field3;}|record {||} i = {"field1": 0, "field2": "mouse", field3: false};
-    io:println(i is record {| boolean field3; anydata...; |}); // @output true
+    io:println(i is record {|boolean field3; anydata...; |}); // @output true
 
     MyRecord2|MyRecord1 o = {myField1: "776777777", myField2: true, "other": false};
     io:println(o is MyRecord2); // @output true
 
     UnionRecord p = {myField1: "776777777", myField2: true, "other": false};
     io:println(p is MyRecord2); // @output true
+
+    MyRecord3|map<string> q = {color: "blue", name: "john"};
+    io:println(q is map<string>); // @output true
+
+    MyRecord3|record {string name; string color;} r = {color: "blue", name: "john"};
+    io:println(r is record {string name; string color;}); // @output true
+
+    record {|int id; string name?;|}|record {|int id;|} s = {id: 23, name: "mack"};
+    io:println(s is record {|int id; string name?;|}); // @output true
 }
 
 Test-Case: error
@@ -713,35 +763,35 @@ type MyRecord2 record {
 type UnionRecord MyRecord1|MyRecord2;
 
 function errorFunction() {
-    map<int>|map<boolean> _ = {field1: 1, field2: 2}; // @error remaining type is a union
+    map<int>|map<boolean> _ = {field1: 1, field2: 2}; // @error ambiguous type; remaining type is a union
 
-    map<int>|map<boolean> _ = {field1: true, field2: false}; // @error remaining type is a union
+    map<int>|map<boolean> _ = {field1: true, field2: false}; // @error ambiguous type; remaining type is a union
 
-    map<string>|record {|boolean fieldA1; string fieldA2;|} _ = {fieldA1: "String1", fieldA2: "String2"}; // @error remaining type is a union
+    map<string>|record {|boolean fieldA1; string fieldA2;|} _ = {fieldA1: "String1", fieldA2: "String2"}; // @error ambiguous type; remaining type is a union
 
-    record {|int fieldA; int fieldB;|}|record {|string fieldA; int fieldB;|} _ = {fieldA: "String1", fieldB: 44}; // @error remaining type is a union
+    record {|int fieldA; int fieldB;|}|record {|string fieldA; int fieldB;|} _ = {fieldA: "String1", fieldB: 44}; // @error ambiguous type; remaining type is a union
 
-    record {|int field1; string field2; boolean field3?;|}|record {|int field1; int field2;|} _ = {field1: 0, field2: "mouse"}; // @error remaining type is a union
+    record {|int field1; string field2; boolean field3?;|}|record {|int field1; int field2;|} _ = {field1: 0, field2: "mouse"}; // @error ambiguous type; remaining type is a union
 
-    record {|string field2; boolean...; |}|record {|string field2; int...; |} _ = {field2: "Car", "field3": false}; // @error remaining type is a union
+    record {|string field2; boolean...; |}|record {|string field2; int...; |} _ = {field2: "Car", "field3": false}; // @error ambiguous type; remaining type is a union
     
-    record {string field2;}|record {int field2;} _ = {field2: "Car", "field3": false}; // @error remaining type is a union
+    record {string field2;}|record {int field2;} _ = {field2: "Car", "field3": false}; // @error ambiguous type; remaining type is a union
 
-    record {|int field1; *MyRecord1;|}|record {|int field1; int myField1; int myField2;|} _ = {field1: 43, myField1: 3443, myField2: false}; // @error remaining type is a union
+    record {|int field1; *MyRecord1;|}|record {|int field1; int myField1; int myField2;|} _ = {field1: 43, myField1: 3443, myField2: false}; // @error ambiguous type; remaining type is a union
 
-    MyRecord1|record {|int myField1; int myField2;|} _ = {myField1: 776777777, myField2: true}; // @error remaining type is a union
+    MyRecord1|record {|int myField1; int myField2;|} _ = {myField1: 776777777, myField2: true}; // @error ambiguous type; remaining type is a union
 
-    MyRecord2|MyRecord1 _ = {myField1: "776777777", myField2: true}; // @error remaining type is a union
+    MyRecord2|MyRecord1 _ = {myField1: "776777777", myField2: true}; // @error ambiguous type; remaining type is a union
 
-    UnionRecord _ = {myField1: "776777777", myField2: true}; // @error remaining type is a union
+    UnionRecord _ = {myField1: "776777777", myField2: true}; // @error ambiguous type; remaining type is a union
 }
 
 Test-Case: error
 Description: Test if the applicable contextually expected type is a union type descriptor, then any members of the 
              union that are inconsistent with the field names specified in a specific-field in the mapping-constructor-expr 
              will be ignored; it is a compile-time error if this does not leave a single mapping type descriptor.
-Labels: any, int:Unsigned16, json, mapping-constructor-expr, map-type, module-type-defn, 
-       record-rest-descriptor, record-type, record-type-inclusion, string, union-type
+Labels: any, int:Unsigned16, json, mapping-constructor-expr, map-type, module-type-defn, never,
+        record-rest-descriptor, record-type, record-type-inclusion, string, union-type
 
 type MyRecord1 record {|
     int myField1;
@@ -751,6 +801,11 @@ type MyRecord1 record {|
 type MyRecord2 record {
     int myField1;
     boolean myField2;
+};
+
+type MyRecord3 record {
+    int hight;
+    never age;
 };
 
 type UnionRecord MyRecord1|MyRecord2;
@@ -783,6 +838,16 @@ function errorFunction() {
     MyRecord2|MyRecord1 _ = {myField1: 776777777, myField2: true}; // @error ambiguous type; remaining type is a union
 
     UnionRecord _ = {myField1: 776777777, myField2: true}; // @error ambiguous type; remaining type is a union
+
+    map<int>|map<byte> _ = {field1: "string", field2: 2}; // @error incompatible types
+
+    record {|int id;|}|map<string> _ = {no: 2}; // @error incompatible types
+
+    record {|int id; string name;|}|record {|int no; string address;|} _ = {no: 2, name: "john"}; // @error incompatible types
+
+    MyRecord1|MyRecord3 _ = {hight: 186, age: 43}; // @error incompatible types
+    
+    record {|int id; string name?;|}|record {|int id;|} s = {id: 23}; // @error ambiguous type; remaining type is a union
 }
 
 Test-Case: output
@@ -954,7 +1019,7 @@ function init() {
 Test-Case: output
 Description: Test If there are fields specified as a computed-name-field, then there will also be a 
              record-rest-descriptor T..., where T is the union of the broad types of the value-expr in all such 
-             fields when thee is no contextually expected type.
+             fields when there is no contextually expected type.
 Labels: computed-name-field, is-expr, mapping-constructor-expr, record-rest-descriptor, record-type, 
        spread-field, string, union-type, var
 
@@ -1725,7 +1790,7 @@ Description: Test mapping constructor expression containing additive expression 
 Labels: additive-expr, computed-name-field, DecimalNumber, mapping-constructor-expr, string, var
 
 function init() {
-    var mapVar = {fieldA: 4343 + 3, fieldB: 4343 - 3, ["field" +"C"]: 67};
+    var mapVar = {fieldA: 4343 + 3, fieldB: 4343 - 3, ["field" + "C"]: 67};
     io:println(mapVar); // @output {"fieldA":4346,"fieldB":4340,"fieldC":67}
 }
 
@@ -1743,7 +1808,7 @@ Description: Test mapping constructor expression containing relational expressio
 Labels: DecimalNumber, mapping-constructor-expr, relational-expr, var
 
 function init() {
-    var mapVar = {fieldA: 1<5, fieldB: 1>5, fieldC: 1<=5, fieldD: 1>=5};
+    var mapVar = {fieldA: 1 < 5, fieldB: 1 > 5, fieldC: 1 <= 5, fieldD: 1 >= 5};
     io:println(mapVar); // @output {"fieldA":true,"fieldB":false,"fieldC":true,"fieldD":false}
 }
 
@@ -1798,8 +1863,8 @@ function init() {
 
 Test-Case: output
 Description: Test mapping constructor expression containing checking expression as expressions.
-Labels: check, checkpanic, computed-name-field, mapping-constructor-expr, record-type, spread-field, string, union-type,
-       var
+Labels: check, checkpanic, computed-name-field, mapping-constructor-expr, optional-type, record-type, spread-field, 
+        string, union-type, var
 
 function init() returns error? {
     string|error stringVar = "ballerina";
@@ -1849,34 +1914,4 @@ function init() {
 
     var mapVar3 = {fieldA: xmlVar.<e>, fieldB: xmlElementVar/*, fieldC: xmlElementVar/<e1>};
     io:println(mapVar3); // @output {"fieldA":`<e>content</e><e>content2</e>`,"fieldB":`content<e1>content</e1>`,"fieldC":`<e1>content</e1>`}
-}
-
-Test-Case: parser-error
-Description: Test syntax errors in mapping constructor
-Labels: any, mapping-constructor-expr, map-type, readonly-field, string
-
-function errorFunction() {
-    map<any> _ = {5 : 5}; //@error field name should be an identifer
-
-    map<any> _ = {getFieldName () : 5}; //@error field name should be an identifer
-
-    map<any> _ = {fieldA "fddfd"}; //@error missing colon
-
-    map<any> _ = {fieldA: "fddfd", }; //@error specific field
-
-    map<any> _ = {fieldA: "fddfd", fieldB:}; //@error missing value expression
-
-    map<any> _ = {fieldA: "fddfd", "fieldB"}; //@error missing colon and value expression
-
-    map<any> _ = {fieldA: "fddfd", ...}; //@error missing spread field
-
-    map<any> _ = {[fieldA: "fddfd"}; //@error missing close bracket
-
-    map<any> _ = {fieldA]: "fddfd"}; //@error missing open bracket
-
-    map<any> a = {["fieldA"]}; //@error missing colon and value expression
-
-    map<any> _ = {readonly }; //@error missing specific field
-
-    map<any> _ = {fieldA: "fddfd"; //@error missing close brace
 }
