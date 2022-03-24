@@ -685,6 +685,9 @@ function init() {
     int|string a = 1;
     io:println(<int>a is ONE); // @output true
     io:println(<int>a is Type); // @output true
+    io:println(<int>2 is byte); // @output true
+    io:println(<int>2 is int:Signed16); // @output true
+    io:println(<int>2 is int:Unsigned32); // @output true
 }
 
 Test-Case: output
@@ -1311,6 +1314,47 @@ function init() {
 }
 
 Test-Case: output
+Description: Test finite type as type descriptor in type test expression.
+Labels: int, is-expr, module-const-decl, module-type-defn, singleton-type, string, union-type
+
+const TEN = 10;
+const TWNETY = 20;
+const A = "A";
+
+type Numbers 10|20;
+
+type Numbers2 TEN|TWNETY;
+
+type Strings "A"|"B";
+
+type Any "A"|10;
+
+type Any2 TEN|A;
+
+function init() {
+    int a = 10;
+    io:println(a is Numbers); // @output true
+    io:println(a is 10|20); // @output true
+    io:println(a is Numbers2); // @output true
+    io:println(a is TEN|TWNETY); // @output true
+    io:println(a is Any); // @output true
+    io:println(a is Any2); // @output true
+    io:println(a is "A"|10); // @output true
+    io:println(a is 20|30); // @output false
+    io:println(a is "A"|20); // @output false
+
+    string b = "A";
+    io:println(b is Strings); // @output true
+    io:println(b is "A"|"B"); // @output true
+    io:println(b is Any); // @output true
+    io:println(b is 10|"A"); // @output true
+    io:println(b is Any2); // @output true
+    io:println(b is A|TEN); // @output true
+    io:println(b is 20|"B"); // @output false
+    io:println(b is "C"|"D"); // @output false
+}
+
+Test-Case: output
 Description: Test any type as type descriptor in type test expression.
 Labels: any, boolean, decimal, error-constructor-expr, error-type, float, int, is-expr, map-type,
         mapping-constructor-expr, module-type-defn, record-type, string, table-constructor-expr, table-type,
@@ -1905,6 +1949,21 @@ function init() {
 }
 
 Test-Case: output
+Description: Test assigning the result of type test expression to subtypes of boolean.
+Fail-Issue: ballerina-platform/ballerina-lang#34711
+Labels: DecimalNumber, int, is-expr, union-type
+
+type Boolean true|false;
+
+function init() {
+    true|false a = 1 is int;
+    io:println(a); // @output true
+
+    Boolean b = 1 is int;
+    io:println(b); // @output true
+}
+
+Test-Case: output
 Description: Test type test expression at module level.
 Labels: boolean, DecimalNumber, int, is-expr, module-init-var-decl
 
@@ -1913,6 +1972,58 @@ boolean b = 1 is int;
 function init() {
     io:println(b); // @output true
 }
+
+Test-Case: output
+Description: Test type narrowing with type test expression.
+Labels: int, is-expr, module-type-defn, optional-type, record-type, string, union-type
+
+type A record {|
+    string a;
+|};
+
+type B record {|
+    int a;
+|};
+
+type C A|B;
+
+function init() {
+    int|string a = 10;
+    string value = "";
+    if a is int {
+        value = "int";
+    } else {
+        value = "string";
+    }
+    io:println(value); // @output int
+
+    C? b = {a : 1};
+    if b is A {
+        value = "A";
+    } else if b is B {
+        value = "B";
+    } else if b is () {
+        value = "nil";
+    }
+    io:println(value); // @output B
+
+    if a is string {
+        return;
+    }
+    int c = a;
+    io:println(c); // @output 10
+
+    int|string? d = "ABC";
+    if d is int {
+        return;
+    }
+    if d is () {
+        return;
+    }
+    value = d;
+    io:println(value); // @output ABC
+}
+
 
 Test-Case: error
 Description: Test assigning the result of type test expression to an incompatible type.
@@ -1923,9 +2034,47 @@ function errorFunction() {
 }
 
 Test-Case: error
-Description: Test using an unknown type as the type descriptor.
+Description: Test using a type that will never be matched to the type of the expression in type test expression.
+Labels: boolean, int, is-expr, union-type
+
+function init() {
+    int a = 10;
+    boolean _ = a is string; // @error 'int' will not be matched to 'string'
+
+    10|20 b = 20;
+    boolean _ = b is "A"; // @error '10|20' will not be matched to 'A'
+}
+
+Test-Case: error
+Description: Test using a type that will never be matched to the narrowed type of the expression in type test
+             expression.
+Labels: boolean, if-else-stmt, int, is-expr, optional-type, return-stmt, string, union-type
+
+function init() {
+    int? a = 10;
+    if a is int {
+    } else if a is string { // @error '()' will not be matched to 'string'
+    }
+
+    if a is int {
+        return;
+    }
+    boolean _ = a is string; // @error '()' will not be matched to 'string'
+}
+
+Test-Case: parser-error
+Description: Test using an unknown type as the type descriptor in type test expression.
 Labels: boolean, DecimalNumber, is-expr
 
 function errorFunction() {
     boolean _ = 1 is expr; // @error unknown type 'expr'
+}
+
+Test-Case: parser-error
+Description: Test using an expression as the type descriptor in type test expression.
+Labels: boolean, DecimalNumber, int, is-expr
+
+function errorFunction() {
+    int a = 10;
+    boolean _ = 10 is a; // @error unknown type 'a'
 }
