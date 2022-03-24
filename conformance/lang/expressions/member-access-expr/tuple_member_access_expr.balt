@@ -9,7 +9,7 @@ function errorFunction() {
 }
 
 Test-Case: output
-Description: Test whether the static type of key expression is subtype of int when the basic type of the
+Description: Test using a value of a static type that is a subtype of int as the key expression when the basic type of the
              container expression is a tuple.
 Labels: float, int, list-constructor-expr, member-access-expr, module-const-decl, module-type-defn, string, tuple-type,
         union-type
@@ -39,9 +39,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test whether the static type of key expression is subtype of int when the basic type of the
+Description: Test using a value of a static type that is a subtype of int as the key expression when the basic type of the
              container expression is a tuple.
-Fail-Issue: ballerina-platform/ballerina-lang#33346
 Labels: byte, float, int, int:Signed16, int:Signed32, int:Signed8, list-constructor-expr, member-access-expr,
         module-type-defn, string, tuple-type, union-type
 
@@ -125,7 +124,7 @@ Labels: additive-expr, float, int, list-constructor-expr, member-access-expr, st
 function init() {
     [int, string, float...] t = [10, "ABC", 10.5, 20.5, 30.5, 40.5];
 
-    io:println(t[-1-2]); // @panic index out of range
+    _ = t[-1-2]; // @panic index out of range
 }
 
 Test-Case: panic
@@ -137,7 +136,7 @@ Labels: float, int, list-constructor-expr, member-access-expr, string, tuple-typ
 function init() {
     [int, string, float...] t = [10, "ABC", 10.5, 20.5, 30.5, 40.5];
 
-    io:println(t[6]); // @panic index out of range
+    _ = t[6]; // @panic index out of range
 }
 
 Test-Case: panic
@@ -149,7 +148,7 @@ Labels: float, int, list-constructor-expr, member-access-expr, string, tuple-typ
 function init() {
     [int, string, float...] t = [10, "ABC", 10.5, 20.5, 30.5, 40.5];
 
-    io:println(t[10]); // @panic index out of range
+    _ = t[10]; // @panic index out of range
 }
 
 Test-Case: output
@@ -591,4 +590,14 @@ function errorFunction() {
     [int, string] t = [10, "CL"];
 
     t[1] = 1; // @error expected string, found int
+}
+
+Test-Case: error
+Description: Test invalid member access using multi key expression.
+Labels: int, list-constructor-expr, member-access-expr, string, tuple-type
+
+function errorFunction() {
+    [int, string] t = [10, "CL"];
+
+    _ = t[1, 2]; // @error member access with multi-key expression is not allowed with tuple
 }

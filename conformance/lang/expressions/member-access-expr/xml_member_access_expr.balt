@@ -8,8 +8,8 @@ function errorFunction() {
 }
 
 Test-Case: output
-Description: Test whether the static type of key expression is a subtype of int when the static type of the
-             container expression is an xml.
+Description: Test using a value of a static type that is a builtin subtype of int as the key expression when the static
+             type of the container expression is an xml.
 Labels: byte, int, int:Signed16, int:Signed32, int:Signed8, int:Unsigned32, int:Unsigned8, member-access-expr, xml
 
 function init() {
@@ -43,40 +43,68 @@ function init() {
 }
 
 Test-Case: output
-Description: Test whether the static type of key expression is a subtype of int when the static type of the
+Description: Test using a value of a static type that is a subtype of int as the key expression when the static type of the
              container expression is an xml.
-Labels: byte, int, int:Signed16, int:Signed8, int:Unsigned32, int:Unsigned8, member-access-expr, xml
+Labels: member-access-expr, module-const-decl, module-type-defn, union-type, xml
 
-const i8 = 0;
+const i1 = 0;
+const i2 = 1;
 
-type IntType1 int:Signed8|int:Signed16;
-
-type IntType2 i8|2;
+type IntType1 i1|i2;
 
 function init() {
     xml authors = xml `<name>Sherlock Holmes</name><name>Enid Blyton</name><name>Dan Brown</name><name>Nicholas Sparks</name>`;
 
-    io:println(authors[i8]); // @output <name>Sherlock Holmes</name>
+    io:println(authors[i1]); // @output <name>Sherlock Holmes</name>
 
-    IntType1 i9 = 1;
-    io:println(authors[i9]); // @output <name>Enid Blyton</name>
-
-    IntType2 i10 = 2;
-    io:println(authors[i10]); // @output <name>Dan Brown</name>
-
-    1|3 i11 = 3;
-    io:println(authors[i11]); // @output <name>Nicholas Sparks</name>
-
-    int:Unsigned8|int:Unsigned32 i12 = 2;
-    io:println(authors[i12]); // @output <name>Dan Brown</name>
-
-    int:Unsigned16|byte i13 = 1;
-    io:println(authors[i13]); // @output <name>Enid Blyton</name>
+    IntType1 i3 = 1;
+    io:println(authors[i3]); // @output <name>Enid Blyton</name>
 }
 
 Test-Case: output
-Description: Test whether the static type of key expression is a subtype of int when the static type of the
-             container expression is an xml:Element.
+Description: Test using a value of a static type that is a subtype of int as the key expression when the static type of the
+             container expression is an xml.
+Labels: byte, int:Signed16, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8, member-access-expr,
+        module-type-defn, union-type, xml
+
+type IntType1 int:Signed8|int:Signed16;
+
+function init() {
+    xml authors = xml `<name>Sherlock Holmes</name><name>Enid Blyton</name><name>Dan Brown</name><name>Nicholas Sparks</name>`;
+
+    IntType1 i1 = 1;
+    io:println(authors[i1]); // @output <name>Enid Blyton</name>
+
+    int:Unsigned8|int:Unsigned32 i2 = 2;
+    io:println(authors[i2]); // @output <name>Dan Brown</name>
+
+    int:Unsigned16|byte i3 = 1;
+    io:println(authors[i3]); // @output <name>Enid Blyton</name>
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a subtype of int as the key expression when the static type of the
+             container expression is an xml.
+Labels: member-access-expr, module-type-defn, singleton-type, union-type, xml
+
+type IntType1 1|2;
+
+function init() {
+    xml authors = xml `<name>Sherlock Holmes</name><name>Enid Blyton</name><name>Dan Brown</name><name>Nicholas Sparks</name>`;
+
+    IntType1 i1 = 1;
+    io:println(authors[i1]); // @output <name>Enid Blyton</name>
+
+    1|2 i2 = 2;
+    io:println(authors[i2]); // @output <name>Dan Brown</name>
+
+    1 i3 = 1;
+    io:println(authors[i3]); // @output <name>Enid Blyton</name>
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a builtin subtype of int as the key expression when the static
+             type of the container expression is an xml:Element.
 Labels: byte, int, int:Signed16, int:Signed32, int:Signed8, int:Unsigned32, int:Unsigned8, member-access-expr,
         xml:Element
 
@@ -111,41 +139,68 @@ function init() {
 }
 
 Test-Case: output
-Description: Test whether the static type of key expression is a subtype of int when the static type of the
+Description: Test using a value of a static type that is a subtype of int as the key expression when the static type of the
              container expression is an xml:Element.
-Labels: byte, int, int:Signed16, int:Signed32, int:Signed8, int:Unsigned32, int:Unsigned8, member-access-expr,
-        xml:Element
+Labels: member-access-expr, module-const-decl, module-type-defn, union-type, xml:Element
 
-const i8 = 0;
+const i1 = 0;
+const i2 = 1;
 
-type IntType1 int:Signed8|int:Signed16;
-
-type IntType2 i8|2;
+type IntType1 i1|i2;
 
 function init() {
     xml:Element author = xml `<name>Sherlock Holmes</name>`;
 
-    io:println(author[i8]); // @output <name>Sherlock Holmes</name>
+    io:println(author[i1]); // @output <name>Sherlock Holmes</name>
 
-    IntType1 i9 = 0;
-    io:println(author[i9]); // @output <name>Sherlock Holmes</name>
-
-    IntType2 i10 = 0;
-    io:println(author[i10]); // @output <name>Sherlock Holmes</name>
-
-    1|0 i11 = 0;
-    io:println(author[i11]); // @output <name>Sherlock Holmes</name>
-
-    int:Unsigned8|int:Unsigned32 i12 = 0;
-    io:println(author[i12]); // @output <name>Sherlock Holmes</name>
-
-    int:Unsigned16|byte i13 = 0;
-    io:println(author[i13]); // @output <name>Sherlock Holmes</name>
+    IntType1 i3 = 0;
+    io:println(author[i3]); // @output <name>Sherlock Holmes</name>
 }
 
 Test-Case: output
-Description: Test whether the static type of key expression is a subtype of int when the static type of the
-             container expression is an xml:ProcessingInstruction.
+Description: Test using a value of a static type that is a subtype of int as the key expression when the static type of the
+             container expression is an xml:Element.
+Labels: byte, int:Signed16, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8, member-access-expr,
+        module-type-defn, union-type, xml:Element
+
+type IntType1 int:Signed8|int:Signed16;
+
+function init() {
+    xml:Element author = xml `<name>Sherlock Holmes</name>`;
+
+    IntType1 i1 = 0;
+    io:println(author[i1]); // @output <name>Sherlock Holmes</name>
+
+    int:Unsigned8|int:Unsigned32 i2 = 0;
+    io:println(author[i2]); // @output <name>Sherlock Holmes</name>
+
+    int:Unsigned16|byte i3 = 0;
+    io:println(author[i3]); // @output <name>Sherlock Holmes</name>
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a subtype of int as the key expression when the static type of the
+             container expression is an xml:Element.
+Labels: member-access-expr, module-type-defn, singleton-type, union-type, xml:Element
+
+type IntType1 1|0;
+
+function init() {
+    xml:Element author = xml `<name>Sherlock Holmes</name>`;
+
+    IntType1 i1 = 0;
+    io:println(author[i1]); // @output <name>Sherlock Holmes</name>
+
+    0|2 i2 = 0;
+    io:println(author[i2]); // @output <name>Sherlock Holmes</name>
+
+    0 i3 = 0;
+    io:println(author[i3]); // @output <name>Sherlock Holmes</name>
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a builtin subtype of int as the key expression when the static
+             type of the container expression is an xml:ProcessingInstruction.
 Labels: byte, int, int:Signed16, int:Signed32, int:Signed8, int:Unsigned32, int:Unsigned8, member-access-expr,
         xml:ProcessingInstruction
 
@@ -180,41 +235,68 @@ function init() {
 }
 
 Test-Case: output
-Description: Test whether the static type of key expression is a subtype of int when the static type of the
+Description: Test using a value of a static type that is a subtype of int as the key expression when the static type of the
              container expression is an xml:ProcessingInstruction.
-Labels: byte, int, int:Signed16, int:Signed32, int:Signed8, int:Unsigned32, int:Unsigned8, member-access-expr,
-        xml:ProcessingInstruction
+Labels: member-access-expr, module-const-decl, module-type-defn, union-type, xml:ProcessingInstruction
 
-const i8 = 0;
+const i1 = 0;
+const i2 = 1;
 
-type IntType1 int:Signed8|int:Signed16;
-
-type IntType2 i8|2;
+type IntType1 i1|i2;
 
 function init() {
     xml:ProcessingInstruction style = xml `<?xml-stylesheet type="text/xsl" href="style.xsl"?>`;
 
-    io:println(style[i8]); // @output <?xml-stylesheet type="text/xsl" href="style.xsl"?>
+    io:println(style[i1]); // @output <?xml-stylesheet type="text/xsl" href="style.xsl"?>
 
-    IntType1 i9 = 0;
-    io:println(style[i9]); // @output <?xml-stylesheet type="text/xsl" href="style.xsl"?>
-
-    IntType2 i10 = 0;
-    io:println(style[i10]); // @output <?xml-stylesheet type="text/xsl" href="style.xsl"?>
-
-    1|0 i11 = 0;
-    io:println(style[i11]); // @output <?xml-stylesheet type="text/xsl" href="style.xsl"?>
-
-    int:Unsigned8|int:Unsigned32 i12 = 0;
-    io:println(style[i12]); // @output <?xml-stylesheet type="text/xsl" href="style.xsl"?>
-
-    int:Unsigned16|byte i13 = 0;
-    io:println(style[i13]); // @output <?xml-stylesheet type="text/xsl" href="style.xsl"?>
+    IntType1 i3 = 0;
+    io:println(style[i3]); // @output <?xml-stylesheet type="text/xsl" href="style.xsl"?>
 }
 
 Test-Case: output
-Description: Test whether the static type of key expression is a subtype of int when the static type of the
-             container expression is an xml:Comment.
+Description: Test using a value of a static type that is a subtype of int as the key expression when the static type of the
+             container expression is an xml:ProcessingInstruction.
+Labels: byte, int:Signed16, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8, member-access-expr,
+        module-type-defn, union-type, xml:ProcessingInstruction
+
+type IntType1 int:Signed8|int:Signed16;
+
+function init() {
+    xml:ProcessingInstruction style = xml `<?xml-stylesheet type="text/xsl" href="style.xsl"?>`;
+
+    IntType1 i1 = 0;
+    io:println(style[i1]); // @output <?xml-stylesheet type="text/xsl" href="style.xsl"?>
+
+    int:Unsigned8|int:Unsigned32 i2 = 0;
+    io:println(style[i2]); // @output <?xml-stylesheet type="text/xsl" href="style.xsl"?>
+
+    int:Unsigned16|byte i3 = 0;
+    io:println(style[i3]); // @output <?xml-stylesheet type="text/xsl" href="style.xsl"?>
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a subtype of int as the key expression when the static type of the
+             container expression is an xml:ProcessingInstruction.
+Labels: member-access-expr, module-type-defn, singleton-type, union-type, xml:ProcessingInstruction
+
+type IntType1 1|0;
+
+function init() {
+    xml:ProcessingInstruction style = xml `<?xml-stylesheet type="text/xsl" href="style.xsl"?>`;
+
+    IntType1 i1 = 0;
+    io:println(style[i1]); // @output <?xml-stylesheet type="text/xsl" href="style.xsl"?>
+
+    0|2 i2 = 0;
+    io:println(style[i2]); // @output <?xml-stylesheet type="text/xsl" href="style.xsl"?>
+
+    0 i3 = 0;
+    io:println(style[i3]); // @output <?xml-stylesheet type="text/xsl" href="style.xsl"?>
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a builtin subtype of int as the key expression when the static
+             type of the container expression is an xml:Comment.
 Labels: byte, int, int:Signed16, int:Signed32, int:Signed8, int:Unsigned32, int:Unsigned8, member-access-expr,
         xml:Comment
 
@@ -249,41 +331,68 @@ function init() {
 }
 
 Test-Case: output
-Description: Test whether the static type of key expression is a subtype of int when the static type of the
+Description: Test using a value of a static type that is a subtype of int as the key expression when the static type of the
              container expression is an xml:Comment.
-Labels: byte, int, int:Signed16, int:Signed32, int:Signed8, int:Unsigned32, int:Unsigned8, member-access-expr,
-        xml:Comment
+Labels: member-access-expr, module-const-decl, module-type-defn, union-type, xml:Comment
 
-const i8 = 0;
+const i1 = 0;
+const i2 = 1;
 
-type IntType1 int:Signed8|int:Signed16;
-
-type IntType2 i8|2;
+type IntType1 i1|i2;
 
 function init() {
     xml:Comment comment = xml `<!--Comment-->`;
 
-    io:println(comment[i8]); // @output <!--Comment-->
+    io:println(comment[i1]); // @output <!--Comment-->
 
-    IntType1 i9 = 0;
-    io:println(comment[i9]); // @output <!--Comment-->
-
-    IntType2 i10 = 0;
-    io:println(comment[i10]); // @output <!--Comment-->
-
-    1|0 i11 = 0;
-    io:println(comment[i11]); // @output <!--Comment-->
-
-    int:Unsigned8|int:Unsigned32 i12 = 0;
-    io:println(comment[i12]); // @output <!--Comment-->
-
-    int:Unsigned16|byte i13 = 0;
-    io:println(comment[i13]); // @output <!--Comment-->
+    IntType1 i3 = 0;
+    io:println(comment[i3]); // @output <!--Comment-->
 }
 
 Test-Case: output
-Description: Test whether the static type of key expression is a subtype of int when the static type of the
-             container expression is an xml:Text.
+Description: Test using a value of a static type that is a subtype of int as the key expression when the static type of the
+             container expression is an xml:Comment.
+Labels: byte, int:Signed16, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8, member-access-expr,
+        module-type-defn, union-type, xml:Comment
+
+type IntType1 int:Signed8|int:Signed16;
+
+function init() {
+    xml:Comment comment = xml `<!--Comment-->`;
+
+    IntType1 i1 = 0;
+    io:println(comment[i1]); // @output <!--Comment-->
+
+    int:Unsigned8|int:Unsigned32 i2 = 0;
+    io:println(comment[i2]); // @output <!--Comment-->
+
+    int:Unsigned16|byte i3 = 0;
+    io:println(comment[i3]); // @output <!--Comment-->
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a subtype of int as the key expression when the static type of the
+             container expression is an xml:Comment.
+Labels: member-access-expr, module-type-defn, singleton-type, union-type, xml:Comment
+
+type IntType1 1|0;
+
+function init() {
+    xml:Comment comment = xml `<!--Comment-->`;
+
+    IntType1 i1 = 0;
+    io:println(comment[i1]); // @output <!--Comment-->
+
+    0|2 i2 = 0;
+    io:println(comment[i2]); // @output <!--Comment-->
+
+    0 i3 = 0;
+    io:println(comment[i3]); // @output <!--Comment-->
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a builtin subtype of int as the key expression when the static
+             type of the container expression is an xml:Text.
 Labels: byte, int, int:Signed16, int:Signed32, int:Signed8, int:Unsigned32, int:Unsigned8, member-access-expr, xml:Text
 
 function init() {
@@ -317,39 +426,67 @@ function init() {
 }
 
 Test-Case: output
-Description: Test whether the static type of key expression is a subtype of int when the static type of the
+Description: Test using a value of a static type that is a subtype of int as the key expression when the static type of the
              container expression is an xml:Text.
-Labels: byte, int, int:Signed16, int:Signed32, int:Signed8, int:Unsigned32, int:Unsigned8, member-access-expr, xml:Text
+Labels: member-access-expr, module-const-decl, module-type-defn, union-type, xml:Text
 
-const i8 = 0;
+const i1 = 0;
+const i2 = 1;
 
-type IntType1 int:Signed8|int:Signed16;
-
-type IntType2 i8|2;
+type IntType1 i1|i2;
 
 function init() {
     xml:Text text = xml `text1 text2`;
 
-    io:println(text[i8]); // @output text1 text2
+    io:println(text[i1]); // @output text1 text2
 
-    IntType1 i9 = 0;
-    io:println(text[i9]); // @output text1 text2
-
-    IntType2 i10 = 0;
-    io:println(text[i10]); // @output text1 text2
-
-    1|0 i11 = 0;
-    io:println(text[i11]); // @output text1 text2
-
-    int:Unsigned8|int:Unsigned32 i12 = 0;
-    io:println(text[i12]); // @output text1 text2
-
-    int:Unsigned16|byte i13 = 0;
-    io:println(text[i13]); // @output text1 text2
+    IntType1 i3 = 0;
+    io:println(text[i3]); // @output text1 text2
 }
 
 Test-Case: output
-Description: Test whether the static type of key expression is a subtype of int when the static type of the
+Description: Test using a value of a static type that is a subtype of int as the key expression when the static type of the
+             container expression is an xml:Text.
+Labels: byte, int:Signed16, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8, member-access-expr,
+        module-type-defn, union-type, xml:Text
+
+type IntType1 int:Signed8|int:Signed16;
+
+function init() {
+    xml:Text text = xml `text1 text2`;
+
+    IntType1 i1 = 0;
+    io:println(text[i1]); // @output text1 text2
+
+    int:Unsigned8|int:Unsigned32 i2 = 0;
+    io:println(text[i2]); // @output text1 text2
+
+    int:Unsigned16|byte i3 = 0;
+    io:println(text[i3]); // @output text1 text2
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a subtype of int as the key expression when the static type of the
+             container expression is an xml:Text.
+Labels: member-access-expr, module-type-defn, singleton-type, union-type, xml:Text
+
+type IntType1 1|0;
+
+function init() {
+    xml:Text text = xml `text1 text2`;
+
+    IntType1 i1 = 0;
+    io:println(text[i1]); // @output text1 text2
+
+    0|2 i2 = 0;
+    io:println(text[i2]); // @output text1 text2
+
+    0 i3 = 0;
+    io:println(text[i3]); // @output text1 text2
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a subtype of int as the key expression when the static type of the
              container expression is a user defined subtype of xml.
 Fail-Issue: ballerina-platform/ballerina-lang#35008
 Labels: byte, int, int:Signed16, int:Signed8, int:Unsigned32, int:Unsigned8, member-access-expr, module-const-decl,
@@ -1070,4 +1207,13 @@ Labels: member-access-expr, optional-type, xml
 function errorFunction() {
     xml? e = xml `<name>Enid Blyton</name><name>Dan Brown</name>`;
     _ = e[1]; // @error type 'xml?' does not support member access
+}
+
+Test-Case: error
+Description: Test invalid member access using multi key expression.
+Labels: member-access-expr, xml
+
+function errorFunction() {
+    xml e = xml `<name>Enid Blyton</name><name>Dan Brown</name>`;
+    _ = e[1, 2]; // @error member access with multi-key expression is not allowed with xml
 }

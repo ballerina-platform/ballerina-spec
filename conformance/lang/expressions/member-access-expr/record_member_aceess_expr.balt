@@ -13,8 +13,8 @@ function errorFunction() {
 }
 
 Test-Case: output
-Description: Test whether the static type of key expression is subtype of string when the basic type of the
-             container expression is a record.
+Description: Test using a value of a static type that is a subtype of string as the key expression when the basic type
+             of the container expression is a record.
 Labels: mapping-constructor-expr, member-access-expr, module-const-decl, module-type-defn, record-type, string,
         union-type
 
@@ -62,6 +62,36 @@ function errorFunction() {
 
     any c = "id";
     _ = p1[c]; // @error expected a key of type string, found any
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a subtype of string as the key expression when the basic type
+             of the container expression is a union of record and nil.
+Labels: mapping-constructor-expr, member-access-expr, module-const-decl, module-type-defn, optional-type, record-type,
+        string, union-type
+
+type Person record {|
+    int id;
+    string name;
+    int age;
+|};
+
+const idf = "id";
+
+type StringType1 "id"|"name";
+
+function init() {
+    Person? p1 = {id: 1, name: "John", age: 23};
+
+    io:println(p1["id"]); // @output 1
+
+    io:println(p1[idf]); // @output 1
+
+    string idf1 = "name";
+    io:println(p1[idf1]); // @output John
+
+    StringType1 idf2 = "name";
+    io:println(p1[idf2]); // @output John
 }
 
 Test-Case: output
@@ -140,6 +170,57 @@ function init() {
     io:println(p is ()); // @output true
 
     io:println(p["id"].toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test the result of evaluating a member access expression when basic type of the evaluated value of the
+             container expression is a union of record and nil.
+Labels: mapping-constructor-expr, member-access-expr, module-const-decl, module-type-defn, optional-type,
+        record-rest-descriptor, record-type, string, union-type, value:toBalString
+
+const A = 10;
+
+type Type1 int|float;
+
+type Record record {|
+    int a;
+    string? b;
+    Type1 c;
+    A d;
+    decimal e?;
+    OtherRecord f;
+    float g = 10.5;
+    int...;
+|};
+
+type OtherRecord record {|
+    int m;
+|};
+
+function init() {
+    Record? rec = {a: 1, b: (), c: 12, d: 10, e: 12.2, f: {m: 3}, g: 9, "h": 30, "i": 24};
+
+    io:println(rec["a"]); // @output 1
+    io:println(rec["b"].toBalString()); // @output ()
+    io:println(rec["c"]); // @output 12
+    io:println(rec["d"]); // @output 10
+    io:println(rec["e"]); // @output 12.2
+    io:println(rec["f"]); // @output {"m":3}
+    io:println(rec["g"]); // @output 9.0
+    io:println(rec["h"]); // @output 30
+    io:println(rec["i"]); // @output 24
+
+    Record? rec2 = {a: 1, b: "A", c: 12, d: 10, f: {m: 3}, "h": 30};
+
+    io:println(rec2["a"]); // @output 1
+    io:println(rec2["b"]); // @output A
+    io:println(rec2["c"]); // @output 12
+    io:println(rec2["d"]); // @output 10
+    io:println(rec2["e"].toBalString()); // @output ()
+    io:println(rec2["f"]); // @output {"m":3}
+    io:println(rec2["g"]); // @output 10.5
+    io:println(rec2["h"]); // @output 30
+    io:println(rec2["i"].toBalString()); // @output ()
 }
 
 Test-Case: output
@@ -709,8 +790,23 @@ type Person record {|
     string name;
 |};
 
-function init() {
+function errorFunction() {
     Person p1 = {id: 5, name: "Mike"};
 
     p1["id"] = "7"; // @error expected int, found string
+}
+
+Test-Case: error
+Description: Test invalid member access using multi key expression.
+Labels: mapping-constructor-expr, member-access-expr, module-type-defn, record-type, string
+
+type Person record {|
+    int id;
+    string name;
+|};
+
+function errorFunction() {
+    Person p1 = {id: 5, name: "Mike"};
+
+    _ = p1["id", "name"]; // @error member access with multi-key expression is not allowed with record
 }

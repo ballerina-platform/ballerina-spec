@@ -8,8 +8,8 @@ function errorFunction() {
 }
 
 Test-Case: output
-Description: Test whether the static type of key expression is subtype of string when the basic type of the
-             container expression is a map.
+Description: Test using a value of a static type that is a subtype of string as the key expression when the basic type
+             of the container expression is a map.
 Labels: int, map-type, mapping-constructor-expr, member-access-expr, module-const-decl, module-type-defn, string,
         union-type
 
@@ -51,6 +51,30 @@ function errorFunction() {
 }
 
 Test-Case: output
+Description: Test using a value of a static type that is a subtype of string as the key expression when the basic type
+             of the container expression is a union of map and nil.
+Labels: int, map-type, mapping-constructor-expr, member-access-expr, module-const-decl, module-type-defn, optional-type,
+        string, union-type
+
+const idf = "id";
+
+type StringType1 "id"|"name";
+
+function init() {
+    map<int|string>? p1 = {id: 1, name: "John", age: 23};
+
+    io:println(p1["id"]); // @output 1
+
+    io:println(p1[idf]); // @output 1
+
+    string idf1 = "name";
+    io:println(p1[idf1]); // @output John
+
+    StringType1 idf2 = "name";
+    io:println(p1[idf2]); // @output John
+}
+
+Test-Case: output
 Description: Test the result of evaluating a member access expression when basic type of the evaluated value of the
              container expression is a map.
 Labels: int, map-type, mapping-constructor-expr, member-access-expr, string, union-type, value:toBalString
@@ -77,6 +101,9 @@ function init() {
 
     io:println(p is ()); // @output true
     io:println(p["id"].toBalString()); // @output ()
+
+    map<string>? p2 = {a: "A", b: "B"};
+    io:println(p2["a"]); // @output A
 }
 
 Test-Case: output
@@ -454,4 +481,14 @@ function errorFunction() {
     map<int|string> p1 = {id: 1, name: "Mike"};
 
     p1["name"] = 10.5; // @error expected (int|string), found float
+}
+
+Test-Case: error
+Description: Test invalid member access using multi key expression.
+Labels: int, map-type, mapping-constructor-expr, member-access-expr, string, union-type
+
+function errorFunction() {
+    map<int|string> p1 = {id: 1, name: "Mike"};
+
+    _ = p1["id", "name"]; // @error member access with multi-key expression is not allowed with map
 }

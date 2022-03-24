@@ -8,16 +8,9 @@ function errorFunction() {
 }
 
 Test-Case: output
-Description: Test whether the static type of key expression is subtype of int when the basic type of the
+Description: Test using a value of a static type that is int as the key expression when the basic type of the
              container expression is an array.
-Labels: array-type, int, list-constructor-expr, member-access-expr, module-const-decl, module-type-defn, union-type
-
-const i1 = 0;
-const i2 = 5;
-
-type IntType1 3|4;
-
-type IntType2 i1|i2;
+Labels: array-type, DecimalNumber, int, list-constructor-expr, member-access-expr
 
 function init() {
     int[8] arr = [10, 20, 30, 40, 50, 60, 70, 80];
@@ -25,19 +18,51 @@ function init() {
     int i0 = 0;
     io:println(arr[i0]); // @output 10
 
-    IntType1 i3 = 4;
-    io:println(arr[i3]); // @output 50
-
-    io:println(arr[i1]); // @output 10
-
-    IntType2 i4 = 5;
-    io:println(arr[i4]); // @output 60
+    io:println(arr[5]); // @output 60
 }
 
 Test-Case: output
-Description: Test whether the static type of key expression is subtype of int when the basic type of the
+Description: Test using a value of a static type that is a subtype of int as the key expression when the basic type of the
              container expression is an array.
-Fail-Issue: ballerina-platform/ballerina-lang#33346
+Labels: array-type, int, list-constructor-expr, member-access-expr, module-const-decl, module-type-defn, union-type
+
+const i1 = 0;
+const i2 = 5;
+
+type IntType1 i1|i2;
+
+function init() {
+    int[8] arr = [10, 20, 30, 40, 50, 60, 70, 80];
+
+    io:println(arr[i1]); // @output 10
+
+    IntType1 i3 = 5;
+    io:println(arr[i3]); // @output 60
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a subtype of int as the key expression when the basic type of the
+             container expression is an array.
+Labels: array-type, int, list-constructor-expr, member-access-expr, module-type-defn, singleton-type, union-type
+
+type IntType1 3|4;
+
+function init() {
+    int[8] arr = [10, 20, 30, 40, 50, 60, 70, 80];
+
+    IntType1 i1 = 4;
+    io:println(arr[i1]); // @output 50
+
+    3 i2 = 3;
+    io:println(arr[i2]); // @output 40
+
+    1|2 i3 = 1;
+    io:println(arr[i3]); // @output 20
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a subtype of int as the key expression when the basic type of
+             the container expression is an array.
 Labels: array-type, byte, int, int:Signed16, int:Signed32, int:Signed8, list-constructor-expr, member-access-expr,
         module-type-defn, union-type
 
@@ -94,7 +119,7 @@ Test-Case: output
 Description: Test the result of evaluating a member access expression when basic type of the evaluated value of the
              container expression is an array.
 Labels: array-type, int, list-constructor-expr, mapping-constructor-expr, member-access-expr, module-type-defn,
-        record-type, string, table-constructor-expr, table-type, union-type
+        readonly-field, record-type, string, table-constructor-expr, table-type, union-type
 
 type Record record {|
     readonly int a;
@@ -136,7 +161,7 @@ Labels: array-type, int, list-constructor-expr, member-access-expr, unary-minus
 function init() {
     int[8] intArr = [10, 20, 30, 40, 50, 60, 70, 80];
 
-    io:println(intArr[-3]); // @panic index out of range
+    _ = intArr[-3]; // @panic index out of range
 }
 
 Test-Case: panic
@@ -148,7 +173,7 @@ Labels: array-type, int, list-constructor-expr, member-access-expr
 function init() {
     int[8] intArr = [10, 20, 30, 40, 50, 60, 70, 80];
 
-    io:println(intArr[8]); // @panic index out of range
+    _ = intArr[8]; // @panic index out of range
 }
 
 Test-Case: panic
@@ -160,7 +185,7 @@ Labels: array-type, int, list-constructor-expr, member-access-expr
 function init() {
     int[8] intArr = [10, 20, 30, 40, 50, 60, 70, 80];
 
-    io:println(intArr[10]); // @panic index out of range
+    _ = intArr[10]; // @panic index out of range
 }
 
 Test-Case: output
@@ -602,4 +627,13 @@ Labels: array-type, int, list-constructor-expr, member-access-expr, string
 function errorFunction() {
     int[3] arr = [1, 2, 3];
     arr[1] = "12"; // @error expected an int value, found a string
+}
+
+Test-Case: error
+Description: Test invalid member access using multi key expression.
+Labels: array-type, int, list-constructor-expr, member-access-expr
+
+function errorFunction() {
+    int[3] arr = [1, 2, 3];
+    _ = arr[1, 2]; // @error member access with multi-key expression is not allowed with array
 }
