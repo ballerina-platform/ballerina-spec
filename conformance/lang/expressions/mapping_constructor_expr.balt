@@ -1,31 +1,126 @@
 Test-Case: parser-error
-Description: Test syntax errors in mapping constructor
-Labels: any, mapping-constructor-expr, map-type, readonly-field, string
+Description: Test syntax errors in mapping constructor.
+Labels: any, mapping-constructor-expr, map-type, string
 
 function errorFunction() {
-    map<any> _ = {5 : 5}; //@error field name should be an identifer
+    map<any> _ = {5 : 5}; //@error field name should be an identifier
 
-    map<any> _ = {getFieldName () : 5}; //@error field name should be an identifer
+    map<any> _ = {getFieldName () : 5}; //@error field name should be an identifier
 
     map<any> _ = {fieldA "fddfd"}; //@error missing colon
 
+    map<any> _ = {"fieldA" "fddfd"}; //@error missing colon
+
     map<any> _ = {fieldA: "fddfd", }; //@error specific field
+
+    map<any> _ = {"fieldA": "fddfd", }; //@error specific field
 
     map<any> _ = {fieldA: "fddfd", fieldB:}; //@error missing value expression
 
     map<any> _ = {fieldA: "fddfd", "fieldB"}; //@error missing colon and value expression
 
-    map<any> _ = {fieldA: "fddfd", ...}; //@error missing spread field
+    map<any> _ = {fieldA: "fddfd" fieldB: "fddfd"}; //@error missing comma token
 
+    map<any> _ = {fieldB: "fddfd" fieldA}; //@error missing comma token
+
+    map<any> _ = {fieldA: "fddfd"; //@error missing close brace
+
+    map<any> _ = {fieldA; "fddfd"}; //@error `;` insted of `:`
+}
+
+Test-Case: parser-error
+Description: Test syntax errors in mapping constructor.
+Fail-Issue: ballerina-platform/ballerina-lang#35564
+Labels: any, mapping-constructor-expr, map-type,string
+
+function errorFunction() {
+    map<any> _ = }; //@error missing open brace token
+}
+
+Test-Case: parser-error
+Description: Test syntax errors in mapping constructor.
+Fail-Issue: ballerina-platform/ballerina-lang#35563
+Labels: any, mapping-constructor-expr, map-type, string
+
+function errorFunction() {
+    string fieldA = "ballerina";
+
+    map<any> _ = {fieldA;}; //@error invalid token semicolon
+
+    map<any> _ = {;fieldA}; //@error  invalid token semicolon
+
+    map<any> _ = }; //@error  missing open brace
+}
+
+Test-Case: parser-error
+Description: Test syntax errors in mapping constructor with spread field expression.
+Labels: any, mapping-constructor-expr, map-type, spread-field, string
+
+function errorFunction() {
+    map<any> _ = {fieldA: "fddfd", ...}; //@error missing spread field expression
+
+    map<any> _ = {fieldA: "fddfd" ...}; //@error missing spread field expression
+    
+    map<any> _ = {fieldA: "fddfd" ... ,}; //@error missing spread field expression and comma
+
+    map<any> _ = {fieldA: ...}; //@error missing spread field expression, comma and value expr
+}
+
+Test-Case: parser-error
+Description: Test syntax errors in computed name field.
+Labels: any, computed-name-field, mapping-constructor-expr, map-type, string
+
+function errorFunction() {
+    string fieldName = "fieldB";
+    
     map<any> _ = {[fieldA: "fddfd"}; //@error missing close bracket
 
     map<any> _ = {fieldA]: "fddfd"}; //@error missing open bracket
 
-    map<any> a = {["fieldA"]}; //@error missing colon and value expression
+    map<any> _ = {["fieldA"]}; //@error missing colon and value expression
 
+    map<any> _ = {["fieldA"] , }; //@error missing colon and value expression
+
+    map<any> _ = {[] : "2"}; //@error missing field name expression
+
+    map<any> _ = {[]  "2"}; //@error missing field name expression and colon
+
+    map<any> _ = {[] }; //@error missing field name expression and colon and value expression
+
+    map<any> _ = {["field"]; 5 }; //@error `;` instead of `:`
+
+    map<any> _ = {["field"];  }; //@error `;` instead of `:`
+
+    map<any> _ = {["field"]: 5 [fieldName]: 32 }; //@error missing comma token
+
+    map<any> _ = {[..."a"]: "b" }; //@error spread field inside field name expr
+}
+
+Test-Case: parser-error
+Description: Test syntax errors with readonly specific field.
+Labels: any, mapping-constructor-expr, map-type, readonly-field, string
+
+function errorFunction() {
     map<any> _ = {readonly }; //@error missing specific field
 
-    map<any> _ = {fieldA: "fddfd"; //@error missing close brace
+    map<any> _ = {readonly field1;}; //@error invalid semicolon token
+
+    map<any> _ = {readonly field1:}; //@error missing specific field
+
+    map<any> _ = {readonly: }; //@error missing specific field name and expression
+
+    map<any> _ = {readonly; }; //@error missing specific field name and invalid semicolon token
+}
+
+Test-Case: parser-error
+Description: Test syntax errors with readonly specific field.
+Fail-Issue: ballerina-platform/ballerina-lang#35562
+Labels: any, mapping-constructor-expr, map-type, readonly-field, string
+
+function errorFunction() {
+    map<any> _ = {:readonly fieldA: "Fd" }; //@error colon before readonly field
+
+    map<any> _ = {fieldB: "fdf" readonly fieldA: "Fd" }; //@error missing comma before readonly field
 }
 
 Test-Case: output
@@ -1021,7 +1116,7 @@ Description: Test If there are fields specified as a computed-name-field, then t
              record-rest-descriptor T..., where T is the union of the broad types of the value-expr in all such 
              fields when there is no contextually expected type.
 Labels: computed-name-field, is-expr, mapping-constructor-expr, record-rest-descriptor, record-type, 
-       spread-field, string, union-type, var
+        spread-field, string, union-type, var
 
 function init() {
     string targetField1 = "fieldB";
