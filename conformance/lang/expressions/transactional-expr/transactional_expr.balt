@@ -1,5 +1,6 @@
 Test-Case: output
-Description: Test whether the transactional expression is being evaluated in transaction mode.
+Description: Test whether the transactional expression is being evaluated in transaction mode with transaction
+             statement.
 Labels: check, commit-action, error, optional-type, transaction-stmt, transactional-expr
 
 function init() returns error? {
@@ -13,7 +14,8 @@ function init() returns error? {
 }
 
 Test-Case: output
-Description: Test whether the transactional expression is being evaluated in transaction mode.
+Description: Test whether the transactional expression is being evaluated in transaction mode with transactional
+             function.
 Labels: check, commit-action, error, function-call-expr, optional-type, transaction-stmt, transactional-expr,
         transactional-function
 
@@ -31,12 +33,13 @@ transactional function f1() {
 }
 
 Test-Case: output
-Description: Test whether the transactional expression is being evaluated in transaction mode.
+Description: Test whether the transactional expression is being evaluated in transaction mode with transactional
+             function.
 Labels: check, commit-action, error, function-call-expr, optional-type, transaction-stmt, transactional-expr,
         transactional-function
 
 function init() returns error? {
-    transactional function () trxFunc = transactional function() {
+    transactional function () trxFunc = function() {
         io:println(transactional);
     };
 
@@ -49,7 +52,7 @@ function init() returns error? {
 }
 
 Test-Case: output
-Description: Test whether the transactional expression is being evaluated in transaction mode.
+Description: Test whether the transactional expression is being evaluated in transaction mode with commit handler.
 Labels: check, commit-action, error, explicit-anonymous-function-expr, isolated-function, optional-type,
         transaction-stmt, transaction:Info, transaction:onCommit, transactional-expr, var
 
@@ -59,15 +62,15 @@ function init() returns error? {
     };
 
     transaction {
-        transaction:onCommit(onCommitFunc); // output true
+        transaction:onCommit(onCommitFunc);
         io:println(transactional); // output true
-        check commit;
+        check commit; // output true
         io:println(transactional); // output false
     }
 }
 
 Test-Case: output
-Description: Test whether the transactional expression is being evaluated in transaction mode.
+Description: Test whether the transactional expression is being evaluated in transaction mode with rollback handler.
 Labels: check, commit-action, error, explicit-anonymous-function-expr, if-else-stmt, int, is-expr, isolated-function,
         optional-type, rollback-stmt, transaction-stmt, transaction:Info, transaction:onRollback, transactional-expr,
         var
@@ -82,9 +85,9 @@ function init() returns error? {
 
         if a is int {
             io:println(transactional); // output true
-            transaction:onRollback(onRollbackFunc); // output true
+            transaction:onRollback(onRollbackFunc);
             io:println(transactional); // output true
-            rollback;
+            rollback; // output true
             io:println(transactional); // output false
         } else {
             check commit;
@@ -95,7 +98,7 @@ function init() returns error? {
 }
 
 Test-Case: output
-Description: Test whether the transactional expression is being evaluated in transaction mode.
+Description: Test whether the transactional expression is being evaluated in transaction mode with transactional worker.
 Labels: check, commit-action, error, int, optional-type, transaction-stmt, transactional-expr, transactional-worker
 
 function init() returns error? {
@@ -113,7 +116,8 @@ transactional function f1() {
 }
 
 Test-Case: output
-Description: Test whether the transactional expression is being evaluated in transaction mode.
+Description: Test whether the transactional expression is being evaluated in transaction mode with transactional
+             method of a class.
 Labels: check, commit-action, error, explicit-new-expr, int, method-call-expr, module-class-defn, optional-type,
         transaction-stmt, transactional-expr
 
@@ -133,7 +137,8 @@ function init() returns error? {
 }
 
 Test-Case: output
-Description: Test whether the transactional expression is being evaluated in transaction mode.
+Description: Test whether the transactional expression is being evaluated in transaction mode with transactional method
+             of a client object.
 Labels: check, commit-action, error, int, method-call-expr, module-type-defn, object-constructor-expr, object-type,
         optional-type, transaction-stmt, transactional-expr
 
@@ -162,7 +167,8 @@ function init() returns error? {
 }
 
 Test-Case: output
-Description: Test whether the transactional expression is being evaluated in transaction mode.
+Description: Test whether the transactional expression is being evaluated in transaction mode with transactional method
+             of a service object.
 Labels: check, commit-action, error, int, method-call-expr, module-type-defn, object-constructor-expr, object-type,
         optional-type, transaction-stmt, transactional-expr
 
@@ -187,7 +193,8 @@ function init() returns error? {
 }
 
 Test-Case: output
-Description: Test whether the transactional expression is being evaluated in transaction mode.
+Description: Test whether the transactional expression is being evaluated in transaction mode with retry transaction
+             statement.
 Labels: check, commit-action, error, error:Retriable, int, optional-type, retry-transaction-stmt, transactional-expr
 
 function init() returns error? {
@@ -218,7 +225,8 @@ function trxErrorInRetry() returns error {
 }
 
 Test-Case: output
-Description: Test whether the transactional expression is being evaluated in transaction mode.
+Description: Test whether the transactional expression is being evaluated in transaction mode with non-transactional
+             function.
 Fail-Issue: ballerina-platform/ballerina-lang#33087
 Labels: function-call-expr, transactional-expr
 
@@ -228,6 +236,34 @@ function init() {
 
 function someFunc() {
     io:println(transactional);
+}
+
+Test-Case: output
+Description: Test transactional expression in nested transactions.
+Labels: boolean, commit-action, transaction-stmt, transactional-expr
+
+function init() returns error? {
+    transaction {
+        io:println(transactional); // output true
+        check commit;
+        io:println(transactional); // output false
+        transaction {
+            io:println(transactional); // output true
+            check commit;
+            io:println(transactional); // output false
+        }
+    }
+
+    transaction {
+        transaction {
+            io:println(transactional); // output true
+            check commit;
+            io:println(transactional); // output false
+        }
+        io:println(transactional); // output true
+        check commit;
+        io:println(transactional); // output false
+    }
 }
 
 Test-Case: output
@@ -428,23 +464,27 @@ function init() {
 
 Test-Case: output
 Description: Test assigning the result of transactional expression to a variable.
-Fail-Issue: ballerina-platform/ballerina-lang#33087
 Labels: boolean, transactional-expr
 
-function init() {
-    boolean a = transactional;
-    io:println(a); // @output false
+function init() returns error? {
+    transaction {
+        boolean a = transactional;
+        io:println(a); // @output true
+        check commit;
+    }
 }
 
 Test-Case: output
 Description: Test assigning the result of transactional expression to var.
-Fail-Issue: ballerina-platform/ballerina-lang#33087
 Labels: boolean, transactional-expr, var
 
-function init() {
-    var a = transactional;
-    boolean _ = a;
-    io:println(a); // @output false
+function init() returns error? {
+    transaction {
+        var a = transactional;
+        boolean _ = a;
+        io:println(a); // @output true
+        check commit;
+    }
 }
 
 Test-Case: output
@@ -477,7 +517,7 @@ function f1() returns boolean {
 }
 
 Test-Case: output
-Description: Test transactional expression with type case expression.
+Description: Test transactional expression with type cast expression.
 Labels: boolean, check, commit-action, error, optional-type, transaction-stmt, transactional-expr, type-cast-expr
 
 function init() returns error? {
@@ -489,11 +529,13 @@ function init() returns error? {
 
 Test-Case: output
 Description: Test transactional expression with typeof expression.
-Fail-Issue: ballerina-platform/ballerina-lang#33087
 Labels: transactional-expr, typeof-expr
 
-function init() {
-    io:println(typeof transactional); // @output typedesc false
+function init() returns error? {
+    transaction {
+        io:println(typeof transactional); // @output typedesc true
+        check commit;
+    }
 }
 
 Test-Case: output
@@ -560,6 +602,23 @@ boolean a = transactional;
 
 function init() {
     io:println(a); // @output false
+}
+
+Test-Case: output
+Description: Test assigning the result of transactional expression to a subtype of boolean.
+Fail-Issue: ballerina-platform/ballerina-lang#34711
+Labels: boolean, transactional-expr
+
+type Boolean true|false;
+
+function init() returns error? {
+    transaction {
+        true|false a = transactional;
+        io:println(a); // @output true
+        check commit;
+        Boolean b = transactional;
+        io:println(b); // @output false
+    }
 }
 
 Test-Case: error
