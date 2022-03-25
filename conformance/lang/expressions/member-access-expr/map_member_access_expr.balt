@@ -150,13 +150,23 @@ function init() {
 }
 
 Test-Case: error
-Description: Test assigning result of member access expression to an invalid type.
+Description: Test assigning result of accessing members of a map type to an invalid type.
 Labels: int, map-type, mapping-constructor-expr, member-access-expr, string, union-type
 
 function errorFunction() {
     map<int|string> p1 = {id: 1, name: "Mike"};
 
-    int|string _ = p1["name"]; // @error expected a int|string, static type of the accessed value is int|string?
+    int|string _ = p1["name"]; // @error expected a `int|string`, but the static type of the accessed value is `int|string?`
+}
+
+Test-Case: error
+Description: Test assigning result of accessing members of a union of map and nil type to an invalid type.
+Labels: int, map-type, mapping-constructor-expr, member-access-expr, string, union-type
+
+function errorFunction() {
+    map<int|string>? p1 = {id: 1, name: "Mike"};
+
+    int|string _ = p1["name"]; // @error expected a `int|string`, but the static type of the accessed value is `int|string?`
 }
 
 Test-Case: output
