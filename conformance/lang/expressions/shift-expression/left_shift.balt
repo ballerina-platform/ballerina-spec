@@ -1,6 +1,6 @@
 Test-Case: output
 Description: Test '<<' expression with zero and positive 'int' DecimalNumbers as operands.
-Labels: int, shift-expr
+Labels: int, shift-expr, DecimalNumber
 
 function init() {
     int a = 9223372036854775804;
@@ -15,141 +15,96 @@ function init() {
 
 Test-Case: output
 Description: Test '<<' expression with zero and positive 'int' HexIntLiterals as operands.
-Labels: HexIntLiterals, int, shift-expr
+Labels: HexIntLiterals, shift-expr
 
 function init() {
-    int a = 0x75;
-    int b = 0x15;
-    int c = 0x0;
-
-    io:println(a << b); // @output 245366784
-    io:println(a << c); // @output 117
-    io:println(c << b); // @output 0
-    io:println(c << c); // @output 0
+    io:println(0x75 << 0x15); // @output 245366784
+    io:println(0x75 << 0x0); // @output 117
+    io:println(0x0 << 0x15); // @output 0
+    io:println(0x0 << 0x0); // @output 0
 }
 
 Test-Case: output
-Description: Test '<<' expression with zero and positive 'int' IntLiterals as operands.
-Labels: HexIntLiterals, int, shift-expr
+Description: Test '<<' expression with zero and positive IntLiterals as operands.
+Labels: HexIntLiterals, shift-expr, DecimalNumber
 
 function init() {
-    int a = 9223372036854775804;
-    int b = 21;
-    int c = 0x7ffffffffffffffd;
-    int d = 0x15;
-    int e = 0;
-    int f = 0x0;
-
-    io:println(a << d); // @output -8388608
-    io:println(c << b); // @output -6291456
-    io:println(f << e); // @output 0
-    io:println(e << f); // @output 0
+    io:println(9223372036854775804 << 0x15); // @output -8388608
+    io:println(0x7ffffffffffffffd << 21); // @output -6291456
+    io:println(0x0 << 0); // @output 0
+    io:println(0 << 0x0); // @output 0
 }
 
 Test-Case: output
 Description: Test '<<' expression with zero and negative 'int' DecimalNumbers as operands.
-Labels: int, shift-expr, unary-minus
+Labels: shift-expr, unary-minus, DecimalNumber
 
 function init() {
-    int a = -9223372036854775802;
-    int b = -9223372036854775805;
-    int c = 0;
-
-    io:println(a << b); // @output 48
-    io:println(a << c); // @output -9223372036854775802
-    io:println(c << b); // @output 0
-    io:println(c << c); // @output 0
+    io:println(-9223372036854775802 << -9223372036854775805); // @output 48
+    io:println(-9223372036854775802 << 0); // @output -9223372036854775802
+    io:println(0 << -9223372036854775805); // @output 0
+    io:println(0 << 0); // @output 0
 }
 
 Test-Case: output
 Description: Test '<<' expression with zero and negative 'int' HexIntLiterals as operands.
-Labels: HexIntLiterals, int, shift-expr, unary-minus
+Labels: HexIntLiterals, shift-expr, unary-minus
 
 function init() {
-    int a = -0x7ffffffffffffffa;
-    int b = -0x7ffffffffffffff8;
-    int c = 0x0;
-
-    io:println(a << b); // @output 1536
-    io:println(a << c); // @output -9223372036854775802
-    io:println(c << b); // @output 0
-    io:println(c << c); // @output 0
+    io:println(-0x7ffffffffffffffa << -0x7ffffffffffffff8); // @output 1536
+    io:println(-0x7ffffffffffffffa << 0x0); // @output -9223372036854775802
+    io:println(0x0 << -0x7ffffffffffffff8); // @output 0
+    io:println(0x0 << 0x0); // @output 0
 }
 
 Test-Case: output
-Description: Test '<<' expression with zero and negative 'int' IntLiterals as operands.
-Labels: HexIntLiterals, int, shift-expr, unary-minus
+Description: Test '<<' expression with zero and negative IntLiterals as operands.
+Labels: HexIntLiterals, shift-expr, unary-minus, DecimalNumber
 
 function init() {
-    int a = -9223372036854775798;
-    int b = -21;
-    int c = -0x7ffffffffffffff6;
-    int d = -0x15;
-    int e = 0;
-    int f = 0x0;
-
-    io:println(a << d); // @output 87960930222080
-    io:println(c << b); // @output 87960930222080
-    io:println(f << e); // @output 0
-    io:println(e << f); // @output 0
+    io:println(-9223372036854775798 << -0x15); // @output 87960930222080
+    io:println(-0x7ffffffffffffff6 << -21); // @output 87960930222080
+    io:println(0x0 << 0); // @output 0
+    io:println(0 << 0x0); // @output 0
 }
 
 Test-Case: output
-Description: Test '<<' expression for positive and negative 'int' DedcimalNumbers as operands.
-Labels: int, shift-expr, unary-minus
+Description: Test '<<' expression for positive and negative 'int' DecimalNumbers as operands.
+Labels: shift-expr, unary-minus, DecimalNumber, unary-minus
 
 function init() {
-    int a = -111;
-    int b = -92;
-    int c = 1;
-    int d = 2;
-
-    io:println(a << d); // @output -444
-    io:println(c << b); // @output 68719476736
+    io:println(-111 << 2); // @output -444
+    io:println(1 << -92); // @output 68719476736
 }
 
 Test-Case: output
 Description: Test '<<' expression for positive and negative 'int' HexIntLiterals as operands.
-Labels: HexIntliteral, int, shift-expr, unary-minus
+Labels: HexIntliteral, shift-expr, unary-minus
 
 function init() {
-    int a = -0x1f;
-    int b = -0x7ffffffffffffff5;
-    int c = 0x1f;
-    int d = 0x1a;
-
-    io:println(a << d); // @output -2080374784
-    io:println(c << b); // @output 63488
+    io:println(-0x1f << 0x1a); // @output -2080374784
+    io:println(0x1f << -0x7ffffffffffffff5); // @output 63488
 }
 
 Test-Case: output
-Description: Test '<<' expression for positive and negative 'int' IntLiterals as operands.
-Labels: HexIntliteral, int, shift-expr, unary-minus
+Description: Test '<<' expression for positive and negative IntLiterals as operands.
+Labels: HexIntliteral, shift-expr, unary-minus, DecimalNumber
 
 function init() {
-    int a = -111;
-    int b = -92;
-    int c = 1;
-    int d = 2;
-    int e = -0x1f;
-    int f = -0x7fffffffffffffff;
-    int g = 0x1f;
-    int h = 0x1a;
+    io:println(-111 << 2); // @output -444
+    io:println(1 << -92); // @output 68719476736
 
-    io:println(a << d); // @output -444
-    io:println(c << b); // @output 68719476736
+    io:println(-0x1f << 0x1f); // @output -66571993088
+    io:println(0x1f << -0x7fffffffffffffff); // @output 62
 
-    io:println(e << g); // @output -66571993088
-    io:println(g << f); // @output 62
-
-    io:println(a << h); // @output -7449083904
-    io:println(g << b); // @output 2130303778816
+    io:println(-111 << 0x1a); // @output -7449083904
+    io:println(0x1f << -92); // @output 2130303778816
 }
 
 Test-Case: output
 Description: Test '<<' expression with 'int' as the LHS operand and builtin subtypes of integer as the RHS operand.
 Labels: int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, shift-expr,
-        unary-minus
+        unary-minus, DecimalNumber
 
 function init() {
     int a = 128;
@@ -183,7 +138,7 @@ function init() {
 
 Test-Case: output
 Description: Test '<<' expression for optional zero and positive 'int' operands.
-Labels: int, nil-literal, optional-type, shift-expr, value:toBalString
+Labels: int, nil-literal, optional-type, shift-expr, value:toBalString, DecimalNumber
 
 function init() {
     int? a = 256;
@@ -222,7 +177,7 @@ function init() {
 
 Test-Case: output
 Description: Test '<<' expression for optional zero and negative 'int' operands.
-Labels: int, nil-literal, optional-type, shift-expr, unary-minus, value:toBalString
+Labels: int, nil-literal, optional-type, shift-expr, unary-minus, value:toBalString, DecimalNumber
 
 function init() {
     int? a = -256;
@@ -259,7 +214,7 @@ function init() {
 
 Test-Case: output
 Description: Test '<<' expression for optional positive and negative 'int' operands.
-Labels: int, optional-type, shift-expr, unary-minus
+Labels: int, optional-type, shift-expr, unary-minus, DecimalNumber
 
 function init() {
     int? a = 256;
@@ -283,7 +238,7 @@ function init() {
 
 Test-Case: output
 Description: Test 0x3F mask of 'int' RHS operand in '<<' expression.
-Labels: int, shift-expr, unary-minus
+Labels: int, shift-expr, unary-minus, DecimalNumber
 
 function init() {
     int a = -1;
@@ -368,7 +323,7 @@ function init() {
 
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int' operands.
-Labels: decimal, float, int, shift-expr, unary-minus, var
+Labels: decimal, float, int, shift-expr, unary-minus, var, DecimalNumber
 
 function errorFunction() {
     int a = 128;
@@ -395,7 +350,7 @@ Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int' as the LHS operand and builtin subtypes of integer
              as the RHS operand.
 Labels: decimal, float, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
-        shift-expr, unary-minus, var
+        shift-expr, unary-minus, var, DecimalNumber
 
 function errorFunction() {
     int a = 128;
@@ -439,7 +394,7 @@ function errorFunction() {
 
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int' as the LHS operand and byte as the RHS operand.
-Labels: decimal, float, byte, int, shift-expr, unary-minus, var
+Labels: decimal, float, byte, int, shift-expr, unary-minus, var, DecimalNumber
 
 function errorFunction() {
     int a = 128;
@@ -455,7 +410,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int' as the LHS operand and user-defined subtype of
              integer as the RHS operand.
-Labels: DecimalNumber, decimal, float, int, int:MIN_VALUE, shift-expr, type, unary-minus, var
+Labels: DecimalNumber, decimal, float, int, int:MIN_VALUE, shift-expr, type, unary-minus, var, DecimalNumber, union-type
 
 type Ints -1|2|int:MIN_VALUE;
 
@@ -477,7 +432,7 @@ Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int' as the LHS operand and user-defined subtype of
              integer as the RHS operand.
 Fail-Issue: ballerina-platform/ballerina-lang#32995
-Labels: DecimalNumber, decimal, float, int, int:MIN_VALUE, shift-expr, type, unary-minus, var
+Labels: DecimalNumber, decimal, float, int, int:MIN_VALUE, shift-expr, type, unary-minus, var, DecimalNumber, union-type
 
 type Ints -1|int:MIN_VALUE;
 
@@ -491,7 +446,7 @@ function errorFunction() {
 
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int' and optional 'int' as the operands.
-Labels: decimal, float, int, nil-literal, optional-type, shift-expr, unary-minus
+Labels: decimal, float, int, nil-literal, optional-type, shift-expr, unary-minus, DecimalNumber
 
 function errorFunction() {
     int a = 128;
@@ -518,7 +473,7 @@ Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int' as the LHS operand and optional builtin subtypes of
              integer as the RHS operand.
 Labels: decimal, float, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
-        nil-literal, optional-type, shift-expr, unary-minus, var
+        nil-literal, optional-type, shift-expr, unary-minus, var, DecimalNumber
 
 function errorFunction() {
     int a = 128;
@@ -581,7 +536,7 @@ function errorFunction() {
 
 Test-Case: output
 Description: Test '<<' expression with 'int' operands in function call and method call.
-Labels: function-call-expr, int, shift-expr, unary-minus, value:toString, value:toBalString
+Labels: function-call-expr, int, shift-expr, unary-minus, value:toString, value:toBalString, DecimalNumber
 
 function init() {
     int a = -1137;
@@ -611,7 +566,7 @@ function leftShiftExpr(int x) {
 
 Test-Case: output
 Description: Test '<<' expression with 'int' operands as a return statement.
-Labels: int, return-stmt, shift-expr, unary-minus
+Labels: int, return-stmt, shift-expr, unary-minus, DecimalNumber
 
 function init() {
     int a = -1137;
@@ -631,7 +586,7 @@ function leftShiftExpr(int x, int y) returns int {
 
 Test-Case: output
 Description: Test '<<' expression with zero and positive 'int:Signed8' DecimalNumbers as operands.
-Labels: int:Signed8, shift-expr
+Labels: int:Signed8, shift-expr, DecimalNumber
 
 function init() {
     int:Signed8 a = 125;
@@ -645,41 +600,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test '<<' expression with zero and positive 'int:Signed8' HexIntLiterals as operands.
-Labels: HexIntLiterals, int:Signed8, shift-expr
-
-function init() {
-    int:Signed8 a = 0x75;
-    int:Signed8 b = 0x15;
-    int:Signed8 c = 0x0;
-
-    io:println(a << b); // @output 245366784
-    io:println(a << c); // @output 117
-    io:println(c << b); // @output 0
-    io:println(c << c); // @output 0
-}
-
-Test-Case: output
-Description: Test '<<' expression with zero and positive 'int:Signed8' IntLiterals as operands.
-Labels: HexIntLiterals, int:Signed8, shift-expr
-
-function init() {
-    int:Signed8 a = 127;
-    int:Signed8 b = 21;
-    int:Signed8 c = 0x7e;
-    int:Signed8 d = 0x15;
-    int:Signed8 e = 0;
-    int:Signed8 f = 0x0;
-
-    io:println(a << d); // @output 266338304
-    io:println(c << b); // @output 264241152
-    io:println(f << e); // @output 0
-    io:println(e << f); // @output 0
-}
-
-Test-Case: output
 Description: Test '<<' expression with zero and negative 'int:Signed8' DecimalNumbers as operands.
-Labels: int:Signed8, shift-expr, unary-minus
+Labels: int:Signed8, shift-expr, unary-minus, DecimalNumber
 
 function init() {
     int:Signed8 a = -122;
@@ -693,41 +615,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test '<<' expression with zero and negative 'int:Signed8' HexIntLiterals as operands.
-Labels: HexIntLiterals, int:Signed8, shift-expr, unary-minus
-
-function init() {
-    int:Signed8 a = -0x7d;
-    int:Signed8 b = -0x79;
-    int:Signed8 c = -0x0;
-
-    io:println(a << b); // @output -16000
-    io:println(a << c); // @output -125
-    io:println(c << b); // @output 0
-    io:println(c << c); // @output 0
-}
-
-Test-Case: output
-Description: Test '<<' expression with zero and negative 'int:Signed8' IntLiterals as operands.
-Labels: HexIntLiterals, int:Signed8, shift-expr, unary-minus
-
-function init() {
-    int:Signed8 a = -119;
-    int:Signed8 b = -21;
-    int:Signed8 c = -0x7e;
-    int:Signed8 d = -0x15;
-    int:Signed8 e = -0;
-    int:Signed8 f = -0x0;
-
-    io:println(a << d); // @output -1046735069642752
-    io:println(c << b); // @output -1108307720798208
-    io:println(f << e); // @output 0
-    io:println(e << f); // @output 0
-}
-
-Test-Case: output
-Description: Test '<<' expression for positive and negative 'int:Signed8' DedcimalNumbers as operands.
-Labels: int:Signed8, shift-expr, unary-minus
+Description: Test '<<' expression for positive and negative 'int:Signed8' DecimalNumbers as operands.
+Labels: int:Signed8, shift-expr, unary-minus, DecimalNumber
 
 function init() {
     int:Signed8 a = -111;
@@ -737,49 +626,11 @@ function init() {
 
     io:println(a << d); // @output -444
     io:println(c << b); // @output 68719476736
-}
-
-Test-Case: output
-Description: Test '<<' expression for positive and negative 'int:Signed8' HexIntLiterals as operands.
-Labels: HexIntliteral, int:Signed8, shift-expr, unary-minus
-
-function init() {
-    int:Signed8 a = -0x1f;
-    int:Signed8 b = -0x7f;
-    int:Signed8 c = 0x1f;
-    int:Signed8 d = 0x1a;
-
-    io:println(a << d); // @output -2080374784
-    io:println(c << b); // @output 62
-}
-
-Test-Case: output
-Description: Test '<<' expression for positive and negative 'int:Signed8' IntLiterals as operands.
-Labels: HexIntliteral, int:Signed8, shift-expr, unary-minus
-
-function init() {
-    int:Signed8 a = -111;
-    int:Signed8 b = -92;
-    int:Signed8 c = 1;
-    int:Signed8 d = 2;
-    int:Signed8 e = -0x1f;
-    int:Signed8 f = -0x7f;
-    int:Signed8 g = 0x1f;
-    int:Signed8 h = 0x1a;
-
-    io:println(a << d); // @output -444
-    io:println(c << b); // @output 68719476736
-
-    io:println(e << g); // @output -66571993088
-    io:println(g << f); // @output 62
-
-    io:println(a << h); // @output -7449083904
-    io:println(g << b); // @output 2130303778816
 }
 
 Test-Case: output
 Description: Test '<<' expression with 'int:Signed8' as the LHS operand and 'int' as the RHS operand.
-Labels: int, int:Signed8, shift-expr, unary-minus
+Labels: int, int:Signed8, shift-expr, unary-minus, DecimalNumber
 
 function init() {
     int:Signed8 x = 117;
@@ -797,7 +648,7 @@ function init() {
 Test-Case: output
 Description: Test '<<' expression with 'int:Signed8' as the LHS operand and builtin subtypes of integer as the RHS
              operand.
-Labels: int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, shift-expr, unary-minus
+Labels: int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, shift-expr, unary-minus, DecimalNumber
 
 function init() {
     int:Signed8 x = 122;
@@ -839,7 +690,7 @@ function init() {
 
 Test-Case: output
 Description: Test '<<' expression for optional zero and positive 'int:Signed8' operands.
-Labels: int, int:Signed8, nil-literal, optional-type, shift-expr, value:toBalString
+Labels: int, int:Signed8, nil-literal, optional-type, shift-expr, value:toBalString, DecimalNumber
 
 function init() {
     int:Signed8? a = 10;
@@ -878,7 +729,7 @@ function init() {
 
 Test-Case: output
 Description: Test '<<' expression for optional zero and negative 'int:Signed8' operands.
-Labels: int, int:Signed8, nil-literal, optional-type, shift-expr, unary-minus, value:toBalString
+Labels: int, int:Signed8, nil-literal, optional-type, shift-expr, unary-minus, value:toBalString, DecimalNumber
 
 function init() {
     int:Signed8? a = -120;
@@ -914,7 +765,7 @@ function init() {
 
 Test-Case: output
 Description: Test '<<' expression for optional positive and negative 'int:Signed8'.
-Labels: int:Signed8, optional-type, shift-expr, unary-minus
+Labels: int:Signed8, optional-type, shift-expr, unary-minus, DecimalNumber
 
 function init() {
     int:Signed8? a = 8;
@@ -938,7 +789,7 @@ function init() {
 
 Test-Case: output
 Description: Test 0x3F mask of 'int:Signed8' RHS operand in '<<' expression.
-Labels: int:Signed8, shift-expr, unary-minus
+Labels: int:Signed8, shift-expr, unary-minus, DecimalNumber
 
 function init() {
     int:Signed8 a = -1;
@@ -1033,7 +884,7 @@ function init() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Signed8' as the LHS operand and 'int' as the RHS
              operand.
-Labels: decimal, float, int, int:Signed8, shift-expr, unary-minus, var
+Labels: decimal, float, int, int:Signed8, shift-expr, unary-minus, var, DecimalNumber
 
 function errorFunction() {
     int:Signed8 x = 12;
@@ -1055,7 +906,7 @@ Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Signed8' as the LHS operand and builtin subtypes of
              integer as the RHS operand.
 Labels: decimal, float, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
-        shift-expr, unary-minus, var
+        shift-expr, unary-minus, var, DecimalNumber
 
 function errorFunction() {
     int:Signed8 x = 127;
@@ -1097,7 +948,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Signed8' as the LHS operand and byte as the RHS
              operand.
-Labels: byte, int:Signed8, shift-expr, unary-minus, var
+Labels: byte, int:Signed8, shift-expr, unary-minus, var, DecimalNumber
 
 function errorFunction() {
     int:Signed8 x = 12;
@@ -1113,7 +964,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Signed8' as the LHS operand and user-defined subtype
              of integer as the RHS operand.
-Labels: DecimalNumber, float, int:Signed8, shift-expr, type, unary-minus, var
+Labels: DecimalNumber, float, int:Signed8, shift-expr, type, unary-minus, var, DecimalNumber
 
 type Ints -1|2|-128;
 
@@ -1141,7 +992,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Signed8' as the LHS operand and optional 'int' as
              the RHS operand.
-Labels: float, int, int:Signed8, nil-literal, optional-type, shift-expr, unary-minus, var
+Labels: float, int, int:Signed8, nil-literal, optional-type, shift-expr, unary-minus, var, DecimalNumber
 
 function errorFunction() {
     int:Signed8 x = 12;
@@ -1169,7 +1020,7 @@ Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Signed8' as the LHS operand and optional builtin
              subtypes of integer as the RHS operand.
 Labels: decimal, float, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
-        shift-expr, unary-minus, var
+        shift-expr, unary-minus, var, DecimalNumber
 
 function errorFunction() {
     int:Signed8 a = 127;
@@ -1230,7 +1081,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Signed8' as the LHS operand and optional byte as
              the RHS operand.
-Labels: byte, float, int, int:Signed8, nil-literal, optional-type, shift-expr, unary-minus, var
+Labels: byte, float, int, int:Signed8, nil-literal, optional-type, shift-expr, unary-minus, var, DecimalNumber
 
 function errorFunction() {
     int:Signed8 x = 12;
@@ -1256,7 +1107,7 @@ function errorFunction() {
 
 Test-Case: output
 Description: Test '<<' expression with 'int:Signed8' operands in function call and method call.
-Labels: function-call-expr, int:Signed8, shift-expr, unary-minus, value:toBalString, value:toString
+Labels: function-call-expr, int:Signed8, shift-expr, unary-minus, value:toBalString, value:toString, DecimalNumber
 
 function init() {
     int:Signed8 a = -112;
@@ -1286,7 +1137,7 @@ function leftShiftExpr(int x) {
 
 Test-Case: output
 Description: Test '<<' expression with 'int:Signed8' operands as a return statement.
-Labels: int, int:Signed8, return-stmt, shift-expr, unary-minus
+Labels: int, int:Signed8, return-stmt, shift-expr, unary-minus, DecimalNumber
 
 function init() {
     int:Signed8 a = -112;
@@ -1306,7 +1157,7 @@ function leftShiftExpr(int:Signed8 x, int:Signed8 y) returns int {
 
 Test-Case: output
 Description: Test '<<' expression with 'int:Unsigned8' DecimalNumbers as operands.
-Labels: int:Unsigned8, shift-expr
+Labels: int:Unsigned8, shift-expr, DecimalNumber
 
 function init() {
     int:Unsigned8 a = 253;
@@ -1320,41 +1171,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test '<<' expression with 'int:Unsigned8' HexIntLiterals as operands.
-Labels: HexIntLiterals, int:Unsigned8, shift-expr
-
-function init() {
-    int:Unsigned8 a = 0xf5;
-    int:Unsigned8 b = 0x15;
-    int:Unsigned8 c = 0x0;
-
-    io:println(a << b); // @output 513802240
-    io:println(a << c); // @output 245
-    io:println(c << b); // @output 0
-    io:println(c << c); // @output 0
-}
-
-Test-Case: output
-Description: Test '<<' expression with 'int:Unsigned8' IntLiterals as operands.
-Labels: HexIntLiterals, int:Unsigned8, shift-expr
-
-function init() {
-    int:Unsigned8 a = 255;
-    int:Unsigned8 b = 21;
-    int:Unsigned8 c = 0xf5;
-    int:Unsigned8 d = 0x15;
-    int:Unsigned8 e = 0;
-    int:Unsigned8 f = 0x0;
-
-    io:println(a << d); // @output 534773760
-    io:println(c << b); // @output 513802240
-    io:println(f << e); // @output 0
-    io:println(e << f); // @output 0
-}
-
-Test-Case: output
 Description: Test '<<' expression with 'int:Unsigned8' as the LHS operand and 'int' as the RHS operand.
-Labels: int, int:Unsigned8, shift-expr, unary-minus
+Labels: int, int:Unsigned8, shift-expr, unary-minus, DecimalNumber
 
 function init() {
     int:Unsigned8 x = 247;
@@ -1369,7 +1187,8 @@ function init() {
 Test-Case: output
 Description: Test '<<' expression with 'int:Unsigned8' as the LHS operand and builtin subtypes of integer as the RHS
              operand.
-Labels: int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, shift-expr, unary-minus
+Labels: int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, shift-expr, unary-minus,
+        DecimalNumber
 
 function init() {
     int:Unsigned8 x = 245;
@@ -1401,7 +1220,7 @@ function init() {
 
 Test-Case: output
 Description: Test '<<' expression for optional 'int:Unsigned8' operands.
-Labels: int, int:Unsigned8, nil-literal, optional-type, shift-expr, value:toBalString
+Labels: int, int:Unsigned8, nil-literal, optional-type, shift-expr, value:toBalString, DecimalNumber
 
 function init() {
     int:Unsigned8? a = 10;
@@ -1440,7 +1259,7 @@ function init() {
 
 Test-Case: output
 Description: Test 0x3F mask of 'int:Unsigned8' RHS operand in '<<' expression.
-Labels: int:Unsigned8, shift-expr
+Labels: int:Unsigned8, shift-expr, DecimalNumber
 
 function init() {
     int:Unsigned8 a = 255;
@@ -1506,7 +1325,7 @@ function init() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Unsigned8' as the LHS operand and 'int' as the RHS
              operand.
-Labels: float, int, int:Unsigned8, shift-expr, unary-minus, var
+Labels: float, int, int:Unsigned8, shift-expr, unary-minus, var, DecimalNumber
 
 function errorFunction() {
     int:Unsigned8 x = 12;
@@ -1523,7 +1342,7 @@ Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Unsigned8' as the LHS operand and builtin subtypes of
              integer as the RHS operand.
 Labels: decimal, float, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
-        shift-expr, unary-minus, var
+        shift-expr, unary-minus, var, DecimalNumber
 
 function errorFunction() {
     int:Unsigned8 x = 127;
@@ -1565,7 +1384,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Unsigned8' as the LHS operand and byte as the RHS
              operand.
-Labels: byte, int:Unsigned8, shift-expr, var
+Labels: byte, int:Unsigned8, shift-expr, var, DecimalNumber
 
 function errorFunction() {
     int:Unsigned8 x = 12;
@@ -1578,7 +1397,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Unsigned8' as the LHS operand and user-defined subtype
              of integer as the RHS operand.
-Labels: DecimalNumber, float, int:Unsigned8, shift-expr, type, var
+Labels: DecimalNumber, float, int:Unsigned8, shift-expr, type, var, DecimalNumber, union-type
 
 type Ints -1|2|-128;
 
@@ -1599,7 +1418,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Unsigned8' as the LHS operand and optional 'int' as
              the RHS operand.
-Labels: float, int, int:Unsigned8, nil-literal, optional-type, shift-expr, unary-minus, var
+Labels: float, int, int:Unsigned8, nil-literal, optional-type, shift-expr, unary-minus, var, DecimalNumber
 
 function errorFunction() {
     int:Unsigned8 x = 12;
@@ -1620,7 +1439,7 @@ Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Unsigned8' as the LHS operand and optional builtin
              subtypes of integer as the RHS operand.
 Labels: decimal, float, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
-        shift-expr, unary-minus, var
+        shift-expr, unary-minus, var, DecimalNumber
 
 function errorFunction() {
     int:Unsigned8 a = 127;
@@ -1681,7 +1500,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Unsigned8' as the LHS operand and optional byte as
              the RHS operand.
-Labels: byte, float, int, int:Unsigned8, nil-literal, optional-type, shift-expr, var
+Labels: byte, float, int, int:Unsigned8, nil-literal, optional-type, shift-expr, var, DecimalNumber
 
 function errorFunction() {
     int:Unsigned8 x = 12;
@@ -1700,7 +1519,8 @@ function errorFunction() {
 
 Test-Case: output
 Description: Test '<<' expression with 'int:Unsigned8' operands in function call and method call.
-Labels: function-call-expr, int, int:Unsigned8, shift-expr, unary-minus, value:toBalString value:toString
+Labels: function-call-expr, int, int:Unsigned8, shift-expr, unary-minus, value:toBalString value:toString, DecimalNumber
+        function-defn
 
 function init() {
     int:Unsigned8 a = 112;
@@ -1730,7 +1550,7 @@ function leftShiftExpr(int x) {
 
 Test-Case: output
 Description: Test '<<' expression with 'int:Unsigned8' operands as a return statement.
-Labels: int, int:Unsigned8, return-stmt, shift-expr, unary-minus
+Labels: int, int:Unsigned8, return-stmt, shift-expr, unary-minus, DecimalNumber
 
 function init() {
     int:Unsigned8 a = 112;
@@ -1750,7 +1570,7 @@ function leftShiftExpr(int:Unsigned8 x, int:Unsigned8 y) returns int {
 
 Test-Case: output
 Description: Test '<<' expression with zero and positive 'int:Signed16' DecimalNumbers as operands.
-Labels: int:Signed16, shift-expr
+Labels: int:Signed16, shift-expr, DecimalNumber
 
 function init() {
     int:Signed16 a = 32765;
@@ -1764,41 +1584,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test '<<' expression with zero and positive 'int:Signed16' HexIntLiterals as operands.
-Labels: HexIntLiterals, int:Signed16, shift-expr
-
-function init() {
-    int:Signed16 a = 0x75;
-    int:Signed16 b = 0x15;
-    int:Signed16 c = 0x0;
-
-    io:println(a << b); // @output 245366784
-    io:println(a << c); // @output 117
-    io:println(c << b); // @output 0
-    io:println(c << c); // @output 0
-}
-
-Test-Case: output
-Description: Test '<<' expression with zero and positive 'int:Signed16' IntLiterals as operands.
-Labels: HexIntLiterals, int:Signed16, shift-expr
-
-function init() {
-    int:Signed16 a = 32764;
-    int:Signed16 b = 21;
-    int:Signed16 c = 0x7fff;
-    int:Signed16 d = 0x15;
-    int:Signed16 e = 0;
-    int:Signed16 f = 0x0;
-
-    io:println(a << d); // @output 68711088128
-    io:println(c << b); // @output 68717379584
-    io:println(f << e); // @output 0
-    io:println(e << f); // @output 0
-}
-
-Test-Case: output
 Description: Test '<<' expression with zero and negative 'int:Signed16' DecimalNumbers as operands.
-Labels: int:Signed16, shift-expr, unary-minus
+Labels: int:Signed16, shift-expr, unary-minus, DecimalNumber
 
 function init() {
     int:Signed16 a = -32764;
@@ -1812,41 +1599,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test '<<' expression with zero and negative 'int:Signed16' HexIntLiterals as operands.
-Labels: HexIntLiterals, int:Signed16, shift-expr, unary-minus
-
-function init() {
-    int:Signed16 a = -0x7ffa;
-    int:Signed16 b = -0x7ff7;
-    int:Signed16 c = -0x0;
-
-    io:println(a << b); // @output -16774144
-    io:println(a << c); // @output -32762
-    io:println(c << b); // @output 0
-    io:println(c << c); // @output 0
-}
-
-Test-Case: output
-Description: Test '<<' expression with zero and negative 'int:Signed16' IntLiterals as operands.
-Labels: HexIntLiterals, int:Signed16, shift-expr, unary-minus
-
-function init() {
-    int:Signed16 a = -32764;
-    int:Signed16 b = -21;
-    int:Signed16 c = -0x7ff6;
-    int:Signed16 d = -0x15;
-    int:Signed16 e = -0;
-    int:Signed16 f = -0x0;
-
-    io:println(a << d); // @output -288195191779622912
-    io:println(c << b); // @output -288142415221489664
-    io:println(f << e); // @output 0
-    io:println(e << f); // @output 0
-}
-
-Test-Case: output
-Description: Test '<<' expression for positive and negative 'int:Signed16' DedcimalNumbers as operands.
-Labels: int:Signed16, shift-expr, unary-minus
+Description: Test '<<' expression for positive and negative 'int:Signed16' DecimalNumbers as operands.
+Labels: int:Signed16, shift-expr, unary-minus, DecimalNumber
 
 function init() {
     int:Signed16 a = -111;
@@ -1856,49 +1610,11 @@ function init() {
 
     io:println(a << d); // @output -444
     io:println(c << b); // @output 68719476736
-}
-
-Test-Case: output
-Description: Test '<<' expression for positive and negative 'int:Signed16' HexIntLiterals as operands.
-Labels: HexIntliteral, int:Signed16, shift-expr, unary-minus
-
-function init() {
-    int:Signed16 a = -0x1f;
-    int:Signed16 b = -0x7ff9;
-    int:Signed16 c = 0x1f;
-    int:Signed16 d = 0x1a;
-
-    io:println(a << d); // @output -2080374784
-    io:println(c << b); // @output 3968
-}
-
-Test-Case: output
-Description: Test '<<' expression for positive and negative 'int:Signed16' IntLiterals as operands.
-Labels: HexIntliteral, int:Signed16, shift-expr, unary-minus
-
-function init() {
-    int:Signed16 a = -111;
-    int:Signed16 b = -92;
-    int:Signed16 c = 1;
-    int:Signed16 d = 2;
-    int:Signed16 e = -0x1f;
-    int:Signed16 f = -0x7ffe;
-    int:Signed16 g = 0x1f;
-    int:Signed16 h = 0x1a;
-
-    io:println(a << d); // @output -444
-    io:println(c << b); // @output 68719476736
-
-    io:println(e << g); // @output -66571993088
-    io:println(g << f); // @output 124
-
-    io:println(a << h); // @output -7449083904
-    io:println(g << b); // @output 2130303778816
 }
 
 Test-Case: output
 Description: Test '<<' expression with 'int:Signed16' as the LHS operand and 'int' as the RHS operand.
-Labels: int, int:Signed16, shift-expr, unary-minus
+Labels: int, int:Signed16, shift-expr, unary-minus, DecimalNumber
 
 function init() {
     int:Signed16 x = 117;
@@ -1916,7 +1632,7 @@ function init() {
 Test-Case: output
 Description: Test '<<' expression with 'int:Signed16' as the LHS operand and builtin subtypes of integer as the RHS
              operand.
-Labels: int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, shift-expr, unary-minus
+Labels: int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, shift-expr, unary-minus, DecimalNumber
 
 function init() {
     int:Signed16 x = 32759;
@@ -1958,7 +1674,7 @@ function init() {
 
 Test-Case: output
 Description: Test '<<' expression for optional zero and positive 'int:Signed16' operands.
-Labels: int, int:Signed16, nil-literal, optional-type, shift-expr, value:toBalString
+Labels: int, int:Signed16, nil-literal, optional-type, shift-expr, value:toBalString, DecimalNumber
 
 function init() {
     int:Signed16? a = 10;
@@ -1997,7 +1713,7 @@ function init() {
 
 Test-Case: output
 Description: Test '<<' expression for optional zero and negative 'int:Signed16' operands.
-Labels: int, int:Signed16, nil-literal, optional-type, shift-expr, unary-minus, value:toBalString
+Labels: int, int:Signed16, nil-literal, optional-type, shift-expr, unary-minus, value:toBalString, DecimalNumber
 
 function init() {
     int:Signed16? a = -32757;
@@ -2033,7 +1749,7 @@ function init() {
 
 Test-Case: output
 Description: Test '<<' expression for optional positive and negative 'int:Signed16'.
-Labels: int:Signed16, optional-type, shift-expr, unary-minus
+Labels: int:Signed16, optional-type, shift-expr, unary-minus, DecimalNumber
 
 function init() {
     int:Signed16? a = 8;
@@ -2057,7 +1773,7 @@ function init() {
 
 Test-Case: output
 Description: Test 0x3F mask of 'int:Signed16' RHS operand in '<<' expression.
-Labels: int:Signed16, shift-expr, unary-minus
+Labels: int:Signed16, shift-expr, unary-minus, DecimalNumber
 
 function init() {
     int:Signed16 a = -1;
@@ -2153,7 +1869,7 @@ function init() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Signed16' as the LHS operand and 'int' as the RHS
              operand.
-Labels: decimal, float, int, int:Signed16, shift-expr, unary-minus, var
+Labels: decimal, float, int, int:Signed16, shift-expr, unary-minus, var, DecimalNumber
 
 function errorFunction() {
     int:Signed16 x = 12;
@@ -2175,7 +1891,7 @@ Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Signed16' as the LHS operand and builtin subtypes of
              integer as the RHS operand.
 Labels: decimal, float, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
-        shift-expr, unary-minus, var
+        shift-expr, unary-minus, var, DecimalNumber
 
 function errorFunction() {
     int:Signed16 x = 32765;
@@ -2217,7 +1933,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Signed16' as the LHS operand and byte as the RHS
              operand.
-Labels: byte, int:Signed16, shift-expr, unary-minus, var
+Labels: byte, int:Signed16, shift-expr, unary-minus, var, DecimalNumber
 
 function errorFunction() {
     int:Signed16 x = 12;
@@ -2233,7 +1949,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Signed16' as the LHS operand and user-defined subtype
              of integer as the RHS operand.
-Labels: DecimalNumber, float, int:Signed16, shift-expr, type, unary-minus, var
+Labels: DecimalNumber, float, int:Signed16, shift-expr, type, unary-minus, var, DecimalNumber, union-type
 
 type Ints -1|2|-128;
 
@@ -2261,7 +1977,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Signed16' as the LHS operand and optional 'int' as
              the RHS operand.
-Labels: float, int, int:Signed16, nil-literal, optional-type, shift-expr, unary-minus, var
+Labels: float, int, int:Signed16, nil-literal, optional-type, shift-expr, unary-minus, var, DecimalNumber
 
 function errorFunction() {
     int:Signed16 x = 12;
@@ -2289,7 +2005,7 @@ Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Signed16' as the LHS operand and optional builtin
              subtypes of integer as the RHS operand.
 Labels: decimal, float, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
-        shift-expr, unary-minus, var
+        shift-expr, unary-minus, var, DecimalNumber
 
 function errorFunction() {
     int:Signed16 a = 32767;
@@ -2350,7 +2066,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Signed16' as the LHS operand and optional byte as
              the RHS operand.
-Labels: byte, float, int, int:Signed16, nil-literal, optional-type, shift-expr, unary-minus, var
+Labels: byte, float, int, int:Signed16, nil-literal, optional-type, shift-expr, unary-minus, var, DecimalNumber
 
 function errorFunction() {
     int:Signed16 x = 12;
@@ -2376,7 +2092,7 @@ function errorFunction() {
 
 Test-Case: output
 Description: Test '<<' expression with 'int:Signed16' operands in function call and method call.
-Labels: function-call-expr, int:Signed16, shift-expr, unary-minus, value:toBalString, value:toString
+Labels: function-call-expr, int:Signed16, shift-expr, unary-minus, value:toBalString, value:toString, DecimalNumber
 
 function init() {
     int:Signed16 a = -112;
@@ -2406,7 +2122,7 @@ function leftShiftExpr(int x) {
 
 Test-Case: output
 Description: Test '<<' expression with 'int:Signed16' operands as a return statement.
-Labels: int, int:Signed16, return-stmt, shift-expr, unary-minus
+Labels: int, int:Signed16, return-stmt, shift-expr, unary-minus, DecimalNumber
 
 function init() {
     int:Signed16 a = -112;
@@ -2426,7 +2142,7 @@ function leftShiftExpr(int:Signed16 x, int:Signed16 y) returns int {
 
 Test-Case: output
 Description: Test '<<' expression with 'int:Unsigned16' DecimalNumbers as operands.
-Labels: int:Unsigned16, shift-expr
+Labels: int:Unsigned16, shift-expr, DecimalNumber
 
 function init() {
     int:Unsigned16 a = 65531;
@@ -2440,41 +2156,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test '<<' expression with 'int:Unsigned16' HexIntLiterals as operands.
-Labels: HexIntLiterals, int:Unsigned16, shift-expr
-
-function init() {
-    int:Unsigned16 a = 0xf5;
-    int:Unsigned16 b = 0x15;
-    int:Unsigned16 c = 0x0;
-
-    io:println(a << b); // @output 513802240
-    io:println(a << c); // @output 245
-    io:println(c << b); // @output 0
-    io:println(c << c); // @output 0
-}
-
-Test-Case: output
-Description: Test '<<' expression with 'int:Unsigned16' IntLiterals as operands.
-Labels: HexIntLiterals, int:Unsigned16, shift-expr
-
-function init() {
-    int:Unsigned16 a = 65526;
-    int:Unsigned16 b = 21;
-    int:Unsigned16 c = 0xf5;
-    int:Unsigned16 d = 0x15;
-    int:Unsigned16 e = 0;
-    int:Unsigned16 f = 0x0;
-
-    io:println(a << d); // @output 137417981952
-    io:println(c << b); // @output 513802240
-    io:println(f << e); // @output 0
-    io:println(e << f); // @output 0
-}
-
-Test-Case: output
 Description: Test '<<' expression with 'int:Unsigned16' as the LHS operand and 'int' as the RHS operand.
-Labels: int, int:Unsigned16, shift-expr, unary-minus
+Labels: int, int:Unsigned16, shift-expr, unary-minus, DecimalNumber
 
 function init() {
     int:Unsigned16 x = 65533;
@@ -2489,7 +2172,7 @@ function init() {
 Test-Case: output
 Description: Test '<<' expression with 'int:Unsigned16' as the LHS operand and builtin subtypes of integer as the RHS
              operand.
-Labels: int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, shift-expr, unary-minus
+Labels: int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, shift-expr, unary-minus, DecimalNumber
 
 function init() {
     int:Unsigned16 x = 245;
@@ -2521,7 +2204,7 @@ function init() {
 
 Test-Case: output
 Description: Test '<<' expression for optional 'int:Unsigned16' operands.
-Labels: int, int:Unsigned16, nil-literal, optional-type, shift-expr, value:toBalString
+Labels: int, int:Unsigned16, nil-literal, optional-type, shift-expr, value:toBalString, DecimalNumber
 
 function init() {
     int:Unsigned16? a = 10;
@@ -2560,11 +2243,7 @@ function init() {
 
 Test-Case: output
 Description: Test 0x3F mask of 'int:Unsigned16' RHS operand in '<<' expression.
-Labels: int:Unsigned16, shift-expr, unary-minus
-
-Test-Case: output
-Description: Test 0x3F mask of 'int:Unsigned16' RHS operand in '<<' expression.
-Labels: int:Unsigned16, shift-expr
+Labels: int:Unsigned16, shift-expr, unary-minus, DecimalNumber
 
 function init() {
     int:Unsigned16 a = 65535;
@@ -2630,7 +2309,7 @@ function init() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Unsigned16' as the LHS operand and 'int' as the RHS
              operand.
-Labels: float, int, int:Unsigned16, shift-expr, unary-minus, var
+Labels: float, int, int:Unsigned16, shift-expr, unary-minus, var, DecimalNumber
 
 function errorFunction() {
     int:Unsigned16 x = 12;
@@ -2647,7 +2326,7 @@ Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Unsigned16' as the LHS operand and builtin subtypes of
              integer as the RHS operand.
 Labels: decimal, float, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
-        shift-expr, unary-minus, var
+        shift-expr, unary-minus, var, DecimalNumber
 
 function errorFunction() {
     int:Unsigned16 x = 127;
@@ -2689,7 +2368,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Unsigned16' as the LHS operand and byte as the RHS
              operand.
-Labels: byte, int:Unsigned16, shift-expr, var
+Labels: byte, int:Unsigned16, shift-expr, var, DecimalNumber
 
 function errorFunction() {
     int:Unsigned16 x = 12;
@@ -2702,7 +2381,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Unsigned16' as the LHS operand and user-defined
              subtype of integer as the RHS operand.
-Labels: DecimalNumber, float, int:Unsigned16, shift-expr, type, unary-minus, var
+Labels: DecimalNumber, float, int:Unsigned16, shift-expr, type, unary-minus, var, DecimalNumber, union-type
 
 type Ints -1|2|-128;
 
@@ -2723,7 +2402,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Unsigned16' as the LHS operand and optional 'int' as
              the RHS operand.
-Labels: int, int:Unsigned16, nil-literal, optional-type, shift-expr, unary-minus
+Labels: int, int:Unsigned16, nil-literal, optional-type, shift-expr, unary-minus, DecimalNumber
 
 function errorFunction() {
     int:Unsigned16 x = 12;
@@ -2744,7 +2423,7 @@ Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Unsigned16' as the LHS operand and optional builtin
              subtypes of integer as the RHS operand.
 Labels: decimal, float, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
-        shift-expr, unary-minus, var
+        shift-expr, unary-minus, var, DecimalNumber
 
 function errorFunction() {
     int:Unsigned16 a = 127;
@@ -2805,7 +2484,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Unsigned16' as the LHS operand and optional byte as
              the RHS operand.
-Labels: byte, float, int, int:Unsigned16, nil-literal, optional-type, shift-expr, var
+Labels: byte, float, int, int:Unsigned16, nil-literal, optional-type, shift-expr, var, DecimalNumber
 
 function errorFunction() {
     int:Unsigned16 x = 12;
@@ -2824,7 +2503,7 @@ function errorFunction() {
 
 Test-Case: output
 Description: Test '<<' expression with 'int:Unsigned16' operands in function call and method call.
-Labels: function-call-expr, int, int:Unsigned16, shift-expr, unary-minus, value:toBalString value:toString
+Labels: function-call-expr, int, int:Unsigned16, shift-expr, value:toBalString, value:toString, DecimalNumber
 
 function init() {
     int:Unsigned16 a = 112;
@@ -2854,7 +2533,7 @@ function leftShiftExpr(int x) {
 
 Test-Case: output
 Description: Test '<<' expression with 'int:Unsigned16' operands as a return statement.
-Labels: int, int:Unsigned16, return-stmt, shift-expr, unary-minus
+Labels: int, int:Unsigned16, return-stmt, shift-expr, DecimalNumber
 
 function init() {
     int:Unsigned16 a = 112;
@@ -2874,7 +2553,7 @@ function leftShiftExpr(int x, int y) returns int {
 
 Test-Case: output
 Description: Test '<<' expression with zero and positive 'int:Signed32' DecimalNumbers as operands.
-Labels: int:Signed32, shift-expr
+Labels: int:Signed32, shift-expr, DecimalNumber
 
 function init() {
     int:Signed32 a = 2147483644;
@@ -2888,41 +2567,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test '<<' expression with zero and positive 'int:Signed32' HexIntLiterals as operands.
-Labels: HexIntLiterals, int:Signed32, shift-expr
-
-function init() {
-    int:Signed32 a = 0x75;
-    int:Signed32 b = 0x15;
-    int:Signed32 c = 0x0;
-
-    io:println(a << b); // @output 245366784
-    io:println(a << c); // @output 117
-    io:println(c << b); // @output 0
-    io:println(c << c); // @output 0
-}
-
-Test-Case: output
-Description: Test '<<' expression with zero and positive 'int:Signed32' IntLiterals as operands.
-Labels: HexIntLiterals, int:Signed32, shift-expr
-
-function init() {
-    int:Signed32 a = 2147483641;
-    int:Signed32 b = 21;
-    int:Signed32 c = 0x7ffffffd;
-    int:Signed32 d = 0x15;
-    int:Signed32 e = 0;
-    int:Signed32 f = 0x0;
-
-    io:println(a << d); // @output 4503599612690432
-    io:println(c << b); // @output 4503599621079040
-    io:println(f << e); // @output 0
-    io:println(e << f); // @output 0
-}
-
-Test-Case: output
 Description: Test '<<' expression with zero and negative 'int:Signed32' DecimalNumbers as operands.
-Labels: int:Signed32, shift-expr, unary-minus
+Labels: int:Signed32, shift-expr, unary-minus, DecimalNumber
 
 function init() {
     int:Signed32 a = -2147483640;
@@ -2936,41 +2582,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test '<<' expression with zero and negative 'int:Signed32' HexIntLiterals as operands.
-Labels: HexIntLiterals, int:Signed32, shift-expr, unary-minus
-
-function init() {
-    int:Signed32 a = -0x7ffffffe;
-    int:Signed32 b = -0x7ffffff7;
-    int:Signed32 c = -0x0;
-
-    io:println(a << b); // @output -1099511626752
-    io:println(a << c); // @output -2147483646
-    io:println(c << b); // @output 0
-    io:println(c << c); // @output 0
-}
-
-Test-Case: output
-Description: Test '<<' expression with zero and negative 'int:Signed32' IntLiterals as operands.
-Labels: HexIntLiterals, int:Signed32, shift-expr, unary-minus
-
-function init() {
-    int:Signed32 a = -2147483640;
-    int:Signed32 b = -21;
-    int:Signed32 c = -0x7ffffffa;
-    int:Signed32 d = -0x15;
-    int:Signed32 e = -0;
-    int:Signed32 f = -0x0;
-
-    io:println(a << d); // @output 70368744177664
-    io:println(c << b); // @output 52776558133248
-    io:println(f << e); // @output 0
-    io:println(e << f); // @output 0
-}
-
-Test-Case: output
-Description: Test '<<' expression for positive and negative 'int:Signed32' DedcimalNumbers as operands.
-Labels: int:Signed32, shift-expr, unary-minus
+Description: Test '<<' expression for positive and negative 'int:Signed32' DecimalNumbers as operands.
+Labels: int:Signed32, shift-expr, unary-minus, DecimalNumber
 
 function init() {
     int:Signed32 a = -111;
@@ -2980,49 +2593,11 @@ function init() {
 
     io:println(a << d); // @output -444
     io:println(c << b); // @output 68719476736
-}
-
-Test-Case: output
-Description: Test '<<' expression for positive and negative 'int:Signed32' HexIntLiterals as operands.
-Labels: HexIntliteral, int:Signed32, shift-expr, unary-minus
-
-function init() {
-    int:Signed32 a = -0x1f;
-    int:Signed32 b = -0x7ffffffe;
-    int:Signed32 c = 0x1f;
-    int:Signed32 d = 0x1a;
-
-    io:println(a << d); // @output -2080374784
-    io:println(c << b); // @output 124
-}
-
-Test-Case: output
-Description: Test '<<' expression for positive and negative 'int:Signed32' IntLiterals as operands.
-Labels: HexIntliteral, int:Signed32, shift-expr, unary-minus
-
-function init() {
-    int:Signed32 a = -111;
-    int:Signed32 b = -92;
-    int:Signed32 c = 1;
-    int:Signed32 d = 2;
-    int:Signed32 e = -0x1f;
-    int:Signed32 f = -0x7ffffffc;
-    int:Signed32 g = 0x1f;
-    int:Signed32 h = 0x1a;
-
-    io:println(a << d); // @output -444
-    io:println(c << b); // @output 68719476736
-
-    io:println(e << g); // @output -66571993088
-    io:println(g << f); // @output 496
-
-    io:println(a << h); // @output -7449083904
-    io:println(g << b); // @output 2130303778816
 }
 
 Test-Case: output
 Description: Test '<<' expression with 'int:Signed32' as the LHS operand and 'int' as the RHS operand.
-Labels: int, int:Signed32, shift-expr, unary-minus
+Labels: int, int:Signed32, shift-expr, unary-minus, DecimalNumber
 
 function init() {
     int:Signed32 x = 117;
@@ -3040,7 +2615,7 @@ function init() {
 Test-Case: output
 Description: Test '<<' expression with 'int:Signed32' as the LHS operand and builtin subtypes of integer as the RHS
              operand.
-Labels: int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, shift-expr, unary-minus
+Labels: int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, shift-expr, unary-minus, DecimalNumber
 
 function init() {
     int:Signed32 x = 2147483642;
@@ -3082,7 +2657,7 @@ function init() {
 
 Test-Case: output
 Description: Test '<<' expression for optional zero and positive 'int:Signed32' operands.
-Labels: int:Signed32, int, nil-literal, optional-type, shift-expr, value:toBalString
+Labels: int:Signed32, int, nil-literal, optional-type, shift-expr, value:toBalString, DecimalNumber
 
 function init() {
     int:Signed32? a = 10;
@@ -3121,7 +2696,7 @@ function init() {
 
 Test-Case: output
 Description: Test '<<' expression for optional zero and negative 'int:Signed32' operands.
-Labels: int:Signed32, int, nil-literal, optional-type, shift-expr, unary-minus, value:toBalString
+Labels: int:Signed32, int, nil-literal, optional-type, shift-expr, unary-minus, value:toBalString, DecimalNumber
 
 function init() {
     int:Signed32? a = -32757;
@@ -3157,7 +2732,7 @@ function init() {
 
 Test-Case: output
 Description: Test '<<' expression for optional positive and negative 'int:Signed32'.
-Labels: int:Signed32, optional-type, shift-expr, unary-minus
+Labels: int:Signed32, optional-type, shift-expr, unary-minus, DecimalNumber
 
 function init() {
     int:Signed32? a = 8;
@@ -3181,7 +2756,7 @@ function init() {
 
 Test-Case: output
 Description: Test 0x3F mask of 'int:Signed32' RHS operand in '<<' expression.
-Labels: int:Signed32, shift-expr, unary-minus
+Labels: int:Signed32, shift-expr, unary-minus, DecimalNumber
 
 function init() {
     int:Signed32 a = -1;
@@ -3276,7 +2851,7 @@ function init() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Signed32' as the LHS operand and 'int' as the RHS
              operand.
-Labels: decimal, float, int:Signed32, int, shift-expr, unary-minus, var
+Labels: decimal, float, int:Signed32, int, shift-expr, unary-minus, var, DecimalNumber
 
 function errorFunction() {
     int:Signed32 x = 12;
@@ -3298,7 +2873,7 @@ Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Signed32' as the LHS operand and builtin subtypes of
              integer as the RHS operand.
 Labels: decimal, float, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
-        shift-expr, unary-minus, var
+        shift-expr, unary-minus, var, DecimalNumber
 
 function errorFunction() {
     int:Signed32 x = 2147483643;
@@ -3340,7 +2915,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Signed32' as the LHS operand and byte as the RHS
              operand.
-Labels: byte, int:Signed32, shift-expr, unary-minus, var
+Labels: byte, int:Signed32, shift-expr, unary-minus, var, DecimalNumber
 
 function errorFunction() {
     int:Signed32 x = 12;
@@ -3356,7 +2931,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Signed32' as the LHS operand and user-defined subtype
              of integer as the RHS operand.
-Labels: DecimalNumber, float, int:Signed32, shift-expr, type, unary-minus, var
+Labels: DecimalNumber, float, int:Signed32, shift-expr, type, unary-minus, var, DecimalNumber
 
 type Ints -1|2|-128;
 
@@ -3384,7 +2959,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Signed32' as the LHS operand and optional 'int' as
              the RHS operand.
-Labels: float, int:Signed32, int, nil-literal, optional-type, shift-expr, unary-minus, var
+Labels: float, int:Signed32, int, nil-literal, optional-type, shift-expr, unary-minus, var, DecimalNumber
 
 function errorFunction() {
     int:Signed32 x = 12;
@@ -3412,7 +2987,7 @@ Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Signed32' as the LHS operand and optional builtin
              subtypes of integer as the RHS operand.
 Labels: decimal, float, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
-        shift-expr, unary-minus, var
+        shift-expr, unary-minus, var, DecimalNumber
 
 function errorFunction() {
     int:Signed32 a = 2147483640;
@@ -3473,7 +3048,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Signed32' as the LHS operand and optional byte as
              the RHS operand.
-Labels: byte, float, int:Signed32, int, nil-literal, optional-type, shift-expr, unary-minus, var
+Labels: byte, float, int:Signed32, int, nil-literal, optional-type, shift-expr, unary-minus, var, DecimalNumber
 
 function errorFunction() {
     int:Signed32 x = 12;
@@ -3499,7 +3074,7 @@ function errorFunction() {
 
 Test-Case: output
 Description: Test '<<' expression with 'int:Signed32' operands in function call and method call.
-Labels: function-call-expr, int:Signed32, shift-expr, unary-minus, value:toBalString, value:toString
+Labels: function-call-expr, int:Signed32, shift-expr, unary-minus, value:toBalString, value:toString, DecimalNumber
 
 function init() {
     int:Signed32 a = -112;
@@ -3529,7 +3104,7 @@ function leftShiftExpr(int x) {
 
 Test-Case: output
 Description: Test '<<' expression with 'int:Signed32' operands as a return statement.
-Labels: int:Signed32, int, return-stmt, shift-expr, unary-minus
+Labels: int:Signed32, int, return-stmt, shift-expr, unary-minus, DecimalNumber, function-defn, function-call-expr
 
 function init() {
     int:Signed32 a = -112;
@@ -3549,7 +3124,7 @@ function leftShiftExpr(int:Signed32 x, int:Signed32 y) returns int {
 
 Test-Case: output
 Description: Test '<<' expression with 'int:Unsigned32' DecimalNumbers as operands.
-Labels: int:Unsigned32, shift-expr
+Labels: int:Unsigned32, shift-expr, DecimalNumber
 
 function init() {
     int:Unsigned32 a = 4294967290;
@@ -3563,41 +3138,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test '<<' expression with 'int:Unsigned32' HexIntLiterals as operands.
-Labels: HexIntLiterals, int:Unsigned32, shift-expr
-
-function init() {
-    int:Unsigned32 a = 0xf5;
-    int:Unsigned32 b = 0x15;
-    int:Unsigned32 c = 0x0;
-
-    io:println(a << b); // @output 513802240
-    io:println(a << c); // @output 245
-    io:println(c << b); // @output 0
-    io:println(c << c); // @output 0
-}
-
-Test-Case: output
-Description: Test '<<' expression with 'int:Unsigned32' IntLiterals as operands.
-Labels: HexIntLiterals, int:Unsigned32, shift-expr
-
-function init() {
-    int:Unsigned32 a = 4294967294;
-    int:Unsigned32 b = 21;
-    int:Unsigned32 c = 0xf5;
-    int:Unsigned32 d = 0x15;
-    int:Unsigned32 e = 0;
-    int:Unsigned32 f = 0x0;
-
-    io:println(a << d); // @output 9007199250546688
-    io:println(c << b); // @output 513802240
-    io:println(f << e); // @output 0
-    io:println(e << f); // @output 0
-}
-
-Test-Case: output
 Description: Test '<<' expression with 'int:Unsigned32' as the LHS operand and 'int' as the RHS operand.
-Labels: int:Unsigned32, int, shift-expr, unary-minus
+Labels: int:Unsigned32, int, shift-expr, unary-minus, DecimalNumber
 
 function init() {
     int:Unsigned32 x = 4294967287;
@@ -3612,7 +3154,8 @@ function init() {
 Test-Case: output
 Description: Test '<<' expression with 'int:Unsigned32' as the LHS operand and builtin subtypes of integer as the RHS
              operand.
-Labels: int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, shift-expr, unary-minus
+Labels: int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, shift-expr, unary-minus,
+        DecimalNumber
 
 function init() {
     int:Unsigned32 x = 245;
@@ -3644,7 +3187,7 @@ function init() {
 
 Test-Case: output
 Description: Test '<<' expression for optional 'int:Unsigned32' operands.
-Labels: int:Unsigned32, int, nil-literal, optional-type, shift-expr, value:toBalString
+Labels: int:Unsigned32, int, nil-literal, optional-type, shift-expr, value:toBalString, DecimalNumber
 
 function init() {
     int:Unsigned32? a = 10;
@@ -3683,7 +3226,7 @@ function init() {
 
 Test-Case: output
 Description: Test 0x3F mask of 'int:Unsigned32' RHS operand in '<<' expression.
-Labels: int:Unsigned32, shift-expr
+Labels: int:Unsigned32, shift-expr, DecimalNumber
 
 function init() {
     int:Unsigned32 a = 4294967295;
@@ -3749,7 +3292,7 @@ function init() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Unsigned32' as the LHS operand and 'int' as the RHS
              operand.
-Labels: float, int:Unsigned32, int, shift-expr, unary-minus, var
+Labels: float, int:Unsigned32, int, shift-expr, unary-minus, var, DecimalNumber
 
 function errorFunction() {
     int:Unsigned32 x = 12;
@@ -3766,7 +3309,7 @@ Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Unsigned32' as the LHS operand and builtin subtypes of
              integer as the RHS operand.
 Labels: decimal, float, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
-        shift-expr, unary-minus, var
+        shift-expr, unary-minus, var, DecimalNumber
 
 function errorFunction() {
     int:Unsigned32 x = 127;
@@ -3808,7 +3351,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Unsigned32' as the LHS operand and byte as the RHS
              operand.
-Labels: byte, int:Unsigned32, shift-expr, var
+Labels: byte, int:Unsigned32, shift-expr, var, DecimalNumber
 
 function errorFunction() {
     int:Unsigned32 x = 12;
@@ -3821,7 +3364,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Unsigned32' as the LHS operand and user-defined
              subtype of integer as the RHS operand.
-Labels: DecimalNumber, float, int:Unsigned32, shift-expr, type, unary-minus, var
+Labels: DecimalNumber, float, int:Unsigned32, shift-expr, type, unary-minus, var, DecimalNumber
 
 type Ints -1|2|-128;
 
@@ -3842,7 +3385,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Unsigned32' as the LHS operand and optional 'int' as
              the RHS operand.
-Labels: float, int:Unsigned32, int, nil-literal, optional-type, shift-expr, unary-minus
+Labels: float, int:Unsigned32, int, nil-literal, optional-type, shift-expr, unary-minus, DecimalNumber
 
 function errorFunction() {
     int:Unsigned32 x = 12;
@@ -3863,7 +3406,7 @@ Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Unsigned32' as the LHS operand and optional builtin
              subtypes of integer as the RHS operand.
 Labels: decimal, float, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
-        shift-expr, unary-minus, var
+        shift-expr, unary-minus, var, DecimalNumber
 
 function errorFunction() {
     int:Unsigned32 a = 127;
@@ -3924,7 +3467,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Unsigned32' as the LHS operand and optional byte as
              the RHS operand.
-Labels: byte, float, int:Unsigned32, int, nil-literal, optional-type, shift-expr, var
+Labels: byte, float, int:Unsigned32, int, nil-literal, optional-type, shift-expr, var, DecimalNumber
 
 function errorFunction() {
     int:Unsigned32 x = 12;
@@ -3943,7 +3486,7 @@ function errorFunction() {
 
 Test-Case: output
 Description: Test '<<' expression with 'int:Unsigned32' operands in function call and method call.
-Labels: function-call-expr, int:Unsigned32, int, shift-expr, unary-minus, value:toBalString value:toString
+Labels: function-call-expr, int:Unsigned32, int, shift-expr, unary-minus, value:toBalString value:toString, function-defn, DecimalNumber
 
 function init() {
     int:Unsigned32 a = 112;
@@ -3973,7 +3516,7 @@ function leftShiftExpr(int x) {
 
 Test-Case: output
 Description: Test '<<' expression with 'int:Unsigned32' operands as a return statement.
-Labels: int:Unsigned32, int, return-stmt, shift-expr, unary-minus
+Labels: int:Unsigned32, int, return-stmt, shift-expr, unary-minus, DecimalNumber, function-call-expr, function-defn
 
 function init() {
     int:Unsigned32 a = 112;
@@ -3993,7 +3536,7 @@ function leftShiftExpr(int x, int y) returns int {
 
 Test-Case: output
 Description: Test '<<' expression with 'byte' DecimalNumbers as operands.
-Labels: byte, shift-expr
+Labels: byte, shift-expr, DecimalNumber
 
 function init() {
     byte a = 253;
@@ -4007,41 +3550,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test '<<' expression with 'byte' HexIntLiterals as operands.
-Labels: byte, HexIntLiterals, shift-expr
-
-function init() {
-    byte a = 0xf5;
-    byte b = 0x15;
-    byte c = 0x0;
-
-    io:println(a << b); // @output 513802240
-    io:println(a << c); // @output 245
-    io:println(c << b); // @output 0
-    io:println(c << c); // @output 0
-}
-
-Test-Case: output
-Description: Test '<<' expression with 'byte' IntLiterals as operands.
-Labels: byte, HexIntLiterals, shift-expr
-
-function init() {
-    byte a = 255;
-    byte b = 21;
-    byte c = 0xf5;
-    byte d = 0x15;
-    byte e = 0;
-    byte f = 0x0;
-
-    io:println(a << d); // @output 534773760
-    io:println(c << b); // @output 513802240
-    io:println(f << e); // @output 0
-    io:println(e << f); // @output 0
-}
-
-Test-Case: output
 Description: Test '<<' expression with 'byte' as the LHS operand and 'int' as the RHS operand.
-Labels: byte, int, shift-expr, unary-minus
+Labels: byte, int, shift-expr, unary-minus, DecimalNumber
 
 function init() {
     byte x = 247;
@@ -4056,7 +3566,7 @@ function init() {
 Test-Case: output
 Description: Test '<<' expression with 'byte' as the LHS operand and builtin subtypes of integer as the RHS
              operand.
-Labels: byte, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, shift-expr, unary-minus
+Labels: byte, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, shift-expr, unary-minus, DecimalNumber
 
 function init() {
     byte x = 245;
@@ -4088,7 +3598,7 @@ function init() {
 
 Test-Case: output
 Description: Test '<<' expression for optional 'byte' operands.
-Labels: byte, int, nil-literal, optional-type, shift-expr, value:toBalString
+Labels: byte, int, nil-literal, optional-type, shift-expr, value:toBalString, DecimalNumber
 
 function init() {
     byte? a = 10;
@@ -4127,7 +3637,7 @@ function init() {
 
 Test-Case: output
 Description: Test 0x3F mask of 'byte' RHS operand in '<<' expression.
-Labels: byte, shift-expr
+Labels: byte, shift-expr, DecimalNumber
 
 function init() {
     byte a = 255;
@@ -4193,7 +3703,7 @@ function init() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'byte' as the LHS operand and 'int' as the RHS
              operand.
-Labels: byte, float, int, shift-expr, unary-minus, var
+Labels: byte, float, int, shift-expr, unary-minus, var, DecimalNumber
 
 function errorFunction() {
     byte x = 12;
@@ -4210,7 +3720,7 @@ Test-Case: error
 Description: Test resultant type of the '<<' expression with 'byte' as the LHS operand and builtin subtypes of
              integer as the RHS operand.
 Labels: byte, decimal, float, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
-        shift-expr, unary-minus, var
+        shift-expr, unary-minus, var, DecimalNumber
 
 function errorFunction() {
     byte x = 127;
@@ -4251,7 +3761,7 @@ function errorFunction() {
 
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'byte' as the operands.
-Labels: byte, shift-expr, var
+Labels: byte, shift-expr, var, DecimalNumber
 
 function errorFunction() {
     byte x = 12;
@@ -4264,7 +3774,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'byte' as the LHS operand and user-defined subtype
              of integer as the RHS operand.
-Labels: byte, DecimalNumber, float, shift-expr, type, var
+Labels: byte, DecimalNumber, float, shift-expr, type, var, DecimalNumber, unary-minus
 
 type Ints -1|2|-128;
 
@@ -4285,7 +3795,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'byte' as the LHS operand and optional 'int' as
              the RHS operand.
-Labels: byte, float, int, nil-literal, optional-type, shift-expr, unary-minus, var
+Labels: byte, float, int, nil-literal, optional-type, shift-expr, unary-minus, var, DecimalNumber
 
 function errorFunction() {
     byte x = 12;
@@ -4306,7 +3816,7 @@ Test-Case: error
 Description: Test resultant type of the '<<' expression with 'byte' as the LHS operand and optional builtin
              subtypes of integer as the RHS operand.
 Labels: byte, decimal, float, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
-        shift-expr, unary-minus, var
+        shift-expr, unary-minus, var, DecimalNumber
 
 function errorFunction() {
     byte a = 127;
@@ -4367,7 +3877,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'byte' as the LHS operand and optional byte as
              the RHS operand.
-Labels: byte, float, int, int:Unsigned8, nil-literal, optional-type, shift-expr, var
+Labels: byte, float, int, int:Unsigned8, nil-literal, optional-type, shift-expr, var, DecimalNumber
 
 function errorFunction() {
     byte x = 12;
@@ -4386,7 +3896,7 @@ function errorFunction() {
 
 Test-Case: output
 Description: Test '<<' expression with 'byte' operands in function call and method call.
-Labels: byte, function-call-expr, int, shift-expr, unary-minus, value:toBalString value:toString
+Labels: byte, function-call-expr, int, shift-expr, value:toBalString value:toString, DecimalNumber
 
 function init() {
     byte a = 112;
@@ -4416,7 +3926,7 @@ function leftShiftExpr(int x) {
 
 Test-Case: output
 Description: Test '<<' expression with 'byte' operands as a return statement.
-Labels: byte, int, return-stmt, shift-expr, unary-minus
+Labels: byte, int, return-stmt, shift-expr, DecimalNumber, function-defn, function-call-expr
 
 function init() {
     byte a = 112;
@@ -4436,7 +3946,7 @@ function leftShiftExpr(byte x, byte y) returns int {
 
 Test-Case: output
 Description: Test '<<' expression with zero and positive user-defined subtypes of integer DecimalNumbers as operands.
-Labels: DecimalNumbers, shift-expr, type
+Labels: DecimalNumbers, shift-expr, type, union-type
 
 type Ints1 32765|21;
 type Ints2 0;
@@ -4453,47 +3963,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test '<<' expression with zero and positive user-defined HexIntLiterals as operands.
-Labels: HexIntLiterals, shift-expr, type
-
-type Ints1 0x75|0x15;
-type Ints2 0x0;
-
-function init() {
-    Ints1 a = 0x75;
-    Ints1 b = 0x15;
-    Ints2 c = 0x0;
-
-    io:println(a << b); // @output 245366784
-    io:println(a << c); // @output 117
-    io:println(c << b); // @output 0
-    io:println(c << c); // @output 0
-}
-
-Test-Case: output
-Description: Test '<<' expression with zero and positive user-defined IntLiterals as operands.
-Labels: DecimalNumbers, HexIntLiterals, shift-expr, type
-
-type Ints1 32764|21|0;
-type Ints2 0x7fff|0x15|0x0;
-
-function init() {
-    Ints1 a = 32764;
-    Ints1 b = 21;
-    Ints2 c = 0x7fff;
-    Ints2 d = 0x15;
-    Ints1 e = 0;
-    Ints2 f = 0x0;
-
-    io:println(a << d); // @output 68711088128
-    io:println(c << b); // @output 68717379584
-    io:println(f << e); // @output 0
-    io:println(e << f); // @output 0
-}
-
-Test-Case: output
 Description: Test '<<' expression with zero and negative user-defined DecimalNumbers as operands.
-Labels: DecimalNumbers, shift-expr, unary-minus, type
+Labels: DecimalNumbers, shift-expr, unary-minus, type, union-type
 
 type Ints1 -32764;
 type Ints2 -32764|0;
@@ -4510,45 +3981,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test '<<' expression with zero and negative user-defined HexIntLiterals as operands.
-Labels: HexIntLiterals, int, shift-expr, type, unary-minus
-
-type Ints int;
-
-function init() {
-    Ints a = -0x7ffa;
-    Ints b = -0x7ff7;
-    Ints c = 0x0;
-
-    io:println(a << b); // @output -16774144
-    io:println(a << c); // @output -32762
-    io:println(c << b); // @output 0
-    io:println(c << c); // @output 0
-}
-
-Test-Case: output
-Description: Test '<<' expression with zero and negative user-defined IntLiterals as operands.
-Labels: HexIntLiterals, int, shift-expr, type, unary-minus
-
-type Ints int;
-
-function init() {
-    Ints a = -32764;
-    Ints b = -21;
-    Ints c = -0x7ff6;
-    Ints d = -0x15;
-    Ints e = 0;
-    Ints f = 0x0;
-
-    io:println(a << d); // @output -288195191779622912
-    io:println(c << b); // @output -288142415221489664
-    io:println(f << e); // @output 0
-    io:println(e << f); // @output 0
-}
-
-Test-Case: output
-Description: Test '<<' expression for positive and negative user-defined DedcimalNumbers as operands.
-Labels: int, shift-expr, type, unary-minus
+Description: Test '<<' expression for positive and negative user-defined DecimalNumbers as operands.
+Labels: int, shift-expr, type, unary-minus, DecimalNumber
 
 type Ints int;
 
@@ -4560,54 +3994,12 @@ function init() {
 
     io:println(a << d); // @output -444
     io:println(c << b); // @output 68719476736
-}
-
-Test-Case: output
-Description: Test '<<' expression for positive and negative user-defined HexIntLiterals as operands.
-Labels: HexIntliteral, int, shift-expr, type, unary-minus
-
-type Ints int;
-
-function init() {
-    Ints a = -0x1f;
-    Ints b = -0x7ff9;
-    Ints c = 0x1f;
-    Ints d = 0x1a;
-
-    io:println(a << d); // @output -2080374784
-    io:println(c << b); // @output 3968
-}
-
-Test-Case: output
-Description: Test '<<' expression for positive and negative user-defined IntLiterals as operands.
-Labels: int, DecimalNumbers, HexIntliteral, shift-expr, type, unary-minus
-
-type Ints int;
-
-function init() {
-    Ints a = -111;
-    Ints b = -92;
-    Ints c = 1;
-    Ints d = 2;
-    Ints e = -0x1f;
-    Ints f = -0x7ffe;
-    Ints g = 0x1f;
-    Ints h = 0x1a;
-
-    io:println(a << d); // @output -444
-    io:println(c << b); // @output 68719476736
-
-    io:println(e << g); // @output -66571993088
-    io:println(g << f); // @output 124
-
-    io:println(a << h); // @output -7449083904
-    io:println(g << b); // @output 2130303778816
 }
 
 Test-Case: output
 Description: Test '<<' expression with user-defined subtypes of integer as the LHS operand and 'int' as the RHS
              operand.
-Labels: DecimalNumbers, int, shift-expr, type, unary-minus
+Labels: DecimalNumbers, int, shift-expr, type, unary-minus, union-type
 
 type Ints 117|-32767;
 
@@ -4628,7 +4020,7 @@ Test-Case: output
 Description: Test '<<' expression with user-defined subtypes of integer as the LHS operand and builtin subtypes of
              integer as the RHS operand.
 Labels: DecimalNumbers, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
-        shift-expr, type, unary-minus
+        shift-expr, type, unary-minus, DecimalNumber, union-type
 
 type Ints 32759|-32767;
 
@@ -4672,7 +4064,7 @@ function init() {
 
 Test-Case: output
 Description: Test '<<' expression for optional zero and positive user-defined subtypes of integer operands.
-Labels: DecimalNumbers, int, nil-literal, optional-type, shift-expr, type, value:toBalString
+Labels: DecimalNumbers, int, nil-literal, optional-type, shift-expr, type, value:toBalString, DecimalNumber
 
 type Ints int;
 
@@ -4713,7 +4105,7 @@ function init() {
 
 Test-Case: output
 Description: Test '<<' expression for optional zero and negative user-defined subtypes of integer operands.
-Labels: DecimalNumbers, int, nil-literal, optional-type, shift-expr, type, unary-minus, value:toBalString
+Labels: DecimalNumbers, int, nil-literal, optional-type, shift-expr, type, unary-minus, value:toBalString, DecimalNumber
 
 type Ints int;
 
@@ -4866,7 +4258,7 @@ function init() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with user-defined subtypes of integer as the LHS operand and
              'int' as the RHS operand.
-Labels: DecimalNumbers, decimal, float, int, int:Signed16, shift-expr, type, unary-minus, var
+Labels: DecimalNumbers, decimal, float, int, int:Signed16, shift-expr, type, unary-minus, var, union-type
 
 type Ints 12|-32762;
 
@@ -4952,7 +4344,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with user-defined subtypes of integer as the LHS operand and
              user-defined subtype of integer as the RHS operand.
-Labels: DecimalNumbers, float, int, int:Signed16, shift-expr, type, unary-minus, var
+Labels: DecimalNumbers, float, int, int:Signed16, shift-expr, type, unary-minus, var, union-type
 
 type Ints1 int;
 type Ints2 -1|2|-128;
@@ -4981,7 +4373,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with user-defined subtypes of integer as the LHS operand and
              optional integer as the RHS operand.
-Labels: DecimalNumbers, float, int, int:Signed16, nil-literal, optional-type, shift-expr, unary-minus, var
+Labels: DecimalNumbers, float, int, int:Signed16, nil-literal, optional-type, shift-expr, unary-minus, var, union-type
 
 type Ints 12|-12;
 
@@ -5011,7 +4403,7 @@ Test-Case: error
 Description: Test resultant type of the '<<' expression with integer as the LHS operand and optional builtin subtypes of
              integer as the RHS operand.
 Labels: DecimalNumbers, decimal, float, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16,
-        int:Unsigned32, shift-expr, type, unary-minus, var
+        int:Unsigned32, shift-expr, type, unary-minus, var, DecimalNumber
 
 type Ints int;
 
@@ -5074,7 +4466,8 @@ function errorFunction() {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with user-defined subtypes of integer as the LHS operand and
              optional byte as the RHS operand.
-Labels: byte, DecimalNumbers, float, int, int:Signed16, nil-literal, optional-type, shift-expr, type, unary-minus, var
+Labels: byte, DecimalNumbers, float, int, int:Signed16, nil-literal, optional-type, shift-expr, type, unary-minus, var,
+        union-type
 
 type Ints 12|-22;
 
@@ -5102,7 +4495,7 @@ function errorFunction() {
 
 Test-Case: output
 Description: Test '<<' expression with user-defined subtypes of integer operands in function call and method call.
-Labels: DecimalNumbers, function-call-expr, int, shift-expr, type, unary-minus, value:toBalString, value:toString
+Labels: DecimalNumbers, function-call-expr, int, shift-expr, type, unary-minus, value:toBalString, value:toString, union-type
 
 type Ints1 -112|-113;
 type Ints2 12|0|2;
@@ -5135,7 +4528,7 @@ function leftShiftExpr(int x) {
 
 Test-Case: output
 Description: Test '<<' expression with user-defined subtypes of integer operands as a return statement.
-Labels: DecimalNumbers, int, return-stmt, shift-expr, type, unary-minus
+Labels: DecimalNumbers, int, return-stmt, shift-expr, type, unary-minus, union-type
 
 type Ints1 -112|-113;
 type Ints2 12|0|2;
@@ -5159,7 +4552,7 @@ function leftShiftExpr(int x, int y) returns int {
 Test-Case: output
 Description: Test the '<<' expression with module level basic types as the operands.
 Labels: byte, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, shift-expr,
-        unary-minus
+        unary-minus, DecimalNumber
 
 int i1 = 1221112;
 int i2 = -1212321321;
@@ -5225,7 +4618,7 @@ function init() {
 Test-Case: output
 Description: Test the '<<' expression with module level optional basic types as the operands.
 Labels: byte, int, int:Signed8, int:Signed32, int:Unsigned8, nil-literal, optional-type, shift-expr, unary-minus,
-        value:toBalString
+        value:toBalString, DecimalNumber
 
 int i1 = -1;
 int? i2 = 7;
@@ -5255,7 +4648,7 @@ function init() {
 Test-Case: output
 Description: Test the '<<' expression at module level.
 Labels: byte, DecimalNumber, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16,
-        int:Unsigned32, shift-expr, unary-minus
+        int:Unsigned32, shift-expr, unary-minus, DecimalNumber
 
 int i1 = 1221112;
 int i2 = 3;
@@ -5303,7 +4696,8 @@ function init() {
 
 Test-Case: output
 Description: Test '<<' expression with field access as operands.
-Labels: DecimalNumber, int, mapping-constructor, module-type-defn, record-type, shift-expr
+Labels: DecimalNumber, int, mapping-constructor, module-type-defn, record-type, shift-expr, mapping-constructor-expr,
+        function-call-expr, function-defn
 
 function init() {
     Record a = {x: 10};
@@ -5320,7 +4714,7 @@ type Record record {
 
 Test-Case: output
 Description: Test '<<' expression with member access as operands.
-Labels: array-type, DecimalNumber, int, list-constructor, shift-expr
+Labels: array-type, DecimalNumber, int, list-constructor, shift-expr, DecimalNumber
 
 function init() {
     int[] b = [3, 40];
@@ -5333,7 +4727,7 @@ function init() {
 
 Test-Case: output
 Description: Test '<<' expression with function call as operands.
-Labels: DecimalNumber, function-call-expr, int, shift-expr
+Labels: DecimalNumber, function-call-expr, int, shift-expr, function-defn
 
 function init() {
     int b = 10 << getInt();
@@ -5348,7 +4742,7 @@ function getInt() returns int {
 
 Test-Case: output
 Description: Test '<<' expression with method call as operands.
-Labels: DecimalNumber, explicit-new-expr, int, method-call-expr, module-class-defn, shift-expr
+Labels: DecimalNumber, explicit-new-expr, int, method-call-expr, module-class-defn, shift-expr, explicit-new-expr
 
 function init() {
     Class a = new Class();
@@ -5387,7 +4781,7 @@ function init() {
 
 Test-Case: output
 Description: Test '<<' expression with unary expressions as operands.
-Labels: int, shift-expr, unary-plus, unary-minus, unary-complement
+Labels: int, shift-expr, unary-plus, unary-minus, unary-complement, DecimalNumber
 
 function init() {
     int a = +4 << -3;
@@ -5408,7 +4802,7 @@ function init() {
 
 Test-Case: output
 Description: Test '<<' expression with multiplicative expressions operands.
-Labels: multiplicative-expr, int, shift-expr
+Labels: multiplicative-expr, int, shift-expr, DecimalNumber
 
 function init() {
     int a = 2 * 2 << 404 % 10 / 4;
@@ -5417,7 +4811,7 @@ function init() {
 
 Test-Case: output
 Description: Test '<<' expression additive expressions as operands.
-Labels: additive-expr, int, shift-expr
+Labels: additive-expr, int, shift-expr, DecimalNumber
 
 function init() {
     int a = (1 + 2) << (3 + 4);
@@ -5426,7 +4820,7 @@ function init() {
 
 Test-Case: output
 Description: Test '<<' expression with shift expressions as operands.
-Labels: int, shift-expr
+Labels: int, shift-expr, DecimalNumber
 
 function init() {
     int a = (1 << 2) << (100 >> 4);
@@ -5435,7 +4829,7 @@ function init() {
 
 Test-Case: output
 Description: Test '<<' expression with binary bitwise expressions as operands.
-Labels: binary-bitwise-expr, int, shift-expr
+Labels: binary-bitwise-expr, int, shift-expr, DecimalNumber
 
 function init() {
     int a = (2 & 6) << (2 ^ 6);
@@ -5444,7 +4838,7 @@ function init() {
 
 Test-Case: output
 Description: Test '<<' expression with conditional expressions as operands.
-Labels: conditional-expr, DecimalNumber, error, int, nil-literal, optional-type, shift-expr, union-type
+Labels: conditional-expr, DecimalNumber, error, int, nil-literal, optional-type, shift-expr, union-type, DecimalNumber
 
 function init() {
     int|error a = 12;
@@ -5457,7 +4851,7 @@ function init() {
 
 Test-Case: output
 Description: Test '<<' expression with checking expressions as operands.
-Labels: checking-expr, error, int, shift-expr, union-type
+Labels: checking-expr, error-type, int, shift-expr, union-type, DecimalNumber
 
 function init() returns error? {
     int|error a = 12;
@@ -5470,7 +4864,7 @@ function init() returns error? {
 
 Test-Case: output
 Description: Test valid '<<' expression.
-Labels: int, shift-expr, unary-minus
+Labels: int, shift-expr, unary-minus, DecimalNumber
 
 function init() {
     int a = 12<<2;
@@ -5489,7 +4883,7 @@ function init() {
 
 Test-Case: parser-error
 Description: Test invalid '<<' expression.
-Labels: int, shift-expr
+Labels: int, shift-expr, DecimalNumber
 
 function errorFunction() {
     int _ = 12 <<< 2; // @error undefined operator '<<<'
