@@ -363,7 +363,7 @@ function init() {
 
 Test-Case: output
 Description: Test less than expression for different user defined sub types of int.
-Labels: DecimalFloatingPointNumber, DecimalNumber, int:Signed8, int:Unsigned32, module-type-defn, relational-expr,
+Labels: DecimalFloatingPointNumber, DecimalNumber, int:Signed8, int:Unsigned32, module-const-decl, module-type-defn, relational-expr,
         union-type
 
 const ONE = 1;
@@ -828,7 +828,7 @@ function init() {
 
 Test-Case: output
 Description: Test less than expression for different optional user defined sub types of int.
-Labels: DecimalFloatingPointNumber, DecimalNumber, int:Signed8, int:Unsigned32, module-type-defn, optional-type,
+Labels: DecimalFloatingPointNumber, DecimalNumber, int:Signed8, int:Unsigned32, module-const-decl, module-type-defn, optional-type,
         relational-expr, union-type
 
 const ONE = 1;
@@ -893,6 +893,18 @@ function init() {
    io:println(b < a); // @output false
    io:println(a < a); // @output false
    io:println(b < b); // @output false
+}
+
+Test-Case: output
+Description: Test less than expression when one operand optional boolean and other one is not.
+Fail-Issue: ballerina-platform/ballerina-lang#35195
+Labels: boolean, optional-type, relational-expr
+
+function init() {
+   boolean a = false;
+   boolean? b = true;
+   io:println(a < b); // @output true
+   io:println(b < a); // @output false
 }
 
 Test-Case: output
@@ -1205,6 +1217,37 @@ function init() {
    io:println(c); // @output true
 }
 
+Test-Case: output
+Description: Test the result type of less than expression is boolean.
+Labels: boolean, DecimalNumber, relational-expr, var
+
+function init() {
+   var a = 1 < 2;
+   boolean b = a;
+   io:println(b); // @output true
+}
+
+Test-Case: output
+Description: Test the operator precedence of less than expression.
+Labels: additive-expr, DecimalNumber, function-call-expr, int, multiplicative-expr, relational-expr
+
+function init() {
+   int a = 4;
+   int b = 5;
+   int c = 6;
+   io:println(a + b < (getOne() + c) * b); // @output true
+   io:println(a / b < (getOne() - c) / b); // @output false
+   io:println((a + b) * getOne() < (getOne() + c) * b); // @output true
+   io:println(a + b * getTwo() < (a + b) * getTwo()); // @output true
+}
+
+function getOne() returns int{
+    return 1;
+}
+
+function getTwo() returns int{
+    return 2;
+}
 Test-Case: output
 Description: Test less than expression with list as operands.
 Labels: array-type, decimal, decimalFloatingPointNumber, DecimalFloatingPointNumber, DecimalNumber, int, float,

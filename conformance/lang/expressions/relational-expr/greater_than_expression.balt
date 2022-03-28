@@ -361,7 +361,7 @@ function init() {
 
 Test-Case: output
 Description: Test greater than expression for different user defined sub types of int.
-Labels: DecimalNumber, int:Signed8, int:Unsigned32, module-type-defn, relational-expr, union-type
+Labels: DecimalNumber, int:Signed8, int:Unsigned32, module-const-decl, module-type-defn, relational-expr, union-type
 
 const ONE = 1;
 const TWO = 2;
@@ -825,7 +825,7 @@ function init() {
 
 Test-Case: output
 Description: Test greater than expression for different optional user defined sub types of int.
-Labels: DecimalNumber, int:Signed8, int:Unsigned32, module-type-defn, optional-type, relational-expr, union-type
+Labels: DecimalNumber, int:Signed8, int:Unsigned32, module-const-decl, module-type-defn, optional-type, relational-expr, union-type
 
 const ONE = 1;
 const TWO = 2;
@@ -882,6 +882,18 @@ function init() {
    io:println(b > a); // @output true
    io:println(a > a); // @output false
    io:println(b > b); // @output false
+}
+
+Test-Case: output
+Description: Test greater than expression when one operand is optional boolean and other one is not.
+Fail-Issue: ballerina-platform/ballerina-lang#35195
+Labels: boolean, optional-type, relational-expr
+
+function init() {
+   boolean a = false;
+   boolean? b = true;
+   io:println(a > b); // @output false
+   io:println(b > a); // @output true
 }
 
 Test-Case: output
@@ -1193,6 +1205,38 @@ boolean c = a > b;
 
 function init() {
    io:println(c); // @output false
+}
+
+Test-Case: output
+Description: Test the result type of greater than expression is boolean.
+Labels: boolean, DecimalNumber, relational-expr, var
+
+function init() {
+   var a = 1 > 2;
+   boolean b = a;
+   io:println(b); // @output false
+}
+
+Test-Case: output
+Description: Test the operator precedence of greater than or equal expression.
+Labels: additive-expr, DecimalNumber, function-call-expr, int, multiplicative-expr, relational-expr
+
+function init() {
+   int a = 4;
+   int b = 5;
+   int c = 6;
+   io:println(a + b > (getOne() + c) * b); // @output false
+   io:println(a / b > (getOne() - c) / b); // @output true
+   io:println((a + b) * getOne() > (getOne() + c) * b); // @output false
+   io:println(a + b * getTwo() > (a + b) * getTwo()); // @output false
+}
+
+function getOne() returns int{
+    return 1;
+}
+
+function getTwo() returns int{
+    return 2;
 }
 
 Test-Case: output
