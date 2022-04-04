@@ -86,6 +86,28 @@ function fn() returns record {} {
     return {};
 }
 
+Test-Case: parser-error
+Description: Test table constructor with typo in `table` keyword.
+Labels: any, map-type, table-constructor-expr, table-type
+
+function errorFunction() {
+    table<map<any>> _ = tabl []; // @error expected the table keyword, found table
+    table<map<any>> _ = tabel []; // @error expected the table keyword, found tabel
+}
+
+Test-Case: parser-error
+Description: Test table constructor with invalid tokens.
+Labels: any, map-type, mapping-constructor-expr, table-constructor-expr, table-type
+
+function errorFunction() {
+    table<map<any>> _ = table [
+        {a: 1}. // @error invalid token `.`, expected `,`
+        {a = 1}, // @error invalid token `=`, expected `:`
+        {a: 1},
+        () // @error invalid usage of parenthesis, expected a curly braces
+    ];
+}
+
 Test-Case: output
 Description: Test members of the table coming from evaluating each mapping-constructor-expr in the row-list in order for a table constructor expression with no key-specifier.
 Labels: array-type, array:push, foreach-stmt, is-expr, iterable-table, list-constructor-expr, member-access-expr, method-call-expr, module-type-defn, 
