@@ -98,7 +98,7 @@ function errorFunction() {
 
 Test-Case: parser-error
 Description: Test syntax errors with readonly specific field.
-Labels: any, mapping-constructor-expr, map-type, readonly-field, string
+Labels: any, mapping-constructor-expr, mapping-constructor-readonly-field, map-type, string
 
 function errorFunction() {
     map<any> _ = {readonly }; // @error missing specific field
@@ -115,7 +115,7 @@ function errorFunction() {
 Test-Case: parser-error
 Description: Test syntax errors with readonly specific field.
 Fail-Issue: ballerina-platform/ballerina-lang#35562
-Labels: any, mapping-constructor-expr, map-type, readonly-field, string
+Labels: any, mapping-constructor-expr, mapping-constructor-readonly-field, map-type, string
 
 function errorFunction() {
     map<any> _ = {:readonly fieldA: "Fd" }; // @error colon before readonly field
@@ -153,7 +153,8 @@ function printMapping(map<any> result) {
 
 Test-Case: output
 Description: Test a specific-field that consists of just a variable name x is equivalent to a field x: x.
-Labels: any, byte, DecimalFloatingPointNumber, float, mapping-constructor-expr, map-type, nil-literal, string
+Labels: any, byte, DecimalFloatingPointNumber, float, mapping-constructor-expr, map-type, nil-literal, string, 
+        variable-name-field
 
 function init() {
     int c = 45;
@@ -175,7 +176,7 @@ function printResult(map<any> result) {
 Test-Case: output
 Description: Test a specific-field that consists of just a variable name x is equivalent to a field x: x using record
              type.
-Labels: any, byte, mapping-constructor-expr, map-type, record-type, string
+Labels: any, byte, mapping-constructor-expr, map-type, record-type, string, variable-name-field
         
 function init() {
     int c = 45;
@@ -214,7 +215,7 @@ function printResult(map<any> result) {
 
 Test-Case: output
 Description: Test basic mapping constructor expression with readonly specific fields.
-Labels: any, mapping-constructor-expr, map-type, readonly-field, string
+Labels: any, mapping-constructor-expr, mapping-constructor-readonly-field, map-type, string
 
 function init() {
     int a = 45;
@@ -277,8 +278,8 @@ function errorFunction() {
 
 Test-Case: output
 Description: Test usage of spread field in mapping constructor using exclusive record types.
-Labels: any, boolean, error-type, error-constructor-expr, mapping-constructor-expr, map-type
-       record-type, spread-field, string, union-type
+Labels: any, boolean, error-type, error-constructor-expr, mapping-constructor-expr, map-type, 
+        record-type, spread-field, string, union-type
 
 function init() {
     record {|int fieldA1; boolean fieldA2;|} a = {fieldA1: 4534, fieldA2: false};
@@ -405,7 +406,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test compile-time error if the static type of the expression in a spread-field allows a field that 
              duplicates a specific-field or that could also occur in another spread-field with exclusive record type.
-Labels: any, mapping-constructor-expr, map-type, record-type, spread-field, string
+Labels: any, mapping-constructor-expr, map-type, record-type, spread-field, string, variable-name-field
 
 function errorFunction() {
     record {|int fieldA1; boolean fieldA2;|} a = {fieldA1: 4534, fieldA2: false};
@@ -500,7 +501,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test compile-time error if the static type of the expression in a spread-field allows a field that 
              duplicates a specific-field or that could also occur in another spread-field with inclusive map types.
-Labels: any, mapping-constructor-expr, map-type, spread-field, string
+Labels: any, mapping-constructor-expr, map-type, spread-field, string, variable-name-field
        
 function errorFunction() {
     map<string> d = {fName: "John", lName: "Wick"};
@@ -632,8 +633,8 @@ Test-Case: output
 Description: Test if the applicable contextually expected type is a mapping type descriptor, then that is used as the 
              inherent type with readonly specific fields.
 Fail-Issue: ballerina-platform/ballerina-lang#24489
-Labels: any, anydata, is-expr, mapping-constructor-expr, map-type, module-const-decl, module-type-defn, 
-       readonly-field, record-rest-descriptor, record-type, string
+Labels: any, anydata, is-expr, mapping-constructor-expr, map-type, mapping-constructor-readonly-field, 
+        module-const-decl, module-type-defn, record-rest-descriptor, record-type, record-type-readonly-field, string
 
 type MyRecord2 record {
     int myField1;
@@ -674,7 +675,8 @@ function init() {
 Test-Case: output
 Description: Test if the applicable contextually expected type is a mapping type descriptor, then that is used as the 
              inherent type with readonly specific fields.
-Labels: any, is-expr, mapping-constructor-expr, map-type, readonly-field, record-rest-descriptor, record-type, string
+Labels: any, is-expr, mapping-constructor-expr, mapping-constructor-readonly-field, map-type, record-rest-descriptor, 
+        record-type, record-type-readonly-field, string
 
 function init() {
     string fieldA2 = "qwerty";
@@ -1055,7 +1057,7 @@ Description: Test If there is no contextually expected type, then the inherent t
              the type of each field-descriptor will be the broad type of the value-expr in the field, unless 
              the field is read-only; using int builtin sub types
 Labels: DecimalFloatingPointNumber, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, 
-       int:Unsigned16, int:Unsigned32 is-expr, mapping-constructor-expr, module-init-var-decl, record-type, string, 
+       int:Unsigned16, int:Unsigned32, is-expr, mapping-constructor-expr, module-init-var-decl, record-type, string, 
        unary-minus, var
 
 int:Signed8 a = -54;
@@ -1104,8 +1106,9 @@ Description: Test If there is no contextually expected type, then the inherent t
              exclusive-record-type-descriptor with an individual-field-descriptor for each specific-field; 
              the type of readonly specific fields will be the precise type.
 Fail-Issue: ballerina-platform/ballerina-lang#24489
-Labels: float, intersection-type, is-expr, list-constructor-expr, mapping-constructor-expr, record-type, readonly-field, 
-       singleton-type, string, tuple-type, var
+Labels: float, intersection-type, is-expr, list-constructor-expr, mapping-constructor-expr, 
+        mapping-constructor-readonly-field, record-type, record-type-readonly-field, singleton-type, string, 
+        tuple-type, var
 
 function init() {
     var a = {fieldA: 2, readonly fieldB: "Car"};
@@ -1134,7 +1137,8 @@ Test-Case: output
 Description: Test If there is no contextually expected type, then the inherent type will be an 
              exclusive-record-type-descriptor with an individual-field-descriptor for each specific-field; 
              the type of readonly specific fields will be the precise type using var ref as fields.
-Labels: intersection-type, is-expr, mapping-constructor-expr, record-type, readonly-field, singleton-type, string, var
+Labels: intersection-type, is-expr, mapping-constructor-expr, mapping-constructor-readonly-field, record-type, 
+        record-type-readonly-field, singleton-type, string, var, variable-name-field
 
 function init() {
     int fieldA = 543543;
@@ -1151,7 +1155,8 @@ Test-Case: output
 Description: Test If there is no contextually expected type, then the inherent type will be an 
              exclusive-record-type-descriptor with an individual-field-descriptor for each specific-field; 
              the type of readonly specific fields will be the precise type using spread fields.
-Labels: is-expr, mapping-constructor-expr, readonly-field, spread-field, string, var
+Labels: is-expr, mapping-constructor-expr, mapping-constructor-readonly-field, record-type, 
+        record-type-readonly-field, spread-field, string, var, variable-name-field
 
 function init() {
     int fieldA = 543543;
@@ -1171,8 +1176,8 @@ Test-Case: output
 Description: Test If there are fields specified as a computed-name-field, then there will also be a 
              record-rest-descriptor T..., where T is the union of the broad types of the value-expr in all such 
              fields when there is no contextually expected type.
-Labels: computed-name-field, is-expr, mapping-constructor-expr, record-rest-descriptor, record-type, 
-        spread-field, string, union-type, var
+Labels: computed-name-field, is-expr, mapping-constructor-expr, mapping-constructor-readonly-field, 
+        record-rest-descriptor, record-type, record-type-readonly-field, spread-field, string, union-type, var
 
 function init() {
     string targetField1 = "fieldB";
@@ -1206,7 +1211,8 @@ Test-Case: error
 Description: Test If a specific-field does not use a string-literal for the name of the field and the inherent type 
              descriptor is a record type descriptor, then the record type descriptor must include an 
              individual-field-descriptor for that field. 
-Labels: mapping-constructor-expr, readonly-field, record-type, spread-field, string
+Labels: mapping-constructor-expr, mapping-constructor-readonly-field, record-type, spread-field, string, 
+        variable-name-field
 
 function errorFunction() {
     record {|int fieldA;|} _ = {fieldA: 2, fieldB: "string"}; // @error fieldB is not refined in the record
@@ -1223,7 +1229,8 @@ Test-Case: output
 Description: Test If the inherent type descriptor is a record type descriptor, a field will be added to the 
              constructed value using the default value from the type descriptor for any field that is not specified 
              explicitly in the mapping constructor and that has a default value.  
-Labels: any, is-expr, mapping-constructor-expr, module-type-defn, record-type, string
+Labels: any, is-expr, mapping-constructor-expr, mapping-constructor-readonly-field, module-type-defn, record-type, 
+        record-type-readonly-field, string
 
 type MyRecord1 record {|
     int myField1;
@@ -1265,8 +1272,8 @@ function printResult(any result) {
 Test-Case: error
 Description: Test if there is a contextually expected type, then the type that the inherent type requires for each 
              field provides the contextually expected type for the value-expr in a field; using map types.
-Labels: computed-name field, mapping-constructor-expr, map-type, optional-type, readonly-field, 
-       record-type, string, union-tyoe
+Labels: computed-name-field, mapping-constructor-expr, mapping-constructor-readonly-field, map-type, optional-type, 
+        record-type, string, union-type
 
 function errorFunction() {
     map<string> _ = {field1: "Ballerina", field2: 544}; // @error contextually expected type for `field2` is string
@@ -1293,8 +1300,8 @@ function errorFunction() {
 Test-Case: error
 Description: Test if there is a contextually expected type, then the type that the inherent type requires for each 
              field provides the contextually expected type for the value-expr in a field; using record types.
-Labels: computed-name field, mapping-constructor-expr, optional-type, readonly-field, record-rest-descriptor, 
-       record-type, string, union-tyoe
+Labels: computed-name-field, mapping-constructor-expr, mapping-constructor-readonly-field, optional-type,
+        record-rest-descriptor, record-type, string, union-type, variable-name-field
 
 function errorFunction() {
     record {int field1; string field2;} _ = {
@@ -1327,7 +1334,7 @@ function errorFunction() {
 Test-Case: output
 Description: Test If there is a contextually expected type, the contextually expected type for the expression in a 
              spread-field is map<T>, where the T is the smallest type such that the inherent type is a subtype of map<T>. 
-Labels: mapping-constructor-expr, map-type, readonly-field, record-type, spread-field, string
+Labels: mapping-constructor-expr, mapping-constructor-readonly-field, map-type, record-type, spread-field, string
 
 function init() {
     map<string> a = {fname: "Mike"};
@@ -1351,7 +1358,7 @@ Test-Case: error
 Description: Test If there is a contextually expected type, the contextually expected type for the expression in a 
              spread-field is map<T>, where the T is the smallest type such that the inherent type is a subtype of 
              map<T> via invalid assignments.
-Labels: any, mapping-constructor-expr, map-type, readonly-field, record-rest-descriptor, record-type, spread-field, 
+Labels: any, mapping-constructor-expr, map-type, record-rest-descriptor, record-type, spread-field, 
        singleton-type, string, union-type
 
 function errorFunction() {
@@ -1369,7 +1376,7 @@ Test-Case: output
 Description: Test usage of computed name fields inside mapping constructor contains specific fields. 
              The effect of a computed-name-field is to modify the member of the mapping with the specified name after
              the mapping has been constructed
-Labels: any, computed-name-field, mapping-constructor-expr, map-type, readonly-field, string
+Labels: any, computed-name-field, mapping-constructor-expr, mapping-constructor-readonly-field, map-type, string
 
 function init() {
     string fieldName = "fieldA";
@@ -1438,7 +1445,8 @@ function printResult(map<any> result) {
 
 Test-Case: output
 Description: Test replacing a value of readonly specific field via computed name field.
-Labels: any, computed-name-field, mapping-constructor-expr, map-type, readonly-field, string
+Labels: any, computed-name-field, mapping-constructor-expr, mapping-constructor-readonly-field, map-type, string, 
+        variable-name-field
 
 function init() {
     string fieldName = "fieldC";
@@ -1451,9 +1459,9 @@ function printResult(map<any> result) {
 }
 
 Test-Case: panic
-Description: Test inherent type violation when replacing a value of readonly specific field via computed name field;
+Description: Test inherent type violation when replacing a value of a specific field via computed name field;
              using var.
-Labels: computed-name-field, mapping-constructor-expr, string, var
+Labels: computed-name-field, mapping-constructor-expr, string, var, variable-name-field
 
 function init() {
     string fieldName = "fieldC";
@@ -1462,9 +1470,9 @@ function init() {
 }
 
 Test-Case: panic
-Description: Test inherent type violation when replacing a value of readonly specific field via computed name field;
+Description: Test inherent type violation when replacing a value of a specific field via computed name field;
              using contextually expected type.
-Labels: computed-name-field, mapping-constructor-expr, record-type, string
+Labels: computed-name-field, mapping-constructor-expr, record-type, string, variable-name-field
 
 function init() {
     string fieldName = "fieldC";
@@ -1475,7 +1483,7 @@ function init() {
 Test-Case: panic
 Description: Test inherent type violation when replacing a value of readonly specific field via computed name field; using readonly field
 Fail-Issue: ballerina-platform/ballerina-lang#24489
-Labels: any, computed-name-field, mapping-constructor-expr, map-type, string
+Labels: any, computed-name-field, mapping-constructor-expr, mapping-constructor-readonly-field, map-type, string
 
 function init() {
     string fieldName = "fieldC";
@@ -1485,7 +1493,7 @@ function init() {
 Test-Case: output
 Description: Test the modifications are performed in the order in which the computed-name-fields occur in the 
              mapping-constructor-expr on a field name introduced via spread field.
-Labels: any, computed-name-field, mapping-constructor-expr, map-type, module-type-def, record-type, 
+Labels: any, computed-name-field, mapping-constructor-expr, map-type, module-type-defn, record-type, 
        spread-field, string
 
 type MyRecord record {|boolean fieldA;|};
@@ -1524,7 +1532,7 @@ Test-Case: output
 Description: Test if the applicable contextually expected type is a subtype of readonly, then the mapping will be 
              constructed with its read-only bit on via inherent type check
 Labels: any, array-type, is-expr, intersection-type, list-constructor-expr, mapping-constructor-expr, map-type, 
-       readonly-field, readonly-type, record-type, string
+       readonly-type, record-type, record-type-readonly-field, string
 
 function init() {
     readonly & map<string> a = {fieldA: "Remote", fieldB: "Bottle"};
@@ -1587,7 +1595,8 @@ function init() {
 Test-Case: output
 Description: Test if the inherent type makes a specific field readonly, then that field will be constructed with its 
              read-only bit on via inherent type check.
-Labels: any, array-type, is-expr, mapping-constructor-expr, module-const-decl, readonly-field, record-type, string
+Labels: any, array-type, is-expr, mapping-constructor-expr, module-const-decl, record-type, record-type-readonly-field,
+        string
 
 function init() {
     record {|readonly string fieldA; string fieldB;|} a = {fieldA: "Remote", fieldB: "Bottle"};
@@ -1608,7 +1617,7 @@ function init() {
 Test-Case: panic
 Description: Test if the inherent type makes a specific field readonly, then that field will be constructed with 
              its read-only bit on via inherent type violation by checking the readonly-ness of the field.
-Labels: mapping-constructor-expr, map-type, member-access-expr, readonly-field, string
+Labels: mapping-constructor-expr, map-type, member-access-expr, record-type, record-type-readonly-field, string
 
 function init() {
     record {|readonly string fieldA; string fieldB;|} a = {fieldA: "Remote", fieldB: "Bottle"};
@@ -1619,7 +1628,7 @@ function init() {
 Test-Case: panic
 Description: Test if the inherent type makes a specific field readonly, then that field will be constructed with 
              its read-only bit on via inherent type violation by checking the readonly-ness of the value.
-Labels: mapping-constructor-expr, map-type, member-access-expr, readonly-field, string
+Labels: mapping-constructor-expr, map-type, member-access-expr, record-type, record-type-readonly-field, string
 
 function init() {
     record {|readonly map<int> fieldA; map<int> fieldB;|} a = {fieldA: {fieldA: 434}, fieldB: {}};
@@ -1630,7 +1639,7 @@ function init() {
 Test-Case: panic
 Description: Test a specific-field that starts with readonly will also be constructed with its read-only bit on 
              via inherent type violation by checking the readonly-ness of the field.
-Labels: mapping-constructor-expr, map-type, member-access-expr, readonly-field, record-type, string
+Labels: mapping-constructor-expr, mapping-constructor-readonly-field, map-type, member-access-expr, record-type, string
 
 function init() {
     record {|string fieldA; string fieldB;|} a = {readonly fieldA: "Remote", fieldB: "Bottle"};
@@ -1641,7 +1650,7 @@ function init() {
 Test-Case: panic
 Description: Test a specific-field that starts with readonly will also be constructed with its read-only bit on via 
              inherent type violation by checking the readonly-ness of the value.
-Labels: mapping-constructor-expr, map-type, member-access-expr, readonly-field, record-type, string
+Labels: mapping-constructor-expr, mapping-constructor-readonly-field, map-type, member-access-expr, record-type, string
 
 function init() {
     record {|map<int> fieldA; map<int> fieldB;|} a = {readonly fieldA: {fieldA: 434}, fieldB: {}};
@@ -1651,7 +1660,7 @@ function init() {
 
 Test-Case: output
 Description: Test mapping constructor expression in module level.
-Labels: computed-name-field, mapping-constructor-expr, readonly-field, spread-field, string, var
+Labels: computed-name-field, mapping-constructor-expr, mapping-constructor-readonly-field, spread-field, string, var
 
 int c = 45;
 
@@ -1675,7 +1684,7 @@ function init() {
 
 Test-Case: output
 Description: Test mapping constructor expression containing literals as expressions.
-Labels: byte-array-literal, DecimalFloatingPointNumber, FloatingPointTypeSuffixHexIntLiteral, float, 
+Labels: byte-array-literal, DecimalFloatingPointNumber, FloatingPointTypeSuffix, HexIntLiteral, float, 
        mapping-constructor-expr, nil-literal, string, value:toBalString, var
 
 function init() {
@@ -1761,7 +1770,7 @@ function init() {
 
 Test-Case: output
 Description: Test mapping constructor expression containing var ref as expressions.
-Labels: mapping-constructor-expr, module-cons-decl, module-init-var-decl, module-type-defn, string, var
+Labels: mapping-constructor-expr, module-const-decl, module-init-var-decl, module-type-defn, string, var
 
 const ONE = 1;
 string globalString = "global";
