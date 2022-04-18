@@ -1,0 +1,323 @@
+Test-Case: output
+Description: Test whether string-template-expr interpolates the results of evaluating expressions into a literal string.
+Labels: string, function-defn, int, string-template-expr, string-literal
+
+function init() {
+    string a1 = "a1";
+    string temp1 = string `${a1}`;
+    io:println(temp1); // @output a1
+    int a2 = 12;
+    string temp2 = string `${a2}`;
+    io:println(temp2); // @output 12
+    int a3 = 13;
+    string temp3 = string `${a2 + a3}`;
+    io:println(temp3); // @output 25
+    string temp4 = string `${"a2"}`;
+    io:println(temp4); // @output a2
+}
+
+Test-Case: error
+Description: Test whether string-template-expr interpolates the results of evaluating expressions into a literal string.
+Labels: string, function-defn, int, string-template-expr, string-literal
+
+function errorFunction() {
+    string a1 = "a1";
+    int _ = string `${a1}`; // @error expected 'int' but found 'string'
+    int a2 = 12;
+    int _ = string `${a2}`; // @error expected 'int' but found 'string'
+    int a3 = 13;
+    int _ = string `${a2 + a3}`; // @error expected 'int' but found 'string'
+    int _ = <int> string `${a2 + a3}`; // @error 'string' cannot be cast to 'int'
+}
+
+Test-Case: output
+Description: Test type of the expression in each interpolation of string-template-expr.
+Labels: string, function-defn, DecimalNumber, string-template-expr, float, int, boolean
+
+function init() {
+    string a1 = "a1";
+    string temp1 = string `${a1}`;
+    io:println(temp1); // @output a1
+    int a2 = 12;
+    string temp2 = string `${a2}`;
+    io:println(temp2); // @output 12
+    decimal a3 = 23.5d;
+    string temp3 = string `${a3}`;
+    io:println(temp3); // @output 23.5
+    decimal a4 = 23.5;
+    string temp4 = string `${a4}`;
+    io:println(temp4); // @output 23.5
+    float a5 = 23.5;
+    string temp5 = string `${a5}`;
+    io:println(temp5); // @output 23.5
+    float a6 = 0x32.5;
+    string temp6 = string `${a6}`;
+    io:println(temp6); // @output 50.3125
+    boolean a7 = true;
+    string temp7 = string `${a7}`;
+    io:println(temp7); // @output true
+    string:Char a8 = "C";
+    string temp8 = string `${a8}`;
+    io:println(temp8); // @output C
+}
+
+Test-Case: output
+Description: Test type of the expression in each interpolation of string-template-expr.
+Labels: string, function-defn, string-template-expr, int, union-type, float, decimal
+
+function init() {
+    string|int a1 = "a1";
+    string temp1 = string `${a1}`;
+    io:println(temp1); // @output a1
+    int|float|decimal a2 = 12;
+    string temp2 = string `${a2}`;
+    io:println(temp2); // @output 12
+    string|int|decimal|float|boolean a3 = true;
+    string temp3 = string `${a3}`;
+    io:println(temp3); // @output true
+    int|string:Char a4 = "C";
+    string temp4 = string `${a4}`;
+    io:println(temp4); // @output C
+    int|float|decimal|byte a5 = 12;
+    string temp5 = string `${a5}`;
+    io:println(temp5); // @output 12
+}
+
+Test-Case: output
+Description: Test type of the expression in each interpolation of string-template-expr.
+Labels: string, function-defn, string-template-expr, int, float, decimal, union-type, intersection-type
+
+function init() {
+    string|int & readonly a1 = "a1";
+    string temp1 = string `${a1}`;
+    io:println(temp1); // @output a1
+    int|float|decimal & readonly a2 = 12;
+    string temp2 = string `${a2}`;
+    io:println(temp2); // @output 12
+    string|int|decimal|float|boolean & readonly a3 = true;
+    string temp3 = string `${a3}`;
+    io:println(temp3); // @output true
+}
+
+Test-Case: output
+Description: Test type of the expression in each interpolation of string-template-expr.
+Labels: string, function-defn, string-template-expr
+
+type T1 "c";
+type T2 "m"|"n";
+type T3 2;
+type T4 2.0|3|5;
+type T5 true;
+
+function init() {
+    T1 a1 = "c";
+    string temp1 = string `${a1}`;
+    io:println(temp1); // @output c
+    T2 a2 = "m";
+    string temp2 = string `${a2}`;
+    io:println(temp2); // @output m
+    T3 a3 = 2;
+    string temp3 = string `${a3}`;
+    io:println(temp3); // @output 2
+    T4 a4 = 5;
+    string temp4 = string `${a4}`;
+    io:println(temp4); // @output 5
+    T5 a5 = true;
+    string temp5 = string `${a5}`;
+    io:println(temp5); // @output true
+}
+
+Test-Case: output
+Description: Test type of the expression in each interpolation of string-template-expr.
+Labels: check, string, function-defn, string-template-expr, int, byte, union-type
+
+function init() {
+    byte a1 = 4;
+    string temp1 = string `${a1}`;
+    io:println(temp1); // @output 4
+    int:Unsigned8 a2 = 12;
+    string temp2 = string `${a2}`;
+    io:println(temp2); // @output 12
+    int:Signed8 a3 = 12;
+    string temp3 = string `${a3}`;
+    io:println(temp3); // @output 12
+    int:Signed16 a4 = 23;
+    string temp4 = string `${a4}`;
+    io:println(temp4); // @output 23
+    int:Unsigned16 a5 = 43;
+    string temp5 = string `${a5}`;
+    io:println(temp5); // @output 43
+    int:Signed32 a6 = 0x33;
+    string temp6 = string `${a6}`;
+    io:println(temp6); // @output 51
+    int:Unsigned32 a7 = 32;
+    string temp7 = string `${a7}`;
+    io:println(temp7); // @output 32
+    byte|int:Unsigned8|int:Signed8|int:Unsigned16|int:Signed16|int:Unsigned32 a8 = 23;
+    string temp8 = string `${a8}`;
+    io:println(temp8); // @output 23
+}
+
+Test-Case: error
+Description: Test type of the expression in each interpolation of string-template-expr.
+Labels: string, string-template-expr, int, record-type, optional-type, tuple-type, function-type
+
+function errorFunction() {
+    record {} a1 = {};
+    string _ = string `${a1}`; // @error expected '(int|float|decimal|string|boolean)', found 'record {| anydata...; |}'
+    function  a2 = f1;
+    string _ = string `${a2}`; // @error expected '(int|float|decimal|string|boolean)', found 'function'
+    () a3 = ();
+    string _ = string `${a3}`; // @error expected '(int|float|decimal|string|boolean)', found '()'
+    string? a4 = "a4";
+    string _ = string `${a4}`; // @error expected '(int|float|decimal|string|boolean)', found 'string?'
+    json a5 = 12;
+    string _ = string `${a5}`; // @error expected '(int|float|decimal|string|boolean)', found 'json'
+    [int, int] a6 = [10, 10];
+    string _ = string `${a6}`; // @error expected '(int|float|decimal|string|boolean)', found '[int,int]'
+}
+
+function f1() returns int {
+    return 10;
+}
+
+Test-Case: error
+Description: Test type of the expression in each interpolation of string-template-expr.
+Labels: string, function-defn, string-template-expr, union-type
+
+type T1 "C"|"S"|map<int>;
+type T2 true|record {};
+type T3 2|3|int[];
+
+function errorFunction() {
+    T1 a1 = "C";
+    string _ = string `${a1}`; // @error expected '(int|float|decimal|string|boolean)', found 'T1'
+    T2  a2 = true;
+    string _ = string `${a2}`; // @error expected '(int|float|decimal|string|boolean)', found 'T2'
+    T3 a3 = 2;
+    string _ = string `${a3}`; // @error expected '(int|float|decimal|string|boolean)', found 'T3'
+}
+
+Test-Case: output
+Description:  Test every character that is not part of an interpolation is interpreted as a literal character.
+Labels: string, function-defn, string-template-expr, int
+
+function init() {
+    string a1 = "a1";
+    string temp1 = string `b1 ${a1}`;
+    io:println(temp1); // @output b1 a1
+    int a2 = 12;
+    string temp2 = string `v1 ${a2} v2`;
+    io:println(temp2); // @output v1 12 v2
+    int a3 = 13;
+    string temp3 = string `$ $ $ ${a2 + a3} $ $ $`;
+    io:println(temp3); // @output $ $ $ 25 $ $ $
+    string temp4 = string `$$${"a2"}$$`;
+    io:println(temp4); // @output $$a2$$
+    string temp5 = string `$v1$${"a2"}$v2$`;
+    io:println(temp5); // @output $v1$a2$v2$
+}
+
+Test-Case: output
+Description:  Test every character that is not part of an interpolation is interpreted as a literal character.
+Labels: string, function-defn, string-template-expr
+
+function init() {
+    string temp1 = string `b1`;
+    io:println(temp1); // @output b1
+    string temp2 = string `v1 v2`;
+    io:println(temp2); // @output v1 v2
+    string temp3 = string `$ $ $ $ $ $`;
+    io:println(temp3); // @output $ $ $ $ $ $
+    string temp4 = string `$$$$`;
+    io:println(temp4); // @output $$$$
+    string temp5 = string `$v1$$v2$`;
+    io:println(temp5); // @output $v1$$v2$
+    string temp6 = string `{}`;
+    io:println(temp6); // @output {}
+}
+
+Test-Case: error
+Description: Test every character that is not part of an interpolation is interpreted as a literal character.
+Fail-Issue: ballerina-platform/ballerina-lang#35515
+Labels: string, function-defn, string-template-expr
+
+function errorFunction() {
+    string _ = string `${`;
+}
+
+function f1() {
+    string name = "Ballerina";
+    string _ = string `${name}`;
+}
+
+function f2() {
+    string _ = string `${`;
+}
+
+
+Test-Case: error
+Description: Test every character that is not part of an interpolation is interpreted as a literal character.
+Labels: string, function-defn, string-template-expr
+
+function errorFunction() {
+    string _ = string `${`}`; @error backtick as a expression
+    string _ = string ```; // @error backtick within BacktickString
+    string _ = string ````; // @error backtick within BacktickString
+    string _ = string ``````; // @error backtick within BacktickString
+}
+
+Test-Case: output
+Description: Test string-template-expr is evaluated by evaluating the expression in each interpolation in the order in
+which they occur.
+Labels: string, function-defn, function-call-expr, string-template-expr, int, boolean
+
+function init() {
+    string a1 = "a1";
+    string b1 = "b1";
+    string temp1 = string `${a1} ${b1}`;
+    io:println(temp1); // @output a1 b1
+    int a2 = 12;
+    string temp2 = string `${a2} ${b1+ a1}`;
+    io:println(temp2); // @output 12 b1a1
+    int a3 = 13;
+    int b2 = 15;
+    string temp3 = string `$ $ $ ${a2 + a3} $ $ $ ${b2 + a2}`;
+    io:println(temp3); // @output $ $ $ 25 $ $ $ 27
+    boolean a4 = true;
+    string temp4 = string `$ $ $ ${a2 + a3} $ $ $ ${a4}`;
+    io:println(temp4); // @output $ $ $ 25 $ $ $ true
+    string temp5 = string `$ $ $ ${f1()} $ $ $ ${f2()} $ $ $ ${f3()}`;
+    io:println(temp5); // @output $ $ $ 10 $ $ $ 10 $ $ $ 10
+    string temp6 = string `${"c"}${"s"}`;
+    io:println(temp6); // @output cs
+}
+
+function f1() returns int {
+    return 10;
+}
+
+function f2() returns int {
+    return 10;
+}
+
+function f3() returns int {
+    return 10;
+}
+
+Test-Case: output
+Description: Test literal ` included in string template.
+Labels: string, function-defn, string-template-expr
+
+function init() {
+    string temp1 = string `${"`"}`;
+    io:println(temp1); // @output `
+}
+
+Test-Case: error
+Description: Test interpolation without expression
+Labels: string, function-defn, string-template-expr
+
+function errorFunction() {
+    string _ = string `${}`; // @error missing expression
+}
