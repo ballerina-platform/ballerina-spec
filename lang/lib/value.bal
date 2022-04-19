@@ -104,7 +104,7 @@ public isolated function toBalString(any v) returns string = external;
 # an error if the string cannot be parsed
 # The subset of Ballerina expression syntax supported is that produced
 # by toBalString when applied to an anydata value.
-function fromBalString(string s) returns anydata|error = external;
+public isolated function fromBalString(string s) returns anydata|error = external;
 
 // JSON conversion
 

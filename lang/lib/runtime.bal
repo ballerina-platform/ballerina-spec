@@ -22,7 +22,7 @@ public isolated function sleep(decimal seconds) = external;
 
 # A listener that is dynamically registered with a module.
 public type DynamicListener object {
-   public function 'start() returns error?;
+   public function start() returns error?;
    public function gracefulStop() returns error?;
    public function immediateStop() returns error?;
 };

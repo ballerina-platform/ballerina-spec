@@ -56,7 +56,6 @@ function errorFunction(string a, string:Char b, Strings c, Chars d) {
 
 Test-Case: error
 Description: Test invalid static type of string union concatenation.
-Fail-Issue: ballerina-platform/ballerina-lang#33059
 Labels: additive-expr, string, string:Char, module-type-defn, union-type, singleton-type
 
 type Strings "A"|"foo";
@@ -439,39 +438,6 @@ function init() {
 }
 
 Test-Case: output
-Description: Test string concatenation when an operand is of a union type containing string:Char.
-Fail-Issue: ballerina-platform/ballerina-lang#33059
-Labels: additive-expr, string, string:Char, module-type-defn, union-type, singleton-type
-
-type Strings "A"|"foo";
-type Chars "B"|"bar";
-
-function init() {
-    string a = "str";
-    string:Char|Strings b = "M";
-    Strings|Chars c = "bar";
-    string:Char d = "C";
-    Strings e = "A";
-    Chars f = "B";
-
-    printString(a + b); // @output strM
-    printString(b + a); // @output Mstr
-    printString(b + b); // @output MM
-    printString(b + c); // @output Mbar
-    printString(b + d); // @output MC
-    printString(b + e); // @output MA
-    printString(b + f); // @output MB
-    printString(c + b); // @output barM
-    printString(d + b); // @output CM
-    printString(e + b); // @output AM
-    printString(f + b); // @output BM
-}
-
-function printString(string s) {
-    io:println(s);
-}
-
-Test-Case: output
 Description: Test string concatenation when an operand is of a union type.
 Labels: additive-expr, string, string:Char, module-type-defn, union-type, singleton-type
 
@@ -486,30 +452,42 @@ function init() {
     Strings e = "A";
     Chars f = "B";
 
+    printString(a + b); // @output strM
     printString(a + c); // @output strbar
     printString(a + d); // @output strC
     printString(a + e); // @output strA
     printString(a + f); // @output strB
 
+    printString(b + a); // @output Mstr
+    printString(b + b); // @output MM
+    printString(b + c); // @output Mbar
+    printString(b + d); // @output MC
+    printString(b + e); // @output MA
+    printString(b + f); // @output MB
+
     printString(c + a); // @output barstr
+    printString(c + b); // @output barM
     printString(c + c); // @output barbar
     printString(c + d); // @output barC
     printString(c + e); // @output barA
     printString(c + f); // @output barB
 
     printString(d + a); // @output Cstr
+    printString(d + b); // @output CM
     printString(d + c); // @output Cbar
     printString(d + d); // @output CC
     printString(d + e); // @output CA
     printString(d + f); // @output CB
 
     printString(e + a); // @output Astr
+    printString(e + b); // @output AM
     printString(e + c); // @output Abar
     printString(e + d); // @output AC
     printString(e + e); // @output AA
     printString(e + f); // @output AB
 
     printString(f + a); // @output Bstr
+    printString(f + b); // @output BM
     printString(f + c); // @output Bbar
     printString(f + d); // @output BC
     printString(f + e); // @output BA
@@ -635,7 +613,7 @@ function init() returns error? {
 
 Test-Case: output
 Description: Test string concatenation at module level.
-Labels: additive-expr, module-type-defn, module-var-decl, string, string:Char, union-type
+Labels: additive-expr, module-type-defn, module-init-var-decl, string, string:Char, union-type
 
 type Strings "foo"|"bar";
 

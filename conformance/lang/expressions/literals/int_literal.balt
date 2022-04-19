@@ -233,11 +233,18 @@ Labels: DecimalNumber, equality, HexIntLiteral
 function init() {
     io:println(0x1234abdef1 == 78193090289); // @output true
 
-    io:println(7819309028 == 0x4abde31); // @output false
-
-    io:println(0x1234abdef1 != 7819309028); // @output true
-
     io:println(9223372036854775807 != 0x7FFFFFFFFFFFFFFF); // @output false
+}
+
+Test-Case: error
+Description: Test equality for different DecimalNumbers and HexIntLiterals should fail due to singleton typing.
+Fail-Issue: ballerina-platform/ballerina-lang#35450
+Labels: DecimalNumber, equality, HexIntLiteral
+
+function init() {
+    io:println(7819309028 == 0x4abde31); // @error intersection of operands of operator '==' is empty
+
+    io:println(0x1234abdef1 != 7819309028); // @error intersection of operands of operator '==' is empty
 }
 
 Test-Case: output
@@ -251,11 +258,25 @@ function init() {
 
     io:println(<decimal> 13245); // @output 13245
 
-    io:println(<decimal> 0xabde12a); // @output 180216106.0
-
     io:println(<float> 13245); // @output 13245.0
+}
 
-    io:println(<float> 0xabde12a); // @output 1.80216106E8
+Test-Case: output
+Description: Test large int literals with valid type casts.
+Fail-Issue: ballerina-platform/ballerina-spec#1046
+Labels: DecimalNumber, decimal, float, HexIntLiteral, int, type-cast-expr
+
+function init() {
+    io:println(<float> 0xabde12a); // @output 180216106.0
+}
+
+Test-Case: output
+Description: Test hex int literals with valid type cast to decimal.
+Fail-Issue: ballerina-platform/ballerina-lang#34976
+Labels: decimal, HexIntLiteral, int, type-cast-expr
+
+function init() {
+    io:println(<decimal> 0xabde12a); // @output 180216106.0
 }
 
 Test-Case: error
