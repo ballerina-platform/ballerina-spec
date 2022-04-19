@@ -97,15 +97,21 @@ Labels: boolean-literal, equality
 public function main() {
     io:println(true == true); // @output true
 
-    io:println(true == false); // @output false
-
     io:println(true != true); // @output false
-
-    io:println(true != false); // @output true
 
     io:println(false == false); // @output true
 
     io:println(false != false); // @output false
+}
+
+Test-Case: error
+Description: Equality check of different boolean literals must fail due to singleton typing.
+Fail-Issue: ballerina-platform/ballerina-lang#35450
+Labels: boolean-literal, equality
+
+public function main() {
+    io:println(true == false); // @error intersection of operands of operator '==' is empty
+    io:println(true != false); // @error intersection of operands of operator '!=' is empty
 }
 
 Test-Case: output
@@ -134,10 +140,16 @@ public function main() {
     io:println(false === false); // @output true
 
     io:println(false !== false); // @output false
+}
 
-    io:println(true === false); // @output false
+Test-Case: error
+Description: Exact-equality check of different boolean literals must fail due to singleton typing.
+Fail-Issue: ballerina-platform/ballerina-lang#35450
+Labels: boolean-literal, exact-equality
 
-    io:println(true !== false); // @output true
+public function main() {
+    io:println(true === false); // @error intersection of operands of operator '===' is empty
+    io:println(true !== false); // @error intersection of operands of operator '!==' is empty
 }
 
 Test-Case: output

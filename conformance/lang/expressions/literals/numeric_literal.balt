@@ -1,0 +1,212 @@
+Test-Case: output
+Description: Test the basic type when the numeric-literal includes a FloatTypeSuffix.
+Labels: any, DecimalFloatingPointNumber, decimal, FloatingPointTypeSuffix, float, int, is-expr
+
+function init() {
+    any x = 0f;
+    io:println(x is int); // @output false
+    io:println(x is float); // @output true
+    io:println(x is decimal); // @output false
+
+    x = 1234567890F;
+    io:println(x is int); // @output false
+    io:println(x is float); // @output true
+    io:println(x is decimal); // @output false
+
+    x = 786.218f;
+    io:println(x is int); // @output false
+    io:println(x is float); // @output true
+    io:println(x is decimal); // @output false
+}
+
+Test-Case: error
+Description: Test the basic type when the numeric-literal includes a FloatTypeSuffix, via incompatible assignment.
+Labels: DecimalFloatingPointNumber, decimal, FloatingPointTypeSuffix, float, int
+
+function errorFunction() {
+    int _ = 0f; // @error expected an 'int' but found a 'float'
+
+    decimal _ = 12345678.90F; // @error expected a 'decimal' but found a 'float'
+
+    int _ = 786f; // @error expected an 'int' but found a 'float'
+}
+
+Test-Case: output
+Description: Test the basic type when the numeric-literal includes a DecimalTypeSuffix.
+Labels: any, DecimalFloatingPointNumber, decimal, float, FloatingPointTypeSuffix, int, is-expr
+
+function init() {
+    any x = 0d;
+    io:println(x is int); // @output false
+    io:println(x is float); // @output false
+    io:println(x is decimal); // @output true
+
+    x = 1234567890D;
+    io:println(x is int); // @output false
+    io:println(x is float); // @output false
+    io:println(x is decimal); // @output true
+
+    x = 786.218d;
+    io:println(x is int); // @output false
+    io:println(x is float); // @output false
+    io:println(x is decimal); // @output true
+}
+
+Test-Case: error
+Description: Test the basic type when the numeric-literal includes a DecimalTypeSuffix, via incompatible assignment.
+Labels: DecimalFloatingPointNumber, decimal, float, FloatingPointTypeSuffix, int
+
+function errorFunction() {
+    int _ = 0d; // @error expected an 'int' but found a 'decimal'
+
+    float _ = 12345678.90D; // @error expected an 'float' but found a 'decimal'
+
+    int _ = 786d; // @error expected an 'int' but found a 'decimal'
+}
+
+Test-Case: output
+Description: Test the basic type when the numeric-literal is a HexFloatingPointLiteral.
+Labels: any, decimal, float, HexFloatingPointLiteral, int, is-expr
+
+function init() {
+    any x = 0xabc12.def;
+    io:println(x is int); // @output false
+    io:println(x is float); // @output true
+    io:println(x is decimal); // @output false
+
+    x = 0x.2131ef;
+    io:println(x is int); // @output false
+    io:println(x is float); // @output true
+    io:println(x is decimal); // @output false
+
+    x = 0x123.456cP4;
+    io:println(x is int); // @output false
+    io:println(x is float); // @output true
+    io:println(x is decimal); // @output false
+}
+
+Test-Case: error
+Description: Test the basic type when the numeric-literal is a HexFloatingPointLiteral, via incompatible assignment.
+Labels: decimal, float, HexFloatingPointLiteral, int
+
+function errorFunction() {
+    decimal _ = 0xabc12.def; // @error expected an 'decimal' but found a 'float'
+
+    decimal _ = 0x.2131ef; // @error expected an 'decimal' but found a 'float'
+
+    int _ = 0x123.456cP4; // @error expected an 'int' but found a 'float'
+}
+
+Test-Case: output
+Description: Test the basic type when the applicable contextually expected type is a subtype of decimal.
+Labels: DecimalNumber, DecimalFloatingPointNumber, decimal, int, is-expr, nil-type, string
+
+function init() {
+    decimal a = 1.212;
+    io:println(a is decimal); // @output true
+
+    int|decimal b = 1.212;
+    io:println(b is int); // @output false
+    io:println(b is decimal); // @output true
+
+    int|decimal c = 0.0;
+    io:println(c is int); // @output false
+    io:println(c is decimal); // @output true
+
+    string|decimal d = 32.12;
+    io:println(d is decimal); // @output true
+
+    ()|decimal e = 10;
+    io:println(e is decimal); // @output true
+}
+
+Test-Case: error
+Description: Test the basic type when the applicable contextually expected type is not a subtype of decimal.
+Fail-Issue: ballerina-platform/ballerina-lang#34976
+Labels: decimal, HexIntLiteral, nil-type, string
+
+function errorFunction() {
+    string|decimal _ = 0xabd1; // @error expected a '(string|decimal)' but found a 'int'
+
+    ()|decimal _ = 0x110; // @error expected a '(()|decimal)' but found a 'int'
+}
+
+Test-Case: output
+Description: Test the basic type when the applicable contextually expected type is a subtype of float.
+Labels: DecimalNumber, DecimalFloatingPointNumber, decimal, float, HexIntLiteral, int, nil-type, is-expr, string
+
+function init() {
+    int|float x = 1.212;
+    io:println(x is int); // @output false
+    io:println(x is float); // @output true
+
+    int|float y = 0.0;
+    io:println(y is int); // @output false
+    io:println(y is float); // @output true
+
+    decimal|float z = 0x123;
+    io:println(z is decimal); // @output false
+    io:println(z is float); // @output true
+
+    string|float a = 32.12;
+    io:println(a is float); // @output true
+
+    ()|float b = 10;
+    io:println(b is float); // @output true
+
+    ()|float c = 0x12ab;
+    io:println(c is float); // @output true
+}
+
+Test-Case: output
+Description: Test the basic type when the applicable contextually expected type is not a subtype of either decimal or
+             float and the numeric literal is an int-literal.
+Labels: any, DecimalNumber, decimal, float, HexIntLiteral, int, is-expr
+
+function init() {
+    int|float|decimal x = 212;
+    io:println(x is int); // @output true
+    io:println(x is float); // @output false
+    io:println(x is decimal); // @output false
+
+    any y = 971;
+    io:println(y is int); // @output true
+    io:println(y is float); // @output false
+    io:println(y is decimal); // @output false
+
+    any z = 0x12aB;
+    io:println(z is int); // @output true
+    io:println(z is float); // @output false
+    io:println(z is decimal); // @output false
+}
+
+Test-Case: error
+Description: Test the basic type when the applicable contextually expected type is not a subtype of either decimal or
+             float and the numeric literal is an int-literal, via incompatible assignment.
+Fail-Issue: ballerina-platform/ballerina-lang#32698
+Labels: DecimalNumber, decimal, float
+
+function errorFunction() {
+    float|decimal _ = 1; // @error expected a '(float|decimal)' but found a 'int'
+}
+
+Test-Case: output
+Description: Test the basic type when the applicable contextually expected type is not a subtype of either decimal or
+             float and the numeric literal is not an int-literal.
+Labels: any, decimal, DecimalFloatingPointNumber, float, int, is-expr
+
+function init() {
+    int|float|decimal x = 4311.1;
+    io:println(x is int); // @output false
+    io:println(x is float); // @output true
+    io:println(x is decimal); // @output false
+
+    float|decimal y = 932.32e11;
+    io:println(y is float); // @output true
+    io:println(y is decimal); // @output false
+
+    any z = 123.654;
+    io:println(z is int); // @output false
+    io:println(z is float); // @output true
+    io:println(z is decimal); // @output false
+}
