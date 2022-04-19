@@ -1,0 +1,252 @@
+Test-Case: output
+Description: Test trap-expr when the expression is a nil-literal.
+Labels: trap-expr, error-type, null, nil-literal, is-expr
+
+function init() {
+    ()|error t1 = trap ();
+    io:println(t1 is ()); // @output true
+
+    error? t2 = trap null;
+    io:println(t2 is ()); // @output true
+}
+
+Test-Case: output
+Description: Test trap-expr when the expression is a boolean-literal.
+Labels: trap-expr, error-type, boolean, boolean-literal
+
+function init() {
+    boolean|error t = trap false;
+    io:println(t); // @output false
+}
+
+Test-Case: output
+Description: Test trap-expr when the expression is a numeric-literal.
+Labels: trap-expr, error-type, int, float, decimal
+
+function init() {
+    int|error t1 = trap 2;
+    io:println(t1); // @output 2
+    float|error t2 = trap 2e3f;
+    io:println(t2); // @output 2000.0
+    decimal|error t3 = trap 2e355d;
+    io:println(t3); // @output 2E+355
+}
+
+Test-Case: output
+Description: Test trap-expr when the expression is a string-literal.
+Labels: trap-expr, string
+
+function init() {
+    string|error t1 = trap "Hello";
+    io:println(t1); // @output Hello
+    t1 = trap "Hello\tWorld";
+    io:println(t1); // @output Hello	World
+}
+
+Test-Case: output
+Description: Test trap-expr when the expression is a byte-array-literal.
+Labels: trap-expr, error-type, byte, byte-array-literal
+
+function init() {
+    byte[]|error t1 = trap base16 `aeeecdefabcd12345567888822`;
+    io:println(t1); // @output [174,238,205,239,171,205,18,52,85,103,136,136,34]
+    t1 = base64 `aGVsbG8gYmFsbGVyaW5hICEhIQ==`;
+    io:println(t1); // @output [104,101,108,108,111,32,98,97,108,108,101,114,105,110,97,32,33,33,33]
+}
+
+Test-Case: output
+Description: Test trap-expr when the expression is a string-template-expr.
+Labels: trap-expr, error-type, string-template-expr
+
+function init() {
+    string|error t1 = trap string `Hello World!`;
+    io:println(t1); // @output Hello World!
+    string s = string `Hello World!`;
+    string|error t2 = string `${s}`;
+    io:println(t2); // @output Hello World!
+}
+
+Test-Case: output
+Description: Test trap-expr when the expression is a xml-template-expr.
+Labels: trap-expr, error-type, xml-template-expr
+
+function init() {
+    xml|error t1 = trap xml `<Greeting>Hello!</Greeting>`;
+    io:println(t1); // @output <Greeting>Hello!</Greeting>
+}
+
+Test-Case: output
+Description: Test trap-expr when the expression is a list-constructor-expr.
+Labels: trap-expr, error-type, int, string, union-type, list-constructor-expr
+
+function init() {
+    int[]|error t1 = trap [1, 2, 3, 4];
+    io:println(t1); // @output [1,2,3,4]
+    (int|string)[]|error t2 = trap [1, "2", 3, "4"];
+    io:println(t2); // @output [1,"2",3,"4"]
+}
+
+Test-Case: output
+Description: Test trap-expr when the expression is a list-constructor-expr.
+Labels: trap-expr, error-type, int, string, union-type, list-constructor-expr, type-cast-expr, function-call-expr
+
+function foo() returns int|string {
+    return "2";
+}
+
+function init() {
+    int[]|error t = trap [1, 2, <int> foo(), 4];
+    io:println(t); // @output error("{ballerina}TypeCastError",message="incompatible types: 'string' cannot be cast to 'int'")
+}
+
+Test-Case: output
+Description: Test trap-expr when the expression is a list-constructor-expr.
+Labels: trap-expr, error-type, int, string, union-type, table-constructor-expr, multiplicative-expr
+
+function init() {
+    (table<record {|readonly string name; int id;|}> key(name))|error tbl1 = trap table key(name) [
+        {name: "John Doe", id: 9223372036854775807*2}
+    ];
+    io:println(tbl1); // @output error("{ballerina}NumberOverflow",message="int range overflow")
+}
+
+Test-Case: output
+Description: Test trap-expr when the expression is a object-constructor-expr.
+Labels: trap-expr, error-type, object-constructor-expr, method-call-expr, panic
+
+function init() {
+    object { function bar(); } obj = object {
+                                        error? i = ();
+                                        function bar() {
+                                            self.i = self.foo();
+                                        }
+                                        function foo() {
+                                            panic error("msg");
+                                        }
+                                    };
+    error? e = trap obj.bar();
+    io:println(e); // @output error("msg")
+}
+
+Test-Case: output
+Description: Test trap-expr when the expression is a new-expr.
+Labels: trap-expr, error-type, new-expr, method-call-expr, panic, error-constructor-expr
+
+class Obj {
+    function bar() {
+        panic error("msg");
+    }
+}
+
+function init() {
+    Obj obj = new();
+    error? t = trap obj.bar();
+    io:println(t); // @output error("msg")
+}
+
+Test-Case: output
+Description: Test trap-expr when the expression is a member-access-expr.
+Labels: trap-expr, error-type, int, array-type, member-access-expr
+
+function init() {
+    int[] i = [];
+    io:println(trap i[3]); // @output error("{ballerina/lang.array}IndexOutOfRange",message="array index out of range: index: 3, size: 0")
+}
+
+Test-Case: output
+Description: Test trap-expr when the expression is a function-call-expr.
+Labels: trap-expr, error-type, int, function-call-expr, array-type, union-type, error-constructor-expr
+
+function foo() returns int {
+    int[] i = [];
+    return i[3];
+}
+
+function bar() {
+    panic error("msg");
+}
+
+function init() {
+    int|error t1 = trap foo();
+    io:println(t1); // @output error("{ballerina/lang.array}IndexOutOfRange",message="array index out of range: index: 3, size: 0")
+    error? t2 = trap bar();
+    io:println(t2); // @output error("msg")
+}
+
+Test-Case: output
+Description: Test trap-expr when the expression is a type-cast-expr.
+Labels: trap-expr, error-type, int, string, function-call-expr, union-type, type-cast-expr
+
+function foo() returns int|string {
+    return "str";
+}
+
+function init() {
+    int|error t1 = trap <int>foo();
+    io:println(t1); // @output error("{ballerina}TypeCastError",message="incompatible types: 'string' cannot be cast to 'int'")
+}
+
+Test-Case: output
+Description: Test trap-expr when the expression is a unary-logical-expr.
+Labels: trap-expr, error-type, int, boolean, function-call-expr, union-type
+
+function foo() returns int|boolean {
+    return 23;
+}
+
+function init() {
+    boolean|error t1 = trap !<boolean>foo();
+    io:println(t1); // @output error("{ballerina}TypeCastError",message="incompatible types: 'int' cannot be cast to 'boolean'")
+}
+
+Test-Case: output
+Description: Test trap-expr when the expression is a multiplicative-expr.
+Labels: trap-expr, error-type, int, boolean, function-call-expr, multiplicative-expr
+
+function foo() returns int {
+    return 0;
+}
+
+function init() {
+    int|error t1 = trap 2 / foo();
+    io:println(t1); // @output error("{ballerina}DivisionByZero",message=" / by zero")
+}
+
+Test-Case: output
+Description: Test trap-expr when the expression is a trap-expr.
+Labels: trap-expr, error-type, int, boolean, function-call-expr, multiplicative-expr
+
+function foo() returns int {
+    return 0;
+}
+
+function init() {
+    int|error t1 = trap trap 2 / foo();
+    io:println(t1); // @output error("{ballerina}DivisionByZero",message=" / by zero")
+}
+
+Test-Case: error
+Description: Check the type of trap-expr.
+Labels: trap-expr, error-type, int, function-call-expr, multiplicative-expr
+
+function foo() returns int {
+    return 0;
+}
+
+function errorFunction() {
+    int _ = trap 2 / foo(); // @error incompatible types: expected 'int', found '(int|error)'
+    error e = trap 2 / foo(); // @error incompatible types: expected 'error', found 'int'
+}
+
+Test-Case: output
+Description: Test trap-expr when the type of expression is never.
+Labels: trap-expr, error-type, int, boolean, function-call-expr, error-constructor-expr
+
+function funcNeverReturns() returns never {
+    panic error("msg");
+}
+
+function init() {
+    never|error e = trap funcNeverReturns();
+    io:println(e); // @output error("msg")
+}
