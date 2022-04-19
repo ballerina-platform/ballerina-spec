@@ -45,7 +45,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test error constructor constructing a new error value.
+Description: Test error constructor constructing an error value.
 Labels: anydata, error-constructor-expr, error-type, error-type-parameter, is-expr, map-type, module-type-defn, string
 
 type E error<map<anydata>>;
@@ -62,9 +62,26 @@ function init() {
     io:println(error E("error message", error E("ERROR!", errorCode = "BCE0001"), msg = "message", fatal = false) is error); // @output true
 }
 
+Test-Case: output
+Description: Test error constructor constructing a new error value.
+Labels: anydata, error-constructor-expr, error-type, error-type-parameter, exact-equality, map-type, module-type-defn,
+        string
+
+type E error<map<anydata>>;
+
+function init() {
+    io:println(error("message 1") === error("message 1")); // @output false
+    io:println(error("error message", msg = "message", fatal = false) === error("error message", msg = "message", fatal = false)); // @output false
+    io:println(error("error message", error("ERROR!")) === error("error message", error("ERROR!"))); // @output false
+
+    io:println(error E("error message") === error E("error message")); // @output false
+    io:println(error E("error message", msg = "message", fatal = false) === error E("error message", msg = "message", fatal = false)); // @output false
+    io:println(error E("error message", error("ERROR!")) === error E("error message", error("ERROR!"))); // @output false
+}
+
 Test-Case: error
 Description: Test specified error-type-reference has to be a subtype of error.
-Labels: any, error-constructor-expr, error-type, module-type-defn, string, union-type, var
+Labels: any, error-constructor-expr, error-type, module-type-defn, string, union-type
 
 type E1 any;
 
@@ -73,22 +90,70 @@ type E2 any|error;
 function errorFunction() {
     error err1 = error E1("error message"); // @error cannot create a new error value from 'E1'
     error err2 = error E2("error message"); // @error cannot create a new error value from 'E2'
+}
+
+Test-Case: error
+Description: Test specified error-type-reference has to be a subtype of error, with var.
+Labels: any, error-constructor-expr, error-type, module-type-defn, string, union-type, var
+
+type E1 any;
+
+type E2 any|error;
+
+function errorFunction() {
     var err3 = error E1("error message"); // @error cannot create a new error value from 'E1'
     var err4 = error E2("error message"); // @error cannot create a new error value from 'E2'
 }
 
 Test-Case: error
 Description: Test the effect of specified error-type-reference is same as making the contextually expected type be that specified type reference.
-Labels: error-constructor-expr, error-type, error-type-parameter, module-type-defn, record-type, string, var
+Labels: error-constructor-expr, error-type, error-type-parameter, module-type-defn, record-type, string
 
 type E error<record {|string message;|}>;
 
 function errorFunction() {
     E err1 = error("error message"); // @error missing error detail arg for error detail field 'message'
 
-    var err2 = error E("error message"); // @error missing error detail arg for error detail field 'message'
-
     error err3 = error E("error message"); // @error missing error detail arg for error detail field 'message'
+}
+
+Test-Case: error
+Description: Test the effect of specified error-type-reference is same as making the contextually expected type be that specified type reference, with var.
+Labels: error-constructor-expr, error-type, error-type-parameter, module-type-defn, record-type, string, var
+
+type E1 error<record {|string message;|}>;
+
+type E2 error<record {|boolean fatal;|}>;
+
+function errorFunction() {
+    E1 err1 = error("error message"); // @error missing error detail arg for error detail field 'message'
+
+    var err2 = error E1("error message"); // @error missing error detail arg for error detail field 'message'
+
+    var err3 = error E1("error message", message = "msg");
+    E2 err4 = err3; // @error incompatible types: expected 'E2', found 'E1'
+}
+
+Test-Case: output
+Description: Test the effect of specified error-type-reference is same as making the contextually expected type be that specified type reference.
+Labels: error-constructor-expr, error-type, error-type-parameter, module-type-defn, record-type, string
+
+type E error<record {|string message;|}>;
+
+function init() {
+    error err1 = error E("error message", message = "msg");
+    io:println(err1 is E); // @output true
+}
+
+Test-Case: output
+Description: Test the effect of specified error-type-reference is same as making the contextually expected type be that specified type reference, with var.
+Labels: error-constructor-expr, error-type, error-type-parameter, module-type-defn, record-type, string, var
+
+type E error<record {|string message;|}>;
+
+function init() {
+    var err2 = error E("error message", message = "msg");
+    io:println(err2 is E); // @output true
 }
 
 Test-Case: error
@@ -100,22 +165,22 @@ type E error<record {|string message?;|}>;
 
 function errorFunction() {
     var err1 = error("error message");
-    int x1 = err1; // @error incompatible types: expected 'int', found 'error'
+    int _ = err1; // @error incompatible types: expected 'int', found 'error'
 
     var err2 = error("error message", msg = "ERROR!", fatal = false);
-    int x2 = err2; // @error incompatible types: expected 'int', found 'error'
+    int _ = err2; // @error incompatible types: expected 'int', found 'error'
 
     var err3 = error("error message", error("ERROR!"));
-    int x3 = err3; // @error incompatible types: expected 'int', found 'error'
+    int _ = err3; // @error incompatible types: expected 'int', found 'error'
 
     var err4 = error("error message", error("ERROR!"), msg = "ERROR!", fatal = false);
-    int x4 = err4; // @error incompatible types: expected 'int', found 'error'
+    int _ = err4; // @error incompatible types: expected 'int', found 'error'
 
     var err5 = error("error message", message = "ERROR!");
-    E x5 = err5; // @error incompatible types: expected 'E', found 'error'
+    E x1 = err5; // @error incompatible types: expected 'E', found 'error'
 
     var err6 = error("error message");
-    E x6 = err6; // @error  incompatible types: expected 'E', found 'error'
+    E x2 = err6; // @error  incompatible types: expected 'E', found 'error'
 }
 
 Test-Case: error
@@ -136,31 +201,27 @@ function errorFunction() {
 
 Test-Case: output
 Description: Test the second positional-arg is by default nil and specified type otherwise.
-Labels: error-constructor-expr, error-type, error-type-parameter, error:cause, error:message, exact-equality, is-expr,
+Labels: error-constructor-expr, error-type, error-type-parameter, error:cause, exact-equality, is-expr,
         method-call-expr, module-type-defn, nil-literal, record-type, string
 
 type E error<record {|string message?;|}>;
 
 function init() {
     error err1 = error("error message 1");
-    io:println(err1.message() == "error message 1"); // @output true
     io:println(err1.cause() is ()); // @output true
     io:println(err1.cause() == ()); // @output true
 
     error err = error E("error message");
     error err2 = error("error message 2", err);
-    io:println(err2.message() == "error message 2"); // @output true
     io:println(err2.cause() is E); // @output true
     io:println(err2.cause() is ()); // @output false
     io:println(err2.cause() === err); // @output true
 
     error err3 = error E("error message 3");
-    io:println(err3.message() == "error message 3"); // @output true
     io:println(err3.cause() is ()); // @output true
     io:println(err3.cause() == ()); // @output true
 
     error err4 = error E("error message 4", err);
-    io:println(err4.message() == "error message 4"); // @output true
     io:println(err4.cause() is E); // @output true
     io:println(err4.cause() is ()); // @output false
     io:println(err4.cause() === err); // @output true
@@ -168,56 +229,64 @@ function init() {
 
 Test-Case: output
 Description: Test evaluating the error-constructor-expr constructs a new immutable detail mapping,
-             where each named-arg specifies a field of the error detail mapping and
-             the static type of each named-arg must be a subtype of value:Cloneable.
-             (Note: value:Cloneable requires explicit importing of lang.value. Hence, using error:Cloneable as they are equivalent)
-Labels: DecimalFloatingPointNumber, error-constructor-expr, error-type, error-type-parameter, error:Cloneable,
-        error:detail, intersection-type, is-expr, list-constructor-expr, map-type, member-access-expr, method-call-expr,
-        module-type-defn, readonly-type, record-type, string
-
-type E error<record {|string message; boolean fatal?;|}>;
+             where each named-arg specifies a field of the error detail mapping, with generic errors.
+Labels: DecimalFloatingPointNumber, error-constructor-expr, error-type, error:detail, is-expr, list-constructor-expr,
+        map-type, method-call-expr, readonly-type, record-type, string
 
 function init() {
     error err1 = error("error message 1");
-    io:println(err1.detail() is map<error:Cloneable>); // @output true
+    io:println(err1.detail() is record {||}); // @output true
     io:println(err1.detail() is readonly); // @output true
     io:println(err1.detail()); // @output {}
 
     error err = error("ERROR!");
     error err2 = error("error message 2", err);
-    io:println(err2.detail() is map<error:Cloneable>); // @output true
+    io:println(err2.detail() is record {||}); // @output true
     io:println(err2.detail() is readonly); // @output true
     io:println(err2.detail()); // @output {}
 
     map<string> m = {"x": "x", "y": "y"};
     error err3 = error("error message 3", a = "a", b = false, c = 1, d = 1.3, e = err, f = [1, 2, 3], g = m);
-    io:println(err3.detail() is map<error:Cloneable>); // @output true
-    io:println(err3.detail() is readonly); // @output true
+    io:println(err3.detail() is record {|"a" a; false b; 1 c; 1.3 d; error e; [1, 2, 3] f; map<string> g;|} & readonly); // @output true
     io:println(err3.detail()); // @output {"a":"a","b":false,"c":1,"d":1.3,"e":error("ERROR!"),"f":[1,2,3],"g":{"x":"x","y":"y"}}
 
     error err4 = error("error message 4", err, a = "a", b = false, c = 1, d = 1.3, e = err, f = [1, 2, 3], g = m);
-    io:println(err4.detail() is map<error:Cloneable>); // @output true
-    io:println(err4.detail() is readonly); // @output true
+    io:println(err4.detail() is record {|"a" a; false b; 1 c; 1.3 d; error e; [1, 2, 3] f; map<string> g;|} & readonly); // @output true
     io:println(err4.detail()); // @output {"a":"a","b":false,"c":1,"d":1.3,"e":error("ERROR!"),"f":[1,2,3],"g":{"x":"x","y":"y"}}
+}
 
-    error err5 = error E("error message 1", message = "Oops!");
-    io:println(err5.detail() is map<error:Cloneable>); // @output true
-    io:println(err5.detail() is readonly); // @output true
-    io:println(err5.detail()); // @output {"message":"Oops!"}
+Test-Case: output
+Description: Test evaluating the error-constructor-expr constructs a new immutable detail mapping,
+             where each named-arg specifies a field of the error detail mapping, with custom errors.
+Labels: error-constructor-expr, error-type, error-type-parameter, error:detail, is-expr, list-constructor-expr,
+        member-access-expr, method-call-expr, module-type-defn, readonly-type, record-type, string
 
-    error err6 = error E("error message 2", err, message = "Oops!", fatal = true);
-    io:println(err6.detail() is readonly); // @output true
-    io:println(err6.detail() is map<error:Cloneable>); // @output true
-    io:println(err6.detail()["message"] is error:Cloneable); // @output true
-    io:println(err6.detail()["message"] is readonly); // @output true
-    io:println(err6.detail()["fatal"] is error:Cloneable); // @output true
-    io:println(err6.detail()["fatal"] is readonly); // @output true
-    io:println(err6.detail()); // @output {"message":"Oops!","fatal":true}
+type E1 error<record {|string message; boolean fatal?;|}>;
+
+type E2 error<record {|string errorCode; string message = "ERROR"; boolean fatal = false;|}>;
+
+function init() {
+    error err1 = error E1("error message 1", message = "Oops!");
+    io:println(err1.detail() is record {|"Oops!" message;|}); // @output true
+    io:println(err1.detail() is readonly); // @output true
+    io:println(err1.detail()); // @output {"message":"Oops!"}
+
+    error err = error("ERROR!");
+    error err2 = error E1("error message 2", err, message = "Oops!", fatal = true);
+    io:println(err2.detail() is record {|"Oops!" message; true fatal;|}); // @output true
+    io:println(err2.detail() is readonly); // @output true
+    io:println(err2.detail()); // @output {"message":"Oops!","fatal":true}
+
+    error err3 = error E2("error message 3", errorCode = "BCE001");
+    io:println(err3.detail() is record {|"BCE001" errorCode;|}); // @output false
+    io:println(err3.detail() is record {|"BCE001" errorCode; "ERROR" message; false fatal;|}); // @output true
+    io:println(err3.detail() is readonly); // @output true
+    io:println(err3.detail()); // @output {"errorCode":"BCE001","message":"ERROR","fatal":false}
 }
 
 Test-Case: error
 Description: Test the static type of each named-arg must be a subtype of value:Cloneable.
-Labels: error-constructor-expr, error-type, explicit-new-expr, module-class-defn, string, value:Cloneable
+Labels: error-constructor-expr, error-type, explicit-new-expr, module-class-defn, string
 
 class ErrorClass {
 
@@ -460,7 +529,7 @@ type E error<record {int code;}>;
 function init() {
     E|int|map<string> err = error("msg", code = 100);
     io:println(err is E); // @output true
-    if (err is E) {
+    if err is E {
         io:println(err.detail()); // @output {"code":100}
     }
 }
@@ -517,13 +586,13 @@ type E E1 & E2;
 function init() {
     E1|E2|E|int|map<string> err = error("msg", code = 100);
     io:println(err is E1); // @output true
-    if (err is E1) {
+    if err is E1 {
         io:println(err.detail()); // @output {"code":100}
     }
 
     err = error("msg", no = 100);
     io:println(err is E2); // @output true
-    if (err is E2) {
+    if err is E2 {
         io:println(err.detail()); // @output {"no":100}
     }
 }
@@ -579,6 +648,20 @@ function init() {
 }
 
 Test-Case: output
+Description: Test error constructor with in-line error contextually-expected type.
+Labels: error-constructor-expr, error-type, error-type-parameter, error:detail, error:message, record-type, string
+
+function init() {
+    error<record {|string message; boolean fatal;|}> err1 = error("error message", message = "msg", fatal = false);
+    io:println(err1.message()); // @output error message
+    io:println(err1.detail()); // @output {"message":"msg","fatal":false}
+
+    error<record {|string message; boolean fatal?;|}> err2 = error("error message", error("ERROR!"), message = "msg");
+    io:println(err2.message()); // @output error message
+    io:println(err2.detail()); // @output {"message":"msg"}
+}
+
+Test-Case: output
 Description: Test type-ids of the constructed error value are those induced by applicable contextually expected type.
 Labels: distinct, error-constructor-expr, error-type, error-type-parameter, intersection-type, is-expr,
         module-type-defn, record-type, string
@@ -599,6 +682,25 @@ function init() {
     E err3 = error("message", code = 100, no = 200);
     E3 err4 = err3;
     io:println(err4 is E); // @output true
+}
+
+Test-Case: output
+Description: Test error constructor with distinct errors.
+Labels: distinct, error-constructor-expr, error-type, error-type-parameter, is-expr, module-type-defn, record-type,
+        string
+
+type E1 distinct error<record {int code;}>;
+
+type E2 distinct error<record {int code;}>;
+
+function init() {
+    E1 err1 = error("message", code = 100);
+    io:println(err1 is E1); // @output true
+    io:println(err1 is E2); // @output false
+
+    E2 err2 = error("message", code = 101);
+    io:println(err2 is E1); // @output false
+    io:println(err2 is E2); // @output true
 }
 
 Test-Case: output
@@ -683,7 +785,7 @@ function init() {
 
     io:println(fooResult is error); // @output true
     if fooResult is error {
-        io:println(fooResult.stackTrace()); // @output [callableName: baz  fileName: int_677.bal lineNumber: 20,callableName: bar  fileName: int_677.bal lineNumber: 16,callableName: foo  fileName: int_677.bal lineNumber: 12,callableName: init  fileName: int_677.bal lineNumber: 3]
+        io:println(fooResult.stackTrace()); // @output [callableName: baz  fileName: int_779.bal lineNumber: 20,callableName: bar  fileName: int_779.bal lineNumber: 16,callableName: foo  fileName: int_779.bal lineNumber: 12,callableName: init  fileName: int_779.bal lineNumber: 3]
     }
 }
 
