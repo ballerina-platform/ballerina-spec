@@ -56,7 +56,6 @@ function errorFunction(string a, string:Char b, Strings c, Chars d) {
 
 Test-Case: error
 Description: Test invalid static type of string union concatenation.
-Fail-Issue: ballerina-platform/ballerina-lang#33059
 Labels: additive-expr, string, string:Char, module-type-defn, union-type, singleton-type
 
 type Strings "A"|"foo";
@@ -439,39 +438,6 @@ function init() {
 }
 
 Test-Case: output
-Description: Test string concatenation when an operand is of a union type containing string:Char.
-Fail-Issue: ballerina-platform/ballerina-lang#33059
-Labels: additive-expr, string, string:Char, module-type-defn, union-type, singleton-type
-
-type Strings "A"|"foo";
-type Chars "B"|"bar";
-
-function init() {
-    string a = "str";
-    string:Char|Strings b = "M";
-    Strings|Chars c = "bar";
-    string:Char d = "C";
-    Strings e = "A";
-    Chars f = "B";
-
-    printString(a + b); // @output strM
-    printString(b + a); // @output Mstr
-    printString(b + b); // @output MM
-    printString(b + c); // @output Mbar
-    printString(b + d); // @output MC
-    printString(b + e); // @output MA
-    printString(b + f); // @output MB
-    printString(c + b); // @output barM
-    printString(d + b); // @output CM
-    printString(e + b); // @output AM
-    printString(f + b); // @output BM
-}
-
-function printString(string s) {
-    io:println(s);
-}
-
-Test-Case: output
 Description: Test string concatenation when an operand is of a union type.
 Labels: additive-expr, string, string:Char, module-type-defn, union-type, singleton-type
 
@@ -491,6 +457,13 @@ function init() {
     printString(a + d); // @output strC
     printString(a + e); // @output strA
     printString(a + f); // @output strB
+
+    printString(b + a); // @output Mstr
+    printString(b + b); // @output MM
+    printString(b + c); // @output Mbar
+    printString(b + d); // @output MC
+    printString(b + e); // @output MA
+    printString(b + f); // @output MB
 
     printString(c + a); // @output barstr
     printString(c + b); // @output barM
