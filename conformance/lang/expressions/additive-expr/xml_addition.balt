@@ -1,0 +1,729 @@
+Test-Case: error
+Description: Test invalid concatenation with XML.
+Labels: additive-expr, int, xml, nil-type, array-type
+
+function errorFunction(xml a, int b, () c, xml[] d) {
+    xml _ = a + b; // @error cannot concatenate xml and int
+    xml _ = a + c; // @error cannot concatenate xml and nil
+    xml _ = a + d; // @error cannot concatenate xml and array
+    xml _ = b + a + a; // @error cannot concatenate xml and int
+    xml _ = c + a; // @error cannot concatenate xml and nil
+    xml _ = d + a; // @error cannot concatenate xml and array
+}
+
+Test-Case: error
+Description: Test invalid static type of XML concatenation.
+Labels: additive-expr, xml, int, string
+
+function errorFunction(xml a, xml b) {
+    int _ = a + b; // @error static type of xml concatenation is xml
+    string _ = a + b + a; // @error static type of xml concatenation is xml
+}
+
+Test-Case: error
+Description: Test invalid static type of xml concatenation with built-in subtype of xml.
+Labels: additive-expr, xml, int, string, xml:Element, xml:Comment, xml:ProcessingInstruction, xml:Text
+
+function errorFunction(xml a, xml:Element b, xml:Comment c, xml:ProcessingInstruction d, xml:Text e) {
+    int _ = a + b; // @error static type of xml concatenation is xml
+    xml:Element _ = a + b; // @error static type of xml concatenation is xml
+    xml:Comment _ = a + c; // @error static type of xml concatenation is xml
+    xml:ProcessingInstruction _ = a + d; // @error static type of xml concatenation is xml
+    xml:Text _ = a + e; // @error static type of xml concatenation is xml
+    string _ = a + e; // @error static type of xml concatenation is xml
+}
+
+Test-Case: error
+Description: Test invalid static type of xml concatenation of operands of built-in subtypes of xml.
+Labels: additive-expr, xml, int, string, xml:Element, xml:Comment, xml:ProcessingInstruction, xml:Text, xml-type-parameter, union-type
+
+function errorFunction(xml:Element b, xml:Comment c, xml:ProcessingInstruction d, xml:Text e) {
+    xml:Element _ = b + b; // @error static type of xml:Element concatenation is xml<xml:Element>
+    xml<xml:Element> _ = b + d; // @error static type of xml:Element and xml:ProcessingInstruction concatenation is xml<xml:Element|xml:ProcessingInstruction>
+    xml:Comment _ = c + c; // @error static type of xml:Comment concatenation is xml<xml:Comment>
+    xml:ProcessingInstruction _ = d + d; // @error static type of xml:ProcessingInstruction concatenation is xml<xml:ProcessingInstruction>
+    xml:ProcessingInstruction|xml:Comment _ = d + c; // @error static type of xml:Comment and xml:ProcessingInstruction concatenation is xml<xml:Comment|xml:ProcessingInstruction>
+    xml:Element|xml:Text|xml:ProcessingInstruction _ = b + e; // @error static type of xml:Element and xml:Text concatenation is xml<xml:Element|xml:Text>
+    string _ = e + e; // @error static type of xml:Text concatenation is xml<xml:Text>
+    xml:Comment _ = e + e; // @error static type of xml:Text concatenation is xml<xml:Text>
+    xml<xml:Comment> _ = e + e; // @error static type of xml:Text concatenation is xml<xml:Text>
+}
+
+Test-Case: error
+Description: Test invalid optional xml concatenation.
+Labels: additive-expr, xml, optional-type
+
+function errorFunction(xml? a, xml? b, xml c) {
+    xml _ = a + b; // @error cannot concatenate optional xml
+    xml? _ = a + b; // @error cannot concatenate optional xmls
+    xml _ = a + c; // @error cannot concatenate xml and optional xml
+    xml _ = c + a + c; // @error cannot concatenate xml and optional xml
+}
+
+Test-Case: error
+Description: Test invalid optional xml subtype concatenation.
+Labels: additive-expr, xml, xml:Element, xml:Comment, xml:ProcessingInstruction, xml:Text, optional-type, union-type
+
+function errorFunction(xml? a, xml:Element? b, xml:Comment? c, xml:ProcessingInstruction? d, xml:Text? e) {
+    xml _ = a + b; // @error cannot concatenate optional xml
+    xml:Element? _ = a + b; // @error cannot concatenate optional xml
+    xml? _ = a + b; // @error cannot concatenate optional xml
+    xml? _ = b + c; // @error cannot concatenate optional xml
+    xml? _ = a + a + c + c; // @error cannot concatenate optional xml
+    xml:ProcessingInstruction|xml:Text? _ = d + c; // @error cannot concatenate optional xml
+}
+
+Test-Case: error
+Description: Test xml concatenation static type via invalid assignment with var.
+Labels: additive-expr, xml, xml:Element, xml:Comment, xml:ProcessingInstruction, xml:Text, xml-type-parameter, var, union-type
+
+function errorFunction(xml a, xml:Element b, xml:Comment c, xml:ProcessingInstruction d, xml:Text e) {
+    var f = a + a;
+    xml<xml:Element> v1 = f; // @error incompatible types: expected xml<xml:Element> found xml
+    xml:Element v2 = f; // @error incompatible types: expected xml:Element found xml
+
+    var g = a + b;
+    v1 = g; // @error incompatible types: expected xml<xml:Element> found xml
+    v2 = g; // @error incompatible types: expected xml:Element found xml
+
+    var h = a + c;
+    v1 = h; // @error incompatible types: expected xml<xml:Element> found xml
+    v2 = h; // @error incompatible types: expected xml:Element found xml
+
+    var o = b + d + e;
+    v1 = o; // @error incompatible types: expected xml<xml:Element> found xml<xml:Element|xml:ProcessingInstruction|xml:Text>
+    v2 = o; // @error incompatible types: expected xml:Element found xml<xml:Element|xml:ProcessingInstruction|xml:Text>
+
+    var i = b + a;
+    v1 = i; // @error incompatible types: expected xml<xml:Element> found xml
+    v2 = i; // @error incompatible types: expected xml:Element found xml
+
+    var j = b + b;
+    xml<xml:Comment|xml:ProcessingInstruction> v3 = j; // @error incompatible types: expected xml<xml:Comment|xml:ProcessingInstruction> found xml<xml:Element>
+    v2 = j; // @error incompatible types: expected xml:Element found xml<xml:Element>
+
+    var k = b + c;
+    v1 = k; // @error incompatible types: expected xml<xml:Element> found xml<xml:Element|xml:Comment>
+    v2 = k; // @error incompatible types: expected xml:Element found xml<xml:Element|xml:Comment>
+
+    var l = c + a;
+    v1 = l; // @error incompatible types: expected xml<xml:Element> found xml
+    v2 = l; // @error incompatible types: expected xml:Element found xml
+
+    var m = c + b;
+    v1 = m; // @error incompatible types: expected xml<xml:Element> found xml<xml:Element|xml:Comment>
+    v2 = m; // @error incompatible types: expected xml:Element found xml<xml:Element|xml:Comment>
+
+    var n = c + c;
+    v1 = n; // @error incompatible types: expected xml<xml:Element> found xml<xml:Comment>
+    v2 = n; // @error incompatible types: expected xml:Element found xml<xml:Comment>
+
+    var p = d + d;
+    v1 = p; // @error incompatible types: expected xml<xml:Element> found xml<xml:ProcessingInstruction>
+    v2 = p; // @error incompatible types: expected xml:Element found xml<xml:ProcessingInstruction>
+
+    var q = e + e;
+    v1 = q; // @error incompatible types: expected xml<xml:Element> found xml<xml:Text>
+    v2 = q; // @error incompatible types: expected xml:Element found xml<xml:Text>
+}
+
+Test-Case: error
+Description: Test invalid static type of xml union concatenation.
+Fail-Issue: ballerina-platform/ballerina-lang#33059
+Labels: additive-expr, xml, string, xml:Element, xml:Comment, xml:ProcessingInstruction, xml:Text, union-type, xml-type-parameter
+
+function errorFunction(xml a, xml:Element|xml:Comment b, xml<xml:Text|xml:ProcessingInstruction> c) {
+    string _ = a + b; // @error static type of concatenation is xml
+    xml:Element|xml:Comment _ = b + b; // @error static type of concatenation is xml<xml:Element|xml:Comment>
+    string _ = a + c; // @error static type of xml concatenation is xml
+    string _ = b + c; // @error static type of xml concatenation is xml<xml:Element|xml:Comment|xml:Text|xml:ProcessingInstruction>
+    xml:Text|xml:ProcessingInstruction _ = c + c; // @error static type of xml concatenation is xml<xml:Text|xml:ProcessingInstruction>
+}
+
+Test-Case: error
+Description: Test invalid static type of xml concatenation with sequences of sequences.
+Fail-Issue: ballerina-platform/ballerina-lang#33065
+Labels: additive-expr, xml, string, xml:Element, xml:Comment, xml:ProcessingInstruction, xml:Text, union-type, xml-type-parameter
+
+function errorFunction(xml a, xml<xml<xml:Element|xml:Comment>> b, xml<xml<xml<xml:Text|xml:ProcessingInstruction>>> c) {
+    string _ = a + b; // @error static type of concatenation is xml
+    xml:Element|xml:Comment _ = b + b; // @error static type of concatenation is xml<xml:Element|xml:Comment>
+    string _ = a + c; // @error static type of concatenation is xml
+    string _ = b + c; // @error static type of concatenation is xml<xml:Element|xml:Comment|xml:Text|xml:ProcessingInstruction>
+    xml:Text|xml:ProcessingInstruction _ = c + c; // @error static type of concatenation is xml<xml:Text|xml:ProcessingInstruction>
+}
+
+Test-Case: output
+Description: Test xml concatenation.
+Labels: additive-expr, xml
+
+function init() {
+    xml a = xml `foo`;
+    xml b = xml `<!--bar-->`;
+    xml c = xml `<baz/>`;
+    xml d = xml `<?qux?>`;
+
+    xml e = a + a;
+    io:println(e); // @output foofoo
+    io:println(a + b); // @output foo<!--bar-->
+    io:println(a + c); // @output foo<baz></baz>
+    io:println(a + d); // @output foo<?qux ?>
+
+    e = b + a;
+    io:println(e); // @output <!--bar-->foo
+    io:println(b + b); // @output <!--bar--><!--bar-->
+    io:println(b + c); // @output <!--bar--><baz></baz>
+    io:println(b + d); // @output <!--bar--><?qux ?>
+
+    e = c + a;
+    io:println(e); // @output <baz></baz>foo
+    io:println(c + b); // @output <baz></baz><!--bar-->
+    io:println(c + c); // @output <baz></baz><baz></baz>
+    io:println(c + d); // @output <baz></baz><?qux ?>
+
+    e = d + a;
+    io:println(e); // @output <?qux ?>foo
+    io:println(d + b); // @output <?qux ?><!--bar-->
+    io:println(d + c); // @output <?qux ?><baz></baz>
+    io:println(d + d); // @output <?qux ?><?qux ?>
+}
+
+Test-Case: output
+Description: Test xml concatenation with sequences.
+Labels: additive-expr, xml, xml-type-parameter, xml:Element, xml:Comment, xml:ProcessingInstruction, xml:Text, union-type
+
+function init() {
+    xml a = xml `foo`;
+    xml b = xml `bar<!--bar-->`;
+    xml<xml:Element|xml:ProcessingInstruction> c = xml `<baz/><?qux?>`;
+
+    xml e = a + a;
+    io:println(e); // @output foofoo
+    io:println(a + b); // @output foobar<!--bar-->
+    io:println(a + c); // @output foo<baz></baz><?qux ?>
+
+    e = b + a;
+    io:println(e); // @output bar<!--bar-->foo
+    io:println(b + b); // @output bar<!--bar-->bar<!--bar-->
+    io:println(b + c); // @output bar<!--bar--><baz></baz><?qux ?>
+
+    e = c + a;
+    io:println(e); // @output <baz></baz><?qux ?>foo
+    io:println(c + b); // @output <baz></baz><?qux ?>bar<!--bar-->
+    io:println(c + c); // @output <baz></baz><?qux ?><baz></baz><?qux ?>
+
+    xml<xml:Element|xml:ProcessingInstruction> f = c + c;
+    io:println(f); // @output <baz></baz><?qux ?><baz></baz><?qux ?>
+
+    e = a + b + c;
+    io:println(e); // @output foobar<!--bar--><baz></baz><?qux ?>
+    io:println(c + e); // @output <baz></baz><?qux ?>foobar<!--bar--><baz></baz><?qux ?>
+}
+
+Test-Case: output
+Description: Test xml concatenation with different subtypes of xml.
+Labels: additive-expr, xml, xml-type-parameter, xml:Element, xml:Comment, xml:ProcessingInstruction, xml:Text, never, is-expr, value:toBalString, union-type
+
+function init() {
+    xml:Text a = xml `foo`;
+    xml:Comment b = xml `<!--bar-->`;
+    xml:Element c = xml `<baz>baz value</baz>`;
+    xml:ProcessingInstruction d = xml `<?qux val?>`;
+    xml<xml:Text|xml:Comment> e = xml ` <!--c1--> <!--c2--> `;
+
+    xml<xml:Text> f = a + a;
+    io:println(f); // @output foofoo
+    io:println(f is xml:Text); // @output true
+    io:println(f is xml<never>); // @output false
+
+    xml:Text g = a + a;
+    io:println(g); // @output foofoo
+    io:println(g is xml:Text); // @output true
+
+    xml<xml:Text|xml:Comment> h = a + b;
+    io:println(h); // @output foo<!--bar-->
+    io:println(h is xml<xml:Text|xml:Comment>); // @output true
+    io:println(h is xml<xml:Text>); // @output false
+
+    xml<xml:Text|xml:Element> i = a + c;
+    io:println(i); // @output foo<baz>baz value</baz>
+    io:println(i is xml<xml:Text|xml:Element>); // @output true
+    io:println(i is xml<xml:Element>); // @output false
+
+    xml<xml:ProcessingInstruction|xml:Element|xml:Text> j = a + d;
+    io:println(j); // @output foo<?qux val?>
+    io:println(j is xml<xml:Text|xml:ProcessingInstruction>); // @output true
+    io:println(j is xml<xml:Element|xml:ProcessingInstruction>); // @output false
+
+    xml<xml:Comment|xml:Text> k = a + e;
+    io:println(k.toBalString()); // @output xml`foo <!--c1--> <!--c2--> `
+    io:println(k is xml<xml:Text|xml:Comment>); // @output true
+    io:println(k is xml<xml:Text>); // @output false
+
+    xml<xml:Comment|xml:Text> l = b + a;
+    io:println(l); // @output <!--bar-->foo
+    io:println(l is xml<xml:Comment|xml:Text>); // @output true
+    io:println(l is xml<xml:Text>); // @output false
+
+    xml<xml:Comment> m = b + b;
+    io:println(m); // @output <!--bar--><!--bar-->
+    io:println(m is xml<xml:Comment>); // @output true
+
+    xml<xml:Comment|xml:Element> n = b + c;
+    io:println(n); // @output <!--bar--><baz>baz value</baz>
+    io:println(n is xml<xml:Comment|xml:Element>); // @output true
+    io:println(n is xml<xml:Comment>); // @output false
+
+    xml<xml:ProcessingInstruction|xml:Comment> o = b + d;
+    io:println(o); // @output <!--bar--><?qux val?>
+    io:println(o is xml<xml:Comment|xml:ProcessingInstruction>); // @output true
+    io:println(o is xml<xml:Comment>); // @output false
+
+    xml<xml:Text|xml:Comment> p = b + e;
+    io:println(p.toBalString()); // @output xml`<!--bar--> <!--c1--> <!--c2--> `
+    io:println(p is xml<xml:Comment|xml:Text>); // @output true
+    io:println(p is xml<xml:Comment>); // @output false
+
+    xml<xml:Text|xml:Element> q = c + a;
+    io:println(q); // @output <baz>baz value</baz>foo
+    io:println(q is xml<xml:Text|xml:Element>); // @output true
+    io:println(q is xml<never>); // @output false
+    io:println(q is xml<xml:Text>); // @output false
+
+    xml<xml:Element|xml:Comment> r = c + b;
+    io:println(r); // @output <baz>baz value</baz><!--bar-->
+    io:println(r is xml<xml:Element|xml:Comment>); // @output true
+    io:println(r is xml<xml:Element>); // @output false
+
+    xml<xml:Element> s = c + c;
+    io:println(s); // @output <baz>baz value</baz><baz>baz value</baz>
+    io:println(s is xml<xml:Text|xml:Element>); // @output true
+    io:println(s is xml<xml:Element>); // @output true
+
+    xml<xml:ProcessingInstruction|xml:Element> t = c + d;
+    io:println(t); // @output <baz>baz value</baz><?qux val?>
+    io:println(t is xml<xml:Element|xml:ProcessingInstruction>); // @output true
+    io:println(t is xml<xml:Element>); // @output false
+
+    xml<xml:Comment|xml:Text|xml:Element> u = c + e;
+    io:println(u.toBalString()); // @output xml`<baz>baz value</baz> <!--c1--> <!--c2--> `
+    io:println(u is xml<xml:Text|xml:Comment|xml:Element>); // @output true
+    io:println(u is xml<xml:Comment|xml:Element>); // @output false
+
+    xml<xml:ProcessingInstruction> v = d + d;
+    io:println(v); // @output <?qux val?><?qux val?>
+    io:println(v is xml<xml:ProcessingInstruction>); // @output true
+    io:println(v is xml<never>); // @output false
+
+    xml<xml:ProcessingInstruction|xml:Text|xml:Comment> w = d + e;
+    io:println(w.toBalString()); // @output xml`<?qux val?> <!--c1--> <!--c2--> `
+    io:println(w is xml<xml:ProcessingInstruction|xml:Text|xml:Comment>); // @output true
+    io:println(w is xml<never>); // @output false
+    io:println(w is xml<xml:Text|xml:Comment>); // @output false
+
+    xml<xml:Text|xml:Comment> x = e + e;
+    io:println(x.toBalString()); // @output xml` <!--c1--> <!--c2-->  <!--c1--> <!--c2--> `
+    io:println(x is xml<xml:Text|xml:Comment>); // @output true
+    io:println(x is xml<never>); // @output false
+}
+
+Test-Case: output
+Description: Test xml concatenation with empty xml sequence.
+Labels: additive-expr, xml, xml-type-parameter, xml:Element, xml:Comment, xml:ProcessingInstruction, xml:Text, never, value:toBalString, union-type
+
+function init() {
+    xml:Text a = xml `foo`;
+    xml:Comment b = xml `<!--bar-->`;
+    xml:Element c = xml `<baz>baz value</baz>`;
+    xml:ProcessingInstruction d = xml `<?qux val?>`;
+    xml<xml:Text|xml:Comment> e = xml ` <!--c1--> <!--c2--> `;
+    xml f = xml ``;
+    xml<never> g = xml ``;
+
+    xml h = a + f;
+    io:println(h); // @output foo
+    io:println(h is xml:Text); // @output true
+    io:println(h is xml<xml:Text>); // @output true
+    io:println(h is xml<never>); // @output false
+
+    xml i = g + a;
+    io:println(i); // @output foo
+    io:println(i is xml:Text); // @output true
+    io:println(i is xml<xml:Text>); // @output true
+    io:println(i is xml<never>); // @output false
+
+    xml j = b + f;
+    io:println(j); // @output <!--bar-->
+    io:println(j is xml:Comment); // @output true
+    io:println(j is xml<xml:Comment>); // @output true
+    io:println(j is xml<never>); // @output false
+
+    xml k = g + b;
+    io:println(k); // @output <!--bar-->
+    io:println(k is xml:Comment); // @output true
+    io:println(k is xml<xml:Comment>); // @output true
+    io:println(k is xml<never>); // @output false
+
+    xml l = c + f;
+    io:println(l); // @output <baz>baz value</baz>
+    io:println(l is xml:Element); // @output true
+    io:println(l is xml<xml:Element>); // @output true
+    io:println(l is xml<never>); // @output false
+
+    xml m = g + c;
+    io:println(m); // @output <baz>baz value</baz>
+    io:println(m is xml:Element); // @output true
+    io:println(m is xml<xml:Element>); // @output true
+    io:println(m is xml<never>); // @output false
+
+    xml n = d + f;
+    io:println(n); // @output <?qux val?>
+    io:println(n is xml:ProcessingInstruction); // @output true
+    io:println(n is xml<xml:ProcessingInstruction>); // @output true
+    io:println(n is xml<never>); // @output false
+
+    xml o = g + d;
+    io:println(o); // @output <?qux val?>
+    io:println(o is xml:ProcessingInstruction); // @output true
+    io:println(o is xml<xml:ProcessingInstruction>); // @output true
+    io:println(o is xml<never>); // @output false
+
+    xml p = e + f;
+    io:println(p.toBalString()); // @output xml` <!--c1--> <!--c2--> `
+    io:println(p is xml<xml:Text|xml:Comment>); // @output true
+    io:println(p is xml:Text|xml:Comment); // @output false
+    io:println(p is xml<never>); // @output false
+
+    xml q = g + e;
+    io:println(q.toBalString()); // @output xml` <!--c1--> <!--c2--> `
+    io:println(q is xml<xml:Text|xml:Comment>); // @output true
+    io:println(q is xml:Text|xml:Comment); // @output false
+    io:println(q is xml<never>); // @output false
+}
+
+Test-Case: output
+Description: Test new sequence creation on xml concatenation.
+Labels: additive-expr, xml, xml-type-parameter, xml:Element, xml:Comment, xml:ProcessingInstruction, xml:Text, never, union-type, exact-equality
+
+function init() {
+    xml:Text a = xml `foo`;
+    xml:Comment b = xml `<!--bar-->`;
+    xml:Element c = xml `<baz>baz value</baz>`;
+    xml:ProcessingInstruction d = xml `<?qux val?>`;
+    xml<xml:Text|xml:Comment> e = xml ` <!--c1--> <!--c2--> `;
+    xml f = xml `<a/><b>bcd</b>`;
+    xml g = xml ``;
+
+    xml h = a + b;
+    io:println(a === h); // @output false
+    io:println(h === a); // @output false
+
+    h = f + a;
+    io:println(a === h); // @output false
+    io:println(h === f); // @output false
+
+    h = b + c;
+    io:println(c === h); // @output false
+    io:println(h === b); // @output false
+
+    h = f + b;
+    io:println(b === h); // @output false
+    io:println(h === f); // @output false
+
+    h = c + d;
+    io:println(d === h); // @output false
+    io:println(h === c); // @output false
+
+    h = f + c;
+    io:println(c === h); // @output false
+    io:println(h === f); // @output false
+
+    h = d + a;
+    io:println(d === h); // @output false
+    io:println(h === a); // @output false
+
+    h = f + d;
+    io:println(d === h); // @output false
+    io:println(h === f); // @output false
+
+    h = e + e;
+    io:println(e === h); // @output false
+    io:println(h === e); // @output false
+
+    h = f + e;
+    io:println(e === h); // @output false
+    io:println(h === f); // @output false
+
+    h = f + a;
+    io:println(f === h); // @output false
+    io:println(h === a); // @output false
+
+    h = f + f;
+    io:println(f === h); // @output false
+    io:println(h === f); // @output false
+
+    h = b + g;
+    io:println(b === h); // @output true
+    io:println(h === g); // @output false
+
+    h = g + c;
+    io:println(c === h); // @output true
+    io:println(h === g); // @output false
+
+    h = g + d;
+    io:println(d === h); // @output true
+    io:println(h === g); // @output false
+
+    h = e + g;
+    // true due to sequence check
+    io:println(e === h); // @output true
+
+    io:println(h === g); // @output false
+
+    h = g + f;
+    // true due to sequence check
+    io:println(f === h); // @output true
+
+    io:println(h === g); // @output false
+}
+
+Test-Case: output
+Description: Test xml concatenation not performing a copy on the constituents of the operand values.
+Labels: additive-expr, xml, xml-type-parameter, xml:Element, xml:Comment, xml:ProcessingInstruction, xml:Text, xml:get, union-type, exact-equality
+
+function init() {
+    xml:Text a = xml `foo`;
+    xml:Element b = xml `<bar>bar val</bar>`;
+    xml:Comment c = xml `<!--baz-->`;
+    xml:ProcessingInstruction d = xml `<?qux val?>`;
+    xml e = xml `<elem/> text <!--comment-->`;
+    xml<xml:Element|xml:ProcessingInstruction> f = xml `<e2/><?p2 val2?>`;
+
+    xml g = a + b;
+    io:println(g); // @output foo<bar>bar val</bar>
+    io:println((g.<bar>).get(0) === b); // @output true
+
+    g = b + a;
+    io:println(g); // @output <bar>bar val</bar>foo
+    io:println((g.<bar>).get(0) === b); // @output true
+
+    g = c + b;
+    io:println(g); // @output <!--baz--><bar>bar val</bar>
+    io:println(g.get(0) === c); // @output true
+    io:println(g.get(1) === b); // @output true
+
+    g = a + b + c + d;
+    io:println(g); // @output foo<bar>bar val</bar><!--baz--><?qux val?>
+    io:println(g.get(1) === b); // @output true
+    io:println(g.get(2) === c); // @output true
+    io:println(g.get(3) === d); // @output true
+
+    g = d + e;
+    io:println(g); // @output <?qux val?><elem></elem> text <!--comment-->
+    io:println(g.get(0) === d); // @output true
+    io:println(g.get(1) === e.get(0)); // @output true
+    io:println(g.get(3) === e.get(2)); // @output true
+
+    g = e + f;
+    io:println(g); // @output <elem></elem> text <!--comment--><e2></e2><?p2 val2?>
+    io:println(g.get(0) === e.get(0)); // @output true
+    io:println(g.get(2) === e.get(2)); // @output true
+    io:println(g.get(3) === f.get(0)); // @output true
+    io:println(g.get(4) === f.get(1)); // @output true
+}
+
+Test-Case: output
+Description: Test xml concatenation when an operand is of a union type containing a builtin subtype of xml.
+Fail-Issue: ballerina-platform/ballerina-lang#33059, ballerina-platform/ballerina-lang#33063
+Labels: additive-expr, xml, xml:Element, xml:Comment, xml:ProcessingInstruction, xml:Text, union-type, xml-type-parameter
+
+function init() {
+    xml:Element|xml:ProcessingInstruction a = xml `<foo>val</foo>`;
+    xml<xml:Comment|xml:Text> b = xml `<!--c1--> <!--c2-->`;
+    xml<xml:Text>|xml<xml:ProcessingInstruction|xml:Element> c = xml `a b c`;
+
+    xml<xml:Element|xml:ProcessingInstruction> d = a + a;
+    io:println(d); // @output <foo>val</foo><foo>val</foo>
+
+    xml<xml:Element|xml:ProcessingInstruction|xml:Comment|xml:Text> e = a + b;
+    io:println(e); // @output <foo>val</foo><!--c1--> <!--c2-->
+
+    xml<xml:Element|xml:ProcessingInstruction|xml:Text> f = a + c;
+    io:println(f); // @output <foo>val</foo>a b c
+
+    xml<xml:Comment|xml:Text> g = b + b;
+    io:println(g); // @output <!--c1--> <!--c2--><!--c1--> <!--c2-->
+
+    xml<xml:Element|xml:ProcessingInstruction|xml:Text> h = c + c;
+    io:println(g); // @output <!--c1--> <!--c2--><!--c1--> <!--c2-->
+}
+
+Test-Case: output
+Description: Test xml concatenation with sequences of sequences.
+Labels: additive-expr, xml, string, xml:Element, xml:Comment, xml:Text, union-type, xml-type-parameter, is-expr
+
+function init() {
+    xml a = xml `<foo>1</foo>`;
+    xml<xml<xml:Element|xml:Comment>> b = xml `<!--c1--><bar>2</bar>`;
+    xml<xml<xml<xml:Text|xml:Element>>> c = xml `text`;
+
+    xml d = a + b;
+    io:println(d); // @output <foo>1</foo><!--c1--><bar>2</bar>
+
+    xml e = a + c;
+    io:println(e); // @output <foo>1</foo>text
+
+    xml<xml:Element|xml:Comment> f = b + b;
+    io:println(f); // @output <!--c1--><bar>2</bar><!--c1--><bar>2</bar>
+    io:println(f is xml<xml:Element|xml:Comment>); // @output true
+
+    xml<xml:Element|xml:Text|xml:Comment> g = b + c + b;
+    io:println(g); // @output <!--c1--><bar>2</bar>text<!--c1--><bar>2</bar>
+    io:println(g is xml<xml:Element|xml:Text|xml:Comment>); // @output true
+}
+
+Test-Case: output
+Description: Test xml concatenation with xml literal expressions as operands.
+Labels: additive-expr, xml, int
+
+function init() {
+    int id = 21;
+    io:println(xml `hello` + xml `<count>${id}</count>`); // @output hello<count>21</count>
+}
+
+Test-Case: output
+Description: Test xml concatenation with field access expressions as operands.
+Labels: additive-expr, xml, field-access-expr, explicit-new-expr, module-class-defn, record-type
+
+function init() {
+    Bar b = {comment: xml `<!--this is a comment-->`};
+    io:println(b.comment + (new Foo()).id); // @output <!--this is a comment--><id>1234</id><default></default>
+}
+
+class Foo {
+    xml id = xml `<id>1234</id><default/>`;
+}
+
+type Bar record {|
+    xml:Comment comment;
+|};
+
+Test-Case: output
+Description: Test xml concatenation with function call and method call expressions as operands.
+Labels: additive-expr, xml, function-call-expr, method-call-expr, implicit-new-expr, explicit-new-expr, module-class-defn
+
+function init() {
+    Class cl = new;
+    io:println(getXml() + cl.getXml()); // @output <foo>1234</foo><!--Comment 1--> <!--Comment 2-->
+    io:println(cl.getXml() + getXml()); // @output <!--Comment 1--> <!--Comment 2--><foo>1234</foo>
+    io:println(getXml() + getXml()); // @output <foo>1234</foo><foo>1234</foo>
+    io:println(cl.getXml() + (new Class()).getXml()); // @output <!--Comment 1--> <!--Comment 2--><!--Comment 1--> <!--Comment 2-->
+}
+
+function getXml() returns xml:Element {
+    return xml `<foo>1234</foo>`;
+}
+
+class Class {
+    function getXml() returns xml<xml:Comment|xml:Text> {
+        return xml `<!--Comment 1--> <!--Comment 2-->`;
+    }
+}
+
+Test-Case: output
+Description: Test xml concatenation with let expressions as operands.
+Labels: additive-expr, xml, let-expr, xml:Element
+
+function init() {
+    xml s = (let xml a = xml `abc`, xml:Element b = xml `<def/>` in a + xml ` ` + b ) + let xml a = xml `<a> a val </a><!--b-->` in a;
+    io:println(s); // @output abc <def></def><a> a val </a><!--b-->
+}
+
+Test-Case: output
+Description: Test xml concatenation with type cast expressions as operands.
+Labels: additive-expr, xml, type-cast-expr, optional-type, xml:Element
+
+function init() {
+    xml s = xml `<elem/>`;
+    xml? t = xml `foo`;
+    io:println(<xml> t + <xml:Element> s); // @output foo<elem></elem>
+}
+
+Test-Case: output
+Description: Test xml concatenation with additive expressions as operands.
+Labels: additive-expr, xml, xml:Element, xml:Comment, xml:ProcessingInstruction, xml:Text
+
+function init() {
+    xml:Element s = xml `<elem>1234</elem>`;
+    xml:Text t = xml `Hello World`;
+    xml:ProcessingInstruction u = xml `<?pi 1?>`;
+    xml:Comment v = xml `<!--comment 1-->`;
+    xml w = xml `<foo></foo>1234<bar>1234</bar>`;
+
+    xml x = (s + t + u) + v + w;
+    io:println(x); // @output <elem>1234</elem>Hello World<?pi 1?><!--comment 1--><foo></foo>1234<bar>1234</bar>
+
+    xml y = s + t + u + v + w;
+    io:println(y); // @output <elem>1234</elem>Hello World<?pi 1?><!--comment 1--><foo></foo>1234<bar>1234</bar>
+
+    xml z = (s + t) + u + v + w;
+    io:println(z); // @output <elem>1234</elem>Hello World<?pi 1?><!--comment 1--><foo></foo>1234<bar>1234</bar>
+}
+
+Test-Case: output
+Description: Test xml concatenation with conditional expressions as operands.
+Fail-Issue: ballerina-platform/ballerina-lang#32959
+Labels: additive-expr, xml, union-type, optional-type, error, conditional-expr
+
+function init() {
+    xml? s = xml `foo`;
+    xml|error t = xml `<bar/>`;
+    xml u = (s ?: xml `<baz/>`) + (t is error ? xml `text` : t);
+    io:println(u); // @output foo<bar></bar>
+}
+
+Test-Case: output
+Description: Test xml concatenation with checking expressions as operands.
+Labels: additive-expr, xml, union-type, optional-type, error, check, checkpanic
+
+function init() returns error? {
+    xml r = xml `world<done/>`;
+    xml|error s = xml `hello`;
+    xml|error t = r;
+
+    xml u = check s + checkpanic t;
+    io:println(u); // @output helloworld<done></done>
+    io:println(check t + checkpanic s); // @output world<done></done>hello
+}
+
+Test-Case: output
+Description: Test xml concatenation at module level.
+Labels: additive-expr, module-type-defn, module-init-var-decl, union-type, xml, xml:Element, xml-type-parameter
+
+xml:Element x = xml `<elem>value</elem>`;
+xml<xml:Text|xml:Comment> y = xml `<!--C1-->text<!--C2-->`;
+
+xml<xml:Element|xml:Text|xml:Comment> val = x + y;
+
+function init() returns error? {
+    io:println(val); // @output <elem>value</elem><!--C1-->text<!--C2-->
+}
+
+Test-Case: output
+Description: Test xml concatenation with var.
+Labels: additive-expr, var, xml, xml:Element, xml:Comment, xml:ProcessingInstruction, xml:Text, xml-type-parameter
+
+function init() {
+    xml a = xml `foo`;
+    xml:Element b = xml `<elem>value</elem>`;
+    xml<xml:Comment|xml:ProcessingInstruction|xml:Text> c = xml `<?pi val?><!--c1-->`;
+
+    var e = a + c;
+    io:println(e); // @output foo<?pi val?><!--c1-->
+
+    var f = a + b + c;
+    io:println(f); // @output foo<elem>value</elem><?pi val?><!--c1-->
+
+    var g = b + c;
+    io:println(g); // @output <elem>value</elem><?pi val?><!--c1-->
+}
