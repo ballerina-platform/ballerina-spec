@@ -1,0 +1,77 @@
+Test-Case: error
+Description: Test invalid subtraction with subtypes of string.
+Labels: additive-expr, string, string:Char, module-type-defn, union-type, singleton-type
+
+type Strings "foo"|"bar";
+
+function errorFunction(string a, string:Char b, Strings c) {
+    string _ = a - a; // @error - not defined for operands of basic type string
+    string _ = a - b; // @error - not defined for operands of basic type string
+    string _ = a - c; // @error - not defined for operands of basic type string
+    string _ = b - a; // @error - not defined for operands of basic type string
+    string _ = b - b; // @error - not defined for operands of basic type string
+    string _ = b - c; // @error - not defined for operands of basic type string
+    string _ = c - a; // @error - not defined for operands of basic type string
+    string _ = c - b; // @error - not defined for operands of basic type string
+    string _ = c - c; // @error - not defined for operands of basic type string
+    string _ = c - b - a; // @error - not defined for operands of basic type string
+    string _ = a - c - b - a; // @error - not defined for operands of basic type string
+}
+
+Test-Case: error
+Description: Test invalid subtraction with subtypes of xml.
+Labels: additive-expr, xml:Element, xml:Comment, xml:ProcessingInstruction, xml:Text, xml-type-parameter, never
+
+function errorFunction(xml a, xml:Element b, xml:Comment c, xml:ProcessingInstruction d, xml:Text e, xml<xml:Element|xml:Comment> f, xml<never> g) {
+    _ = a - a; // @error - not defined for operands of basic type xml
+    _ = a - b; // @error - not defined for operands of basic type xml
+    _ = a - c; // @error - not defined for operands of basic type xml
+    _ = b - a; // @error - not defined for operands of basic type xml
+    _ = b - b; // @error - not defined for operands of basic type xml
+    _ = b - c; // @error - not defined for operands of basic type xml
+    _ = c - a; // @error - not defined for operands of basic type xml
+    _ = c - b; // @error - not defined for operands of basic type xml
+    _ = c - c; // @error - not defined for operands of basic type xml
+    _ = d - e; // @error - not defined for operands of basic type xml
+    _ = e - f; // @error - not defined for operands of basic type xml
+    _ = f - g; // @error - not defined for operands of basic type xml
+    _ = d - g; // @error - not defined for operands of basic type xml
+    _ = c - b - a; // @error - not defined for operands of basic type xml
+    _ = a - c - b - a; // @error - not defined for operands of basic type xml
+    _ = a - d - b - f; // @error - not defined for operands of basic type xml
+    _ = f - g - f; // @error - not defined for operands of basic type xml
+}
+
+Test-Case: error
+Description: Test invalid subtraction with subtypes of string and xml.
+Labels: additive-expr, xml:Element, xml:Comment, xml:ProcessingInstruction, xml:Text, xml-type-parameter, never, string, string:Char, module-type-defn, union-type, singleton-type
+
+type Strings "foo"|"bar";
+
+function errorFunction(xml a, xml:Element b, xml:Comment c, xml:ProcessingInstruction d, xml:Text e, xml<xml:Element|xml:Comment> f, xml<never> g,
+                      string h, string:Char i, Strings j) {
+    _ = a - h; // @error - not defined for operands of basic type xml and string
+    _ = a - i; // @error - not defined for operands of basic type xml and string
+    _ = a - j; // @error - not defined for operands of basic type xml and string
+    _ = b - h; // @error - not defined for operands of basic type xml and string
+    _ = b - i; // @error - not defined for operands of basic type xml and string
+    _ = b - j; // @error - not defined for operands of basic type xml and string
+    _ = c - j; // @error - not defined for operands of basic type xml and string
+    _ = c - i; // @error - not defined for operands of basic type xml and string
+    _ = c - h; // @error - not defined for operands of basic type xml and string
+    _ = d - j; // @error - not defined for operands of basic type xml and string
+    _ = e - i; // @error - not defined for operands of basic type xml and string
+    _ = f - h; // @error - not defined for operands of basic type xml and string
+    _ = d - i; // @error - not defined for operands of basic type xml and string
+    _ = c - j - a; // @error - not defined for operands of basic type xml and string
+    _ = a - j - b - h; // @error - not defined for operands of basic type xml and string
+    _ = a - h - h - f; // @error - not defined for operands of basic type xml and string
+    _ = h - g - j; // @error - not defined for operands of basic type xml and string
+    _ = h - a; // @error - not defined for operands of basic type xml and string
+    _ = i - b; // @error - not defined for operands of basic type xml and string
+    _ = j - c; // @error - not defined for operands of basic type xml and string
+    _ = j - d; // @error - not defined for operands of basic type xml and string
+    _ = i - e; // @error - not defined for operands of basic type xml and string
+    _ = h - f; // @error - not defined for operands of basic type xml and string
+    _ = h - g; // @error - not defined for operands of basic type xml and string
+}

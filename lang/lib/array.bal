@@ -93,6 +93,26 @@ public isolated function filter(Type[] arr, @isolatedParam function(Type val) re
 # is the same as `sum(1, 2, 3)`.
 public isolated function reduce(Type[] arr, @isolatedParam function(Type1 accum, Type val) returns Type1 func, Type1 initial) returns Type1 = external;
 
+# Tests whether a function returns true for some member of an array.
+# `func` is called for each member of `arr` in order unless and until a call returns true.
+# When the array is empty, returns false.
+#
+# + arr - the array
+# + func - function to apply to each member
+# + return - true if func returns true for some member of `arr`; otherwise, false
+# 
+public isolated function some(Type[] arr, @isolatedParam function(Type val) returns boolean func) returns boolean = external;
+
+# Tests whether a function returns true for every member of an array.
+# `func` is called for each member of `arr` in order unless and until a call returns false.
+# When the array is empty, returns true.
+#
+# + arr - the array
+# + func - function to apply to each member
+# + return - true if func returns true for every member of `arr`; otherwise, false
+# 
+public isolated function every(Type[] arr, @isolatedParam function(Type val) returns boolean func) returns boolean = external;
+
 # Returns a slice of an array.
 #
 # + arr - the array
