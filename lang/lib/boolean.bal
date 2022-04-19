@@ -21,6 +21,6 @@
 # and also `1` for true and `0` for `false`.
 # This is the inverse of `value:toString` applied to a `boolean`.
 #
-# + s - string representing a boolean valie
+# + s - string representing a boolean value
 # + return - boolean that `s` represents, or an error if there is no such boolean
 public isolated function fromString(string s) returns boolean|error = external;
