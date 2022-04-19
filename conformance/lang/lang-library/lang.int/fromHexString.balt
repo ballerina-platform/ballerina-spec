@@ -29,8 +29,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test `fromHexString` function.
-Fail-Issue: ballerina-platform/ballerina-lang#32627
+Description: Test `fromHexString` function with values not in integer range.
 Labels: int:fromHexString, error, function-call-expr, int, is-expr, string, union-type
 
 function init() {
@@ -40,14 +39,20 @@ function init() {
     string a4 = "8000000000000000";
 
     int|error b1 = int:fromHexString(a1);
-    io:println(b1); // @output -2147483648
+    io:println(b1 is error); // @output true
+    io:println((<error>b1).message()); // @output {ballerina/lang.int}NumberParsingError
 
-    io:println(int:fromHexString(a2)); // @output -32768
+    b1 = int:fromHexString(a2);
+    io:println(b1 is error); // @output true
+    io:println((<error>b1).message()); // @output {ballerina/lang.int}NumberParsingError
 
     b1 = int:fromHexString(a3);
-    io:println(b1); // @output -20
+    io:println(b1 is error); // @output true
+    io:println((<error>b1).message()); // @output {ballerina/lang.int}NumberParsingError
 
-    io:println(int:fromHexString(a4)); // @output -9223372036854775808
+    b1 = int:fromHexString(a4);
+    io:println(b1 is error); // @output true
+    io:println((<error>b1).message()); // @output {ballerina/lang.int}NumberParsingError
 }
 
 Test-Case: output
@@ -67,22 +72,26 @@ function init() {
 }
 
 Test-Case: output
-Description: Test `fromHexString` function with string literals.
-Fail-Issue: ballerina-platform/ballerina-lang#32627
+Description: Test `fromHexString` function with string literal values not in integer range.
 Labels: int:fromHexString, error, function-call-expr, int, is-expr, string, union-type
 
 function init() {
     int|error b1 = int:fromHexString("ffffffff80000000");
-    io:println(b1); // @output -2147483648
+    io:println(b1 is error); // @output true
+    io:println((<error>b1).message()); // @output {ballerina/lang.int}NumberParsingError
 
-    io:println(int:fromHexString("ffffffffffff8000")); // @output -32768
+    b1 = int:fromHexString("ffffffffffff8000");
+    io:println(b1 is error); // @output true
+    io:println((<error>b1).message()); // @output {ballerina/lang.int}NumberParsingError
 
     b1 = int:fromHexString("ffffffffffffffec");
-    io:println(b1); // @output -20
+    io:println(b1 is error); // @output true
+    io:println((<error>b1).message()); // @output {ballerina/lang.int}NumberParsingError
 
-    io:println(int:fromHexString("8000000000000000")); // @output -9223372036854775808
+    b1 = int:fromHexString("8000000000000000");
+    io:println(b1 is error); // @output true
+    io:println((<error>b1).message()); // @output {ballerina/lang.int}NumberParsingError
 }
-
 
 Test-Case: output
 Description: Test `fromHexString` function with string template expression.
@@ -239,7 +248,7 @@ function getString() returns string {
 
 Test-Case: panic
 Description: Test `fromHexString` function with invalid strings.
-Labels: int:fromHexString, error, float, function-call-expr, if-else-stmt, int, is-expr, panic-stmt, string, union-type
+Labels: int:fromHexString, error, float, function-call-expr, if-else-stmt, int, is-expr, panic, string, union-type
 
 function init() {
     testResult(int:fromHexString("sfg12")); // @panic number parsing error for input string
@@ -335,7 +344,7 @@ function init() {
 
 Test-Case: output
 Description: Test `fromHexString` method call as expression in typeof expression.
-Labels: int:fromHexString, function-call-expr, string, typedesc, typeof-expr
+Labels: int:fromHexString, function-call-expr, string, typedesc-type, typeof-expr
 
 function init() {
     typedesc j = typeof int:fromHexString("123");
