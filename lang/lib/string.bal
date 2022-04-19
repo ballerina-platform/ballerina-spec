@@ -190,3 +190,34 @@ public isolated function fromCodePointInts(int[] codePoints) returns string|erro
 # + return - a single character string whose code point is `codePoint`; or an error
 # if `codePoint` is not a valid code point
 public isolated function fromCodePointInt(int codePoint) returns Char|error = external;
+
+# Adds padding to the start of a string.
+# Adds sufficient `padChar` characters at the start of `str` to make its length be `len`.
+# If the length of `str` is >= `len`, returns `str`.
+# 
+# + str - the string to pad
+# + len - the length of the string to be returned
+# + padChar - the character to use for padding `str`; defaults to a space character
+# + return - `str` padded with `padChar` 
+public isolated function padStart(string str, int len, Char padChar = " ") returns string = external;
+
+# Adds padding to the end of a string.
+# Adds sufficient `padChar` characters to the end of `str` to make its length be `len`.
+# If the length of `str` is >= `len`, returns `str`.
+# 
+# + str - the string to pad
+# + len - the length of the string to be returned
+# + padChar - the character to use for padding `str`; defaults to a space character
+# + return - `str` padded with `padChar` 
+public isolated function padEnd(string str, int len, Char padChar = " ") returns string = external;
+
+# Pads a string with zeros.
+# The zeros are added at the start of the string, after a `+` or `-` sign if there is one.
+# Sufficient zero characters are added to `str` to make its length be `len`.
+# If the length of `str` is >= `len`, returns `str`.
+# 
+# + str - the string to pad
+# + len - the length of the string to be returned
+# + zeroChar - the character to use for the zero; defaults to ASCII zero `0`
+# + return - `str` padded with zeros 
+public isolated function padZero(string str, int len, Char zeroChar = "0") returns string = external;
