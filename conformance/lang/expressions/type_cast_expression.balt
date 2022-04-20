@@ -181,10 +181,10 @@ function init() {
 
     any b = xml `<e>content</e>`;
     xml b1 = <xml>b;
-    io:println(b1); // <e>content</e>
+    io:println(b1); // @output <e>content</e>
 
     xml:Element b2 = <xml:Element>b;
-    io:println(b2); // <e>content</e>
+    io:println(b2); // @output <e>content</e>
 }
 
 Test-Case: output
@@ -199,16 +199,16 @@ function init() {
 
     string|xml b = xml `<e>content</e>`;
     xml b1 = <xml>b;
-    io:println(b1); // <e>content</e>
+    io:println(b1); // @output <e>content</e>
 
     xml:Element b2 = <xml:Element>b;
-    io:println(b2); // <e>content</e>
+    io:println(b2); // @output <e>content</e>
 }
 
 Test-Case: output
 Description: Test if the value v of the expression belongs to the type described by the type cast expression then the 
              result of the type cast expression is v using list type.
-Labels: any, array-type, boolean, list-constructor, module-type-defn, string, tuple-rest-descriptor, tuple-type, 
+Labels: any, array-type, boolean, list-constructor-expr, module-type-defn, string, tuple-type-rest-descriptor, tuple-type, 
         type-cast-expr, union-type
 
 type MyStringArr string[];
@@ -778,15 +778,15 @@ type MYTypeUnion MyType1|MyType2;
 function init() {
     any a = 5;
     int? a1 = <int?>a;
-    io:println(a1); // @output typedesc 5
+    io:println(a1); // @output 5
 
     string|int|() b0 = 55;
     int? b1 = <int?> b0;
-    io:println(b1); // @output typedesc 55
+    io:println(b1); // @output 55
 
     MYTypeUnion c0 = true;
     MyType1 c1 = <MyType1> c0;
-    io:println(c1); // @output typedesc true
+    io:println(c1); // @output true
 
     MYTypeUnion d0 = ();
     MyType1 d1 = <MyType1> d0;
@@ -805,19 +805,19 @@ Labels: any, anydata, byte, json, string, type-cast-expr, union-type, xml
 function init() {
     any a = 5;
     anydata a1 = <anydata>a;
-    io:println(a1); // @output typedesc 5
+    io:println(a1); // @output 5
 
     anydata|json b0 = 55;
     anydata b1 = <anydata>b0;
-    io:println(b1); // @output typedesc 55
+    io:println(b1); // @output 55
     
     byte|json c = 4;
     byte c1 = <byte> c;
-    io:println(c1); // @output typedesc 4
+    io:println(c1); // @output 4
 
     xml|json d = 4;
     json d2 = <(json)> d;
-    io:println(d2); // @output typedesc 55
+    io:println(d2); // @output 4
 }
 
 Test-Case: output
@@ -1043,7 +1043,7 @@ function init() {
     int|int[] f = <int|int[]>e;
     io:println(f); // @output 3
     byte|json f0 = <byte|json>e;
-    io:println(f0); // @output 3
+    io:println(f0); // @output 3.247
 
     decimal|map<int> g = 4444.4444;
     io:println(g); // @output 4444.4444
@@ -1348,9 +1348,12 @@ function init() {
 Test-Case: panic
 Description: Test panic when value is not belonging to the type described by the type desc and numeric convert is not 
              applicable by casting to a record with readonly field.
-Labels: //, 34, <record, =, @panic, _, any, b, boolean, cannot, cast, false};, fieldA;, fieldB:, fieldB;|}, 
-        fieldB;|}>b;, function, init(), mapping-constructor-expr, readonly, record, record-type, 
-        record-type-readonly-field, type-cast-expr, var, {, {fieldA:, {|int, }
+Labels: any, boolean, mapping-constructor-expr, record-type, record-type-readonly-field, type-cast-expr, var 
+
+function init() {
+    var b = {fieldA: 34, fieldB: false};
+    record {|int fieldA; boolean fieldB;|} _  = <record {|int fieldA; readonly boolean fieldB;|}>b; // @panic cannot cast
+}
 
 Test-Case: panic
 Description: Test panic when value is not belonging to the type described by the type desc and numeric convert is not 
@@ -1483,7 +1486,7 @@ Description: Test error when value is not belonging to the type described by the
 Labels: map-type, mapping-constructor-expr, string, type-cast-expr, var
 
 function errorFunction() {
-    var a = {fieldA: "Car",  fieldB: "43"};
+    var a = {fieldA: "Car",  fieldB: 43};
     map<string> _ = <map<string>> a; // @error record value cannot be cast to 'map<string>'
 }
 
@@ -1587,7 +1590,7 @@ function getString() returns error|string {
     return "car";
 }
 
-Test-Case: error
+Test-Case: output
 Description: Test if static type of expression contains error, then the intersection of T and error must 
              also be non-empty.
 Labels: error, error-constructor-expr, error-type-parameter, field-access-expr, method-call-expr, module-type-defn, 
@@ -1597,10 +1600,10 @@ type MyError error<record {|int severity;|}>;
 
 type MyUnion any|MyError;
 
-function errorFunction() {
+function init() {
     MyUnion a = 3;
-    int|error b = <int|error>a; // @output 3
-    io:println(b);
+    int|error b = <int|error>a;
+    io:println(b); // @output 3
 
     string|error c = error("msg", severity = 1);
     MyError e = <MyError> c;
@@ -1621,10 +1624,10 @@ function init() {
     io:println(typeof b); // @output typedesc record {| readonly int a; |}
 
     record {|int a;string...; |} c = <record {|readonly int a; "Car" b;|}>{a: 5, b: "Car"};
-    io:println(typeof c); // @output typedesc record {| readonly int a; Car b; |}
+    io:println(typeof c); // @output typedesc record {| readonly int a; "Car" b; |}
 
     record {|int a;string...; |}|string d = <record {|readonly int a; "Car" b;|}|string>{a: 5, b: "Car"};
-    io:println(typeof d); // @output typedesc record {| readonly int a; Car b; |}
+    io:println(typeof d); // @output typedesc record {| readonly int a; "Car" b; |}
 
     int[] e = <[int, byte]>[444, 21];
     io:println(typeof e); // @output typedesc [int,byte]
@@ -1642,7 +1645,7 @@ function init() {
 Test-Case: output
 Description: Test cast to readonly can be used to cause constructors withing the expression to construct values
              with the read-only bit on.
-Labels: any, array-type, list-constructor-expr, map-type, mapping-constructor-expr, readonly, string, 
+Labels: any, array-type, list-constructor-expr, map-type, mapping-constructor-expr, readonly-type, string, 
         table-constructor-expr, table-type, type-cast-expr, typeof-expr
 
 function init() {
@@ -1667,7 +1670,7 @@ function init() {
 Test-Case: output
 Description: Test cast to readonly can be used to verify that the value resulting from the evaluation of expression 
              has its read-only bit on. 
-Labels: any, array-type, list-constructor-expr, map-type, mapping-constructor-expr, readonly, string, 
+Labels: any, array-type, list-constructor-expr, map-type, mapping-constructor-expr, readonly-type, string, 
         table-constructor-expr, table-type, type-cast-expr, typeof-expr
 
 function init() {
