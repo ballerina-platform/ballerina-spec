@@ -5,6 +5,13 @@ Labels: boolean, is-expr, nil-literal, nil-type
 function init() {
     boolean b = () !is ();
     io:println(b); // @output false
+
+    io:println(null !is ()); // @output false
+
+    b = () !is null;
+    io:println(b); // @output false
+
+    io:println(null !is null); // @output false
 }
 
 Test-Case: output
@@ -26,12 +33,14 @@ function init() {
 }
 
 Test-Case: output
-Description: Test floating point literal as expression in type test expression.
+Description: Test boolean literal as expression in type test expression.
 Labels: boolean, boolean-literal, is-expr
 
 function init() {
     boolean b = true !is boolean;
     io:println(b); // @output false
+
+    io:println(false !is boolean); // @output false
 }
 
 Test-Case: output
@@ -41,6 +50,10 @@ Labels: boolean, is-expr, string
 function init() {
     boolean b = "A" !is string;
     io:println(b); // @output false
+
+    io:println("A" !is string:Char); // @output false
+    io:println("FOO" !is string); // @output false
+    io:println("FOO" !is string:Char); // @output true
 }
 
 Test-Case: output
@@ -49,6 +62,9 @@ Labels: array-type, boolean, byte, byte-array-literal, is-expr
 
 function init() {
     boolean b = base64 `aGVsbG8gYmFsbGVyaW5hICEhIQ==` !is byte[];
+    io:println(b); // @output false
+
+    b = base16 `aeeecdefabcd12345567888822` !is byte[];
     io:println(b); // @output false
 }
 
@@ -105,8 +121,8 @@ function init() {
 
 Test-Case: output
 Description: Test list constructor expression as expression in type test expression.
-Labels: any, array-type, boolean, float, int, is-expr, list-constructor-expr, map-type, record-type, string, tuple-type,
-        union-type
+Labels: any, array-type, boolean, float, int, is-expr, list-constructor-expr, map-type, mapping-constructor-expr,
+        record-type, string, tuple-type, union-type
 
 function init() {
     boolean b1 = [1, "ABC", 10.2, {a: 2}] !is any;
@@ -129,9 +145,19 @@ function init() {
 }
 
 Test-Case: output
+Description: Test list having never type member with type test expression.
+Fail-Issue: ballerina-platform/ballerina-lang#35612
+Labels: int, is-expr, list-constructor-expr, never, string, tuple-type
+
+function init() {
+    [int, string, never...] t1 = [1, "s"];
+    io:println(t1 !is [int, string]); // @output false
+}
+
+Test-Case: output
 Description: Test mapping constructor expression as expression in type test expression.
 Labels: any, anydata, boolean, error-constructor-expr, float, int, is-expr, map-type, mapping-constructor-expr,
-        record-rest-descriptor, record-type, string, union-type
+        record-rest-descriptor, record-type, record-type-readonly-field, string, union-type
 
 function init() {
     boolean b1 = {a: 1, b: 2, "c": 3} !is anydata;
@@ -195,7 +221,7 @@ function init() {
 
 Test-Case: output
 Description: Test object constructor expression as expression in type test expression.
-Labels: boolean, is-expr, module-type-defn, object-constructor-expr, object-type
+Labels: boolean, is-expr, isolated-method, module-type-defn, object-constructor-expr, object-type
 
 type Client client object {
     int a;
@@ -275,7 +301,7 @@ function init() {
 
 Test-Case: output
 Description: Test new expression as expression in type test expression.
-Labels: boolean, explicit-new-expr, is-expr, module-class-defn, object-type
+Labels: boolean, explicit-new-expr, is-expr, isolated-object, module-class-defn, module-type-defn, object-type
 
 class Class {
     function f1() returns int {
@@ -342,7 +368,7 @@ function init() {
 Test-Case: output
 Description: Test field access expression as expression in type test expression.
 Labels: boolean, field-access-expr, float, int, is-expr, mapping-constructor-expr, module-type-defn, optional-type,
-        record-type, string, union-type
+        record-rest-descriptor, record-type, string, union-type
 
 type Type string|xml|boolean;
 
@@ -381,8 +407,8 @@ function init() {
 
 Test-Case: output
 Description: Test optional field access expression as expression in type test expression.
-Labels: boolean, float, int, is-expr, mapping-constructor-expr, module-type-defn, optional-field-access-expr,
-        optional-type, record-type, string, union-type
+Labels: boolean, float, FloatingPointTypeSuffix, int, is-expr, mapping-constructor-expr, module-type-defn,
+        optional-field-access-expr, optional-type, record-type, string, union-type
 
 type Type string|xml|boolean;
 
@@ -476,7 +502,7 @@ function init() {
 Test-Case: output
 Description: Test annotation access expression as expression in type test expression.
 Fail-Issue: ballerina-platform/ballerina-lang#33243
-Labels: annot-access-expr, annotation-decl, any, array-type, explicit-new-expr, is-expr, mapping-constructor-expr,
+Labels: annot-access-expr, annotation-decl, any, array-type, implicit-new-expr, is-expr, mapping-constructor-expr,
         module-class-defn, module-type-defn, record-type, typedesc-type, typeof-expr
 
 type Annot record {
@@ -530,7 +556,7 @@ function init() {
 Test-Case: output
 Description: Test member access expression as expression in type test expression.
 Labels: boolean, float, int, is-expr, mapping-constructor-expr, member-access-expr, module-type-defn, nil-type,
-        optional-type, record-type, string, union-type
+        optional-type, record-rest-descriptor, record-type, string, union-type
 
 type Type string|xml|boolean;
 
@@ -578,8 +604,8 @@ function getName(string fname) returns string? {
 
 Test-Case: output
 Description: Test method call expression as expression in type test expression.
-Labels: int, is-expr, method-call-expr, module-class-defn, module-const-decl, module-type-defn, nil-type, optional-type,
-        string, union-type
+Labels: implicit-new-expr, int, is-expr, method-call-expr, module-class-defn, module-const-decl, module-type-defn,
+        nil-type, optional-type, string, union-type
 
 const nm = "Anne Smith";
 
@@ -602,8 +628,8 @@ function init() {
 
 Test-Case: output
 Description: Test error constructor expression as expression in type test expression.
-Labels: any, anydata, error-constructor-expr, error-type, is-expr, map-type, module-type-defn, optional-type,
-        record-type, union-type
+Labels: any, anydata, distinct, error-constructor-expr, error-type, error-type-parameter, intersection-type, is-expr,
+        map-type, module-type-defn, optional-type, record-type, union-type
 
 type Record record {
     int code;
@@ -673,7 +699,8 @@ function init() {
 
 Test-Case: output
 Description: Test type cast expression as expression in type test expression.
-Labels: decimal, int, is-expr, module-const-decl, string, type-cast-expr, union-type
+Labels: decimal, float, int, int:Signed16, int:Unsigned32, is-expr, module-const-decl, module-type-defn, string,
+        type-cast-expr, union-type
 
 const ONE = 1;
 
@@ -692,7 +719,7 @@ function init() {
 
 Test-Case: output
 Description: Test type of expression as expression in type test expression.
-Labels: int, is-expr, module-const-decl, string, typeof-expr, union-type
+Labels: int, is-expr, module-const-decl, string, typedesc-type-parameter, typeof-expr, union-type
 
 const ONE = 1;
 
@@ -787,7 +814,7 @@ function init() {
 
 Test-Case: output
 Description: Test shift expression as expression in type test expression.
-Labels: int, is-expr, module-const-decl, module-type-defn, shift-expr, string, union-type
+Labels: int, is-expr, module-const-decl, module-type-defn, shift-expr, singleton-type, string, union-type
 
 const ONE = 1;
 
@@ -806,7 +833,7 @@ function init() {
 
 Test-Case: output
 Description: Test binary bitwise expression as expression in type test expression.
-Labels: binary-bitwise-expr, int, is-expr, module-const-decl, module-type-defn, string, union-type
+Labels: binary-bitwise-expr, int, is-expr, module-const-decl, module-type-defn, singleton-type, string, union-type
 
 const SIX = 6;
 
@@ -825,7 +852,7 @@ function init() {
 
 Test-Case: output
 Description: Test range expression as expression in type test expression.
-Labels: is-expr, module-type-defn, object-type, range-expr, record-type
+Labels: is-expr, isolated-method, module-type-defn, object-type, range-expr, record-type
 
 type Object1 object {
     public function iterator() returns (object {
@@ -907,7 +934,7 @@ function init() {
 
 Test-Case: output
 Description: Test equality expression as expression in type test expression.
-Labels: boolean, equality, int, is-expr, module-const-decl
+Labels: boolean, equality, exact-equality, int, is-expr, module-const-decl
 
 const TRUE = true;
 
@@ -949,7 +976,7 @@ function init() {
 
 Test-Case: output
 Description: Test conditional expression as expression in type test expression.
-Labels: conditional-expr, int, is-expr, module-const-decl, optional-type
+Labels: ternary-conditional-expr, int, is-expr, module-const-decl, optional-type, singleton-type, union-type
 
 const ONE = 1;
 
@@ -964,7 +991,7 @@ function init() {
 
 Test-Case: output
 Description: Test checking expression as expression in type test expression.
-Labels: check, checkpanic, error-type, int, is-expr, module-const-decl, union-type
+Labels: check, checkpanic, error-type, int, is-expr, module-const-decl, singleton-type, union-type
 
 const ONE = 1;
 
@@ -984,7 +1011,7 @@ function init() returns error? {
 
 Test-Case: output
 Description: Test trap expression as expression in type test expression.
-Labels: error-type, int, is-expr, module-const-decl, trap-expr, union-type
+Labels: error-type, int, is-expr, module-const-decl, singleton-type, trap-expr, union-type
 
 const ONE = 1;
 
@@ -1000,7 +1027,7 @@ function init() {
 
 Test-Case: output
 Description: Test query expression as expression in type test expression.
-Labels: array-type, int, is-expr, list-constructor-expr, query-expr, tuple-type
+Labels: array-type, int, is-expr, list-constructor-expr, multiplicative-expr, query-expr, tuple-type
 
 function init() {
     int[] arr = [1, 2, 3, 4, 5];
@@ -1014,7 +1041,7 @@ function init() {
 
 Test-Case: output
 Description: Test xml navigate expression as expression in type test expression.
-Labels: is-expr, xml-filter-expr, xml-step-expr, xml:Comment, xml:Element, xml:ProcessingInstruction, xml:Text
+Labels: is-expr, xml, xml-filter-expr, xml-step-expr, xml:Comment, xml:Element, xml:ProcessingInstruction, xml:Text
 
 function init() {
     xml x1 = xml `<root><child attr="attr-val"></child></root><root><child attr="attr-val2"></child></root>`;
@@ -1043,8 +1070,9 @@ function init() returns error? {
 
 Test-Case: output
 Description: Test simple type as type descriptor in type test expression.
-Labels: any, boolean, boolean-literal, decimal, DecimalFloatingPointNumber, DecimalNumber, float, int, int:Signed16,
-        int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8, is-expr, nil-literal, nil-type
+Labels: any, boolean, boolean-literal, decimal, DecimalFloatingPointNumber, DecimalNumber, float,
+        FloatingPointTypeSuffix, int, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32,
+        int:Unsigned8, is-expr, nil-literal, nil-type, null
 
 function init() {
     any a = ();
@@ -1072,7 +1100,8 @@ function init() {
 
 Test-Case: output
 Description: Test sequence type as type descriptor in type test expression.
-Labels: any, is-expr, string, string:Char, xml, xml:Comment, xml:Element, xml:ProcessingInstruction, xml:Text
+Labels: any, is-expr, string, string:Char, xml, xml:Comment, xml:Element, xml:ProcessingInstruction, xml:Text,
+        xml-template-expr, xml-type-parameter
 
 function init() {
     any a = "A";
@@ -1126,7 +1155,8 @@ function init() {
 
 Test-Case: output
 Description: Test map type as type descriptor in type test expression.
-Labels: int, is-expr, map-type, module-type-defn, record-type, string, union-type
+Labels: int, is-expr, map-type, mapping-constructor-expr, module-type-defn, record-rest-descriptor, record-type, string,
+        union-type, var
 
 type Record1 record {|
     int x;
@@ -1166,6 +1196,33 @@ function init() {
     io:println(rest1 !is map<int|string>); // @output false
     io:println(rest2 !is record{|string...;|}); // @output false
     io:println(rest2 !is map<string>); // @output false
+}
+
+Test-Case: output
+Description: Test subtyping with record type having never rest field.
+Labels: is-expr, mapping-constructor-expr, module-type-defn, never, record-rest-descriptor, record-type,
+
+type A1 record {|
+    int a;
+    never...;
+|};
+
+
+type A2 record {|
+    int a;
+|};
+
+type A3 record {|
+    int a;
+    int...;
+|};
+
+function init() {
+    A1 r1 = {a: 7};
+    io:println(r1 !is A2); // @output false
+
+    A3 r2 = {a: 7};
+    io:println(r2 !is A2); // @output true
 }
 
 Test-Case: output
@@ -1468,6 +1525,39 @@ function init() {
     io:println(std.id !is readonly); // @output false
     io:println(std?.id !is readonly); // @output false
     io:println(std["name"] !is readonly); // @output false
+
+    any arr = [1, 2];
+    io:println(arr !is readonly); // @output true
+}
+
+Test-Case: output
+Description: Test subtyping with readonly type.
+Fail-Issue: ballerina-platform/ballerina-lang#35461
+Labels: tuple-type, intersection-type, is-expr, list-constructor-expr, readonly-type
+
+function init() {
+    readonly t = [1, 2];
+
+    io:println(t !is [1, 2]); // @output false
+    io:println(t !is readonly & [1, 2]); // @output false
+    io:println(t !is readonly); // @output false
+}
+
+Test-Case: output
+Description: Test subtyping with readonly for selectively immutable basic types.
+Fail-Issue: ballerina-platform/ballerina-lang#22785
+Labels: array-type, function-call-expr, if-else-stmt, intersection-type, is-expr, list-constructor-expr, readonly-type
+
+function init() {
+    int[] arr = [];
+    io:println(testArr(arr)); // @output true
+}
+
+function testArr(int[] arr) returns boolean {
+    if arr !is readonly {
+        return true;
+    }
+    return false;
 }
 
 Test-Case: output
@@ -1766,6 +1856,16 @@ function init() {
 
     boolean g = true;
     io:println(g !is true); // @output false
+}
+
+Test-Case: output
+Description: Test subtyping with broad types that have an intersection.
+Labels: any, is-expr, json, map-type, mapping-constructor-expr
+
+function init() {
+    map<any> ma = {a: 1, b: "hello"};
+    io:println(ma !is json); // @output false
+    io:println(ma !is map<json>); // @output false
 }
 
 Test-Case: output
