@@ -66,7 +66,7 @@ Description: Test using a value of a static type that is a subtype of int as the
 Labels: array-type, byte, int, int:Signed16, int:Signed32, int:Signed8, list-constructor-expr, member-access-expr,
         module-type-defn, union-type
 
-type IntType1 int:Signed8|int:Signed16;
+type IntType1 int:Signed8|int:Unsigned16;
 
 function init() {
     int[8] arr = [10, 20, 30, 40, 50, 60, 70, 80];
@@ -82,12 +82,15 @@ function init() {
 
     IntType1 i4 = 5;
     io:println(arr[i4]); // @output 60
+
+    int:Unsigned8 i5 = 2;
+    io:println(arr[i5]); // @output 30
 }
 
 Test-Case: error
 Description: Test key expression with invalid static type.
-Labels: any, array-type, DecimalFloatingPointNumber, float, int, list-constructor-expr, member-access-expr, string,
-        union-type
+Labels: any, array-type, DecimalFloatingPointNumber, float, int, list-constructor-expr, member-access-expr,
+        module-type-defn, module-const-decl, singleton-type, string, union-type
 
 type SomeType "2"|"3";
 
@@ -119,7 +122,8 @@ Test-Case: output
 Description: Test the result of evaluating a member access expression when basic type of the evaluated value of the
              container expression is an array.
 Labels: array-type, int, list-constructor-expr, mapping-constructor-expr, member-access-expr, module-type-defn,
-        readonly-field, record-type, string, table-constructor-expr, table-type, union-type
+        record-type-readonly-field, record-type, string, table-constructor-expr, table-type, table-type-key-specifier,
+        union-type
 
 type Record record {|
     readonly int a;
@@ -191,7 +195,7 @@ function init() {
 Test-Case: output
 Description: Test the static type of member access expression when the container expression is of basic type list.
 Labels: array-type, int, list-constructor-expr, mapping-constructor-expr, member-access-expr, module-type-defn,
-        record-type, string, table-constructor-expr, table-type, union-type
+        record-type-readonly-field, string, table-constructor-expr, table-type, table-type-key-specifier, union-type
 
 type Record record {|
     readonly int a;
@@ -236,6 +240,15 @@ Labels: array-type, int, list-constructor-expr, member-access-expr
 function errorFunction() {
     int[3] arr = [1, 2, 3];
     string _ = arr[1]; // @error expected string, static type of the accessed value is int
+}
+
+Test-Case: output
+Description: Test list constructor expression as container expression of basic type list.
+Labels: list-constructor-expr, member-access-expr
+
+function init() {
+    io:println([10, 20, 30, 40, 50, 60, 70, 80][5]); // @output 60
+    io:println([10, "ABC", 2.5, 2d, 2][1]); // @output ABC
 }
 
 Test-Case: output
@@ -548,8 +561,8 @@ function init() {
 Test-Case: output
 Description: Test member access expression with container expression of basic type list as default expression
              for a field.
-Labels: array-type, int, list-constructor-expr, mapping-constructor-expr, member-access-expr, module-init-var-decl,
-        module-type-defn, readonly-type, record-type
+Labels: array-type, field-access-expr, int, intersection-type, list-constructor-expr, mapping-constructor-expr,
+        member-access-expr, module-init-var-decl, module-type-defn, readonly-type, record-type
 
 final int[5] & readonly arr = [1, 2, 3, 4, 5];
 
@@ -565,8 +578,8 @@ function init() {
 Test-Case: output
 Description: Test member access expression with container expression of basic type list as defaultable
              function parameter.
-Labels: array-type, defaultable-param, function-call-expr, int, list-constructor-expr, member-access-expr,
-        module-init-var-decl, readonly-type
+Labels: array-type, defaultable-param, function-call-expr, int, intersection-type, list-constructor-expr,
+        member-access-expr, module-init-var-decl, readonly-type
 
 final int[5] & readonly arr = [1, 2, 3, 4, 5];
 
@@ -602,7 +615,7 @@ function init() {
 }
 
 Test-Case: error
-Description: Test using a value greater than the size of a sealed array as the key.
+Description: Test using a value greater than the size of a fixed length array as the key.
 Labels: array-type, int, list-constructor-expr, member-access-expr
 
 function errorFunction() {
@@ -622,7 +635,7 @@ function errorFunction() {
 
 Test-Case: error
 Description: Test assigning an invalid value to member access expression.
-Labels: array-type, int, list-constructor-expr, member-access-expr, string
+Labels: array-type, int, list-constructor-expr, member-access-lvexpr, string
 
 function errorFunction() {
     int[3] arr = [1, 2, 3];
