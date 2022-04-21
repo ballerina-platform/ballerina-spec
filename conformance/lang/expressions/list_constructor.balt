@@ -1,5 +1,5 @@
 Test-Case: parser-error
-Description: Test list constructor syntax errors.
+Description: Test list constructor syntax errors for missing open bracket, close bracket, and comma.
 Labels: array-type, list-constructor-expr
 
 function errorFunction() {
@@ -9,6 +9,19 @@ function errorFunction() {
         1
         2 // @error missing comma token
         3 // @error missing comma token
+    ];
+}
+
+Test-Case: parser-error
+Description: Test syntax errors with invalid tokens inside the list constructor.
+Labels: array-type, list-constructor-expr
+
+function errorFunction() {
+    int a;
+    int[] arr1 = [
+        %3, // @error invalid token '%'
+        a = 3,// @error invalid token '=', expected ','
+        4; // @error invalid ';'
     ];
 }
 
@@ -140,7 +153,6 @@ function init() {
 Test-Case: output
 Description: Test inherent type of the created list when the applicable contextually expected type
              is a array-type-descriptor of (any|error).
-Fail-Issue: ballerina-platform/ballerina-lang#33377
 Labels: any, array-type, is-expr, list-constructor-expr, string, union-type
 
 function init() {
@@ -160,8 +172,8 @@ function init() {
 
     any[] a4 = [1, 2, 3];
     io:println(a4 is (any|error)[]); // @output true
-    io:println(a4 is any[]); // @output false
-    io:println(a4 is (any|error)[3]); // @output false
+    io:println(a4 is any[]); // @output true
+    io:println(a4 is any[3]); // @output false
 
     any|(any|error)[] a5 = [1, 2, 3];
     io:println(a5 is (any|error)[]); // @output true
@@ -552,6 +564,7 @@ type Ints 0|1|2|3;
 function init() {
     Ints[] a1 = [1, 3, 0];
     io:println(a1 is Ints[]); // @output true
+    io:println(a1 is (0|1|2|3)[]); // @output true
     io:println(a1 is (0|1|3)[]); // @output false
     io:println(a1 is [1, 3, 0]); // @output false
 }
