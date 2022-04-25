@@ -1,5 +1,5 @@
 Test-Case: parser-error
-Description: Test error constructor negative syntax.
+Description: Test error constructor syntax errors.
 Labels: error-constructor-expr, error-type, module-type-defn, string
 
 type E error;
@@ -14,6 +14,12 @@ function errorFunction() {
     error err7 = error E); // @error missing open parenthesis token
     error err8 = error E(); // @error missing argument within parenthesis
     error err9 = error("error message" ()); // @error missing comma token
+    error err10 = error(
+        "error message"
+        err1 // @error missing comma token
+        msg = "msg" // @error missing comma token
+        fatal = false // @error missing comma token
+    );
 }
 
 Test-Case: output
@@ -785,7 +791,7 @@ function init() {
 
     io:println(fooResult is error); // @output true
     if fooResult is error {
-        io:println(fooResult.stackTrace()); // @output [callableName: baz  fileName: int_779.bal lineNumber: 20,callableName: bar  fileName: int_779.bal lineNumber: 16,callableName: foo  fileName: int_779.bal lineNumber: 12,callableName: init  fileName: int_779.bal lineNumber: 3]
+        io:println(fooResult.stackTrace()); // @output [callableName: baz  fileName: int_785.bal lineNumber: 20,callableName: bar  fileName: int_785.bal lineNumber: 16,callableName: foo  fileName: int_785.bal lineNumber: 12,callableName: init  fileName: int_785.bal lineNumber: 3]
     }
 }
 
