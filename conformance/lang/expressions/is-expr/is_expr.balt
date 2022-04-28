@@ -1,0 +1,2195 @@
+Test-Case: output
+Description: Test nil literal as expression in type test expression.
+Labels: boolean, is-expr, nil-literal, nil-type, null
+
+function init() {
+    boolean b = () is ();
+    io:println(b); // @output true
+
+    io:println(null is ()); // @output true
+
+    b = () is null;
+    io:println(b); // @output true
+
+    io:println(null is null); // @output true
+}
+
+Test-Case: output
+Description: Test int literal as expression in type test expression.
+Labels: boolean, DecimalNumber, int, is-expr
+
+function init() {
+    boolean b = 12 is int;
+    io:println(b); // @output true
+}
+
+Test-Case: output
+Description: Test floating point literal as expression in type test expression.
+Labels: boolean, DecimalFloatingPointNumber, float, is-expr
+
+function init() {
+    boolean b = 12.5 is float;
+    io:println(b); // @output true
+}
+
+Test-Case: output
+Description: Test boolean literal as expression in type test expression.
+Labels: boolean, boolean-literal, is-expr
+
+function init() {
+    boolean b = true is boolean;
+    io:println(b); // @output true
+
+    io:println(false is boolean); // @output true
+}
+
+Test-Case: output
+Description: Test string literal as expression in type test expression.
+Labels: boolean, is-expr, string, string:Char
+
+function init() {
+    boolean b = "A" is string;
+    io:println(b); // @output true
+
+    io:println("A" is string:Char); // @output true
+    io:println("FOO" is string); // @output true
+    io:println("FOO" is string:Char); // @output false
+}
+
+Test-Case: output
+Description: Test byte array literal as expression in type test expression.
+Labels: array-type, boolean, byte, byte-array-literal, is-expr
+
+function init() {
+    boolean b = base64 `aGVsbG8gYmFsbGVyaW5hICEhIQ==` is byte[];
+    io:println(b); // @output true
+
+    b = base16 `aeeecdefabcd12345567888822` is byte[];
+    io:println(b); // @output true
+}
+
+Test-Case: output
+Description: Test string template expression as expression in type test expression.
+Labels: boolean, is-expr, string, string-template-expr
+
+function init() {
+    boolean b = string `ABC` is string;
+    io:println(b); // @output true
+}
+
+Test-Case: output
+Description: Test xml template expression as expression in type test expression.
+Labels: boolean, is-expr, xml, xml:Element, xml:Text
+
+function init() {
+    boolean b1 = xml `ABC` is xml;
+    io:println(b1); // @output true
+
+    boolean b2 = xml `ABC` is xml:Text;
+    io:println(b2); // @output true
+
+    boolean b3 = xml `<name>Enid Blyton</name><!--Text-->` is xml:Element;
+    io:println(b3); // @output false
+}
+
+Test-Case: output
+Description: Test list constructor expression as expression in type test expression.
+Labels: array-type, boolean, int, is-expr, list-constructor-expr, tuple-type
+
+function init() {
+    boolean b1 = [1, 2, 3] is int[];
+    io:println(b1); // @output true
+
+    boolean b2 = [1, 2, 3] is int[3];
+    io:println(b2); // @output true
+
+    boolean b3 = [1, 2, 3] is [int, int, int];
+    io:println(b3); // @output true
+
+    boolean b4 = [1, 2, 3] is [int...];
+    io:println(b4); // @output true
+
+    boolean b5 = [1, 2, 3] is [int, int...];
+    io:println(b5); // @output true
+
+    boolean b6 = [1, 2, 3] is [int, int, int...];
+    io:println(b6); // @output true
+
+    boolean b7 = [1, 2, 3] is [int, int, int, int...];
+    io:println(b7); // @output true
+}
+
+Test-Case: output
+Description: Test list constructor expression as expression in type test expression.
+Labels: any, array-type, boolean, float, int, is-expr, list-constructor-expr, map-type, mapping-constructor-expr,
+        record-type, string, tuple-type, union-type
+
+function init() {
+    boolean b1 = [1, "ABC", 10.2, {a: 2}] is any;
+    io:println(b1); // @output true
+
+    boolean b2 = [1, "ABC", 10.2, {a: 2}] is [int, string, float, record {|int a;|}];
+    io:println(b2); // @output true
+
+    boolean b3 = [1, "ABC", 10.2, {a: 2}] is [int, string, float, map<int>];
+    io:println(b3); // @output true
+
+    boolean b4 = [1, "ABC", 10.2, {a: 2}] is [int, string, float|map<int>...];
+    io:println(b4); // @output true
+
+    boolean b5 = [1, "ABC", 10.2, {a: 2}] is (int|string|float|record {|int a;|})[];
+    io:println(b5); // @output true
+
+    boolean b6 = [1, "ABC", 10.2, {a: 2}] is (int|string|float|map<int>)[4];
+    io:println(b6); // @output true
+}
+
+Test-Case: output
+Description: Test list having never type member with type test expression.
+Fail-Issue: ballerina-platform/ballerina-lang#35612
+Labels: int, is-expr, list-constructor-expr, never, string, tuple-type
+
+function init() {
+    [int, string, never...] t1 = [1, "s"];
+    io:println(t1 is [int, string]); // @output true
+}
+
+Test-Case: output
+Description: Test mapping constructor expression as expression in type test expression.
+Labels: any, anydata, boolean, error-constructor-expr, float, int, is-expr, map-type, mapping-constructor-expr,
+        record-rest-descriptor, record-type, record-type-readonly-field, string, union-type
+
+function init() {
+    boolean b1 = {a: 1, b: 2, "c": 3} is anydata;
+    io:println(b1); // @output true
+
+    boolean b2 = {a: 1, b: 2, "c": 3} is map<int>;
+    io:println(b2); // @output true
+
+    boolean b3 = {a: 1, b: "ABC", "c": 10f} is record {|int a; string b; float c;|};
+    io:println(b3); // @output true
+
+    boolean b4 = {a: 1, b: "ABC", "c": 10f} is record {|int a; string b; float...;|};
+    io:println(b4); // @output true
+
+    boolean b5 = {a: 1, b: "ABC", "c": 10f} is map<int|string|float>;
+    io:println(b5); // @output true
+
+    boolean b6 = {a: 1, b: 2, "c": error("Error")} is any;
+    io:println(b6); // @output true
+
+    boolean b7 = {a: 1, b: "ABC", "c": 10f} is record {|readonly int a; readonly string b; float...;|};
+    io:println(b7); // @output false
+}
+
+Test-Case: output
+Description: Test table constructor expression as expression in type test expression.
+Labels: any, anydata, boolean, is-expr, map-type, record-type, table-constructor-expr
+
+function init() {
+    boolean b1 = table [{a: 1, b: 2, "c": 3}] is anydata;
+    io:println(b1); // @output true
+
+    boolean b2 = table [{a: 1, b: "ABC", "c": 10f, "d": error("Err")}] is any;
+    io:println(b2); // @output true
+
+    boolean b3 = table [{a: 1, b: "ABC", "c": 10f, "d": error("Err")}] is table<record {|int a; string b; float c; error d;|}>;
+    io:println(b3); // @output true
+
+    boolean b4 = table [{a: 1, b: "ABC", "c": 10f}] is table<record {|readonly int a; readonly string b; float c;|}> key(a, b);
+    io:println(b4); // @output false
+
+    boolean b5 = table key(a, b) [{a: 1, b: "ABC", "c": 10f}] is table<record {|readonly int a; readonly string b; float c;|}> key(a, b);
+    io:println(b5); // @output true
+
+    boolean b6 = table key(a, b) [{a: 1, b: "ABC", "c": 10f}] is table<record {|int a; string b; float c;|}>;
+    io:println(b6); // @output true
+
+    boolean b7 = table [{a: 1, b: "ABC", "c": 10f}] is table<map<int|string|float>>;
+    io:println(b7); // @output true
+}
+
+Test-Case: output
+Description: Test table constructor expression as expression in type test expression.
+Fail-Issue: ballerina-platform/ballerina-lang#35126
+Labels: any, anydata, boolean, is-expr, map-type, record-type, table-constructor-expr
+
+function init() {
+    boolean b8 = table key(a, b) [{a: 1, b: "ABC", "c": 10f}] is table<map<int|string|float>>;
+    io:println(b8); // @output false
+}
+
+Test-Case: output
+Description: Test object constructor expression as expression in type test expression.
+Labels: boolean, is-expr, isolated-method, module-type-defn, object-constructor-expr, object-type
+
+type Client client object {
+    int a;
+    function f1();
+    remote function f2();
+};
+
+type Service service object {
+    int a;
+    function f1();
+    function f2();
+};
+
+function init() {
+    boolean b1 = object {} is object {};
+    io:println(b1); // @output true
+
+    boolean b2 = object {
+        int a = 1;
+        isolated function f1() {
+        }
+        function f2() {
+        }
+    } is object {
+        int a;
+        function f1();
+        function f2();
+    };
+    io:println(b2); // @output true
+
+    boolean b3 = client object {
+        int a = 1;
+        isolated function f1() {
+        }
+        remote function f2() {
+        }
+    } is client object {
+        int a;
+        function f1();
+        remote function f2();
+    };
+    io:println(b3); // @output true
+
+    boolean b4 = client object {
+        int a = 1;
+        isolated function f1() {
+        }
+        remote function f2() {
+        }
+    } is Client;
+    io:println(b4); // @output true
+
+    boolean b5 = client object {
+        int a = 1;
+        string b = "ABC";
+        isolated function f1() {
+        }
+        remote function f2() {
+        }
+        private function f3() {
+        }
+    } is Client;
+    io:println(b5); // @output true
+
+    boolean b6 = service object {
+        int a = 1;
+        string b = "ABC";
+        isolated function f1() {
+        }
+        function f2() {
+        }
+        private function f3() {
+        }
+    } is Service;
+    io:println(b6); // @output true
+}
+
+Test-Case: output
+Description: Test new expression as expression in type test expression.
+Labels: boolean, explicit-new-expr, is-expr, isolated-object, module-class-defn, module-type-defn, object-type
+
+class Class {
+    function f1() returns int {
+        return 60;
+    }
+}
+
+type Object1 object {
+    function f1() returns int;
+};
+
+type Object2 object {
+    int a;
+    function f1() returns int;
+};
+
+function init() {
+    boolean b1 = new Class() is object {};
+    io:println(b1); // @output true
+
+    boolean b2 = new Class() is object {
+        function f1() returns int;
+    };
+    io:println(b2); // @output true
+
+    boolean b3 = new Class() is Object1;
+    io:println(b3); // @output true
+
+    boolean b4 = new Class() is Object2;
+    io:println(b4); // @output false
+
+    boolean b5 = new Class() is object {
+        int a;
+        function f1() returns int;
+    };
+    io:println(b5); // @output false
+
+    boolean b6 = new Class() is isolated object {
+        function f1() returns int;
+    };
+    io:println(b6); // @output true
+}
+
+Test-Case: output
+Description: Test variable reference expression as expression in type test expression.
+Labels: any, anydata, error-type, int, is-expr, map-type, mapping-constructor-expr, record-type, string,
+        table-constructor-expr, table-type, union-type, variable-reference-expr
+
+function init() {
+    int|string a = 10;
+    io:println(a is int); // @output true
+
+    map<string|error> b = {a: "A", b: "B"};
+    io:println(b is map<any>); // @output false
+    io:println(b is any); // @output true
+    io:println(b is map<string>); // @output false
+
+    table<record {|int a; string b;|}> c = table [{a: 1, b: "A"}];
+    io:println(c is table<record {|readonly int a; string b;|}>); // @output false
+    io:println(c is table<map<int|string>>); // @output true
+    io:println(c is anydata); // @output true
+}
+
+Test-Case: output
+Description: Test field access expression as expression in type test expression.
+Labels: boolean, field-access-expr, float, int, is-expr, mapping-constructor-expr, module-type-defn, optional-type,
+        record-rest-descriptor, record-type, string, union-type
+
+type Type string|xml|boolean;
+
+type Record1 record {|
+    int|string a;
+    float? b;
+    int c?;
+    boolean d = true;
+    Type? e;
+    string...;
+|};
+
+type Record2 record {
+    int|string a;
+    float? b;
+    int c?;
+    boolean d = true;
+};
+
+function init() {
+    Record1 rec1 = {a: 1, b: (), "e": "A", "f": "B"};
+
+    io:println(rec1.a is int); // @output true
+    io:println(rec1.b is float); // @output false
+    io:println(rec1.c is int); // @output false
+    io:println(rec1.d is Type); // @output true
+    io:println(rec1.e is string); // @output true
+
+    Record2 rec2 = {a: 1, b: 2f, c: 1, d: false, "e": "A"};
+
+    io:println(rec2.a is int); // @output true
+    io:println(rec2.b is float); // @output true
+    io:println(rec2.c is int); // @output true
+    io:println(rec2.d is boolean); // @output true
+}
+
+Test-Case: output
+Description: Test optional field access expression as expression in type test expression.
+Labels: boolean, float, FloatingPointTypeSuffix, int, is-expr, mapping-constructor-expr, module-type-defn,
+        optional-field-access-expr, optional-type, record-type, record-rest-descriptor, string, union-type
+
+type Type string|xml|boolean;
+
+type Record1 record {|
+    int|string a;
+    float? b;
+    int c?;
+    boolean d = true;
+    Type? e;
+    string...;
+|};
+
+type Record2 record {
+    int|string a;
+    float? b;
+    int c?;
+    boolean d = true;
+};
+
+function init() {
+    Record1 rec1 = {a: 1, b: (), "e": "A", "f": "B"};
+
+    io:println(rec1?.a is int); // @output true
+    io:println(rec1?.b is float); // @output false
+    io:println(rec1?.c is int); // @output false
+    io:println(rec1?.d is Type); // @output true
+    io:println(rec1?.e is string); // @output true
+
+    Record2 rec2 = {a: 1, b: 2f, c: 1, d: false, "e": "A"};
+
+    io:println(rec2?.a is int); // @output true
+    io:println(rec2?.b is float); // @output true
+    io:println(rec2?.c is int); // @output true
+    io:println(rec2?.d is boolean); // @output true
+}
+
+Test-Case: output
+Description: Test xml attribute access expression as expression in type test expression.
+Labels: error-type, is-expr, module-type-defn, nil-type, optional-type, string, union-type,
+        xml-optional-attribute-access-expr, xml-required-attribute-access-expr, xmlns-decl
+
+type Type1 string|error;
+
+type Type2 string|error?;
+
+type Type3 string;
+
+xmlns "NS" as ns;
+
+function init() {
+    xml x1 = xml `<messages id="b">
+                    <note id="1">
+                        <to>John</to>
+                    </note>
+                    <note id="2">
+                        <to>Anne</to>
+                    </note>
+                </messages>`;
+
+    io:println(x1.id is string); // @output true
+    io:println(x1.id is Type1); // @output true
+    io:println(x1/<note>.id is error); // @output true
+    io:println(x1/<note>[1].id is Type2); // @output true
+
+    xml x2 = xml `<root ns:attr="attr-val"><a attr="a-attr"></a><b attr="b-attr"></b></root>`;
+    io:println(x2/*.attr is error); // @output true
+    io:println(x2.ns:attr is string); // @output true
+
+    xml:Element x3 = xml `<elem xmlns="ns-uri" attr="val" xml:space="default"></elem>`;
+    io:println(x3.attr is string); // @output true
+    io:println(x3.attrNon is error); // @output true
+
+    xml<xml:Element> x4 = xml `<elem xmlns="ns-uri" attr="val" xml:space="default"></elem>`;
+    io:println(x4.attr is string); // @output true
+    io:println(x4?.attr is string); // @output true
+    io:println(x4.attrNon is error); // @output true
+    io:println(x4?.attrNon is ()); // @output true
+}
+
+Test-Case: output
+Description: Test xml attribute access expression as expression in type test expression.
+Fail-Issue: ballerina-platform/ballerina-lang#35190
+Labels: is-expr, nil-type, string, xml-optional-attribute-access-expr, xml:Element
+
+function init() {
+    xml:Element x3 = xml `<elem xmlns="ns-uri" attr="val" xml:space="default"></elem>`;
+    io:println(x3?.attr is string); // @output true
+    io:println(x3?.attrNon is ()); // @output true
+}
+
+Test-Case: output
+Description: Test annotation access expression as expression in type test expression.
+Fail-Issue: ballerina-platform/ballerina-lang#33243
+Labels: annot-access-expr, annotation-decl, any, array-type, implicit-new-expr, is-expr, mapping-constructor-expr,
+        module-class-defn, module-type-defn, record-type, typedesc-type, typeof-expr
+
+type Annot record {
+    string foo;
+    int bar?;
+};
+
+public annotation Annot v1 on type, class;
+
+annotation Annot[] v2 on class;
+
+public annotation Annot v3 on function;
+
+@v1 {
+    foo: "strValue",
+    bar: 1
+}
+type T1 record {
+    string name;
+};
+
+@v1 {
+    foo: "strValue"
+}
+@v2 {
+    foo: "v2 value 1"
+}
+@v2 {
+    foo: "v2 value 2"
+}
+class T2 {
+    string name = "ballerina";
+}
+
+function init() {
+    T1 a = {name: "John"};
+    typedesc<any> t = typeof a;
+    io:println(t.@v1 is Annot); // @output true
+
+    T1 b = {name: "John"};
+    t = typeof b;
+    io:println(t.@v2 is ()); // @output true
+
+    T2 c = new;
+    t = typeof c;
+    io:println(t.@v1 is Annot); // @output true
+    io:println(t.@v2 is Annot[]); // @output true
+    io:println(t.@v3 is ()); // @output true
+}
+
+Test-Case: output
+Description: Test member access expression as expression in type test expression.
+Labels: boolean, float, int, is-expr, mapping-constructor-expr, member-access-expr, module-type-defn, nil-type,
+        optional-type, record-rest-descriptor, record-type, string, union-type
+
+type Type string|xml|boolean;
+
+type Record1 record {|
+    int|string a;
+    float? b;
+    int c?;
+    boolean d = true;
+    Type? e;
+    string...;
+|};
+
+function init() {
+    Record1 rec1 = {a: 1, b: (), "e": "A", "f": "B"};
+
+    io:println(rec1["a"] is int); // @output true
+    io:println(rec1["b"]is float); // @output false
+    io:println(rec1["c"] is int); // @output false
+    io:println(rec1["d"] is Type); // @output true
+    io:println(rec1["e"] is string); // @output true
+    io:println(rec1["f"] is string); // @output true
+    io:println(rec1["g"] is ()); // @output true
+}
+
+Test-Case: output
+Description: Test function call expression as expression in type test expression.
+Labels: function-call-expr, int, is-expr, module-const-decl, module-type-defn, nil-type, optional-type, string,
+        union-type
+
+const nm = "Anne Smith";
+
+type Type string;
+
+function init() {
+    io:println(getName("Anne") is string); // @output true
+    io:println(getName("Anne") is ()); // @output false
+    io:println(getName("Anne") is Type); // @output true
+    io:println(getName("Anne") is nm); // @output true
+    io:println(getName("Anne") is string|int); // @output true
+}
+
+function getName(string fname) returns string? {
+    return fname + " Smith";
+}
+
+Test-Case: output
+Description: Test method call expression as expression in type test expression.
+Labels: implicit-new-expr, int, is-expr, method-call-expr, module-class-defn, module-const-decl, module-type-defn,
+        nil-type, optional-type, string, union-type
+
+const nm = "Anne Smith";
+
+type Type string;
+
+class Person {
+    function getName(string fname) returns string? {
+        return fname + " Smith";
+    }
+}
+
+function init() {
+    Person p = new;
+    io:println(p.getName("Anne") is string); // @output true
+    io:println(p.getName("Anne") is ()); // @output false
+    io:println(p.getName("Anne") is Type); // @output true
+    io:println(p.getName("Anne") is nm); // @output true
+    io:println(p.getName("Anne") is string|int); // @output true
+}
+
+Test-Case: output
+Description: Test error constructor expression as expression in type test expression.
+Labels: any, anydata, distinct, error-constructor-expr, error-type, error-type-parameter, intersection-type, is-expr,
+        map-type, module-type-defn, optional-type, record-type, union-type
+
+type Record record {
+    int code;
+};
+
+type ErrorType1 error<map<anydata>>;
+
+type ErrorType2 error<Record>;
+
+type ErrorType3 error<record {int no;}>;
+
+type ErrorType4 ErrorType2 & ErrorType3;
+
+type ErrorType5 distinct error<Record>;
+
+type Type error?;
+
+function init() {
+    io:println(error("Err") is error); // @output true
+    io:println(error("Err") is Type); // @output true
+    io:println(error("Err") is any|error); // @output true
+    io:println(error("Err") is ErrorType1); // @output true
+    io:println(error("Err") is ErrorType2); // @output false
+
+    io:println(error("Err", error("AnotherErr")) is error); // @output true
+    io:println(error("Err", error("AnotherErr"), code = 1) is ErrorType1); // @output true
+    io:println(error("Err", error("AnotherErr"), code = 1) is ErrorType2); // @output true
+    io:println(error("message", error("AnotherErr"), code = 3, no = 1) is ErrorType4); // @output true
+    io:println(error("message", error("AnotherErr"), code = 3) is ErrorType5); // @output false
+}
+
+Test-Case: output
+Description: Test anonymous function expression as expression in type test expression.
+Labels: explicit-anonymous-function-expr, function-type, int, is-expr, string, union-type
+
+function init() {
+    io:println(function(string x, string y) returns (string) {
+        return x + y;
+    } is function); // @output true
+
+    io:println(function(string x, string y) returns (string) {
+        return x + y;
+    } is function (string, string) returns (string)); // @output true
+
+    io:println(function(string x, string y) returns (string) {
+        return x + y;
+    } is function (string, string|int) returns (string)); // @output false
+
+    io:println(function(string x, string y) returns (string) {
+        return x + y;
+    } is function (string, string) returns (string|int)); // @output true
+}
+
+Test-Case: output
+Description: Test let expression as expression in type test expression.
+Labels: decimal, float, int, is-expr, let-expr, list-constructor-expr, map-type, mapping-constructor-expr,
+        member-access-expr, module-const-decl, string, union-type
+
+const ONE = 1;
+
+function init() {
+    io:println(let int i = 2, float f = 2.2f, decimal d = 1.2d in <decimal>i + <decimal>f + d is decimal); // @output true
+    io:println(let var l = ["A", 2] in l[0] is string); // @output true
+    io:println(let map<int|string> m = {a: 1, b: "A"} in m["a"] is int); // @output true
+    io:println(let map<int|string> m = {a: 1, b: "A"} in m["a"] is ONE); // @output true
+}
+
+Test-Case: output
+Description: Test type cast expression as expression in type test expression.
+Labels: decimal, float, int, int:Signed16, int:Unsigned32, is-expr, module-const-decl, module-type-defn, string,
+        type-cast-expr, union-type
+
+const ONE = 1;
+
+type Type int|float;
+
+function init() {
+    io:println(<decimal>2 is decimal); // @output true
+
+    int|string a = 1;
+    io:println(<int>a is ONE); // @output true
+    io:println(<int>a is Type); // @output true
+    io:println(<int>2 is byte); // @output true
+    io:println(<int>2 is int:Signed16); // @output true
+    io:println(<int>2 is int:Unsigned32); // @output true
+}
+
+Test-Case: output
+Description: Test type of expression as expression in type test expression.
+Labels: int, is-expr, module-const-decl, string, typedesc-type-parameter, typeof-expr, union-type
+
+const ONE = 1;
+
+function init() {
+    io:println(typeof 2 is typedesc<int>); // @output true
+    io:println(typeof 2 is typedesc<int|string>); // @output true
+
+    int|string a = 1;
+    io:println(typeof a is typedesc<ONE>); // @output true
+    io:println(typeof a is typedesc<int>); // @output true
+}
+
+Test-Case: output
+Description: Test unary logical expression as expression in type test expression.
+Labels: boolean, equality, int, is-expr, logical-expr, module-const-decl, relational-expr, string, union-type
+
+const TRUE = true;
+
+function init() {
+    io:println(!true is boolean); // @output true
+    io:println(!true is true); // @output false
+    io:println(!true is false); // @output true
+
+    int a = 10;
+    io:println(!(a < 5) is true); // @output true
+    io:println(!(a < 5) is false); // @output false
+
+    io:println(!(a == 5) is true); // @output true
+    io:println(!(a == 5) is false); // @output false
+
+    string|int b = 10;
+    io:println(!(b is int) is true); // @output false
+    io:println(!(b is int) is false); // @output true
+
+    io:println(!TRUE is true); // @output false
+    io:println(!TRUE is false); // @output true
+}
+
+Test-Case: output
+Description: Test unary numeric expression as expression in type test expression.
+Labels: anydata, int, is-expr, module-const-decl, module-type-defn, unary-complement, unary-minus, unary-plus
+
+const FIVE = 5;
+
+type Type int;
+
+function init() {
+    io:println(+5 is FIVE); // @output true
+    io:println(+5 is int); // @output true
+
+    io:println(-5 is Type); // @output true
+    io:println(-5 is -5); // @output true
+
+    io:println(~5 is -6); // @output true
+    io:println(~5 is anydata); // @output true
+}
+
+Test-Case: output
+Description: Test multiplicative expression as expression in type test expression.
+Labels: anydata, int, is-expr, module-const-decl, module-type-defn, multiplicative-expr
+
+const FIVE = 5;
+
+type Type int;
+
+function init() {
+    io:println(1 * 5 is FIVE); // @output true
+    io:println(1 * 5 is int); // @output true
+
+    io:println(4 / 2 is 2); // @output true
+    io:println(4 / 2 is Type); // @output true
+
+    io:println(5 % 2 is 1); // @output true
+    io:println(5 % 2 is anydata); // @output true
+}
+
+Test-Case: output
+Description: Test additive expression as expression in type test expression.
+Labels: additive-expr, anydata, int, is-expr, module-const-decl, module-type-defn
+
+const FIVE = 5;
+
+type Type int;
+
+function init() {
+    io:println(2 + 3 is FIVE); // @output true
+    io:println(2 - 3 is int); // @output true
+
+    io:println(4 - 2 is 2); // @output true
+    io:println(4 - 2 is Type); // @output true
+}
+
+Test-Case: output
+Description: Test shift expression as expression in type test expression.
+Labels: int, is-expr, module-const-decl, module-type-defn, shift-expr, singleton-type, string, union-type
+
+const ONE = 1;
+
+type Type int;
+
+function init() {
+    io:println(4 << 2 is 16); // @output true
+    io:println(4 << 2 is int); // @output true
+
+    io:println(4 >> 2 is ONE); // @output true
+    io:println(4 >> 2 is Type); // @output true
+
+    io:println(8 >>> 2 is 2|4); // @output true
+    io:println(8 >>> 2 is int|string); // @output true
+}
+
+Test-Case: output
+Description: Test binary bitwise expression as expression in type test expression.
+Labels: binary-bitwise-expr, int, is-expr, module-const-decl, module-type-defn, singleton-type, string, union-type
+
+const SIX = 6;
+
+type Type int;
+
+function init() {
+    io:println((4 & 2) is 0); // @output true
+    io:println((4 & 2) is int); // @output true
+
+    io:println((4 | 2) is SIX); // @output true
+    io:println((4 | 2) is Type); // @output true
+
+    io:println((4 ^ 2) is SIX); // @output true
+    io:println((4 ^ 2) is int|string); // @output true
+}
+
+Test-Case: output
+Description: Test range expression as expression in type test expression.
+Labels: is-expr, isolated-method, module-type-defn, object-type, range-expr, record-type
+
+type Object1 object {
+    public function iterator() returns (object {
+        public function next() returns (record {|int value;|}?);
+    });
+};
+
+type Record record {|
+    int value;
+|};
+
+public type Object object {
+    public function next() returns (Record?);
+};
+
+type Object2 object {
+    public function iterator() returns Object;
+};
+
+function init() {
+    io:println(1 ... 5 is object {
+        public isolated function iterator() returns (object {
+            public isolated function next() returns (record {|int value;|}?);
+        });
+    }); // @output true
+
+    io:println(1 ... 5 is Object1); // @output true
+    io:println(1 ... 5 is Object2); // @output true
+
+    io:println(1 ..< 5 is object {
+        public isolated function iterator() returns (object {
+            public isolated function next() returns (record {|int value;|}?);
+        });
+    }); // @output true
+
+    io:println(1 ..< 5 is Object1); // @output true
+    io:println(1 ..< 5 is Object2); // @output true
+}
+
+Test-Case: output
+Description: Test relational expression as expression in type test expression.
+Labels: boolean, int, is-expr, module-const-decl, relational-expr
+
+const TRUE = true;
+
+function init() {
+    int a = 5;
+
+    io:println(a < 10 is boolean); // @output true
+    io:println(a < 10 is true); // @output true
+    io:println(a < 10 is TRUE); // @output true
+
+    io:println(a <= 10 is boolean); // @output true
+    io:println(a <= 10 is true); // @output true
+    io:println(a <= 10 is TRUE); // @output true
+
+    io:println(a > 10 is boolean); // @output true
+    io:println(a > 10 is true); // @output false
+    io:println(a > 10 is TRUE); // @output false
+
+    io:println(a >= 10 is boolean); // @output true
+    io:println(a >= 10 is true); // @output false
+    io:println(a >= 10 is TRUE); // @output false
+}
+
+Test-Case: output
+Description: Test type test expression as expression in type test expression.
+Labels: boolean, int, is-expr, module-const-decl, optional-type
+
+const TRUE = true;
+
+function init() {
+    int? a = 5;
+
+    io:println(a is int is boolean); // @output true
+    io:println(a is int is true); // @output true
+    io:println(a is int is TRUE); // @output true
+}
+
+Test-Case: output
+Description: Test equality expression as expression in type test expression.
+Labels: boolean, equality, exact-equality, int, is-expr, module-const-decl
+
+const TRUE = true;
+
+function init() {
+    int a = 5;
+
+    io:println((a == 5) is boolean); // @output true
+    io:println((a == 5) is true); // @output true
+    io:println((a == 5) is TRUE); // @output true
+
+    io:println((a != 5) is boolean); // @output true
+    io:println((a != 5) is true); // @output false
+    io:println((a != 5) is TRUE); // @output false
+
+    io:println((a === 5) is boolean); // @output true
+    io:println((a === 5) is true); // @output true
+    io:println((a === 5) is TRUE); // @output true
+
+    io:println((a !== 5) is boolean); // @output true
+    io:println((a !== 5) is true); // @output false
+    io:println((a !== 5) is TRUE); // @output false
+}
+
+Test-Case: output
+Description: Test logical expression as expression in type test expression.
+Labels: boolean, is-expr, logical-expr, module-const-decl, relational-expr
+
+const TRUE = true;
+
+function init() {
+    boolean a = true;
+
+    io:println((TRUE && a) is boolean); // @output true
+    io:println((1 < 10 && 2 > 1) is TRUE); // @output true
+
+    io:println((false || a) is boolean); // @output true
+    io:println((1 < 10 || 2 > 3) is TRUE); // @output true
+}
+
+Test-Case: output
+Description: Test conditional expression as expression in type test expression.
+Labels: ternary-conditional-expr, int, is-expr, module-const-decl, optional-type, singleton-type, union-type
+
+const ONE = 1;
+
+function init() {
+    int? a = 5;
+
+    io:println((a is int ? 1 : 2) is 1); // @output true
+    io:println((a is int ? 1 : 2) is ONE); // @output true
+    io:println((a is int ? 1 : 2) is int); // @output true
+    io:println((a is int ? 1 : 2) is 1|0); // @output true
+}
+
+Test-Case: output
+Description: Test checking expression as expression in type test expression.
+Labels: check, checkpanic, error-type, int, is-expr, module-const-decl, singleton-type, union-type
+
+const ONE = 1;
+
+function init() returns error? {
+    int|error a = 1;
+
+    io:println(check a is 1); // @output true
+    io:println(check a is ONE); // @output true
+    io:println(check a is int); // @output true
+    io:println(check a is 1|0); // @output true
+
+    io:println(checkpanic a is 1); // @output true
+    io:println(checkpanic a is ONE); // @output true
+    io:println(checkpanic a is int); // @output true
+    io:println(checkpanic a is 1|0); // @output true
+}
+
+Test-Case: output
+Description: Test trap expression as expression in type test expression.
+Labels: error-type, int, is-expr, module-const-decl, singleton-type, trap-expr, union-type
+
+const ONE = 1;
+
+function init() {
+    int|error a = 1;
+
+    io:println(trap a is 1); // @output true
+    io:println(trap a is ONE); // @output true
+    io:println(trap a is int); // @output true
+    io:println(trap a is 1|0); // @output true
+    io:println(trap a is error); // @output false
+}
+
+Test-Case: output
+Description: Test query expression as expression in type test expression.
+Labels: array-type, int, is-expr, list-constructor-expr, multiplicative-expr, query-expr, tuple-type
+
+function init() {
+    int[] arr = [1, 2, 3, 4, 5];
+    io:println((from int i in arr
+        select i * 10) is int[]); // @output true
+    io:println((from int i in arr
+        select i * 10) is [int...]); // @output true
+    io:println((from int i in arr
+        select i * 10) is [int, int, int, int, int, int...]); // @output false
+}
+
+Test-Case: output
+Description: Test xml navigate expression as expression in type test expression.
+Labels: is-expr, xml, xml-filter-expr, xml-step-expr, xml:Comment, xml:Element, xml:ProcessingInstruction, xml:Text
+
+function init() {
+    xml x1 = xml `<root><child attr="attr-val"></child></root><root><child attr="attr-val2"></child></root>`;
+    io:println(x1.<root> is xml:Element); // @output false
+    io:println(x1.<root> is xml<xml:Element>); // @output true
+
+    io:println(x1/<child> is xml:Element); // @output false
+    io:println(x1/<child> is xml<xml:Element>); // @output true
+    io:println(x1/<child> is xml<xml:Element|xml:Text|xml:Comment|xml:ProcessingInstruction>); // @output true
+}
+
+Test-Case: output
+Description: Test transactional expression as expression in type test expression.
+Labels: check, commit-action, error-type, is-expr, module-const-decl, optional-type, transaction-stmt,
+        transactional-expr
+
+const TRUE = true;
+
+function init() returns error? {
+    transaction {
+        io:println(transactional is true); // @output true
+        io:println(transactional is TRUE); // @output true
+        check commit;
+    }
+}
+
+Test-Case: output
+Description: Test simple type as type descriptor in type test expression.
+Labels: any, boolean, boolean-literal, decimal, DecimalFloatingPointNumber, DecimalNumber, float,
+        FloatingPointTypeSuffix, int, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32,
+        int:Unsigned8, is-expr, nil-literal, nil-type, null
+
+function init() {
+    any a = ();
+    io:println(a is ()); // @output true
+    io:println(a is null); // @output true
+
+    a = true;
+    io:println(a is boolean); // @output true
+
+    a = 10;
+    io:println(a is int); // @output true
+    io:println(a is int:Signed32); // @output true
+    io:println(a is int:Signed16); // @output true
+    io:println(a is int:Signed8); // @output true
+    io:println(a is int:Unsigned32); // @output true
+    io:println(a is int:Unsigned16); // @output true
+    io:println(a is int:Unsigned8); // @output true
+
+    a = 10f;
+    io:println(a is float); // @output true
+
+    a = 10d;
+    io:println(a is decimal); // @output true
+}
+
+Test-Case: output
+Description: Test sequence type as type descriptor in type test expression.
+Labels: any, is-expr, string, string:Char, xml, xml:Comment, xml:Element, xml:ProcessingInstruction, xml:Text,
+        xml-template-expr, xml-type-parameter
+
+function init() {
+    any a = "A";
+    io:println(a is string); // @output true
+    io:println(a is string:Char); // @output true
+
+    a = xml `<book><author>Enid Blyton</author></book>`;
+    io:println(a is xml); // @output true
+    io:println(a is xml:Element); // @output true
+    io:println(a is xml<xml:Element>); // @output true
+
+    a = xml `<!--This is a comment-->`;
+    io:println(a is xml); // @output true
+    io:println(a is xml:Comment); // @output true
+    io:println(a is xml<xml:Comment>); // @output true
+    io:println(a is xml<xml:Element>); // @output false
+
+    a = xml `This is a Text`;
+    io:println(a is xml); // @output true
+    io:println(a is xml:Text); // @output true
+    io:println(a is xml<xml:Text>); // @output true
+    io:println(a is xml<xml:Element>); // @output false
+
+    a = xml `<?xml-stylesheet type="text/xsl" href="style.xsl"?>`;
+    io:println(a is xml); // @output true
+    io:println(a is xml:ProcessingInstruction); // @output true
+    io:println(a is xml<xml:ProcessingInstruction>); // @output true
+    io:println(a is xml<xml:Element>); // @output false
+}
+
+Test-Case: output
+Description: Test list type as type descriptor in type test expression.
+Labels: any, anydata, array-type, float, int, is-expr, list-constructor-expr, string, tuple-type, union-type
+
+function init() {
+    io:println([1, 2, 3] is int[]); // @output true
+    io:println([1, 2, 3] is [int, int, int]); // @output true
+    io:println([1, 2, 3] is [int, int, int...]); // @output true
+    io:println([1, 2, 3] is [int, int...]); // @output true
+    io:println([1, 2, 3] is [int...]); // @output true
+
+    io:println([1, "A", 3f] is (int|string|float)[]); // @output true
+    io:println([1, "A", 3f] is [int|string|float...]); // @output true
+    io:println([1, "A", 3f] is [int, string, float]); // @output true
+    io:println([1, "A", 3f] is [int, string, float...]); // @output true
+    io:println([1, "A", 3f] is [int, string|float...]); // @output true
+    io:println([1, "A", 3f] is any[]); // @output true
+    io:println([1, "A", 3f] is anydata[]); // @output true
+    io:println([1, "A", 3f] is [anydata, anydata, anydata]); // @output true
+}
+
+Test-Case: output
+Description: Test map type as type descriptor in type test expression.
+Labels: int, is-expr, map-type, mapping-constructor-expr, module-type-defn, record-rest-descriptor, record-type, string,
+        union-type, var
+
+type Record1 record {|
+    int x;
+    int y;
+|};
+
+type Record2 record {
+    int x;
+    int y;
+};
+
+type Record3 record {|
+    int x;
+    int y;
+    string...;
+|};
+
+function init() {
+    var a = {x: 1, y: 2};
+
+    io:println(a is map<int>); // @output true
+    io:println(a is map<int|string>); // @output true
+    io:println(a is record {int x; int y;}); // @output true
+    io:println(a is record {|int x; int y;|}); // @output true
+    io:println(a is record {|int x; int y;string...; |}); // @output true
+    io:println(a is record {|int x; int y; string z?;|}); // @output true
+    io:println(a is record {int x; int y; string z?;}); // @output true
+    io:println(a is Record1); // @output true
+    io:println(a is Record2); // @output true
+    io:println(a is Record3); // @output true
+
+    Record3 b = {x: 1, y: 2, "u": "A", "v": "B"};
+    Record3 { x: x1, ...rest1 } = b;
+    var { x: x2, y: y2, ...rest2 } = b;
+
+    io:println(rest1 is record{|never x?; int y; string...;|}); // @output true
+    io:println(rest1 is map<int|string>); // @output true
+    io:println(rest2 is record{|string...;|}); // @output true
+    io:println(rest2 is map<string>); // @output true
+}
+
+Test-Case: output
+Description: Test subtyping with record type having never rest field.
+Labels: is-expr, mapping-constructor-expr, module-type-defn, never, record-rest-descriptor, record-type,
+
+type A1 record {|
+    int a;
+    never...;
+|};
+
+
+type A2 record {|
+    int a;
+|};
+
+type A3 record {|
+    int a;
+    int...;
+|};
+
+function init() {
+    A1 r1 = {a: 7};
+    io:println(r1 is A2); // @output true
+
+    A3 r2 = {a: 7};
+    io:println(r2 is A2); // @output false
+}
+
+Test-Case: output
+Description: Test table type as type descriptor in type test expression.
+Labels: anydata, float, int, is-expr, map-type, module-type-defn, readonly-type, record-type, string, table-type,
+        union-type
+
+type Record record {|
+    readonly int x;
+    float y;
+    string...;
+|};
+
+type TableType1 table<Record> key(x);
+
+function init() {
+    TableType1 t1 = table [{x: 1, y: 2f, "u": "A", "v": "B"}];
+
+    io:println(t1 is table<record {|int x; float y;string...; |}>); // @output true
+    io:println(t1 is table<map<int|float|string>>); // @output true
+    io:println(t1 is table<record {|readonly int x; float y; string...; |}> key(x)); // @output true
+    io:println(t1 is table<record {|anydata...;|}>); // @output true
+}
+
+
+Test-Case: output
+Description: Test union type as type descriptor in type test expression.
+Labels: any, error-type, int, is-expr, map-type, string, union-type
+
+function init() {
+    io:println(2 is int|string); // @output true
+    io:println("A" is any|error); // @output true
+    io:println({a: 1, b: 2} is map<int>|map<string>); // @output true
+    io:println({a: 1, b: 1} is map<1>|map<2>); // @output false
+}
+
+Test-Case: output
+Description: Test future type as type descriptor in type test expression.
+Labels: additive-expr, array-type, function-call-expr, future, int, is-expr, list-constructor-expr,
+        mapping-constructor-expr, module-type-defn, record-type, start-action, string, union-type
+
+type Foo record {
+    int i;
+};
+
+function init() {
+    var a = start add(5, 2);
+
+    io:println(a is future); // @output true
+    io:println(a is future<int>); // @output true
+    io:println(a is future<int|string>); // @output true
+
+    var b = start intArray();
+
+    io:println(b is future); // @output true
+    io:println(b is future<int[]>); // @output true
+
+    var c = start getFoo();
+
+    io:println(c is future<Foo>); // @output true
+    io:println(c is future<record {}>); // @output true
+    io:println(c is future<int|Foo>); // @output true
+    io:println(c is future<record {}|int[]>); // @output true
+}
+
+function add(int i, int j) returns int {
+    int k = i + j;
+    return k;
+}
+
+function intArray() returns int[] {
+    int[] j = [1, 2, 3];
+    return j;
+}
+
+function getFoo() returns Foo => {i: 1, "j": "hello"};
+
+Test-Case: output
+Description: Test handle type as type descriptor in type test expression.
+Labels: handle, is-expr, nil-literal, optional-type
+
+function init() {
+    handle? h = ();
+    io:println(h is handle); // @output false
+}
+
+Test-Case: output
+Description: Test stream type as type descriptor in type test expression.
+Labels: error-type, explicit-new-expr, int, is-expr, module-class-defn, module-type-defn, nil-type, optional-type,
+        stream, union-type
+
+class Class {
+    public isolated function next() returns record {|int value;|}|error? {
+        return {value: 1};
+    }
+}
+
+class Class2 {
+    public isolated function next() returns record {|int value;|}? {
+        return {value: 1};
+    }
+}
+
+type CompletionType error?;
+
+type IntType int|string;
+
+function init() {
+    Class cls = new ();
+    stream<int, error?> a = new (cls);
+    io:println(a is stream<int, string|error?>); // @output true
+    io:println(a is stream<IntType, CompletionType>); // @output true
+    io:println(a is stream<IntType, CompletionType>); // @output true
+
+    Class2 cls2 = new ();
+    stream<int> b = new (cls2);
+    io:println(b is stream<int>); // @output true
+    io:println(b is stream<int, ()>); // @output true
+    io:println(b is stream<IntType>); // @output true
+    io:println(b is stream<IntType, CompletionType>); // @output true
+}
+
+Test-Case: output
+Description: Test singleton type as type descriptor in type test expression.
+Labels: const-reference-expr, float, int, is-expr, module-const-decl, singleton-type, string
+
+const TEN = 10;
+const A = "A";
+const FLOAT = 10f;
+
+function init() {
+    int a = 10;
+    io:println(a is 10); // @output true
+    io:println(a is 20); // @output false
+    io:println(a is TEN); // @output true
+
+    string b = "A";
+    io:println(b is "A"); // @output true
+    io:println(b is "B"); // @output false
+    io:println(b is A); // @output true
+
+    float c = 10;
+    io:println(c is 10f); // @output true
+    io:println(c is 20f); // @output false
+    io:println(c is FLOAT); // @output true
+}
+
+Test-Case: output
+Description: Test finite type as type descriptor in type test expression.
+Labels: int, is-expr, module-const-decl, module-type-defn, singleton-type, string, union-type
+
+const TEN = 10;
+const TWNETY = 20;
+const A = "A";
+
+type Numbers 10|20;
+
+type Numbers2 TEN|TWNETY;
+
+type Strings "A"|"B";
+
+type Any "A"|10;
+
+type Any2 TEN|A;
+
+function init() {
+    int a = 10;
+    io:println(a is Numbers); // @output true
+    io:println(a is 10|20); // @output true
+    io:println(a is Numbers2); // @output true
+    io:println(a is TEN|TWNETY); // @output true
+    io:println(a is Any); // @output true
+    io:println(a is Any2); // @output true
+    io:println(a is "A"|10); // @output true
+    io:println(a is 20|30); // @output false
+    io:println(a is "A"|20); // @output false
+
+    string b = "A";
+    io:println(b is Strings); // @output true
+    io:println(b is "A"|"B"); // @output true
+    io:println(b is Any); // @output true
+    io:println(b is 10|"A"); // @output true
+    io:println(b is Any2); // @output true
+    io:println(b is A|TEN); // @output true
+    io:println(b is 20|"B"); // @output false
+    io:println(b is "C"|"D"); // @output false
+}
+
+Test-Case: output
+Description: Test any type as type descriptor in type test expression.
+Labels: any, boolean, decimal, error-constructor-expr, error-type, float, int, is-expr, map-type,
+        mapping-constructor-expr, module-type-defn, record-type, string, table-constructor-expr, table-type,
+        type-reference, union-type
+
+type Type int|string|float|decimal|boolean;
+
+function init() {
+    int a = 10;
+    io:println(a is any); // @output true
+
+    Type b = 10;
+    io:println(b is any); // @output true
+
+    int|error c = error("Error");
+    io:println(c is any); // @output false
+
+    map<string> d = {a: "A", b: "B", c: "C"};
+    io:println(d is any); // @output true
+
+    map<string|error> e = {a: "A", b: "B", c: "C"};
+    io:println(e is any); // @output true
+
+    map<string|error> f = {a: "A", b: "B", c: error("error")};
+    io:println(f is any); // @output true
+
+    table<record {|readonly int a; string b;|}> g = table [{a: 1, b: "B"}];
+    io:println(g is any); // @output true
+
+    table<record {|readonly int a; string b;|}> h = table key(a) [
+            {a: 1, b: "B"},
+            {a: 2, b: "C"}
+        ];
+    io:println(h is any); // @output true
+
+    table<record {|readonly int a; error b;|}> i = table key(a) [
+            {a: 1, b: error("E1")},
+            {a: 2, b: error("E2")}
+        ];
+    io:println(i is any); // @output true
+
+    table<map<int|error>> j = table key(a) [
+            {a: 1, b: error("E1")},
+            {a: 2, b: error("E2")}
+        ];
+    io:println(j is any); // @output true
+}
+
+Test-Case: output
+Description: Test readonly type as type descriptor in type test expression.
+Labels: any, field-access-expr, field-access-lvexpr, intersection-type, is-expr, map-type, mapping-constructor-expr,
+        member-access-expr, module-class-defn, module-type-defn, optional-field-access-expr, readonly-type, record-type,
+        record-type-readonly-field, string
+
+type Details record {|
+    string name;
+    int yob;
+|};
+
+type Department record {
+    string name = "IT";
+};
+
+readonly class Employee {
+    Details details;
+    Department dept;
+    int id;
+
+    function init(Details & readonly details, Department & readonly dept, int id) {
+        self.details = details;
+        self.dept = dept;
+        self.id = id;
+    }
+
+    function getId() returns int {
+        return self.id;
+    }
+}
+
+type Student record {
+    readonly string name;
+    readonly int id?;
+};
+
+function init() {
+    Employee emp = new ({name: "Jo", yob: 2000}, {}, 1234);
+
+    io:println(emp is readonly); // @output true
+    io:println(emp.details is readonly); // @output true
+    io:println(emp.details is Details & readonly); // @output true
+    io:println(emp.dept is readonly); // @output true
+    io:println(emp.dept is Department & readonly); // @output true
+
+    readonly a = 10;
+    io:println(a is readonly); // @output true
+
+    string b = "ballerina";
+    io:println(b is readonly); // @output true
+
+    map<int> & readonly c = {
+        math: 80,
+        physics: 85,
+        chemistry: 75
+    };
+    io:println(c is readonly); // @output true
+
+    Student std = {
+        name: "Anne"
+    };
+    io:println(std.name is readonly); // @output true
+    io:println(std.id is readonly); // @output true
+    io:println(std?.id is readonly); // @output true
+    io:println(std["name"] is readonly); // @output true
+
+    any arr = [1, 2];
+    io:println(arr is readonly); // @output false
+}
+
+Test-Case: output
+Description: Test subtyping with readonly type.
+Fail-Issue: ballerina-platform/ballerina-lang#35461
+Labels: tuple-type, intersection-type, is-expr, list-constructor-expr, readonly-type
+
+function init() {
+    readonly t = [1, 2];
+
+    io:println(t is [1, 2]); // @output true
+    io:println(t is readonly & [1, 2]); // @output true
+    io:println(t is readonly); // @output true
+}
+
+Test-Case: output
+Description: Test subtyping with readonly for selectively immutable basic types.
+Fail-Issue: ballerina-platform/ballerina-lang#22785
+Labels: array-type, function-call-expr, if-else-stmt, intersection-type, is-expr, list-constructor-expr, readonly-type
+
+function init() {
+    int[] & readonly arr = [];
+    io:println(testArr(arr)); // @output true
+}
+
+function testArr(int[] arr) returns boolean {
+    if arr is readonly {
+        return true;
+    }
+    return false;
+}
+
+Test-Case: output
+Description: Test distinct type as type descriptor in type test expression.
+Labels: explicit-new-expr, is-expr, module-class-defn, module-type-defn, object-constructor-expr, object-type
+
+type Object1 distinct object {
+    int a;
+    function f1();
+};
+
+distinct class Class1 {
+    int i = 0;
+}
+
+distinct class Class2 {
+    *Class1;
+
+    function init(int i) {
+        self.i = i;
+    }
+}
+
+function init() {
+    Object1 c = object {
+        int a = 10;
+        function f1() {
+
+        }
+    };
+    io:println(c is distinct Object1); // @output true
+
+    Class1 d = new;
+    io:println(d is distinct Class1); // @output true
+
+    Class2 e = new(1);
+    io:println(e is distinct Class1); // @output true
+    io:println(e is distinct Class2); // @output true
+}
+
+Test-Case: output
+Description: Test distinct type as type descriptor in type test expression.
+Fail-Issue: ballerina-platform/ballerina-lang#35500
+Labels: is-expr, module-type-defn, object-constructor-expr, object-type
+
+type Obj1 distinct object {
+    int a;
+    function f1();
+};
+
+function init() {
+    Obj1 c = object {
+        int a = 10;
+        function f1() {
+
+        }
+    };
+    io:println(c is distinct object {
+        int a;
+        function f1();
+    }); // @output true
+}
+
+Test-Case: output
+Description: Test distinct type as type descriptor in type test expression.
+Fail-Issue: ballerina-platform/ballerina-lang#35501
+Labels: error-constructor-expr, error-type, is-expr, module-type-defn
+
+type Error0 distinct error;
+
+type Error1 distinct error<map<int>>;
+
+function init() {
+    Error0 a = error("E0");
+    io:println(a is distinct error); // @output true
+
+    Error1 b = error("E1", a = 1);
+    io:println(b is distinct error); // @output true
+}
+
+Test-Case: output
+Description: Test intersection type as type descriptor in type test expression.
+Labels: anydata, array-type, intersection-type, is-expr, json, list-constructor-expr, mapping-constructor-expr,
+        module-type-defn, optional-type, readonly-type, union-type
+
+type Record1 record {
+    int i;
+};
+
+type ReadOnlyRecord1 readonly & Record1;
+
+type ArrayTypes int[]|string[];
+
+type Record2 record {|
+    (ArrayTypes & readonly)? j;
+|};
+
+function init() {
+    ReadOnlyRecord1 a = {i: 1, "j": "A"};
+    Record1 b = a;
+    io:println(b is ReadOnlyRecord1); // @output true
+    io:println(b is Record1 & readonly); // @output true
+
+    Record1? & readonly c = {i: 100};
+    io:println(c is ReadOnlyRecord1); // @output true
+    io:println(c is Record1 & readonly); // @output true
+
+    Record2 & readonly d = {j: [1, 2, 3]};
+    io:println(d.j is int[] & readonly); // @output true
+
+    Record2 & readonly e = {j: ()};
+    io:println(e.j is int[]? & readonly); // @output true
+
+    Record2 & readonly f = {j: ["A", "B", "C"]};
+    io:println(f.j is string[] & readonly); // @output true
+
+    map<json> & readonly g = {
+        a: 1,
+        b: "foo",
+        c: null,
+        d: {
+            a1: null,
+            b1: true
+        }
+    };
+    io:println(g["a"] is int & readonly); // @output true
+    io:println(g["c"] is readonly); // @output true
+    io:println(g["d"] is map<anydata> & readonly); // @output true
+}
+
+Test-Case: output
+Description: Test json type as type descriptor in type test expression.
+Labels: decimal, float, int, is-expr, json, map-type, mapping-constructor-expr, member-access-expr, module-type-defn,
+        record-type, string, union-type
+
+type Record1 record {
+    int i;
+};
+
+function init() {
+    Record1 a = {i: 100};
+    io:println(a is json); // @output false
+    io:println(a.i is json); // @output true
+
+    string? b = "ABC";
+    io:println(b is json); // @output true
+
+    int|string|decimal|float c = "ABC";
+    io:println(c is json); // @output true
+
+    map<json> d = {
+        a: 1,
+        b: "foo",
+        c: null,
+        d: {
+            a1: null,
+            b1: true
+        }
+    };
+    io:println(d is json); // @output true
+    io:println(d["a"] is json); // @output true
+    io:println(d["b"] is json); // @output true
+    io:println(d["c"] is json); // @output true
+    io:println(d["d"] is json); // @output true
+}
+
+Test-Case: output
+Description: Test byte type as type descriptor in type test expression.
+Labels: array-type, byte, int, int:Signed16, int:Signed32, int:Unsigned16, int:Unsigned32, int:Unsigned8, is-expr,
+        list-constructor-expr, union-type
+
+function init() {
+    int a = 10;
+    io:println(a is byte); // @output true
+
+    int[] b = [1, 2, 3];
+    io:println(b[2] is byte); // @output true
+
+    int:Signed32 c = 10;
+    io:println(c is byte); // @output true
+
+    int:Signed16 d = 10;
+    io:println(d is byte); // @output true
+
+    int:Unsigned32 e = 10;
+    io:println(e is byte); // @output true
+
+    int:Unsigned16 f = 10;
+    io:println(f is byte); // @output true
+
+    int:Unsigned16 g = 10;
+    io:println(g is byte); // @output true
+
+    int:Unsigned8 h = 10;
+    io:println(h is byte); // @output true
+
+    int:Unsigned16|int:Signed8 i = 10;
+    io:println(i is byte); // @output true
+}
+
+Test-Case: output
+Description: Test type reference as type descriptor in type test expression.
+Labels: int, is-expr, mapping-constructor-expr, module-const-decl, record-type, string, table-type, union-type
+
+const ONE = 1;
+const JOHN = "john";
+
+type A int|string;
+
+type B ONE|JOHN;
+
+type C record {|
+    string...;
+|};
+
+type D record {
+    readonly string a;
+    string b;
+    string c?;
+};
+
+type E table<D>;
+
+type F table<D> key(a);
+
+type G table<D> key<string>;
+
+function init() {
+    io:println(1 is A); // @output true
+    io:println("Mike" is B); // @output false
+
+    record {|string a; string b;|} a = {a: "A", b: "B"};
+    io:println(a is C); // @output true
+    io:println(a is D); // @output false
+
+    io:println(table key(a) [{a: "A", b: "B"}] is E); // @output true
+
+    F b = table [{a: "A", b: "B"}];
+    io:println(b is E); // @output true
+    io:println(b is G); // @output true
+}
+
+Test-Case: output
+Description: Test subtyping with type test expression.
+Labels: any, anydata, array-type, boolean, byte, float, int, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16,
+        int:Unsigned32, int:Unsigned8, is-expr, list-constructor-expr, map-type, mapping-constructor-expr,
+        module-type-defn, readonly-type, record-type, string, table-constructor-expr, table-type, tuple-type, union-type
+
+type UnionType map<int>|int[];
+
+type Record record {|
+    readonly int x;
+    [float, string] y;
+|};
+
+type TableType table<Record> key(x);
+
+type Record2 record {|
+    int|string x;
+    [float|int, string] y;
+|};
+
+function init() {
+    int|string a = 10;
+    io:println(a is int); // @output true
+    io:println(a is string); // @output false
+
+    UnionType b = [1, 2, 3];
+    io:println(b is int[]); // @output true
+    io:println(b is map<int>); // @output false
+
+    [int, int, int] c = [1, 2, 3];
+    io:println(c is UnionType); // @output true
+
+    int d = 12;
+    io:println(d is int:Signed8); // @output true
+    io:println(d is int:Signed16); // @output true
+    io:println(d is int:Signed32); // @output true
+    io:println(d is int:Unsigned8); // @output true
+    io:println(d is int:Unsigned16); // @output true
+    io:println(d is int:Unsigned32); // @output true
+    io:println(d is byte); // @output true
+
+    any e = table key(x) [{x: 1, y: [10.2, "A"]}];
+    io:println(e is TableType); // @output true
+    io:println(e is table<map<float|string>>); // @output false
+    io:println(e is table<Record> key<int>); // @output true
+    io:println(e is anydata); // @output true
+
+    record {|readonly int x; [float, string] y;|} f = {x: 1, y: [10.2, "A"]};
+    io:println(f is Record); // @output true
+    io:println(f is record {|int x;(float|string)[] y; |}); // @output true
+    io:println(f is record {|int x;(float|string)[]...; |}); // @output true
+    io:println(f is record {int x; [float, string] y;}); // @output true
+    io:println(f is Record2); // @output true
+
+    boolean g = true;
+    io:println(g is true); // @output true
+}
+
+Test-Case: output
+Description: Test subtyping with broad types that have an intersection.
+Labels: any, is-expr, json, map-type, mapping-constructor-expr
+
+function init() {
+    map<any> ma = {a: 1, b: "hello"};
+    io:println(ma is json); // @output false
+    io:println(ma is map<json>); // @output false
+}
+
+Test-Case: output
+Description: Test using type test expression in if else statement.
+Labels: if-else-stmt, is-expr, mapping-constructor-expr, module-type-defn, readonly-type, record-type, union-type
+
+type A record {|
+    string a;
+|};
+
+type B record {|
+    int a;
+|};
+
+type C A|B;
+
+type D readonly & record {|
+    int i;
+|};
+
+type E readonly & record {|
+    string i;
+|};
+
+type F D|E;
+
+function init() {
+    io:println(f1({a: 1})); // @output 2
+    io:println(f2({a: 1})); // @output 2
+    io:println(f3({i: "A"})); // @output 4
+    io:println(f4({i: "A"})); // @output 4
+}
+
+function f1(A|B x) returns int {
+    if x is A {
+        return 1;
+    } else if x is B {
+        return 2;
+    }
+    return 3;
+}
+
+function f2(C x) returns int {
+    if x is A {
+        return 1;
+    } else if x is B {
+        return 2;
+    }
+    return 3;
+}
+
+function f3(F x) returns int {
+    if x is D {
+        return 3;
+    } else if x is E {
+        return 4;
+    }
+}
+
+function f4(D|E x) returns int {
+    if x is D {
+        return 3;
+    } else if x is E {
+        return 4;
+    }
+}
+
+Test-Case: output
+Description: Test using type test expression in query expression.
+Labels: array-type, int, is-expr, list-constructor-expr, logical-expr, multiplicative-expr, nil-literal, optional-type,
+        query-expr
+
+function init() {
+    int?[] arr = [1, (), 2, 3];
+    int[] a = from var i in arr
+        where i is int
+        select i * 100;
+    io:println(a); // @output [100,200,300]
+
+    int[] b = from var i in arr
+        let string? str = ()
+        where i is int && str is string
+        select i * 100;
+    io:println(b); // @output []
+}
+
+Test-Case: output
+Description: Test using type test expression in query action.
+Labels: additive-expr, array-type, check, error-type, int, is-expr, list-constructor-expr, logical-expr,
+        multiplicative-expr, nil-literal, nil-type, optional-type, query-action
+
+function init() returns error? {
+    int?[] arr = [1, (), 2, 3];
+    int sum = 0;
+    _ = check from var i in arr
+        where i is int
+        do {
+            sum = sum + i * 100;
+        };
+    io:println(sum); // @output 600
+
+    sum = 0;
+    _ = check from var i in arr
+        let string? str = ()
+        where i is int && str is ()
+        do {
+            sum = sum + i * 200;
+        };
+    io:println(sum); // @output 1200
+}
+
+Test-Case: output
+Description: Test using type test expression in ternary conditional expression.
+Labels: DecimalNumber, int, is-expr, logical-expr, optional-type, ternary-conditional-expr
+
+function init() {
+    int? a = 10;
+    io:println(a is int ? 1 : 2); // @output 1
+    io:println(a is int && a is 5 ? 1 : 2); // @output 2
+}
+
+Test-Case: output
+Description: Test using type test expression in while.
+Labels: additive-expr, break-stmt, if-else-stmt, int, is-expr, optional-type, relational-expr, while-stmt
+
+function init() {
+    int? a = 10;
+    while a is int {
+        if a > 20 {
+            break;
+        }
+        a = a + 1;
+    }
+    io:println(a); // @output 21
+}
+
+Test-Case: output
+Description: Test using type test expression in logical expression.
+Labels: int, is-expr, logical-expr, optional-type, string
+
+function init() {
+    int? a = 10;
+    string? b = "A";
+    io:println(a is int && b is string); // @output true
+    io:println(a is int || b is string); // @output true
+}
+
+Test-Case: output
+Description: Test using type test expression in return statement.
+Labels: boolean, function-call-expr, int, is-expr, optional-type, return-stmt
+
+function init() {
+    io:println(isInt(12)); // @output true
+}
+
+function isInt(int? a) returns boolean {
+    return a is int;
+}
+
+Test-Case: output
+Description: Test using type test expression in defaultable function parameter.
+Labels: boolean, defaultable-param, function-call-expr, int, is-expr, module-init-var-decl, optional-type
+
+int? a = 10;
+
+function init() {
+    io:println(isInt()); // @output true
+}
+
+function isInt(boolean x = a is int) returns boolean {
+    return x;
+}
+
+Test-Case: output
+Description: Test inferring the type of the result of type test expression with var.
+Labels: DecimalNumber, int, is-expr, var
+
+function init() {
+    var a = 1 is int;
+    boolean b = a;
+    io:println(b); // @output true
+}
+
+Test-Case: output
+Description: Test assigning the result of type test expression to subtypes of boolean.
+Fail-Issue: ballerina-platform/ballerina-lang#34711
+Labels: DecimalNumber, int, is-expr, union-type
+
+type Boolean true|false;
+
+function init() {
+    true|false a = 1 is int;
+    io:println(a); // @output true
+
+    Boolean b = 1 is int;
+    io:println(b); // @output true
+}
+
+Test-Case: output
+Description: Test type test expression at module level.
+Labels: boolean, DecimalNumber, int, is-expr, module-init-var-decl
+
+boolean b = 1 is int;
+
+function init() {
+    io:println(b); // @output true
+}
+
+Test-Case: output
+Description: Test type narrowing with type test expression.
+Labels: int, is-expr, module-type-defn, optional-type, record-type, string, union-type
+
+type A record {|
+    string a;
+|};
+
+type B record {|
+    int a;
+|};
+
+type C A|B;
+
+function init() {
+    int|string a = 10;
+    string value = "";
+    if a is int {
+        value = "int";
+    } else {
+        value = "string";
+    }
+    io:println(value); // @output int
+
+    C? b = {a : 1};
+    if b is A {
+        value = "A";
+    } else if b is B {
+        value = "B";
+    } else if b is () {
+        value = "nil";
+    }
+    io:println(value); // @output B
+
+    if a is string {
+        return;
+    }
+    int c = a;
+    io:println(c); // @output 10
+
+    int|string? d = "ABC";
+    if d is int {
+        return;
+    }
+    if d is () {
+        return;
+    }
+    value = d;
+    io:println(value); // @output ABC
+}
+
+Test-Case: output
+Description: Test assigning the result of type test expression to a subtype of boolean.
+Fail-Issue: ballerina-platform/ballerina-lang#34711
+Labels: DecimalNumber, int, is-expr, module-type-defn, singleton-type, union-type
+
+type Boolean true|false;
+
+function init() {
+    true|false a = 1 is int;
+    io:println(a); // @output true
+
+    Boolean b = 1 is int;
+    io:println(b); // @output true
+}
+
+Test-Case: error
+Description: Test assigning the result of type test expression to an incompatible type.
+Labels: DecimalNumber, int, is-expr
+
+function errorFunction() {
+    int _ = 1 is int; // @error expected 'int', found 'boolean'
+}
+
+Test-Case: error
+Description: Test using a type that will never be matched to the type of the expression in type test expression.
+Labels: boolean, int, is-expr, union-type
+
+function init() {
+    int a = 10;
+    boolean _ = a is string; // @error 'int' will not be matched to 'string'
+
+    10|20 b = 20;
+    boolean _ = b is "A"; // @error '10|20' will not be matched to 'A'
+}
+
+Test-Case: error
+Description: Test using a type that will never be matched to the narrowed type of the expression in type test
+             expression.
+Labels: boolean, if-else-stmt, int, is-expr, optional-type, return-stmt, string, union-type
+
+function init() {
+    int? a = 10;
+    if a is int {
+    } else if a is string { // @error '()' will not be matched to 'string'
+    }
+
+    if a is int {
+        return;
+    }
+    boolean _ = a is string; // @error '()' will not be matched to 'string'
+}
+
+Test-Case: parser-error
+Description: Test using an unknown type as the type descriptor in type test expression.
+Labels: boolean, DecimalNumber, is-expr
+
+function errorFunction() {
+    boolean _ = 1 is expr; // @error unknown type 'expr'
+}
+
+Test-Case: parser-error
+Description: Test using an expression as the type descriptor in type test expression.
+Labels: boolean, DecimalNumber, int, is-expr
+
+function errorFunction() {
+    int a = 10;
+    boolean _ = 10 is a; // @error unknown type 'a'
+}
