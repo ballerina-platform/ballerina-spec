@@ -321,21 +321,15 @@ Test-Case: error
 Description: Test resultant type of the '>>>' expression with 'int' operands.
 Labels: decimal, float, int, shift-expr, unary-minus, var
 
-function errorFunction() {
-    int a = 128;
-    int b = 7;
-    int c = -120;
-    int d = -9223372036854775794;
-
+function errorFunction(int a, int b) {
     var x1 = a >>> b;
     decimal _ = x1; // @error expected 'decimal' but found 'int'
-    var x2 = a >>> d;
+    var x2 = a >>> -100;
     float _ = x2; // @error expected 'float' but found 'int'
-    var x3 = c >>> d;
+    var x3 = b >>> 100;
     decimal _ = x3; // @error expected 'decimal' but found 'int'
-    var x4 = c >>> b;
+    var x4 = 100 >>> b;
     float _ = x4; // @error expected 'float' but found 'int'
-
     var x5 = 511 >>> 8;
     float _ = x5; // @error expected 'float' but found 'int'
     var x6 = -197 >>> -9223372036854775807;
@@ -348,58 +342,32 @@ Description: Test resultant type of the '>>>' expression with 'int' as the LHS o
 Labels: decimal, float, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
         shift-expr, unary-minus, var
 
-function errorFunction() {
-    int a = 128;
-    int:Signed8 b = 7;
-    int:Signed8 c = -120;
-    int:Unsigned8 d = 5;
-    int:Signed16 e = 8;
-    int:Signed16 f = -32750;
-    int:Unsigned16 g = 3;
-    int:Signed32 h = 9;
-    int:Signed32 i = -2147483641;
-    int:Unsigned32 j = 17;
-
+function errorFunction(int a, int:Signed8 a, int:Unsigned8 b, int:Signed16 c, int:Unsigned16 d, int:Signed32 e,
+                         int:Unsigned32 f) {
     var x1 = a >>> b;
     int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'int'
     var x2 = a >>> c;
     float _ = x2; // @error expected 'float' but found 'int'
-
     var x3 = a >>> d;
     int:Unsigned8 _ = x3; // @error expected 'int:Unsigned8' but found 'int'
-
     var x4 = a >>> e;
     int:Signed16 _ = x4; // @error expected 'int:Signed16' but found 'int'
     var x5 = a >>> f;
     decimal _ = x5; // @error expected 'decimal' but found 'int'
-
-    var x6 = a >>> g;
+    var x6 = -100 >>> g;
     int:Unsigned16 _ = x6; // @error expected 'int:Unsigned16' but found 'int'
-
-    var x7 = a >>> h;
+    var x7 = int:MAX_VALUE >>> b;
     int:Signed32 _ = x7; // @error expected 'int:Signed32' but found 'int'
-    var x8 = a >>> i;
-    float _ = x8; // @error expected 'float' but found 'int'
-
-    var x9 = a >>> j;
-    int:Unsigned32 _ = x9; // @error expected 'int:Unsigned32' but found 'int'
-
-    var x10 = 11 >>> b;
-    float _ = x10; // @error expected 'float' but found 'int'
 }
 
 Test-Case: error
 Description: Test resultant type of the '>>>' expression with 'int' as the LHS operand and byte as the RHS operand.
 Labels: decimal, float, byte, int, shift-expr, unary-minus, var
 
-function errorFunction() {
-    int a = 128;
-    int b = -7;
-    byte c = 20;
-
-    var x1 = a >>> c;
+function errorFunction(int a, byte b) {
+    var x1 = a >>> b;
     float _ = x1; // @error expected 'float' but found 'int'
-    var x2 = b >>> c;
+    var x2 = -100 >>> b;
     decimal _ = x2; // @error expected 'decimal' but found 'int'
 }
 
@@ -410,59 +378,26 @@ Labels: DecimalNumber, decimal, float, int, int:MIN_VALUE, shift-expr, type, una
 
 type Ints -1|2|int:MIN_VALUE;
 
-function errorFunction() {
-    int a = 128;
-    Ints b = 2;
-    Ints c = -1;
-    Ints d = int:MIN_VALUE;
-
+function errorFunction(int a, Ints b) {
     var x1 = a >>> b;
     decimal _ = x1; // @error expected 'decimal' but found 'int'
-    var x2 = a >>> c;
+    var x2 = -100 >>> b;
     float _ = x2; // @error expected 'float' but found 'int'
-    var x3 = a >>> d;
+    var x3 = int:MIN_VALUE >>> b;
     float _ = x3; // @error expected 'float' but found 'int'
-}
-
-Test-Case: error
-Description: Test resultant type of the '>>>' expression with 'int' as the LHS operand and user-defined subtype of
-             integer as the RHS operand.
-Fail-Issue: ballerina-platform/ballerina-lang#32995
-Labels: DecimalNumber, decimal, float, int, int:MIN_VALUE, shift-expr, type, unary-minus, var
-
-type Ints -1|int:MIN_VALUE;
-
-function errorFunction() {
-    int a = 128;
-    Ints b = -1;
-
-    var x1 = a >>> b;
-    Ints _ = x1; // @error expected 'float' but found 'int'
 }
 
 Test-Case: error
 Description: Test resultant type of the '>>>' expression with 'int' and optional 'int' as the operands.
 Labels: decimal, float, int, nil-literal, optional-type, shift-expr, unary-minus
 
-function errorFunction() {
-    int a = 128;
-    int? b = 2;
-    int? c = -9223372036854775794;
-    int? d = ();
-
+function errorFunction(int a, int? b) {
     var x1 = a >>> b;
     int _ = x1; // @error expected 'int' but found 'int?'
-    var x2 = a >>> c;
+    var x2 = -100 >>> b;
     decimal _ = x2; // @error expected 'decimal' but found 'int?'
-    var x3 = b >>> c;
+    var x3 = int:MAX_VALUE >>> b;
     float _ = x3; // @error expected 'float' but found 'int?'
-
-    var x4 = a >>> d;
-    float _ = x4; // @error expected 'float' but found 'int?'
-    var x5 = d >>> d;
-    float _ = x5; // @error expected 'float' but found 'int?'
-    var x6 = d >>> b;
-    float _ = x6; // @error expected 'float' but found 'int?'
 }
 
 Test-Case: error
@@ -471,63 +406,20 @@ Description: Test resultant type of the '>>>' expression with 'int' as the LHS o
 Labels: decimal, float, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
         nil-literal, optional-type, shift-expr, unary-minus, var
 
-function errorFunction() {
-    int a = 128;
-    int:Signed8? b = 7;
-    int:Signed8? c = -120;
-    int:Unsigned8? d = 5;
-    int:Signed16? e = 7;
-    int:Signed16? f = -120;
-    int:Unsigned16? g = 5;
-    int:Signed32? h = 7;
-    int:Signed32? i = -120;
-    int:Unsigned32? j = 5;
-    int:Signed8? k = ();
-    int:Unsigned8? l = ();
-    int:Signed16? m = ();
-    int:Unsigned16? n = ();
-    int:Signed32? p = ();
-    int:Unsigned32? q = ();
-
+function errorFunction(int a, int:Signed8? b, int:Unsigned8? c, int:Signed16? d, int:Unsigned16? e, int:Signed32? f,
+                        int:Unsigned32? g) {
     var x1 = a >>> b;
     int _ = x1; // @error expected 'int' but found 'int?'
     var x2 = a >>> c;
     decimal _ = x2; // @error expected 'decimal' but found 'int?'
-
     var x3 = a >>> d;
     float _ = x3; // @error expected 'float' but found 'int?'
-
     var x4 = a >>> e;
     int _ = x4; // @error expected 'int' but found 'int?'
     var x5 = a >>> f;
     int _ = x5; // @error expected 'int' but found 'int?'
-
     var x6 = a >>> g;
     int _ = x6; // @error expected 'int' but found 'int?'
-
-    var x7 = a >>> h;
-    int _ = x7; // @error expected 'int' but found 'int?'
-    var x8 = a >>> i;
-    int _ = x8; // @error expected 'int' but found 'int?'
-
-    var x9 = a >>> j;
-    int _ = x9; // @error expected 'int' but found 'int?'
-
-    var x10 = 11 >>> b;
-    int _ = x10; // @error expected 'int' but found 'int?'
-
-    var x11 = 11 >>> k;
-    int _ = x11; // @error expected 'int' but found 'int?'
-    var x12 = 11 >>> l;
-    int _ = x12; // @error expected 'int' but found 'int?'
-    var x13 = 11 >>> m;
-    int _ = x13; // @error expected 'int' but found 'int?'
-    var x14 = 11 >>> n;
-    int _ = x14; // @error expected 'int' but found 'int?'
-    var x15 = 11 >>> p;
-    float _ = x15; // @error expected 'float' but found 'int?'
-    var x16 = 11 >>> q;
-    decimal _ = x16; // @error expected 'decimal' but found 'int?'
 }
 
 
@@ -905,41 +797,20 @@ Description: Test resultant type of the '>>>' expression with 'int:Signed8' as t
 Labels: decimal, float, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
         shift-expr, unary-minus, var
 
-function errorFunction() {
-    int:Signed8 x = 127;
-    int:Signed8 a = 7;
-    int:Signed8 b = -120;
-    int:Unsigned8 c = 5;
-    int:Signed16 d = 8;
-    int:Signed16 e = -32750;
-    int:Unsigned16 f = 3;
-    int:Signed32 g = 9;
-    int:Signed32 h = -2147483641;
-    int:Unsigned32 i = 17;
-
+function errorFunction(int:Signed8 x, int:Signed8 a, int:Unsigned8 b, int:Signed16 c, int:Unsigned16 d, int:Signed32 e,
+                         int:Unsigned32 f) {
     var x1 = x >>> a;
     int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'int'
     var x2 = x >>> b;
     decimal _ = x2; // @error expected 'decimal' but found 'int'
-
     var x3 = x >>> c;
     int:Unsigned16 _ = x3; // @error expected 'int:Unsigned16' but found 'int'
-
     var x4 = x >>> d;
     int:Signed16 _ = x4; // @error expected 'int:Signed16' but found 'int'
     var x5 = x >>> e;
     float _ = x5; // @error expected 'float' but found 'int'
-
     var x6 = x >>> f;
     int:Unsigned16 _ = x6; // @error expected 'int:Unsigned16' but found 'int'
-
-    var x7 = x >>> g;
-    int:Signed32 _ = x7; // @error expected 'int:Signed32' but found 'int'
-    var x8 = x >>> h;
-    decimal _ = x8; // @error expected 'decimal' but found 'int'
-
-    var x9 = x >>> i;
-    int:Unsigned32 _ = x9; // @error expected 'int:Unsigned32' but found 'int'
 }
 
 Test-Case: error
@@ -947,14 +818,10 @@ Description: Test resultant type of the '>>>' expression with 'int:Signed8' as t
              operand.
 Labels: byte, int:Signed8, shift-expr, unary-minus, var
 
-function errorFunction() {
-    int:Signed8 x = 12;
-    int:Signed8 y = -7;
-    byte a = 20;
-
+function errorFunction(int:Signed8 x, byte a) {
     var x1 = x >>> a;
     int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'int'
-    var x2 = y >>> a;
+    var x2 = x >>> a;
     byte _ = x2; // @error expected 'byte' but found 'int'
 }
 
@@ -965,25 +832,11 @@ Labels: DecimalNumber, float, int:Signed8, shift-expr, type, unary-minus, var
 
 type Ints -1|2|-128;
 
-function errorFunction() {
-    int:Signed8 x = 80;
-    int:Signed8 y = -100;
-    Ints a = 2;
-    Ints b = -1;
-    Ints c = -128;
-
+function errorFunction(int:Signed8 x, Ints a) {
     var x1 = x >>> a;
     int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'int'
-    var x2 = y >>> a;
-    int:Signed8 _ = x2; // @error expected 'int:Signed8' but found 'int'
-    var x3 = x >>> b;
-    Ints _ = x3; // @error expected '-1|2|-128' but found 'int'
-    var x4 = y >>> b;
-    Ints _ = x4; // @error expected '-1|2|-128' but found 'int'
-    var x5 = x >>> c;
-    float _ = x5; // @error expected 'float' but found 'int'
-    var x6 = y >>> c;
-    float _ = x6; // @error expected 'float' but found 'int'
+    var x2 = x >>> a;
+    Ints _ = x2; // @error expected 'Ints' but found 'int'
 }
 
 Test-Case: error
@@ -991,26 +844,11 @@ Description: Test resultant type of the '>>>' expression with 'int:Signed8' as t
              the RHS operand.
 Labels: float, int, int:Signed8, nil-literal, optional-type, shift-expr, unary-minus, var
 
-function errorFunction() {
-    int:Signed8 x = 12;
-    int:Signed8 y = -12;
-    int? a = 2;
-    int? b = -9223372036854775794;
-    int? c = ();
-
+function errorFunction(int:Signed8 x, int? a) {
     var x1 = x >>> a;
     int:Signed8 _ = x1; // @error  expected 'int:Signed8' but found 'int?'
-    var x2 = x >>> b;
+    var x2 = x >>> a;
     int _ = x2; // @error expected 'int' but found 'int?'
-    var x3 = y >>> a;
-    int:Signed8 _ = x3; // @error  expected 'int:Signed8' but found 'int?'
-    var x4 = y >>> b;
-    int _ = x4; // @error expected 'int' but found 'int?'
-
-    var x5 = x >>> c;
-    float _ = x5; // @error expected 'float' but found 'int?'
-    var x6 = y >>> c;
-    float _ = x6; // @error expected 'float' but found 'int?'
 }
 
 Test-Case: error
@@ -1019,60 +857,20 @@ Description: Test resultant type of the '<<' expression with 'int:Signed8' as th
 Labels: decimal, float, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
         shift-expr, unary-minus, var
 
-function errorFunction() {
-    int:Signed8 a = 127;
-    int:Signed8? b = 7;
-    int:Signed8? c = -120;
-    int:Unsigned8? d = 5;
-    int:Signed16? e = 7;
-    int:Signed16? f = -120;
-    int:Unsigned16? g = 5;
-    int:Signed32? h = 7;
-    int:Signed32? i = -120;
-    int:Unsigned32? j = 5;
-    int:Signed8? k = ();
-    int:Unsigned8? l = ();
-    int:Signed16? m = ();
-    int:Unsigned16? n = ();
-    int:Signed32? p = ();
-    int:Unsigned32? q = ();
-
+function errorFunction(int:Signed8 a, int:Signed8? b, int:Unsigned8? c, int:Signed16? d, int:Unsigned16? e, int:Signed32? f,
+                         int:Unsigned32? g) {
     var x1 = a >>> b;
     int:Signed16 _ = x1; // @error expected 'int:Signed16' but found 'int?'
     var x2 = a >>> c;
     float _ = x2; // @error expected 'float' but found 'int?'
-
     var x3 = a >>> d;
     int:Unsigned16 _ = x3; // @error expected 'int:Unsigned16' but found 'int?'
-
     var x4 = a >>> e;
     int:Signed16 _ = x4; // @error expected 'int:Signed16' but found 'int?'
     var x5 = a >>> f;
-    decimal _ = x5; // @error expected 'decimal' but found 'int?'
-
+    decimal _ = x5; // @error expected 'decimal' but found 'int?
     var x6 = a >>> g;
     int:Unsigned16 _ = x6; // @error expected 'int:Unsigned16' but found 'int?'
-
-    var x7 = a >>> h;
-    int:Signed32 _ = x7; // @error expected 'int:Signed32' but found 'int?'
-    var x8 = a >>> i;
-    float _ = x8; // @error expected 'float' but found 'int?'
-
-    var x9 = a >>> j;
-    int:Unsigned32 _ = x9; // @error expected 'int:Unsigned32' but found 'int?'
-
-    var x11 = a >>> k;
-    int:Signed16 _ = x11; // @error expected 'int:Signed16' but found 'int?'
-    var x12 = a >>> l;
-    int:Signed16 _ = x12; // @error expected 'int:Signed16' but found 'int?'
-    var x13 = a >>> m;
-    int:Signed16 _ = x13; // @error expected 'int:Signed16' but found 'int?'
-    var x14 = a >>> n;
-    int:Signed8 _ = x14; // @error expected 'int:Signed8' but found 'int?'
-    var x15 = a >>> p;
-    int:Signed8 _ = x15; // @error expected 'int:Signed8' but found 'int?'
-    var x16 = a >>> q;
-    int:Signed8 _ = x16; // @error expected 'int:Signed8' but found 'int?'
 }
 
 Test-Case: error
@@ -1080,26 +878,11 @@ Description: Test resultant type of the '>>>' expression with 'int:Signed8' as t
              the RHS operand.
 Labels: byte, float, int, int:Signed8, nil-literal, optional-type, shift-expr, unary-minus, var
 
-function errorFunction() {
-    int:Signed8 x = 12;
-    int:Signed8 y = -22;
-    byte? a = 2;
-    byte? b = 255;
-    byte? c = ();
-
+function errorFunction(int:Signed8 x, byte? a) {
     var x1 = x >>> a;
     int:Signed8 _ = x1; // @error  expected 'int:Signed8' but found 'int?'
-    var x2 = x >>> b;
+    var x2 = x >>> a;
     int _ = x2; // @error expected 'int' but found 'int?'
-    var x3 = y >>> a;
-    int:Signed8 _ = x3; // @error  expected 'int:Signed8' but found 'int?'
-    var x4 = y >>> b;
-    int _ = x4; // @error expected 'int' but found 'int?'
-
-    var x5 = x >>> c;
-    float _ = x5; // @error expected 'float' but found 'int?'
-    var x6 = y >>> c;
-    byte _ = x6; // @error expected 'byte' but found 'int?'
 }
 
 Test-Case: output
@@ -1333,14 +1116,10 @@ Description: Test resultant type of the '>>>' expression with 'int:Unsigned8' as
              operand.
 Labels: float, int, int:Unsigned8, shift-expr, unary-minus, var
 
-function errorFunction() {
-    int:Unsigned8 x = 251;
-    int a = 2;
-    int b = -124;
-
+function errorFunction(int:Unsigned8 x, int a) {
     var x1 = x >>> a;
     float _ = x1; // @error expected 'float' but found 'int:Unsigned8'
-    var x2 = x >>> a;
+    var x2 = x >>> 100;
     float _ = x2; // @error expected 'float' but found 'int:Unsigned8'
 }
 
@@ -1393,41 +1172,21 @@ Description: Test resultant type of the '>>>' expression with 'int:Unsigned8' as
 Labels: decimal, float, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
         shift-expr, unary-minus, var
 
-function errorFunction() {
-    int:Unsigned8 x = 255;
-    int:Signed8 a = 1;
-    int:Signed8 b = -124;
-    int:Unsigned8 c = 5;
-    int:Signed16 d = 8;
-    int:Signed16 e = -32765;
-    int:Unsigned16 f = 3;
-    int:Signed32 g = 9;
-    int:Signed32 h = -2147483641;
-    int:Unsigned32 i = 17;
+function errorFunction(int:Unsigned8 x, int:Signed8 a, int:Unsigned8 b, int:Signed16 c, int:Unsigned16 d, int:Signed32 e,
+                         int:Unsigned32 f) {
 
     var x1 = x >>> a;
     int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'int:Unsigned8'
     var x2 = x >>> b;
     decimal _ = x2; // @error expected 'decimal' but found 'int:Unsigned8'
-
     var x3 = x >>> c;
     int:Signed8 _ = x3; // @error expected 'int:Signed8' but found 'int:Unsigned8'
-
     var x4 = x >>> d;
     int:Signed8 _ = x4; // @error expected 'int:Signed8' but found 'int:Unsigned8'
     var x5 = x >>> e;
     float _ = x5; // @error expected 'float' but found 'int:Unsigned8'
-
     var x6 = x >>> f;
     int:Signed8 _ = x6; // @error expected 'int:Signed8' but found 'int:Unsigned8'
-
-    var x7 = x >>> g;
-    int:Signed8 _ = x7; // @error expected 'int:Signed8' but found 'int:Unsigned8'
-    var x8 = x >>> h;
-    decimal _ = x8; // @error expected 'decimal' but found 'int:Unsigned8'
-
-    var x9 = x >>> i;
-    int:Signed8 _ = x9; // @error expected 'int:Signed8' but found 'int:Unsigned8'
 }
 
 Test-Case: output
@@ -1451,10 +1210,7 @@ Description: Test resultant type of the '>>>' expression with 'int:Unsigned8' as
              operand.
 Labels: byte, int:Unsigned8, shift-expr, var
 
-function errorFunction() {
-    int:Unsigned8 x = 254;
-    byte a = 2;
-
+function errorFunction(int:Unsigned8, byte a) {
     var x1 = x >>> a;
     int:Signed8 _ = x1; // @error expected 'int:Unsigned8' but found 'int:Unsigned8'
 }
@@ -1487,18 +1243,11 @@ Labels: DecimalNumber, float, int:Unsigned8, shift-expr, type, unary-minus, var
 
 type Ints -1|2|-128;
 
-function errorFunction() {
-    int:Unsigned8 x = 247;
-    Ints a = 2;
-    Ints b = -1;
-    Ints c = -128;
-
+function errorFunction(int:Unsigned8 x, Ints a) {
     var x1 = x >>> a;
     int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'int:Unsigned8'
-    var x2 = x >>> b;
+    var x2 = x >>> a;
     Ints _ = x2; // @error expected '-1|2|-128' but found 'int:Unsigned8'
-    var x3 = x >>> c;
-    float _ = x3; // @error expected 'float' but found 'int:Unsigned8'
 }
 
 Test-Case: output
@@ -1525,19 +1274,11 @@ Description: Test resultant type of the '>>>' expression with 'int:Unsigned8' as
              the RHS operand.
 Labels: float, int, int:Unsigned8, nil-literal, optional-type, shift-expr, unary-minus, var
 
-function errorFunction() {
-    int:Unsigned8 x = 12;
-    int? a = 2;
-    int? b = -9223372036854775794;
-    int? c = ();
-
+function errorFunction(int:Unsigned8 x, int? a) {
     var x1 = x >>> a;
     int:Unsigned8 _ = x1; // @error  expected 'int:Unsigned8' but found 'int:Unsigned8?'
-    var x2 = x >>> b;
+    var x2 = x >>> a;
     int _ = x2; // @error expected 'int' but found 'int:Unsigned8?'
-
-    var x3 = x >>> c;
-    float _ = x3; // @error expected 'float' but found 'int:Unsigned8?'
 }
 
 Test-Case: output
@@ -1608,60 +1349,20 @@ Description: Test resultant type of the '>>>' expression with 'int:Unsigned8' as
 Labels: decimal, float, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned16,
         optional-type, shift-expr, unary-minus, var
 
-function errorFunction() {
-    int:Unsigned8 a = 127;
-    int:Signed8? b = 7;
-    int:Signed8? c = -120;
-    int:Unsigned8? d = 5;
-    int:Signed16? e = 7;
-    int:Signed16? f = -120;
-    int:Unsigned16? g = 5;
-    int:Signed32? h = 7;
-    int:Signed32? i = -120;
-    int:Unsigned32? j = 5;
-    int:Signed8? k = ();
-    int:Unsigned8? l = ();
-    int:Signed16? m = ();
-    int:Unsigned16? n = ();
-    int:Signed32? p = ();
-    int:Unsigned32? q = ();
-
+function errorFunction(int:Unsigned8 a, int:Signed8? b, int:Unsigned8? c, int:Signed16? d, int:Unsigned16? e, int:Signed32? f,
+                         int:Unsigned32? g) {
     var x1 = a >>> b;
     int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'int:Unsigned8?'
     var x2 = a >>> c;
     float _ = x2; // @error expected 'float' but found 'int:Unsigned8?'
-
     var x3 = a >>> d;
     int:Unsigned8 _ = x3; // @error expected 'int:Unsigned8' but found 'int:Unsigned8?'
-
     var x4 = a >>> e;
     int:Signed16 _ = x4; // @error expected 'int:Signed16' but found 'int:Unsigned8?'
     var x5 = a >>> f;
     decimal _ = x5; // @error expected 'decimal' but found 'int:Unsigned8?'
-
     var x6 = a >>> g;
     int:Unsigned16 _ = x6; // @error expected 'int:Unsigned16' but found 'int:Unsigned8?'
-
-    var x7 = a >>> h;
-    int:Signed32 _ = x7; // @error expected 'int:Signed32' but found 'int:Unsigned8?'
-    var x8 = a >>> i;
-    float _ = x8; // @error expected 'float' but found 'int:Unsigned8?'
-
-    var x9 = a >>> j;
-    int:Unsigned32 _ = x9; // @error expected 'int:Unsigned32' but found 'int:Unsigned8?'
-
-    var x11 = a >>> k;
-    int:Unsigned16 _ = x11; // @error expected 'int:Unsigned16' but found 'int:Unsigned8?'
-    var x12 = a >>> l;
-    int:Signed16 _ = x12; // @error expected 'int:Signed16' but found 'int:Unsigned8?'
-    var x13 = a >>> m;
-    int:Signed16 _ = x13; // @error expected 'int:Signed16' but found 'int:Unsigned8?'
-    var x14 = a >>> n;
-    int:Signed16 _ = x14; // @error expected 'int:Signed16' but found 'int:Unsigned8?'
-    var x15 = a >>> p;
-    int:Signed16 _ = x15; // @error expected 'int:Signed16' but found 'int:Unsigned8?'
-    var x16 = a >>> q;
-    int:Signed16 _ = x16; // @error expected 'int:Signed16' but found 'int:Unsigned8?'
 }
 
 Test-Case: output
@@ -1689,19 +1390,11 @@ Description: Test resultant type of the '>>>' expression with 'int:Unsigned8' as
              the RHS operand.
 Labels: byte, float, int, int:Unsigned8, nil-literal, optional-type, shift-expr,var
 
-function errorFunction() {
-    int:Unsigned8 x = 12;
-    byte? a = 2;
-    byte? b = 255;
-    byte? c = ();
-
+function errorFunction(int:Unsigned8 x, byte? a) {
     var x1 = x >>> a;
     int:Unsigned8 _ = x1; // @error  expected 'int:Unsigned8' but found 'int:Unsigned8?'
-    var x2 = x >>> b;
+    var x2 = x >>> a;
     int _ = x2; // @error expected 'int' but found 'int:Unsigned8?'
-
-    var x3 = x >>> c;
-    float _ = x3; // @error expected 'float' but found 'int:Unsigned8?'
 }
 
 Test-Case: output
@@ -2056,19 +1749,14 @@ Description: Test resultant type of the '>>>' expression with 'int:Signed16' as 
              operand.
 Labels: decimal, float, int, int:Signed16, shift-expr, unary-minus, var
 
-function errorFunction() {
-    int:Signed16 x = 32757;
-    int:Signed16 y = -32764;
-    int a = 7;
-    int b = -12;
-
+function errorFunction(int:Signed16 x, int a) {
     var x1 = x >>> a;
     int:Signed16 _ = x1; // @error expected 'int:Signed16' but found 'int'
-    var x2 = x >>> b;
+    var x2 = x >>> int:MAX_VALUE;
     float _ = x2; // @error expected 'float' but found 'int'
-    var x3 = y >>> a;
+    var x3 = y >>> -123;
     decimal _ = x3; // @error expected 'decimal' but found 'int'
-    var x4 = y >>> b;
+    var x4 = y >>> 0;
     float _ = x4; // @error expected 'float' but found 'int'
 }
 
@@ -2078,41 +1766,20 @@ Description: Test resultant type of the '>>>' expression with 'int:Signed16' as 
 Labels: decimal, float, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
         shift-expr, unary-minus, var
 
-function errorFunction() {
-    int:Signed16 x = 32760;
-    int:Signed8 a = 7;
-    int:Signed8 b = -32;
-    int:Unsigned8 c = 5;
-    int:Signed16 d = 8;
-    int:Signed16 e = -32750;
-    int:Unsigned16 f = 3;
-    int:Signed32 g = 9;
-    int:Signed32 h = -2147483641;
-    int:Unsigned32 i = 17;
-
+function errorFunction(int:Signed16 x, int:Signed8 a, int:Unsigned8 b, int:Signed16 c, int:Unsigned16 d, int:Signed32 e,
+                         int:Unsigned32 f) {
     var x1 = x >>> a;
     int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'int'
     var x2 = x >>> b;
     decimal _ = x2; // @error expected 'decimal' but found 'int'
-
     var x3 = x >>> c;
     int:Unsigned16 _ = x3; // @error expected 'int:Unsigned16' but found 'int'
-
     var x4 = x >>> d;
     int:Signed16 _ = x4; // @error expected 'int:Signed16' but found 'int'
     var x5 = x >>> e;
     float _ = x5; // @error expected 'float' but found 'int'
-
     var x6 = x >>> f;
     int:Unsigned16 _ = x6; // @error expected 'int:Unsigned16' but found 'int'
-
-    var x7 = x >>> g;
-    int:Signed32 _ = x7; // @error expected 'int:Signed32' but found 'int'
-    var x8 = x >>> h;
-    decimal _ = x8; // @error expected 'decimal' but found 'int'
-
-    var x9 = x >>> i;
-    int:Unsigned32 _ = x9; // @error expected 'int:Unsigned32' but found 'int'
 }
 
 Test-Case: error
@@ -2120,14 +1787,10 @@ Description: Test resultant type of the '>>>' expression with 'int:Signed16' as 
              operand.
 Labels: byte, int:Signed16, shift-expr, unary-minus, var
 
-function errorFunction() {
-    int:Signed16 x = 12;
-    int:Signed16 y = -7;
-    byte a = 20;
-
+function errorFunction(int:Signed16 x, byte a) {
     var x1 = x >>> a;
     int:Signed16 _ = x1; // @error expected 'int:Signed16' but found 'int'
-    var x2 = y >>> a;
+    var x2 = x >>> a;
     byte _ = x2; // @error expected 'byte' but found 'int'
 }
 
@@ -2138,25 +1801,11 @@ Labels: DecimalNumber, float, int:Signed8, int:Signed16, shift-expr, type, unary
 
 type Ints -1|2|-128;
 
-function errorFunction() {
-    int:Signed16 x = 80;
-    int:Signed16 y = -100;
-    Ints a = 2;
-    Ints b = -1;
-    Ints c = -128;
-
+function errorFunction(int:Signed16 x, Ints a) {
     var x1 = x >>> a;
     int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'int'
-    var x2 = y >>> a;
-    int:Signed16 _ = x2; // @error expected 'int:Signed16' but found 'int'
-    var x3 = x >>> b;
-    Ints _ = x3; // @error expected '-1|2|-128' but found 'int'
-    var x4 = y >>> b;
-    Ints _ = x4; // @error expected '-1|2|-128' but found 'int'
-    var x5 = x >>> c;
-    float _ = x5; // @error expected 'float' but found 'int'
-    var x6 = y >>> c;
-    float _ = x6; // @error expected 'float' but found 'int'
+    var x2 = x >>> a;
+    Ints _ = x2; // @error expected '-1|2|-128' but found 'int'
 }
 
 Test-Case: error
@@ -2164,26 +1813,11 @@ Description: Test resultant type of the '>>>' expression with 'int:Signed16' as 
              the RHS operand.
 Labels: float, int, int:Signed8, int:Signed16, nil-literal, optional-type, shift-expr, unary-minus, var
 
-function errorFunction() {
-    int:Signed16 x = 12;
-    int:Signed16 y = -12;
-    int? a = 2;
-    int? b = -9223372036854775794;
-    int? c = ();
-
+function errorFunction(int:Signed16 x, int? a) {
     var x1 = x >>> a;
     int:Signed8 _ = x1; // @error  expected 'int:Signed8' but found 'int?'
-    var x2 = x >>> b;
+    var x2 = x >>> a;
     int _ = x2; // @error expected 'int' but found 'int?'
-    var x3 = y >>> a;
-    int:Signed16 _ = x3; // @error  expected 'int:Signed16' but found 'int?'
-    var x4 = y >>> b;
-    int _ = x4; // @error expected 'int' but found 'int?'
-
-    var x5 = x >>> c;
-    float _ = x5; // @error expected 'float' but found 'int?'
-    var x6 = y >>> c;
-    float _ = x6; // @error expected 'float' but found 'int?'
 }
 
 Test-Case: error
@@ -2192,60 +1826,20 @@ Description: Test resultant type of the '<<' expression with 'int:Signed16' as t
 Labels: decimal, float, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
         shift-expr, unary-minus, var
 
-function errorFunction() {
-    int:Signed16 a = 32763;
-    int:Signed8? b = 7;
-    int:Signed8? c = -121;
-    int:Unsigned8? d = 5;
-    int:Signed16? e = 7;
-    int:Signed16? f = -120;
-    int:Unsigned16? g = 5;
-    int:Signed32? h = 7;
-    int:Signed32? i = -120;
-    int:Unsigned32? j = 5;
-    int:Signed8? k = ();
-    int:Unsigned8? l = ();
-    int:Signed16? m = ();
-    int:Unsigned16? n = ();
-    int:Signed32? p = ();
-    int:Unsigned32? q = ();
-
+function errorFunction(int:Signed16 a, int:Signed8? b, int:Unsigned8? c, int:Signed16? d, int:Unsigned16? e, int:Signed32? f,
+                         int:Unsigned32? g) {
     var x1 = a >>> b;
     int:Signed16 _ = x1; // @error expected 'int:Signed16' but found 'int?'
     var x2 = a >>> c;
     float _ = x2; // @error expected 'float' but found 'int?'
-
     var x3 = a >>> d;
     int:Unsigned16 _ = x3; // @error expected 'int:Unsigned16' but found 'int?'
-
     var x4 = a >>> e;
     int:Signed16 _ = x4; // @error expected 'int:Signed16' but found 'int?'
     var x5 = a >>> f;
     decimal _ = x5; // @error expected 'decimal' but found 'int?'
-
     var x6 = a >>> g;
     int:Unsigned16 _ = x6; // @error expected 'int:Unsigned16' but found 'int?'
-
-    var x7 = a >>> h;
-    int:Signed32 _ = x7; // @error expected 'int:Signed32' but found 'int?'
-    var x8 = a >>> i;
-    float _ = x8; // @error expected 'float' but found 'int?'
-
-    var x9 = a >>> j;
-    int:Unsigned32 _ = x9; // @error expected 'int:Unsigned32' but found 'int?'
-
-    var x11 = a >>> k;
-    int:Signed16 _ = x11; // @error expected 'int:Signed16' but found 'int?'
-    var x12 = a >>> l;
-    int:Signed16 _ = x12; // @error expected 'int:Signed16' but found 'int?'
-    var x13 = a >>> m;
-    int:Signed16 _ = x13; // @error expected 'int:Signed16' but found 'int?'
-    var x14 = a >>> n;
-    int:Signed8 _ = x14; // @error expected 'int:Signed8' but found 'int?'
-    var x15 = a >>> p;
-    int:Signed8 _ = x15; // @error expected 'int:Signed8' but found 'int?'
-    var x16 = a >>> q;
-    int:Signed8 _ = x16; // @error expected 'int:Signed8' but found 'int?'
 }
 
 Test-Case: error
@@ -2253,26 +1847,11 @@ Description: Test resultant type of the '>>>' expression with 'int:Signed16' as 
              the RHS operand.
 Labels: byte, float, int, int:Signed16, nil-literal, optional-type, shift-expr, unary-minus, var
 
-function errorFunction() {
-    int:Signed16 x = 12;
-    int:Signed16 y = -22;
-    byte? a = 2;
-    byte? b = 255;
-    byte? c = ();
-
+function errorFunction(int:Signed16 x, byte? a) {
     var x1 = x >>> a;
     int:Signed16 _ = x1; // @error  expected 'int:Signed16' but found 'int?'
-    var x2 = x >>> b;
+    var x2 = x >>> a;
     int _ = x2; // @error expected 'int' but found 'int?'
-    var x3 = y >>> a;
-    int:Signed16 _ = x3; // @error  expected 'int:Signed16' but found 'int?'
-    var x4 = y >>> b;
-    int _ = x4; // @error expected 'int' but found 'int?'
-
-    var x5 = x >>> c;
-    float _ = x5; // @error expected 'float' but found 'int?'
-    var x6 = y >>> c;
-    byte _ = x6; // @error expected 'byte' but found 'int?'
 }
 
 Test-Case: output
@@ -2506,14 +2085,10 @@ Description: Test resultant type of the '>>>' expression with 'int:Unsigned16' a
              operand.
 Labels: decimal, float, int:Unsigned16, int, shift-expr, unary-minus, var
 
-function errorFunction() {
-    int:Unsigned16 x = 65534;
-    int a = 2;
-    int b = -124;
-
+function errorFunction(int:Unsigned16 x, int a) {
     var x1 = x >>> a;
     decimal _ = x1; // @error expected 'decimal' but found 'int:Unsigned16'
-    var x2 = x >>> a;
+    var x2 = x >>> -123;
     float _ = x2; // @error expected 'float' but found 'int:Unsigned16'
 }
 
@@ -2566,41 +2141,20 @@ Description: Test resultant type of the '>>>' expression with 'int:Unsigned16' a
 Labels: decimal, float, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
         shift-expr, unary-minus, var
 
-function errorFunction() {
-    int:Unsigned16 x = 65535;
-    int:Signed8 a = 1;
-    int:Signed8 b = -124;
-    int:Unsigned8 c = 5;
-    int:Signed16 d = 8;
-    int:Signed16 e = -32765;
-    int:Unsigned16 f = 3;
-    int:Signed32 g = 9;
-    int:Signed32 h = -2147483641;
-    int:Unsigned32 i = 17;
-
+function errorFunction(int:Unsigned16 x, int:Signed8 a, int:Unsigned8 b, int:Signed16 c, int:Unsigned16 d, int:Signed32 e,
+                         int:Unsigned32 f) {
     var x1 = x >>> a;
     int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'int:Unsigned16'
     var x2 = x >>> b;
     decimal _ = x2; // @error expected 'decimal' but found 'int:Unsigned16'
-
     var x3 = x >>> c;
     int:Signed8 _ = x3; // @error expected 'int:Signed8' but found 'int:Unsigned16'
-
     var x4 = x >>> d;
     int:Signed16 _ = x4; // @error expected 'int:Signed16' but found 'int:Unsigned16'
     var x5 = x >>> e;
     float _ = x5; // @error expected 'float' but found 'int:Unsigned16'
-
     var x6 = x >>> f;
     int:Signed16 _ = x6; // @error expected 'int:Signed16' but found 'int:Unsigned16'
-
-    var x7 = x >>> g;
-    int:Signed8 _ = x7; // @error expected 'int:Signed8' but found 'int:Unsigned16'
-    var x8 = x >>> h;
-    decimal _ = x8; // @error expected 'decimal' but found 'int:Unsigned16'
-
-    var x9 = x >>> i;
-    int:Signed16 _ = x9; // @error expected 'int:Signed16' but found 'int:Unsigned16'
 }
 
 Test-Case: output
@@ -2622,10 +2176,7 @@ Description: Test resultant type of the '>>>' expression with 'int:Unsigned16' a
              operand.
 Labels: byte, int:Signed8, int:Unsigned16, shift-expr, var
 
-function errorFunction() {
-    int:Unsigned16 x = 65531;
-    byte a = 2;
-
+function errorFunction(int:Unsigned16 x, byte a) {
     var x1 = x >>> a;
     int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'int:Unsigned16'
 }
@@ -2658,18 +2209,11 @@ Labels: DecimalNumber, float, int:Unsigned16, shift-expr, type, unary-minus, var
 
 type Ints -1|2|-128;
 
-function errorFunction() {
-    int:Unsigned16 x = 65532;
-    Ints a = 2;
-    Ints b = -1;
-    Ints c = -128;
-
+function errorFunction(int:Unsigned16 x, Ints a) {
     var x1 = x >>> a;
     int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'int:Unsigned16'
-    var x2 = x >>> b;
+    var x2 = x >>> a;
     Ints _ = x2; // @error expected '-1|2|-128' but found 'int:Unsigned16'
-    var x3 = x >>> c;
-    float _ = x3; // @error expected 'float' but found 'int:Unsigned16'
 }
 
 Test-Case: output
@@ -2696,19 +2240,11 @@ Description: Test resultant type of the '>>>' expression with 'int:Unsigned16' a
              the RHS operand.
 Labels: float, int, int:Unsigned8, int:Unsigned16, nil-literal, optional-type, shift-expr, unary-minus, var
 
-function errorFunction() {
-    int:Unsigned16 x = 12;
-    int? a = 2;
-    int? b = -9223372036854775794;
-    int? c = ();
-
+function errorFunction(int:Unsigned16 x, int? a) {
     var x1 = x >>> a;
     int:Unsigned8 _ = x1; // @error  expected 'int:Unsigned8' but found 'int:Unsigned16?'
-    var x2 = x >>> b;
+    var x2 = x >>> a;
     int _ = x2; // @error expected 'int' but found 'int:Unsigned16?'
-
-    var x3 = x >>> c;
-    float _ = x3; // @error expected 'float' but found 'int:Unsigned16?'
 }
 
 Test-Case: output
@@ -2779,60 +2315,20 @@ Description: Test resultant type of the '>>>' expression with 'int:Unsigned16' a
 Labels: decimal, float, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
         optional-type, shift-expr, unary-minus, var
 
-function errorFunction() {
-    int:Unsigned16 a = 127;
-    int:Signed8? b = 7;
-    int:Signed8? c = -120;
-    int:Unsigned8? d = 5;
-    int:Signed16? e = 7;
-    int:Signed16? f = -120;
-    int:Unsigned16? g = 5;
-    int:Signed32? h = 7;
-    int:Signed32? i = -120;
-    int:Unsigned32? j = 5;
-    int:Signed8? k = ();
-    int:Unsigned8? l = ();
-    int:Signed16? m = ();
-    int:Unsigned16? n = ();
-    int:Signed32? p = ();
-    int:Unsigned32? q = ();
-
+function errorFunction(int:Unsigned16 a, int:Signed8? b, int:Unsigned8? c, int:Signed16? d, int:Unsigned16? e, int:Signed32? f,
+                         int:Unsigned32? g) {
     var x1 = a >>> b;
     int:Unsigned8 _ = x1; // @error expected 'int:Unsigned8' but found 'int:Unsigned16?'
     var x2 = a >>> c;
     float _ = x2; // @error expected 'float' but found 'int:Unsigned16?'
-
     var x3 = a >>> d;
     int:Unsigned8 _ = x3; // @error expected 'int:Unsigned8' but found 'int:Unsigned16?'
-
     var x4 = a >>> e;
     int:Signed16 _ = x4; // @error expected 'int:Signed16' but found 'int:Unsigned16?'
     var x5 = a >>> f;
     decimal _ = x5; // @error expected 'decimal' but found 'int:Unsigned16?'
-
     var x6 = a >>> g;
     int:Unsigned16 _ = x6; // @error expected 'int:Unsigned16' but found 'int:Unsigned16?'
-
-    var x7 = a >>> h;
-    int:Signed32 _ = x7; // @error expected 'int:Signed32' but found 'int:Unsigned16?'
-    var x8 = a >>> i;
-    float _ = x8; // @error expected 'float' but found 'int:Unsigned16?'
-
-    var x9 = a >>> j;
-    int:Unsigned32 _ = x9; // @error expected 'int:Unsigned32' but found 'int:Unsigned16?'
-
-    var x11 = a >>> k;
-    int:Unsigned16 _ = x11; // @error expected 'int:Unsigned16' but found 'int:Unsigned16?'
-    var x12 = a >>> l;
-    int:Signed16 _ = x12; // @error expected 'int:Signed16' but found 'int:Unsigned16?'
-    var x13 = a >>> m;
-    int:Signed16 _ = x13; // @error expected 'int:Signed16' but found 'int:Unsigned16?'
-    var x14 = a >>> n;
-    int:Signed16 _ = x14; // @error expected 'int:Signed16' but found 'int:Unsigned16?'
-    var x15 = a >>> p;
-    int:Signed16 _ = x15; // @error expected 'int:Signed16' but found 'int:Unsigned16?'
-    var x16 = a >>> q;
-    int:Signed16 _ = x16; // @error expected 'int:Signed16' but found 'int:Unsigned16?'
 }
 
 Test-Case: output
@@ -2860,19 +2356,11 @@ Description: Test resultant type of the '>>>' expression with 'int:Unsigned16' a
              the RHS operand.
 Labels: byte, float, int, int:Unsigned16, nil-literal, optional-type, shift-expr, var
 
-function errorFunction() {
-    int:Unsigned16 x = 12;
-    byte? a = 2;
-    byte? b = 234;
-    byte? c = ();
-
+function errorFunction(int:Unsigned16 x, byte? a) {
     var x1 = x >>> a;
     int:Unsigned8 _ = x1; // @error  expected 'int:Unsigned8' but found 'int:Unsigned16?'
-    var x2 = x >>> b;
+    var x2 = x >>> a;
     int _ = x2; // @error expected 'int' but found 'int:Unsigned16?'
-
-    var x3 = x >>> c;
-    float _ = x3; // @error expected 'float' but found 'int:Unsigned16?'
 }
 
 Test-Case: output
@@ -3227,19 +2715,14 @@ Description: Test resultant type of the '>>>' expression with 'int:Signed32' as 
              operand.
 Labels: decimal, float, int, int:Signed32, shift-expr, unary-minus, var
 
-function errorFunction() {
-    int:Signed32 x = 32757;
-    int:Signed32 y = -2147483644;
-    int a = 7;
-    int b = -12;
-
+function errorFunction(int:Signed32 x, int a) {
     var x1 = x >>> a;
     int:Signed32 _ = x1; // @error expected 'int:Signed32' but found 'int'
-    var x2 = x >>> b;
+    var x2 = x >>> int:MIN_VALUE;
     float _ = x2; // @error expected 'float' but found 'int'
-    var x3 = y >>> a;
+    var x3 = y >>> 123;
     decimal _ = x3; // @error expected 'decimal' but found 'int'
-    var x4 = y >>> b;
+    var x4 = y >>> 0;
     float _ = x4; // @error expected 'float' but found 'int'
 }
 
@@ -3249,41 +2732,20 @@ Description: Test resultant type of the '>>>' expression with 'int:Signed32' as 
 Labels: decimal, float, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
         shift-expr, unary-minus, var
 
-function errorFunction() {
-    int:Signed32 x = 2147483642;
-    int:Signed8 a = 7;
-    int:Signed8 b = -32;
-    int:Unsigned8 c = 5;
-    int:Signed16 d = 8;
-    int:Signed16 e = -32750;
-    int:Unsigned16 f = 3;
-    int:Signed32 g = 9;
-    int:Signed32 h = -2147483641;
-    int:Unsigned32 i = 17;
-
+function errorFunction(int:Signed32 x, int:Signed8 a, int:Unsigned8 b, int:Signed16 c, int:Unsigned16 d, int:Signed32 e,
+                         int:Unsigned32 f) {
     var x1 = x >>> a;
     int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'int'
     var x2 = x >>> b;
     decimal _ = x2; // @error expected 'decimal' but found 'int'
-
     var x3 = x >>> c;
     int:Unsigned16 _ = x3; // @error expected 'int:Unsigned16' but found 'int'
-
     var x4 = x >>> d;
     int:Signed32 _ = x4; // @error expected 'int:Signed32' but found 'int'
     var x5 = x >>> e;
     float _ = x5; // @error expected 'float' but found 'int'
-
     var x6 = x >>> f;
     int:Unsigned16 _ = x6; // @error expected 'int:Unsigned16' but found 'int'
-
-    var x7 = x >>> g;
-    int:Signed32 _ = x7; // @error expected 'int:Signed32' but found 'int'
-    var x8 = x >>> h;
-    decimal _ = x8; // @error expected 'decimal' but found 'int'
-
-    var x9 = x >>> i;
-    int:Unsigned32 _ = x9; // @error expected 'int:Unsigned32' but found 'int'
 }
 
 Test-Case: error
@@ -3291,14 +2753,10 @@ Description: Test resultant type of the '>>>' expression with 'int:Signed32' as 
              operand.
 Labels: byte, int:Signed32, shift-expr, unary-minus, var
 
-function errorFunction() {
-    int:Signed32 x = 12;
-    int:Signed32 y = -7;
-    byte a = 20;
-
+function errorFunction(int:Signed32 x, byte a) {
     var x1 = x >>> a;
     int:Signed32 _ = x1; // @error expected 'int:Signed32' but found 'int'
-    var x2 = y >>> a;
+    var x2 = x >>> a;
     byte _ = x2; // @error expected 'byte' but found 'int'
 }
 
@@ -3309,25 +2767,11 @@ Labels: DecimalNumber, float, int:Signed8, int:Signed32, shift-expr, type, unary
 
 type Ints -1|2|-128;
 
-function errorFunction() {
-    int:Signed32 x = 80;
-    int:Signed32 y = -100;
-    Ints a = 2;
-    Ints b = -1;
-    Ints c = -128;
-
+function errorFunction(int:Signed32, Ints a) {
     var x1 = x >>> a;
     int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'int'
-    var x2 = y >>> a;
-    int:Signed32 _ = x2; // @error expected 'int:Signed32' but found 'int'
-    var x3 = x >>> b;
-    Ints _ = x3; // @error expected '-1|2|-128' but found 'int'
-    var x4 = y >>> b;
-    Ints _ = x4; // @error expected '-1|2|-128' but found 'int'
-    var x5 = x >>> c;
-    float _ = x5; // @error expected 'float' but found 'int'
-    var x6 = y >>> c;
-    float _ = x6; // @error expected 'float' but found 'int'
+    var x2 = x >>> b;
+    Ints _ = x2; // @error expected '-1|2|-128' but found 'int'
 }
 
 Test-Case: error
@@ -3335,26 +2779,11 @@ Description: Test resultant type of the '>>>' expression with 'int:Signed32' as 
              the RHS operand.
 Labels: float, int, int:Signed8, int:Signed32, nil-literal, optional-type, shift-expr, unary-minus, var
 
-function errorFunction() {
-    int:Signed32 x = 12;
-    int:Signed32 y = -12;
-    int? a = 2;
-    int? b = -9223372036854775794;
-    int? c = ();
-
+function errorFunction(int:Signed32 x, int? a) {
     var x1 = x >>> a;
     int:Signed8 _ = x1; // @error  expected 'int:Signed8' but found 'int?'
-    var x2 = x >>> b;
+    var x2 = x >>> a;
     int _ = x2; // @error expected 'int' but found 'int?'
-    var x3 = y >>> a;
-    int:Signed32 _ = x3; // @error  expected 'int:Signed32' but found 'int?'
-    var x4 = y >>> b;
-    int _ = x4; // @error expected 'int' but found 'int?'
-
-    var x5 = x >>> c;
-    float _ = x5; // @error expected 'float' but found 'int?'
-    var x6 = y >>> c;
-    float _ = x6; // @error expected 'float' but found 'int?'
 }
 
 Test-Case: error
@@ -3363,60 +2792,20 @@ Description: Test resultant type of the '<<' expression with 'int:Signed32' as t
 Labels: decimal, float, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
         shift-expr, unary-minus, var
 
-function errorFunction() {
-    int:Signed32 a = 2147483644;
-    int:Signed8? b = 7;
-    int:Signed8? c = -127;
-    int:Unsigned8? d = 5;
-    int:Signed16? e = 7;
-    int:Signed16? f = -120;
-    int:Unsigned16? g = 5;
-    int:Signed32? h = 7;
-    int:Signed32? i = -120;
-    int:Unsigned32? j = 5;
-    int:Signed8? k = ();
-    int:Unsigned8? l = ();
-    int:Signed16? m = ();
-    int:Unsigned16? n = ();
-    int:Signed32? p = ();
-    int:Unsigned32? q = ();
-
+function errorFunction(int:Signed32 a, int:Signed8? b, int:Unsigned8? c, int:Signed16? d, int:Unsigned16? e, int:Signed32? f,
+                         int:Unsigned32? g) {
     var x1 = a >>> b;
     int:Signed32 _ = x1; // @error expected 'int:Signed32' but found 'int?'
     var x2 = a >>> c;
     float _ = x2; // @error expected 'float' but found 'int?'
-
     var x3 = a >>> d;
     int:Unsigned16 _ = x3; // @error expected 'int:Unsigned16' but found 'int?'
-
     var x4 = a >>> e;
     int:Signed32 _ = x4; // @error expected 'int:Signed32' but found 'int?'
     var x5 = a >>> f;
     decimal _ = x5; // @error expected 'decimal' but found 'int?'
-
     var x6 = a >>> g;
     int:Unsigned16 _ = x6; // @error expected 'int:Unsigned16' but found 'int?'
-
-    var x7 = a >>> h;
-    int:Signed32 _ = x7; // @error expected 'int:Signed32' but found 'int?'
-    var x8 = a >>> i;
-    float _ = x8; // @error expected 'float' but found 'int?'
-
-    var x9 = a >>> j;
-    int:Unsigned32 _ = x9; // @error expected 'int:Unsigned32' but found 'int?'
-
-    var x11 = a >>> k;
-    int:Signed32 _ = x11; // @error expected 'int:Signed32' but found 'int?'
-    var x12 = a >>> l;
-    int:Signed32 _ = x12; // @error expected 'int:Signed32' but found 'int?'
-    var x13 = a >>> m;
-    int:Signed32 _ = x13; // @error expected 'int:Signed32' but found 'int?'
-    var x14 = a >>> n;
-    int:Signed8 _ = x14; // @error expected 'int:Signed8' but found 'int?'
-    var x15 = a >>> p;
-    int:Signed8 _ = x15; // @error expected 'int:Signed8' but found 'int?'
-    var x16 = a >>> q;
-    int:Signed8 _ = x16; // @error expected 'int:Signed8' but found 'int?'
 }
 
 Test-Case: error
@@ -3424,26 +2813,11 @@ Description: Test resultant type of the '>>>' expression with 'int:Signed32' as 
              the RHS operand.
 Labels: byte, float, int, int:Signed32, nil-literal, optional-type, shift-expr, unary-minus, var
 
-function errorFunction() {
-    int:Signed32 x = 12;
-    int:Signed32 y = -22;
-    byte? a = 2;
-    byte? b = 255;
-    byte? c = ();
-
+function errorFunction(int:Signed32 x, byte? a) {
     var x1 = x >>> a;
     int:Signed32 _ = x1; // @error  expected 'int:Signed32' but found 'int?'
-    var x2 = x >>> b;
+    var x2 = x >>> a;
     int _ = x2; // @error expected 'int' but found 'int?'
-    var x3 = y >>> a;
-    int:Signed32 _ = x3; // @error  expected 'int:Signed32' but found 'int?'
-    var x4 = y >>> b;
-    int _ = x4; // @error expected 'int' but found 'int?'
-
-    var x5 = x >>> c;
-    float _ = x5; // @error expected 'float' but found 'int?'
-    var x6 = y >>> c;
-    byte _ = x6; // @error expected 'byte' but found 'int?'
 }
 
 Test-Case: output
@@ -3677,14 +3051,10 @@ Description: Test resultant type of the '>>>' expression with 'int:Unsigned32' a
              operand.
 Labels: decimal, float, int:Unsigned32, int, shift-expr, unary-minus, var
 
-function errorFunction() {
-    int:Unsigned32 x = 4294967287;
-    int a = 2;
-    int b = -124;
-
+function errorFunction(int:Unsigned32 x, int a) {
     var x1 = x >>> a;
     decimal _ = x1; // @error expected 'decimal' but found 'int:Unsigned32'
-    var x2 = x >>> a;
+    var x2 = x >>> 123;
     float _ = x2; // @error expected 'float' but found 'int:Unsigned32'
 }
 
@@ -3737,41 +3107,20 @@ Description: Test resultant type of the '>>>' expression with 'int:Unsigned32' a
 Labels: decimal, float, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
         shift-expr, unary-minus, var
 
-function errorFunction() {
-    int:Unsigned32 x = 4294967285;
-    int:Signed8 a = 1;
-    int:Signed8 b = -124;
-    int:Unsigned8 c = 5;
-    int:Signed16 d = 8;
-    int:Signed16 e = -32765;
-    int:Unsigned16 f = 3;
-    int:Signed32 g = 9;
-    int:Signed32 h = -2147483641;
-    int:Unsigned32 i = 17;
-
+function errorFunction(int:Unsigned32 x, int:Signed8 a, int:Unsigned8 b, int:Signed16 c, int:Unsigned16 d, int:Signed32 e,
+                         int:Unsigned32 f) {
     var x1 = x >>> a;
     int:Signed16 _ = x1; // @error expected 'int:Signed16' but found 'int:Unsigned32'
     var x2 = x >>> b;
     decimal _ = x2; // @error expected 'decimal' but found 'int:Unsigned32'
-
     var x3 = x >>> c;
     int:Signed8 _ = x3; // @error expected 'int:Signed8' but found 'int:Unsigned32'
-
     var x4 = x >>> d;
     int:Signed16 _ = x4; // @error expected 'int:Signed16' but found 'int:Unsigned32'
     var x5 = x >>> e;
     float _ = x5; // @error expected 'float' but found 'int:Unsigned32'
-
     var x6 = x >>> f;
     int:Signed16 _ = x6; // @error expected 'int:Signed16' but found 'int:Unsigned32'
-
-    var x7 = x >>> g;
-    int:Signed32 _ = x7; // @error expected 'int:Signed32' but found 'int:Unsigned32'
-    var x8 = x >>> h;
-    decimal _ = x8; // @error expected 'decimal' but found 'int:Unsigned32'
-
-    var x9 = x >>> i;
-    int:Signed32 _ = x9; // @error expected 'int:Signed32' but found 'int:Unsigned32'
 }
 
 Test-Case: output
@@ -3793,10 +3142,7 @@ Description: Test resultant type of the '>>>' expression with 'int:Unsigned32' a
              operand.
 Labels: byte, int:Signed8, int:Unsigned32, shift-expr, var
 
-function errorFunction() {
-    int:Unsigned32 x = 4294967294;
-    byte a = 2;
-
+function errorFunction(int:Unsigned32 x, byte a) {
     var x1 = x >>> a;
     int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'int:Unsigned32'
 }
@@ -3829,18 +3175,11 @@ Labels: DecimalNumber, float, int:Unsigned32, shift-expr, type, unary-minus, var
 
 type Ints -1|2|-128;
 
-function errorFunction() {
-    int:Unsigned32 x = 4294967294;
-    Ints a = 2;
-    Ints b = -1;
-    Ints c = -128;
-
+function errorFunction(int:Unsigned32 x, Ints a) {
     var x1 = x >>> a;
     int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'int:Unsigned32'
-    var x2 = x >>> b;
+    var x2 = x >>> a;
     Ints _ = x2; // @error expected '-1|2|-128' but found 'int:Unsigned32'
-    var x3 = x >>> c;
-    float _ = x3; // @error expected 'float' but found 'int:Unsigned32'
 }
 
 Test-Case: output
@@ -3867,19 +3206,11 @@ Description: Test resultant type of the '>>>' expression with 'int:Unsigned32' a
              the RHS operand.
 Labels: float, int, int:Unsigned8, int:Unsigned32, nil-literal, optional-type, shift-expr, unary-minus, var
 
-function errorFunction() {
-    int:Unsigned32 x = 12;
-    int? a = 2;
-    int? b = -9223372036854775794;
-    int? c = ();
-
+function errorFunction(int:Unsigned32 x, int? a) {
     var x1 = x >>> a;
     int:Unsigned8 _ = x1; // @error  expected 'int:Unsigned8' but found 'int:Unsigned32?'
-    var x2 = x >>> b;
+    var x2 = x >>> a;
     int _ = x2; // @error expected 'int' but found 'int:Unsigned32?'
-
-    var x3 = x >>> c;
-    float _ = x3; // @error expected 'float' but found 'int:Unsigned32?'
 }
 
 Test-Case: output
@@ -3950,60 +3281,20 @@ Description: Test resultant type of the '>>>' expression with 'int:Unsigned32' a
 Labels: decimal, float, int, int:Signed8, int:Signed16, int:Unsigned32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
         optional-type, shift-expr, unary-minus, var
 
-function errorFunction() {
-    int:Unsigned32 a = 127;
-    int:Signed8? b = 7;
-    int:Signed8? c = -120;
-    int:Unsigned8? d = 5;
-    int:Signed16? e = 7;
-    int:Signed16? f = -120;
-    int:Unsigned16? g = 5;
-    int:Signed32? h = 7;
-    int:Signed32? i = -120;
-    int:Unsigned32? j = 5;
-    int:Signed8? k = ();
-    int:Unsigned8? l = ();
-    int:Signed16? m = ();
-    int:Unsigned16? n = ();
-    int:Signed32? p = ();
-    int:Unsigned32? q = ();
-
+function errorFunction(int:Unsigned32 a, int:Signed8? b, int:Unsigned8? c, int:Signed16? d, int:Unsigned16? e, int:Signed32? f,
+                         int:Unsigned32? g) {
     var x1 = a >>> b;
     int:Unsigned8 _ = x1; // @error expected 'int:Unsigned8' but found 'int:Unsigned32?'
     var x2 = a >>> c;
     float _ = x2; // @error expected 'float' but found 'int:Unsigned32?'
-
     var x3 = a >>> d;
     int:Unsigned8 _ = x3; // @error expected 'int:Unsigned8' but found 'int:Unsigned32?'
-
     var x4 = a >>> e;
     int:Signed16 _ = x4; // @error expected 'int:Signed16' but found 'int:Unsigned32?'
     var x5 = a >>> f;
     decimal _ = x5; // @error expected 'decimal' but found 'int:Unsigned32?'
-
     var x6 = a >>> g;
     int:Unsigned16 _ = x6; // @error expected 'int:Unsigned16' but found 'int:Unsigned32?'
-
-    var x7 = a >>> h;
-    int:Signed32 _ = x7; // @error expected 'int:Signed32' but found 'int:Unsigned32?'
-    var x8 = a >>> i;
-    float _ = x8; // @error expected 'float' but found 'int:Unsigned32?'
-
-    var x9 = a >>> j;
-    int:Unsigned32 _ = x9; // @error expected 'int:Unsigned32' but found 'int:Unsigned32?'
-
-    var x11 = a >>> k;
-    int:Unsigned16 _ = x11; // @error expected 'int:Unsigned16' but found 'int:Unsigned32?'
-    var x12 = a >>> l;
-    int:Signed16 _ = x12; // @error expected 'int:Signed16' but found 'int:Unsigned32?'
-    var x13 = a >>> m;
-    int:Signed16 _ = x13; // @error expected 'int:Signed16' but found 'int:Unsigned32?'
-    var x14 = a >>> n;
-    int:Signed16 _ = x14; // @error expected 'int:Signed16' but found 'int:Unsigned32?'
-    var x15 = a >>> p;
-    int:Signed16 _ = x15; // @error expected 'int:Signed16' but found 'int:Unsigned32?'
-    var x16 = a >>> q;
-    int:Signed16 _ = x16; // @error expected 'int:Signed16' but found 'int:Unsigned32?'
 }
 
 Test-Case: output
@@ -4031,19 +3322,11 @@ Description: Test resultant type of the '>>>' expression with 'int:Unsigned32' a
              the RHS operand.
 Labels: byte, float, int, int:Unsigned32, nil-literal, optional-type, shift-expr, var
 
-function errorFunction() {
-    int:Unsigned32 x = 12;
-    byte? a = 2;
-    byte? b = 167;
-    byte? c = ();
-
+function errorFunction(int:Unsigned32 x, byte? a) {
     var x1 = x >>> a;
     int:Unsigned8 _ = x1; // @error  expected 'int:Unsigned8' but found 'int:Unsigned32?'
-    var x2 = x >>> b;
+    var x2 = x >>> a;
     int _ = x2; // @error expected 'int' but found 'int:Unsigned32?'
-
-    var x3 = x >>> c;
-    float _ = x3; // @error expected 'float' but found 'int:Unsigned32?'
 }
 
 Test-Case: output
@@ -4277,14 +3560,10 @@ Description: Test resultant type of the '>>>' expression with 'byte' as the LHS 
              operand.
 Labels: byte, float, int, shift-expr, unary-minus, var
 
-function errorFunction() {
-    byte x = 251;
-    int a = 2;
-    int b = -124;
-
+function errorFunction(byte x, int a) {
     var x1 = x >>> a;
     float _ = x1; // @error expected 'float' but found 'byte'
-    var x2 = x >>> a;
+    var x2 = x >>> 1;
     float _ = x2; // @error expected 'float' but found 'byte'
 }
 
@@ -4337,41 +3616,20 @@ Description: Test resultant type of the '>>>' expression with 'byte' as the LHS 
 Labels: byte, decimal, float, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
         shift-expr, unary-minus, var
 
-function errorFunction() {
-    byte x = 255;
-    int:Signed8 a = 1;
-    int:Signed8 b = -124;
-    int:Unsigned8 c = 5;
-    int:Signed16 d = 8;
-    int:Signed16 e = -32765;
-    int:Unsigned16 f = 3;
-    int:Signed32 g = 9;
-    int:Signed32 h = -2147483641;
-    int:Unsigned32 i = 17;
-
+function errorFunction(byte x, int:Signed8 a, int:Unsigned8 b, int:Signed16 c, int:Unsigned16 d, int:Signed32 e,
+                         int:Unsigned32 f) {
     var x1 = x >>> a;
     int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'byte'
     var x2 = x >>> b;
     decimal _ = x2; // @error expected 'decimal' but found 'byte'
-
     var x3 = x >>> c;
     int:Signed8 _ = x3; // @error expected 'int:Signed8' but found 'byte'
-
     var x4 = x >>> d;
     int:Signed8 _ = x4; // @error expected 'int:Signed8' but found 'byte'
     var x5 = x >>> e;
     float _ = x5; // @error expected 'float' but found 'byte'
-
     var x6 = x >>> f;
     int:Signed8 _ = x6; // @error expected 'int:Signed8' but found 'byte'
-
-    var x7 = x >>> g;
-    int:Signed8 _ = x7; // @error expected 'int:Signed8' but found 'byte'
-    var x8 = x >>> h;
-    decimal _ = x8; // @error expected 'decimal' but found 'byte'
-
-    var x9 = x >>> i;
-    int:Signed8 _ = x9; // @error expected 'int:Signed8' but found 'byte'
 }
 
 Test-Case: error
@@ -4379,10 +3637,7 @@ Description: Test resultant type of the '>>>' expression with 'byte' as the LHS 
              operand.
 Labels: byte, shift-expr, var
 
-function errorFunction() {
-    byte x = 254;
-    byte a = 2;
-
+function errorFunction(byte x, byte a) {
     var x1 = x >>> a;
     int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'byte'
 }
@@ -4415,18 +3670,11 @@ Labels: byte, DecimalNumber, float, shift-expr, type, unary-minus, var
 
 type Ints -1|2|-128;
 
-function errorFunction() {
-    byte x = 247;
-    Ints a = 2;
-    Ints b = -1;
-    Ints c = -128;
-
+function errorFunction(byte x, Ints a) {
     var x1 = x >>> a;
     int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'byte'
-    var x2 = x >>> b;
+    var x2 = x >>> a;
     Ints _ = x2; // @error expected '-1|2|-128' but found 'byte'
-    var x3 = x >>> c;
-    float _ = x3; // @error expected 'float' but found 'byte'
 }
 
 Test-Case: output
@@ -4434,38 +3682,11 @@ Description: Test resultant type of the '>>>' expression with 'byte' as the LHS 
              the RHS operand.
 Labels: byte, int, nil-literal, optional-type, shift-expr, unary-minus, value:toBalString()
 
-function init() {
-    byte x = 246;
-    int? a = 2;
-    int? b = -9223372036854775806;
-    int? c = ();
-
+function init(byte x, int? a ) {
     byte? x1 = x >>> a;
     io:println(x1); // @output 61
-    byte? x2 = x >>> b;
+    byte? x2 = x >>> a;
     io:println(x2); // @output 61
-    byte? x3 = x >>> c;
-    io:println(x3.toBalString()); // @output ()
-}
-
-Test-Case: error
-Description: Test resultant type of the '>>>' expression with 'byte' as the LHS operand and optional 'int' as
-             the RHS operand.
-Labels: byte, float, int, nil-literal, optional-type, shift-expr, unary-minus, var
-
-function errorFunction() {
-    byte x = 12;
-    int? a = 2;
-    int? b = -9223372036854775794;
-    int? c = ();
-
-    var x1 = x >>> a;
-    byte _ = x1; // @error  expected 'byte' but found 'byte?'
-    var x2 = x >>> b;
-    int _ = x2; // @error expected 'int' but found 'byte?'
-
-    var x3 = x >>> c;
-    float _ = x3; // @error expected 'float' but found 'byte?'
 }
 
 Test-Case: output
@@ -4536,60 +3757,20 @@ Description: Test resultant type of the '>>>' expression with 'byte' as the LHS 
 Labels: byte, decimal, float, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned16,
         optional-type, shift-expr, unary-minus, var
 
-function errorFunction() {
-    byte a = 127;
-    int:Signed8? b = 7;
-    int:Signed8? c = -120;
-    int:Unsigned8? d = 5;
-    int:Signed16? e = 7;
-    int:Signed16? f = -120;
-    int:Unsigned16? g = 5;
-    int:Signed32? h = 7;
-    int:Signed32? i = -120;
-    int:Unsigned32? j = 5;
-    int:Signed8? k = ();
-    int:Unsigned8? l = ();
-    int:Signed16? m = ();
-    int:Unsigned16? n = ();
-    int:Signed32? p = ();
-    int:Unsigned32? q = ();
-
+function errorFunction(byte a, int:Signed8? b, int:Unsigned8? c, int:Signed16? d, int:Unsigned16? e, int:Signed32? f,
+                         int:Unsigned32? g) {
     var x1 = a >>> b;
     int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'byte?'
     var x2 = a >>> c;
     float _ = x2; // @error expected 'float' but found 'byte?'
-
     var x3 = a >>> d;
     byte _ = x3; // @error expected 'byte' but found 'byte?'
-
     var x4 = a >>> e;
     int:Signed16 _ = x4; // @error expected 'int:Signed16' but found 'byte?'
     var x5 = a >>> f;
     decimal _ = x5; // @error expected 'decimal' but found 'byte?'
-
     var x6 = a >>> g;
     int:Unsigned16 _ = x6; // @error expected 'int:Unsigned16' but found 'byte?'
-
-    var x7 = a >>> h;
-    int:Signed32 _ = x7; // @error expected 'int:Signed32' but found 'byte?'
-    var x8 = a >>> i;
-    float _ = x8; // @error expected 'float' but found 'byte?'
-
-    var x9 = a >>> j;
-    int:Unsigned32 _ = x9; // @error expected 'int:Unsigned32' but found 'byte?'
-
-    var x11 = a >>> k;
-    int:Unsigned16 _ = x11; // @error expected 'int:Unsigned16' but found 'byte?'
-    var x12 = a >>> l;
-    int:Signed16 _ = x12; // @error expected 'int:Signed16' but found 'byte?'
-    var x13 = a >>> m;
-    int:Signed16 _ = x13; // @error expected 'int:Signed16' but found 'byte?'
-    var x14 = a >>> n;
-    int:Signed16 _ = x14; // @error expected 'int:Signed16' but found 'byte?'
-    var x15 = a >>> p;
-    int:Signed16 _ = x15; // @error expected 'int:Signed16' but found 'byte?'
-    var x16 = a >>> q;
-    int:Signed16 _ = x16; // @error expected 'int:Signed16' but found 'byte?'
 }
 
 Test-Case: output
@@ -4617,19 +3798,11 @@ Description: Test resultant type of the '>>>' expression with 'byte' as the LHS 
              the RHS operand.
 Labels: byte, float, int, byte, nil-literal, optional-type, shift-expr, var
 
-function errorFunction() {
-    byte x = 12;
-    byte? a = 2;
-    byte? b = 255;
-    byte? c = ();
-
+function errorFunction(byte x, byte? a) {
     var x1 = x >>> a;
     byte _ = x1; // @error  expected 'byte' but found 'byte?'
-    var x2 = x >>> b;
+    var x2 = x >>> a;
     int _ = x2; // @error expected 'int' but found 'byte?'
-
-    var x3 = x >>> c;
-    float _ = x3; // @error expected 'float' but found 'byte?'
 }
 
 Test-Case: output
@@ -5000,20 +4173,11 @@ Labels: DecimalNumbers, decimal, float, int, int:Signed16, shift-expr, type, una
 
 type Ints 12|-32762;
 
-function errorFunction() {
-    Ints x = 12;
-    Ints y = -32762;
-    int a = 7;
-    int b = -12;
-
+function errorFunction(Ints x, int a) {
     var x1 = x >>> a;
     int:Signed16 _ = x1; // @error 'int:Signed16' but found 'int'
-    var x2 = x >>> b;
+    var x2 = x >>> a;
     float _ = x2; // @error expected 'float' but found 'int'
-    var x3 = y >>> a;
-    decimal _ = x3; // @error expected 'decimal' but found 'int'
-    var x4 = y >>> b;
-    float _ = x4; // @error expected 'float' but found 'int'
 }
 
 Test-Case: error
@@ -5024,41 +4188,20 @@ Labels: DecimalNumbers, decimal, float, int, int:Signed8, int:Signed16, int:Sign
 
 type Ints int;
 
-function errorFunction() {
-    Ints x = 32765;
-    int:Signed8 a = 7;
-    int:Signed8 b = -126;
-    int:Unsigned8 c = 5;
-    int:Signed16 d = 8;
-    int:Signed16 e = -32750;
-    int:Unsigned16 f = 3;
-    int:Signed32 g = 9;
-    int:Signed32 h = -2147483641;
-    int:Unsigned32 i = 17;
-
+function errorFunction(Ints x, int:Signed8 a, int:Unsigned8 b, int:Signed16 c, int:Unsigned16 d, int:Signed32 e,
+                         int:Unsigned32 f) {
     var x1 = x >>> a;
     int:Signed16 _ = x1; // @error expected 'int:Signed16' but found 'int'
     var x2 = x >>> b;
     decimal _ = x2; // @error expected 'decimal' but found 'int'
-
     var x3 = x >>> c;
     int:Unsigned16 _ = x3; // @error expected 'int:Unsigned16' but found 'int'
-
     var x4 = x >>> d;
     int:Signed16 _ = x4; // @error expected 'int:Signed16' but found 'int'
     var x5 = x >>> e;
     float _ = x5; // @error expected 'float' but found 'int'
-
     var x6 = x >>> f;
     int:Unsigned16 _ = x6; // @error expected 'int:Unsigned16' but found 'int'
-
-    var x7 = x >>> g;
-    int:Signed32 _ = x7; // @error expected 'int:Signed32' but found 'int'
-    var x8 = x >>> h;
-    decimal _ = x8; // @error expected 'decimal' but found 'int'
-
-    var x9 = x >>> i;
-    int:Unsigned32 _ = x9; // @error expected 'int:Unsigned32' but found 'int'
 }
 
 Test-Case: error
@@ -5068,15 +4211,9 @@ Labels: byte, DecimalNumbers, int, int:Signed16, shift-expr, type, unary-minus, 
 
 type Ints int;
 
-function errorFunction() {
-    Ints x = 12;
-    Ints y = -7;
-    byte a = 20;
-
+function errorFunction(Ints x, byte a) {
     var x1 = x >>> a;
     int:Signed16 _ = x1; // @error expected 'int:Signed16' but found 'int'
-    var x2 = y >>> a;
-    byte _ = x2; // @error expected 'byte' but found 'int'
 }
 
 Test-Case: error
@@ -5087,25 +4224,10 @@ Labels: DecimalNumbers, float, int, int:Signed16, shift-expr, type, unary-minus,
 type Ints1 int;
 type Ints2 -1|2|-128;
 
-function errorFunction() {
-    Ints1 x = 80;
-    Ints1 y = -100;
-    Ints2 a = 2;
-    Ints2 b = -1;
-    Ints2 c = -128;
-
+function errorFunction(Ints1 x, Ints2 a) {
     var x1 = x >>> a;
     int:Signed16 _ = x1; // @error expected 'int:Signed16' but found 'int'
-    var x2 = y >>> a;
-    int:Signed16 _ = x2; // @error expected 'int:Signed16' but found 'int'
-    var x3 = x >>> b;
-    Ints2 _ = x3; // @error expected '-1|2|-128' but found 'int'
-    var x4 = y >>> b;
-    Ints2 _ = x4; // @error expected '-1|2|-128' but found 'int'
-    var x5 = x >>> c;
-    float _ = x5; // @error expected 'float' but found 'int'
-    var x6 = y >>> c;
-    float _ = x6; // @error expected 'float' but found 'int'
+    var x2 = x >>> a;
 }
 
 Test-Case: error
@@ -5115,26 +4237,11 @@ Labels: DecimalNumbers, float, int, int:Signed16, nil-literal, optional-type, sh
 
 type Ints 12|-12;
 
-function errorFunction() {
-    Ints x = 12;
-    Ints y = -12;
-    int? a = 2;
-    int? b = -9223372036854775794;
-    int? c = ();
-
+function errorFunction(Ints x, int? a) {
     var x1 = x >>> a;
     int:Signed16 _ = x1; // @error  expected 'int:Signed16' but found 'int?'
-    var x2 = x >>> b;
+    var x2 = x >>> a;
     int _ = x2; // @error expected 'int' but found 'int?'
-    var x3 = y >>> a;
-    int:Signed16 _ = x3; // @error  expected 'int:Signed16' but found 'int?'
-    var x4 = y >>> b;
-    int _ = x4; // @error expected 'int' but found 'int?'
-
-    var x5 = x >>> c;
-    float _ = x5; // @error expected 'float' but found 'int?'
-    var x6 = y >>> c;
-    float _ = x6; // @error expected 'float' but found 'int?'
 }
 
 Test-Case: error
@@ -5145,60 +4252,20 @@ Labels: DecimalNumbers, decimal, float, int, int:Signed8, int:Signed16, int:Sign
 
 type Ints int;
 
-function errorFunction() {
-    Ints a = 32767;
-    int:Signed8? b = 7;
-    int:Signed8? c = -32;
-    int:Unsigned8? d = 5;
-    int:Signed16? e = 7;
-    int:Signed16? f = -120;
-    int:Unsigned16? g = 5;
-    int:Signed32? h = 7;
-    int:Signed32? i = -120;
-    int:Unsigned32? j = 5;
-    int:Signed8? k = ();
-    int:Unsigned8? l = ();
-    int:Signed16? m = ();
-    int:Unsigned16? n = ();
-    int:Signed32? p = ();
-    int:Unsigned32? q = ();
-
+function errorFunction(Ints a, int:Signed8? b, int:Unsigned8? c, int:Signed16? d, int:Unsigned16? e, int:Signed32? f,
+                         int:Unsigned32? g) {
     var x1 = a >>> b;
     int:Signed16 _ = x1; // @error expected 'int:Signed16' but found 'int?'
     var x2 = a >>> c;
     float _ = x2; // @error expected 'float' but found 'int?'
-
     var x3 = a >>> d;
     int:Unsigned16 _ = x3; // @error expected 'int:Unsigned16' but found 'int?'
-
     var x4 = a >>> e;
     int:Signed16 _ = x4; // @error expected 'int:Signed16' but found 'int?'
     var x5 = a >>> f;
     decimal _ = x5; // @error expected 'decimal' but found 'int?'
-
     var x6 = a >>> g;
     int:Unsigned16 _ = x6; // @error expected 'int:Unsigned16' but found 'int?'
-
-    var x7 = a >>> h;
-    int:Signed32 _ = x7; // @error expected 'int:Signed32' but found 'int?'
-    var x8 = a >>> i;
-    float _ = x8; // @error expected 'float' but found 'int?'
-
-    var x9 = a >>> j;
-    int:Unsigned32 _ = x9; // @error expected 'int:Unsigned32' but found 'int?'
-
-    var x11 = a >>> k;
-    int:Signed16 _ = x11; // @error expected 'int:Signed16' but found 'int?'
-    var x12 = a >>> l;
-    int:Signed16 _ = x12; // @error expected 'int:Signed16' but found 'int?'
-    var x13 = a >>> m;
-    int:Signed16 _ = x13; // @error expected 'int:Signed16' but found 'int?'
-    var x14 = a >>> n;
-    int:Signed8 _ = x14; // @error expected 'int:Signed8' but found 'int?'
-    var x15 = a >>> p;
-    int:Signed8 _ = x15; // @error expected 'int:Signed8' but found 'int?'
-    var x16 = a >>> q;
-    int:Signed8 _ = x16; // @error expected 'int:Signed8' but found 'int?'
 }
 
 Test-Case: error
@@ -5208,26 +4275,10 @@ Labels: byte, DecimalNumbers, float, int, int:Signed16, nil-literal, optional-ty
 
 type Ints 12|-22;
 
-function errorFunction() {
-    Ints x = 12;
-    Ints y = -22;
-    byte? a = 2;
-    byte? b = 255;
-    byte? c = ();
-
+function errorFunction(Ints x, byte? a) {
     var x1 = x >>> a;
     int:Signed16 _ = x1; // @error  expected 'int:Signed16' but found 'int?'
-    var x2 = x >>> b;
-    int _ = x2; // @error expected 'int' but found 'int?'
-    var x3 = y >>> a;
-    int:Signed16 _ = x3; // @error  expected 'int:Signed16' but found 'int?'
-    var x4 = y >>> b;
-    int _ = x4; // @error expected 'int' but found 'int?'
-
-    var x5 = x >>> c;
-    float _ = x5; // @error expected 'float' but found 'int?'
-    var x6 = y >>> c;
-    float _ = x6; // @error expected 'float' but found 'int?'
+    var x2 = x >>> a;
 }
 
 Test-Case: output
