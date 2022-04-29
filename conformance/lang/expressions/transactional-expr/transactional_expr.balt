@@ -1,0 +1,630 @@
+Test-Case: output
+Description: Test whether the transactional expression is being evaluated in transaction mode with transaction
+             statement.
+Labels: check, commit-action, error, optional-type, transaction-stmt, transactional-expr
+
+function init() returns error? {
+    io:println(transactional); // @output false
+    transaction {
+        io:println(transactional); // @output true
+        check commit;
+        io:println(transactional); // @output false
+    }
+    io:println(transactional); // @output false
+}
+
+Test-Case: output
+Description: Test whether the transactional expression is being evaluated in transaction mode with transactional
+             function.
+Labels: check, commit-action, error, function-call-expr, optional-type, transaction-stmt, transactional-expr,
+        transactional-function
+
+function init() returns error? {
+    transaction {
+        f1(); // @output true
+        io:println(transactional); // @output true
+        check commit;
+        io:println(transactional); // @output false
+    }
+}
+
+transactional function f1() {
+    io:println(transactional);
+}
+
+Test-Case: output
+Description: Test whether the transactional expression is being evaluated in transaction mode with transactional
+             function.
+Labels: check, commit-action, error, function-call-expr, optional-type, transaction-stmt, transactional-expr,
+        transactional-function
+
+function init() returns error? {
+    transactional function () trxFunc = function() {
+        io:println(transactional);
+    };
+
+    transaction {
+        trxFunc(); // @output true
+        io:println(transactional); // @output true
+        check commit;
+        io:println(transactional); // @output false
+    }
+}
+
+Test-Case: output
+Description: Test whether the transactional expression is being evaluated in transaction mode with commit handler.
+Labels: check, commit-action, error, explicit-anonymous-function-expr, isolated-function, optional-type,
+        transaction-stmt, transaction:Info, transaction:onCommit, transactional-expr, var
+
+function init() returns error? {
+    var onCommitFunc = isolated function(transaction:Info? info) {
+        io:println(transactional);
+    };
+
+    transaction {
+        transaction:onCommit(onCommitFunc);
+        io:println(transactional); // @output true
+        check commit; // @output true
+        io:println(transactional); // @output false
+    }
+}
+
+Test-Case: output
+Description: Test whether the transactional expression is being evaluated in transaction mode with rollback handler.
+Labels: check, commit-action, error, explicit-anonymous-function-expr, if-else-stmt, int, is-expr, isolated-function,
+        optional-type, rollback-stmt, transaction-stmt, transaction:Info, transaction:onRollback, transactional-expr,
+        var
+
+function init() returns error? {
+    var onRollbackFunc = isolated function(transaction:Info? info, error? cause, boolean willTry) {
+        io:println(transactional);
+    };
+
+    transaction {
+        int? a = 10;
+
+        if a is int {
+            io:println(transactional); // @output true
+            transaction:onRollback(onRollbackFunc);
+            io:println(transactional); // @output true
+            rollback; // @output true
+            io:println(transactional); // @output false
+        } else {
+            check commit;
+        }
+
+        io:println(transactional); // @output false
+    }
+}
+
+Test-Case: output
+Description: Test whether the transactional expression is being evaluated in transaction mode with transactional worker.
+Labels: check, commit-action, error, int, optional-type, transaction-stmt, transactional-expr, transactional-worker
+
+function init() returns error? {
+    transaction {
+        f1();
+        check commit;
+        io:println(transactional); // @output false
+    }
+}
+
+transactional function f1() {
+    transactional worker A {
+        io:println(transactional); // @output true
+    }
+}
+
+Test-Case: output
+Description: Test whether the transactional expression is being evaluated in transaction mode with transactional
+             method of a class.
+Labels: check, commit-action, error, explicit-new-expr, int, method-call-expr, module-class-defn, optional-type,
+        transaction-stmt, transactional-expr
+
+class Class {
+    transactional function f1() {
+        io:println(transactional); // @output true
+    }
+}
+
+function init() returns error? {
+    Class c = new;
+    transaction {
+        c.f1(); // @output true
+        check commit;
+        io:println(transactional); // @output false
+    }
+}
+
+Test-Case: output
+Description: Test whether the transactional expression is being evaluated in transaction mode with transactional method
+             of a client object.
+Labels: check, commit-action, error, int, method-call-expr, module-type-defn, object-constructor-expr, object-type,
+        optional-type, transaction-stmt, transactional-expr
+
+type ClientObj client object {
+    transactional function f1();
+    transactional remote function f2();
+};
+
+function init() returns error? {
+    ClientObj c = client object {
+        transactional function f1() {
+            io:println(transactional);
+        }
+        transactional remote function f2() {
+            io:println(transactional);
+        }
+    };
+
+    transaction {
+        c.f1(); // @output true
+        io:println(transactional); // @output true
+        c->f2(); // @output true
+        check commit;
+        io:println(transactional); // @output false
+    }
+}
+
+Test-Case: output
+Description: Test whether the transactional expression is being evaluated in transaction mode with transactional method
+             of a service object.
+Labels: check, commit-action, error, int, method-call-expr, module-type-defn, object-constructor-expr, object-type,
+        optional-type, transaction-stmt, transactional-expr
+
+type ServiceObj service object {
+    transactional function f1();
+};
+
+function init() returns error? {
+    ServiceObj c = service object {
+        transactional function f1() {
+            io:println(transactional);
+        }
+    };
+
+    io:println(transactional); // @output false
+    transaction {
+        c.f1(); // @output true
+        io:println(transactional);
+        check commit;
+        io:println(transactional); // @output false
+    }
+}
+
+Test-Case: output
+Description: Test whether the transactional expression is being evaluated in transaction mode with retry transaction
+             statement.
+Labels: check, commit-action, error, error:Retriable, int, optional-type, retry-transaction-stmt, transactional-expr
+
+function init() returns error? {
+    int a = 10;
+
+    retry(3) transaction {
+        if transactional && a < 25 {
+            a += 5;
+            check trxErrorInRetry();
+        }
+
+        check commit;
+
+        if !transactional {
+            a += 20;
+        }
+    }
+
+    if !transactional {
+        a += 30;
+    }
+
+    io:println(a); // @output 75
+}
+
+function trxErrorInRetry() returns error {
+    return error error:Retriable("TransactionError");
+}
+
+Test-Case: output
+Description: Test whether the transactional expression is being evaluated in transaction mode with non-transactional
+             function.
+Fail-Issue: ballerina-platform/ballerina-lang#33087
+Labels: function-call-expr, transactional-expr
+
+function init() {
+    someFunc(); // @output false
+}
+
+function someFunc() {
+    io:println(transactional);
+}
+
+Test-Case: output
+Description: Test transactional expression in nested transactions.
+Labels: boolean, commit-action, transaction-stmt, transactional-expr
+
+function init() returns error? {
+    transaction {
+        io:println(transactional); // @output true
+        check commit;
+        io:println(transactional); // @output false
+        transaction {
+            io:println(transactional); // @output true
+            check commit;
+            io:println(transactional); // @output false
+        }
+    }
+
+    transaction {
+        transaction {
+            io:println(transactional); // @output true
+            check commit;
+            io:println(transactional); // @output false
+        }
+        io:println(transactional); // @output true
+        check commit;
+        io:println(transactional); // @output false
+    }
+}
+
+Test-Case: output
+Description: Test transactional expression as expression in if statement.
+Labels: check, commit-action, compound-assignment-stmt, error, if-else-stmt, int, optional-type, transaction-stmt,
+        transactional-expr
+
+function init() returns error? {
+    int a = 10;
+
+    transaction {
+        a += f1();
+        if transactional {
+            a += 10;
+        }
+        check commit;
+        if transactional {
+            a += 20;
+        }
+    }
+
+    if transactional {
+        a += 30;
+    }
+
+    io:println(a); // @output 60
+}
+
+transactional function f1() returns int {
+    if transactional {
+        return 40;
+    }
+    return -10;
+}
+
+Test-Case: output
+Description: Test transactional expression as expression in if statement.
+Labels: check, commit-action, compound-assignment-stmt, error, if-else-stmt, int, optional-type, rollback-stmt,
+        transaction-stmt, transactional-expr
+
+function init() returns error? {
+    int a = 10;
+
+    transaction {
+        if transactional {
+            a += 5;
+            rollback;
+            if transactional {
+                a += 6;
+            }
+        } else {
+            check commit;
+        }
+
+        if transactional {
+            a += 20;
+        }
+    }
+
+    if transactional {
+        a += 30;
+    }
+
+    io:println(a); // @output 15
+}
+
+Test-Case: output
+Description: Test transactional expression as expression in if statement.
+Labels: additive-expr, check, commit-action, error, function-call-expr, if-else-stmt, int, is-expr, logical-expr,
+        optional-type, rollback-stmt, transaction-stmt, transactional-expr, unary-not
+
+function init() returns error? {
+    int? a = 10;
+    transaction {
+        if a is () || transactional {
+            a = a + 20;
+            rollback;
+            if a is int && !transactional {
+                a = a + 30;
+            }
+        } else {
+            check commit;
+        }
+    }
+
+    if !transactional {
+        a = a + 40;
+    }
+
+    io:println(a); // @output 100
+}
+
+Test-Case: output
+Description: Test transactional expression as expression in if statement.
+Labels: additive-expr, check, commit-action, error, function-call-expr, if-else-stmt, int, is-expr, logical-expr,
+        optional-type, rollback-stmt, transaction-stmt, transactional-expr, unary-not
+
+function init() returns error? {
+    int? a = 10;
+
+    transaction {
+        a = a + f1();
+        check commit;
+        if transactional {
+            a = a + f1() + 15;
+        }
+    }
+
+    if !transactional {
+        a = a + 40;
+    }
+
+    io:println(a); // @output 110
+}
+
+transactional function f1() returns int? {
+    int? a = 10;
+    if a is () || transactional {
+        a = a + 20;
+        if a is int && transactional {
+            a = a + 30;
+        }
+    }
+
+    return a;
+}
+
+Test-Case: output
+Description: Test transactional expression as expression in if statement.
+Labels: check, commit-action, compound-assignment-stmt, error, if-else-stmt, int, logical-expr, optional-type,
+        transaction-stmt, transactional-expr
+
+function init() returns error? {
+    int a = 10;
+
+    transaction {
+        if transactional {
+            if transactional {
+                if transactional {
+                    if transactional {
+                        transaction {
+                            if transactional {
+                                a += 5;
+                            }
+                            check commit;
+                        }
+                        if transactional {
+                            if transactional {
+                                transaction {
+                                    if transactional {
+                                        a += 15;
+                                    }
+                                    check commit;
+                                }
+                                if transactional {
+                                    if transactional {
+                                        a += 20;
+                                        check commit;
+                                        if !transactional {
+                                            a += 30;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if !transactional {
+        a += 50;
+    }
+
+    io:println(a); // @output 130
+}
+
+Test-Case: output
+Description: Test transactional expression as expression in type test expression.
+Fail-Issue: ballerina-platform/ballerina-lang#33087
+Labels: boolean, int, is-expr, module-const-decl, module-type-defn, transactional-expr, union-type
+
+const TRUE = true;
+const FALSE = false;
+
+type Type1 boolean;
+
+type Type2 true|false;
+
+function init() {
+    io:println(transactional is boolean); // @output true
+    io:println(transactional is boolean|int); // @output true
+    io:println(transactional is Type1); // @output true
+    io:println(transactional is Type2); // @output true
+    io:println(transactional is TRUE|FALSE); // @output true
+}
+
+Test-Case: output
+Description: Test assigning the result of transactional expression to a variable.
+Labels: boolean, transactional-expr
+
+function init() returns error? {
+    transaction {
+        boolean a = transactional;
+        io:println(a); // @output true
+        check commit;
+    }
+}
+
+Test-Case: output
+Description: Test assigning the result of transactional expression to var.
+Labels: boolean, transactional-expr, var
+
+function init() returns error? {
+    transaction {
+        var a = transactional;
+        boolean _ = a;
+        io:println(a); // @output true
+        check commit;
+    }
+}
+
+Test-Case: output
+Description: Test transactional expression with let expression.
+Labels: boolean, check, commit-action, error, let-expr, optional-type, transaction-stmt, transactional-expr
+
+function init() returns error? {
+    transaction {
+        boolean a = let var b = transactional in b;
+        check commit;
+        io:println(a); // @output true
+    }
+}
+
+Test-Case: output
+Description: Test transactional expression with return statement.
+Labels: boolean, check, commit-action, error, function-call-expr, let-expr, optional-type, return-stmt,
+        transaction-stmt, transactional-expr
+
+function init() returns error? {
+    transaction {
+        boolean a = f1();
+        check commit;
+        io:println(a); // @output true
+    }
+}
+
+function f1() returns boolean {
+    return transactional;
+}
+
+Test-Case: output
+Description: Test transactional expression with type cast expression.
+Labels: boolean, check, commit-action, error, optional-type, transaction-stmt, transactional-expr, type-cast-expr
+
+function init() returns error? {
+    transaction {
+        io:println(<boolean> transactional); // @output true
+        check commit;
+    }
+}
+
+Test-Case: output
+Description: Test transactional expression with typeof expression.
+Labels: transactional-expr, typeof-expr
+
+function init() returns error? {
+    transaction {
+        io:println(typeof transactional); // @output typedesc true
+        check commit;
+    }
+}
+
+Test-Case: output
+Description: Test transactional expression with unary logical expression.
+Labels: check, commit-action, error, optional-type, transaction-stmt, transactional-expr, unary-not
+
+function init() returns error? {
+    transaction {
+        io:println(!transactional); // @output false
+        check commit;
+        io:println(!transactional); // @output true
+    }
+}
+
+Test-Case: output
+Description: Test transactional expression with equality expression.
+Labels: boolean, check, commit-action, equality, error, exact-equality, optional-type, transaction-stmt,
+        transactional-expr
+
+function init() returns error? {
+    boolean b = true;
+    transaction {
+        io:println(b == transactional); // @output true
+        io:println(b === transactional); // @output true
+        check commit;
+        io:println(b != transactional); // @output true
+        io:println(b !== transactional); // @output true
+    }
+}
+
+Test-Case: output
+Description: Test transactional expression with logical expression.
+Labels: boolean, check, commit-action, error, logical-expr, optional-type, transaction-stmt, transactional-expr
+
+function init() returns error? {
+    boolean b = true;
+    transaction {
+        io:println(b && transactional); // @output true
+        io:println(b || transactional); // @output true
+        check commit;
+        io:println(b && transactional); // @output false
+        io:println(b || transactional); // @output true
+    }
+}
+
+Test-Case: output
+Description: Test transactional expression with logical expression.
+Labels: check, commit-action, conditional-expr, error, optional-type, transaction-stmt, transactional-expr
+
+function init() returns error? {
+    transaction {
+        io:println(transactional ? 1 : 2); // @output 1
+        check commit;
+        io:println(transactional ? 3 : 4); // @output 4
+    }
+}
+
+Test-Case: output
+Description: Test transactional expression at module level.
+Fail-Issue: ballerina-platform/ballerina-lang#33087
+Labels: boolean, transactional-expr
+
+boolean a = transactional;
+
+function init() {
+    io:println(a); // @output false
+}
+
+Test-Case: output
+Description: Test assigning the result of transactional expression to a subtype of boolean.
+Fail-Issue: ballerina-platform/ballerina-lang#34711
+Labels: boolean, transactional-expr
+
+type Boolean true|false;
+
+function init() returns error? {
+    transaction {
+        true|false a = transactional;
+        io:println(a); // @output true
+        check commit;
+        Boolean b = transactional;
+        io:println(b); // @output false
+    }
+}
+
+Test-Case: error
+Description: Test assigning the result of transactional expression to an invalid type.
+Labels: int, transactional-expr
+
+function errorFunction() {
+    int _ = transactional; // @error expected 'int', found 'boolean'
+}
