@@ -11,8 +11,8 @@ function errorFunction() {
 Test-Case: output
 Description: Test using a value of a static type that is a subtype of int as the key expression when the basic type of the
              container expression is a tuple.
-Labels: float, int, list-constructor-expr, member-access-expr, module-const-decl, module-type-defn, string, tuple-type,
-        union-type
+Labels: float, int, list-constructor-expr, member-access-expr, module-const-decl, module-type-defn, string, tuple-rest-descriptor,
+        tuple-type, union-type
 
 const i1 = 0;
 const i2 = 5;
@@ -41,10 +41,8 @@ function init() {
 Test-Case: output
 Description: Test using a value of a static type that is a subtype of int as the key expression when the basic type of the
              container expression is a tuple.
-Labels: byte, float, int, int:Signed16, int:Signed32, int:Signed8, list-constructor-expr, member-access-expr,
-        module-type-defn, string, tuple-type, union-type
-
-type IntType1 int:Signed8|int:Signed16;
+Labels: byte, float, int, int:Signed8, list-constructor-expr, member-access-expr, string, tuple-rest-descriptor,
+        tuple-type
 
 function init() {
     [int, string, float...] t = [10, "ABC", 10.5, 20.5, 30.5, 40.5];
@@ -54,6 +52,19 @@ function init() {
 
     byte i2 = 2;
     io:println(t[i2]); // @output 10.5
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a subtype of int as the key expression when the basic type of the
+             container expression is a tuple.
+Fail-Issue: ballerina-platform/ballerina-lang#35974
+Labels: float, int, int:Signed16, int:Signed32, int:Signed8, list-constructor-expr, member-access-expr,
+        module-type-defn, string, tuple-rest-descriptor, tuple-type, union-type
+
+type IntType1 int:Signed8|int:Signed16;
+
+function init() {
+    [int, string, float...] t = [10, "ABC", 10.5, 20.5, 30.5, 40.5];
 
     int:Signed32|int:Signed16 i3 = 3;
     io:println(t[i3]); // @output 20.5
@@ -97,7 +108,7 @@ Test-Case: output
 Description: Test the result of evaluating a member access expression when basic type of the evaluated value of the
              container expression is a tuple.
 Labels: boolean, float, int, list-constructor-expr, map-type, mapping-constructor-expr, member-access-expr,
-        module-type-defn, record-type, string, tuple-type, union-type
+        module-type-defn, record-type, string, tuple-rest-descriptor, tuple-type, union-type
 
 type Record record {|
     int a;
@@ -119,7 +130,8 @@ function init() {
 Test-Case: panic
 Description: Test the result of evaluating a member access expression when the evaluated value(k) of the
              key expression is less than 0 with container expression whose basic type is a tuple (k < 0).
-Labels: additive-expr, float, int, list-constructor-expr, member-access-expr, string, tuple-type, unary-minus
+Labels: additive-expr, float, int, list-constructor-expr, member-access-expr, string, tuple-rest-descriptor,
+        tuple-type, unary-minus
 
 function init() {
     [int, string, float...] t = [10, "ABC", 10.5, 20.5, 30.5, 40.5];
@@ -131,7 +143,7 @@ Test-Case: panic
 Description: Test the result of evaluating a member access expression when the evaluated value(k) of the
              key expression is equal to the length of the evaluated value(c) of the
              container expression whose basic type is a tuple (k = length(c)).
-Labels: float, int, list-constructor-expr, member-access-expr, string, tuple-type
+Labels: float, int, list-constructor-expr, member-access-expr, string, tuple-rest-descriptor, tuple-type
 
 function init() {
     [int, string, float...] t = [10, "ABC", 10.5, 20.5, 30.5, 40.5];
@@ -143,7 +155,7 @@ Test-Case: panic
 Description: Test the result of evaluating a member access expression when the evaluated value(k) of the
              key expression is greater than the length of the evaluated value(c) of the
              container expression whose basic type is a tuple (k > length(c)).
-Labels: float, int, list-constructor-expr, member-access-expr, string, tuple-type
+Labels: float, int, list-constructor-expr, member-access-expr, string, tuple-rest-descriptor, tuple-type
 
 function init() {
     [int, string, float...] t = [10, "ABC", 10.5, 20.5, 30.5, 40.5];
@@ -154,7 +166,7 @@ function init() {
 Test-Case: output
 Description: Test the static type of member access expression when the container expression is of basic type list.
 Labels: boolean, float, int, list-constructor-expr, map-type, mapping-constructor-expr, member-access-expr,
-        module-type-defn, optional-type, record-type, string, tuple-type, union-type
+        module-type-defn, optional-type, record-type, string, tuple-type, tuple-rest-descriptor, union-type
 
 type Record record {|
     int a;
@@ -201,7 +213,7 @@ function errorFunction() {
 Test-Case: error
 Description: Test assigning result of member access expression to an invalid type.
 Fail-Issue: ballerina-platform/ballerina-lang#35079
-Labels: int, list-constructor-expr, member-access-expr, string, tuple-type
+Labels: int, list-constructor-expr, member-access-expr, string, tuple-rest-descriptor, tuple-type
 
 function errorFunction() {
     [int, string, boolean...] t = [10, "CL", true];
@@ -283,7 +295,7 @@ function init() {
 
 Test-Case: output
 Description: Test conditional expression as container expression of basic type list.
-Labels: conditional-expr, int, list-constructor-expr, member-access-expr, relational-expr, string, tuple-type
+Labels: ternary-conditional-expr, int, list-constructor-expr, member-access-expr, relational-expr, string, tuple-type
 
 function init() {
     [int, string] t1 = [10, "CL"];
@@ -307,7 +319,7 @@ function init() returns error? {
 Test-Case: output
 Description: Test field access expression as key expression with container expression of basic type list.
 Labels: field-access-expr, float, int, list-constructor-expr, mapping-constructor-expr, member-access-expr, record-type,
-        string, tuple-type
+        string, tuple-rest-descriptor, tuple-type
 
 type Record record {|
     int index;
@@ -322,7 +334,7 @@ function init() {
 
 Test-Case: output
 Description: Test member access expression as key expression with container expression of basic type list.
-Labels: float, int, list-constructor-expr, member-access-expr, string, tuple-type
+Labels: float, int, list-constructor-expr, member-access-expr, string, tuple-rest-descriptor, tuple-type
 
 function init() {
     [int, string, float...] t = [10, "CL", 10.2, 3.2];
@@ -333,7 +345,7 @@ function init() {
 
 Test-Case: output
 Description: Test functional call as key expression with container expression of basic type list.
-Labels: float, function-call-expr, int, list-constructor-expr, member-access-expr, string, tuple-type
+Labels: float, function-call-expr, int, list-constructor-expr, member-access-expr, string, tuple-rest-descriptor, tuple-type
 
 function init() {
     [int, string, float...] t = [10, "CL", 10.2, 3.2];
@@ -349,7 +361,7 @@ function getPos() returns int {
 Test-Case: output
 Description: Test method call as key expression with container expression of basic type list.
 Labels: explicit-new-expr, float, int, list-constructor-expr, member-access-expr, method-call-expr, module-class-defn,
-        string, tuple-type
+        string, tuple-rest-descriptor, tuple-type
 
 class Position {
     function getPos() returns int {
@@ -367,7 +379,7 @@ function init() {
 
 Test-Case: output
 Description: Test let expression as key expression with container expression of basic type list.
-Labels: float, int, let-expr, list-constructor-expr, member-access-expr, string, tuple-type
+Labels: float, int, let-expr, list-constructor-expr, member-access-expr, string, tuple-rest-descriptor, tuple-type
 
 function init() {
     [int, string, float...] t = [10, "CL", 10.2, 3.2];
@@ -377,7 +389,7 @@ function init() {
 
 Test-Case: output
 Description: Test type cast expression as key expression with container expression of basic type list.
-Labels: float, int, list-constructor-expr, member-access-expr, string, tuple-type, type-cast-expr
+Labels: float, int, list-constructor-expr, member-access-expr, string, tuple-rest-descriptor, tuple-type, type-cast-expr
 
 function init() {
     [int, string, float...] t = [10, "CL", 10.2, 3.2];
@@ -387,8 +399,8 @@ function init() {
 
 Test-Case: output
 Description: Test unary numeric expression as key expression with container expression of basic type list.
-Labels: DecimalNumber, float, int, list-constructor-expr, member-access-expr, string, tuple-type, unary-complement,
-        unary-minus, unary-plus
+Labels: DecimalNumber, float, int, list-constructor-expr, member-access-expr, string, tuple-rest-descriptor, tuple-type,
+        unary-complement, unary-minus, unary-plus
 
 function init() {
     [int, string, float...] t = [10, "CL", 10.2, 3.2, 9];
@@ -400,7 +412,8 @@ function init() {
 
 Test-Case: output
 Description: Test additive expression as key expression with container expression of basic type list.
-Labels: additive-expr, DecimalNumber, float, int, list-constructor-expr, member-access-expr, string, tuple-type
+Labels: additive-expr, DecimalNumber, float, int, list-constructor-expr, member-access-expr, string, tuple-rest-descriptor,
+        tuple-type
 
 function init() {
     [int, string, float...] t = [10, "CL", 10.2, 3.2, 9];
@@ -411,7 +424,8 @@ function init() {
 
 Test-Case: output
 Description: Test multiplicative expression as key expression with container expression of basic type list.
-Labels: DecimalNumber, float, int, list-constructor-expr, member-access-expr, multiplicative-expr, string, tuple-type
+Labels: DecimalNumber, float, int, list-constructor-expr, member-access-expr, multiplicative-expr, string,
+        tuple-rest-descriptor, tuple-type
 
 function init() {
     [int, string, float...] t = [10, "CL", 10.2, 3.2, 9];
@@ -423,7 +437,8 @@ function init() {
 
 Test-Case: output
 Description: Test shift expression as key expression with container expression of basic type list.
-Labels: DecimalNumber, float, int, list-constructor-expr, member-access-expr, shift-expr, string, tuple-type
+Labels: DecimalNumber, float, int, list-constructor-expr, member-access-expr, shift-expr, string, tuple-rest-descriptor,
+        tuple-type
 
 function init() {
     [int, string, float...] t = [10, "CL", 10.2, 3.2, 9];
@@ -434,7 +449,8 @@ function init() {
 
 Test-Case: output
 Description: Test binary bitwise expression as key expression with container expression of basic type list.
-Labels: binary-bitwise-expr, DecimalNumber, float, int, list-constructor-expr, member-access-expr, string, tuple-type
+Labels: binary-bitwise-expr, DecimalNumber, float, int, list-constructor-expr, member-access-expr, string,
+        tuple-rest-descriptor, tuple-type
 
 function init() {
     [int, string, float...] t = [10, "CL", 10.2, 3.2, 9];
@@ -446,7 +462,7 @@ function init() {
 Test-Case: output
 Description: Test checking expression as key expression with container expression of basic type list.
 Labels: check, checkpanic, error-type, float, int, list-constructor-expr, member-access-expr, optional-type, string,
-        tuple-type, union-type
+        tuple-rest-descriptor, tuple-type, union-type
 
 function init() returns error? {
     [int, string, float...] t = [10, "CL", 10.2, 3.2, 9];
@@ -458,7 +474,8 @@ function init() returns error? {
 
 Test-Case: output
 Description: Test conditional expression as key expression with container expression of basic type list.
-Labels: conditional-expr, float, int, list-constructor-expr, member-access-expr, relational-expr, string, tuple-type
+Labels: ternary-conditional-expr, float, int, list-constructor-expr, member-access-expr, relational-expr, string,
+        tuple-rest-descriptor, tuple-type
 
 function init() {
     [int, string, float...] t = [10, "CL", 10.2, 3.2, 9];
@@ -469,7 +486,7 @@ function init() {
 
 Test-Case: output
 Description: Test member access expression at module level.
-Labels: float, int, list-constructor-expr, member-access-expr, module-init-var-decl, string, tuple-type
+Labels: float, int, list-constructor-expr, member-access-expr, module-init-var-decl, string, tuple-rest-descriptor, tuple-type
 
 [int, string, float...] t = [10, "CL", 10.2, 3.2, 9];
 
@@ -493,7 +510,7 @@ function init() {
 
 Test-Case: output
 Description: Test member access expression with container expression of basic type list as array member.
-Labels: decimal, float, int, list-constructor-expr, member-access-expr, string, tuple-type
+Labels: decimal, float, int, list-constructor-expr, member-access-expr, string, tuple-rest-descriptor, tuple-type
 
 function init() {
     [int, string, float, float, decimal...] t = [10, "CL", 10.2, 3.2, 9d];
@@ -506,8 +523,8 @@ function init() {
 Test-Case: output
 Description: Test member access expression with container expression of basic type list as default expression
              for a field.
-Labels: decimal, float, int, list-constructor-expr, mapping-constructor-expr, member-access-expr, module-init-var-decl,
-        module-type-defn, readonly-type, record-type, string, tuple-type
+Labels: decimal, float, int, intersection-type, list-constructor-expr, mapping-constructor-expr, member-access-expr,
+        module-init-var-decl, module-type-defn, readonly-type, record-type, string, tuple-rest-descriptor, tuple-type
 
 final [int, string, float, float, decimal...] & readonly t = [10, "CL", 10.2, 3.2, 9d];
 
@@ -523,8 +540,8 @@ function init() {
 Test-Case: output
 Description: Test member access expression with container expression of basic type list as defaultable
              function parameter.
-Labels: additive-expr, decimal, defaultable-param, float, function-call-expr, int, list-constructor-expr,
-        member-access-expr, module-init-var-decl, readonly-type, string, tuple-type
+Labels: additive-expr, decimal, defaultable-param, float, function-call-expr, int, intersection-type, list-constructor-expr,
+        member-access-expr, module-init-var-decl, readonly-type, string, tuple-rest-descriptor, tuple-type
 
 final [int, string, float, float, decimal...] & readonly t = [10, "CL", 10.2, 3.2, 9d];
 
@@ -552,7 +569,7 @@ function getValue() returns int {
 
 Test-Case: output
 Description: Test assigning a value to member access expression.
-Labels: float, int, list-constructor-expr, member-access-expr, string, tuple-type
+Labels: float, int, list-constructor-expr, member-access-lvexpr, string, tuple-rest-descriptor, tuple-type
 
 function init() {
     [int, string, float...] t = [10, "CL"];
