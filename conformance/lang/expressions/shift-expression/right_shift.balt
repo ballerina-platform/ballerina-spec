@@ -1,16 +1,12 @@
 Test-Case: output
 Description: Test '>>' expression with zero and positive 'int' DecimalNumbers as operands.
-Labels: int, shift-expr, DecimalNumber
+Labels: DecimalNumber, shift-expr
 
 function init() {
-    int a = 9223372036854775804;
-    int b = 21;
-    int c = 0;
-
-    io:println(a >> b); // @output 4398046511103
-    io:println(a >> c); // @output 9223372036854775804
-    io:println(c >> b); // @output 0
-    io:println(c >> c); // @output 0
+    io:println(9223372036854775804 >> 21); // @output 4398046511103
+    io:println(9223372036854775804 >> 0); // @output 9223372036854775804
+    io:println(0 >> 21); // @output 0
+    io:println(0 >> 0); // @output 0
 }
 
 Test-Case: output
@@ -26,7 +22,7 @@ function init() {
 
 Test-Case: output
 Description: Test '>>' expression with zero and positive 'int' IntLiterals as operands.
-Labels: HexIntLiterals, shift-expr, DecimalNumber
+Labels: DecimalNumber, HexIntLiterals, shift-expr
 
 function init() {
     io:println(9223372036854775804 >> 0x15); // @output 4398046511103
@@ -37,17 +33,13 @@ function init() {
 
 Test-Case: output
 Description: Test '>>' expression with zero and negative 'int' DecimalNumbers as operands.
-Labels: int, shift-expr, unary-minus, DecimalNumber
+Labels: DecimalNumber, shift-expr, unary-minus
 
 function init() {
-    int a = -9223372036854775802;
-    int b = -9223372036854775805;
-    int c = 0;
-
-    io:println(a >> b); // @output -1152921504606846976
-    io:println(a >> c); // @output -9223372036854775802
-    io:println(c >> b); // @output 0
-    io:println(c >> c); // @output 0
+    io:println(-9223372036854775802 >> -9223372036854775805); // @output -1152921504606846976
+    io:println(-9223372036854775802 >> 0); // @output -9223372036854775802
+    io:println(0 >> -9223372036854775805); // @output 0
+    io:println(0 >> 0); // @output 0
 }
 
 Test-Case: output
@@ -63,7 +55,7 @@ function init() {
 
 Test-Case: output
 Description: Test '>>' expression with zero and negative 'int' IntLiterals as operands.
-Labels: HexIntLiterals, shift-expr, unary-minus, DecimalNumber
+Labels: DecimalNumber, HexIntLiterals, shift-expr, unary-minus
 
 function init() {
     io:println(-9223372036854775798 >> -0x15); // @output -1048576
@@ -74,7 +66,7 @@ function init() {
 
 Test-Case: output
 Description: Test '>>' expression for positive and negative 'int' DecimalNumbers as operands.
-Labels: shift-expr, unary-minus, DecimalNumber
+Labels: DecimalNumber, shift-expr, unary-minus
 
 function init() {
     io:println(-111 >> 2); // @output -28
@@ -83,7 +75,7 @@ function init() {
 
 Test-Case: output
 Description: Test '>>' expression for positive and negative 'int' HexIntLiterals as operands.
-Labels: HexIntliteral, shift-expr, unary-minus, DecimalNumber
+Labels: HexIntliteral, shift-expr, unary-minus
 
 function init() {
     io:println(-0x1f >> 0x1a); // @output -1
@@ -92,7 +84,7 @@ function init() {
 
 Test-Case: output
 Description: Test '>>' expression for positive and negative 'int' IntLiterals as operands.
-Labels: HexIntliteral, shift-expr, unary-minus, DecimalNumber
+Labels: DecimalNumber, HexIntliteral, shift-expr, unary-minus
 
 function init() {
     io:println(-111 >> 2); // @output -28
@@ -107,8 +99,8 @@ function init() {
 
 Test-Case: output
 Description: Test '>>' expression with 'int' as the LHS operand and builtin subtypes of integer as the RHS operand.
-Labels: int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, shift-expr,
-        unary-minus, var, DecimalNumber
+Labels: DecimalNumber, int, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        shift-expr, unary-minus
 
 function init() {
     int a = 128;
@@ -142,7 +134,7 @@ function init() {
 
 Test-Case: output
 Description: Test '>>' expression for optional zero and positive 'int' operands.
-Labels: int, nil-literal, optional-type, shift-expr, value:toBalString, DecimalNumber
+Labels: int, nil-literal, optional-type, shift-expr, value:toBalString
 
 function init() {
     int? a = 256;
@@ -327,113 +319,87 @@ function init() {
 
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int' operands.
-Labels: decimal, float, int, shift-expr, unary-minus, var
+Labels: decimal, DecimalNumber, float, int, shift-expr, unary-minus, int:MAX_VALUE
 
 function errorFunction(int a, int b) {
-    var x1 = a >> b;
-    decimal _ = x1; // @error expected 'decimal' but found 'int'
-    var x2 = a >> 100;
-    float _ = x2; // @error expected 'float' but found 'int'
-    var x3 = b >> -100;
-    decimal _ = x3; // @error expected 'decimal' but found 'int'
-    var x4 = b >> int:MAX_VALUE;
-    float _ = x4; // @error expected 'float' but found 'int'
-    var x5 = 511 >> 8;
-    float _ = x5; // @error expected 'float' but found 'int'
-    var x6 = -197 >> -9223372036854775807;
-    float _ = x6; // @error expected 'float' but found 'int'
+    decimal _ = a >> b; // @error expected 'decimal' but found 'int'
+    float _ = a >> 100; // @error expected 'float' but found 'int'
+    decimal _ = b >> -100; // @error expected 'decimal' but found 'int'
+    float _ = b >> int:MAX_VALUE; // @error expected 'float' but found 'int'
+    float _ = 511 >> 8; // @error expected 'float' but found 'int'
+    float _ = -197 >> -9223372036854775807; // @error expected 'float' but found 'int'
 }
 
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int' as the LHS operand and builtin subtype of integer as
              the RHS operand.
-Labels: decimal, float, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
-        shift-expr, unary-minus, var
+Labels: decimal, float, int, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        shift-expr, optional-type
 
 function errorFunction(int a, int:Signed8? b, int:Unsigned8? c, int:Signed16? d, int:Unsigned16? e, int:Signed32? f,
                         int:Unsigned32? g) {
-    var x1 = a >> b;
-    int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'int'
-    var x2 = a >> c;
-    float _ = x2; // @error expected 'float' but found 'int'
-    var x3 = a >> d;
-    int:Unsigned8 _ = x3; // @error expected 'int:Unsigned8' but found 'int'
-    var x4 = a >> e;
-    int:Signed16 _ = x4; // @error expected 'int:Signed16' but found 'int'
-    var x5 = a >> f;
-    decimal _ = x5; // @error expected 'decimal' but found 'int'
-    var x6 = a >> g;
-    int:Unsigned16 _ = x6; // @error expected 'int:Unsigned16' but found 'int'
+    int:Signed8 _ = a >> b; // @error expected 'int:Signed8' but found 'int'
+    float _ = a >> c; // @error expected 'float' but found 'int'
+    int:Unsigned8 _ = a >> d; // @error expected 'int:Unsigned8' but found 'int'
+    int:Signed16 _ = a >> e;; // @error expected 'int:Signed16' but found 'int'
+    decimal _ = a >> f; // @error expected 'decimal' but found 'int'
+    int:Unsigned16 _ = a >> g; // @error expected 'int:Unsigned16' but found 'int'
 }
 
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int' as the LHS operand and byte as the RHS operand.
-Labels: decimal, float, byte, int, shift-expr, unary-minus, var
+Labels: byte, decimal, float, int, shift-expr, DecimalNumber
 
-function errorFunction(int a, byte a) {
-    var x1 = a >> a;
-    float _ = x1; // @error expected 'float' but found 'int'
-    var x2 = 100 >> a;
-    decimal _ = x2; // @error expected 'decimal' but found 'int'
+function errorFunction(int a, byte b) {
+    float _ = a >> b; // @error expected 'float' but found 'int'
+    decimal _ = 100 >> b; // @error expected 'decimal' but found 'int'
 }
 
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int' as the LHS operand and user-defined subtype of
              integer as the RHS operand.
-Labels: DecimalNumber, decimal, float, int, int:MIN_VALUE, shift-expr, type, unary-minus, var, union-type
+Labels: decimal, DecimalNumber, float, int, int:MIN_VALUE, shift-expr, type, unary-minus, union-type, int:MAX_VALUE
 
 type Ints -1|2|int:MIN_VALUE;
 
 function errorFunction(int a, Ints b) {
-    var x1 = a >> b;
-    decimal _ = x1; // @error expected 'decimal' but found 'int'
-    var x2 = int:MAX_VALUE >> b;
-    float _ = x2; // @error expected 'float' but found 'int'
-    var x3 = -100 >> b;
-    float _ = x3; // @error expected 'float' but found 'int'
+    decimal _ = a >> b; // @error expected 'decimal' but found 'int'
+    float _ = int:MAX_VALUE >> b; // @error expected 'float' but found 'int'
+    float _ = -100 >> b; // @error expected 'float' but found 'int'
 }
 
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int' and optional 'int' as the operands.
-Labels: decimal, float, int, nil-literal, optional-type, shift-expr, unary-minus
+Labels: decimal, float, int, optional-type, shift-expr, int:MAX_VALUE, DecimalNumber
 
 function errorFunction(int a, int? b) {
-    var x1 = a >> b;
-    int _ = x1; // @error expected 'int' but found 'int?'
-    var x2 = 100 >> b;
-    decimal _ = x2; // @error expected 'decimal' but found 'int?'
-    var x3 = -100 >> c;
-    float _ = x3; // @error expected 'float' but found 'int?'
-    var x4 = int:MAX_VALUE >> d;
-    float _ = x4; // @error expected 'float' but found 'int?'
+    int _ = a >> b; // @error expected 'int' but found 'int?'
+    decimal _ = 100 >> b; // @error expected 'decimal' but found 'int?'
+    float _ = -100 >> c; // @error expected 'float' but found 'int?'
+    float _ = int:MAX_VALUE >> d; // @error expected 'float' but found 'int?'
 }
 
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int' as the LHS operand and optional builtin subtype of
              integer as the RHS operand.
-Labels: decimal, float, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
-        nil-literal, optional-type, shift-expr, unary-minus, var
+Labels: decimal, float, int, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        optional-type, shift-expr
 
 function errorFunction(int a, int:Signed8? b, int:Unsigned8? c, int:Signed16? d, int:Unsigned16? e, int:Signed32? f,
                         int:Unsigned32? g) {
-    var x1 = a >> b;
-    int _ = x1; // @error expected 'int' but found 'int?'
-    var x2 = a >> c;
-    decimal _ = x2; // @error expected 'decimal' but found 'int?'
-    var x3 = a >> d;
-    float _ = x3; // @error expected 'float' but found 'int?'
-    var x4 = a >> e;
-    int _ = x4; // @error expected 'int' but found 'int?'
-    var x5 = a >> f;
-    int _ = x5; // @error expected 'int' but found 'int?'
-    var x6 = a >> g;
-    int _ = x6; // @error expected 'int' but found 'int?'
+    int _ = a >> b; // @error expected 'int' but found 'int?'
+    decimal _ = a >> c; // @error expected 'decimal' but found 'int?'
+    float _ = a >> d; // @error expected 'float' but found 'int?'
+    int _ = a >> e; // @error expected 'int' but found 'int?'
+    int _ = a >> f; // @error expected 'int' but found 'int?'
+    int _ = a >> g; // @error expected 'int' but found 'int?'
 }
 
 
 Test-Case: output
 Description: Test '>>' expression with 'int' operand in function call and method call.
-Labels: int, shift-expr, unary-minus, value:toString, value:toBalString
+Labels: function-call-expr, function-defn, int, method-call-expr, shift-expr, unary-minus,
+        value:toBalString, value:toString
 
 function init() {
     int a = -1137;
@@ -545,7 +511,8 @@ function init() {
 Test-Case: output
 Description: Test '>>' expression with 'int:Signed8' as the LHS operand and builtin subtypes of integer as the RHS
              operand.
-Labels: int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, shift-expr, unary-minus
+Labels: int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        shift-expr, unary-minus
 
 function init() {
     int:Signed8 x = 122;
@@ -781,69 +748,56 @@ function init() {
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int:Signed8' as the LHS operand and 'int' as the RHS
              operand.
-Labels: decimal, float, int, int:Signed8, shift-expr, unary-minus, var
+Labels: decimal, DecimalNumber, float, int, int:Signed8, shift-expr, unary-minus
 
 function errorFunction(int:Signed8 x, int a) {
-    var x1 = x >> a;
-    int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'int'
-    var x2 = x >> 100;
-    float _ = x2; // @error expected 'float' but found 'int'
-    var x3 = y >> -100;
-    decimal _ = x3; // @error expected 'decimal' but found 'int'
+    int:Signed8 _ = x >> a; // @error expected 'int:Signed8' but found 'int'
+    float _ = x >> 100; // @error expected 'float' but found 'int'
+    decimal _ = y >> -100; // @error expected 'decimal' but found 'int'
 }
 
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int:Signed8' as the LHS operand and builtin subtypes of
              integer as the RHS operand.
 Labels: decimal, float, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
-        shift-expr, unary-minus, var
+        shift-expr
 
 function errorFunction(int:Signed8 x, int:Signed8 a, int:Unsigned8 b, int:Signed16 c, int:Unsigned16 d, int:Signed32 e,
                         int:Unsigned32 f) {
-    var x1 = x >> a;
-    int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'int'
-    var x2 = x >> b;
-    decimal _ = x2; // @error expected 'decimal' but found 'int'
-    var x3 = x >> c;
-    int:Unsigned16 _ = x3; // @error expected 'int:Unsigned16' but found 'int'
-    var x4 = x >> d;
-    int:Signed16 _ = x4; // @error expected 'int:Signed16' but found 'int'
-    var x5 = x >> e;
-    float _ = x5; // @error expected 'float' but found 'int'
-    var x6 = x >> f;
-    int:Unsigned16 _ = x6; // @error expected 'int:Unsigned16' but found 'int'
+    int:Signed8 _ = x >> a; // @error expected 'int:Signed8' but found 'int'
+    decimal _ = x >> b; // @error expected 'decimal' but found 'int'
+    int:Unsigned16 _ = x >> c; // @error expected 'int:Unsigned16' but found 'int'
+    int:Signed16 _ = x >> d; // @error expected 'int:Signed16' but found 'int'
+    float _ = x >> e; // @error expected 'float' but found 'int'
+    int:Unsigned16 _ = x >> f; // @error expected 'int:Unsigned16' but found 'int'
 }
 
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int:Signed8' as the LHS operand and byte as the RHS
              operand.
-Labels: byte, int:Signed8, shift-expr, unary-minus, var
+Labels: byte, int:Signed8, shift-expr
 
 function errorFunction(int:Signed8 x, byte a) {
-    var x1 = x >> a;
-    int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'int'
-    var x2 = x >> a;
-    byte _ = x2; // @error expected 'byte' but found 'int'
+    int:Signed8 _ = x >> a; // @error expected 'int:Signed8' but found 'int'
+    byte _ = x >> a; // @error expected 'byte' but found 'int'
 }
 
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int:Signed8' as the LHS operand and user-defined subtype
              of integer as the RHS operand.
-Labels: DecimalNumber, float, int:Signed8, shift-expr, type, unary-minus, var, union-type
+Labels: DecimalNumber, int:Signed8, shift-expr, type, unary-minus, union-type
 
 type Ints -1|2|-128;
 
 function errorFunction(int:Signed8 x, Ints a) {
-    var x1 = x >> a;
-    int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'int'
-    var x2 = x >> a;
-    Ints _ = x2; // @error expected '-1|2|-128' but found 'int'
+    int:Signed8 _ = x >> a; // @error expected 'int:Signed8' but found 'int'
+    Ints _ = x >> a; // @error expected 'Ints' but found 'int'
 }
 
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int:Signed8' as the LHS operand and optional 'int' as
              the RHS operand.
-Labels: float, int, int:Signed8, nil-literal, optional-type, shift-expr, unary-minus, var
+Labels: int, int:Signed8, optional-type, shift-expr, unary-minus, var
 
 function errorFunction(int:Signed8 x, int? a) {
     var x1 = x >> a;
@@ -855,40 +809,33 @@ function errorFunction(int:Signed8 x, int? a) {
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Signed8' as the LHS operand and optional builtin
              subtypes of integer as the RHS operand.
-Labels: decimal, float, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
-        shift-expr, unary-minus, var
+Labels: decimal, float, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        shift-expr, optional-type
 
 function errorFunction(int:Signed8 a, int:Signed8? b, int:Unsigned8? c, int:Signed16? d, int:Unsigned16? e, int:Signed32? f,
                         int:Unsigned32? g) {
-    var x1 = a >> b;
-    int:Signed16 _ = x1; // @error expected 'int:Signed16' but found 'int?'
-    var x2 = a >> c;
-    float _ = x2; // @error expected 'float' but found 'int?'
-    var x3 = a >> d;
+    int:Signed16 _ = a >> b; // @error expected 'int:Signed16' but found 'int?'
+    float _ = a >> c; // @error expected 'float' but found 'int?'
     int:Unsigned16 _ = x3; // @error expected 'int:Unsigned16' but found 'int?'
-    var x4 = a >> e;
-    int:Signed16 _ = x4; // @error expected 'int:Signed16' but found 'int?'
-    var x5 = a >> f;
-    decimal _ = x5; // @error expected 'decimal' but found 'int?'
-    var x6 = a >> g;
-    int:Unsigned16 _ = x6; // @error expected 'int:Unsigned16' but found 'int?'
+    int:Signed16 _ = a >> e; // @error expected 'int:Signed16' but found 'int?'
+    decimal _ = a >> f; // @error expected 'decimal' but found 'int?'
+    int:Unsigned16 _ = a >> g; // @error expected 'int:Unsigned16' but found 'int?'
 }
 
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int:Signed8' as the LHS operand and optional byte as
              the RHS operand.
-Labels: byte, float, int, int:Signed8, nil-literal, optional-type, shift-expr, unary-minus, var
+Labels: byte, int, int:Signed8, optional-type, shift-expr
 
 function errorFunction(int:Signed8 x, byte? a) {
-    var x1 = x >> a;
-    int:Signed8 _ = x1; // @error  expected 'int:Signed8' but found 'int?'
-    var x2 = x >> a;
-    int _ = x2; // @error expected 'int' but found 'int?'
+    int:Signed8 _ = x >> a; // @error  expected 'int:Signed8' but found 'int?'
+    int _ = x >> a; // @error expected 'int' but found 'int?'
 }
 
 Test-Case: output
 Description: Test '>>' expression with 'int:Signed8' operands in function call and method call.
-Labels: function-call-expr, int:Signed8, shift-expr, unary-minus, value:toBalString, value:toString
+Labels: function-call-expr, function-defn, int:Signed8, method-call-expr, shift-expr, unary-minus, value:toBalString,
+        value:toString
 
 function init() {
     int:Signed8 a = -122;
@@ -968,7 +915,7 @@ function init() {
 Test-Case: output
 Description: Test '>>' expression with 'int:Unsigned8' as the LHS operand and builtin subtypes of integer as the RHS
              operand.
-Labels: int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, shift-expr, unary-minus
+Labels: int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8, shift-expr, unary-minus
 
 function init() {
     int:Unsigned8 x = 246;
@@ -1115,20 +1062,18 @@ function init() {
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int:Unsigned8' as the LHS operand and 'int' as the RHS
              operand.
-Labels: float, int, int:Unsigned8, shift-expr, unary-minus, var
+Labels: DecimalNumber, float, int, int:Unsigned8, shift-expr, unary-minus, var
 
 function errorFunction(int:Unsigned8 x, int a) {
-    var x1 = x >> a;
-    float _ = x1; // @error expected 'float' but found 'int:Unsigned8'
-    var x2 = x >> -100;
-    float _ = x2; // @error expected 'float' but found 'int:Unsigned8'
+    float _ = x >> a; // @error expected 'float' but found 'int:Unsigned8'
+    var x1 = x >> -100;
+    int:Unsigned8 _ = x1; // @error expected 'float' but found 'int:Unsigned8'
 }
 
 Test-Case: output
 Description: Test resultant type of the '>>' expression with 'int:Unsigned8' as the LHS operand and builtin subtype of
              integer as the RHS operand.
-Labels: int:Signed8, int:Signed16, int:Unsigned32, int:Unsigned8, int:Unsigned16, int:Unsigned32, shift-expr,
-        unary-minus
+Labels: int:Signed16, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8, shift-expr, unary-minus
 
 function init() {
     int:Unsigned8 x = 250;
@@ -1170,23 +1115,17 @@ function init() {
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int:Unsigned8' as the LHS operand and builtin subtypes of
              integer as the RHS operand.
-Labels: decimal, float, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
-        shift-expr, unary-minus, var
+Labels: decimal, float, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        shift-expr
 
 function errorFunction(int:Unsigned8 x, int:Signed8 a, int:Unsigned8 b, int:Signed16 c, int:Unsigned16 d, int:Signed32 e,
                         int:Unsigned32 f) {
-    var x1 = x >> a;
-    int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'int:Unsigned8'
-    var x2 = x >> b;
-    decimal _ = x2; // @error expected 'decimal' but found 'int:Unsigned8'
-    var x3 = x >> c;
-    int:Signed8 _ = x3; // @error expected 'int:Signed8' but found 'int:Unsigned8'
-    var x4 = x >> d;
-    int:Signed8 _ = x4; // @error expected 'int:Signed8' but found 'int:Unsigned8'
-    var x5 = x >> e;
-    float _ = x5; // @error expected 'float' but found 'int:Unsigned8'
-    var x6 = x >> f;
-    int:Signed8 _ = x6; // @error expected 'int:Signed8' but found 'int:Unsigned8'
+    int:Signed8 _ = x >> a; // @error expected 'int:Signed8' but found 'int:Unsigned8'
+    decimal _ = x >> b; // @error expected 'decimal' but found 'int:Unsigned8'
+    int:Signed8 _ = x >> c; // @error expected 'int:Signed8' but found 'int:Unsigned8'
+    int:Signed8 _ = x >> d; // @error expected 'int:Signed8' but found 'int:Unsigned8'
+    float _ = x >> e; // @error expected 'float' but found 'int:Unsigned8'
+    int:Signed8 _ = x >> f; // @error expected 'int:Signed8' but found 'int:Unsigned8'
 }
 
 Test-Case: output
@@ -1239,15 +1178,13 @@ function init() {
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int:Unsigned8' as the LHS operand and user-defined subtype
              of integer as the RHS operand.
-Labels: DecimalNumber, float, int:Unsigned8, shift-expr, type, unary-minus, var
+Labels: DecimalNumber, int:Unsigned8, shift-expr, type, unary-minus
 
 type Ints -1|2|-128;
 
 function errorFunction(int:Unsigned8 x, Ints a) {
-    var x1 = x >> a;
-    int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'int:Unsigned8'
-    var x2 = x >> a;
-    Ints _ = x2; // @error expected '-1|2|-128' but found 'int:Unsigned8'
+    int:Signed8 _ = x >> a; // @error expected 'int:Signed8' but found 'int:Unsigned8'
+    Ints _ = x >> a; // @error expected 'Ints' but found 'int:Unsigned8'
 }
 
 Test-Case: output
@@ -1272,20 +1209,18 @@ function init() {
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int:Unsigned8' as the LHS operand and optional 'int' as
              the RHS operand.
-Labels: float, int, int:Unsigned8, nil-literal, optional-type, shift-expr, unary-minus, var
+Labels: int, int:Unsigned8, optional-type, shift-expr, unary-minus
 
 function errorFunction(int:Unsigned8 x, int? a) {
-    var x1 = x >> a;
-    int:Unsigned8 _ = x1; // @error  expected 'int:Unsigned8' but found 'int:Unsigned8?'
-    var x2 = x >> a;
-    int _ = x2; // @error expected 'int' but found 'int:Unsigned8?'
+    int:Unsigned8 _ = x >> a; // @error  expected 'int:Unsigned8' but found 'int:Unsigned8?'
+    int _ = x >> a; // @error expected 'int' but found 'int:Unsigned8?'
 }
 
 Test-Case: output
 Description: Test resultant type of the '>>' expression with 'int:Unsigned8' as the LHS operand and optional builtin
              subtype of integer as the RHS operand.
-Labels: int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, optional-type,
-        shift-expr, unary-minus, union-type, value:toBalString
+Labels: int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        optional-type, shift-expr, unary-minus, union-type, value:toBalString
 
 function init() {
     int:Unsigned8 x = 251;
@@ -1346,21 +1281,16 @@ function init() {
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int:Unsigned8' as the LHS operand and optional builtin
              subtypes of integer as the RHS operand.
-Labels: decimal, float, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned16,
-        optional-type, shift-expr, unary-minus, var
+Labels: decimal, float, int, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned8, optional-type,
+        shift-expr
 
-function errorFunction(int:Unsigned8 a, int:Signed8 a, int:Unsigned8 b, int:Signed16 c, int:Unsigned16 d, int:Signed32 e,
-                        int:Unsigned32 f) {
-    var x1 = a >> b;
-    int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'int:Unsigned8?'
-    var x2 = a >> c;
-    float _ = x2; // @error expected 'float' but found 'int:Unsigned8?'
-    var x3 = a >> d;
-    int:Unsigned8 _ = x3; // @error expected 'int:Unsigned8' but found 'int:Unsigned8?'
-    var x4 = a >> e;
-    int:Signed16 _ = x4; // @error expected 'int:Signed16' but found 'int:Unsigned8?'
-    var x5 = a >> f;
-    decimal _ = x5; // @error expected 'decimal' but found 'int:Unsigned8?'
+function errorFunction(int:Unsigned8 a, int:Signed8? b, int:Unsigned8? c, int:Signed16? d, int:Unsigned16? e, int:Signed32? f,
+                        int:Unsigned32? g) {
+    int:Signed8 _ = a >> b; // @error expected 'int:Signed8' but found 'int:Unsigned8?'
+    float _ = a >> c; // @error expected 'float' but found 'int:Unsigned8?'
+    int:Unsigned8 _ = a >> d; // @error expected 'int:Unsigned8' but found 'int:Unsigned8?'
+    int:Signed16 _ = a >> e; // @error expected 'int:Signed16' but found 'int:Unsigned8?'
+    decimal _ = a >> f; // @error expected 'decimal' but found 'int:Unsigned8?'
 }
 
 Test-Case: output
@@ -1386,18 +1316,17 @@ function init() {
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int:Unsigned8' as the LHS operand and optional byte as
              the RHS operand.
-Labels: byte, float, int, int:Unsigned8, nil-literal, optional-type, shift-expr, var
+Labels: byte, int, int:Unsigned8, nil-literal, optional-type, shift-expr
 
 function errorFunction(int:Unsigned8 x, byte? a) {
-    var x1 = x >> a;
-    int:Unsigned8 _ = x1; // @error  expected 'int:Unsigned8' but found 'int:Unsigned8?'
-    var x2 = x >> a;
-    int _ = x2; // @error expected 'int' but found 'int:Unsigned8?'
+    int:Unsigned8 _ = x >> a; // @error  expected 'int:Unsigned8' but found 'int:Unsigned8?'
+    int _ = x >> a; // @error expected 'int' but found 'int:Unsigned8?'
 }
 
 Test-Case: output
 Description: Test '>>' expression with 'int:Unsigned8' operands in function call and method call.
-Labels: function-call-expr, int, int:Unsigned8, shift-expr, unary-minus, value:toBalString, value:toString
+Labels: function-call-expr, function-defn, int:Unsigned8, method-call-expr, shift-expr,
+        value:toBalString, value:toString
 
 function init() {
     int:Unsigned8 a = 125;
@@ -1427,7 +1356,7 @@ function rightShiftExpr(int:Unsigned8 x) {
 
 Test-Case: output
 Description: Test '>>' expression with 'int:Unsigned8' operands as a return statement.
-Labels: int:Unsigned8, return-stmt, shift-expr, unary-minus
+Labels: int:Unsigned8, return-stmt, shift-expr
 
 function init() {
     int:Unsigned8 a = 125;
@@ -1509,7 +1438,8 @@ function init() {
 Test-Case: output
 Description: Test '>>' expression with 'int:Signed16' as the LHS operand and builtin subtypes of integer as the RHS
              operand.
-Labels: int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, shift-expr, unary-minus
+Labels: int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        shift-expr, unary-minus
 
 function init() {
     int:Signed16 x = 32767;
@@ -1745,7 +1675,7 @@ function init() {
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int:Signed16' as the LHS operand and 'int' as the RHS
              operand.
-Labels: decimal, float, int, int:Signed16, shift-expr, unary-minus, var
+Labels: int, int:Signed16, shift-expr, var
 
 function errorFunction(int:Signed16 x, int a) {
     var x1 = x >> a;
@@ -1755,100 +1685,81 @@ function errorFunction(int:Signed16 x, int a) {
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int:Signed16' as the LHS operand and builtin subtypes of
              integer as the RHS operand.
-Labels: decimal, float, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
-        shift-expr, unary-minus, var
+Labels: decimal, float, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        shift-expr
 
 function errorFunction(int:Signed16 x, int:Signed8 a, int:Unsigned8 b, int:Signed16 c, int:Unsigned16 d, int:Signed32 e,
                         int:Unsigned32 f) {
-    var x1 = x >> a;
-    int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'int'
-    var x2 = x >> b;
-    decimal _ = x2; // @error expected 'decimal' but found 'int'
-    var x3 = x >> c;
-    int:Unsigned16 _ = x3; // @error expected 'int:Unsigned16' but found 'int'
-    var x4 = x >> d;
-    int:Signed16 _ = x4; // @error expected 'int:Signed16' but found 'int'
-    var x5 = x >> e;
-    float _ = x5; // @error expected 'float' but found 'int'
-    var x6 = x >> f;
-    int:Unsigned16 _ = x6; // @error expected 'int:Unsigned16' but found 'int'
+    int:Signed8 _ = x >> a; // @error expected 'int:Signed8' but found 'int'
+    decimal _ = x >> b; // @error expected 'decimal' but found 'int'
+    int:Unsigned16 _ = x >> c; // @error expected 'int:Unsigned16' but found 'int'
+    int:Signed16 _ = x >> d; // @error expected 'int:Signed16' but found 'int'
+    float _ = x >> e; // @error expected 'float' but found 'int'
+    int:Unsigned16 _ = x >> f; // @error expected 'int:Unsigned16' but found 'int'
 }
 
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int:Signed16' as the LHS operand and byte as the RHS
              operand.
-Labels: byte, int:Signed16, shift-expr, unary-minus, var
+Labels: byte, int:Signed16, shift-expr
 
 function errorFunction(int:Signed16 x, byte a) {
-    var x1 = x >> a;
-    int:Signed16 _ = x1; // @error expected 'int:Signed16' but found 'int'
-    var x2 = x >> a;
-    byte _ = x2; // @error expected 'byte' but found 'int'
+    int:Signed16 _ = x >> a; // @error expected 'int:Signed16' but found 'int'
+    byte _ = x >> a; // @error expected 'byte' but found 'int'
 }
 
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int:Signed16' as the LHS operand and user-defined subtype
              of integer as the RHS operand.
-Labels: DecimalNumber, float, int:Signed8, int:Signed16, shift-expr, type, unary-minus, var
+Labels: DecimalNumber, int:Signed16, int:Signed8, shift-expr, type, unary-minus
 
 type Ints -1|2|-128;
 
 function errorFunction(int:Signed16 x, Ints a) {
-    var x1 = x >> a;
-    int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'int'
-    var xw = x >> a;
-    Ints _ = xw; // @error expected '-1|2|-128' but found 'int'
+    int:Signed8 _ = x >> a; // @error expected 'int:Signed8' but found 'int'
+    Ints _ = x >> a; // @error expected '-1|2|-128' but found 'int'
 }
 
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int:Signed16' as the LHS operand and optional 'int' as
              the RHS operand.
-Labels: float, int, int:Signed8, int:Signed16, nil-literal, optional-type, shift-expr, unary-minus, var
+Labels: int, int:Signed16, int:Signed8, optional-type, shift-expr
 
 function errorFunction(int:Signed16 x, int? a) {
-    var x1 = x >> a;
-    int:Signed8 _ = x1; // @error  expected 'int:Signed8' but found 'int?'
-    var x2 = x >> a;
-    int _ = x2; // @error expected 'int' but found 'int?'
+    int:Signed8 _ = x >> a; // @error  expected 'int:Signed8' but found 'int?'
+    int _ = x >> a; // @error expected 'int' but found 'int?'
 }
 
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Signed16' as the LHS operand and optional builtin
              subtypes of integer as the RHS operand.
-Labels: decimal, float, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
-        shift-expr, unary-minus, var
+Labels: decimal, float, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        shift-expr
 
 function errorFunction(int:Signed16 a, int:Signed8? b, int:Unsigned8? c, int:Signed16? d, int:Unsigned16? e, int:Signed32? f,
                         int:Unsigned32? g) {
-    var x1 = a >> b;
-    int:Signed16 _ = x1; // @error expected 'int:Signed16' but found 'int?'
-    var x2 = a >> c;
-    float _ = x2; // @error expected 'float' but found 'int?'
-    var x3 = a >> d;
-    int:Unsigned16 _ = x3; // @error expected 'int:Unsigned16' but found 'int?'
-    var x4 = a >> e;
-    int:Signed16 _ = x4; // @error expected 'int:Signed16' but found 'int?'
-    var x5 = a >> f;
-    decimal _ = x5; // @error expected 'decimal' but found 'int?'
-    var x6 = a >> g;
-    int:Unsigned16 _ = x6; // @error expected 'int:Unsigned16' but found 'int?'
+    int:Signed16 _ = a >> b; // @error expected 'int:Signed16' but found 'int?'
+    float _ = a >> c; // @error expected 'float' but found 'int?'
+    int:Unsigned16 _ = a >> d; // @error expected 'int:Unsigned16' but found 'int?'
+    int:Signed16 _ = a >> e; // @error expected 'int:Signed16' but found 'int?'
+    decimal _ = a >> f; // @error expected 'decimal' but found 'int?'
+    int:Unsigned16 _ = a >> g; // @error expected 'int:Unsigned16' but found 'int?'
 }
 
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int:Signed16' as the LHS operand and optional byte as
              the RHS operand.
-Labels: byte, float, int, int:Signed16, nil-literal, optional-type, shift-expr, unary-minus, var
+Labels: byte, int, int:Signed16, optional-type, shift-expr
 
 function errorFunction(int:Signed16 x, byte? a) {
-    var x1 = x >> a;
-    int:Signed16 _ = x1; // @error  expected 'int:Signed16' but found 'int?'
-    var x2 = x >> a;
-    int _ = x2; // @error expected 'int' but found 'int?'
+    int:Signed16 _ = x >> a; // @error  expected 'int:Signed16' but found 'int?'
+    int _ = x >> a; // @error expected 'int' but found 'int?'
 }
 
 Test-Case: output
 Description: Test '>>' expression with 'int:Signed16' operands in function call and method call.
-Labels: function-call-expr, int:Signed16, shift-expr, unary-minus, value:toBalString, value:toString
+Labels: function-call-expr, function-defn, int:Signed16, method-call-expr, shift-expr, unary-minus, value:toBalString,
+        value:toString
 
 function init() {
     int:Signed16 a = -32763;
@@ -1913,7 +1824,7 @@ function init() {
 
 Test-Case: output
 Description: Test '>>' expression with 'int:Unsigned16' as the LHS operand and 'int' as the RHS operand.
-Labels: int:Unsigned16, int, shift-expr, unary-minus
+Labels: int, int:Unsigned16, shift-expr, unary-minus
 
 function init() {
     int:Unsigned16 x = 65531;
@@ -1928,7 +1839,8 @@ function init() {
 Test-Case: output
 Description: Test '>>' expression with 'int:Unsigned16' as the LHS operand and builtin subtypes of integer as the RHS
              operand.
-Labels: int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, shift-expr, unary-minus
+Labels: int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        shift-expr, unary-minus
 
 function init() {
     int:Unsigned16 x = 65535;
@@ -1960,7 +1872,7 @@ function init() {
 
 Test-Case: output
 Description: Test '>>' expression for optional 'int:Unsigned16' operands.
-Labels: int:Unsigned16, int, nil-literal, optional-type, shift-expr, Value:toBalString()
+Labels: int, int:Unsigned16, nil-literal, optional-type, shift-expr, Value:toBalString
 
 function init() {
     int:Unsigned16? a = 65530;
@@ -2059,7 +1971,7 @@ function init() {
 Test-Case: output
 Description: Test resultant type of the '>>' expression with 'int:Unsigned16' as the LHS operand and 'int' as the RHS
              operand.
-Labels: int:Unsigned16, int, shift-expr, unary-minus
+Labels: int, int:Unsigned16, shift-expr, unary-minus
 
 function init() {
     int:Unsigned16 x = 65528;
@@ -2075,20 +1987,17 @@ function init() {
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int:Unsigned16' as the LHS operand and 'int' as the RHS
              operand.
-Labels: decimal, float, int:Unsigned16, int, shift-expr, unary-minus, var
+Labels: decimal, DecimalNumber, float, int, int:Unsigned16, shift-expr
 
 function errorFunction(int:Unsigned16 x, int a) {
-    var x1 = x >> a;
-    decimal _ = x1; // @error expected 'decimal' but found 'int:Unsigned16'
-    var x2 = x >> 100;
-    float _ = x2; // @error expected 'float' but found 'int:Unsigned16'
+    decimal _ = x >> a; // @error expected 'decimal' but found 'int:Unsigned16'
+    float _ = x >> 100; // @error expected 'float' but found 'int:Unsigned16'
 }
 
 Test-Case: output
 Description: Test resultant type of the '>>' expression with 'int:Unsigned16' as the LHS operand and builtin subtype of
              integer as the RHS operand.
-Labels: int:Signed8, int:Signed16, int:Unsigned32, int:Unsigned8, int:Unsigned16, int:Unsigned32, shift-expr,
-        unary-minus
+Labels: int:Signed16, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8, shift-expr, unary-minus
 
 function init() {
     int:Unsigned16 x = 245;
@@ -2130,23 +2039,17 @@ function init() {
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int:Unsigned16' as the LHS operand and builtin subtypes of
              integer as the RHS operand.
-Labels: decimal, float, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
-        shift-expr, unary-minus, var
+Labels: decimal, float, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        shift-expr
 
 function errorFunction(int:Unsigned16 x, int:Signed8 a, int:Unsigned8 b, int:Signed16 c, int:Unsigned16 d, int:Signed32 e,
                         int:Unsigned32 f) {
-    var x1 = x >> a;
-    int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'int:Unsigned16'
-    var x2 = x >> b;
-    decimal _ = x2; // @error expected 'decimal' but found 'int:Unsigned16'
-    var x3 = x >> c;
-    int:Signed8 _ = x3; // @error expected 'int:Signed8' but found 'int:Unsigned16'
-    var x4 = x >> d;
-    int:Signed16 _ = x4; // @error expected 'int:Signed16' but found 'int:Unsigned16'
-    var x5 = x >> e;
-    float _ = x5; // @error expected 'float' but found 'int:Unsigned16'
-    var x6 = x >> f;
-    int:Signed16 _ = x6; // @error expected 'int:Signed16' but found 'int:Unsigned16'
+    int:Signed8 _ = x >> a; // @error expected 'int:Signed8' but found 'int:Unsigned16'
+    decimal _ = x >> b; // @error expected 'decimal' but found 'int:Unsigned16'
+    int:Signed8 _ = x >> c; // @error expected 'int:Signed8' but found 'int:Unsigned16'
+    int:Signed16 _ = x >> d; // @error expected 'int:Signed16' but found 'int:Unsigned16'
+    float _ = x >> e; // @error expected 'float' but found 'int:Unsigned16'
+    int:Signed16 _ = x >> f; // @error expected 'int:Signed16' but found 'int:Unsigned16'
 }
 
 Test-Case: output
@@ -2176,7 +2079,7 @@ function errorFunction(int:Unsigned16 x, byte a) {
 Test-Case: output
 Description: Test resultant type of the '>>' expression with 'int:Unsigned16' as the LHS operand and user-defined
              subtype of integer as the RHS operand.
-Labels: DecimalNumber, decimal, float, int:Unsigned16, shift-expr, type, unary-minus, union-type
+Labels: decimal, DecimalNumber, float, int:Unsigned16, shift-expr, type, unary-minus, union-type
 
 type Ints -1|2|-128;
 
@@ -2197,21 +2100,19 @@ function init() {
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int:Unsigned16' as the LHS operand and user-defined
              subtype of integer as the RHS operand.
-Labels: DecimalNumber, float, int:Unsigned16, shift-expr, type, unary-minus, var
+Labels: DecimalNumber, int:Unsigned16, shift-expr, type, unary-minus, union-type
 
 type Ints -1|2|-128;
 
 function errorFunction(int:Unsigned16 x, Ints a) {
-    var x1 = x >> a;
-    int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'int:Unsigned16'
-    var x2 = x >> a;
-    Ints _ = x2; // @error expected '-1|2|-128' but found 'int:Unsigned16'
+    int:Signed8 _ = x >> a; // @error expected 'int:Signed8' but found 'int:Unsigned16'
+    Ints _ = x >> a; // @error expected '-1|2|-128' but found 'int:Unsigned16'
 }
 
 Test-Case: output
 Description: Test resultant type of the '>>' expression with 'int:Unsigned16' as the LHS operand and optional 'int' as
              the RHS operand.
-Labels: int, int:Unsigned16, nil-literal, optional-type, shift-expr, unary-minus, value:toBalString
+Labels: DecimalNumber, int, int:Unsigned16, nil-literal, optional-type, shift-expr, unary-minus, value:toBalString
 
 function init() {
     int:Unsigned16 x = 65525;
@@ -2230,20 +2131,18 @@ function init() {
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int:Unsigned16' as the LHS operand and optional 'int' as
              the RHS operand.
-Labels: float, int:Unsigned8, int:Unsigned16, int, nil-literal, optional-type, shift-expr, unary-minus, var
+Labels: int, int:Unsigned16, int:Unsigned8, optional-type, shift-expr
 
 function errorFunction(int:Unsigned16 x, int? a) {
-    var x1 = x >> a;
-    int:Unsigned8 _ = x1; // @error  expected 'int:Unsigned8' but found 'int:Unsigned16?'
-    var x2 = x >> a;
-    int _ = x2; // @error expected 'int' but found 'int:Unsigned16?'
+    int:Unsigned8 _ = x >> a; // @error  expected 'int:Unsigned8' but found 'int:Unsigned16?'
+    int _ = x >> a; // @error expected 'int' but found 'int:Unsigned16?'
 }
 
 Test-Case: output
 Description: Test resultant type of the '>>' expression with 'int:Unsigned16' as the LHS operand and optional builtin
              subtype of integer as the RHS operand.
-Labels: int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, optional-type,
-        shift-expr, unary-minus, union-type, value:toBalString
+Labels: DecimalNumber, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        nil-literal, optional-type, shift-expr, unary-minus, union-type, value:toBalString
 
 function init() {
     int:Unsigned16 x = 65531;
@@ -2304,23 +2203,17 @@ function init() {
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int:Unsigned16' as the LHS operand and optional builtin
              subtypes of integer as the RHS operand.
-Labels: decimal, float, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
-        optional-type, shift-expr, unary-minus, var
+Labels: decimal, float, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        optional-type, shift-expr
 
 function errorFunction(int:Unsigned16 a, int:Signed8? b, int:Unsigned8? c, int:Signed16? d, int:Unsigned16? e, int:Signed32? f,
                         int:Unsigned32? g) {
-    var x1 = a >> b;
-    int:Unsigned8 _ = x1; // @error expected 'int:Unsigned8' but found 'int:Unsigned16?'
-    var x2 = a >> c;
-    float _ = x2; // @error expected 'float' but found 'int:Unsigned16?'
-    var x3 = a >> d;
-    int:Unsigned8 _ = x3; // @error expected 'int:Unsigned8' but found 'int:Unsigned16?'
-    var x4 = a >> e;
-    int:Signed16 _ = x4; // @error expected 'int:Signed16' but found 'int:Unsigned16?'
-    var x5 = a >> f;
-    decimal _ = x5; // @error expected 'decimal' but found 'int:Unsigned16?'
-    var x6 = a >> g;
-    int:Unsigned16 _ = x6; // @error expected 'int:Unsigned16' but found 'int:Unsigned16?'
+    int:Unsigned8 _ = a >> b; // @error expected 'int:Unsigned8' but found 'int:Unsigned16?'
+    float _ = a >> c; // @error expected 'float' but found 'int:Unsigned16?'
+    int:Unsigned8 _ = a >> d; // @error expected 'int:Unsigned8' but found 'int:Unsigned16?'
+    int:Signed16 _ = a >> e; // @error expected 'int:Signed16' but found 'int:Unsigned16?'
+    decimal _ = a >> f; // @error expected 'decimal' but found 'int:Unsigned16?'
+    int:Unsigned16 _ = a >> g; // @error expected 'int:Unsigned16' but found 'int:Unsigned16?'
 }
 
 Test-Case: output
@@ -2346,18 +2239,17 @@ function init() {
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int:Unsigned16' as the LHS operand and optional byte as
              the RHS operand.
-Labels: byte, float, int, int:Unsigned16, nil-literal, optional-type, shift-expr, var
+Labels: byte, int, int:Unsigned16, optional-type, shift-expr
 
 function errorFunction(int:Unsigned16 x, byte? a) {
-    var x1 = x >> a;
-    int:Unsigned8 _ = x1; // @error  expected 'int:Unsigned8' but found 'int:Unsigned16?'
-    var x2 = x >> a;
-    int _ = x2; // @error expected 'int' but found 'int:Unsigned16?'
+    int:Unsigned8 _ = x >> a; // @error  expected 'int:Unsigned8' but found 'int:Unsigned16?'
+    int _ = x >> a; // @error expected 'int' but found 'int:Unsigned16?'
 }
 
 Test-Case: output
 Description: Test '>>' expression with 'int:Unsigned16' operands in function call and method call.
-Labels: function-call-expr, int, int:Unsigned16, shift-expr, unary-minus, value:toBalString, value:toString
+Labels: function-call-expr, function-defn, int, int:Unsigned16, method-call-expr, shift-expr, unary-minus,
+        value:toBalString, value:toString
 
 function init() {
     int:Unsigned16 a = 125;
@@ -2469,7 +2361,8 @@ function init() {
 Test-Case: output
 Description: Test '>>' expression with 'int:Signed32' as the LHS operand and builtin subtypes of integer as the RHS
              operand.
-Labels: int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, shift-expr, unary-minus
+Labels: int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        shift-expr, unary-minus
 
 function init() {
     int:Signed32 x = 2147483641;
@@ -2706,115 +2599,93 @@ function init() {
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int:Signed32' as the LHS operand and 'int' as the RHS
              operand.
-Labels: decimal, float, int, int:Signed32, shift-expr, unary-minus, var
+Labels: decimal, DecimalNumber, float, int, int:MIN_VALUE, int:Signed32, shift-expr, unary-minus
 
 function errorFunction(int:Signed32 x, int a) {
-    var x1 = x >> a;
-    int:Signed32 _ = x1; // @error expected 'int:Signed32' but found 'int'
-    var x2 = x >> 100;
-    float _ = x2; // @error expected 'float' but found 'int'
-    var x3 = y >> -100;
-    decimal _ = x3; // @error expected 'decimal' but found 'int'
-    var x4 = y >> int:MIN_VALUE;
-    float _ = x4; // @error expected 'float' but found 'int'
+    int:Signed32 _ = x >> a; // @error expected 'int:Signed32' but found 'int'
+    float _ = x >> 100; // @error expected 'float' but found 'int'
+    decimal _ = y >> -100; // @error expected 'decimal' but found 'int'
+    float _ = y >> int:MIN_VALUE; // @error expected 'float' but found 'int'
 }
 
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int:Signed32' as the LHS operand and builtin subtypes of
              integer as the RHS operand.
-Labels: decimal, float, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
-        shift-expr, unary-minus, var
+Labels: decimal, float, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        shift-expr
 
 function errorFunction(int:Signed32 x, int:Signed8 a, int:Unsigned8 b, int:Signed16 c, int:Unsigned16 d, int:Signed32 e,
                          int:Unsigned32 f) {
-    var x1 = x >> a;
-    int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'int'
-    var x2 = x >> b;
-    decimal _ = x2; // @error expected 'decimal' but found 'int'
-    var x3 = x >> c;
-    int:Unsigned16 _ = x3; // @error expected 'int:Unsigned16' but found 'int'
-    var x4 = x >> d;
-    int:Signed32 _ = x4; // @error expected 'int:Signed32' but found 'int'
-    var x5 = x >> e;
-    float _ = x5; // @error expected 'float' but found 'int'
-    var x6 = x >> f;
-    int:Unsigned16 _ = x6; // @error expected 'int:Unsigned16' but found 'int'
+    int:Signed8 _ = x >> a; // @error expected 'int:Signed8' but found 'int'
+    decimal _ = x >> b; // @error expected 'decimal' but found 'int'
+    int:Unsigned16 _ = x >> c; // @error expected 'int:Unsigned16' but found 'int'
+    int:Signed32 _ = x >> d; // @error expected 'int:Signed32' but found 'int'
+    float _ = x >> e; // @error expected 'float' but found 'int'
+    int:Unsigned16 _ = x >> f; // @error expected 'int:Unsigned16' but found 'int'
 }
 
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int:Signed32' as the LHS operand and byte as the RHS
              operand.
-Labels: byte, int:Signed32, shift-expr, unary-minus, var
+Labels: byte, int:Signed32, shift-expr
 
 function errorFunction(int:Signed32 x, byte a) {
-    var x1 = x >> a;
-    int:Signed32 _ = x1; // @error expected 'int:Signed32' but found 'int'
-    var x2 = x >> a;
-    byte _ = x2; // @error expected 'byte' but found 'int'
+    int:Signed32 _ = x >> a; // @error expected 'int:Signed32' but found 'int'
+    byte _ = x >> a; // @error expected 'byte' but found 'int'
 }
 
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int:Signed32' as the LHS operand and user-defined subtype
              of integer as the RHS operand.
-Labels: DecimalNumber, float, int:Signed8, int:Signed32, shift-expr, type, unary-minus, var
+Labels: DecimalNumber, int:Signed32, int:Signed8, shift-expr, type, unary-minus, union-type
 
 type Ints -1|2|-128;
 
 function errorFunction(int:Signed32 x, Ints a) {
-    var x1 = x >> a;
-    int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'int'
-    var x2 = x >> 1;
-    Ints _ = x2; // @error expected '-1|2|-128' but found 'int'
+    int:Signed8 _ = x >> a; // @error expected 'int:Signed8' but found 'int'
+    Ints _ = x >> a; // @error expected '-1|2|-128' but found 'int'
 }
 
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int:Signed32' as the LHS operand and optional 'int' as
              the RHS operand.
-Labels: float, int, int:Signed8, int:Signed32, nil-literal, optional-type, shift-expr, unary-minus, var
+Labels: int, int:Signed32, int:Signed8, optional-type, shift-expr
 
 function errorFunction(int:Signed32 x, int? a) {
-    var x1 = x >> a;
-    int:Signed8 _ = x1; // @error  expected 'int:Signed8' but found 'int?'
-    var x2 = x >> a;
-    int _ = x2; // @error expected 'int' but found 'int?'
+    int:Signed8 _ = x >> a; // @error  expected 'int:Signed8' but found 'int?'
+    int _ = x >> a; // @error expected 'int' but found 'int?'
 }
 
 Test-Case: error
 Description: Test resultant type of the '<<' expression with 'int:Signed32' as the LHS operand and optional builtin
              subtypes of integer as the RHS operand.
-Labels: decimal, float, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
-        shift-expr, unary-minus, var
+Labels: decimal, float, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        shift-expr
 
 function errorFunction(int:Signed32 a, int:Signed8? b, int:Unsigned8? c, int:Signed16? d, int:Unsigned16? e, int:Signed32? f,
                         int:Unsigned32? g) {
-    var x1 = a >> b;
-    int:Signed32 _ = x1; // @error expected 'int:Signed32' but found 'int?'
-    var x2 = a >> c;
-    float _ = x2; // @error expected 'float' but found 'int?'
-    var x3 = a >> d;
-    int:Unsigned16 _ = x3; // @error expected 'int:Unsigned16' but found 'int?'
-    var x4 = a >> e;
-    int:Signed32 _ = x4; // @error expected 'int:Signed32' but found 'int?'
-    var x5 = a >> f;
-    decimal _ = x5; // @error expected 'decimal' but found 'int?'
-    var x6 = a >> g;
-    int:Unsigned16 _ = x6; // @error expected 'int:Unsigned16' but found 'int?'
+    int:Signed32 _ = a >> b; // @error expected 'int:Signed32' but found 'int?'
+    float _ = a >> c; // @error expected 'float' but found 'int?'
+    int:Unsigned16 _ = a >> d; // @error expected 'int:Unsigned16' but found 'int?'
+    int:Signed32 _ = a >> e; // @error expected 'int:Signed32' but found 'int?'
+    decimal _ = a >> f; // @error expected 'decimal' but found 'int?'
+    int:Unsigned16 _ = a >> g; // @error expected 'int:Unsigned16' but found 'int?'
 }
 
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int:Signed32' as the LHS operand and optional byte as
              the RHS operand.
-Labels: byte, float, int, int:Signed32, nil-literal, optional-type, shift-expr, unary-minus, var
+Labels: byte, int, int:Signed32, optional-type, shift-expr
 
 function errorFunction(int:Signed32 x, byte? a) {
-    var x1 = x >> a;
-    int:Signed32 _ = x1; // @error  expected 'int:Signed32' but found 'int?'
-    var x2 = x >> a;
+    int:Signed32? _ = x >> a; // @error  expected 'int:Signed32?' but found 'int?'
+    int _ = x >> a; // @error  expected 'int' but found 'int?'
 }
 
 Test-Case: output
 Description: Test '>>' expression with 'int:Signed32' operands in function call and method call.
-Labels: function-call-expr, int:Signed32, shift-expr, unary-minus, value:toBalString, value:toString
+Labels: function-call-expr, functions-defn, int:Signed32, method-call-expr, shift-expr, unary-minus, value:toBalString,
+        value:toString
 
 function init() {
     int:Signed32 a = -2147483639;
@@ -2879,7 +2750,7 @@ function init() {
 
 Test-Case: output
 Description: Test '>>' expression with 'int:Unsigned32' as the LHS operand and 'int' as the RHS operand.
-Labels: int:Unsigned32, int, shift-expr, unary-minus
+Labels: int, int:Unsigned32, shift-expr, unary-minus
 
 function init() {
     int:Unsigned32 x = 4294967291;
@@ -2894,7 +2765,8 @@ function init() {
 Test-Case: output
 Description: Test '>>' expression with 'int:Unsigned32' as the LHS operand and builtin subtypes of integer as the RHS
              operand.
-Labels: int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, shift-expr, unary-minus
+Labels: int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        shift-expr, unary-minus
 
 function init() {
     int:Unsigned32 x = 4294967288;
@@ -2926,7 +2798,7 @@ function init() {
 
 Test-Case: output
 Description: Test '>>' expression for optional 'int:Unsigned32' operands.
-Labels: int:Unsigned32, int, nil-literal, optional-type, shift-expr, value:toBalString
+Labels: int, int:Unsigned32, nil-literal, optional-type, shift-expr, value:toBalString
 
 function init() {
     int:Unsigned32? a = 4294967290;
@@ -3025,7 +2897,7 @@ function init() {
 Test-Case: output
 Description: Test resultant type of the '>>' expression with 'int:Unsigned32' as the LHS operand and 'int' as the RHS
              operand.
-Labels: int:Unsigned32, int, shift-expr, unary-minus
+Labels: int, int:Unsigned32, shift-expr, unary-minus
 
 function init() {
     int:Unsigned32 x = 4294967293;
@@ -3041,20 +2913,17 @@ function init() {
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int:Unsigned32' as the LHS operand and 'int' as the RHS
              operand.
-Labels: decimal, float, int:Unsigned32, int, shift-expr, unary-minus, var
+Labels: decimal, float, int, int:Unsigned32, shift-expr
 
 function errorFunction(int:Unsigned32 x, int a) {
-    var x1 = x >> a;
-    decimal _ = x1; // @error expected 'decimal' but found 'int:Unsigned32'
-    var x2 = x >> a;
-    float _ = x2; // @error expected 'float' but found 'int:Unsigned32'
+    decimal _ = x >> a; // @error expected 'decimal' but found 'int:Unsigned32'
+    float _ = x >> a; // @error expected 'float' but found 'int:Unsigned32'
 }
 
 Test-Case: output
 Description: Test resultant type of the '>>' expression with 'int:Unsigned32' as the LHS operand and builtin subtypes of
              integer as the RHS operand.
-Labels: int:Signed8, int:Signed16, int:Unsigned32, int:Unsigned8, int:Unsigned16, int:Unsigned32, shift-expr,
-        unary-minus
+Labels: int:Signed16, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8, shift-expr, unary-minus
 
 function init() {
     int:Unsigned32 x = 245;
@@ -3096,23 +2965,17 @@ function init() {
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int:Unsigned32' as the LHS operand and builtin subtypes of
              integer as the RHS operand.
-Labels: decimal, float, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
-        shift-expr, unary-minus, var
+Labels: decimal, float, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        shift-expr
 
 function errorFunction(int:Unsigned32 x, int:Signed8 a, int:Unsigned8 b, int:Signed16 c, int:Unsigned16 d, int:Signed32 e,
                          int:Unsigned32 f) {
-    var x1 = x >> a;
-    int:Signed16 _ = x1; // @error expected 'int:Signed16' but found 'int:Unsigned32'
-    var x2 = x >> b;
-    decimal _ = x2; // @error expected 'decimal' but found 'int:Unsigned32'
-    var x3 = x >> c;
-    int:Signed8 _ = x3; // @error expected 'int:Signed8' but found 'int:Unsigned32'
-    var x4 = x >> d;
-    int:Signed16 _ = x4; // @error expected 'int:Signed16' but found 'int:Unsigned32'
-    var x5 = x >> e;
-    float _ = x5; // @error expected 'float' but found 'int:Unsigned32'
-    var x6 = x >> f;
-    int:Signed16 _ = x6; // @error expected 'int:Signed16' but found 'int:Unsigned32'
+    int:Signed16 _ = x >> a; // @error expected 'int:Signed16' but found 'int:Unsigned32'
+    decimal _ = x >> b; // @error expected 'decimal' but found 'int:Unsigned32'
+    int:Signed8 _ = x >> c; // @error expected 'int:Signed8' but found 'int:Unsigned32'
+    int:Signed16 _ = x >> d; // @error expected 'int:Signed16' but found 'int:Unsigned32'
+    float _ = x >> e; // @error expected 'float' but found 'int:Unsigned32'
+    int:Signed16 _ = x >> f; // @error expected 'int:Signed16' but found 'int:Unsigned32'
 }
 
 Test-Case: output
@@ -3163,15 +3026,13 @@ function init() {
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int:Unsigned32' as the LHS operand and user-defined
              subtype of integer as the RHS operand.
-Labels: DecimalNumber, float, int:Unsigned32, shift-expr, type, var
+Labels: DecimalNumber, int:Unsigned32, shift-expr, type, unary-minus, union-type, int:Signed8
 
 type Ints -1|2|-128;
 
 function errorFunction(int:Unsigned32 x, Ints a) {
-    var x1 = x >> a;
-    int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'int:Unsigned32'
-    var x2 = x >> a;
-    Ints _ = x2; // @error expected '-1|2|-128' but found 'int:Unsigned32'
+    int:Signed8 _ = x >> a; // @error expected 'int:Signed8' but found 'int:Unsigned32'
+    Ints _ = x >> a; // @error expected 'Ints' but found 'int:Unsigned32'
 }
 
 Test-Case: output
@@ -3196,20 +3057,18 @@ function init() {
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int:Unsigned32' as the LHS operand and optional 'int' as
              the RHS operand.
-Labels: float, int:Unsigned8, int:Unsigned32, int, nil-literal, optional-type, shift-expr, unary-minus, var
+Labels: int, int:Unsigned32, int:Unsigned8, optional-type, shift-expr
 
 function errorFunction(int:Unsigned32 x, int? a) {
-    var x1 = x >> a;
-    int:Unsigned8 _ = x1; // @error  expected 'int:Unsigned8' but found 'int:Unsigned32?'
-    var x2 = x >> b;
-    int _ = x2; // @error expected 'int' but found 'int:Unsigned32?'
+    int:Unsigned8 _ = x >> a; // @error  expected 'int:Unsigned8' but found 'int:Unsigned32?'
+    int _ = x >> b; // @error expected 'int' but found 'int:Unsigned32?'
 }
 
 Test-Case: output
 Description: Test resultant type of the '>>' expression with 'int:Unsigned32' as the LHS operand and optional builtin
              subtype of integer as the RHS operand.
-Labels: int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, optional-type,
-        shift-expr, unary-minus, union-type, value:toBalString
+Labels: int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        nil-literal, optional-type, shift-expr, unary-minus, union-type, value:toBalString
 
 function init() {
     int:Unsigned32 x = 4294967285;
@@ -3270,23 +3129,17 @@ function init() {
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int:Unsigned32' as the LHS operand and optional builtin
              subtypes of integer as the RHS operand.
-Labels: decimal, float, int, int:Signed8, int:Signed16, int:Unsigned32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
-        optional-type, shift-expr, unary-minus, var
+Labels: decimal, float, int, int:Signed16, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8, optional-type,
+        shift-expr
 
 function errorFunction(int:Unsigned32 a, int:Signed8? b, int:Unsigned8? c, int:Signed16? d, int:Unsigned16? e, int:Signed32? f,
                          int:Unsigned32? g) {
-    var x1 = a >> b;
-    int:Unsigned8 _ = x1; // @error expected 'int:Unsigned8' but found 'int:Unsigned32?'
-    var x2 = a >> c;
-    float _ = x2; // @error expected 'float' but found 'int:Unsigned32?'
-    var x3 = a >> d;
-    int:Unsigned8 _ = x3; // @error expected 'int:Unsigned8' but found 'int:Unsigned32?'
-    var x4 = a >> e;
-    int:Signed16 _ = x4; // @error expected 'int:Signed16' but found 'int:Unsigned32?'
-    var x5 = a >> f;
-    decimal _ = x5; // @error expected 'decimal' but found 'int:Unsigned32?'
-    var x6 = a >> g;
-    int:Unsigned16 _ = x6; // @error expected 'int:Unsigned16' but found 'int:Unsigned32?'
+    int:Unsigned8 _ = a >> b; // @error expected 'int:Unsigned8' but found 'int:Unsigned32?'
+    float _ = a >> c; // @error expected 'float' but found 'int:Unsigned32?'
+    int:Unsigned8 _ = a >> d; // @error expected 'int:Unsigned8' but found 'int:Unsigned32?'
+    int:Signed16 _ = a >> e; // @error expected 'int:Signed16' but found 'int:Unsigned32?'
+    decimal _ = a >> f; // @error expected 'decimal' but found 'int:Unsigned32?'
+    int:Unsigned16 _ = a >> g; // @error expected 'int:Unsigned16' but found 'int:Unsigned32?'
 }
 
 Test-Case: output
@@ -3312,18 +3165,17 @@ function init() {
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'int:Unsigned32' as the LHS operand and optional byte as
              the RHS operand.
-Labels: byte, float, int, int:Unsigned32, nil-literal, optional-type, shift-expr, var
+Labels: byte, int, int:Unsigned32, optional-type, shift-expr
 
 function errorFunction(int:Unsigned32 x, byte? a) {
-    var x1 = x >> a;
-    int:Unsigned8 _ = x1; // @error  expected 'int:Unsigned8' but found 'int:Unsigned32?'
-    var x2 = x >> a;
-    int _ = x2; // @error expected 'int' but found 'int:Unsigned32?'
+    int:Unsigned8 _ = x >> a; // @error  expected 'int:Unsigned8' but found 'int:Unsigned32?'
+    int _ = x >> a; // @error expected 'int' but found 'int:Unsigned32?'
 }
 
 Test-Case: output
 Description: Test '>>' expression with 'int:Unsigned32' operands in function call and method call.
-Labels: function-call-expr, int, int:Unsigned32, shift-expr, unary-minus, value:toBalString, value:toString
+Labels: function-call-expr, function-defn, int:Unsigned32, method-call-expr, shift-expr,
+        value:toBalString, value:toString
 
 function init() {
     int:Unsigned32 a = 125;
@@ -3353,7 +3205,7 @@ function rightShiftExpr(int:Unsigned32 x) {
 
 Test-Case: output
 Description: Test '>>' expression with 'int:Unsigned32' operands as a return statement.
-Labels: int:Unsigned32, return-stmt, shift-expr, unary-minus
+Labels: int:Unsigned32, return-stmt, shift-expr
 
 function init() {
     int:Unsigned32 a = 125;
@@ -3403,7 +3255,8 @@ function init() {
 Test-Case: output
 Description: Test '>>' expression with 'byte' as the LHS operand and builtin subtypes of integer as the RHS
              operand.
-Labels: byte, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, shift-expr, unary-minus
+Labels: byte, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        shift-expr, unary-minus
 
 function init() {
     byte x = 246;
@@ -3543,26 +3396,24 @@ function init() {
 
     byte x1 = x >> a;
     io:println(x1); // @output 31
-    byte x2 = x >> a;
+    byte x2 = x >> b;
     io:println(x2); // @output 31
 }
 
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'byte' as the LHS operand and 'int' as the RHS
              operand.
-Labels: byte, float, int, shift-expr, unary-minus, var
+Labels: byte, DecimalNumber, float, decimal, int, shift-expr, unary-minus
 
 function errorFunction(byte x, int a) {
-    var x1 = x >> a;
-    float _ = x1; // @error expected 'float' but found 'byte'
-    var x2 = x >> -100;
-    float _ = x2; // @error expected 'float' but found 'byte'
+    float _ = x >> a; // @error expected 'float' but found 'byte'
+    decimal _ = x >> -100; // @error expected 'decimal' but found 'byte'
 }
 
 Test-Case: output
 Description: Test resultant type of the '>>' expression with 'byte' as the LHS operand and builtin subtype of
              integer as the RHS operand.
-Labels: byte, int:Signed8, int:Signed16, int:Unsigned32, int:Unsigned8, int:Unsigned16, int:Unsigned32, shift-expr,
+Labels: byte, int:Signed16, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8, shift-expr,
         unary-minus
 
 function init() {
@@ -3605,26 +3456,17 @@ function init() {
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'byte' as the LHS operand and builtin subtypes of
              integer as the RHS operand.
-Labels: byte, decimal, float, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
-        shift-expr, unary-minus, var
+Labels: byte, decimal, float, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        shift-expr
 
 function errorFunction(byte x, int:Signed8 a, int:Unsigned8 b, int:Signed16 c, int:Unsigned16 d, int:Signed32 e,
                         int:Unsigned32 f) {
-    var x1 = x >> a;
-    int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'byte'
-    var x2 = x >> b;
-    decimal _ = x2; // @error expected 'decimal' but found 'byte'
-
-    var x3 = x >> c;
-    int:Signed8 _ = x3; // @error expected 'int:Signed8' but found 'byte'
-
-    var x4 = x >> d;
-    int:Signed8 _ = x4; // @error expected 'int:Signed8' but found 'byte'
-    var x5 = x >> e;
-    float _ = x5; // @error expected 'float' but found 'byte'
-
-    var x6 = x >> f;
-    int:Signed8 _ = x6; // @error expected 'int:Signed8' but found 'byte'
+    int:Signed8 _ = x >> a; // @error expected 'int:Signed8' but found 'byte'
+    decimal _ = x >> b; // @error expected 'decimal' but found 'byte'
+    int:Signed8 _ = x >> c; // @error expected 'int:Signed8' but found 'byte'
+    int:Signed8 _ = x >> d; // @error expected 'int:Signed8' but found 'byte'
+    float _ = x >> e; // @error expected 'float' but found 'byte'
+    int:Signed8 _ = x >> f; // @error expected 'int:Signed8' but found 'byte'
 }
 
 Test-Case: error
@@ -3661,15 +3503,13 @@ function init() {
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'byte' as the LHS operand and user-defined subtype
              of integer as the RHS operand.
-Labels: byte, DecimalNumber, float, shift-expr, type, unary-minus, var
+Labels: byte, DecimalNumber, shift-expr, type, unary-minus, union-type
 
 type Ints -1|2|-128;
 
 function errorFunction(byte x, Ints a) {
-    var x1 = x >> a;
-    int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'byte'
-    var x2 = x >> a;
-    Ints _ = x2; // @error expected '-1|2|-128' but found 'byte'
+    int:Signed8 _ = x >> a; // @error expected 'int:Signed8' but found 'byte'
+    Ints _ = x >> a; // @error expected '-1|2|-128' but found 'byte'
 }
 
 Test-Case: output
@@ -3694,20 +3534,18 @@ function init() {
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'byte' as the LHS operand and optional 'int' as
              the RHS operand.
-Labels: byte, float, int, nil-literal, optional-type, shift-expr, unary-minus, var
+Labels: byte, int, optional-type, shift-expr
 
 function errorFunction(byte x, int? a) {
-    var x1 = x >> a;
-    byte _ = x1; // @error  expected 'byte' but found 'byte?'
-    var x2 = x >> a;
-    int _ = x2; // @error expected 'int' but found 'byte?'
+    byte _ = x >> a; // @error  expected 'byte' but found 'byte?'
+    int _ = x >> a; // @error expected 'int' but found 'byte?'
 }
 
 Test-Case: output
 Description: Test resultant type of the '>>' expression with 'byte' as the LHS operand and optional builtin
              subtype of integer as the RHS operand.
-Labels: byte, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, optional-type,
-        shift-expr, unary-minus, union-type, value:toBalString
+Labels: byte, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        nil-literal, optional-type, shift-expr, unary-minus, union-type, value:toBalString
 
 function init() {
     byte x = 251;
@@ -3768,29 +3606,23 @@ function init() {
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'byte' as the LHS operand and optional builtin
              subtypes of integer as the RHS operand.
-Labels: byte, decimal, float, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned16,
-        optional-type, shift-expr, unary-minus, var
+Labels: byte, decimal, float, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned8,
+        optional-type, shift-expr
 
 function errorFunction(byte a, int:Signed8? b, int:Unsigned8? c, int:Signed16? d, int:Unsigned16? e, int:Signed32? f,
                         int:Unsigned32? g) {
-    var x1 = a >> b;
-    int:Signed8 _ = x1; // @error expected 'int:Signed8' but found 'byte?'
-    var x2 = a >> c;
-    float _ = x2; // @error expected 'float' but found 'byte?'
-    var x3 = a >> d;
-    byte _ = x3; // @error expected 'byte' but found 'byte?'
-    var x4 = a >> e;
-    int:Signed16 _ = x4; // @error expected 'int:Signed16' but found 'byte?'
-    var x5 = a >> f;
-    decimal _ = x5; // @error expected 'decimal' but found 'byte?'
-    var x6 = a >> g;
-    int:Unsigned16 _ = x6; // @error expected 'int:Unsigned16' but found 'byte?'
+    int:Signed8 _ = a >> b; // @error expected 'int:Signed8' but found 'byte?'
+    float _ = a >> c; // @error expected 'float' but found 'byte?'
+    byte _ = a >> d; // @error expected 'byte' but found 'byte?'
+    int:Signed16 _ = a >> e; // @error expected 'int:Signed16' but found 'byte?'
+    decimal _ = a >> f; // @error expected 'decimal' but found 'byte?'
+    int:Unsigned16 _ = a >> g; // @error expected 'int:Unsigned16' but found 'byte?'
 }
 
 Test-Case: output
 Description: Test resultant type of the '>>' expression with 'byte' as the LHS operand and optional byte as
              the RHS operand.
-Labels: byte, int, byte, nil-literal, optional-type, shift-expr, value:toBalString
+Labels: byte, nil-literal, optional-type, shift-expr, value:toBalString
 
 function init() {
     byte x = 251;
@@ -3810,18 +3642,17 @@ function init() {
 Test-Case: error
 Description: Test resultant type of the '>>' expression with 'byte' as the LHS operand and optional byte as
              the RHS operand.
-Labels: byte, float, int, byte, nil-literal, optional-type, shift-expr, var
+Labels: byte, int, optional-type, shift-expr
 
 function errorFunction(byte x, byte? a) {
-    var x1 = x >> a;
-    byte _ = x1; // @error  expected 'byte' but found 'byte?'
-    var x2 = x >> a;
-    int _ = x2; // @error expected 'int' but found 'byte?'
+    byte _ = x >> a; // @error  expected 'byte' but found 'byte?'
+    int _ = x >> a; // @error expected 'int' but found 'byte?'
 }
 
 Test-Case: output
 Description: Test '>>' expression with 'byte' operands in function call and method call.
-Labels: byte, function-call-expr, int, shift-expr, unary-minus, value:toBalString, value:toString
+Labels: byte, function-call-expr, function-defn, method-call-expr, shift-expr, value:toBalString,
+        value:toString
 
 function init() {
     byte a = 125;
@@ -3851,7 +3682,7 @@ function rightShiftExpr(byte x) {
 
 Test-Case: output
 Description: Test '>>' expression with 'byte' operands as a return statement.
-Labels: byte, return-stmt, shift-expr, unary-minus
+Labels: byte, return-stmt, shift-expr
 
 function init() {
     byte a = 125;
@@ -3871,7 +3702,7 @@ function rightShiftExpr(byte x, byte y) returns byte {
 
 Test-Case: output
 Description: Test '>>' expression with zero and positive user-defined subtypes of integer DecimalNumbers as operands.
-Labels: DecimalNumbers, shift-expr, type
+Labels: DecimalNumber, shift-expr, type, union-type
 
 type Ints1 2147483642|5;
 type Ints2 0;
@@ -3889,7 +3720,7 @@ function init() {
 
 Test-Case: output
 Description: Test '>>' expression with zero and negative user-defined DecimalNumbers as operands.
-Labels: DecimalNumbers, shift-expr, unary-minus, type
+Labels: DecimalNumber, shift-expr, type, unary-minus, union-type
 
 type Ints1 -32757;
 type Ints2 -2147483639|0;
@@ -3907,7 +3738,7 @@ function init() {
 
 Test-Case: output
 Description: Test '>>' expression for positive and negative user-defined DedcimalNumbers as operands.
-Labels: int, shift-expr, type, unary-minus
+Labels: DecimalNumber, int, shift-expr, type, unary-minus
 
 type Ints int;
 
@@ -3924,7 +3755,7 @@ function init() {
 Test-Case: output
 Description: Test '>>' expression with user-defined subtypes of integer as the LHS operand and 'int' as the RHS
              operand.
-Labels: DecimalNumbers, int, shift-expr, type, unary-minus
+Labels: DecimalNumber, int, shift-expr, type, unary-minus, union-type
 
 type Ints 2147483644|-2147483637;
 
@@ -3944,8 +3775,8 @@ function init() {
 Test-Case: output
 Description: Test '>>' expression with user-defined subtypes of integer as the LHS operand and builtin subtypes of
              integer as the RHS operand.
-Labels: DecimalNumbers, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32,
-        shift-expr, type, unary-minus
+Labels: DecimalNumber, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        shift-expr, type, unary-minus, union-type
 
 type Ints 2147483645|-2147483644;
 
@@ -3989,7 +3820,7 @@ function init() {
 
 Test-Case: output
 Description: Test '>>' expression for optional zero and positive user-defined subtypes of integer operands.
-Labels: DecimalNumbers, int, nil-literal, optional-type, shift-expr, type, value:toBalString
+Labels: DecimalNumber, int, nil-literal, optional-type, shift-expr, type, value:toBalString
 
 type Ints int;
 
@@ -4030,7 +3861,7 @@ function init() {
 
 Test-Case: output
 Description: Test '>>' expression for optional zero and negative user-defined subtypes of integer operands.
-Labels: DecimalNumbers, int, nil-literal, optional-type, shift-expr, type, unary-minus, value:toBalString
+Labels: DecimalNumber, int, nil-literal, optional-type, shift-expr, type, unary-minus, value:toBalString
 
 type Ints int;
 
@@ -4068,14 +3899,14 @@ function init() {
 
 Test-Case: output
 Description: Test '>>' expression for optional positive and negative user-defined subtypes of integer.
-Labels: DecimalNumbers, optional-type, shift-expr, type, unary-minus
+Labels: DecimalNumber, nil-literal, optional-type, shift-expr, type, unary-minus, int
 
 type Ints int;
 
 function init() {
     Ints? a = 2147483637;
     Ints? b = 5;
-    Ints? c = -2;
+    Ints? c = ();
     Ints? d = -2147483643;
     Ints e = 100;
     Ints f = 7;
@@ -4083,10 +3914,10 @@ function init() {
     Ints h = -2147483637;
 
     io:println(a >> d); // @output 67108863
-    io:println(c >> b); // @output -1
+    io:println(c >> b); // @output ()
 
     io:println(a >> h); // @output 1048575
-    io:println(c >> f); // @output -1
+    io:println(c >> f); // @output ()
 
     io:println(e >> d); // @output 3
     io:println(g >> b); // @output -1
@@ -4094,7 +3925,7 @@ function init() {
 
 Test-Case: output
 Description: Test 0x3F mask of user-defined subtypes of integer RHS operand in '>>' expression.
-Labels: DecimalNumbers, int, shift-expr, type, unary-minus
+Labels: DecimalNumber, int, shift-expr, type, unary-minus
 
 type Ints int;
 
@@ -4182,139 +4013,105 @@ function init() {
 Test-Case: error
 Description: Test resultant type of the '>>' expression with user-defined subtypes of integer as the LHS operand and
              'int' as the RHS operand.
-Labels: DecimalNumbers, decimal, float, int, int:Signed16, shift-expr, type, unary-minus, var
+Labels: DecimalNumber, int, int:Signed16, shift-expr, type, unary-minus, union-type
 
 type Ints 12|-32762;
 
-function errorFunction() {
-    Ints x = 12;
-    Ints y = -32762;
-    int a = 7;
-    int b = -12;
-
-    var x1 = x >> a;
-    int:Signed16 _ = x1; // @error 'int:Signed16' but found 'int'
-    var x2 = x >> b;
-    float _ = x2; // @error expected 'float' but found 'int'
-    var x3 = y >> a;
-    decimal _ = x3; // @error expected 'decimal' but found 'int'
-    var x4 = y >> b;
-    float _ = x4; // @error expected 'float' but found 'int'
+function errorFunction(Ints x, int a) {
+    int:Signed16 _ = x >> a; // @error 'int:Signed16' but found 'int'
+    Ints _ = x >> -100; // @error expected 'float' but found 'int'
 }
 
 Test-Case: error
 Description: Test resultant type of the '>>' expression with integer as the LHS operand and builtin subtypes of integer
              as the RHS operand.
-Labels: DecimalNumbers, decimal, float, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16,
-        int:Unsigned32, shift-expr, type, unary-minus, var
+Labels: decimal, float, int, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32,
+        int:Unsigned8, shift-expr, type
 
 type Ints int;
 
 function errorFunction(Ints x, int:Signed8 a, int:Unsigned8 b, int:Signed16 c, int:Unsigned16 d, int:Signed32 e,
                          int:Unsigned32 f) {
-    var x1 = x >> a;
-    int:Signed16 _ = x1; // @error expected 'int:Signed16' but found 'int'
-    var x2 = x >> b;
-    decimal _ = x2; // @error expected 'decimal' but found 'int'
-
-    var x3 = x >> c;
-    int:Unsigned16 _ = x3; // @error expected 'int:Unsigned16' but found 'int'
-
-    var x4 = x >> d;
-    int:Signed16 _ = x4; // @error expected 'int:Signed16' but found 'int'
-    var x5 = x >> e;
-    float _ = x5; // @error expected 'float' but found 'int'
-
-    var x6 = x >> f;
-    int:Unsigned16 _ = x6; // @error expected 'int:Unsigned16' but found 'int'
+    int:Signed16 _ = x >> a; // @error expected 'int:Signed16' but found 'int'
+    decimal _ = x >> b; // @error expected 'decimal' but found 'int'
+    int:Unsigned16 _ = x >> c; // @error expected 'int:Unsigned16' but found 'int'
+    int:Signed16 _ = x >> d; // @error expected 'int:Signed16' but found 'int'
+    float _ = x >> e; // @error expected 'float' but found 'int'
+    int:Unsigned16 _ = x >> f; // @error expected 'int:Unsigned16' but found 'int'
 }
 
 Test-Case: error
 Description: Test resultant type of the '>>' expression with user-defined subtypes of integer as the LHS operand and
              byte as the RHS operand.
-Labels: byte, DecimalNumbers, int:Signed16, shift-expr, type, unary-minus, var
+Labels: byte, shift-expr, type
 
 type Ints int;
 
-function errorFunction(Ints x, Ints a) {
-    var x1 = x >> a;
-    int:Signed16 _ = x1; // @error expected 'int:Signed16' but found 'int'
-    var x2 = y >> a;
-    Ints _ = x2; // @error expected 'Ints' but found 'int'
+function errorFunction(Ints x, byte a) {
+    byte _ = x >> a; // @error expected 'byte' but found 'int'
+    Ints _ = x >> a; // @error expected 'Ints' but found 'int'
 }
 
 Test-Case: error
 Description: Test resultant type of the '>>' expression with user-defined subtypes of integer as the LHS operand and
              user-defined subtype of integer as the RHS operand.
-Labels: DecimalNumbers, float, int, int:Signed16, shift-expr, type, unary-minus, var
+Labels: DecimalNumber, int, shift-expr, type, unary-minus, union-type
 
 type Ints1 int;
 type Ints2 -1|2|-128;
 
 function errorFunction(Ints1 x, Ints2 a) {
-    var x1 = x >> a;
-    int:Signed16 _ = x1; // @error expected 'int:Signed16' but found 'int'
-    var x2 = x >> a;
-    Ints1 _ = x2; // @error expected 'Ints1' but found 'int'
-    var x3 = a >> x;
-    Ints2 _ = x3; // @error expected 'Ints1' but found 'int'
+    int:Signed16 _ = x >> a; // @error expected 'int:Signed16' but found 'int'
+    Ints1 _ = x >> x; // @error expected 'Ints1' but found 'int'
+    Ints2 _ = a >> x; // @error expected 'Ints1' but found 'int'
 }
 
 Test-Case: error
 Description: Test resultant type of the '>>' expression with user-defined subtypes of integer as the LHS operand and
              optional integer as the RHS operand.
-Labels: DecimalNumbers, float, int, int:Signed16, nil-literal, optional-type, shift-expr, unary-minus
+Labels: DecimalNumber, int, optional-type, shift-expr, unary-minus, union-type
 
 type Ints 12|-12;
 
 function errorFunction(Ints x, int? a) {
-    var x1 = x >> a;
-    int:Signed16 _ = x1; // @error  expected 'int:Signed16' but found 'int?'
-    var x2 = x >> a;
-    int _ = x2; // @error expected 'int' but found 'int?'
+    Ints _ = x1; // @error  expected 'int:Signed16' but found 'int?'
+    int _ = x >> a; // @error expected 'Ints' but found 'int?'
 }
 
 Test-Case: error
 Description: Test resultant type of the '>>' expression with integer as the LHS operand and optional builtin subtypes of
              integer as the RHS operand.
-Labels: DecimalNumbers, decimal, float, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16,
-        int:Unsigned32, shift-expr, type, unary-minus
+Labels: decimal, float, int, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32,
+        int:Unsigned8, optional-type, shift-expr, type
 
 type Ints int;
 
 function errorFunction(Ints a, int:Signed8? b, int:Unsigned8? c, int:Signed16? d, int:Unsigned16? e, int:Signed32? f,
                          int:Unsigned32? g) {
-    var x1 = a >> b;
-    int:Signed16 _ = x1; // @error expected 'int:Signed16' but found 'int?'
-    var x2 = a >> c;
-    float _ = x2; // @error expected 'float' but found 'int?'
-    var x3 = a >> d;
-    int:Unsigned16 _ = x3; // @error expected 'int:Unsigned16' but found 'int?'
-    var x4 = a >> e;
-    int:Signed16 _ = x4; // @error expected 'int:Signed16' but found 'int?'
-    var x5 = a >> f;
-    decimal _ = x5; // @error expected 'decimal' but found 'int?'
-    var x6 = a >> g;
-    int:Unsigned16 _ = x6; // @error expected 'int:Unsigned16' but found 'int?'
+    int:Signed16 _ = a >> b; // @error expected 'int:Signed16' but found 'int?'
+    float _ = a >> c; // @error expected 'float' but found 'int?'
+    int:Unsigned16 _ = a >> d; // @error expected 'int:Unsigned16' but found 'int?'
+    int:Signed16 _ = a >> e; // @error expected 'int:Signed16' but found 'int?'
+    decimal _ = a >> f; // @error expected 'decimal' but found 'int?'
+    int:Unsigned16 _ = a >> g; // @error expected 'int:Unsigned16' but found 'int?'
 }
 
 Test-Case: error
 Description: Test resultant type of the '>>' expression with user-defined subtypes of integer as the LHS operand and
              optional byte as the RHS operand.
-Labels: byte, DecimalNumbers, float, int, nil-literal, optional-type, shift-expr, type, unary-minus, var
+Labels: byte, DecimalNumber, int, optional-type, shift-expr, type, unary-minus
 
 type Ints 12|-22;
 
 function errorFunction(Ints x, byte? a) {
-    var x1 = x >> a;
-    int:Signed16 _ = x1; // @error  expected 'int:Signed16' but found 'int?'
-    var x2 = x >> a;
-    int _ = x2; // @error expected 'int' but found 'int?'
+    int:Signed16 _ = x >> a; // @error  expected 'int:Signed16' but found 'int?'
+    int _ = x >> a; // @error expected 'int' but found 'int?'
 }
 
 Test-Case: output
 Description: Test '>>' expression with user-defined subtypes of integer operands in function call and method call.
-Labels: DecimalNumbers, function-call-expr, shift-expr, type, unary-minus, value:toBalString, value:toString
+Labels: DecimalNumber, function-call-expr, function-defn, method-call-expr, shift-expr, type, unary-minus, union-type,
+        value:toBalString, value:toString
 
 type Ints1 -2147483640|-2147483637;
 type Ints2 12|0|2;
@@ -4347,7 +4144,7 @@ function rightShiftExpr(int x) {
 
 Test-Case: output
 Description: Test '>>' expression with user-defined subtypes of integer operands as a return statement.
-Labels: DecimalNumbers, int, return-stmt, shift-expr, type, unary-minus
+Labels: DecimalNumber, int, return-stmt, shift-expr, type, unary-minus, union-type
 
 type Ints1 -122|-123;
 type Ints2 12|0|2;
@@ -4370,8 +4167,8 @@ function rightShiftExpr(int x, int y) returns int {
 
 Test-Case: output
 Description: Test the '>>' expression with module level basic types as the operands.
-Labels: byte, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16, int:Unsigned32, shift-expr,
-        unary-minus
+Labels: byte, DecimalNumber, int, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32,
+        int:Unsigned8, shift-expr, unary-minus
 
 int i1 = 1221112;
 int i2 = -1212321321;
@@ -4436,8 +4233,8 @@ function init() {
 
 Test-Case: output
 Description: Test the '>>' expression with module level optional basic types as the operands.
-Labels: byte, int, int:Signed8, int:Signed32, int:Unsigned8, nil-literal, optional-type, shift-expr, unary-minus,
-        value:toBalString
+Labels: byte, int, int:Signed32, int:Signed8, int:Unsigned8, nil-literal, optional-type, shift-expr,
+        unary-minus, value:toBalString
 
 int i1 = -1;
 int? i2 = 7;
@@ -4466,8 +4263,8 @@ function init() {
 
 Test-Case: output
 Description: Test the '>>' expression at module level.
-Labels: byte, DecimalNumber, int, int:Signed8, int:Signed16, int:Signed32, int:Unsigned8, int:Unsigned16,
-        int:Unsigned32, shift-expr, unary-minus
+Labels: byte, int, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32,
+        int:Unsigned8, shift-expr, unary-minus
 
 int i1 = 1221112;
 int i2 = 3;
@@ -4515,7 +4312,8 @@ function init() {
 
 Test-Case: output
 Description: Test '>>' expression with field access as operands.
-Labels: DecimalNumber, int, mapping-constructor, module-type-defn, record-type, shift-expr, unary-minus
+Labels: DecimalNumber, field-access-expr, int, mapping-constructor-expr, module-type-defn, record-type, shift-expr,
+        unary-minus
 
 function init() {
     Record a = {x: 12};
@@ -4533,7 +4331,7 @@ type Record record {
 
 Test-Case: output
 Description: Test '>>' expression with member access as operands.
-Labels: array-type, DecimalNumber, int, list-constructor, shift-expr
+Labels: array-type, DecimalNumber, int, list-constructor-expr, member-access-expr, shift-expr
 
 function init() {
     int[] b = [3, 40];
@@ -4546,7 +4344,7 @@ function init() {
 
 Test-Case: output
 Description: Test '>>' expression with function call as operands.
-Labels: DecimalNumber, function-call-expr, int, shift-expr
+Labels: DecimalNumber, function-call-expr, function-defn, int, shift-expr
 
 function init() {
     int b = 10 >> getInt();
@@ -4584,7 +4382,7 @@ class Class {
 
 Test-Case: output
 Description: Test let expression in integer '>>' expression operands.
-Labels: int, let-expr, shift-expr
+Labels: DecimalNumber, int, let-expr, shift-expr
 
 function init() {
     int a = (let int h1 = 300 >> 2 in h1) >> 5;
@@ -4604,7 +4402,7 @@ function init() {
 
 Test-Case: output
 Description: Test unary expressions in integer '>>' expression operands.
-Labels: int, shift-expr, unary-plus, unary-minus, unary-complement
+Labels: DecimalNumber, int, shift-expr, unary-complement, unary-minus, unary-plus
 
 function init() {
     int a = +40 >> -3;
@@ -4625,7 +4423,7 @@ function init() {
 
 Test-Case: output
 Description: Test '>>' expression with multiplicative expressions operands.
-Labels: multiplicative-expr, int, shift-expr
+Labels: DecimalNumber, int, multiplicative-expr, shift-expr
 
 function init() {
     int a = 2 * 2 >> 404 % 10 / 4;
@@ -4634,7 +4432,7 @@ function init() {
 
 Test-Case: output
 Description: Test additive expressions as integer '>>' expression operands.
-Labels: additive-expr, int, shift-expr
+Labels: additive-expr, DecimalNumber, int, shift-expr
 
 function init() {
     int a = (1 + 2) >> (3 + 4);
