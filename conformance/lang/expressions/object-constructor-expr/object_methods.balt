@@ -1,0 +1,305 @@
+Test-Case: output
+Description: Test defining a method of an object.
+Labels: array-type, field-access-expr, int, list-constructor-expr, method-call-expr, method-defn, module-type-defn,
+        object-constructor-expr, object-field, object-type
+
+type ObjectType object {
+    int[] val;
+    function func1() returns int;
+};
+
+function init() {
+    ObjectType obj = object {
+        int[] val;
+
+        function init() {
+            self.val = [1, 2];
+        }
+
+        function func1() returns int {
+            return 10;
+        }
+    };
+    io:println(obj.val); // @output [1,2]
+    io:println(obj.func1()); // @output 10
+}
+
+Test-Case: output
+Description: Test defining methods of an object with visibility qualifiers.
+Labels: array-type, field-access-expr, int, list-constructor-expr, method-call-expr, method-defn, module-type-defn,
+        object-constructor-expr, object-field, object-type
+
+type ObjectType object {
+    int[] val;
+    public function func2() returns string;
+};
+
+function init() {
+    ObjectType obj =  object {
+        int[] val;
+
+        function init() {
+            self.val = [1, 2];
+        }
+
+        private function func1() returns int {
+            return 10;
+        }
+
+        public function func2() returns string {
+            return "ABC";
+        }
+    };
+    io:println(obj.val); // @output [1,2]
+    io:println(obj.func2()); // @output ABC
+}
+
+Test-Case: output
+Description: Test defining methods of an object with method qualifiers.
+Labels: array-type, field-access-expr, int, isolated-function, list-constructor-expr, member-access-expr,
+        method-call-expr, method-defn, object-constructor-expr, object-field, string, var
+
+function init() {
+    var obj =  object {
+        int[] val;
+
+        function init() {
+            self.val = [1, 2];
+        }
+
+        transactional function func1() returns int {
+            return self.val[0];
+        }
+
+        public isolated function func2() returns string {
+            return "ABC";
+        }
+    };
+    io:println(obj.func2()); // @output ABC
+}
+
+Test-Case: output
+Description: Test accessing fields and methods of the object within the method-defn-body using self variable.
+Labels: additive-expr, array-type, field-access-expr, int, list-constructor-expr, member-access-expr, method-call-expr,
+        method-defn, object-constructor-expr, object-field, var
+
+function init() {
+    var obj =  object {
+        int[] val;
+
+        function init() {
+            self.val = [1, 2];
+        }
+
+        function func1() returns int {
+            return self.val[0];
+        }
+
+        function func2() returns int {
+            return self.val[1] + self.func1();
+        }
+    };
+    io:println(obj.func1()); // @output 1
+    io:println(obj.func2()); // @output 3
+}
+
+Test-Case: error
+Description: Test accessing fields and methods of the object within the method-defn-body without using self variable.
+Labels: array-type, field-access-expr, int, list-constructor-expr, member-access-expr, method-call-expr, method-defn,
+        object-constructor-expr, object-field, var
+
+function errorFunction() {
+    var obj =  object {
+        int[] val;
+
+        function init() {
+            val = [1, 2]; // @error undefined symbol
+        }
+
+        function func1() returns int {
+            return val[0]; // @error undefined symbol
+        }
+
+        function func2() returns int {
+            return func1(); // @error undefined function
+        }
+    };
+}
+
+Test-Case: output
+Description: Test accessing the self variable only within the scope of a lock statement, except when
+             self is part of a field-access-expr of the form self.f, where f is the name of an isolated field, if
+             object-constructor-expr is explicitly isolated.
+Labels: additive-expr, array-type, field-access-expr, int, intersection-type, isolated-object, list-constructor-expr,
+        lock-stmt, member-access-expr, method-call-expr, method-defn, object-constructor-expr, object-field,
+        readonly-type, var
+
+function init() {
+    var obj = isolated object {
+        private int[] val = [1, 2];
+        final readonly & int[] val2 = [3, 4];
+
+        function func1() returns int {
+            int sum = self.val2[1];
+            lock {
+                return sum + self.val[0];
+            }
+        }
+    };
+    io:println(obj.func1()); // @output 5
+}
+
+Test-Case: error
+Description: Test accessing the self variable without using a lock statement when the object-constructor-expr is
+             explicitly isolated and self is part of a field-access-expr of the form self.f, where f is the name of a
+             non-isolated field.
+Labels: array-type, field-access-expr, int, isolated-object, list-constructor-expr, member-access-expr, method-defn,
+        object-constructor-expr, object-field, var
+
+function errorFunction() {
+    var _ = isolated object {
+        private int[] val = [1, 2];
+
+        function func1() returns int {
+            return self.val[0]; // @error invalid access of a mutable field of an isolated object outside a lock statement
+        }
+    };
+}
+
+Test-Case: output
+Description: Test method-defn-body satisfying the requirements for an isolated function if isolated-qual is present.
+Labels: additive-expr, array-type, field-access-expr, int, intersection-type, isolated-function, list-constructor-expr,
+        member-access-expr, method-call-expr, method-defn, object-constructor-expr, object-field, readonly-type, var
+
+function init() {
+    var obj = object {
+        final readonly & int[] val = [1, 2];
+
+        isolated function func1() returns int {
+            return self.val[0];
+        }
+
+        isolated function func2() returns int {
+            return self.val[1] + self.func1();
+        }
+    };
+    io:println(obj.func2()); // @output 3
+}
+
+Test-Case: error
+Description: Test method-defn-body satisfying the requirements for an isolated function if isolated-qual is present.
+Labels: additive-expr, array-type, field-access-expr, int, intersection-type, isolated-function, list-constructor-expr,
+        member-access-expr, method-call-expr, method-defn, object-constructor-expr, object-field, readonly-type, var
+
+function errorFunction() {
+    var _ = object {
+        final readonly & int[] val = [1, 2];
+
+        function func1() returns int {
+            return self.val[0];
+        }
+
+        isolated function func2() returns int {
+            return self.val[1] + self.func1(); // @error invalid invocation of a non-isolated function in an 'isolated' function
+        }
+    };
+}
+
+Test-Case: output
+Description: Test method-defn-body satisfying the requirements for an isolated function if isolated-qual is present.
+Labels: additive-expr, array-type, field-access-expr, int, intersection-type, isolated-function, list-constructor-expr,
+        member-access-expr, method-call-expr, method-defn, module-init-var-decl, object-constructor-expr, object-field,
+        readonly-type, var
+
+final int[] & readonly arr = [3, 4];
+
+function init() {
+    var obj = object {
+        final readonly & int[] val = [1, 2];
+
+        isolated function func1() returns int {
+            return self.val[0];
+        }
+
+        isolated function func2() returns int {
+            return self.val[1] + arr[1] + self.func1();
+        }
+    };
+    io:println(obj.func2()); // @output 7
+}
+
+Test-Case: error
+Description: Test method-defn-body satisfying the requirements for an isolated function if isolated-qual is present.
+Labels: additive-expr, array-type, field-access-expr, int, intersection-type, isolated-function, list-constructor-expr,
+        member-access-expr, method-call-expr, method-defn, module-init-var-decl, object-constructor-expr, object-field,
+        readonly-type, var
+
+int[] & readonly arr = [3, 4];
+
+function errorFunction() {
+    var _ = object {
+        isolated function func1() returns int {
+            return arr[1]; // @error invalid access of mutable storage in an isolated function
+        }
+    };
+}
+
+Test-Case: output
+Description: Test method-defn-body satisfying the requirements for an isolated function if isolated-qual is present.
+Labels: additive-expr, array-type, int, isolated-function, list-constructor-expr, lock-stmt, member-access-expr,
+        method-call-expr, method-defn, module-init-var-decl, object-constructor-expr, object-field, var
+
+isolated int[] arr = [3, 4];
+
+function init() {
+    var obj = object {
+        isolated function func1() returns int {
+            lock {
+                arr[2] = 5;
+                return arr[0] + arr[2];
+            }
+        }
+    };
+    io:println(obj.func1()); // @output 8
+}
+
+Test-Case: error
+Description: Test method-defn-body satisfying the requirements for an isolated function if isolated-qual is present.
+Labels: int, isolated-function, method-defn, module-init-var-decl, object-constructor-expr, object-field, var
+
+int intVal = 10;
+
+function errorFunction() {
+    var _ = object {
+        isolated function func1() {
+            lock {
+                intVal = 5; // @error invalid access of mutable storage in an isolated function
+            }
+        }
+    };
+}
+
+Test-Case: output
+Description: Test method-defn-body satisfying the requirements for an isolated function if isolated-qual is present.
+Labels: explicit-anonymous-function-expr, int, isolated-function, method-call-expr, method-defn,
+        object-constructor-expr, object-field, var
+
+function init() {
+    final int val = 10;
+    var obj = object {
+        isolated function func1() returns int => val;
+    };
+    io:println(obj.func1()); // @output 10
+}
+
+Test-Case: error
+Description: Test method-defn-body satisfying the requirements for an isolated function if isolated-qual is present.
+Labels: explicit-anonymous-function-expr, int, intersection-type, isolated-function, method-call-expr, method-defn,
+        object-constructor-expr, object-field, readonly-type, var
+
+function errorFunction() {
+    int & readonly val = 10;
+    var _ = object {
+        isolated function func1() returns int => val; // @error invalid access of mutable storage in an isolated function
+    };
+}
