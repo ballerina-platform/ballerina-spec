@@ -25,6 +25,33 @@ function init() {
 }
 
 Test-Case: output
+Description: Test defining methods of an object with meta data.
+Fail-Issue: ballerina-platform/ballerina-lang#34859
+Labels: annotation-decl, annotation, field-access-expr, method-defn, module-type-defn, object-constructor-expr,
+        record-type, string, type-cast-expr, typeof-expr, var
+
+type Annot record {
+    string a;
+};
+
+annotation Annot v1 on object function;
+
+function init() {
+    var obj = object {
+        # This is a document.
+        # It is for an object function.
+        @v1 {
+            a: "v1"
+        }
+        function f1() {
+        }
+    };
+
+    Annot annot = <Annot>(typeof obj.f1).@v1;
+    io:println(annot.a); // @output v1
+}
+
+Test-Case: output
 Description: Test defining methods of an object with visibility qualifiers.
 Labels: array-type, field-access-expr, int, list-constructor-expr, method-call-expr, method-defn, module-type-defn,
         object-constructor-expr, object-field, object-type

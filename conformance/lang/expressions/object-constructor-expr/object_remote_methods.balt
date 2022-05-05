@@ -1,7 +1,7 @@
 Test-Case: error
 Description: Test defining a remote method of an object when object-network-qual is not present in the
              object-constructor-expr.
-Labels: client-remote-method-call-action, field-access-expr, int, method-defn, object-constructor-expr, object-field
+Labels: client-remote-method-call-action, field-access-expr, int, remote-method-defn, object-constructor-expr, object-field
 
 function errorFunction() {
     var _ = object {
@@ -12,7 +12,7 @@ function errorFunction() {
 
 Test-Case: output
 Description: Test defining a remote method of a network interaction object.
-Labels: client-remote-method-call-action, field-access-expr, int, method-defn, object-constructor-expr, object-field
+Labels: client-remote-method-call-action, field-access-expr, int, remote-method-defn, object-constructor-expr, object-field
 
 function init() {
     var obj = client object {
@@ -31,9 +31,36 @@ function init() {
     io:println(res); // @output 10
 }
 
+Test-Case: output
+Description: Test defining methods of an object with meta data.
+Fail-Issue: ballerina-platform/ballerina-lang#36034
+Labels: annotation-decl, annotation, field-access-expr, remote-method-defn, module-type-defn, object-constructor-expr,
+        record-type, string, type-cast-expr, typeof-expr, var
+
+type Annot record {
+    string a;
+};
+
+annotation Annot v1 on object function;
+
+function init() {
+    var obj = client object {
+        # This is a document.
+        # It is for an object function.
+        @v1 {
+            a: "v1"
+        }
+        remote function f1() {
+        }
+    };
+
+    Annot annot = <Annot>(typeof obj.f1).@v1;
+    io:println(annot.a); // @output v1
+}
+
 Test-Case: error
 Description: Test defining remote methods of a network interaction object with visibility qualifiers.
-Labels: field-access-expr, int, method-defn, object-constructor-expr, object-field
+Labels: field-access-expr, int, remote-method-defn, object-constructor-expr, object-field
 
 function errorFunction() {
     var _ = client object {
@@ -55,7 +82,7 @@ function errorFunction() {
 
 Test-Case: output
 Description: Test defining remote methods of a network interaction object with remote method qualifiers.
-Labels: client-remote-method-call-action, field-access-expr, int, member-access-expr, method-defn,
+Labels: client-remote-method-call-action, field-access-expr, int, member-access-expr, remote-method-defn,
         object-constructor-expr, object-field, string, var
 
 function init() {
@@ -83,7 +110,7 @@ Test-Case: output
 Description: Test accessing fields and remote methods of a network interaction object within the method-defn-body using
              self variable.
 Labels: additive-expr, array-type, client-remote-method-call-action, field-access-expr, int, list-constructor-expr,
-        member-access-expr, method-defn, object-constructor-expr, object-field, var
+        member-access-expr, remote-method-defn, object-constructor-expr, object-field, var
 
 function init() {
     var obj = client object {
@@ -111,7 +138,7 @@ function init() {
 Test-Case: error
 Description: Test accessing fields and remote methods of a network interaction object within the method-defn-body
              without using self variable.
-Labels: field-access-expr, function-call-expr, int, method-defn, object-constructor-expr, object-field, var
+Labels: field-access-expr, function-call-expr, int, remote-method-defn, object-constructor-expr, object-field, var
 
 function errorFunction() {
     var obj = client object {
@@ -136,7 +163,7 @@ Description: Test accessing the self variable only within the scope of a lock st
              self is part of a field-access-expr of the form self.f, where f is the name of an isolated field, if
              object-constructor-expr is explicitly isolated.
 Labels: additive-expr, array-type, client-remote-method-call-action, field-access-expr, int, intersection-type,
-        isolated-object, list-constructor-expr, lock-stmt, member-access-expr, method-defn, object-constructor-expr,
+        isolated-object, list-constructor-expr, lock-stmt, member-access-expr, remote-method-defn, object-constructor-expr,
         object-field, readonly-type, var
 
 function init() {
@@ -160,7 +187,7 @@ Test-Case: error
 Description: Test accessing the self variable without using a lock statement when a client object-constructor-expr is
              explicitly isolated and self is part of a field-access-expr of the form self.f, where f is the name of a
              non-isolated field.
-Labels: array-type, field-access-expr, int, isolated-object, list-constructor-expr, member-access-expr, method-defn,
+Labels: array-type, field-access-expr, int, isolated-object, list-constructor-expr, member-access-expr, remote-method-defn,
         object-constructor-expr, object-field, var
 
 function errorFunction() {
@@ -176,7 +203,7 @@ function errorFunction() {
 Test-Case: output
 Description: Test method-defn-body satisfying the requirements for an isolated function if isolated-qual is present.
 Labels: additive-expr, array-type, client-remote-method-call-action, field-access-expr, int, intersection-type,
-        isolated-function, list-constructor-expr, member-access-expr, method-defn, object-constructor-expr,
+        isolated-function, list-constructor-expr, member-access-expr, remote-method-defn, object-constructor-expr,
         object-field, readonly-type, var
 
 function init() {
@@ -199,7 +226,7 @@ function init() {
 Test-Case: error
 Description: Test method-defn-body satisfying the requirements for an isolated function if isolated-qual is present.
 Labels: additive-expr, array-type, field-access-expr, int, intersection-type, isolated-function, list-constructor-expr,
-        member-access-expr, method-call-expr, method-defn, object-constructor-expr, object-field, readonly-type, var
+        member-access-expr, method-call-expr, remote-method-defn, object-constructor-expr, object-field, readonly-type, var
 
 function errorFunction() {
     var _ = client object {
@@ -218,7 +245,7 @@ function errorFunction() {
 Test-Case: output
 Description: Test method-defn-body satisfying the requirements for an isolated function if isolated-qual is present.
 Labels: additive-expr, array-type, client-remote-method-call-action, field-access-expr, int, intersection-type,
-        isolated-function, list-constructor-expr, member-access-expr, method-call-expr, method-defn,
+        isolated-function, list-constructor-expr, member-access-expr, method-call-expr, remote-method-defn,
         module-init-var-decl, object-constructor-expr, object-field, readonly-type, var
 
 final int[] & readonly arr = [3, 4];
@@ -243,7 +270,7 @@ function init() {
 Test-Case: error
 Description: Test method-defn-body satisfying the requirements for an isolated function if isolated-qual is present.
 Labels: additive-expr, array-type, field-access-expr, int, intersection-type, list-constructor-expr, member-access-expr,
-        method-call-expr, method-defn, module-init-var-decl, object-constructor-expr, object-field, readonly-type, var
+        method-call-expr, remote-method-defn, module-init-var-decl, object-constructor-expr, object-field, readonly-type, var
 
 int[] & readonly arr = [3, 4];
 
@@ -258,7 +285,7 @@ function errorFunction() {
 Test-Case: output
 Description: Test method-defn-body satisfying the requirements for an isolated function if isolated-qual is present.
 Labels: additive-expr, array-type, client-remote-method-call-action, int, isolated-function, list-constructor-expr,
-        lock-stmt, member-access-expr, method-call-expr, method-defn, module-init-var-decl, object-constructor-expr,
+        lock-stmt, member-access-expr, method-call-expr, remote-method-defn, module-init-var-decl, object-constructor-expr,
         object-field, var
 
 isolated int[] arr = [3, 4];
@@ -279,7 +306,7 @@ function init() {
 
 Test-Case: error
 Description: Test method-defn-body satisfying the requirements for an isolated function if isolated-qual is present.
-Labels: int, isolated-function, method-defn, module-init-var-decl, object-constructor-expr, object-field, var
+Labels: int, isolated-function, remote-method-defn, module-init-var-decl, object-constructor-expr, object-field, var
 
 int intVal = 10;
 
@@ -295,7 +322,7 @@ function errorFunction() {
 
 Test-Case: output
 Description: Test method-defn-body satisfying the requirements for an isolated function if isolated-qual is present.
-Labels: client-remote-method-call-action, explicit-anonymous-function-expr, int, method-call-expr, method-defn,
+Labels: client-remote-method-call-action, explicit-anonymous-function-expr, int, method-call-expr, remote-method-defn,
         object-constructor-expr, object-field, var
 
 function init() {
@@ -310,7 +337,7 @@ function init() {
 
 Test-Case: error
 Description: Test method-defn-body satisfying the requirements for an isolated function if isolated-qual is present.
-Labels: explicit-anonymous-function-expr, int, intersection-type, isolated-function, method-call-expr, method-defn,
+Labels: explicit-anonymous-function-expr, int, intersection-type, isolated-function, method-call-expr, remote-method-defn,
         object-constructor-expr, object-field, readonly-type, var
 
 function errorFunction() {
