@@ -1,0 +1,195 @@
+Test-Case: output
+Description: Test minimum value of Signed16 built-in subtype of int.
+Labels: DecimalNumber, if-else-stmt, int, int:SIGNED16_MIN_VALUE, is-expr, optional-type, string, unary-minus
+
+function init() {
+    int:SIGNED16_MIN_VALUE a = -32768;
+    testIntOrNil(a); // @output -32768
+
+    testIntOrNil(int:SIGNED16_MIN_VALUE); // @output -32768
+
+    int b = int:SIGNED16_MIN_VALUE;
+    testIntOrNil(b); // @output -32768
+}
+
+function testIntOrNil(int? i) {
+    if i is int {
+        io:println(i);
+    } else {
+        io:println("nil");
+    }
+}
+
+Test-Case: output
+Description: Test SIGNED16_MIN_VALUE belonging to a type.
+Labels: int, int:Signed16, int:SIGNED16_MIN_VALUE, int:Signed32, is-expr
+
+function init() {
+    io:println(int:SIGNED16_MIN_VALUE is int); // @output true
+    io:println(int:SIGNED16_MIN_VALUE is int:Signed16); // @output true
+    io:println(int:SIGNED16_MIN_VALUE is int:Signed32); // @output true
+}
+
+Test-Case: output
+Description: Test assignability of SIGNED16_MIN_VALUE with var.
+Labels: int, int:SIGNED16_MIN_VALUE, is-expr, var
+
+function init() {
+    var a = int:SIGNED16_MIN_VALUE;
+    io:println(a); // @output -32768
+    io:println(a is int); // @output true
+}
+
+Test-Case: output
+Description: Test declaring module level variables with SIGNED16_MIN_VALUE.
+Labels: int, int:SIGNED16_MIN_VALUE, module-const-decl
+
+const int a = int:SIGNED16_MIN_VALUE;
+
+int b = int:SIGNED16_MIN_VALUE;
+
+function init() {
+    io:println(a); // @output -32768
+    io:println(b); // @output -32768
+}
+
+Test-Case: output
+Description: Test defining types with SIGNED16_MIN_VALUE.
+Labels: DecimalNumber, int:SIGNED16_MIN_VALUE, int:Unsigned16, module-type-defn, unary-minus, union-type
+
+type Const1 int:SIGNED16_MIN_VALUE;
+
+function init() {
+    Const1 a1 = -32768;
+    io:println(a1); // @output -32768
+
+    int:SIGNED16_MIN_VALUE|int:Unsigned16 a2 = 130;
+    io:println(a2); // @output 130
+}
+
+Test-Case: output
+Description: Test equality with SIGNED16_MIN_VALUE.
+Labels: DecimalNumber, equality, int, int:SIGNED16_MIN_VALUE, int:Signed32, unary-minus
+
+function init() {
+    io:println(int:SIGNED16_MIN_VALUE == -32768); // @output true
+
+    int a = -32768;
+    io:println(a == int:SIGNED16_MIN_VALUE); // @output true
+
+    int:Signed32 b = -32768;
+    io:println(b == int:SIGNED16_MIN_VALUE); // @output true
+}
+
+Test-Case: output
+Description: Test SIGNED16_MIN_VALUE as expression in return statement.
+Labels: int:SIGNED16_MIN_VALUE, return-stmt
+
+function init() {
+    io:println(getInt()); // @output -32768
+}
+
+function getInt() returns int {
+    return int:SIGNED16_MIN_VALUE;
+}
+
+Test-Case: output
+Description: Test SIGNED16_MIN_VALUE as expression in list constructor.
+Labels: array-type, int, int:SIGNED16_MIN_VALUE, list-constructor-expr
+
+function init() {
+    int[] arr = [int:SIGNED16_MIN_VALUE, int:SIGNED16_MIN_VALUE];
+    io:println(arr); // @output [-32768,-32768]
+}
+
+Test-Case: output
+Description: Test SIGNED16_MIN_VALUE as expression in method call expression.
+Labels: int:SIGNED16_MIN_VALUE, method-call-expr, value:toString
+
+function init() {
+    io:println(int:SIGNED16_MIN_VALUE.toString()); // @output -32768
+}
+
+Test-Case: output
+Description: Test SIGNED16_MIN_VALUE as expression in map constructor.
+Labels: int, int:SIGNED16_MIN_VALUE, map-type, mapping-constructor-expr, string
+
+function init() {
+    map<int> intMap = {"One": int:SIGNED16_MIN_VALUE, "Two": int:SIGNED16_MIN_VALUE};
+    io:println(intMap); // @output {"One":-32768,"Two":-32768}
+}
+
+Test-Case: output
+Description: Test SIGNED16_MIN_VALUE as expression in additive expression.
+Labels: additive-expr, int, int:SIGNED16_MIN_VALUE
+
+function init() {
+    int a = int:SIGNED16_MIN_VALUE + int:SIGNED16_MIN_VALUE;
+    io:println(a); // @output -65536
+}
+
+Test-Case: output
+Description: Test SIGNED16_MIN_VALUE as expression in if else statement.
+Labels: DecimalNumber, if-else-stmt, int:SIGNED16_MIN_VALUE, relational-expr
+
+function init() {
+    compare(); // @output true
+}
+
+function compare() {
+    if int:SIGNED16_MIN_VALUE < 20 {
+        io:println(int:SIGNED16_MIN_VALUE < 20);
+    } else {
+        io:println();
+    }
+}
+
+Test-Case: error
+Description: Test assigning values to subtypes of SIGNED16_MIN_VALUE.
+Fail-Issue: ballerina-platform/ballerina-lang#32804
+Labels: DecimalNumber, int:SIGNED16_MIN_VALUE, module-const-decl, module-type-defn
+
+const int A = int:SIGNED16_MIN_VALUE;
+
+type Const1 int:SIGNED16_MIN_VALUE;
+
+type Const2 A|Const1;
+
+function init() {
+    Const1 _ = 23; // @error int is not a subtype of -32768
+
+    Const2 _ = 23; // @error int is not a subtype of -32768
+}
+
+Test-Case: error
+Description: Test assigning invalid value for int:SIGNED16_MIN_VALUE type variable.
+Labels: DecimalNumber, int:SIGNED16_MIN_VALUE
+
+function init() {
+    int:SIGNED16_MIN_VALUE _ = 10; // @error int is not a subtype of -32768
+}
+
+Test-Case: error
+Description: Test assigning int:SIGNED16_MIN_VALUE to an incompatible type.
+Labels: int:Signed16, int:SIGNED16_MIN_VALUE, string
+
+function init() {
+    int:Signed16 _ = int:SIGNED16_MIN_VALUE; // @error int is not a subtype of int:Signed16
+    string _ = int:SIGNED16_MIN_VALUE; // @error int is not a subtype of string
+}
+
+Test-Case: error
+Description: Test updating int:SIGNED16_MIN_VALUE constant value.
+Labels: DecimalNumber, int:SIGNED16_MIN_VALUE
+
+function init() {
+    int:SIGNED16_MIN_VALUE = 10; // @error cannot update constant
+}
+
+Test-Case: error
+Description: Test missing int module-prefix with int:SIGNED16_MIN_VALUE.
+Labels: DecimalNumber, unary-minus
+
+function init() {
+    SIGNED16_MIN_VALUE _ = -100; // @error unknown type
+}

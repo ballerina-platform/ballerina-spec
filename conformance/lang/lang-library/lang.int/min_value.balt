@@ -1,0 +1,69 @@
+Test-Case: output
+Description: Test minimum value of int type.
+Labels: additive-expr, DecimalNumber, if-else-stmt, int, int:MIN_VALUE, is-expr, optional-type, string, unary-minus
+
+function init() {
+    int b = int:MIN_VALUE;
+    io:println(b); // @output -9223372036854775808
+
+    testIntOrNil(int:MIN_VALUE); // @output -9223372036854775808
+}
+
+function testIntOrNil(int? i) {
+    if i is int {
+        io:println(i);
+    } else {
+        io:println("nil");
+    }
+}
+
+Test-Case: error
+Description: Test assigning int:MIN_VALUE to an incompatible type.
+Labels: int:MIN_VALUE, int:Unsigned32, string
+
+function errorFunction() {
+    int:Unsigned32 _ = int:MIN_VALUE; // @error int is not a subtype of int:Unsigned32
+    string _ = int:MIN_VALUE; // @error int is not a subtype of string
+}
+
+Test-Case: error
+Description: Test assigning -9223372036854775808 for int:MIN_VALUE type variable.
+Fail-Issue: ballerina-platform/ballerina-lang#32577
+Labels: DecimalNumber, int:MIN_VALUE, unary-minus
+
+function errorFunction() {
+    int:MIN_VALUE _ = -9223372036854775808; // @error integer overflow
+}
+
+Test-Case: error
+Description: Test assigning too small value for int:MIN_VALUE type variable
+Fail-Issue: ballerina-platform/ballerina-lang#35844
+Labels: DecimalNumber, int:MIN_VALUE, unary-minus
+
+function errorFunction() {
+    int:MIN_VALUE _ = -9223372036854775809; // @error too small value
+}
+
+Test-Case: error
+Description: Test assigning invalid value for int:MIN_VALUE type variable.
+Labels: DecimalNumber, int:MIN_VALUE
+
+function errorFunction() {
+    int:MIN_VALUE _ = 10; // @error int is not a subtype of -9223372036854775808
+}
+
+Test-Case: error
+Description: Test updating int:MIN_VALUE constant value.
+Labels: DecimalNumber, int:MIN_VALUE
+
+function errorFunction() {
+    int:MIN_VALUE = 10; // @error cannot update constant
+}
+
+Test-Case: error
+Description: Test missing int module-prefix with int MIN_VALUE.
+Labels: additive-expr, DecimalNumber, unary-minus
+
+function errorFunction() {
+    MIN_VALUE _ = -9223372036854775807 - 1; // @error unknown type
+}
