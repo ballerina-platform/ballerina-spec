@@ -5911,7 +5911,7 @@ zero);</li>
 </ul>
 <p>
 If the contextually expected type for a <code>-</code> expression is T, then the
-contextualy expected type for the operand expressions is T', where a value v is
+contextually expected type for the operand expressions is T', where a value v is
 in T' if it belongs to int, decimal or float, and T contains a value with the
 same basic type as v.
 </p>
@@ -5961,8 +5961,15 @@ href="#nil_lifting">Nil lifting</a> section, and an underlying form, which is
 specified in this section.
 </p>
 <p>
-The static type of both operand expressions is required to be a subtype of the
-same basic type. The following basic types are allowed:
+The static type of each operand must be a subtype of <code>int</code>,
+<code>float</code> or <code>decimal</code>. If the static type of both operands
+is not a subtype of the same basic type, then either the second operand must be
+a subtype of <code>int</code>, or the operator must be <code>*</code> and the
+first operand must be a subtype of <code>int</code>; in either case, the
+<code>int</code> operand is first converted to the type of the other operand.
+</p>
+<p>
+The operation performed depends on the basic type of the operands as follows:
 </p>
 <ul>
 <li>int
@@ -6013,7 +6020,7 @@ of <code><var>x</var></code></li>
 </ul>
 <p>
 The static type of the result of a multiplicative-expr is the basic type of its
-subexpressions, modified by the usual <a href="#singleton_typing">singleton
+subexpressions, after conversion, modified by the usual <a href="#singleton_typing">singleton
 typing</a> rules, except that the result type is always <code>float</code> in
 the case where the operator is <code>/</code> and the right-hand operand is
 singleton float <code>0.0</code>. (This is a consequence of the fact that
@@ -6021,7 +6028,7 @@ singleton float <code>0.0</code>. (This is a consequence of the fact that
 </p>
 <p>
 If the contextually expected type for a multiplicative-expr is T, then the
-contextualy expected type for both operand expressions is T', where a value v is
+contextually expected type for both operand expressions is T', where a value v is
 in T' if it belongs to int, decimal or float, and T contains a value with the
 same basic type as v.
 </p>
@@ -10769,6 +10776,10 @@ more than one basic type..</p>
 <section>
 <h3>Summary of changes from 2021R1 to 2022R2</h3>
 <ol>
+<li>The <code>*</code>, <code>/</code> and <code>%</code> operators now allow
+operands to mix numeric types in specific cases: <code>*</code> allows the case
+where either operand is an <code>int</code>; <code>/</code> and <code>*</code>
+allow the case where the right operand is an <code>int</code>.</li>
 <li>The <code>toExpString</code> and <code>toFixedString</code>
 functions have been added to <code>lang.float</code>.</li>
 <li>The <code>padStart</code>, <code>padEnd</code>, <code>padZero</code>
