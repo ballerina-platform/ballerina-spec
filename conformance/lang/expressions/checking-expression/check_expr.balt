@@ -27,27 +27,27 @@ function init() {
     io:println(fn5(())); // @output
 }
 
-function fn1(int x) returns error|int {
+function fn1(int x) returns int {
     int y = check x;
     return y;
 }
 
-function fn2(float x) returns error|float {
+function fn2(float x) returns float {
     float y = check x;
     return y;
 }
 
-function fn3(decimal x) returns error|decimal {
+function fn3(decimal x) returns decimal {
     decimal y = check x;
     return y;
 }
 
-function fn4(string x) returns error|string {
+function fn4(string x) returns string {
     string y = check x;
     return y;
 }
 
-function fn5(() x) returns error? {
+function fn5(() x) returns () {
     () y = check x;
     return y;
 }
@@ -82,7 +82,7 @@ function init() {
                        // @output ()
 }
 
-function fn1() returns error? {
+function fn1() {
     int a1 = check 123;
     io:println(a1);
     int a2 = check 9223372036854775807;
@@ -95,7 +95,7 @@ function fn1() returns error? {
     io:println(a5);
 }
 
-function fn2() returns error? {
+function fn2() {
     float a1 = check 12.3;
     io:println(a1);
     float a2 = check 9223372036854775807;
@@ -108,7 +108,7 @@ function fn2() returns error? {
     io:println(a5);
 }
 
-function fn3() returns error? {
+function fn3() {
     decimal a1 = check 12.3d;
     io:println(a1);
     decimal a2 = check 9223372036854775807d;
@@ -117,14 +117,14 @@ function fn3() returns error? {
     io:println(a3);
 }
 
-function fn4() returns error? {
+function fn4() {
     string a1 = check "";
     io:println(a1);
     string a2 = check "9223372036854775807d";
     io:println(a2);
 }
 
-function fn5() returns error? {
+function fn5() {
     () a1 = check ();
     io:println(a1);
     () a2 = check null;
@@ -134,7 +134,7 @@ function fn5() returns error? {
 Test-Case: output
 Description: Test check-expr with string template expressions.
 Labels: check, string, function-defn, function-call-expr, return-stmt, optional-type, DecimalNumber, string-template-expr,
-        int
+        int, trap
 
 function init() {
     error? x1 = fn1(); // @output 224
@@ -392,9 +392,9 @@ function fieldAccess() returns error? {
     int i2 = check rec?.x;
     io:println(i2);
 
-    string s1  =check rec.y;
+    string s1  = check rec.y;
     io:println(s1);
-    string s2  =check rec?.y;
+    string s2  = check rec?.y;
     io:println(s2);
 
     boolean[] b1 = check rec.z;
@@ -421,7 +421,7 @@ function memberAccess() returns error? {
     int i1 = check rec["x"];
     io:println(i1);
 
-    string s1  =check rec["y"];
+    string s1  = check rec["y"];
     io:println(s1);
 
     boolean[] b1 = check rec["z"];
