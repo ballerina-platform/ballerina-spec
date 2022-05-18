@@ -1,0 +1,64 @@
+Test-Case: output
+Description: Test maximum value of int type.
+Labels: DecimalNumber, if-else-stmt, int, int:MAX_VALUE, is-expr, optional-type, string
+
+function init() {
+    int:MAX_VALUE a = 9223372036854775807;
+    testIntOrNil(a); // @output 9223372036854775807
+
+    int b = int:MAX_VALUE;
+    io:println(b); // @output 9223372036854775807
+
+    testIntOrNil(int:MAX_VALUE); // @output 9223372036854775807
+}
+
+function testIntOrNil(int? i) {
+    if i is int {
+        io:println(i);
+
+    } else {
+        io:println("nil");
+    }
+}
+
+Test-Case: error
+Description: Test assigning int:MAX_VALUE to an incompatible type.
+Labels: int:MAX_VALUE, int:Unsigned32, string
+
+function errorFunction() {
+    int:Unsigned32 _ = int:MAX_VALUE; // @error int is not a subtype of int:Unsigned32
+    string _ = int:MAX_VALUE; // @error int is not a subtype of string
+}
+
+Test-Case: error
+Description: Test assigning invalid value for int:MAX_VALUE type variable.
+Labels: DecimalNumber, int:MAX_VALUE
+
+function errorFunction() {
+    int:MAX_VALUE _ = 9223372036854775806; // @error int is not a subtype of 9223372036854775807
+}
+
+Test-Case: error
+Description: Test assigning too large value for int:MAX_VALUE type variable.
+Fail-Issue: ballerina-platform/ballerina-lang#32574
+Labels: DecimalNumber, int:MAX_VALUE
+
+function errorFunction() {
+    int:MAX_VALUE _ = 9223372036854775808; // @error too large value
+}
+
+Test-Case: error
+Description: Test updating int:MAX_VALUE constant value.
+Labels: DecimalNumber, int:MAX_VALUE
+
+function errorFunction() {
+    int:MAX_VALUE = 10; // @error cannot update constant
+}
+
+Test-Case: error
+Description: Test missing int module-prefix with int MAX_VALUE.
+Labels: DecimalNumber
+
+function errorFunction() {
+    MAX_VALUE _ = 9223372036854775807; // @error unknown type
+}
