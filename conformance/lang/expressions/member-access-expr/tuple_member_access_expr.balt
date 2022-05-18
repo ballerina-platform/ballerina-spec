@@ -1,0 +1,620 @@
+Test-Case: parser-error
+Description: Test missing key expression in member access expression.
+Labels: int, list-constructor-expr, member-access-expr, string, tuple-type
+
+function errorFunction() {
+    [int, string] t = [10, "CL"];
+
+    _ = t[]; // @error missing key expression
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a subtype of int as the key expression when the basic type of the
+             container expression is a tuple.
+Labels: float, int, list-constructor-expr, member-access-expr, module-const-decl, module-type-defn, string, tuple-rest-descriptor,
+        tuple-type, union-type
+
+const i1 = 0;
+const i2 = 5;
+
+type IntType1 3|4;
+
+type IntType2 i1|i2;
+
+function init() {
+    [int, string, float...] t = [10, "ABC", 10.5, 20.5, 30.5, 40.5];
+
+    int i0 = 0;
+    io:println(t[i0]); // @output 10
+
+    io:println(t[1]); // @output ABC
+
+    IntType1 i3 = 4;
+    io:println(t[i3]); // @output 30.5
+
+    io:println(t[i1]); // @output 10
+
+    IntType2 i4 = 5;
+    io:println(t[i4]); // @output 40.5
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a subtype of int as the key expression when the basic type of the
+             container expression is a tuple.
+Labels: byte, float, int, int:Signed8, list-constructor-expr, member-access-expr, string, tuple-rest-descriptor,
+        tuple-type
+
+function init() {
+    [int, string, float...] t = [10, "ABC", 10.5, 20.5, 30.5, 40.5];
+
+    int:Signed8 i1 = 1;
+    io:println(t[i1]); // @output ABC
+
+    byte i2 = 2;
+    io:println(t[i2]); // @output 10.5
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a subtype of int as the key expression when the basic type of the
+             container expression is a tuple.
+Fail-Issue: ballerina-platform/ballerina-lang#35974
+Labels: float, int, int:Signed16, int:Signed32, int:Signed8, list-constructor-expr, member-access-expr,
+        module-type-defn, string, tuple-rest-descriptor, tuple-type, union-type
+
+type IntType1 int:Signed8|int:Signed16;
+
+function init() {
+    [int, string, float...] t = [10, "ABC", 10.5, 20.5, 30.5, 40.5];
+
+    int:Signed32|int:Signed16 i3 = 3;
+    io:println(t[i3]); // @output 20.5
+
+    IntType1 i4 = 5;
+    io:println(t[i4]); // @output 40.5
+}
+
+Test-Case: error
+Description: Test key expression with invalid static type.
+Labels: any, DecimalFloatingPointNumber, float, int, list-constructor-expr, member-access-expr, string, tuple-type,
+        union-type
+
+type SomeType "1"|"3";
+
+const c = "1";
+
+function errorFunction() {
+    [int, string] t = [10, "CL"];
+
+    _ = t["1"]; // @error expected a value of subtype int as key
+
+    string a = "1";
+    _ = t[a]; // @error expected a value of subtype int as key
+
+    SomeType b = "1";
+    _ = t[b]; // @error expected a value of subtype int as key
+
+    _ = t[c]; // @error expected a value of subtype int as key
+
+    any d = 1;
+    _ = t[d]; // @error expected a value of subtype int as key
+
+    int|float e = 2;
+    _ = t[e]; // @error expected a value of subtype int as key
+
+    _ = t[2.0]; // @error expected a value of subtype int as key
+}
+
+Test-Case: output
+Description: Test the result of evaluating a member access expression when basic type of the evaluated value of the
+             container expression is a tuple.
+Labels: boolean, float, int, list-constructor-expr, map-type, mapping-constructor-expr, member-access-expr,
+        module-type-defn, record-type, string, tuple-rest-descriptor, tuple-type, union-type
+
+type Record record {|
+    int a;
+    string b;
+|};
+
+function init() {
+    [int, string, string|boolean, map<int>, Record, float...] t = [10, "ABC", true, {x: 1, y: 2}, {a: 1, b: "CDE"}, 40.5, 30.5];
+
+    io:println(t[0]); // @output 10
+    io:println(t[1]); // @output ABC
+    io:println(t[2]); // @output true
+    io:println(t[3]); // @output {"x":1,"y":2}
+    io:println(t[4]); // @output {"a":1,"b":"CDE"}
+    io:println(t[5]); // @output 40.5
+    io:println(t[6]); // @output 30.5
+}
+
+Test-Case: panic
+Description: Test the result of evaluating a member access expression when the evaluated value(k) of the
+             key expression is less than 0 with container expression whose basic type is a tuple (k < 0).
+Labels: additive-expr, float, int, list-constructor-expr, member-access-expr, string, tuple-rest-descriptor,
+        tuple-type, unary-minus
+
+function init() {
+    [int, string, float...] t = [10, "ABC", 10.5, 20.5, 30.5, 40.5];
+
+    _ = t[-1-2]; // @panic index out of range
+}
+
+Test-Case: panic
+Description: Test the result of evaluating a member access expression when the evaluated value(k) of the
+             key expression is equal to the length of the evaluated value(c) of the
+             container expression whose basic type is a tuple (k = length(c)).
+Labels: float, int, list-constructor-expr, member-access-expr, string, tuple-rest-descriptor, tuple-type
+
+function init() {
+    [int, string, float...] t = [10, "ABC", 10.5, 20.5, 30.5, 40.5];
+
+    _ = t[6]; // @panic index out of range
+}
+
+Test-Case: panic
+Description: Test the result of evaluating a member access expression when the evaluated value(k) of the
+             key expression is greater than the length of the evaluated value(c) of the
+             container expression whose basic type is a tuple (k > length(c)).
+Labels: float, int, list-constructor-expr, member-access-expr, string, tuple-rest-descriptor, tuple-type
+
+function init() {
+    [int, string, float...] t = [10, "ABC", 10.5, 20.5, 30.5, 40.5];
+
+    _ = t[10]; // @panic index out of range
+}
+
+Test-Case: output
+Description: Test the static type of member access expression when the container expression is of basic type list.
+Labels: boolean, float, int, list-constructor-expr, map-type, mapping-constructor-expr, member-access-expr,
+        module-type-defn, optional-type, record-type, string, tuple-type, tuple-rest-descriptor, union-type
+
+type Record record {|
+    int a;
+    string b;
+|};
+
+function init() {
+    [int, string|decimal, boolean?, map<int>, Record, float...] t = [10, "ABC", true, {x: 1, y: 2}, {a: 1, b: "CDE"}, 40.5, 30.5];
+
+    int i0 = t[0];
+    io:println(i0); // @output 10
+
+    string|decimal i1 = t[1];
+    io:println(i1); // @output ABC
+
+    boolean? i3 = t[2];
+    io:println(i3); // @output true
+
+    map<int> i4 = t[3];
+    io:println(i4); // @output {"x":1,"y":2}
+
+    Record i5 = t[4];
+    io:println(i5); // @output {"a":1,"b":"CDE"}
+
+    float i6 = t[5];
+    io:println(i6); // @output 40.5
+
+    float i7 = t[6];
+    io:println(i7); // @output 30.5
+}
+
+Test-Case: error
+Description: Test assigning result of member access expression to an invalid type.
+Labels: int, list-constructor-expr, member-access-expr, string, tuple-type
+
+function errorFunction() {
+    [int, string] t = [10, "CL"];
+
+    string _ = t[0]; // @error expected string, found int
+
+    int _ = t[1]; // @error expected int, found string
+}
+
+Test-Case: error
+Description: Test assigning result of member access expression to an invalid type.
+Fail-Issue: ballerina-platform/ballerina-lang#35079
+Labels: int, list-constructor-expr, member-access-expr, string, tuple-rest-descriptor, tuple-type
+
+function errorFunction() {
+    [int, string, boolean...] t = [10, "CL", true];
+    int idx = 2;
+
+    string _ = t[idx]; // @error expected string, found (int|string|boolean)
+
+    [boolean...] p = [true, false, true];
+    string _ = p[idx]; // @error expected string, found boolean
+}
+
+Test-Case: output
+Description: Test field access expression as container expression of basic type list.
+Labels: field-access-expr, int, list-constructor-expr, mapping-constructor-expr, member-access-expr, module-type-defn,
+        record-type, string, tuple-type
+
+type Record record {|
+    [int, string] f1;
+|};
+
+function init() {
+    Record rec = {f1: [10, "CL"]};
+    io:println(rec.f1[1]); // @output CL
+}
+
+Test-Case: output
+Description: Test member access expression as container expression of basic type list.
+Labels: array-type, int, list-constructor-expr, member-access-expr, string, tuple-type
+
+function init() {
+    [int, string][] t = [[10, "CL"], [20, "NY"]];
+    io:println(t[1][1]); // @output NY
+}
+
+Test-Case: output
+Description: Test function call expression as container expression of basic type list.
+Labels: function-call-expr, int, list-constructor-expr, member-access-expr, string, tuple-type
+
+function init() {
+    io:println(getTuple()[1]); // @output CL
+}
+
+function getTuple() returns [int, string] {
+    return [10, "CL"];
+}
+
+Test-Case: output
+Description: Test method call expression as container expression of basic type list.
+Labels: implicit-new-expr, int, list-constructor-expr, member-access-expr, method-call-expr, module-class-defn, string,
+        tuple-type
+
+class Tuple {
+    function getTuple() returns [int, string] {
+        return [10, "CL"];
+    }
+}
+
+function init() {
+    Tuple t = new;
+    io:println(t.getTuple()[1]); // @output CL
+}
+
+Test-Case: output
+Description: Test let expression as container expression of basic type list.
+Labels: int, let-expr, list-constructor-expr, member-access-expr, string, tuple-type
+
+function init() {
+    io:println((let [int, string] b = [10, "CL"] in b)[1]); // @output CL
+}
+
+Test-Case: output
+Description: Test type cast expression as container expression of basic type list.
+Labels: int, list-constructor-expr, member-access-expr, optional-type, string, tuple-type, type-cast-expr
+
+function init() {
+    [int, string]? t = [10, "CL"];
+    io:println((<[int, string]> t)[1]); // @output CL
+}
+
+Test-Case: output
+Description: Test conditional expression as container expression of basic type list.
+Labels: ternary-conditional-expr, int, list-constructor-expr, member-access-expr, relational-expr, string, tuple-type
+
+function init() {
+    [int, string] t1 = [10, "CL"];
+    [int, string] t2 = [20, "NY"];
+    int x = 5;
+
+    io:println((x < 5 ? t1 : t2)[1]); // @output NY
+}
+
+Test-Case: output
+Description: Test checking expression as container expression of basic type list.
+Labels: check, checkpanic, error-type, int, list-constructor-expr, member-access-expr, string, tuple-type, union-type
+
+function init() returns error? {
+    [int, string]|error t = [10, "CL"];
+
+    io:println((check t)[1]); // @output CL
+    io:println((checkpanic t)[1]); // @output CL
+}
+
+Test-Case: output
+Description: Test field access expression as key expression with container expression of basic type list.
+Labels: field-access-expr, float, int, list-constructor-expr, mapping-constructor-expr, member-access-expr, record-type,
+        string, tuple-rest-descriptor, tuple-type
+
+type Record record {|
+    int index;
+|};
+
+function init() {
+    [int, string, float...] t = [10, "CL", 10.2, 3.2];
+    Record rec = {index: 2};
+
+    io:println(t[rec.index]); // @output 10.2
+}
+
+Test-Case: output
+Description: Test member access expression as key expression with container expression of basic type list.
+Labels: float, int, list-constructor-expr, member-access-expr, string, tuple-rest-descriptor, tuple-type
+
+function init() {
+    [int, string, float...] t = [10, "CL", 10.2, 3.2];
+    [int, int] a = [2, 3];
+
+    io:println(t[a[1]]); // @output 3.2
+}
+
+Test-Case: output
+Description: Test functional call as key expression with container expression of basic type list.
+Labels: float, function-call-expr, int, list-constructor-expr, member-access-expr, string, tuple-rest-descriptor, tuple-type
+
+function init() {
+    [int, string, float...] t = [10, "CL", 10.2, 3.2];
+
+    io:println(t[getPos()]); // @output 3.2
+}
+
+function getPos() returns int {
+    [int, int] a = [2, 3];
+    return a[1];
+}
+
+Test-Case: output
+Description: Test method call as key expression with container expression of basic type list.
+Labels: explicit-new-expr, float, int, list-constructor-expr, member-access-expr, method-call-expr, module-class-defn,
+        string, tuple-rest-descriptor, tuple-type
+
+class Position {
+    function getPos() returns int {
+        [int, int] a = [2, 3];
+        return a[1];
+    }
+}
+
+function init() {
+    [int, string, float...] t = [10, "CL", 10.2, 3.2];
+    Position pos = new;
+
+    io:println(t[pos.getPos()]); // @output 3.2
+}
+
+Test-Case: output
+Description: Test let expression as key expression with container expression of basic type list.
+Labels: float, int, let-expr, list-constructor-expr, member-access-expr, string, tuple-rest-descriptor, tuple-type
+
+function init() {
+    [int, string, float...] t = [10, "CL", 10.2, 3.2];
+
+    io:println(t[let int i = 1 + 2 in i]); // @output 3.2
+}
+
+Test-Case: output
+Description: Test type cast expression as key expression with container expression of basic type list.
+Labels: float, int, list-constructor-expr, member-access-expr, string, tuple-rest-descriptor, tuple-type, type-cast-expr
+
+function init() {
+    [int, string, float...] t = [10, "CL", 10.2, 3.2];
+
+    io:println(t[<int> 3]); // @output 3.2
+}
+
+Test-Case: output
+Description: Test unary numeric expression as key expression with container expression of basic type list.
+Labels: DecimalNumber, float, int, list-constructor-expr, member-access-expr, string, tuple-rest-descriptor, tuple-type,
+        unary-complement, unary-minus, unary-plus
+
+function init() {
+    [int, string, float...] t = [10, "CL", 10.2, 3.2, 9];
+
+    io:println(t[+4]); // @output 9.0
+    io:println(t[-(-3)]); // @output 3.2
+    io:println(t[~(-3)]); // @output 10.2
+}
+
+Test-Case: output
+Description: Test additive expression as key expression with container expression of basic type list.
+Labels: additive-expr, DecimalNumber, float, int, list-constructor-expr, member-access-expr, string, tuple-rest-descriptor,
+        tuple-type
+
+function init() {
+    [int, string, float...] t = [10, "CL", 10.2, 3.2, 9];
+
+    io:println(t[1 + 2]); // @output 3.2
+    io:println(t[3 - 3]); // @output 10
+}
+
+Test-Case: output
+Description: Test multiplicative expression as key expression with container expression of basic type list.
+Labels: DecimalNumber, float, int, list-constructor-expr, member-access-expr, multiplicative-expr, string,
+        tuple-rest-descriptor, tuple-type
+
+function init() {
+    [int, string, float...] t = [10, "CL", 10.2, 3.2, 9];
+
+    io:println(t[2 * 1]); // @output 10.2
+    io:println(t[4 / 2]); // @output 10.2
+    io:println(t[5 % 2]); // @output CL
+}
+
+Test-Case: output
+Description: Test shift expression as key expression with container expression of basic type list.
+Labels: DecimalNumber, float, int, list-constructor-expr, member-access-expr, shift-expr, string, tuple-rest-descriptor,
+        tuple-type
+
+function init() {
+    [int, string, float...] t = [10, "CL", 10.2, 3.2, 9];
+
+    io:println(t[1 << 2]); // @output 9.0
+    io:println(t[4 >> 2]); // @output CL
+}
+
+Test-Case: output
+Description: Test binary bitwise expression as key expression with container expression of basic type list.
+Labels: binary-bitwise-expr, DecimalNumber, float, int, list-constructor-expr, member-access-expr, string,
+        tuple-rest-descriptor, tuple-type
+
+function init() {
+    [int, string, float...] t = [10, "CL", 10.2, 3.2, 9];
+
+    io:println(t[2 & 6]); // @output 10.2
+    io:println(t[2 ^ 6]); // @output 9.0
+}
+
+Test-Case: output
+Description: Test checking expression as key expression with container expression of basic type list.
+Labels: check, checkpanic, error-type, float, int, list-constructor-expr, member-access-expr, optional-type, string,
+        tuple-rest-descriptor, tuple-type, union-type
+
+function init() returns error? {
+    [int, string, float...] t = [10, "CL", 10.2, 3.2, 9];
+    int|error pos = 3;
+
+    io:println(t[check pos]); // @output 3.2
+    io:println(t[checkpanic pos]); // @output 3.2
+}
+
+Test-Case: output
+Description: Test conditional expression as key expression with container expression of basic type list.
+Labels: ternary-conditional-expr, float, int, list-constructor-expr, member-access-expr, relational-expr, string,
+        tuple-rest-descriptor, tuple-type
+
+function init() {
+    [int, string, float...] t = [10, "CL", 10.2, 3.2, 9];
+    int pos = 4;
+
+    io:println(t[pos < 4 ? 0 : pos]); // @output 9.0
+}
+
+Test-Case: output
+Description: Test member access expression at module level.
+Labels: float, int, list-constructor-expr, member-access-expr, module-init-var-decl, string, tuple-rest-descriptor, tuple-type
+
+[int, string, float...] t = [10, "CL", 10.2, 3.2, 9];
+
+float f = t[3];
+
+function init() {
+    io:println(f); // @output 3.2
+}
+
+Test-Case: output
+Description: Test member access expression when the basic type of the container expression is inferred as list.
+Labels: decimal, float, int, list-constructor-expr, member-access-expr, string, tuple-type, var
+
+function init() {
+    var t = [10, "CL", 10.2, 3.2, 9d];
+
+    [int, string, float, float, decimal] _ = t;
+
+    io:println(t[4]); // @output 9
+}
+
+Test-Case: output
+Description: Test member access expression with container expression of basic type list as array member.
+Labels: decimal, float, int, list-constructor-expr, member-access-expr, string, tuple-rest-descriptor, tuple-type
+
+function init() {
+    [int, string, float, float, decimal...] t = [10, "CL", 10.2, 3.2, 9d];
+
+    [int, float, decimal...] t2 = [t[0], t[2], t[4]];
+
+    io:println(t2[2]); // @output 9
+}
+
+Test-Case: output
+Description: Test member access expression with container expression of basic type list as default expression
+             for a field.
+Labels: decimal, float, int, intersection-type, list-constructor-expr, mapping-constructor-expr, member-access-expr,
+        module-init-var-decl, module-type-defn, readonly-type, record-type, string, tuple-rest-descriptor, tuple-type
+
+final [int, string, float, float, decimal...] & readonly t = [10, "CL", 10.2, 3.2, 9d];
+
+type Record record {|
+    string a = t[1];
+|};
+
+function init() {
+    Record rec = {};
+    io:println(rec.a); // @output CL
+}
+
+Test-Case: output
+Description: Test member access expression with container expression of basic type list as defaultable
+             function parameter.
+Labels: additive-expr, decimal, defaultable-param, float, function-call-expr, int, intersection-type, list-constructor-expr,
+        member-access-expr, module-init-var-decl, readonly-type, string, tuple-rest-descriptor, tuple-type
+
+final [int, string, float, float, decimal...] & readonly t = [10, "CL", 10.2, 3.2, 9d];
+
+function init() {
+    io:println(getString()); // @output CLM
+}
+
+function getString(string a = t[1]) returns string {
+    return a + "M";
+}
+
+Test-Case: output
+Description: Test member access expression with container expression of basic type list as expression in
+             return statement.
+Labels: function-call-expr, int, list-constructor-expr, member-access-expr, return-stmt, string, tuple-type
+
+function init() {
+    io:println(getValue()); // @output 10
+}
+
+function getValue() returns int {
+    [int, string] t = [10, "CL"];
+    return t[0];
+}
+
+Test-Case: output
+Description: Test assigning a value to member access expression.
+Labels: float, int, list-constructor-expr, member-access-lvexpr, string, tuple-rest-descriptor, tuple-type
+
+function init() {
+    [int, string, float...] t = [10, "CL"];
+    t[2] = 1;
+
+    io:println(t[2]); // @output 1.0
+}
+
+Test-Case: error
+Description: Test using a value greater/less than the size of a tuple as the key.
+Labels: int, list-constructor-expr, member-access-expr, string, tuple-type
+
+function errorFunction() {
+    [int, string] t = [10, "CL"];
+
+    _ = t[2]; // @error list index out of range
+    _ = t[-1]; // @error list index out of range
+}
+
+Test-Case: error
+Description: Test accessing members of an invalid structure.
+Labels: int, list-constructor-expr, member-access-expr, optional-type, string, tuple-type
+
+function errorFunction() {
+    [int, string]? t = [10, "CL"];
+
+    _ = t[0]; // @error type [int,string]? does not support member access
+}
+
+Test-Case: error
+Description: Test assigning an invalid value to member access expression.
+Labels: int, list-constructor-expr, member-access-expr, string, tuple-type
+
+function errorFunction() {
+    [int, string] t = [10, "CL"];
+
+    t[1] = 1; // @error expected string, found int
+}
+
+Test-Case: error
+Description: Test invalid member access using multi key expression.
+Labels: int, list-constructor-expr, member-access-expr, string, tuple-type
+
+function errorFunction() {
+    [int, string] t = [10, "CL"];
+
+    _ = t[1, 2]; // @error member access with multi-key expression is not allowed with tuple
+}
