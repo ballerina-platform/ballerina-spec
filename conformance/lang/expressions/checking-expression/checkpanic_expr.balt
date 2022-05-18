@@ -993,6 +993,32 @@ function testElvisExpr2(error? a, error b) {
     int _ = checkpanic (a ?:b); // @panic ERROR1
 }
 
+Test-Case: panic
+Description: Test checkpanic-expr with custom error types.
+Labels: function-defn, function-call-expr, return-stmt, checkpanic, error-type, int, DecimalNumber, record-type, string,
+        error-type, error-type-parameter, nil-type, unary-minus
+
+type CustomErrorDetail record {|
+    string message;
+    int code;
+|};
+
+type CustomError error<CustomErrorDetail>;
+
+CustomError e1 = error ("error msg", message = "error 1", code = 500);
+
+function init() {
+    error? x1 = fn1(-1);
+    io:println(x1); // @output
+
+    error? x2 = fn1(2);
+    io:println(x2); // @panic error msg {"message":"error 1","code":500}
+}
+
+function fn1(int i) returns error? {
+    return checkpanic (i > 0? e1:());
+}
+
 Test-Case: error
 Description: Test checkpanic-expr when it is used to convert json to simple types. Test case 1.
 Labels: boolean, decimal, DecimalFloatingPointNumber, DecimalNumber, field-access-expr, float, FloatingPointTypeSuffix,

@@ -1981,3 +1981,40 @@ function fn1(int i) returns error? {
 function fn2(int i) returns error? {
     return i < 0? error("Error from fn2"):();
 }
+
+Test-Case: output
+Description: Test check-expr with custom error types.
+Labels: function-defn, function-call-expr, return-stmt, check, error-type, int, DecimalNumber, record-type, string,
+        error-type, error-type-parameter, nil-type
+
+type CustomErrorDetail record {|
+    string message;
+    int code;
+|};
+
+type CustomError error<CustomErrorDetail>;
+
+CustomError e1 = error ("error msg", message = "error 1", code = 500);
+CustomError e2 = error ("error msg", message = "error 2", code = 600);
+
+function init() {
+    error? x1 = fn1(1);
+    io:println(x1); // @output error CustomError ("error msg",message="error 1",code=500)
+
+    error? x2 = fn1(-2);
+    io:println(x2); // @output
+
+    error? x3 = fn2(1);
+    io:println(x3); // @output
+
+    error? x4 = fn2(2);
+    io:println(x4); // @output error CustomError ("error msg",message="error 2",code=600)
+}
+
+function fn1(int i) returns error? {
+    return check (i > 0? e1:());
+}
+
+function fn2(int i) returns error? {
+    return check (i <= 1? ():e2);
+}
