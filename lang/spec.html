@@ -4507,35 +4507,59 @@ structural value that has its read-only bit on.
 <h4>List constructor</h4>
 
 <pre
-class="grammar">list-constructor-expr := <code>[</code> [ expr-list ] <code>]</code>
-expr-list := expression (<code>,</code> expression)*
+class="grammar">list-constructor-expr := <code>[</code> [ list-member-list ] <code>]</code>
+list-member-list := list-member (<code>,</code> list-member)*
+list-member := single-list-member | spread-list-member
+single-list-member := expression
+spread-list-member := <code>...</code> expression
 </pre>
 <p>
-A list-constructor-expr creates a new list value. The members of the list come from evaluating each
-expression in the expr-list in order.
+A list-constructor-expr creates a new list value. The list is constructed by
+processing each list-member in the order specified as follows. The expression in
+the list-member is first evaluated resulting in a value <var>v</var>. If the
+list-member is a single-list-member, then <var>v</var> is added to the list
+being constructed. Otherwise <var>v</var> must be a list, and every member of
+<var>v</var> is added in order to the list being constructed. It is a
+compile-time error if the static type of the expression in a spread-list-member
+is not a subtype of list.
 </p>
 <p>
 If there is a contextually expected type, then the inherent type of the newly
 created list is derived from the applicable contextually expected type. If the
 applicable contextually expected type is a list type descriptor, then that used
 as the inherent type. If the applicable contextually expected type is a union
-type descriptor, then any members of the union that do not contain list shapes
-of length N will be ignored, where N is the number of expressions in the
-<code>expr-list</code>; it is a compile-time error if this does not leave a
-single list type descriptor, which is then used as the inherent type. The static
-type of the list-constructor-expr will be the same as the inherent type.
+type descriptor, then it is a compile-time error unless there is exactly one
+member of the union that is a list type descriptor and that allows list shapes
+of a length that the static types of the expressions in the list-member-list
+make it possible for the constructed list to have; this list type descriptor is
+used as the inherent type. If there is a spread-list-member, and the type of its
+expression is not fixed length, then the minimum of the total number of members
+that may be added to the list being constructed by this spread-list-member and
+any previous list-member must be greater than or equal to the minimum length
+required by the inherent type. The static type of the list-constructor-expr will
+be the same as the inherent type.
 </p>
 <p>
 If there is no contextually expected type, then the inherent type will be a
-tuple-type-descriptor with a member-type-descriptor for each expression in the
-expr-list; the type of each member-type-descriptor will be the broad type of the
-corresponding expression in the expr-list.
+tuple-type-descriptor derived from the static type of each expression in the
+list-member-list. Each single-list-member that does not have a preceding
+spread-list-member contributes a member-type-descriptor to the
+tuple-type-descriptor; the type of the member-type-descriptor will be the broad
+type of the expression in the single-list-member. If there is a
+spread-list-member, then a tuple-rest-descriptor <code>T...</code> is added
+where T is the smallest type such that the broad type of the expression in every
+other single-list-member is a subtype of <code>T</code>, and the type of the
+expression in each spread-list-member is a subtype of <code>T[]</code>.
 </p>
 <p>
-If there is a contextually expected type, then the type that the inherent type
-requires for each list member provides the contextually expected type for the
-expression for the member; otherwise there is no contextually expected type for
-the expressions for members.
+If the list-constructor-expr does not have a contextually expected type, then
+the contextually expected type for the expression in a spread-list-member is
+<code>(any|error)[]</code>, and the expression in a single-list-member does not
+have a contextually expected type. Otherwise the contextually expected type for
+each list-member is derived from the contextually expected type of the
+list-constructor-expr. If there is a spread-list-member that is not the last
+list-member in the list-member-list, then the contextually expected type used
+from that point on is approximated with a tuple-rest-descriptor.
 </p>
 <p>
 A member of a list can be filled in automatically if the <a
@@ -4706,7 +4730,7 @@ a compile-time error if two or more rows of the table have the same key value.
 <p>
 If there is a contextually expected type, then the type that the inherent type
 requires for each table member provides the contextually expected type for the
-expressions in the expr-list; otherwise there is no contextually expected type
+expressions in the row-list; otherwise there is no contextually expected type
 for these expressions.
 </p>
 
@@ -10797,6 +10821,7 @@ of digits after the decimal point.</li>
 <li>The length of an array type is allowed to be <code>*</code> only when it is
 the outermost array and there is an initializer from which it can be
 inferred.</li>
+<li>A list constructor can use <code>...E</code> as in an argument list.</li>
 </ol>
 </section>
 <section>
