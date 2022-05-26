@@ -1,0 +1,1472 @@
+Test-Case: parser-error
+Description: Test list constructor syntax errors for missing open bracket, close bracket, and comma.
+Labels: array-type, list-constructor-expr
+
+function errorFunction() {
+    int[] arr1 = [; // @error missing close bracket token
+    int[] arr2 = ]; // @error missing open bracket token
+    int[] arr3 = [
+        1
+        2 // @error missing comma token
+        3 // @error missing comma token
+    ];
+}
+
+Test-Case: parser-error
+Description: Test syntax errors with invalid tokens inside the list constructor.
+Labels: array-type, list-constructor-expr
+
+function errorFunction() {
+    int a;
+    int[] arr1 = [
+        %3, // @error invalid token '%'
+        a = 3,// @error invalid token '=', expected ','
+        4; // @error invalid ';'
+    ];
+}
+
+Test-Case: output
+Description: Test basic list constructor expression without contextually expected type.
+Labels: list-constructor-expr, string, var
+
+function init() {
+    var t1 = [];
+    io:println(t1); // @output []
+
+    var t2 = [1, 2, 3];
+    io:println(t2); // @output [1,2,3]
+
+    var t3 = ["A", 2, true];
+    io:println(t3); // @output ["A",2,true]
+}
+
+Test-Case: output
+Description: Test basic list constructor expression with contextually expected type, for array.
+Labels: array-type, list-constructor-expr
+
+function init() {
+    int[] a1 = [1, 2, 3];
+    io:println(a1); // @output [1,2,3]
+}
+
+Test-Case: output
+Description: Test basic list constructor expression with contextually expected type, for tuple.
+Labels: list-constructor-expr, string, tuple-type
+
+function init() {
+    [int, string] t1 = [1,"foo"];
+    io:println(t1); // @output [1,"foo"]
+}
+
+Test-Case: output
+Description: Test list-constructor-expr creates a new list value.
+Labels: exact-equality, list-constructor-expr
+
+function init() {
+    io:println([1, 2] === [1, 2]); // @output false
+}
+
+Test-Case: output
+Description: Test members of the list come from evaluating each expression in the expr-list in order.
+Labels: additive-expr, array-type, function-call-expr, list-constructor-expr, module-init-var-decl
+
+int n = 0;
+
+function init() {
+    int[] arr = [getInt(), getInt(), getInt()];
+    io:println(arr); // @output [1,2,3]
+}
+
+function getInt() returns int {
+    n = n + 1;
+    return n;
+}
+
+Test-Case: output
+Description: Test list-constructor-expr occurring within a const-expr will construct a structural value
+             that has its read-only bit on, for array-typed const.
+Fail-Issue: ballerina-platform/ballerina-lang#13944
+Labels: array-type, is-expr, list-constructor-expr, module-const-decl, readonly-type, string
+
+const string[] strArr = [];
+const int[] intArr = [1, 2, 3, 4];
+
+function init() {
+    io:println(strArr is readonly); // @output true
+    io:println(intArr is readonly); // @output true
+}
+
+Test-Case: output
+Description: Test list-constructor-expr occurring within a const-expr will construct a structural value
+             that has its read-only bit on, for tuple-typed const.
+Fail-Issue: ballerina-platform/ballerina-lang#13944
+Labels: boolean, is-expr, list-constructor-expr, module-const-decl, readonly-type, string, tuple-type
+
+const [int, string, boolean] tuple1 = [11, "foo", true];
+const [int, [boolean, string], boolean] tuple2 = [11, [true, "foo"], true];
+
+function init() {
+    io:println(tuple1 is readonly); // @output true
+    io:println(tuple2 is readonly); // @output true
+}
+
+Test-Case: output
+Description: Test list-constructor-expr occurring within a const-expr will construct a structural value
+             that has its read-only bit on, for map-typed const.
+Fail-Issue: ballerina-platform/ballerina-lang#13944
+Labels: array-type, is-expr, list-constructor-expr, map-type, mapping-constructor-expr, member-access-expr,
+        module-const-decl, readonly-type, string
+
+const map<int[]> keyValues = {even: [2, 4, 6], odd: [1, 3, 5]};
+
+function init() {
+    io:println(keyValues["odd"] is readonly); // @output true
+    io:println(keyValues["even"] is readonly); // @output true
+}
+
+Test-Case: output
+Description: Test if there is a contextually expected type, then the inherent type of the newly created list
+             is derived from the applicable contextually expected type, for array.
+Labels: array-type, byte, is-expr, list-constructor-expr, singleton-type, union-type
+
+function init() {
+    int[] a1 = [1, 2, 3];
+    io:println(a1 is int[]); // @output true
+    io:println(a1 is byte[]); // @output false
+
+    byte[] a2 = [1, 2, 3];
+    io:println(a2 is byte[]); // @output true
+    io:println(a2 is (1|2|3)[]); // @output false
+}
+
+Test-Case: output
+Description: Test if there is a contextually expected type, then the inherent type of the newly created list
+             is derived from the applicable contextually expected type, for tuple.
+Labels: byte, is-expr, list-constructor-expr, singleton-type, tuple-type
+
+function init() {
+    [int, byte, 3] t1 = [1, 2, 3];
+    io:println(t1 is [int, byte, 3]); // @output true
+    io:println(t1 is [int, 2, 3]); // @output false
+}
+
+Test-Case: output
+Description: Test inherent type of the created list when the applicable contextually expected type
+             is a array-type-descriptor of (any|error).
+Labels: any, array-type, is-expr, list-constructor-expr, string, union-type
+
+function init() {
+    any a1 = [];
+    io:println(a1 is (any|error)[]); // @output true
+    io:println(a1 is any[]); // @output false
+
+    any a2 = [1, 2, 3];
+    io:println(a2 is (any|error)[]); // @output true
+    io:println(a2 is any[]); // @output false
+    io:println(a2 is (any|error)[3]); // @output false
+
+    any a3 = [1, "foo", false];
+    io:println(a3 is (any|error)[]); // @output true
+    io:println(a3 is any[]); // @output false
+    io:println(a3 is (any|error)[3]); // @output false
+
+    any[] a4 = [1, 2, 3];
+    io:println(a4 is (any|error)[]); // @output true
+    io:println(a4 is any[]); // @output true
+    io:println(a4 is any[3]); // @output false
+
+    any|(any|error)[] a5 = [1, 2, 3];
+    io:println(a5 is (any|error)[]); // @output true
+    io:println(a5 is any[]); // @output false
+    io:println(a5 is (any|error)[3]); // @output false
+}
+
+Test-Case: output
+Description: Test inherent type of the created list when the applicable contextually expected type
+             is a tuple-type-descriptor, with 'any' tuple members.
+Labels: any, is-expr, list-constructor-expr, singleton-type, string, tuple-type, union-type
+
+function init() {
+    [any, any, any] t1 = [13, 25, "foo"];
+    io:println(t1 is [any, any, any]); // @output true
+    io:println(t1 is [13, 25, "foo"]); // @output false
+
+    [any, any...] t2 = [11, 27, "foo", "bar"];
+    io:println(t2 is [any, any...]); // @output true
+    io:println(t2 is [any, any, any, any]); // @output false
+    io:println(t2 is [13, 25, "foo"]); // @output false
+}
+
+Test-Case: output
+Description: Test inherent type of the created list when the applicable contextually expected type
+             is a array-type-descriptor of anydata.
+Labels: anydata, array-type, is-expr, list-constructor-expr, string, union-type
+
+function init() {
+    anydata a1 = [];
+    io:println(a1 is anydata[]); // @output true
+    io:println(a1 is anydata[0]); // @output false
+
+    anydata a2 = [1, 2, 3];
+    io:println(a2 is anydata[]); // @output true
+    io:println(a2 is anydata[3]); // @output false
+
+    anydata a3 = [1, "foo", false];
+    io:println(a3 is anydata[]); // @output true
+    io:println(a3 is anydata[3]); // @output false
+
+    anydata[] a4 = [1, 2, 3];
+    io:println(a4 is anydata[]); // @output true
+    io:println(a4 is anydata[3]); // @output false
+
+    anydata|anydata[] a5 = [1, 2, 3];
+    io:println(a5 is anydata[]); // @output true
+    io:println(a5 is anydata[3]); // @output false
+}
+
+Test-Case: output
+Description: Test inherent type of the created list when the applicable contextually expected type
+             is a tuple-type-descriptor, with anydata tuple members.
+Labels: anydata, is-expr, list-constructor-expr, singleton-type, string, tuple-type, union-type
+
+function init() {
+    [anydata, anydata, anydata] t1 = [13, 25, "foo"];
+    io:println(t1 is [anydata, anydata, anydata]); // @output true
+    io:println(t1 is [13, 25, "foo"]); // @output false
+
+    [anydata, anydata...] t2 = [11, 27, "foo", "bar"];
+    io:println(t2 is [anydata, anydata...]); // @output true
+    io:println(t2 is [anydata, anydata, anydata, anydata]); // @output false
+    io:println(t2 is [11, 27, "foo", "bar"]); // @output false
+}
+
+Test-Case: output
+Description: Test inherent type of the created list when the applicable contextually expected type
+             is a array-type-descriptor of json.
+Labels: array-type, is-expr, json, list-constructor-expr, string, union-type
+
+function init() {
+    json a1 = [];
+    io:println(a1 is json[]); // @output true
+    io:println(a1 is json[0]); // @output false
+
+    json a2 = [true, 2, "foo"];
+    io:println(a2 is json[]); // @output true
+    io:println(a2 is json[3]); // @output false
+
+    json[] a3 = [true, 2, "foo"];
+    io:println(a3 is json[]); // @output true
+    io:println(a3 is json[3]); // @output false
+
+    json|json[] a4 = [true, 2, "foo"];
+    io:println(a4 is json[]); // @output true
+    io:println(a4 is json[3]); // @output false
+}
+
+Test-Case: output
+Description: Test inherent type of the created list when the applicable contextually expected type
+             is a tuple-type-descriptor of json.
+Labels: is-expr, json, list-constructor-expr, singleton-type, string, tuple-type, union-type
+
+function init() {
+    [json, json, json] t1 = [true, 2, "foo"];
+    io:println(t1 is [json, json, json]); // @output true
+    io:println(t1 is [true, 2, "foo"]); // @output false
+
+    [json, json...] t2 = [true, 2, "foo"];
+    io:println(t2 is [json, json...]); // @output true
+    io:println(t2 is [json, json, json]); // @output false
+    io:println(t2 is [true, 2, "foo"]); // @output false
+}
+
+Test-Case: output
+Description: Test inherent type of the created list when the applicable contextually expected type
+             is a array-type-descriptor, for different array member types.
+Labels: array-type, byte, decimal, DecimalFloatingPointNumber, float, FloatingPointTypeSuffix, is-expr,
+        list-constructor-expr
+
+function init() {
+    int[] a1 = [];
+    io:println(a1 is int[]); // @output true
+    io:println(a1 is int[0]); // @output false
+
+    int[] a2 = [1, 2, 3];
+    io:println(a2 is int[]); // @output true
+    io:println(a2 is int[3]); // @output false
+
+    byte[] a3 = [17, 212, 33];
+    io:println(a3 is byte[]); // @output true
+    io:println(a3 is byte[3]); // @output false
+
+    float[] a4 = [1, 2.0, 25e174, 0.3f];
+    io:println(a4 is float[]); // @output true
+    io:println(a4 is float[4]); // @output false
+
+    decimal[] a5 = [9d, 21, 7e-56, 2.3];
+    io:println(a5 is decimal[]); // @output true
+    io:println(a5 is decimal[4]); // @output false
+
+    int[][] a6 = [[0, 2, 3], [8, 1, 2], [7, 1, 1]];
+    io:println(a6 is int[][]); // @output true
+    io:println(a6 is int[3][3]); // @output false
+}
+
+Test-Case: output
+Description: Test inherent type of the created list when the applicable contextually expected type
+             is a array-type-descriptor having array length, with different array member types.
+Labels: array-type, boolean, byte, DecimalNumber, is-expr, list-constructor-expr, singleton-type, union-type
+
+function init() {
+    byte[3] a1 = [17, 212, 33];
+    io:println(a1 is byte[3]); // @output true
+    io:println(a1 is (17|212|33)[3]); // @output false
+
+    boolean[*] a2 = [true, true, false];
+    io:println(a2 is boolean[3]); // @output true
+    io:println(a2 is (true|false)[3]); // @output false
+}
+
+Test-Case: output
+Description: Test inherent type of the created list when the applicable contextually expected type
+             is a tuple-type-descriptor, for different tuple member types.
+Labels: boolean, byte, DecimalNumber, is-expr, list-constructor-expr, singleton-type, string, tuple-type
+
+function init() {
+    [int, int, int] t1 = [];
+    io:println(t1 is [int, int, int]); // @output true
+
+    [int...] t2 = [];
+    io:println(t2 is [int...]); // @output true
+
+    [int, int, int] t3 = [1, 2, 3];
+    io:println(t3 is [int, int, int]); // @output true
+    io:println(t3 is [1, 2, 3]); // @output false
+
+    [int...] t4 = [1, 2, 3];
+    io:println(t4 is [int...]); // @output true
+    io:println(t4 is [int, int, int]); // @output false
+    io:println(t4 is [1, 2, 3]); // @output false
+
+    [byte, byte, byte] t5 = [17, 212, 33];
+    io:println(t5 is [byte, byte, byte]); // @output true
+    io:println(t5 is [17, 212, 33]); // @output false
+
+    [byte, byte...] t6 = [17, 212, 33];
+    io:println(t6 is [byte, byte...]); // @output true
+    io:println(t6 is [byte, byte, byte]); // @output false
+    io:println(t6 is [17, 212, 33]); // @output false
+
+    [int, int, string] t7 = [1, 2, "foo"];
+    io:println(t7 is [int, int, string]); // @output true
+    io:println(t7 is [1, 2, "foo"]); // @output false
+
+    [int, [boolean, string], boolean] t8 = [11, [true, "foo"], true];
+    io:println(t8 is [int, [boolean, string], boolean]); // @output true
+    io:println(t8 is [11, [true, "foo"], true]); // @output false
+
+    [int, string...] t9 = [12, "foo", "bar", "baz"];
+    io:println(t9 is [int, string...]); // @output true
+    io:println(t9 is [int, string, string, string]); // @output false
+    io:println(t9 is [12, "foo", "bar", "baz"]); // @output false
+}
+
+Test-Case: output
+Description: Test inherent type of the created list when the applicable contextually expected type
+             is a list-type-descriptor, for member types itself being array and tuple.
+Labels: array-type, boolean, DecimalNumber, is-expr, list-constructor-expr, singleton-type, string, tuple-type
+
+function init() {
+    [int, string][] a1 = [[1, "foo"], [2, "bar"], [3, "baz"]];
+    io:println(a1 is [int, string][]); // @output true
+    io:println(a1 is [int, string][3]); // @output false
+    io:println(a1 is [[1, "foo"], [2, "bar"], [3, "baz"]]); // @output false
+
+    [int, string[2], boolean] t1 = [1, ["foo", "bar"], true];
+    io:println(t1 is [int, string[2], boolean]); // @output true
+    io:println(t1 is [1, ["foo", "bar"], true]); // @output false
+
+    [int, [int, string...], int] t2 = [12, [2, "bar", "qux", "quux"], 21];
+    io:println(t2 is [int, [int, string...], int]); // @output true
+    io:println(t2 is [int, [int, string, string, string], int]); // @output false
+    io:println(t2 is [12, [2, "bar", "qux", "quux"], 21]); // @output false
+}
+
+Test-Case: output
+Description: Test inherent type of the created list when the applicable contextually expected type
+             is a readonly array-type-descriptor.
+Labels: array-type, DecimalNumber, intersection-type, is-expr, list-constructor-expr, readonly-type, singleton-type,
+        tuple-type
+
+function init() {
+    readonly & int[] a1 = [1, 2, 3];
+    io:println(a1 is [1, 2, 3]); // @output true
+    io:println(a1 is readonly); // @output true
+}
+
+Test-Case: output
+Description: Test inherent type of the created list when the applicable contextually expected type
+             is a readonly tuple-type-descriptor.
+Labels: DecimalNumber, intersection-type, is-expr, list-constructor-expr, readonly-type, singleton-type, string,
+        tuple-type
+
+function init() {
+    readonly & [int, string, int] t1 = [33, "foo", 17];
+    io:println(t1 is [33, "foo", 17]); // @output true
+    io:println(t1 is readonly); // @output true
+
+    readonly t2 = [1, 2, 3];
+    io:println(t2 is readonly & [1, 2, 3]); // @output true
+
+    readonly t3 = [33, "foo", 17];
+    io:println(t3 is readonly & [33, "foo", 17]); // @output true
+
+    readonly t4 = [1, ["foo", [true, 23]], [true, false, true]];
+    io:println(t4 is readonly & [1, ["foo", [true, 23]], [true, false, true]]); // @output true
+}
+
+Test-Case: output
+Description: Test inherent type of the created list when the applicable contextually expected type
+             is a array-type-descriptor with optional array member types.
+Labels: array-type, boolean, is-expr, list-constructor-expr, nil-literal, nil-type, optional-type, string, union-type
+
+function init() {
+    int?[] a1 = [1, 2, 3];
+    io:println(a1 is int?[]); // @output true
+    io:println(a1 is int[]); // @output false
+
+    int?[] a2 = [1, (), 3];
+    io:println(a2 is int?[]); // @output true
+    io:println(a2 is int[]); // @output false
+
+    int[]? a3 = [1, 2, 3];
+    io:println(a3 is int[]); // @output true
+    io:println(a3 is int[3]); // @output false
+
+    int?[]? a4 = [(), (), ()];
+    io:println(a4 is int?[]); // @output true
+    io:println(a4 is ()[]); // @output false
+
+    (int?|boolean?|string?)[] a5 = [43, false, "foo"];
+    io:println(a5 is (int|boolean|string)?[]); // @output true
+    io:println(a5 is (int|boolean|string)?[3]); // @output false
+    io:println(a5 is (int|boolean|string)[]); // @output false
+    io:println(a5 is ()[]); // @output false
+}
+
+Test-Case: output
+Description: Test inherent type of the created list when the applicable contextually expected type
+             is a tuple-type-descriptor with optional tuple member types.
+Labels: boolean, is-expr, list-constructor-expr, nil-literal, nil-type, optional-type, singleton-type, string,
+        tuple-type, union-type
+
+function init() {
+    [int?, boolean?, string?] t1 = [11, false, "foo"];
+    io:println(t1 is [int?, boolean?, string?]); // @output true
+    io:println(t1 is [int, boolean, string]); // @output false
+
+    [int?, boolean?, string?] t2 = [(), (), ()];
+    io:println(t2 is [int?, boolean?, string?]); // @output true
+    io:println(t2 is [(), (), ()]); // @output false
+
+    [int?, boolean?, string?]? t3 = [11, false, "foo"];
+    io:println(t3 is [int?, boolean?, string?]); // @output true
+    io:println(t3 is [int, boolean, string]); // @output false
+    io:println(t3 is [11, false, "foo"]); // @output false
+
+    [int?|boolean?, boolean?, string|int?] t4 = [true, false, "foo"];
+    io:println(t4 is [(int|boolean)?, boolean?, (string|int)?]); // @output true
+    io:println(t4 is [int|boolean, boolean, string|int]); // @output false
+    io:println(t4 is [true, false, "foo"]); // @output false
+
+    [int?, [boolean?, string?|boolean], boolean?] t5 = [11, [true, ()], true];
+    io:println(t5 is [int?, [boolean?, (string|boolean)?], boolean?]); // @output true
+    io:println(t5 is [int, [boolean, (string|boolean)?], boolean]); // @output false
+    io:println(t5 is [11, [true, ()], true]); // @output false
+}
+
+Test-Case: output
+Description: Test inherent type of the created list when the applicable contextually expected type
+             is a array-type-descriptor of union.
+Labels: array-type, boolean, byte, decimal, DecimalFloatingPointNumber, DecimalNumber, is-expr, list-constructor-expr,
+        singleton-type, string, union-type
+
+function init() {
+    (int|string|decimal|boolean)[] a1 = [2.0, "foo", false, true];
+    io:println(a1 is (int|string|decimal|boolean)[]); // @output true
+    io:println(a1 is (string|decimal|boolean)[]); // @output false
+
+    (int|byte)[] a2 = [1, 2, 3];
+    io:println(a2 is (int|byte)[]); // @output true
+    io:println(a2 is byte[]); // @output false
+    io:println(a2 is int[3]); // @output false
+}
+
+Test-Case: output
+Description: Test inherent type of the created list when the applicable contextually expected type
+             is a tuple-type-descriptor of union.
+Labels: boolean, decimal, DecimalFloatingPointNumber, is-expr, list-constructor-expr, string, tuple-type, union-type
+
+function init() {
+    [int|string|decimal|boolean, string, boolean|int] t1 = [2.0, "foo", false];
+    io:println(t1 is [(int|string|decimal|boolean), string, (boolean|int)]); // @output true
+    io:println(t1 is [decimal, string, boolean]); // @output false
+
+    [int|string, boolean|string...] t2 = [23, "foo", false, "bar", true];
+    io:println(t2 is [(int|string), (boolean|string)...]); // @output true
+    io:println(t2 is [int, string, boolean, string, boolean]); // @output false
+}
+
+Test-Case: output
+Description: Test inherent type of the created list when the applicable contextually expected type
+             is a list-type-descriptor of union, where member types itself being array and tuple.
+Labels: array-type, byte, DecimalFloatingPointNumber, DecimalNumber, is-expr, list-constructor-expr, singleton-type,
+        tuple-type, union-type
+
+function init() {
+    [int, (int|byte)[]] t1 = [17, [23, 700]];
+    io:println(t1 is [int, (int|byte)[]]); // @output true
+    io:println(t1 is [int, byte[]]); // @output false
+    io:println(t1 is [17, [23, 700]]); // @output false
+
+    [int, (int|byte)[]...] t2 = [17, [23, 700]];
+    io:println(t2 is [int, (int|byte)[]...]); // @output true
+    io:println(t2 is [int, (int|byte)[]]); // @output false
+    io:println(t2 is [17, [23, 700]]); // @output false
+
+    [(int|byte)[], int] t3 = [[23, 700], 17];
+    io:println(t3 is [(int|byte)[], int]); // @output true
+    io:println(t3 is [[byte, int], int]); // @output false
+    io:println(t3 is [[23, 700], 17]); // @output false
+
+    [((int|byte)[])...] t4 = [[17], [23, 700]];
+    io:println(t4 is [((int|byte)[])...]); // @output true
+    io:println(t4 is [((int|byte)[]), ((int|byte)[])]); // @output false
+    io:println(t4 is [[17], [23, 700]]); // @output false
+
+    [(int|byte)[], (boolean|string)[]...] t5 = [[23, 700, 252, 0], ["foo", false, "bar", true], [true], ["qux", "quux"]];
+    io:println(t5 is [(int|byte)[], (boolean|string)[]...]); // @output true
+    io:println(t5 is [(int|byte)[], (boolean|string)[], (boolean|string)[], (boolean|string)[]]); // @output false
+    io:println(t5 is [[23, 700, 252, 0], ["foo", false, "bar", true], [true], ["qux", "quux"]]); // @output false
+
+    [(int|byte)[]...] t6 = [[17], [23, 700]];
+    io:println(t6 is [(int|byte)[]...]); // @output true
+    io:println(t6 is [(int|byte)[], (int|byte)[]]); // @output false
+    io:println(t6 is [[17], [23, 700]]); // @output false
+}
+
+Test-Case: output
+Description: Test inherent type of the created list when the applicable contextually expected type
+             is a array-type-descriptor of user-defined type.
+Labels: array-type, DecimalNumber, is-expr, list-constructor-expr, module-type-defn, singleton-type, union-type
+
+type Ints 0|1|2|3;
+
+function init() {
+    Ints[] a1 = [1, 3, 0];
+    io:println(a1 is Ints[]); // @output true
+    io:println(a1 is (0|1|2|3)[]); // @output true
+    io:println(a1 is (0|1|3)[]); // @output false
+    io:println(a1 is [1, 3, 0]); // @output false
+}
+
+Test-Case: output
+Description: Test inherent type of the created list when the applicable contextually expected type
+             is a tuple-type-descriptor of user-defined type.
+Labels: boolean, DecimalNumber, is-expr, list-constructor-expr, module-type-defn, singleton-type, tuple-type, union-type
+
+type Ints 0|1|2|3;
+
+function init() {
+    [Ints, Ints, boolean] t1 = [2, 0, true];
+    io:println(t1 is [Ints, Ints, boolean]); // @output true
+    io:println(t1 is [0|2, 0|2, boolean]); // @output false
+    io:println(t1 is [2, 0, true]); // @output false
+}
+
+Test-Case: output
+Description: Test inherent type of the created list when the applicable contextually expected type
+             is a array-type-descriptor of record or map.
+Labels: array-type, is-expr, list-constructor-expr, map-type, mapping-constructor-expr, module-type-defn, record-type,
+        singleton-type, string
+
+type Student record {|
+    int id;
+    string name;
+    int age;
+|};
+
+function init() {
+    Student[] a1 = [{id: 111, name: "Mike", age: 15}, {id: 99, name: "Emma", age: 17}];
+    io:println(a1 is Student[]); // @output true
+    io:println(a1 is Student[2]); // @output false
+
+    map<string>[] a2 = [{firstName: "Joey", lastName: "Tribbiani"}, {firstName: "Monica", lastName: "Geller"}];
+    io:println(a2 is map<string>[]); // @output true
+    io:println(a2 is map<string>[2]); // @output false
+    io:println(a2 is map<"Joey"|"Tribbiani"|"Monica"|"Geller">[]); // @output false
+}
+
+Test-Case: output
+Description: Test inherent type of the created list when the applicable contextually expected type
+             is a tuple-type-descriptor of record or map.
+Labels: is-expr, list-constructor-expr, map-type, mapping-constructor-expr, module-type-defn, record-type,
+        singleton-type, string, tuple-type
+
+type Student record {|
+    int id;
+    string name;
+    int age;
+|};
+
+function init() {
+    [Student...] t1 = [{id: 111, name: "Mike", age: 15}, {id: 99, name: "Emma", age: 17}];
+    io:println(t1 is [Student...]); // @output true
+    io:println(t1 is [Student, Student]); // @output false
+
+    [map<string>, map<int>] t2 = [{firstName: "Ross", lastName: "Geller"}, {circles: 12, rectangles: 7}];
+    io:println(t2 is [map<string>, map<int>]); // @output true
+    io:println(t2 is [map<"Ross"|"Geller">, map<12|7>]); // @output false
+}
+
+Test-Case: output
+Description: Test inherent type of the created list when the applicable contextually expected type
+             is a array-type-descriptor, where the contextually expected type is a union.
+Labels: array-type, byte, decimal, DecimalNumber, is-expr, list-constructor-expr, singleton-type, string, union-type
+
+function init() {
+    int[]|int|byte|decimal a1 = [1, 2, 3];
+    io:println(a1 is int[]); // @output true
+    io:println(a1 is (1|2|3)[]); // @output false
+    io:println(a1 is int[3]); // @output false
+}
+
+Test-Case: output
+Description: Test inherent type of the created list when the applicable contextually expected type
+             is a tuple-type-descriptor, where the contextually expected type is a union.
+Labels: byte, decimal, is-expr, list-constructor-expr, string, tuple-type, union-type
+
+function init() {
+    [int, string, int]|int|byte|decimal t1 = [34, "foo", 13];
+    io:println(t1 is [int, string, int]); // @output true
+    io:println(t1 is [byte, string, byte]); // @output false
+}
+
+Test-Case: output
+Description: Test the applicable contextually expected type being a union type descriptor,
+             where any members of the union that do not contain list shapes of length N is ignored, with array.
+Labels: array-type, byte, DecimalNumber, is-expr, list-constructor-expr, singleton-type, union-type
+
+function init() {
+    int[2]|int[3]|byte[] a1 = [1, 2, 3, 4];
+    io:println(a1 is byte[]); // @output true
+    io:println(a1 is byte[4]); // @output false
+    io:println(a1 is (1|2|3|4)[]); // @output false
+
+    int[2]|int[3]|int[*] a2 = [1, 2, 3, 4];
+    io:println(a2 is int[4]); // @output true
+    io:println(a2 is byte[4]); // @output false
+
+    int[2]|int[3]|int[]|int|byte a3 = [1, 2, 3, 4];
+    io:println(a3 is int[]); // @output true
+    io:println(a3 is int[4]); // @output false
+    io:println(a3 is byte[]); // @output false
+}
+
+Test-Case: output
+Description: Test the applicable contextually expected type being a union type descriptor,
+             where any members of the union that do not contain list shapes of length N is ignored, with tuple.
+Labels: byte, is-expr, list-constructor-expr, tuple-type, union-type
+
+function init() {
+    [int]|[int, int]|[int, int, int] t1 = [1, 2, 3];
+    io:println(t1 is [int, int, int]); // @output true
+    io:println(t1 is [byte, byte, byte]); // @output false
+
+    [int]|[int, int]|int|byte t2 = [1, 2];
+    io:println(t2 is [int, int]); // @output true
+    io:println(t2 is [byte, byte]); // @output false
+
+    [int...]|int|byte t3 = [1, 2];
+    io:println(t3 is [int...]); // @output true
+    io:println(t3 is [int, int]); // @output false
+    io:println(t3 is [byte...]); // @output false
+}
+
+Test-Case: error
+Description: Test the compile-time error when the applicable contextually expected type does not leave
+             a single list type descriptor, with array as union members.
+Labels: array-type, boolean, byte, list-constructor-expr, union-type
+
+function errorFunction() {
+    int[4]|int[3] _ = [1, 2, 3]; // @error ambiguous type '(int[4]|int[3])'
+    int[]|int[3] _ = [1, 2]; // @error ambiguous type '(int[]|int[3])'
+    int[]|int[3] _ = [1, 2, 3]; // @error ambiguous type '(int[]|int[3])'
+    int[]|byte[] _ = [1, 2, 3]; // @error ambiguous type '(int[]|byte[])'
+    int[2]|int[3] _ = [12]; // @error ambiguous type '(int[2]|int[3])'
+    int[]|int[3]|boolean[] _ = [1, 2, 3]; // @error ambiguous type '(int[]|int[3]|boolean[])'
+}
+
+Test-Case: error
+Description: Test the compile-time error when the applicable contextually expected type does not leave
+             a single list type descriptor, with tuple as union members.
+Labels: byte, list-constructor-expr, tuple-type, union-type
+
+function errorFunction() {
+    [int, int, int]|[int] _ = [1]; // @error ambiguous type '([int,int,int]|[int])'
+    [int...]|[int, int, int] _ = [1, 2]; // @error ambiguous type '([int...]|[int,int,int])'
+    [int...]|[int, int, int] _ = [1, 2, 3]; // @error ambiguous type '([int...]|[int,int,int])'
+    [int...]|[byte...] _ = [1, 2, 3]; // @error ambiguous type '([int...]|[byte...])'
+    [int, int]|[int, int, int] _ = [1]; // @error ambiguous type '([int,int]|[int,int,int])'
+}
+
+Test-Case: error
+Description: Test the compile-time error when the applicable contextually expected type does not leave
+             a single list type descriptor, with mix of array and tuple as union members.
+Labels: array-type, list-constructor-expr, tuple-type, union-type
+
+function errorFunction() {
+    int[2]|[int, int, int] _ = [1, 2]; // @error ambiguous type '(int[2]|[int,int,int])'
+    int[3]|[int, int] _ = [1, 2]; // @error ambiguous type '(int[3]|[int,int])'
+
+    ([int]|[int, int])[] _ = [[1], [1, 2]]; // @error ambiguous type '([int]|[int,int])'
+
+    int[]|[int, int, int] _ = [1, 2]; // @error ambiguous type '(int[]|[int,int,int])'
+    int[]|[int, int, int] _ = [1, 2, 3]; // @error ambiguous type '(int[]|[int,int,int])'
+    int[]|[byte...] _ = [1, 2, 3]; // @error ambiguous type '(int[]|[byte...])'
+
+    int[2]|[int, int, int] _ = [1]; // @error ambiguous type '(int[2]|[int,int,int])'
+}
+
+Test-Case: error
+Description: Test the compile-time error when the applicable contextually expected type does not leave
+             a single list type descriptor, with non-list types as union members.
+Labels: boolean, list-constructor-expr, string, union-type
+
+function errorFunction() {
+    int|string|boolean _ = [1, 2, 3]; // @error incompatible types: expected '(int|string|boolean)', found '[int,int,int]'
+}
+
+Test-Case: error
+Description: Test the compile-time error when the applicable contextually expected type does not leave a single list type descriptor,
+             although it is possible to narrow down the type to a single array type considering the list constructor members.
+Fail-Issue: ballerina-platform/ballerina-lang#33056
+Labels: array-type, boolean, list-constructor-expr, string, union-type
+
+function errorFunction() {
+    string[]|int[]|boolean[] _ = [1, 2, 3]; // @error inherent type cannot be a union type
+    string[]|int[] _ = [1, 2, 3]; // @error inherent type cannot be a union type
+}
+
+Test-Case: error
+Description: Test the compile-time error when the applicable contextually expected type does not leave a single list type descriptor,
+             although it is possible to narrow down the type to a single tuple type considering the list constructor members.
+Fail-Issue: ballerina-platform/ballerina-lang#33056
+Labels: boolean, list-constructor-expr, string, tuple-type, union-type
+
+function errorFunction() {
+    [int, int, int]|[string...] _ = [1, 2, 3]; // @error inherent type cannot be a union type
+    [int, int, int]|[string...]|int|boolean _ = [1, 2, 3]; // @error inherent type cannot be a union type
+}
+
+Test-Case: error
+Description: Test the compile-time error when the applicable contextually expected type does not leave a single list type descriptor,
+             although it is possible to narrow down the type to a single list type considering the list constructor members.
+Fail-Issue: ballerina-platform/ballerina-lang#33056
+Labels: array-type, boolean, list-constructor-expr, tuple-type, union-type
+
+function errorFunction() {
+    [int, int, int]|boolean[] _ = [1, 2, 3]; // @error inherent type cannot be a union type
+    int[]|[boolean] _ = [1, 2, 3]; // @error inherent type cannot be a union type
+}
+
+Test-Case: output
+Description: Test when there is no contextually expected type, then the inherent type is a a tuple-type-descriptor
+             with a member-type-descriptor for each expression in the expr-list,
+             where the type of each member-type-descriptor will be the broad type of the corresponding expression
+             in the expr-list.
+Labels: boolean-literal, DecimalNumber, is-expr, list-constructor-expr, singleton-type, string, tuple-type, var
+
+function init() {
+    var a1 = [1, 2, 3];
+    io:println(a1 is [int, int, int]); // @output true
+    io:println(a1 is [byte, byte, byte]); // @output false
+    io:println(a1 is [1, 2, 3]); // @output false
+
+    var a2 = [1, "foo", "bar", 3];
+    io:println(a2 is [int, string, string, int]); // @output true
+    io:println(a2 is [byte, "foo", "bar", byte]); // @output false
+    io:println(a2 is [1, "foo", "bar", 3]); // @output false
+
+    var a3 = [1, ["foo", [true, 23]], [true, false, true]];
+    io:println(a3 is [int, [string, [boolean, int]], [boolean, boolean, boolean]]); // @output true
+    io:println(a3 is [1, ["foo", [true, 23]], [true, false, true]]); // @output false
+}
+
+Test-Case: error
+Description: Test when there is no contextually expected type, then the inherent type is a a tuple-type-descriptor
+             with a member-type-descriptor for each expression in the expr-list,
+             where the type of each member-type-descriptor will be the broad type of the corresponding expression
+             in the expr-list.
+Labels: boolean-literal, DecimalNumber, list-constructor-expr, member-access-lvexpr, string, tuple-type, var
+
+function errorFunction() {
+    var a1 = [1, 2, 3];
+    a1[0] = "s"; // @error incompatible types: expected 'int', found 'string'
+    a1[1] = "s"; // @error incompatible types: expected 'int', found 'string'
+    a1[2] = "s"; // @error incompatible types: expected 'int', found 'string'
+
+    var a2 = [1, "foo", "bar", 3];
+    a2[0] = "s"; // @error incompatible types: expected 'int', found 'string'
+    a2[1] = 1; // @error incompatible types: expected 'string', found 'int'
+    a2[2] = 1; // @error incompatible types: expected 'string', found 'int'
+    a2[3] = "s"; // @error incompatible types: expected 'int', found 'string'
+
+    var a3 = [1, ["foo", [true, 23]], [true, false, true]];
+    a3[0] = "s"; // @error incompatible types: expected 'int', found 'string'
+    a3[1] = "s"; // @error incompatible types: expected '[string,[boolean,int]]', found 'string'
+    a3[1][0] = 1; // @error incompatible types: expected 'string', found 'int'
+    a3[1][1][0] = "s"; // @error incompatible types: expected 'boolean', found 'string'
+    a3[1][1][1] = "s"; // @error incompatible types: expected 'int', found 'string'
+    a3[2] = "s"; // @error incompatible types: expected '[boolean,boolean,boolean]', found 'string'
+}
+
+Test-Case: error
+Description: Test when there is a contextually expected type, then the type that the inherent type
+             requires for each list member provides the contextually expected type for the expression for the member,
+             for array.
+Labels: array-type, byte, DecimalFloatingPointNumber, float, list-constructor-expr, member-access-expr, optional-type,
+        string, unary-minus, union-type
+
+function errorFunction() {
+    byte[] a1 = [
+        333, // @error incompatible types: expected 'byte', found 'int'
+        -2, // @error incompatible types: expected 'byte', found 'int'
+        2.3, // @error incompatible types: expected 'byte', found 'float'
+        "s" // @error incompatible types: expected 'byte', found 'string'
+    ];
+
+    int?[] a2 = [
+        true, // @error incompatible types: expected 'int?', found 'boolean'
+        1.2, // @error incompatible types: expected 'int?', found 'float'
+        false // @error incompatible types: expected 'int?', found 'boolean'
+    ];
+
+    (byte|string)[] a3 = [
+        400, // @error incompatible types: expected '(byte|string)', found 'int'
+        1.2, // @error incompatible types: expected '(byte|string)', found 'float'
+        false // @error incompatible types: expected '(byte|string)', found 'boolean'
+    ];
+
+    string|byte[]|boolean a4 = [333, -2, 2.3, "s"]; // @error incompatible types: expected '(string|byte[]|boolean)', found '[int,int,float,string]'
+}
+
+Test-Case: error
+Description: Test when there is a contextually expected type, then the type that the inherent type
+             requires for each list member provides the contextually expected type for the expression for the member,
+             for tuple.
+Labels: array-type, byte, list-constructor-expr, optional-type, singleton-type, string, union-type
+
+function errorFunction() {
+    [true, byte, "foo"|"bar"] t1 = [
+        false, // @error incompatible types: expected 'true', found 'boolean'
+        522, // @error incompatible types: expected 'byte', found 'int'
+        "baz" // @error incompatible types: expected '"foo"|"bar"', found 'string'
+    ];
+
+    [int, string?...] t2 = [
+        true, // @error incompatible types: expected 'int', found 'boolean'
+        12, // @error incompatible types: expected 'string?', found 'int'
+        false // @error incompatible types: expected 'string?', found 'boolean'
+    ];
+
+    [int, string|int, string?|int] t3 = [
+        true, // @error incompatible types: expected 'int', found 'boolean'
+        false, // @error incompatible types: expected '(string|int)', found 'boolean'
+        false // @error incompatible types: expected '(string|int)?', found 'boolean'
+    ];
+}
+
+Test-Case: output
+Description: Test a member of list being able to fill automatically when the FillMember abstract operation succeed on it.
+Labels: array-type, list-constructor-expr
+
+function init() {
+    int[5] a1 = [1, 2, 3];
+    io:println(a1); // @output [1,2,3,0,0]
+}
+
+Test-Case: output
+Description: Test a member of list being able to fill automatically when the FillMember abstract operation succeed on it.
+Labels: boolean, list-constructor-expr, string, tuple-type
+
+function init() {
+    [int, string, int, boolean] t1 = [1, "foo"];
+    io:println(t1); // @output [1,"foo",0,false]
+}
+
+Test-Case: error
+Description: Test a member of list being unable to fill automatically as the FillMember abstract operation fails on it.
+Labels: array-type, list-constructor-expr, string, union-type
+
+function errorFunction() {
+    (int|string)[4] _ = [1, 2]; // @error invalid usage of list constructor: type '(int|string)[4]' does not have a filler value
+}
+
+Test-Case: error
+Description: Test a member of list being  unable to fill automatically as the FillMember abstract operation fails on it.
+Labels: boolean, list-constructor-expr, string, tuple-type, union-type
+
+function errorFunction() {
+    [int,boolean|string] _ = [1]; // @error tuple and expression size does not match
+}
+
+Test-Case: output
+Description: Test list-constructor-expr in module-var-decl, with array.
+Labels: array-type, byte, is-expr, list-constructor-expr, module-init-var-decl
+
+int[] a1 = [1, 2, 3];
+int[][] a2 = [[0, 2, 3], [8, 1, 2], [7, 1, 1]];
+
+function init() {
+    io:println(a1 is int[]); // @output true
+    io:println(a1 is int[3]); // @output false
+    io:println(a1 is byte[]); // @output false
+
+    io:println(a2 is int[][]); // @output true
+    io:println(a2 is int[3][3]); // @output false
+    io:println(a2 is byte[][]); // @output false
+}
+
+Test-Case: output
+Description: Test list-constructor-expr in module-var-decl, with tuple.
+Labels: byte, is-expr, list-constructor-expr, module-init-var-decl, tuple-type
+
+[int, int, int] t1 = [1, 2, 3];
+[int...] t2 = [1, 2, 3];
+
+function init() {
+    io:println(t1 is [int, int, int]); // @output true
+    io:println(t1 is [byte, byte, byte]); // @output false
+
+    io:println(t2 is [int...]); // @output true
+    io:println(t2 is [int, int, int]); // @output false
+    io:println(t2 is [byte...]); // @output false
+}
+
+Test-Case: output
+Description: Test list-constructor-expr in module-var-decl, with mixing array and tuple.
+Labels: array-type, boolean, byte, is-expr, list-constructor-expr, module-init-var-decl, string, tuple-type, union-type
+
+[(int|byte)[], int] t1 = [[23, 700], 17];
+[(int|byte)[]...] t2 = [[17], [23, 700]];
+[(int|byte)[], (boolean|string)[]...] t3 = [[23, 700, 252, 0], ["foo", false, "bar", true], [true], ["qux", "quux"]];
+
+function init() {
+    io:println(t1 is [(int|byte)[], int]); // @output true
+    io:println(t1 is [(int|byte)[1], int]); // @output false
+    io:println(t1 is [byte[], int]); // @output false
+
+    io:println(t2 is [(int|byte)[]...]); // @output true
+    io:println(t2 is [(int|byte)[], (int|byte)[]]); // @output false
+    io:println(t2 is [byte[]...]); // @output false
+
+    io:println(t3 is [(int|byte)[], (boolean|string)[]...]); // @output true
+    io:println(t3 is [byte[], (boolean|string)[]...]); // @output false
+    io:println(t3 is [(int|byte)[], (boolean|string)[], (boolean|string)[]]); // @output false
+}
+
+Test-Case: output
+Description: Test literals as list-constructor expressions.
+Labels: boolean, byte, byte-array-literal, decimal, DecimalFloatingPointNumber, float, FloatingPointTypeSuffix,
+        HexFloatingPointLiteral, is-expr, list-constructor-expr, nil-literal, nil-type, singleton-type, string,
+        tuple-type
+
+function init() {
+    io:println([11, 2.0, true, base64 `bGlnaHQgd29y`, (), "foo", 0x12, 7e-56, 0X21.5, 3.9] is [int, float, boolean, byte[], (), string, int, float, float, float]); // @output true
+    io:println([11, 2.0, true, base64 `bGlnaHQgd29y`, (), "foo", 0x12, 7e-56, 0X21.5, 3.9] is [11, 2.0, true, byte[], (), "foo", 0x12, 7e-56, 0X21.5, 3.9]); // @output false
+}
+
+Test-Case: output
+Description: Test string-template-expr as list-constructor expressions.
+Labels: BacktickString, is-expr, list-constructor-expr, singleton-type, string, tuple-type
+
+function init() {
+    io:println([string `Hello ${10 * 3}!!`, "foo", string `\u{61}NT`, "bar"] is [string, string, string, string]); // @output true
+    io:println([string `Hello ${10 * 3}!!`, "foo", string `\u{61}NT`, "bar"] is ["Hello 30!!", "foo", "\u{61}NT", "bar"]); // @output false
+}
+
+Test-Case: output
+Description: Test xml-template-expr as list-constructor expressions.
+Labels: BacktickString, is-expr, list-constructor-expr, tuple-type, xml, xml:Comment, xml:Element, xml:Text
+
+function init() {
+    io:println([xml `<name>Mike</name>`, xml `${7 + 3}`, xml `<!-- hello -->`] is [xml:Element, xml:Text, xml:Comment]); // @output true
+}
+
+Test-Case: output
+Description: Test raw-template-expr as list-constructor expressions.
+Labels: is-expr, list-constructor-expr, object:RawTemplate, raw-template-expr, tuple-type
+
+function init() {
+    io:println([`x + y = ${2 + 3}`, `Count:${1}`, `INSERT INTO Details VALUES (${"Foo"}, ${20})`] is [object:RawTemplate, object:RawTemplate, object:RawTemplate]); // @output true
+}
+
+Test-Case: output
+Description: Test structural-constructor-expr as list-constructor expressions.
+Labels: list-constructor-expr, mapping-constructor-expr, record-type, record-type-readonly-field, string,
+        table-constructor-expr, table-constructor-key-specifier, table-type, tuple-type
+
+function init() {
+    io:println([
+        [23, "foo"],
+        table key(id) [
+                {id: 1, name: "Frank", age: 54},
+                {id: 2, name: "John", age: 47}
+            ],
+        {a: 1, b: "bar", c: true}
+    ] is [[int, string], table<record {|readonly int id; string name; int age;|}> key(id), record {|int a; string b; boolean c;|}]); // @output true
+}
+
+Test-Case: output
+Description: Test object-constructor-expr as list-constructor expressions.
+Labels: array-type, field-access-lvexpr, is-expr, list-constructor-expr, object-constructor-expr, string
+
+function init() {
+    io:println([
+        object {
+            int i;
+            function init() {
+                self.i = 20;
+            }
+        },
+        object {
+            int a;
+            string[] b;
+
+            function init() {
+                self.a = 21;
+                self.b = [];
+            }
+        },
+        object {}
+    ] is object {}[]); // @output true
+}
+
+Test-Case: output
+Description: Test as new-expr list-constructor expressions.
+Labels: array-type, explicit-new-expr, field-access-lvexpr, implicit-new-expr, is-expr, list-constructor-expr,
+        module-class-defn, new-expr
+
+class Student {
+    int i;
+
+    function init() {
+        self.i = 0;
+    }
+}
+
+function init() {
+    Student[] arr = [new, new Student()];
+
+    io:println(arr is Student[]); // @output true
+}
+
+Test-Case: output
+Description: Test variable-reference-expr as list-constructor expressions.
+Labels: array-type, decimal, DecimalFloatingPointNumber, is-expr, list-constructor-expr, singleton-type, string,
+        tuple-type
+
+function init() {
+    string name = "Ballerina";
+    decimal ver = 2.0;
+    string[] arr = ["R", "O", "X"];
+
+    io:println([name, ver, arr] is [string, decimal, string[]]); // @output true
+    io:println([name, ver, arr] is ["Ballerina", decimal, string[]]); // @output false
+}
+
+Test-Case: output
+Description: Test field-access-expr as list-constructor expressions.
+Labels: DecimalNumber, field-access-expr, is-expr, list-constructor-expr, mapping-constructor-expr, module-type-defn,
+        record-type, singleton-type, string, tuple-type
+
+type Employee record {|
+    int id;
+    string name;
+|};
+
+function init() {
+    Employee emp = {id: 0, name: "John"};
+
+    io:println([emp.id, emp.name] is [int, string]); // @output true
+    io:println([emp.id, emp.name] is [0, "John"]); // @output false
+}
+
+Test-Case: output
+Description: Test optional-field-access as list-constructor expressions.
+Labels: is-expr, list-constructor-expr, mapping-constructor-expr, module-type-defn, optional-field-access-expr,
+        optional-type, record-type, singleton-type, string, tuple-type
+
+type Employee record {|
+    int id;
+    string fName;
+    string lName?;
+|};
+
+function init() {
+    Employee emp = {id: 0, fName: "Ross", lName: "Geller"};
+
+    io:println([emp?.id, emp?.fName, emp?.lName] is [int, string, string?]); // @output true
+    io:println([emp?.id, emp?.fName, emp?.lName] is [int, string, string]); // @output false
+    io:println([emp?.id, emp?.fName, emp?.lName] is [int, "Ross", "Geller"?]); // @output false
+}
+
+Test-Case: output
+Description: Test annot-access-expr as list-constructor expressions.
+Labels: annot-access-expr, annotation-decl, is-expr, list-constructor-expr, mapping-constructor-expr, module-type-defn,
+        optional-type, record-type, singleton-type, string, tuple-type, typedesc-type
+
+annotation v1 on type;
+
+annotation v2 on type;
+
+@v1
+type T1 record {
+    string name;
+};
+
+T1 t1 = {name: "Ross"};
+
+function init() {
+    typedesc<T1> t = typeof t1;
+
+    io:println([t.@v1, t.@v2] is [true?, true?]); // @output true
+    io:println([t.@v1, t.@v2] is [true, true]); // @output false
+}
+
+Test-Case: output
+Description: Test member-access-expr as list-constructor expressions.
+Labels: array-type, byte, is-expr, list-constructor-expr, member-access-expr
+
+function init() {
+    int[] arr = [1, 2, 3, 4, 5];
+
+    io:println(arr[0] is 1); // @output true
+    io:println(arr[1] is 2); // @output true
+    io:println(arr[2] is 3); // @output true
+    io:println(arr[3] is 4); // @output true
+    io:println(arr[4] is 5); // @output true
+}
+
+Test-Case: output
+Description: Test function-call-expr as list-constructor expressions.
+Labels: boolean, function-call-expr, is-expr, list-constructor-expr, singleton-type, tuple-type
+
+function init() {
+    io:println([isSameNumber(3, 2), isSameNumber(4, 4)] is [boolean, boolean]); // @output true
+    io:println([isSameNumber(3, 2), isSameNumber(4, 4)] is [false, true]); // @output false
+}
+
+function isSameNumber(int a, int b) returns boolean {
+    return a == b;
+}
+
+Test-Case: output
+Description: Test method-call-expr as list-constructor expressions.
+Labels: is-expr, list-constructor-expr, method-call-expr, singleton-type, string, tuple-type, value:toString
+
+function init() {
+    io:println(["Hello".toString(), "World".toString()] is [string, string]); // @output true
+    io:println(["Hello".toString(), "World".toString()] is ["Hello", "World"]); // @output false
+}
+
+Test-Case: output
+Description: Test error-constructor-expr as list-constructor expressions.
+Labels: error-constructor-expr, error-type, is-expr, list-constructor-expr, tuple-type
+
+function init() {
+    io:println([error("Oh, NO!"), error("OMG!")] is [error,error]); // @output true
+}
+
+Test-Case: output
+Description: Test anonymous-function-expr as list-constructor expressions.
+Labels: array-type, byte, explicit-anonymous-function-expr, function-type, infer-anonymous-function-expr, is-expr,
+        list-constructor-expr, module-type-defn
+
+type func function () returns int;
+
+function init() {
+    func[] arr = [
+        function() returns byte {
+            return 5;
+        },
+        () => 10
+    ];
+
+    io:println(arr is (function () returns int)[]); // @output true
+    io:println(arr is (function () returns byte)[]); // @output false
+}
+
+Test-Case: output
+Description: Test let-expr as list-constructor expressions.
+Labels: boolean, is-expr, let-expr, list-constructor-expr, multiplicative-expr, singleton-type, tuple-type
+
+function init() {
+    io:println([
+        let int i = 4
+            in i * 2,
+        let int x = 3
+            in x == 3
+    ] is [int, boolean]); // @output true
+
+    io:println([
+        let int i = 4
+            in i * 2,
+        let int x = 3
+            in x == 3
+    ] is [8, true]); // @output false
+}
+
+Test-Case: output
+Description: Test type-cast-expr as list-constructor expressions.
+Labels: byte, is-expr, list-constructor-expr, optional-type, singleton-type, tuple-type, type-cast-expr
+
+function init() {
+    byte? b = 221;
+
+    io:println([<byte>21, <byte>b] is [byte, byte]); // @output true
+    io:println([<byte>21, <byte>b] is [21, 221?]); // @output false
+}
+
+Test-Case: output
+Description: Test typeof-expr as list-constructor expressions.
+Labels: is-expr, list-constructor-expr, string, tuple-type, typedesc-type, typeof-expr
+
+function init() {
+    io:println([typeof 11, typeof "foo"] is [typedesc, typedesc]); // @output true
+}
+
+Test-Case: output
+Description: Test unary-expr as list-constructor expressions.
+Labels: boolean, is-expr, list-constructor-expr, singleton-type, tuple-type, unary-complement, unary-minus, unary-not,
+        unary-plus
+
+function init() {
+    io:println([+11, -2, !true, ~0] is [int, int, boolean, int]); // @output true
+    io:println([+11, -2, !true, ~0] is [11, -2, false, -1]); // @output false
+}
+
+Test-Case: output
+Description: Test multiplicative-expr as list-constructor expressions.
+Labels: byte, is-expr, list-constructor-expr, multiplicative-expr, tuple-type
+
+function init() {
+    io:println([3 * 2, 4 / 2, 5 % 2] is [int, int, int]); // @output true
+    io:println([3 * 2, 4 / 2, 5 % 2] is [byte, byte, byte]); // @output false
+}
+
+Test-Case: output
+Description: Test additive-expr as list-constructor expressions.
+Labels: additive-expr, byte, is-expr, list-constructor-expr, tuple-type
+
+function init() {
+    io:println([1 + 7, 6 - 3] is [int, int]); // @output true
+    io:println([1 + 7, 6 - 3] is [byte, byte]); // @output false
+}
+
+Test-Case: output
+Description: Test shift-expr as list-constructor expressions.
+Labels: DecimalNumber, is-expr, list-constructor-expr, shift-expr, singleton-type, tuple-type, unary-minus
+
+function init() {
+    io:println([1 << 2, -64 >> 2, 256 >>> 2] is [int, int, int]); // @output true
+    io:println([1 << 2, -64 >> 2, 256 >>> 2] is [4, -16, 64]); // @output false
+}
+
+Test-Case: output
+Description: Test range-expr as list-constructor expressions.
+Labels: array-type, is-expr, isolated-method, list-constructor-expr, object-type, range-expr, record-type
+
+function init() {
+    io:println([0 ... 2, 1 ..< 3] is object {
+        public isolated function iterator() returns object {
+            public isolated function next() returns record {|int value;|}?;
+        };
+    }[]); // @output true
+}
+
+Test-Case: output
+Description: Test relational-expr as list-constructor expressions.
+Labels: boolean, is-expr, list-constructor-expr, relational-expr, singleton-type, tuple-type
+
+function init() {
+    io:println([11 <= 11, 2 < 3, 3 > 5, 7 >= 4] is [boolean, boolean, boolean, boolean]); // @output true
+    io:println([11 <= 11, 2 < 3, 3 > 5, 7 >= 4] is [true, true, false, true]); // @output false
+}
+
+Test-Case: output
+Description: Test is-expr as list-constructor expressions.
+Labels: boolean, byte, is-expr, list-constructor-expr, singleton-type, tuple-type
+
+function init() {
+    io:println([3 is byte, 3 is 3] is [boolean, boolean]); // @output true
+    io:println([3 is byte, 3 is 3] is [true, true]); // @output false
+}
+
+Test-Case: output
+Description: Test equality-expr as list-constructor expressions.
+Labels: boolean, equality, is-expr, list-constructor-expr, singleton-type, tuple-type
+
+function init() {
+    io:println([3 == 3, 4 != 4, 6 === 6, 1 !== 1] is [boolean, boolean, boolean, boolean]); // @output true
+    io:println([3 == 3, 4 != 4, 6 === 6, 1 !== 1] is [true, false, true, false]); // @output false
+}
+
+Test-Case: output
+Description: Test binary-bitwise-expr as list-constructor expressions.
+Labels: binary-bitwise-expr, is-expr, list-constructor-expr, singleton-type, tuple-type
+
+function init() {
+    io:println([3 & 0, 4 | 0, 2 ^ 0] is [int, int, int]); // @output true
+    io:println([3 & 0, 4 | 0, 2 ^ 0] is [0, 4, 2]); // @output false
+}
+
+Test-Case: output
+Description: Test logical-expr as list-constructor expressions.
+Labels: boolean, is-expr, list-constructor-expr, logical-expr, singleton-type, tuple-type
+
+function init() {
+    io:println([true && false, true || false] is [boolean, boolean]); // @output true
+    io:println([true && false, true || false] is [false, true]); // @output false
+}
+
+Test-Case: output
+Description: Test conditional-expr as list-constructor expressions.
+Labels: binary-conditional-expr, is-expr, list-constructor-expr, optional-type, singleton-type,
+        ternary-conditional-expr, tuple-type
+
+function init() {
+    int? num = 5;
+    io:println([false ? 3 : 4, num ?: 0] is [int, int]); // @output true
+    io:println([false ? 3 : 4, num ?: 0] is [4, 5]); // @output false
+}
+
+Test-Case: output
+Description: Test checking-expr as list-constructor expressions.
+Labels: check, checking-expr, checkpanic, error-type, is-expr, list-constructor-expr, singleton-type, tuple-type,
+        union-type
+
+function init() returns error? {
+    int|error n = 7;
+    io:println([check n, checkpanic n] is [int, int]); // @output true
+    io:println([check n, checkpanic n] is [7, 7]); // @output false
+}
+
+Test-Case: output
+Description: Test trap-expr as list-constructor expressions.
+Labels: error-constructor-expr, error-type, is-expr, list-constructor-expr, trap-expr, tuple-type, union-type
+
+function init() {
+    io:println([trap 23, trap error("Oops!")] is [(int|error), error]); // @output true
+    io:println([trap 23, trap error("Oops!")] is [int, error]); // @output false
+}
+
+Test-Case: output
+Description: Test query-expr as list-constructor expressions.
+Labels: array-type, is-expr, list-constructor-expr, multiplicative-expr, query-expr, singleton-type, tuple-type
+
+function init() {
+    io:println([
+        from int i in [1, 2, 3]
+        select i * 2,
+        from int i in [1, 2, 3]
+        where i % 2 != 0
+        select i
+    ] is [int[], int[]]); // @output true
+
+    io:println([
+        from int i in [1, 2, 3]
+        select i * 2,
+        from int i in [1, 2, 3]
+        where i % 2 != 0
+        select i
+    ] is [[2, 4, 6], [1, 3]]); // @output false
+}
+
+Test-Case: output
+Description: Test list-constructor expression in query select clause.
+Labels: array-type, list-constructor-expr, multiplicative-expr, query-expr
+
+function init() {
+    int[][] arr = from int i in [1, 2, 3, 4, 5]
+        where i % 2 != 0
+        select [i, i * i];
+
+    io:println(arr); // @output [[1,1],[3,9],[5,25]]
+}
+
+Test-Case: output
+Description: Test transactional-expr as list-constructor expressions.
+Fail-Issue: ballerina-platform/ballerina-lang#33087
+Labels: boolean, is-expr, list-constructor-expr, singleton-type, string, transactional-expr, tuple-type
+
+function init() {
+    io:println(["transaction1", "transaction_description_1", transactional] is [string, string, boolean]); // @output true
+    io:println(["transaction1", "transaction_description_1", transactional] is ["transaction1", "transaction_description_1", false]); // @output false
+}
+
+Test-Case: output
+Description: Test braced-expr as list-constructor expressions.
+Labels: additive-expr, HexIntLiteral, is-expr, list-constructor-expr, singleton-type, string, tuple-type, unary-minus,
+        unary-plus
+
+function init() {
+    io:println([("String"), (+1), (-0x34), (true), (1 + 5)] is [string, int, int, boolean, int]); // @output true
+    io:println([("String"), (+1), (-0x34), (true), (1 + 5)] is ["String", 1, -52, true, 6]); // @output false
+}
+
+Test-Case: output
+Description: Test list-constructor-expr with foreach-stmt.
+Labels: array-type, foreach-stmt, list-constructor-expr, singleton-type, string, union-type, var
+
+function init() {
+    foreach int i in [1, 2, 3] {
+        io:println(i); // @output 1
+                       // @output 2
+                       // @output 3
+    }
+
+    foreach var i in ["s", 4, true] {
+        io:println(i); // @output s
+                       // @output 4
+                       // @output true
+    }
+
+    (int|string)[] a1 = [2, "s", "x"];
+
+    foreach int|string i in a1 {
+        io:println(i); // @output 2
+                       // @output s
+                       // @output x
+    }
+
+    foreach var i in a1 {
+        io:println(i); // @output 2
+                       // @output s
+                       // @output x
+    }
+
+    var a2 = ["y", 5, "z"];
+
+    foreach int|string i in a2 {
+        io:println(i); // @output y
+                       // @output 5
+                       // @output z
+    }
+
+    foreach var i in a2 {
+        io:println(i); // @output y
+                       // @output 5
+                       // @output z
+    }
+}
