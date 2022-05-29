@@ -1,0 +1,209 @@
+Test-Case: output
+Description: Test maximum value of Unsigned8 built-in subtype of int.
+Labels: DecimalNumber, if-else-stmt, int, int:UNSIGNED8_MAX_VALUE, is-expr, optional-type, string
+
+function init() {
+    int:UNSIGNED8_MAX_VALUE a = 255;
+
+    testIntOrNil(a); // @output 255
+                     // @output true
+
+    testIntOrNil(int:UNSIGNED8_MAX_VALUE);  // @output 255
+                                            // @output true
+
+    int b = int:UNSIGNED8_MAX_VALUE;
+    testIntOrNil(b); // @output 255
+                     // @output true
+}
+
+function testIntOrNil(int? i) {
+    if i is int {
+        io:println(i);
+        io:println(i is int);
+    } else {
+        io:println("nil");
+    }
+}
+
+Test-Case: output
+Description: Test UNSIGNED8_MAX_VALUE belonging to a type.
+Labels: byte, int, int:Signed16, int:Signed32, int:Unsigned16, int:Unsigned32, int:Unsigned8, int:UNSIGNED8_MAX_VALUE,
+        is-expr
+
+function init() {
+    io:println(int:UNSIGNED8_MAX_VALUE is int); // @output true
+    io:println(int:UNSIGNED8_MAX_VALUE is int:Signed16); // @output true
+    io:println(int:UNSIGNED8_MAX_VALUE is int:Signed32); // @output true
+
+    io:println(int:UNSIGNED8_MAX_VALUE is int:Unsigned8); // @output true
+    io:println(int:UNSIGNED8_MAX_VALUE is int:Unsigned16); // @output true
+    io:println(int:UNSIGNED8_MAX_VALUE is int:Unsigned32); // @output true
+    io:println(int:UNSIGNED8_MAX_VALUE is byte); // @output true
+}
+
+Test-Case: output
+Description: Test assignability of UNSIGNED8_MAX_VALUE with var.
+Labels: int, int:UNSIGNED8_MAX_VALUE, is-expr, var
+
+function init() {
+    var a = int:UNSIGNED8_MAX_VALUE;
+    io:println(a); // @output 255
+    io:println(a is int); // @output true
+}
+
+Test-Case: output
+Description: Test declaring module level variables with UNSIGNED8_MAX_VALUE.
+Labels: int, int:UNSIGNED8_MAX_VALUE, module-const-decl
+
+const int a = int:UNSIGNED8_MAX_VALUE;
+
+int b = int:UNSIGNED8_MAX_VALUE;
+
+function init() {
+    io:println(a); // @output 255
+    io:println(b); // @output 255
+}
+
+Test-Case: output
+Description: Test defining types with UNSIGNED8_MAX_VALUE.
+Labels: DecimalNumber, int:Unsigned16, int:UNSIGNED8_MAX_VALUE, module-type-defn, union-type
+
+type Const1 int:UNSIGNED8_MAX_VALUE;
+
+function init() {
+    Const1 a1 = 255;
+    io:println(a1); // @output 255
+
+    int:UNSIGNED8_MAX_VALUE|int:Unsigned16 a2 = 130;
+    io:println(a2); // @output 130
+}
+
+Test-Case: error
+Description: Test assigning values to subtypes of UNSIGNED8_MAX_VALUE.
+Fail-Issue: ballerina-platform/ballerina-lang#32804
+Labels: DecimalNumber, int, int:UNSIGNED8_MAX_VALUE, module-const-decl, module-type-defn
+
+const int A = int:UNSIGNED8_MAX_VALUE;
+
+type Const1 int:UNSIGNED8_MAX_VALUE;
+
+type Const2 A|Const1;
+
+function errorFunction() {
+    Const1 _ = 23; // @error int is not a subtype of 255
+
+    Const2 _ = 23; // @error int is not a subtype of 255
+}
+
+Test-Case: output
+Description: Test equality with UNSIGNED8_MAX_VALUE.
+Labels: byte, DecimalNumber, equality, int, int:Signed32, int:UNSIGNED8_MAX_VALUE
+
+function init() {
+    io:println(int:UNSIGNED8_MAX_VALUE == 255); // @output true
+
+    int a = 255;
+    io:println(a == int:UNSIGNED8_MAX_VALUE); // @output true
+
+    int:Signed32 b = 255;
+    io:println(b == int:UNSIGNED8_MAX_VALUE); // @output true
+
+    byte c = 255;
+    io:println(c == int:UNSIGNED8_MAX_VALUE); // @output true
+}
+
+Test-Case: output
+Description: Test UNSIGNED8_MAX_VALUE as expression in return statement.
+Labels: int:UNSIGNED8_MAX_VALUE, return-stmt
+
+function init() {
+    io:println(getInt()); // @output 255
+}
+
+function getInt() returns int {
+    return int:UNSIGNED8_MAX_VALUE;
+}
+
+Test-Case: output
+Description: Test UNSIGNED8_MAX_VALUE as expression in list constructor.
+Labels: array-type, int, int:UNSIGNED8_MAX_VALUE, list-constructor-expr
+
+function init() {
+    int[] arr = [int:UNSIGNED8_MAX_VALUE, int:UNSIGNED8_MAX_VALUE];
+    io:println(arr); // @output [255,255]
+}
+
+Test-Case: output
+Description: Test UNSIGNED8_MAX_VALUE as expression in method call expression.
+Labels: int:UNSIGNED8_MAX_VALUE, method-call-expr, value:toString
+
+function init() {
+    io:println(int:UNSIGNED8_MAX_VALUE.toString()); // @output 255
+}
+
+Test-Case: output
+Description: Test UNSIGNED8_MAX_VALUE as expression in map constructor.
+Labels: int, int:UNSIGNED8_MAX_VALUE, map-type, mapping-constructor-expr, string
+
+function init() {
+    map<int> intMap = {"One": int:UNSIGNED8_MAX_VALUE, "Two": int:UNSIGNED8_MAX_VALUE};
+    io:println(intMap); // @output {"One":255,"Two":255}
+}
+
+Test-Case: output
+Description: Test UNSIGNED8_MAX_VALUE as expression in additive expression.
+Labels: additive-expr, int, int:UNSIGNED8_MAX_VALUE
+
+function init() {
+    int a = int:UNSIGNED8_MAX_VALUE + int:UNSIGNED8_MAX_VALUE;
+    io:println(a); // @output 510
+}
+
+Test-Case: output
+Description: Test UNSIGNED8_MAX_VALUE as expression in if else statement.
+Labels: DecimalNumber, if-else-stmt, int:UNSIGNED8_MAX_VALUE, relational-expr
+
+function init() {
+    compare(); // @output true
+}
+
+function compare() {
+    if int:UNSIGNED8_MAX_VALUE > 20 {
+        io:println(int:UNSIGNED8_MAX_VALUE > 20);
+    } else {
+        io:println();
+    }
+}
+
+Test-Case: error
+Description: Test assigning invalid value for int:UNSIGNED8_MAX_VALUE type variable.
+Labels: DecimalNumber, int:UNSIGNED8_MAX_VALUE
+
+function errorFunction() {
+    int:UNSIGNED8_MAX_VALUE _ = 10; // @error int is not a subtype of 255
+}
+
+Test-Case: error
+Description: Test assigning int:UNSIGNED8_MAX_VALUE to an incompatible type.
+Labels: int:Unsigned8, int:UNSIGNED8_MAX_VALUE, string
+
+function errorFunction() {
+    int:Unsigned8 _ = int:UNSIGNED8_MAX_VALUE; // @error int is not a subtype of int:Unsigned8
+    string _ = int:UNSIGNED8_MAX_VALUE; // @error int is not a subtype of string
+}
+
+Test-Case: error
+Description: Test updating int:UNSIGNED8_MAX_VALUE constant value.
+Labels: DecimalNumber, int:UNSIGNED8_MAX_VALUE
+
+function errorFunction() {
+    int:UNSIGNED8_MAX_VALUE = 10; // @error cannot update constant
+}
+
+Test-Case: error
+Description: Test missing int module-prefix with int:SIGNED8_MAX_VALUE.
+Labels: DecimalNumber, int:UNSIGNED8_MAX_VALUE, unary-minus
+
+function errorFunction() {
+    int:UNSIGNED8_MAX_VALUE _ = -100; // @error unknown type
+}
