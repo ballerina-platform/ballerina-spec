@@ -31,6 +31,22 @@ function init() {
     io:println(res); // @output 10
 }
 
+Test-Case: error
+Description: Test defining mismatching remote method of an object at the object constructor.
+Labels: int, method-call-expr, remote-method-defn, module-type-defn, object-constructor-expr, object-field, object-type, string
+
+type ObjectType client object {
+    remote function func1() returns int;
+};
+
+function errorFunction() {
+    ObjectType obj = client object {
+        remote function func1() returns string {
+            return "A";
+        }
+    }; // @error expected 'ObjectType', found 'isolated object { public function func1 () returns (string); }'
+}
+
 Test-Case: output
 Description: Test defining methods of an object with meta data.
 Fail-Issue: ballerina-platform/ballerina-lang#36034
@@ -104,6 +120,38 @@ function init() {
 
     string res = obj->func2();
     io:println(res); // @output ABC
+}
+
+Test-Case: output
+Description: Test invoking object remote method with transactional qualifier in a transactional context.
+Labels: commit-action, client-remote-method-call-action, int, remote-method-defn, object-constructor-expr,
+        transaction-stmt, var
+
+function init() returns error? {
+    var obj = client object {
+        transactional remote function func1() returns int {
+            return 1;
+        }
+    };
+    transaction {
+        int a = obj->func1();
+        io:println(a); // @output 1
+        check commit;
+    }
+}
+
+Test-Case: error
+Description: Test invoking object remote method with transactional qualifier in a non-transactional context.
+Labels: commit-action, client-remote-method-call-action, int, remote-method-defn, object-constructor-expr,
+        transaction-stmt, var
+
+function errorFunction() {
+    var obj =  client object {
+        transactional remote function func1() returns int {
+            return 1;
+        }
+    };
+    _ = obj->func1(); // @error invoking transactional function outside transactional scope is prohibited
 }
 
 Test-Case: output
@@ -201,7 +249,8 @@ function errorFunction() {
 }
 
 Test-Case: output
-Description: Test method-defn-body satisfying the requirements for an isolated function if isolated-qual is present.
+Description: Test method-defn-body satisfying the requirements for an isolated function if isolated-qual is present,
+             where it can call only isolated functions.
 Labels: additive-expr, array-type, client-remote-method-call-action, field-access-expr, int, intersection-type,
         isolated-function, list-constructor-expr, member-access-expr, remote-method-defn, object-constructor-expr,
         object-field, readonly-type, var
@@ -224,7 +273,8 @@ function init() {
 }
 
 Test-Case: error
-Description: Test method-defn-body satisfying the requirements for an isolated function if isolated-qual is present.
+Description: Test method-defn-body satisfying the requirements for an isolated function if isolated-qual is present,
+             where it can call only isolated functions.
 Labels: additive-expr, array-type, field-access-expr, int, intersection-type, isolated-function, list-constructor-expr,
         member-access-expr, method-call-expr, remote-method-defn, object-constructor-expr, object-field, readonly-type, var
 
@@ -243,7 +293,9 @@ function errorFunction() {
 }
 
 Test-Case: output
-Description: Test method-defn-body satisfying the requirements for an isolated function if isolated-qual is present.
+Description: Test method-defn-body satisfying the requirements for an isolated function if isolated-qual is present,
+             where non-isolated module-level state can only be read if the variable is final and static type of the
+             variable is a subtype of readonly.
 Labels: additive-expr, array-type, client-remote-method-call-action, field-access-expr, int, intersection-type,
         isolated-function, list-constructor-expr, member-access-expr, method-call-expr, remote-method-defn,
         module-init-var-decl, object-constructor-expr, object-field, readonly-type, var
@@ -268,7 +320,8 @@ function init() {
 }
 
 Test-Case: error
-Description: Test method-defn-body satisfying the requirements for an isolated function if isolated-qual is present.
+Description: Test method-defn-body satisfying the requirements for an isolated function if isolated-qual is present,
+             where non-isolated module-level state cannot be mutated.
 Labels: additive-expr, array-type, field-access-expr, int, intersection-type, list-constructor-expr, member-access-expr,
         method-call-expr, remote-method-defn, module-init-var-decl, object-constructor-expr, object-field, readonly-type, var
 
@@ -283,7 +336,8 @@ function errorFunction() {
 }
 
 Test-Case: output
-Description: Test method-defn-body satisfying the requirements for an isolated function if isolated-qual is present.
+Description: Test method-defn-body satisfying the requirements for an isolated function if isolated-qual is present,
+             where isolated module-level state is read in lock statement.
 Labels: additive-expr, array-type, client-remote-method-call-action, int, isolated-function, list-constructor-expr,
         lock-stmt, member-access-expr, method-call-expr, remote-method-defn, module-init-var-decl, object-constructor-expr,
         object-field, var
@@ -305,7 +359,8 @@ function init() {
 }
 
 Test-Case: error
-Description: Test method-defn-body satisfying the requirements for an isolated function if isolated-qual is present.
+Description: Test method-defn-body satisfying the requirements for an isolated function if isolated-qual is present,
+             where non-isolated module-level state cannot be mutated.
 Labels: int, isolated-function, remote-method-defn, module-init-var-decl, object-constructor-expr, object-field, var
 
 int intVal = 10;
@@ -321,7 +376,9 @@ function errorFunction() {
 }
 
 Test-Case: output
-Description: Test method-defn-body satisfying the requirements for an isolated function if isolated-qual is present.
+Description: Test method-defn-body satisfying the requirements for an isolated function if isolated-qual is present,
+             where captured variables must be both final and have a static type that is a subtype of
+             readonly|isolated object {}.
 Labels: client-remote-method-call-action, explicit-anonymous-function-expr, int, method-call-expr, remote-method-defn,
         object-constructor-expr, object-field, var
 
@@ -336,7 +393,9 @@ function init() {
 }
 
 Test-Case: error
-Description: Test method-defn-body satisfying the requirements for an isolated function if isolated-qual is present.
+Description: Test method-defn-body satisfying the requirements for an isolated function if isolated-qual is present,
+             where captured variables must be both final and have a static type that is a subtype of
+             readonly|isolated object {}.
 Labels: explicit-anonymous-function-expr, int, intersection-type, isolated-function, method-call-expr, remote-method-defn,
         object-constructor-expr, object-field, readonly-type, var
 
