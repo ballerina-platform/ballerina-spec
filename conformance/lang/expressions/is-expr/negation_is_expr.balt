@@ -1454,7 +1454,7 @@ function init() {
         ];
     io:println(i !is any); // @output false
 
-    table<map<int|error>> j = table key(a) [
+    table<map<int|error>> j = table [
             {a: 1, b: error("E1")},
             {a: 2, b: error("E2")}
         ];
@@ -1814,7 +1814,7 @@ type Record record {|
     [float, string] y;
 |};
 
-type TableType table<Record> key(x);
+type TableType table<Record>;
 
 type Record2 record {|
     int|string x;
@@ -1842,10 +1842,17 @@ function init() {
     io:println(d !is int:Unsigned32); // @output false
     io:println(d !is byte); // @output false
 
-    any e = table key(x) [{x: 1, y: [10.2, "A"]}];
-    io:println(e !is TableType); // @output false
+    any e = table [{x: 1, y: [10.2, "A"]}];
+    io:println(e !is TableType); // @output true
     io:println(e !is table<map<float|string>>); // @output true
+    io:println(e !is table<Record>); // @output true
+    io:println(e !is anydata); // @output true
+
+    TableType e = table [{x: 1, y: [10.2, "A"]}];
+    io:println(e !is any); // @output false
     io:println(e !is table<Record> key<int>); // @output false
+    io:println(e !is table<Record>); // @output false
+    io:println(e !is table<record {|readonly int x; [float, string] y;|}>); // @output false
     io:println(e !is anydata); // @output false
 
     record {|readonly int x; [float, string] y;|} f = {x: 1, y: [10.2, "A"]};
