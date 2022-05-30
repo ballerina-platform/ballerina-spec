@@ -1848,6 +1848,13 @@ function init() {
     io:println(e !is table<Record>); // @output true
     io:println(e !is anydata); // @output true
 
+    TableType e = table [{x: 1, y: [10.2, "A"]}];
+    io:println(e !is any); // @output false
+    io:println(e !is table<Record> key<int>); // @output false
+    io:println(e !is table<Record>); // @output false
+    io:println(e !is table<record {|readonly int x; [float, string] y;|}>); // @output false
+    io:println(e !is anydata); // @output false
+
     record {|readonly int x; [float, string] y;|} f = {x: 1, y: [10.2, "A"]};
     io:println(f !is Record); // @output false
     io:println(f !is record {|int x;(float|string)[] y; |}); // @output false
