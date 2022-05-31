@@ -1,0 +1,690 @@
+Test-Case: output
+Description: Test raw template expression constructing an object belonging to the abstract RawTemplate object type, with var.
+Labels: object:RawTemplate, raw-template-expr, var
+
+function init() {
+    var a = ``;
+    io:println(a is object:RawTemplate); // @output true
+
+    int b = 1;
+    var c = `int value ${b}, object value ${a}`;
+    io:println(c is object:RawTemplate); // @output true
+}
+
+Test-Case: output
+Description: Test raw template expression constructing an object belonging to the abstract RawTemplate object type, with `object:RawTemplate` as the contextually-expected type.
+Labels: object:RawTemplate, object-type, raw-template-expr
+
+function init() {
+    object:RawTemplate a = ``;
+    io:println(a is object:RawTemplate); // @output true
+
+    int b = 1;
+    object:RawTemplate c = `int value ${b}, object value ${a}`;
+    io:println(c is object:RawTemplate); // @output true
+}
+
+Test-Case: output
+Description: Test raw template expression constructing an object belonging to the abstract RawTemplate object type, with a user-defined subtype of `object:RawTemplate` as the contextually-expected type.
+Labels: array-type, intersection-type, module-type-defn, object:RawTemplate, object-type, raw-template-expr
+
+type MyRawTemplate object {
+    *object:RawTemplate;
+
+    public readonly & string[] strings;
+    public int[] insertions;
+};
+
+function init() {
+    int i = 1;
+    MyRawTemplate a = `number ${i} and number ${2}`;
+
+    io:println(a is object:RawTemplate); // @output true
+    io:println(a.strings); // @output ["number "," and number ",""]
+    io:println(a.insertions); // @output [1,2]
+}
+
+Test-Case: output
+Description: Test raw template expression constructing an object belonging to the abstract RawTemplate object type, with an in-line user-defined subtype of `object:RawTemplate` as the contextually-expected type.
+Labels: array-type, intersection-type, object:RawTemplate, object-type, raw-template-expr
+
+function init() {
+    int i = 1;
+    object {
+        *object:RawTemplate;
+
+        public readonly & string[] strings;
+        public int[] insertions;
+    } a = `number ${i} and number ${2}`;
+
+    io:println(a is object:RawTemplate); // @output true
+    io:println(a.strings); // @output ["number "," and number ",""]
+    io:println(a.insertions); // @output [1,2]
+}
+
+Test-Case: output
+Description: Test raw template expression constructing an object belonging to the abstract RawTemplate object type, with a user-defined subtype of `object:RawTemplate` 
+             with an overridden `string:Char` `strings` field as the contextually-expected type.
+Labels: array-type, intersection-type, module-type-defn, object:RawTemplate, object-type, raw-template-expr, string:Char
+
+type MyRawTemplate object {
+    *object:RawTemplate;
+
+    public readonly & string:Char[] strings;
+    public int[] insertions;
+};
+
+function init() {
+    int i = 1;
+    MyRawTemplate a = `a${i} ${20}b`;
+
+    io:println(a is object:RawTemplate); // @output true
+    io:println(a.strings); // @output ["a"," ","b"]
+    io:println(a.insertions); // @output [1,20]
+}
+
+Test-Case: output
+Description: Test raw template expression constructing an object belonging to the abstract RawTemplate object type, with a user-defined subtype of `object:RawTemplate` 
+             with an overridden user-defined type `strings` field as the contextually-expected type.
+Labels: array-type, intersection-type, module-type-defn, object:RawTemplate, object-type, raw-template-expr, singleton-type, union-type
+
+type MyRawTemplate object {
+    *object:RawTemplate;
+
+    public readonly & ("foo"|"bar")[] strings;
+    public int[] insertions;
+};
+
+function init() {
+    int i = 1;
+    MyRawTemplate a = `foo${i}bar${20}foo`;
+
+    io:println(a is object:RawTemplate); // @output true
+    io:println(a.strings); // @output ["foo","bar","foo"]
+    io:println(a.insertions); // @output [1,20]
+}
+
+Test-Case: error
+Description: Test incompatible types in raw template expression constructing an object belonging to the abstract RawTemplate object type, with a user-defined subtype of `object:RawTemplate` 
+             with an overridden user-defined type `strings` field as the contextually-expected type.
+Fail-Issue: ballerina-platform/ballerina-lang#36353
+Labels: array-type, intersection-type, module-type-defn, object:RawTemplate, object-type, raw-template-expr, singleton-type, union-type
+
+type MyRawTemplate object {
+    *object:RawTemplate;
+
+    public readonly & ("foo"|"bar")[] strings;
+    public int[] insertions;
+};
+
+function errorFunction() {
+    MyRawTemplate b = `baz${ // @error incompatible value for `strings`: expected '"foo"|"bar', found 'string'
+                       1} ${ // @error incompatible value for `strings`: expected '"foo"|"bar', found 'string'
+                       2}`; // @error incompatible value for `strings`: expected '"foo"|"bar', found 'string'
+}
+
+Test-Case: output
+Description: Test raw template expression constructing an object belonging to the abstract RawTemplate object type, with a user-defined class 
+             of a type that is a subtype of `object:RawTemplate` as the contextually-expected type.
+Fail-Issue: ballerina-platform/ballerina-lang#36200
+Labels: array-type, intersection-type, list-constructor-expr, module-class-defn, object:RawTemplate, object-type, raw-template-expr
+
+class MyRawTemplate {
+    *object:RawTemplate;
+
+    public readonly & string[] strings = [];
+    public int[] insertions = [];
+
+    function init(string[] strings, int[] insertions) {
+        self.strings = strings.cloneReadOnly();
+        self.insertions = insertions;
+    }
+}
+
+function init() {
+    int i = 1;
+    MyRawTemplate a = `number ${i} and number ${2}`;
+
+    io:println(a is object:RawTemplate); // @output true
+    io:println(a.strings); // @output ["number "," and number ",""]
+    io:println(a.insertions); // @output [1,2]
+}
+
+Test-Case: error
+Description: Test incompatible types in raw template expression constructing an object belonging to the abstract RawTemplate object type, with a user-defined subtype of `object:RawTemplate` as the contextually-expected type.
+Labels: array-type, intersection-type, module-type-defn, object:RawTemplate, object-type, raw-template-expr
+
+type MyRawTemplate object {
+    *object:RawTemplate;
+
+    public readonly & string[] strings;
+    public int[] insertions;
+};
+
+function errorFunction() {
+    string a = "one";
+    MyRawTemplate b = `number ${
+                                a} and number ${ // @error incompatible interpolation: expected 'int', found 'string'
+                                "two"}`; // @error incompatible interpolation: expected 'int', found 'string'
+}
+
+Test-Case: error
+Description: Test incompatible types in raw template expression constructing an object belonging to the abstract RawTemplate object type, with an in-line user-defined subtype of `object:RawTemplate` as the contextually-expected type.
+Labels: array-type, intersection-type, object:RawTemplate, object-type, raw-template-expr
+
+function errorFunction() {
+    string a = "1";
+    object {
+        *object:RawTemplate;
+
+        public readonly & string[] strings;
+        public int[] insertions;
+    } b = `number ${
+                    a} and number ${ // @error incompatible interpolation: expected 'int', found 'string'
+                    "two"}`; // @error incompatible interpolation: expected 'int', found 'string'
+}
+
+Test-Case: error
+Description: Test incompatible types in raw template expression constructing an object belonging to the abstract RawTemplate object type, with a user-defined subtype of `object:RawTemplate` 
+             with an overridden `string:Char` `strings` field as the contextually-expected type.
+Labels: array-type, intersection-type, module-type-defn, object:RawTemplate, object-type, raw-template-expr, string:Char
+
+type MyRawTemplate object {
+    *object:RawTemplate;
+
+    public readonly & string:Char[] strings;
+    public int[] insertions;
+};
+
+function errorFunction() {
+    string a = "two";
+    MyRawTemplate b = `ab${ // @error incompatible value for `strings`: expected 'string:Char', found 'string'
+                       "1"} ${ // @error incompatible interpolation: expected 'int', found 'string'
+                        a}b`; // @error incompatible interpolation: expected 'int', found 'string'
+}
+
+
+
+Test-Case: error
+Description: Test incompatible types in raw template expression constructing an object belonging to the abstract RawTemplate object type, with a user-defined class 
+             of a type that is a subtype of `object:RawTemplate` as the contextually-expected type.
+Fail-Issue: ballerina-platform/ballerina-lang#36200
+Labels: array-type, intersection-type, list-constructor-expr, module-class-defn, object:RawTemplate, object-type, raw-template-expr
+
+class MyRawTemplate {
+    *object:RawTemplate;
+
+    public readonly & string[] strings = [];
+    public int[] insertions = [];
+
+    function init(string[] strings, int[] insertions) {
+        self.strings = strings.cloneReadOnly();
+        self.insertions = insertions;
+    }
+}
+
+function errorFunction() {
+    string a = "two";
+    MyRawTemplate b = `ab${ // @error incompatible value for `strings`: expected 'string:Char', found 'string'
+                       "1"} ${ // @error incompatible interpolation: expected 'int', found 'string'
+                        a}b`; // @error incompatible interpolation: expected 'int', found 'string'
+}
+
+Test-Case: output
+Description: Test the raw template `strings` and `insertions` fields being read-only when required by the contextually-expected type.
+Fail-Issue: ballerina-platform/ballerina-lang#36200
+Labels: array-type, intersection-type, list-constructor-expr, module-class-defn, object:RawTemplate, raw-template-expr
+
+class MyRawTemplate {
+    *object:RawTemplate;
+
+    public final readonly & string[] strings = [];
+    public final readonly & int[] insertions = [];
+}
+
+function init() {
+    int i = 1;
+    MyRawTemplate a = `number ${i} and number ${2}`;
+
+    io:println(a is object:RawTemplate); // @output true
+    io:println(a.strings); // @output ["number "," and number ",""]
+    io:println(a.insertions); // @output [1,2]
+
+    object:RawTemplate b = a;
+    io:println(b is MyRawTemplate); // @output true
+}
+
+Test-Case: panic
+Description: Test the raw template `strings` fields being read-only when required by the contextually-expected type.
+Fail-Issue: ballerina-platform/ballerina-lang#36200
+Labels: array-type, intersection-type, list-constructor-expr, module-class-defn, object:RawTemplate, raw-template-expr
+
+class MyRawTemplate {
+    *object:RawTemplate;
+
+    public final readonly & string[] strings = [];
+    public final readonly & int[] insertions = [];
+}
+
+function init() {
+    int i = 1;
+    MyRawTemplate a = `number ${i} and number ${2}`;
+    object:RawTemplate b = a;
+    b.strings = []; // @panic cannot overwrite the read-only `strings` field
+}
+
+Test-Case: panic
+Description: Test the raw template `insertions` fields being read-only when required by the contextually-expected type.
+Fail-Issue: ballerina-platform/ballerina-lang#36200
+Labels: array-type, intersection-type, list-constructor-expr, module-class-defn, object:RawTemplate, raw-template-expr
+
+class MyRawTemplate {
+    *object:RawTemplate;
+
+    public final readonly & string[] strings = [];
+    public final readonly & int[] insertions = [];
+}
+
+function init() {
+    int i = 1;
+    MyRawTemplate a = `number ${i} and number ${2}`;
+    object:RawTemplate b = a;
+    b.insertions = []; // @panic cannot overwrite the read-only `insertions` field
+}
+
+Test-Case: output
+Description: Test the value of the `strings` field being constructed only once by the class for the raw template expression.
+Fail-Issue: ballerina-platform/ballerina-lang#36354
+Labels: array-type, object:RawTemplate, raw-template-expr
+
+function init() {
+    object:RawTemplate a = fn();
+    string[] b = a.strings;
+    string[] c = fn().strings;
+    io:println(b === c); // @output true
+}
+
+function fn() returns object:RawTemplate {
+    int i = 2;
+    return `foo${1}bar${i}`;
+}
+
+Test-Case: output
+Description: Test the value of the `insertions` field being constructed once for each evaluation of the raw template expression.
+Labels: any, array-type, error-type, object:RawTemplate, raw-template-expr, union-type
+
+function init() {
+    object:RawTemplate a = fn();
+    (any|error)[] b = a.insertions;
+    (any|error)[] c = fn().insertions;
+    io:println(b === c); // @output false
+}
+
+function fn() returns object:RawTemplate {
+    int i = 2;
+    return `foo${1}bar${i}`;
+}
+
+Test-Case: output
+Description: Test literal expressions as interpolations.
+Labels: any, array-type, boolean-literal, check, error-type, nil-literal, object:RawTemplate, raw-template-expr, string-literal, union-type, value:toBalString
+
+function init() returns error? {
+    object:RawTemplate a = `int ${1} float ${1.23} dec ${3.4d} str ${"b7a"} boolean ${false} nil ${()}`;
+    (any|error)[] insertions = a.insertions;
+    io:println(insertions.length()); // @output 6
+    foreach any|error item in insertions {
+        io:println((check item).toBalString()); // @output 1
+                                                // @output 1.23  
+                                                // @output 3.4d
+                                                // @output "b7a"
+                                                // @output false
+                                                // @output ()
+    }
+}
+
+Test-Case: output
+Description: Test template expressions as interpolations.
+Labels: any, array-type, check, error-type, member-access-expr, object:RawTemplate, raw-template-expr, string-template-expr, type-cast-expr, union-type, xml-template-expr, xml:children, xml:length
+
+function init() returns error? {
+    string name = "world";
+    object:RawTemplate a = `string ${string `hello ${name}`} xml ${xml `<a><b>1</b><!--comment--></a>`} raw ${`another template ${1}`}`;
+    (any|error)[] insertions = a.insertions;
+    io:println(insertions.length()); // @output 3
+
+    io:println(check insertions[0]); // @output hello world
+
+    xml b = <xml> check insertions[1];
+    io:println(b.children().length()); // @output 2
+    io:println(b); // @output <a><b>1</b><!--comment--></a>
+
+    object:RawTemplate c = <object:RawTemplate> check insertions[2];
+    io:println(c.strings); // @output ["another template ",""]
+    io:println(c.insertions); // @output [1]
+}
+
+Test-Case: output
+Description: Test structural constructor expressions as interpolations.
+Labels: any, array-type, error-constructor-expr, error-type, list-constructor-expr, mapping-constructor-expr, member-access-expr, object:RawTemplate, table-constructor-expr, type-cast-expr, union-type, xml-template-expr, xml:children, xml:length
+
+function init() {
+    error e = error("oops!");
+    object:RawTemplate a = `list ${[1, e]} map ${{a: 2, b: e}} table ${table [{c: 3, e}]}`;
+    (any|error)[] insertions = a.insertions;
+    io:println(insertions.length()); // @output 3
+
+    foreach any|error item in insertions {
+        io:println(item); // @output [1,error("oops!")]
+                          // @output {"a":2,"b":error("oops!")}
+                          // @output [{"c":3,"e":error("oops!")}]
+    }
+}
+
+Test-Case: output
+Description: Test template expressions as interpolations.
+Labels: any, array-type, check, error-type, field-access-expr, module-class-defn, new-expr, object-constructor-expr, object:RawTemplate, raw-template-expr, type-cast-expr, union-type
+
+class Class {
+    int i = 1;
+}
+
+function init() returns error? {
+    object:RawTemplate a = `new ${new Class()} object constructor ${<Class> object { int i = 2; }}`;
+    (any|error)[] insertions = a.insertions;
+    io:println(insertions.length()); // @output 2
+
+    io:println((<Class> check insertions[0]).i); // @output 1
+    io:println((<Class> check insertions[1]).i); // @output 2
+}
+
+Test-Case: output
+Description: Test field, optional field, and member access expressions as interpolations.
+Labels: field-access-expr, member-access-expr, module-type-defn, object:RawTemplate, optional-field-access-expr, raw-template-expr, record-type
+
+type Record record {|
+    int a;
+    int b?;
+    int c?;
+|};
+
+function init() {
+    Record rec = {a: 1, b: 2};
+    object:RawTemplate a = `1 ${rec.a} 2 ${rec?.b} 3 ${rec?.c} 4 ${rec["b"]} 5 ${rec["c"]}`;
+    io:println(a.insertions); // @output [1,2,null,2,null]
+}
+
+Test-Case: output
+Description: Test xml attribute access expressions as interpolations.
+Labels: object:RawTemplate, raw-template-expr, xml, xml-optional-attribute-access-expr, xml-required-attribute-access-expr
+
+function init() {
+    xml x = xml `<el attr="123"/>`;
+    object:RawTemplate a = `required ${x.attr} optional 1 ${x?.attr} optional 2 ${x?.nonexistent}`;
+    io:println(a.insertions); // @output ["123","123",null]
+}
+
+Test-Case: output
+Description: Test annotation access expressions as interpolations.
+Fail-Issue: ballerina-platform/ballerina-lang#33243
+Labels: annotation, annot-access-expr, annotation-decl, module-type-defn, object:RawTemplate, raw-template-expr, record-type
+
+annotation X on type;
+
+type Foo record {|
+    int a;
+|};
+
+@X
+type Bar record {|
+    int b;
+|};
+
+function init() {
+    object:RawTemplate a = `1 ${Foo.@X} 2 ${Bar.@X}`;
+    io:println(a.insertions); // @output [null,true]
+}
+
+Test-Case: output
+Description: Test function and method call expressions as interpolations.
+Labels: function-call-expr, method-call-expr, module-class-defn, new-expr, object:RawTemplate, raw-template-expr
+
+class Class {
+    function fn() returns int {
+        return 123;
+    }
+}
+
+function fn() returns boolean {
+    return true;
+}
+
+function init() {
+    Class c = new;
+    object:RawTemplate a = `func ${fn()} method ${c.fn()}`;
+    io:println(a.insertions); // @output [true,123]
+}
+
+Test-Case: output
+Description: Test anonymous function expressions as interpolations.
+Labels: additive-expr, check, error-type, explicit-anonymous-function-expr, function-call-expr, function-type, object:RawTemplate, raw-template-expr, type-cast-expr, union-type
+
+function init() returns error? {
+    object:RawTemplate a = `func ${function (int i) returns int {return i + 1;}}`;
+    function (int i) returns int b = <function (int i) returns int> check a.insertions[0];
+    io:println(b(3)); // @output 4
+}
+
+Test-Case: output
+Description: Test let expressions as interpolations.
+Labels: additive-expr, let-expr, object:RawTemplate, raw-template-expr
+
+function init() {
+    object:RawTemplate a = `1 ${let int i = 1 in i + 1} 2 ${let string s = "hello world" in s}`;
+    io:println(a.insertions); // @output [2,"hello world"]
+}
+
+Test-Case: output
+Description: Test typeof expressions as interpolations.
+Labels: object:RawTemplate, raw-template-expr, typeof-expr
+
+function init() {
+    object:RawTemplate a = `1 ${typeof 1}`;
+    io:println(a.insertions); // @output [typedesc 1]
+}
+
+Test-Case: output
+Description: Test unary not expressions as interpolations.
+Labels: object:RawTemplate, raw-template-expr, unary-not
+
+function init() {
+    boolean a = true;
+    object:RawTemplate b = `1 ${!a} 2 ${!false}`;
+    io:println(b.insertions); // @output [false,true]
+}
+
+Test-Case: output
+Description: Test unary numeric expressions as interpolations.
+Labels: object:RawTemplate, raw-template-expr, unary-complement, unary-minus, unary-plus
+
+function init() {
+    int a = 1;
+    object:RawTemplate b = `${+a} ${-a} ${~a}`;
+    io:println(b.insertions); // @output [1,-1,-2]
+}
+
+Test-Case: output
+Description: Test multiplicative expressions as interpolations.
+Labels: multiplicative-expr, object:RawTemplate, raw-template-expr
+
+function init() {
+    int a = 10;
+    object:RawTemplate b = `${a * 2} ${a / 3} ${a % 6}`;
+    io:println(b.insertions); // @output [20,3,4]
+}
+
+Test-Case: output
+Description: Test additive expressions as interpolations.
+Labels: additive-expr, object:RawTemplate, raw-template-expr
+
+function init() {
+    int a = 10;
+    object:RawTemplate b = `${a + 2} ${a - 6}`;
+    io:println(b.insertions); // @output [12,4]
+}
+
+Test-Case: output
+Description: Test shift expressions as interpolations.
+Labels: object:RawTemplate, raw-template-expr, shift-expr
+
+function init() {
+    int a = 10;
+    object:RawTemplate b = `${a << 2} ${a >> 2} ${10 >>> 3}`;
+    io:println(b.insertions); // @output [40,2,1]
+}
+
+Test-Case: output
+Description: Test binary bitwise expressions as interpolations.
+Labels: binary-bitwise-expr, object:RawTemplate, raw-template-expr
+
+function init() {
+    int a = 10;
+    object:RawTemplate b = `${a & 2} ${a | 2} ${2 ^ a}`;
+    io:println(b.insertions); // @output [2,10,8]
+}
+
+Test-Case: output
+Description: Test range expressions as interpolations.
+Labels: check, field-access-expr, is-expr, object:Iterable, object:RawTemplate, range-expr, raw-template-expr, var, while-stmt
+
+function init() returns error? {
+    object:RawTemplate b = `${1 ... 4} ${1 ..< 4}`;
+    object:Iterable c = <object:Iterable> check b.insertions[0];
+    var d = c.iterator();
+    var e = d.next();
+
+    while e !is error? {
+        io:println(e.value); // @output 1
+                             // @output 2
+                             // @output 3
+                             // @output 4
+        e = d.next();
+    }
+
+    c = <object:Iterable> check b.insertions[1];
+    d = c.iterator();
+    e = d.next();
+
+    while e !is error? {
+        io:println(e.value); // @output 1
+                             // @output 2
+                             // @output 3
+        e = d.next();
+    } 
+}
+
+Test-Case: output
+Description: Test relational expressions as interpolations.
+Labels: object:RawTemplate, raw-template-expr, relational-expr
+
+function init() {
+    int a = 1;
+    object:RawTemplate b = `${a < 2} ${a > 0} ${a <= 0} ${3 >= 4}`;
+    io:println(b.insertions); // @output [true,true,false,false]
+}
+
+Test-Case: output
+Description: Test is expressions as interpolations.
+Labels: any, is-expr, object:RawTemplate, raw-template-expr
+
+function init() {
+    any a = 1;
+    object:RawTemplate b = `${a is int} ${a !is int}`;
+    io:println(b.insertions); // @output [true,false]
+}
+
+Test-Case: output
+Description: Test equality expressions as interpolations.
+Labels: any, equality, exact-equality, object:RawTemplate, raw-template-expr
+
+function init() {
+    any a = 1;
+    any b = [];
+    any c = b;
+    object:RawTemplate d = `${a == 1} ${a != 1} ${b === a} ${b !== c}`;
+    io:println(d.insertions); // @output [true,false,false,false]
+}
+
+Test-Case: output
+Description: Test logical expressions as interpolations.
+Labels: logical-expr, object:RawTemplate, raw-template-expr
+
+function init() {
+    boolean a = true;
+    boolean b = false;
+    object:RawTemplate c = `${a || b} ${a && b}`;
+    io:println(c.insertions); // @output [true,false]
+}
+
+Test-Case: output
+Description: Test conditional expressions as interpolations.
+Labels: binary-conditional-expr, object:RawTemplate, raw-template-expr, ternary-conditional-expr, union-type
+
+function init() {
+    boolean a = true;
+    int? b = ();
+    object:RawTemplate c = `${a ? 1 : 2} ${b ?: "nil"}`;
+    io:println(c.insertions); // @output [1,"nil"]
+}
+
+Test-Case: output
+Description: Test checking expressions as interpolations.
+Labels: check, checkpanic, error-type, object:RawTemplate, raw-template-expr, union-type
+
+function init() returns error? {
+    int|error a = 1;
+    object:RawTemplate c = `${check a} ${checkpanic a}`;
+    io:println(c.insertions); // @output [1,1]
+}
+
+Test-Case: output
+Description: Test trap expressions as interpolations.
+Labels: error-type, error-constructor-expr, object:RawTemplate, panic, raw-template-expr, trap-expr, union-type
+
+function init() {
+    object:RawTemplate c = `${trap fn()}`;
+    io:println(c.insertions); // @output [error("oops!")]
+}
+
+function fn() returns int {
+    panic error("oops!");
+}
+
+Test-Case: output
+Description: Test query expressions as interpolations.
+Labels: additive-expr, array-type, object:RawTemplate, raw-template-expr, query-expr
+
+function init() {
+    int[] a = [1, 2];
+    object:RawTemplate c = `${from int b in a select b + 1}`;
+    io:println(c.insertions); // @output [[2,3]]
+}
+
+Test-Case: output
+Description: Test xml navigate expressions as interpolations.
+Labels: object:RawTemplate, raw-template-expr, xml, xml-filter-expr, xml-step-expr
+
+function init() {
+    xml x = xml `<Employee><name>May</name><age>35</age></Employee>`;
+    object:RawTemplate c = `${x.<Employee>} ${x/*}`;
+    io:println(c.insertions); // @output [`<Employee><name>May</name><age>35</age></Employee>`,`<name>May</name><age>35</age>`]
+}
+
+Test-Case: output
+Description: Test transactional expressions as interpolations.
+Labels: object:RawTemplate, raw-template-expr, transactional-expr
+
+function init() {
+    object:RawTemplate c = `${transactional}`;
+    io:println(c.insertions); // @output [false]
+}
