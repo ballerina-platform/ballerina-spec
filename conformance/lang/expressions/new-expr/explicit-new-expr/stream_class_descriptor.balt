@@ -25,51 +25,83 @@ function init() {
 
 Test-Case: output
 Description: Test new-expression to create a empty streams.
-Labels: int, record-type, optional-type, if-else-stmt, is-expr, module-type-defn, new-expr, union-type, stream-type-descriptor
+Labels: int, record-type, optional-type, is-expr, module-type-defn, new-expr, union-type, stream-type-descriptor
 
 type IntRecord record {|
     int value;
 |};
 
-function getRecordValue(IntRecord|error? returnedVal) returns int|error? {
-    if returnedVal is IntRecord {
-        return returnedVal.value;
-    } else {
-        return returnedVal;
-    }
-}
-
 function init() {
     stream<int, error?> emptyStream = new stream<int, error?>();
-    int|error? d = getRecordValue(emptyStream.next());
+    IntRecord|error? d = emptyStream.next();
     io:println(d is ()); // @output true
 }
 
 Test-Case: output
 Description: Test new-expr to create a stream without completion type.
-Labels: int, record-type, optional-type, new-expr, module-type-defn, if-else-stmt, is-expr, stream-type-descriptor
+Labels: int, record-type, optional-type, new-expr, is-expr, stream-type-descriptor
 
 type IntRecord record {|
     int value;
 |};
 
-function getRecordValue(IntRecord? returnedVal) returns int? {
-    if returnedVal is IntRecord {
-        return returnedVal.value;
-    } else {
-        return returnedVal;
+function init() {
+    stream<int> emptyStream = new stream<int>();
+    IntRecord? d = emptyStream.next();
+    io:println(d is ()); // @output true
+}
+
+Test-Case: error
+Description: Test new-expr to create a stream with stream extra parameters.
+Labels: int, error, optional-type, new-expr, module-class-defn, stream-type-descriptor
+
+class NumbersGenerator {
+    int i = 0;
+    public isolated function next() returns string|error? {
+        self.i += 1;
+        return self.i.toBalString();
     }
 }
 
 function init() {
-    stream<int> emptyStream = new stream<int>();
-    int? d = getRecordValue(emptyStream.next());
-    io:println(d); // @output
+    NumbersGenerator numbersGenerator = new;
+    stream<string, error?> numberStream = new stream<string, error?>(numbersGenerator, string); // @error 'new(numbersGenerator, null)' is not a valid constructor for streams type
+}
+
+
+Test-Case: error
+Description: Test new-expr to create a stream with stream implementor with next method with incompatible return type.
+Labels: int, error, optional-type, new-expr, module-class-defn, stream-type-descriptor
+
+class NumbersGenerator {
+    int i = 0;
+    public isolated function next() returns string|error? {
+        self.i += 1;
+        return self.i.toBalString();
+    }
+}
+
+function init() {
+    NumbersGenerator numbersGenerator = new;
+    stream<int, error?> numberStream = new stream<int, error?>(numbersGenerator); // @error incompatible types: expected '(IntRecord|ErrorB)?', found '(record {| int value; |}|ErrorA)?'
+}
+
+Test-Case: error
+Description: Test new-expr to create a stream with invalid stream implementor.
+Labels: int, error, optional-type, new-expr, module-class-defn, stream-type-descriptor
+
+class NumbersGenerator {
+    int i = 0;
+}
+
+function init() {
+    NumbersGenerator numbersGenerator = new;
+    stream<int, error?> numberStream = new stream<int, error?>(numbersGenerator); // @error invalid stream constructor. expected a subtype of 'object { public isolated function next() returns (record {| int value; |}|error)?; }', but found 'NumbersGenerator'
 }
 
 Test-Case: output
 Description: Test new-expression with int stream created via a stream with parameters and implementor.
-Labels: int, record-type, optional-type, explicit-new-expr, module-type-defn, if-else-stmt, is-expr, union-type, error, stream-type-descriptor
+Labels: int, record-type, optional-type, explicit-new-expr, module-type-defn, module-class-defn, if-else-stmt, is-expr, union-type, error, stream-type-descriptor
 
 type IntRecord record {|
     int value;
@@ -102,7 +134,7 @@ function init() {
 
 Test-Case: output
 Description: Test close method return type of stream created with stream implementor not implementing close.
-Labels: int, error, record-type, optional-type, if-else-stmt, is-expr, module-type-defn, union-type, explicit-new-expr, stream-type-descriptor
+Labels: int, error, record-type, optional-type, if-else-stmt, is-expr, module-type-defn, module-class-defn, union-type, explicit-new-expr, stream-type-descriptor
 
 type IntRecord record {|
     int value;
@@ -149,7 +181,7 @@ function init() {
 Test-Case: panic
 Description: Test auto closing of stream after completion type.
 // Fail-Issue: ballerina-platform/ballerina-lang/issues/34934
-Labels: int, record-type, optional-type, if-else-stmt, is-expr, module-type-defn, new-expr, stream-type-descriptor
+Labels: int, record-type, optional-type, if-else-stmt, is-expr, module-type-defn, module-class-defn, new-expr, stream-type-descriptor
 
 type IntRecord record {|
     int value;
@@ -189,7 +221,7 @@ function init() {
 Test-Case: panic
 Description: Test closed stream next when stream implementor does not have close method.
 // Fail-Issue: ballerina-platform/ballerina-lang/issues/34934
-Labels: int, record-type, error, optional-type, union-type, is-expr, module-type-defn, explicit-new-expr, stream-type-descriptor
+Labels: int, record-type, error, optional-type, union-type, is-expr, module-type-defn, module-class-defn, explicit-new-expr, stream-type-descriptor
 
 type IntRecord record {|
     int value;
@@ -214,7 +246,7 @@ function init() {
 
 Test-Case: output
 Description: Test closed stream next with stream implementor with close method.
-Labels: int, record-type, error, optional-type, union-type, module-type-defn, if-else-stmt, is-expr, explicit-new-expr, stream-type-descriptor
+Labels: int, record-type, error, optional-type, union-type, module-type-defn, module-class-defn, if-else-stmt, is-expr, explicit-new-expr, stream-type-descriptor
 
 type IntRecord record {|
     int value;
