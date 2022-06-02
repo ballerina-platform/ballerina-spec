@@ -35,7 +35,7 @@ type ObjectType object {
 };
 
 function errorFunction() {
-    ObjectType obj = object {
+    ObjectType obj = object { // @error incompatible types: expected 'ObjectType', found 'object { int[] val; function func1 () returns (string); }'
         int[] val;
 
         function init() {
@@ -45,7 +45,7 @@ function errorFunction() {
         function func1() returns string {
             return "A";
         }
-    }; // @error incompatible types: expected 'ObjectType', found 'object { int[] val; function func1 () returns (string); }'
+    };
 }
 
 Test-Case: output
@@ -77,26 +77,31 @@ function init() {
 
 Test-Case: output
 Description: Test defining methods of an object with visibility qualifiers.
-Labels: array-type, field-access-expr, int, list-constructor-expr, method-call-expr, method-defn, module-type-defn,
-        object-constructor-expr, object-field, object-type
+Labels: array-type, field-access-expr, int, list-constructor-expr, member-access-expr, method-call-expr, method-defn,
+        module-type-defn, object-constructor-expr, object-field, object-type
 
-function errorFunction() {
+function init() {
     var obj =  object {
         private int[] val = [1, 2];
 
         private function func1() returns int {
             return self.val[0];
         }
+
+        public function func2() returns int {
+            return self.val[0];
+        }
     };
 
-    int _ = obj.func1(); // @error attempt to refer to non-accessible symbol
-                         // @error undefined method 'func1' in object 'object { private int[] val; private function func1 () returns (int); }'
+    int a = obj.func2();
+    io:println(a); // @output 1
 }
 
 Test-Case: error
 Description: Test accessing private method of an object.
-Labels: array-type, field-access-expr, int, list-constructor-expr, method-call-expr, method-defn, module-type-defn,
-        object-constructor-expr, object-field, object-type
+Fail-Issue: ballerina-platform/ballerina-lang#36417
+Labels: array-type, field-access-expr, int, list-constructor-expr, member-access-expr, method-call-expr, method-defn,
+        module-type-defn, object-constructor-expr, object-field, object-type
 
 function errorFunction() {
     var obj =  object {
@@ -107,8 +112,7 @@ function errorFunction() {
         }
     };
 
-    int _ = obj.func1(); // @error attempt to refer to non-accessible symbol
-                         // @error undefined method 'func1' in object 'object { private int[] val; private function func1 () returns (int); }'
+    int _ = obj.func1(); // @error attempt to refer to non-accessible symbol and undefined method 'func1' in object 'object { private int[] val; private function func1 () returns (int); }'
 }
 
 Test-Case: output
