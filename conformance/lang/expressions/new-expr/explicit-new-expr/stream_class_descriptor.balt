@@ -147,7 +147,47 @@ function init() {
 }
 
 Test-Case: panic
-Description: Test closed stream next when stream implementor does not have close.
+Description: Test auto closing of stream after completion type.
+// Fail-Issue: ballerina-platform/ballerina-lang/issues/34934
+Labels: new-expr, stream-type-descriptor
+
+type IntRecord record {|
+    int value;
+|};
+
+function getRecordValue(IntRecord? returnedVal) returns int? {
+    if returnedVal is IntRecord {
+        return returnedVal.value;
+    } else {
+        return returnedVal;
+    }
+}
+
+class NumbersGenerator {
+    int i = 0;
+    public isolated function next() returns IntRecord? {
+        self.i += 1;
+        if (self.i > 1) {
+            self.i = 0;
+            return ();
+        }
+        return {value: self.i};
+    }
+}
+
+function init() {
+    NumbersGenerator numbersGenerator = new;
+    stream<int> newStream = new stream<int>(numbersGenerator);
+    var value = getRecordValue(newStream.next());
+    io:println(value); // @output 1
+    value = getRecordValue(newStream.next());
+    io:println(value is ()); // @output true
+    IntRecord? panicVar = newStream.next(); // @panic
+    io:println(panicVar is IntRecord); // @output false
+}
+
+Test-Case: panic
+Description: Test closed stream next when stream implementor does not have close method.
 // Fail-Issue: ballerina-platform/ballerina-lang/issues/34934
 Labels: new-expr, stream-type-descriptor
 
@@ -209,7 +249,6 @@ function init() {
     io:println(a); // @output 1
     error? closed = numberStream.close();
     io:println(closed is ()); // @output true
-    io:println(a); // @output 1
 }
 
 Test-Case: error
