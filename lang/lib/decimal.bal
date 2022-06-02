@@ -57,7 +57,10 @@ public isolated function abs(decimal x) returns decimal = external;
 # + return - closest decimal value to `x` that is an integral multiple of 10 raised to the power of `-fractionDigits`
 public isolated function round(decimal x, int fractionDigits = 0) returns decimal = external;
 
-# IEEE quantize operation.
+# Return a decimal with a specified value and exponent.
+# Return a decimal value that has the same value (except for rounding) as the first
+# argument, and the same exponent as the second argument.
+# This is the IEEE quantize operation.
 # + x - decimal value to operate on
 # + y - decimal value from which to get the quantum
 # + return - `x` with the quantum of `y`
