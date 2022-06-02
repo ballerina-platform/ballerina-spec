@@ -47,7 +47,7 @@ function init() {
 
 Test-Case: output
 Description: Test new-expr to create a stream without completion type.
-Labels: new-expr, stream-type-descriptor
+Labels: int, new-expr, stream-type-descriptor
 
 type IntRecord record {|
     int value;
@@ -101,7 +101,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test closing of stream created with new-expression using a stream implementor.
+Description: Test close method return type of stream created with stream implementor not implementing close.
 Labels: int, new-expr, stream-type-descriptor
 
 type IntRecord record {|
@@ -144,6 +144,72 @@ function init() {
     stream<int, error?> newStream = new stream<int, error?>();
     error? closed = newStream.close();
     var _ = newStream.next(); // @panic
+}
+
+Test-Case: panic
+Description: Test closed stream next when stream implementor does not have close.
+// Fail-Issue: ballerina-platform/ballerina-lang/issues/34934
+Labels: new-expr, stream-type-descriptor
+
+type IntRecord record {|
+    int value;
+|};
+
+class NumbersGenerator {
+    int i = 0;
+    public isolated function next() returns IntRecord|error? {
+        self.i += 1;
+        return { value: self.i };
+    }
+}
+
+function init() {
+    NumbersGenerator numbersGenerator = new;
+    stream<int, error?> newStream = new stream<int, error?>(numbersGenerator);
+    error? closed = newStream.close();
+    io:println(closed is ()); // @output true
+    IntRecord|error? panicVar = newStream.next(); // @panic
+    io:println(panicVar is IntRecord); // @output false
+}
+
+Test-Case: output
+Description: Test closed stream next with stream implementor with close method.
+Labels: int, explicit-new-expr, stream-type-descriptor
+
+type IntRecord record {|
+    int value;
+|};
+
+function getRecordValue(IntRecord|error? returnedVal) returns int|error? {
+    if returnedVal is IntRecord {
+        return returnedVal.value;
+    } else {
+        return returnedVal;
+    }
+}
+
+class NumbersGenerator {
+    int i = 0;
+    public isolated function next() returns IntRecord|error? {
+        self.i += 1;
+        return { value: self.i };
+    }
+
+    public isolated function close() returns error? {
+        self.i = 0;
+    }
+}
+
+function init() {
+    NumbersGenerator numbersGenerator = new;
+    stream<int, error?> numberStream = new stream<int, error?>(numbersGenerator);
+    error? closed = numberStream.close();
+    io:println(closed is ()); // @output true
+    int|error? a = getRecordValue(numberStream.next());
+    io:println(a); // @output 1
+    error? closed = numberStream.close();
+    io:println(closed is ()); // @output true
+    io:println(a); // @output 1
 }
 
 Test-Case: error
