@@ -1,5 +1,5 @@
 Test-Case: error
-Description: Test new-expression to create a stream without type descriptors.
+Description: Test new-expression to create a stream without stream type parameters.
 Labels: explicit-new-expr, stream-type, var
 
 function init() {
@@ -7,7 +7,7 @@ function init() {
 }
 
 Test-Case: error
-Description: Test new-expression to create a stream with incompatible type-descriptor.
+Description: Test new-expression to create a stream with incompatible stream type parameters.
 Labels: new-expr, stream-type-descriptor
 
 function init() {
@@ -16,24 +16,23 @@ function init() {
 
 Test-Case: output
 Description: Test new-expression to create a stream with incompatible type-descriptor.
-Fail-Issue: ballerina-platform/ballerina-lang#34963
-Labels: error-0, new-expr, optional-type, stream-type-descriptor
+Labels: error, new-expr, optional-type, stream-type-descriptor
 
 function init() {
     stream s = new stream<string, error?>();
-    io:println(s); // @output stream <stream<int,error?>>
+    io:println(s); // @output stream <stream<string,error?>>
 }
 
 Test-Case: output
 Description: Test new-expression to create a empty streams.
-Labels: int-type-descriptor, new-expr, stream-type-descriptor
+Labels: int, new-expr, stream-type-descriptor
 
 type IntRecord record {|
     int value;
 |};
 
 function getRecordValue(IntRecord|error? returnedVal) returns int|error? {
-    if (returnedVal is IntRecord) {
+    if returnedVal is IntRecord {
         return returnedVal.value;
     } else {
         return returnedVal;
@@ -43,7 +42,7 @@ function getRecordValue(IntRecord|error? returnedVal) returns int|error? {
 function init() {
     stream<int, error?> emptyStream = new stream<int, error?>();
     int|error? d = getRecordValue(emptyStream.next());
-    io:println(d); // @output
+    io:println(d is ()); // @output true
 }
 
 Test-Case: output
@@ -55,7 +54,7 @@ type IntRecord record {|
 |};
 
 function getRecordValue(IntRecord? returnedVal) returns int? {
-    if (returnedVal is IntRecord) {
+    if returnedVal is IntRecord {
         return returnedVal.value;
     } else {
         return returnedVal;
@@ -69,15 +68,15 @@ function init() {
 }
 
 Test-Case: output
-Description: Test new-expression with int streams.
-Labels: int-type-descriptor, new-expr, stream-type-descriptor
+Description: Test new-expression with int stream created via a stream with parameters and implementor.
+Labels: int, new-expr, error, stream-type-descriptor
 
 type IntRecord record {|
     int value;
 |};
 
 function getRecordValue(IntRecord|error? returnedVal) returns int|error? {
-    if (returnedVal is IntRecord) {
+    if returnedVal is IntRecord {
         return returnedVal.value;
     } else {
         return returnedVal;
@@ -96,21 +95,21 @@ function init() {
     NumbersGenerator numbersGenerator = new;
     stream<int, error?> numberStream = new stream<int, error?>(numbersGenerator);
     int|error? a = getRecordValue(numberStream.next());
-    int|error? b = getRecordValue(numberStream.next());
     io:println(a); // @output 1
+    int|error? b = getRecordValue(numberStream.next());
     io:println(b); // @output 2
 }
 
 Test-Case: output
-Description: Test closing of stream created with new-expression.
-Labels: int-type-descriptor, new-expr, stream-type-descriptor
+Description: Test closing of stream created with new-expression using a stream implementor.
+Labels: int, new-expr, stream-type-descriptor
 
 type IntRecord record {|
     int value;
 |};
 
 function getRecordValue(IntRecord|error? returnedVal) returns int|error? {
-    if (returnedVal is IntRecord) {
+    if returnedVal is IntRecord {
         return returnedVal.value;
     } else {
         return returnedVal;
@@ -129,8 +128,8 @@ function init() {
     NumbersGenerator numbersGenerator = new;
     stream<int, error?> numberStream = new stream<int, error?>(numbersGenerator);
     int|error? a = getRecordValue(numberStream.next());
-    int|error? b = getRecordValue(numberStream.next());
     io:println(a); // @output 1
+    int|error? b = getRecordValue(numberStream.next());
     io:println(b); // @output 2
     error? closed = numberStream.close();
     io:println(closed is ()); // @output true
