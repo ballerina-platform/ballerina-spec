@@ -160,16 +160,16 @@ function init() {
     int c = 45;
     byte e = 128;
 
-    printResult({a: 325, b: "value b", c, d: (), e}); // @output {"a":325,"b":"value b","c":45,"d":null,"e":128}
+    map<any> result = {a: 325, b: "value b", c, d: (), e};
+    printResult(result); // @output {"a":325,"b":"value b","c":45,"d":null,"e":128}
     printResult({a: 325, b: "value b", c, d: (), e} == {a: 325, b: "value b", c, d: (), e: e}); // @output true
 
     float f = 55.43;
     map<any> result2 = {a: "Some string", b: 434, result, f};
-    printResult(result2); // @output {"a":"Some string","b":434,"result":{"c":45,"e":128},"f":55.43}
-    printResult({a: "Some string", b: 434, result, f} == {a: "Some string", b: 434, result: result, f: f}); // @output true
+    printResult(result2); // @output {"a":"Some string","b":434,"result":{"a":325,"b":"value b","c":45,"d":null,"e":128},"f":55.43}
 }
 
-function printResult(map<any> result) {
+function printResult(any result) {
     io:println(result);
 }
 
@@ -187,7 +187,7 @@ function init() {
     printResult({c, e} == {c: c, e: e}); // @output true
 }
 
-function printResult(map<any> result) {
+function printResult(any result) {
     io:println(result);
 }
 
@@ -626,7 +626,8 @@ function init() {
 
     any q = {myField1: 776777777, myField2: true, "other": false};
     any var17 = q;
-    io:println(var17 is  map<any>); // @output true
+    io:println(var17 is  map<any>); // @output false
+    io:println(var17 is  map<any|error>); // @output true
 }
 
 Test-Case: output
@@ -666,7 +667,8 @@ function init() {
 
     any q = {myField1: 776777777, readonly myField2: true, "other": false};
     any var17 = q;
-    io:println(var17 is record {|readonly true myField2; any...; |}); // @output true
+    io:println(var17 is record {|readonly true myField2; any...; |}); // @output false
+    io:println(var17 is record {|readonly true myField2; any|error...; |}); // @output true
 
     map<int> r = {readonly field1: MYINT};
     io:println(r is record {|readonly 6 field1; int...; |}); // @output true
@@ -827,7 +829,8 @@ function init() {
     io:println(q is map<json>); // @output true
 
     any|int[] r = {myField1: 776777777, myField2: true, "other": false};
-    io:println(r is map<any>); // @output true
+    io:println(r is map<any>); // @output false
+    io:println(r is map<any|error>); // @output true
 }
 
 Test-Case: output
