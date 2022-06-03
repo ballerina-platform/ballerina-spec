@@ -1,8 +1,8 @@
 Test-Case: output
 Description: Test check-expr with basic types.
-Labels: int, float, decimal, string, nil-type, nil-literal, error-type, decimal, DecimalFloatingPointNumber, DecimalNumber,
-        FloatingPointTypeSuffix, HexFloatingPointLiteral, HexIntLiteral, check, function-defn, function-call-expr, return-stmt,
-        union-type, optional-type, int:MAX_VALUE, int:MIN_VALUE
+Labels: check, decimal, DecimalFloatingPointNumber, DecimalNumber, error-type, float, FloatingPointTypeSuffix,
+        function-call-expr, function-defn, HexFloatingPointLiteral, HexIntLiteral, int, int:MAX_VALUE, int:MIN_VALUE,
+        nil-literal, nil-type, null, optional-type, return-stmt, string, union-type, value:toBalString
 
 function init() {
     io:println(fn1(0)); // @output 0
@@ -23,8 +23,8 @@ function init() {
     io:println(fn4("0.000")); // @output 0.000
     io:println(fn4("abc")); // @output abc
 
-    io:println(fn5(null)); // @output
-    io:println(fn5(())); // @output
+    io:println(fn5(null).toBalString()); // @output ()
+    io:println(fn5(()).toBalString()); // @output ()
 }
 
 function fn1(int x) returns int {
@@ -54,9 +54,9 @@ function fn5(() x) returns () {
 
 Test-Case: output
 Description: Test check-expr with literal values.
-Labels: error-type, optional-type, check, nil-type, nil-literal, decimal, DecimalFloatingPointNumber, DecimalNumber, float,
-        FloatingPointTypeSuffix, HexFloatingPointLiteral, HexIntLiteral, function-defn, function-call-expr, return-stmt,
-        value:toBalString(), int, , additive-epr, unary-minus
+Labels: additive-expr, check, decimal, DecimalFloatingPointNumber, DecimalNumber, error-type, float,
+        FloatingPointTypeSuffix, function-call-expr, function-defn, HexFloatingPointLiteral, HexIntLiteral, int,
+        nil-literal, nil-type, optional-type, return-stmt, unary-minus, value:toBalString
 
 function init() {
     error? x1 = fn1(); // @output 123
@@ -78,7 +78,7 @@ function init() {
     error? x4 = fn4(); // @output
                        // @output 9223372036854775807d
 
-    error? x5 = fn5(); // @output
+    error? x5 = fn5(); // @output ()
                        // @output ()
 }
 
@@ -126,15 +126,15 @@ function fn4() {
 
 function fn5() {
     () a1 = check ();
-    io:println(a1);
+    io:println(a1.toBalString());
     () a2 = check null;
     io:println(a2.toBalString());
 }
 
 Test-Case: output
 Description: Test check-expr with string template expressions.
-Labels: check, string, function-defn, function-call-expr, return-stmt, optional-type, DecimalNumber, string-template-expr,
-        int, trap
+Labels: check, DecimalNumber, function-call-expr, function-defn, int, multiplicative-expr, optional-type, return-stmt,
+        string, string-template-expr, trap-expr, union-type
 
 function init() {
     error? x1 = fn1(); // @output 224
@@ -149,9 +149,9 @@ function init() {
 }
 
 function fn1() returns error? {
-    string a1 = check (string`${12 + 212 - 0}`);
+    string a1 = check string`${12 + 212 - 0}`;
     io:println(a1);
-    string a2 = check (string`${"a" + "b"}`);
+    string a2 = check string`${"a" + "b"}`;
     io:println(a2);
     string a3 = check (string`${string `${"a"}`}`);
     io:println(a3);
@@ -162,35 +162,28 @@ function fn2(int a, int b) returns error|string {
 }
 
 Test-Case: error
-Description: Test the static type of the check-expr when it is used with string template expressions.
-Labels: decimal, DecimalNumber, float, string, function-defn, function-call-expr, return-stmt, optional-type, check,
-        string-template-expr, error-type, int
+Description: Test the static type of the check-expr when it is applied to string template expressions via invalid
+             assignments
+Labels: check, decimal, DecimalNumber, error-type, float, function-call-expr, function-defn, int, optional-type,
+        return-stmt, string, string-template-expr
 
-function errorFunction() {
-    error? x1 = fn1(); // @error expected '(int|error)' but found 'string'
-                       // @error expected '(float|error)' but found 'string'
-                       // @error expected '(decimal|error)' but found 'string'
-}
-
-function fn1() returns error? {
-    int _ = check (string`${12 + 212 - 0}`);
-    float _ = check (string`${"a" + "b"}`);
-    decimal _ = check (string`${string `${"a"}`}`);
+function errorFunction() returns error? {
+    int _ = check (string`${12 + 212 - 0}`); // @error expected '(int|error)' but found 'string'
+    float _ = check (string`${"a" + "b"}`); // @error expected '(float|error)' but found 'string'
+    decimal _ = check (string`${string `${"a"}`}`); // @error expected '(decimal|error)' but found 'string'
 }
 
 Test-Case: output
 Description: Test check-expr with structural constructor expressions.
-Fail-Issue: ballerina-platform/ballerina-lang#35162
-Labels: array-type, decimal, DecimalFloatingPointNumber, DecimalNumber, float, FloatingPointTypeSuffix, HexIntLiteral,
-        list-constructor-expr, mapping-constructor-expr, string, byte, int:MAX_VALUE, int:MIN_VALUE, function-defn,
-        function-call-expr, return-stmt, union-type, optional-type, map-type, readonly-type, check, spread-field, unary-minus,
-        table-constructor-expr, table-type, record-type, check, int
+Labels: array-type, byte, check, decimal, DecimalFloatingPointNumber, DecimalNumber, float, FloatingPointTypeSuffix,
+        function-call-expr, function-defn, HexIntLiteral, int, int:MAX_VALUE, int:MIN_VALUE, list-constructor-expr,
+        map-type, mapping-constructor-expr, optional-type, readonly-type, record-type, return-stmt, spread-field,
+        string, table-constructor-expr, table-type, unary-minus, union-type
 
 function init() {
     error? x1 = listConstructor(); // @output [1,2,3,-18,-9223372036854775808]
                                    // @output [1.2,-0.21,102,-21]
                                    // @output ["1","b","+"]
-                                   // @output [["1","b","+"]]
                                    // @output [["1","b","+"]]
 
     error? x2 = mappingConstructor(); // @output {"a":1,"b":12,"3":5,"max":9223372036854775807}
@@ -211,8 +204,6 @@ function listConstructor() returns error? {
     io:println(a3);
     string[][]|error a4 = check [check ["1", check "b", "+"]];
     io:println(a4);
-    string[2][4]|error a5 = check [check ["1", check "b", "+"]];
-    io:println(a5);
 }
 
 function mappingConstructor() returns error? {
@@ -240,46 +231,29 @@ function tableConstructor() returns error? {
 }
 
 Test-Case: error
-Description: Test the static type of the check-expr when it is used with structural constructor expressions.
-Labels: array-type, byte, decimal, DecimalFloatingPointNumber, DecimalNumber, float, int:MAX_VALUE, int:MIN_VALUE
-        FloatingPointTypeSuffix, HexIntLiteral, list-constructor-expr, check, int
-        mapping-constructor-expr, nil-type, string, function-defn, function-call-expr, union-type, optional-type
+Description: Test the static type of the check-expr when it is applied to structural constructor expressions via invalid
+             assignments.
+Labels: array-type, byte, check, decimal, DecimalFloatingPointNumber, DecimalNumber, float, FloatingPointTypeSuffix,
+        function-call-expr, function-defn, HexIntLiteral, int, int:MAX_VALUE, int:MIN_VALUE, list-constructor-expr,
+        mapping-constructor-expr, nil-type, optional-type, string, union-type
 
-function errorFunction() {
-    error? x1 = listConstructor(); // @error expected '(int|error)' but found '[int,int,int,int,int]'
-                                   // @error expected '((float|decimal)[2]|error)' but found '[float,float,decimal,decimal]'
-                                   // @error expected '(()[3]|error)' but found '[string,string,string]'
-                                   // @error expected '(string[]|error)' but found '[[string,string,string]]'
-                                   // @error expected '(string[2][1]|error)' but found '[[string,string,string]]'
+function errorFunction() returns error? {
+    int _ = check [1, 2, 3, -0x12, int:MIN_VALUE]; // @error expected '(int|error)' but found '[int,int,int,int,int]'
+    (float|decimal)[2] _ = check [1.2, -0.21, 102d, -21d]; // @error expected '((float|decimal)[2]|error)' but found '[float,float,decimal,decimal]'
+    ()[3] _ = check ["1", "b", "+"]; // @error expected '(()[3]|error)' but found '[string,string,string]'
+    string[] _ = check [check ["1", check "b", "+"]]; // @error expected '(string[]|error)' but found '[[string,string,string]]'
+    string[2][1] _ = check [check ["1", check "b", "+"]]; // @error expected '(string[2][1]|error)' but found '[[string,string,string]]'
 
-    error? x2 = mappingConstructor(); // @error incompatible mapping constructor expression for type 'int|error'
-                                      // @error incompatible mapping constructor expression for type 'int|error'
-                                      // @error incompatible mapping constructor expression for type 'byte|error'
-                                      // @error incompatible mapping constructor expression for type 'map<map<string>>|error'
-}
-
-function listConstructor() returns error? {
-    int _ = check [1, 2, 3, -0x12, int:MIN_VALUE];
-    (float|decimal)[2] _ = check [1.2, -0.21, 102d, -21d];
-    ()[3] _ = check ["1", "b", "+"];
-    string[] _ = check [check ["1", check "b", "+"]];
-    string[2][1] _ = check [check ["1", check "b", "+"]];
-}
-
-function mappingConstructor() returns error? {
-    int _ = check {a: 1, b: 12, '3: 5, max: int:MAX_VALUE};
-    int _ = check {x: 1.21, y: 2f, z: -212d};
-    byte _ = check {'0: 0, '255: 255, hex: 0x12};
-    map<string> _ = check {[check "a"]: "a", b: check "b"};
-    map<map<string>> _ = check {...a4};
+    int _ = check {a: 1, b: 12, '3: 5, max: int:MAX_VALUE}; // @error incompatible mapping constructor expression for type 'int|error'
+    int _ = check {x: 1.21, y: 2f, z: -212d}; // @error incompatible mapping constructor expression for type 'int|error'
+    byte _ = check {'0: 0, '255: 255, hex: 0x12}; // @error incompatible mapping constructor expression for type 'byte|error'
+    map<string> a1 = check {[check "a"]: "a", b: check "b"};
+    map<map<string>> _ = check {...a1}; // @error incompatible mapping constructor expression for type 'map<map<string>>|error'
 }
 
 Test-Case: output
 Description: Test check-expr with object constructor expressions.
-Fail-Issue: ballerina-platform/ballerina-lang#35205
-Labels: boolean, int, , DecimalNumber, field-access-expr, float,
-        , , , json, list-constructor-expr,
-        mapping-constructor-expr, nil-literal, readonly-type, string
+Labels: boolean, DecimalNumber, field-access-expr, float, int, nil-literal, readonly-type, string
 
 function init() {
     error? x1 = objectConstructor(); // @output 1
@@ -287,16 +261,8 @@ function init() {
                                      // @output true
 }
 
-type Object1 object {
-    public int a;
-};
-
-Object1|error obj = object{ // invalid usage of 'object constructor expression' with type '(Object1|error)'
-    public int a = 1;
-};
-
 function objectConstructor() returns error? {
-    Object1 obj = check object{
+    var obj = check object{
         public int a = 1;
         public string b = "abc";
         public boolean c = true;
@@ -308,35 +274,32 @@ function objectConstructor() returns error? {
 }
 
 Test-Case: error
-Description: Test the static type of the check-expr when it is used with object constructor expressions.
+Description: Test the static type of the check-expr when it is applied to object constructor expressions via invalid
+             assignments.
 Fail-Issue: ballerina-platform/ballerina-lang#35205
-Labels: boolean, string, object-type, error-type, function-defn, function-call-expr, optional-type
-
-function errorFunction() {
-    error? x1 = objectConstructor(); // @error expected 'Object1' but found 'object { string b; }'
-}
+Labels: boolean, error-type, function-call-expr, function-defn, object-type, optional-type, string
 
 type Object1 object {
     boolean c;
 };
 
-function objectConstructor() returns error? {
-    Object1 _ = check object{
+function errorFunction() returns error? {
+    Object1 _ = check object{ // @error expected 'Object1' but found 'object { string b; }'
         string b = "abc";
     };
 }
 
 Test-Case: output
 Description: Test check-expr with new expressions.
-Labels: check, DecimalNumber, field-access-expr, error-type, int, explicit-new-expr, module-class-defn,
-        error-type, function-defn, function-call-expr, optional-type
-
-function init() {
-    error? x1 = file(); // @output 10
-}
+Labels: check, DecimalNumber, error-type, explicit-new-expr, field-access-expr, function-call-expr, function-defn, int,
+        module-class-defn, optional-type
 
 class File {
     int i = 10;
+}
+
+function init() {
+    error? x1 = file(); // @output 10
 }
 
 function file() returns error? {
@@ -345,26 +308,22 @@ function file() returns error? {
 }
 
 Test-Case: error
-Description: Test the static type of the check-expr when it is used with new expressions.
-Labels: int, error-type, function-defn, function-call-expr, optional-type, module-class-defn, DecimalNumber
-
-function init() {
-    error? x1 = file(); // @error expected '(int|error)' but found 'File'
-}
+Description: Test the static type of the check-expr when it is applied to new expressions via invalid assignments.
+Labels: DecimalNumber, error-type, function-call-expr, function-defn, int, module-class-defn, optional-type
 
 class File {
     int i = 10;
 }
 
-function file() returns error? {
-    int _ = check new File();
+function errorFunction() returns error? {
+    int _ = check new File(); // @error expected '(int|error)' but found 'File'
 }
 
 Test-Case: output
 Description: Test check-expr with field-access, optional-field-access and member-access expressions.
-Labels: array-type, boolean, decimal, DecimalFloatingPointNumber, DecimalNumber, field-access-expr, float,
-        json, list-constructor-expr, function-defn, function-call-expr, optional-type,
-        error-type, mapping-constructor-expr, string, optional-field-access-expr, check, unary-not
+Labels: array-type, boolean, check, decimal, DecimalFloatingPointNumber, DecimalNumber, error-type, field-access-expr,
+        float, function-call-expr, function-defn, json, list-constructor-expr, mapping-constructor-expr,
+        optional-field-access-expr, optional-type, string, unary-not
 
 function init() {
     error? x1 = fieldAccess(); // @output 2
@@ -375,7 +334,7 @@ function init() {
                                // @output [true,false,false]
                                // @output 21
                                // @output 21
-    io:println(x1); // @output key 'b1' not found in JSON mapping
+    io:println(x1); // @output error("{ballerina/lang.map}KeyNotFound",message="key 'b1' not found in JSON mapping")
 
     error? x2 = memberAccess(); // @output 2
                                 // @output abc
@@ -383,7 +342,7 @@ function init() {
                                 // @output [true,false,false]
                                 // @output 1
 
-    io:println(x2); // @output JSON value is not a mapping
+    io:println(x2); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
 }
 
 type Rec record {
@@ -447,28 +406,24 @@ function memberAccess() returns error? {
 }
 
 Test-Case: error
-Description: Test the static type of the check-expr when it is used with field-access, optional-field-access and
-             member-access expressions. ***
-Labels: boolean, decimal, DecimalFloatingPointNumber, DecimalNumber, field-access-expr, float,
-        FloatingPointTypeSuffix, HexFloatingPointLiteral, HexIntLiteral, json, list-constructor-expr,
-        mapping-constructor-expr, nil-literal, readonly-type, string
-
-function init() {
-    error? x1 = file(); // @error expected '(int|error)' but found 'File'
-}
+Description: Test the static type of the check-expr when it is applied to field-access, optional-field-access and
+             member-access expressions via invalid assignments.
+Labels: boolean, decimal, DecimalFloatingPointNumber, DecimalNumber, field-access-expr, float, FloatingPointTypeSuffix,
+        HexFloatingPointLiteral, HexIntLiteral, json, list-constructor-expr, mapping-constructor-expr, nil-literal,
+        readonly-type, string
 
 class File {
     public int i = 10;
 }
 
-function file() returns error? {
-    int f = check new File();
+function errorFunction() returns error? {
+    int f = check new File(); // @error expected '(int|error)' but found 'File'
 }
 
 Test-Case: output
 Description: Test check-expr with function call expressions.
-Labels: boolean, DecimalNumber, error-type, function-defn, function-call-expr, optional-type, check, return-stmt, if-else-stmt
-        error-constructor-expr, string
+Labels: boolean, check, DecimalNumber, error-constructor-expr, error-type, function-call-expr, function-defn,
+        if-else-stmt, optional-type, return-stmt, string
 
 function init() {
     error? x1 = testFunction1(); // @output function
@@ -539,13 +494,13 @@ function recursiveFn(int i) returns error? {
 
 Test-Case: output
 Description: Test check-expr with method call expressions.
-Labels: boolean, DecimalNumber, nil-literal, string, error-type, module-class-defn, explicit-new-expr, check, returm-stmt,
-        function-defn, function-call-expr, optional-type, check, return-stmt, if-else-stmt, relational-expr
+Labels: boolean, check, DecimalNumber, error-type, explicit-new-expr, function-call-expr, function-defn, if-else-stmt,
+        module-class-defn, nil-literal, optional-type, relational-expr, return-stmt, string
 
 function init() {
     error? x1 = methodCall(0); // @output No errors
     error? x2 = methodCall(1);
-    io:println(x2); // @output error("mothod2")
+    io:println(x2); // @output error("method2")
 }
 
 class C1 {
@@ -564,7 +519,7 @@ class C2 {
         if i == 0 {
             return;
         }
-        return error("mothod2");
+        return error("method2");
     }
 }
 
@@ -575,19 +530,16 @@ function methodCall(int i) returns error? {
 
 Test-Case: error
 Description: Test check-expr with error constructor expressions.
-Labels: DecimalNumber, function-defn, function-call-expr, optional-type, check, return-stmt, int, string
+Fail-Issue: ballerina-platform/ballerina-lang#36427
+Labels: check, DecimalNumber, function-call-expr, function-defn, int, optional-type, return-stmt, string
 
-function errorFunction() {
-    error? x1 = errorConstructorExpr(0);
-}
-
-function errorConstructorExpr(int i) returns error {
-    error c = check error("a"); // expression of type 'never' or equivalent to type 'never' not allowed here
+function errorFunction() returns error {
+    never _ = check error("Error"); // @error expression of type 'never' or equivalent to type 'never' not allowed here
 }
 
 Test-Case: output
 Description: Test check-expr with an anonymous function expression.
-Labels: int, DecimalNumber, function-defn, function-call-expr, optional-type, check, return-stmt, var
+Labels: check, DecimalNumber, function-call-expr, function-defn, int, optional-type, return-stmt, var
 
 function init() {
     error? x1 = fnCall(0); // @output error("error")
@@ -601,19 +553,21 @@ function fnCall(int i) returns error? {
 
 Test-Case: output
 Description: Test check-expr with let expression.
-Labels: union-type, unary-minus, json, DecimalNumber, function-defn, function-call-expr, optional-type, check, return-stmt,
-        relational-expr, if-else-stmt, string
+Labels: check, DecimalNumber, function-call-expr, function-defn, if-else-stmt, json, optional-type, relational-expr,
+        return-stmt, string, unary-minus, union-type
 
 function init() {
-    error? x1 = letExpr(-2);
+    error|string x1 = letExpr(-2);
     io:println(x1); // @output error("Invalid Number 1")
-    error? x2 = letExpr(2);
+    error|string x2 = letExpr(2);
     io:println(x2); // @output error("Invalid Number 2")
+    error|string x3 = letExpr(0);
+    io:println(x3); // @output Done!
 }
 
-function letExpr(int i) returns error? {
+function letExpr(int i) returns error|string {
     json _ = check (let int s = - check fn1(i) in fn2(s));
-    io:println("Done!");
+    return "Done!";
 }
 
 function fn1(int i) returns error|int {
@@ -632,45 +586,41 @@ function fn2(int i) returns error|int {
 
 Test-Case: output
 Description: Test check-expr with type-cast expression.
-Labels: relational-expr, int, string, unary-minus, json, union-type, function-defn, function-call-expr, optional-type,
-        check, return-stmt, if-else-stmt, error-type
+Labels: check, error-type, function-call-expr, function-defn, if-else-stmt, int, json, optional-type, relational-expr,
+        return-stmt, string, unary-minus, union-type
 
 function init() {
-    error? x1 = typeCast(-2); // @output Done!
-    error? x2 = typeCast(0);
-    io:println(x2); // @output error("Invalid Number")
+    error|int x1 = typeCast(-2.0);
+    io:println(x1); // @output -2
+    error|int x2 = typeCast(error("Error"));
+    io:println(x2); // @output error("Error")
 }
 
-function typeCast(int i) returns error? {
-    error|int x = i;
-    if i == 0 {
-        x = error("Invalid Number");
-    }
-    json _ = check (<int> check x);
-    io:println("Done!");
+function typeCast(error|float i) returns error|int {
+    return check <int> check i;
 }
 
 Test-Case: output
 Description: Test check-expr with typeof expression.
-Labels: any, DecimalNumber, typeof-expr, string, function-defn, function-call-expr, optional-type, check, unary-minus
+Labels: any, check, DecimalNumber, function-call-expr, function-defn, optional-type, string, typeof-expr, unary-minus
 
 function init() {
-    error? x1 = typeOfTest(-1); // @output -1
+    error? x1 = typeOfTest(-1); // @output typedesc -1
     io:println(x1); // @output
-    error? x2 = typeOfTest("0"); // @output 0
+    error? x2 = typeOfTest("0"); // @output typedesc 0
     io:println(x2); // @output
 }
 
 function typeOfTest(any i) returns error? {
-    io:println(check (typeof i));
+    io:println(check typeof i);
 }
 
 Test-Case: output
 Description: Test check-expr with unary expression, multiplicative expression, additive expression, shift expression,
              binary bitwise expression and logical expression.
-Labels: int, float, decimal, error-type, DecimalFloatingPointNumber, DecimalNumber, additive-expr, binary-bitwise-expr,
-        check, function-defn, function-call-expr, FloatingPointTypeSuffix, unary-plus, unary-minus, unary-not, unary-complement,
-        optional-type, multiplicative-expr, shift-expr, int:MAX_VALUE, int:MIN_VALUE
+Labels: additive-expr, binary-bitwise-expr, check, decimal, DecimalFloatingPointNumber, DecimalNumber, error-type,
+        float, FloatingPointTypeSuffix, function-call-expr, function-defn, int, int:MAX_VALUE, int:MIN_VALUE,
+        multiplicative-expr, optional-type, shift-expr, unary-complement, unary-minus, unary-not, unary-plus
 
 function init() {
     error? x1 = testAdditiveExpr1(1, 3); // @output 4
@@ -717,10 +667,10 @@ function init() {
     error? x13 = testBitwiseExpr(1, 3); // @output 1
                                         // @output 3
                                         // @output 2
-    io:println(x13); // @output1
+    io:println(x13); // @output
     error? x14 = testBitwiseExpr(int:MIN_VALUE, -1); // @output -9223372036854775808
-                                                     // @output -2
-                                                     // @output -9223372036854775807
+                                                     // @output -1
+                                                     // @output 9223372036854775807
     io:println(x14); // @output
 
     error? x15 = testShiftExpr(-1, 3); // @output -8
@@ -829,8 +779,8 @@ function testShiftExpr(int a, int b) returns error? {
 
 Test-Case: output
 Description: Test check-expr with type test expression.
-Labels: boolean, DecimalFloatingPointNumber, DecimalNumber,  nil-literal, string, function-defn, function-call-expr,
-        optional-type, check, int, float, is-expr
+Labels: boolean, check, DecimalFloatingPointNumber, DecimalNumber, float, function-call-expr, function-defn, int,
+        is-expr, nil-literal, optional-type, string, value:toBalString, is-expr, ternary-conditional-expr
 
 function init() {
     error? x1 = typeTestExpr(1); // @output true
@@ -845,17 +795,17 @@ function init() {
                                    // @output false
     io:println(x2); // @output
 
-    error? x3 = typeTestExpr("1"); // @output false
-                                   // @output false
-                                   // @output true
-                                   // @output false
-    io:println(x3); // @output
-
-    error? x4 = typeTestExpr(()); // @output false
+    error? x3 = typeTestExpr(()); // @output false
                                   // @output false
                                   // @output false
                                   // @output true
-    io:println(x4); // @output
+    io:println(x3); // @output
+
+    error? x4 = typeTestExpr("1"); // @output false
+                                       // @output false
+                                       // @output true
+                                       // @output false
+    io:println((x4 is error? (<error> x4).message():x4).toBalString()); // @output
 }
 
 function typeTestExpr(anydata a) returns error? {
@@ -871,8 +821,8 @@ function typeTestExpr(anydata a) returns error? {
 
 Test-Case: output
 Description: Test check-expr with trap expression.
-Labels: DecimalNumber, float, FloatingPointTypeSuffix, string, function-defn, function-call-expr, optional-type, check,
-        int, error-type, trap-expr, anydata, typecast-expr, multiplicative-expr
+Labels: anydata, check, DecimalNumber, error-type, float, FloatingPointTypeSuffix, function-call-expr, function-defn,
+        int, multiplicative-expr, optional-type, string, trap-expr, typecast-expr
 
 function init() {
     error? x1 = testTrapExpr1(1); // @output 1
@@ -900,8 +850,8 @@ function testTrapExpr2(int a, int b) returns error? {
 
 Test-Case: output
 Description: Test check-expr with conditional expression.
-Labels: boolean, DecimalNumber, string, function-defn, function-call-expr, optional-type, check,
-        int, error-type, typecast-expr, union-type, error-constructor-expr, binary-conditional-expr, ternary-conditional-expr
+Labels: binary-conditional-expr, boolean, check, DecimalNumber, error-constructor-expr, error-type, function-call-expr,
+        function-defn, int, optional-type, string, ternary-conditional-expr, typecast-expr
 
 function init() {
     error? x1 = testTernaryExpr1(1, 2, false); // @output 2
@@ -948,9 +898,10 @@ function testElvisExpr2(error? a, error b) returns error? {
 Test-Case: output
 Description: Test check-expr when it is used to convert json to simple types. Verify the results using val:ensureType.
              Test case 1.
-Labels: boolean, decimal, DecimalFloatingPointNumber, DecimalNumber, field-access-expr, float, FloatingPointTypeSuffix,
-        HexFloatingPointLiteral, HexIntLiteral, json, mapping-constructor-expr, nil-literal, string, unary-minus,
-        function-defn, function-call-expr, optional-type, check, unary-not, int:MAX_VALUE, int:MIN_VALUE, map-type
+Labels: boolean, check, decimal, DecimalFloatingPointNumber, DecimalNumber, field-access-expr, float,
+        FloatingPointTypeSuffix, function-call-expr, function-defn, HexFloatingPointLiteral, HexIntLiteral,
+        int:MAX_VALUE, int:MIN_VALUE, json, map-type, mapping-constructor-expr, nil-literal, optional-type, string,
+        unary-minus, unary-not
 
 import ballerina/lang.value;
 
@@ -1138,9 +1089,10 @@ function mapOfJsonTest1() returns error? {
 
 Test-Case: output
 Description: Test check-expr when it is used to convert json to simple types. Test case 2.
-Labels: boolean, decimal, DecimalFloatingPointNumber, DecimalNumber, field-access-expr, float, FloatingPointTypeSuffix,
-        HexFloatingPointLiteral, HexIntLiteral, json, mapping-constructor-expr, nil-literal, string, unary-minus,
-        function-defn, function-call-expr, optional-type, check, unary-not, int:MAX_VALUE, int:MIN_VALUE, map-type
+Labels: boolean, check, decimal, DecimalFloatingPointNumber, DecimalNumber, field-access-expr, float,
+        FloatingPointTypeSuffix, function-call-expr, function-defn, HexFloatingPointLiteral, HexIntLiteral,
+        int:MAX_VALUE, int:MIN_VALUE, json, map-type, mapping-constructor-expr, nil-literal, optional-type, string,
+        unary-minus, unary-not
 
 function init() {
     error? x1 = jsonTest2(); // @output 9223372036854775807
@@ -1426,7 +1378,7 @@ Test-Case: output
 Description: Test check-expr when it is used to convert json to simple types. Test case 4.
 Labels: array-type, boolean, decimal, DecimalFloatingPointNumber, DecimalNumber, field-access-expr, float,
         FloatingPointTypeSuffix, HexFloatingPointLiteral, HexIntLiteral, json, list-constructor-expr,
-        mapping-constructor-expr, nil-literal, readonly-type, string
+        mapping-constructor-expr, nil-literal, readonly-type, string, trap-expr
 
 import ballerina/lang.value;
 
@@ -1439,25 +1391,25 @@ json j4 = {f: null};
 
 function init() {
     error? x1 = fn1(j2);
-    io:println(x1); // @output 'boolean' cannot be cast to 'int'
+    io:println(x1); // @output error("{ballerina}TypeCastError",message="incompatible types: 'boolean' cannot be cast to 'int'")
     error? x2 = fn2(j3);
-    io:println(x2); // @output 'string' cannot be cast to 'float'
+    io:println(x2); // @output error("{ballerina}TypeCastError",message="incompatible types: 'string' cannot be cast to 'float'")
     error? x3 = fn3(j4);
-    io:println(x3); // @output '()' cannot be cast to 'decimal'
+    io:println(x3); // @output error("{ballerina}TypeCastError",message="incompatible types: '()' cannot be cast to 'decimal'")
     error? x4 = fn4(j1);
-    io:println(x4); // @output 'int' cannot be cast to 'string'
+    io:println(x4); // @output error("{ballerina}TypeCastError",message="incompatible types: 'int' cannot be cast to 'string'")
     error? x5 = fn5(j2);
-    io:println(x5); // @output 'boolean' cannot be cast to '()'
+    io:println(x5); // @output error("{ballerina}TypeCastError",message="incompatible types: 'boolean' cannot be cast to '()'")
     error? x6 = fn6(j2);
-    io:println(x6); //  @output 'boolean' cannot be cast to 'int'
+    io:println(x6); // @output error("{ballerina}TypeCastError",message="incompatible types: 'boolean' cannot be cast to 'int'")
     error? x7 = fn7(j3);
-    io:println(x7); // @output 'string' cannot be cast to 'float'
+    io:println(x7); // @output error("{ballerina}TypeCastError",message="incompatible types: 'string' cannot be cast to 'float'")
     error? x8 = fn8(j4);
-    io:println(x8); // @output '()' cannot be cast to 'decimal'
+    io:println(x8); // @output error("{ballerina}TypeCastError",message="incompatible types: '()' cannot be cast to 'decimal'")
     error? x9 = fn9(j1);
-    io:println(x9); // @output 'int' cannot be cast to 'string'
+    io:println(x9); // @output error("{ballerina}TypeCastError",message="incompatible types: 'int' cannot be cast to 'string'")
     error? x10 = fn10(j2);
-    io:println(x10); // @output 'boolean' cannot be cast to '()'
+    io:println(x10); // @output error("{ballerina}TypeCastError",message="incompatible types: 'boolean' cannot be cast to '()'")
 
     io:println((<error> fn1(j4)).message() == (<error> fn6(j4)).message()); // @output true
     io:println((<error> fn2(j3)).message() == (<error> fn7(j3)).message()); // @output true
@@ -1806,8 +1758,8 @@ function testByte() returns error? {
 
 Test-Case: output
 Description: Test check-expr with control structures.
-Labels: decimal, DecimalNumber, float, string, function-defn, function-call-expr, return-stmt, optional-type, check,
-        string-template-expr, error-type, int
+Labels: check, decimal, DecimalNumber, error-type, float, function-call-expr, function-defn, int, optional-type,
+        return-stmt, string, string-template-expr
 
 function init() {
     error? x1 = testCheckExprInsideWhile();
@@ -1870,8 +1822,8 @@ function testCheckExprAsConditionOfIf() returns error|int {
 Test-Case: output
 Description: Test check-expr with query expression.
 Fail-Issue: ballerina-platform/ballerina-lang#36119
-Labels: decimal, DecimalNumber, float, string, function-defn, function-call-expr, return-stmt, optional-type, check,
-        string-template-expr, error-type, int
+Labels: check, decimal, DecimalNumber, error-type, float, function-call-expr, function-defn, int, optional-type,
+        return-stmt, string, string-template-expr
 
 function init() {
     error|int[] x1 = testQueryExpr1([-2, -1, 0, 1]);
@@ -1948,8 +1900,8 @@ function testQueryExpr4(error|int[] nums) returns error|int[] {
 
 Test-Case: output
 Description: Test check-expr with failure handling statements.
-Labels: decimal, DecimalNumber, float, string, function-defn, function-call-expr, return-stmt, optional-type, check,
-        string-template-expr, error-type, int
+Labels: check, decimal, DecimalNumber, error-type, float, function-call-expr, function-defn, int, optional-type,
+        return-stmt, string, string-template-expr
 
 function init() {
     error|int x1 = testCheckWithOnFail(-1);
@@ -1984,8 +1936,8 @@ function fn2(int i) returns error? {
 
 Test-Case: output
 Description: Test check-expr with custom error types.
-Labels: function-defn, function-call-expr, return-stmt, check, error-type, int, DecimalNumber, record-type, string,
-        error-type, error-type-parameter, nil-type
+Labels: check, DecimalNumber, error-type, error-type-parameter, function-call-expr, function-defn, int, nil-type,
+        record-type, return-stmt, string
 
 type CustomErrorDetail record {|
     string message;
