@@ -4175,7 +4175,7 @@ is never applicable when all operands have singleton type.)
 </section>
 
 <section>
-<h4>Isolated expressions</h4>
+<h4 id="isolated_expressions">Isolated expressions</h4>
 <p>
 Ballerina defines requirements for when an expression is <em>isolated</em>. If
 an expression meets the requirements, then it is compile-time guaranteed that
@@ -5747,10 +5747,10 @@ specified explicitly as usual with a function-signature. With an
 infer-anonymous-function-expr, the type of the function is inferred.
 </p>
 <p>
-If block-function-body refers to a block-scope variable defined
-outside of the block-function-body, the closure will capture a reference to that
-variable; the captured reference will refer to the same storage as the original
-reference not a copy.
+If a variable-reference-expr within an anonymous-function-expr refers to a local
+variable defined outside of the anonymous-function-expr, the closure will
+capture a reference to that variable; the captured reference will refer to the
+same storage as the original reference rather than to a copy.
 </p>
 
 <pre
@@ -7117,17 +7117,18 @@ to executing another strand. The following actions cause a strand to yield:
 <p>
 In addition, any function with an external-function-body can potentially yield;
 it should only do so if it performs a system call that would block or calls a
-Ballerina function that itself yields. The `sleep` function in
+Ballerina function that itself yields. The <code>sleep</code> function in
 <code>lang.runtime</code> will make the strand yield. Other functions in the
 lang library do not themselves yield, although if they call a function passed as
 an argument, that function may result in yielding.
 </p>
 <p>
 There are two language constructs whose execution causes the creation of new
-strands: named-worker-decl and start-action. These constructs may use
-annotations to indicate that the newly created strand should be in a separate
-thread from the current strand. In the absence of such annotations, the new
-strand must be part of the same thread as the current strand.
+strands: named-worker-decl and start-action. Except in the cases explicitly
+allowed by this specification, the new strand must be part of the same thread as
+the current strand. An implementation may also allow annotations to be used to
+indicate that the newly created strand should be in a separate thread from the
+current strand.
 </p>
 
 </section>
@@ -7197,7 +7198,8 @@ default worker.
 </p>
 <p>
 A function also has zero or more named workers. Each named worker runs on its
-own new strand. The termination of a function is independent of the termination
+own new strand. The strand can run on a separate thread from the default worker if the
+function is isolated. The termination of a function is independent of the termination
 of its named workers. The termination of a named worker does not automatically
 result in the termination of its function. When a function's default worker
 terminates, causing the function to terminate, the function does not
@@ -7327,17 +7329,13 @@ identifier is declared as <code>configurable</code>).</li>
 variable-reference-lvexpr or in a capture-binding-pattern in a
 destructuring-assignment-stmt must not refer to a variable defined by a
 module-var-decl that does not include <code>isolated</code>.</li>
-<li>Captured variables are restricted as follows: if the body is part of an
-anonymous-function-expr, then any captured variable references must refer to
-variables that are both final (either explicitly or implicitly) and have a
-static type that is a subtype of <code>readonly|isolated object {}</code>.</li>
-<li>New workers cannot be started: the following constructs are not allowed
-<ul>
-<li>named-worker-decl</li>
-<li>fork-stmt</li>
-<li>start-action</li>
-</ul>
-</li>
+<li>A variable reference to a captured variable must refer to variables that are
+both final (either explicitly or implicitly) and have a static type that is a
+subtype of <code>readonly|isolated object {}</code>, where a variable reference
+is captured if it occurs within an anonymous-function-expr or named-worker-decl
+and refers to a variable declared within the function but outside of that
+anonymous-function-expr or named-worker-decl.</li>
+<li>A start-action is allowed only if its call-action-or-expression is isolated.</li>
 </ul>
 <p>
 If an isolated function has an <code>external-function-body</code>, then the
@@ -7476,7 +7474,8 @@ class="grammar">fork-stmt := <code>fork</code> <code>{</code> named-worker-decl+
 </pre>
 <p>
 The fork statement starts one or more named workers, which run in parallel with
-each other, each in its own new strand.
+each other, each in its own new strand. The strand can run on a separate thread
+from the current worker if the fork-stmt occurs in an isolated function.
 </p>
 <p>
 Variables and parameters in scope for the fork-stmt remain in scope within the
@@ -7496,7 +7495,11 @@ block-function-body.
 <h3>Start action</h3>
 
 <pre
-class="grammar">start-action := [annots] <code>start</code> (function-call-expr|method-call-expr|client-remote-method-call-action)
+class="grammar">start-action := [annots] <code>start</code> call-action-or-expr
+call-action-or-expr :=
+   function-call-expr
+   | method-call-expr
+   | client-remote-method-call-action
 </pre>
 
 <p>
@@ -7508,7 +7511,19 @@ action <code><var>C</var></code> is T, then the static type of <code>start
 <var>C</var></code> is future&lt;T&gt;; it is permitted for T to be
 <code>never</code>.
 </p>
-
+<p>
+A call-action-or-expr is <em>isolated</em> if the function or method it calls
+has a type that is isolated and the expression for every argument is an <a
+href="#isolated_expressions">isolated expression</a>; for this purpose, the
+object whose method is called by the method-call-expr or
+client-remote-method-call-action is treated as an argument. When a start-action
+has a call-action-or-expr that is isolated then
+</p>
+<ul>
+<li>the start-action is allowed in an isolated function, and</li>
+<li>the strand created by the start-action may run in a separate thread from the
+current thread.</li>
+</ul>
 
 </section>
 <section>
@@ -9818,7 +9833,10 @@ explicitly specified an <code>isolated</code> qualifier, then they all would
 meet the requirements for <a href="#isolated_functions">isolated functions</a>
 and isolated objects. If so, then the isolated bit of values resulting from them
 is set in the same way as if <code>isolated</code> qualifiers had been
-explicitly specified.
+explicitly specified. The analysis should not infer a function or method to be
+<code>isolated</code> if that would be inconsistent with an annotion supported
+by the implementation that provides control over which thread is used for a strand
+created for named-worker-decl or start-action.
 </p>
 <p>
 This inference is purely an optimization to improve service concurrency and is
@@ -10801,6 +10819,9 @@ more than one basic type..</p>
 <section>
 <h3>Summary of changes from 2021R2 to 2022R3</h3>
 <ol>
+<li>The <code>isolated</code> feature can now be used to identify cases where
+strands created by <code>start</code> and named worker can be run safely on
+separate threads.</li>
 <li>The variable declaration in an <code>on fail</code> clause is now
 optional.</li>
 </ol>
