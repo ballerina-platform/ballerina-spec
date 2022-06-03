@@ -99,6 +99,7 @@ class NumbersGenerator {
 function errorFunction() {
     NumbersGenerator numbersGenerator = new;
     stream<int, error?> numberStream = new stream<int, error?>(numbersGenerator); // @error invalid stream constructor. expected a subtype of 'object { public isolated function next() returns (record {| int value; |}|error)?; }', but found 'NumbersGenerator'
+    stream<int, error?> numberStreamI = new (numbersGenerator); // @error invalid stream constructor. expected a subtype of 'object { public isolated function next() returns (record {| int value; |}|error)?; }', but found 'NumbersGenerator'
 }
 
 Test-Case: output
@@ -134,6 +135,11 @@ function init() {
     io:println(a); // @output 1
     int|error? b = getRecordValue(numberStream.next());
     io:println(b); // @output 2
+    stream<int, error?> numberStreamI = new (numbersGenerator);
+    int|error? ai = getRecordValue(numberStreamI.next());
+    io:println(ai); // @output 3
+    int|error? bi = getRecordValue(numberStreamI.next());
+    io:println(bi); // @output 4
 }
 
 Test-Case: output
@@ -314,8 +320,3 @@ function errorFunction() {
     IntRecord|ErrorB? a = numberStream.next(); // @error incompatible types: expected '(IntRecord|ErrorB)?', found '(record {| int value; |}|ErrorA)?'
     ErrorB? closed = numberStream.close(); // @error incompatible types: expected 'ErrorB?', found 'ErrorA?'
 }
-
-
-
-
-
