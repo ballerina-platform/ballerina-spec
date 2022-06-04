@@ -6543,7 +6543,8 @@ comprehensions; future versions will provided richer functionality.
 
 <pre class="grammar">query-expr := [query-construct-type] query-pipeline select-clause [on-conflict-clause]
 query-construct-type :=
-  <code>table</code> key-specifier
+  <code>map</code>
+  | <code>table</code> key-specifier
   | <code>stream</code>
 query-pipeline := from-clause intermediate-clause*
 intermediate-clause :=
@@ -6575,8 +6576,11 @@ result must be one of the following basic types:
 </p>
 <ul>
 <li>list - the constructed list has a member for each emitted value; every
-emitted value must beloing to type T, where T[] is the type of the constructed
+emitted value must belong to type T, where T[] is the type of the constructed
 value</li>
+<li>map - the constructed mapping has a member for each emitted value; every
+emitted value must belong to type [string, T], where map&lt;T&gt; is the type
+of the constructed value </li>
 <li>table - the constructed table has a member for each emitted value; every
 emitted value must belong to type T, where table&lt;T&gt; is the type of the
 constructed value</li>
@@ -6602,6 +6606,11 @@ within the query-expr completely abruptly with a panic, then the next operation
 will complete abruptly with a panic.
 </p>
 <p>
+A query-expr that constructs a map must start with the <code>map</code> keyword.
+An emitted value <code>[<var>k</var>, <var>v</var>]</code> results in adding a
+field with key <code><var>k</var></code> and value <code><var>v</var></code>.
+</p>
+<p>
 If the query-expr starts with <code>table</code>, then the query-expr will
 construct a table; the key-specifier specifies the key sequence of the
 constructed table in the same way as with a table-constructor-expr. Otherwise,
@@ -6612,7 +6621,7 @@ it is a compile-time error if the static type of this expression is not a
 subtype of one of the basic types that a query expression can construct.
 </p>
 <p>
-When during the construction of a table, an emitted value is added as a new
+When during the construction of a map or table, an emitted value is added as a new
 member, it replaces any existing member with the same key value; when a new
 member replaces an existing member, it will have the same position in the order
 of members as the existing member. This behavior may be controlled by an
@@ -6890,9 +6899,9 @@ on-conflict-clause := <code>on</code> <code>conflict</code> expression
 </pre>
 <p>
 An <code>on conflict</code> clause is allowed only for a query expression that
-constructs a table with a key sequence. The expression is evaluated when the
+constructs a map or table with a key sequence. The expression is evaluated when the
 <code>select</code> clause emits a value that conflicts with a previous value,
-in the sense that both values have the same key value in the table. The
+in the sense that both values have the same key value in the map or table. The
 expression is evaluated with the same frame in scope as the select clause that
 emitted the value that conflicts with the previous value. The static type of the
 expression must be a subtype of <code>error?</code>. If the result of evaluating
@@ -10830,6 +10839,7 @@ a separate thread.</li>
 optional.</li>
 <li>Query expressions producing xml values will now work properly when used as
 interpolated expressions in XML templates.</li>
+<li>Query expressions may be used to construct maps.</li>
 </ol>
 </section>
 
