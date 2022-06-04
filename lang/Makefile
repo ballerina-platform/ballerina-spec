@@ -14,8 +14,8 @@ DISTDIR=ballerina-lang-spec-$(VERSION)
 ZIPFILE=$(DISTDIR).zip
 INCFILES= \
   lib/array.bal lib/boolean.bal lib/decimal.bal lib/error.bal lib/float.bal \
-  lib/future.bal lib/int.bal lib/map.bal lib/object.bal lib/stream.bal \
-  lib/string.bal lib/table.bal lib/typedesc.bal lib/xml.bal \
+  lib/function.bal lib/future.bal lib/int.bal lib/map.bal lib/object.bal \
+  lib/stream.bal lib/string.bal lib/table.bal lib/typedesc.bal lib/xml.bal \
   lib/runtime.bal lib/transaction.bal lib/value.bal
 COPYFILES= \
   style/ballerina-language-specification.css \
