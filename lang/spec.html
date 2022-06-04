@@ -4429,12 +4429,16 @@ value at which the value of the expression is to be inserted.</li>
 <li>The static type of an expression occurring in an attribute value must be a
 simple type and must not be nil. The static type type of an expression occurring
 in content can either be xml or a non-nil simple type.</li>
-<li>When the xml-template-expr is evaluated, the interpolated expressions are evaluated
-in the order in which they occur in the <code>BacktickString</code>, and
-converted to strings if necessary. A new copy is made of the xml value and the
-result of the expression evaluations are inserted into the corresponding
+<li>When the xml-template-expr is evaluated, the interpolated expressions are
+evaluated in the order in which they occur in the <code>BacktickString</code>,
+and converted to strings if necessary. A new copy is made of the xml value and
+the result of the expression evaluations are inserted into the corresponding
 position in the newly created xml value. This xml value is the result of the
-evaluation.</li>
+evaluation. The contextually expected type for an interpolated expression that
+occurs within an Attribute Information Item is string, and otherwise is xml;
+this ensures that a query expr will work as expected. Note that if the static
+type is not a subtype of the contextually expected type, it is not an error:
+rather the value will be converted to a string.</li>
 </ol>
 <p>
 An xml-template-expr occurring within a const-expr will construct an xml value
@@ -10824,6 +10828,8 @@ strands created by <code>start</code> and named worker can be run safely on
 separate threads.</li>
 <li>The variable declaration in an <code>on fail</code> clause is now
 optional.</li>
+<li>Query expressions producing xml values will now work properly when used as
+interpolated expressions in XML templates.</li>
 </ol>
 </section>
 
