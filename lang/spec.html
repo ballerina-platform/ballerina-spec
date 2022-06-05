@@ -2157,6 +2157,7 @@ object-member-descriptor :=
    object-field-descriptor
    | method-decl
    | remote-method-decl
+   | resource-method-decl
    | object-type-inclusion
 </pre>
 
@@ -2196,13 +2197,7 @@ is not allowed in conjunction with <code>public</code>.
 
 <p>
 Network interaction objects provide two additional features: remote methods and
-resources. Remote methods are supported by both client and service objects. The
-remote methods of an object are in a separate symbol space from the other
-methods of the object. Resources are supported only by service objects. Object
-type descriptors do not provide a way to describe the resources of a service
-object: whether a service object belongs to an object type is not affected by
-the service object's resources. Resources are described in detail in the <a
-href="#resources">section</a> on object constructors.
+resources.
 </p>
 
 </section>
@@ -2288,6 +2283,149 @@ The return type of the remote method of a client object must not be
 <code>never</code>. A remote method of a service object is invoked by a listener
 object provided by a library module; Ballerina does not yet define a mechanism
 to allow such a library module to be implemented completely in Ballerina.
+</p>
+
+</section>
+
+<section>
+<h5>Resources</h5>
+
+<pre
+class="grammar">resource-method-decl :=
+   metadata resource-method-quals
+   <code>function</code> resource-method-name resource-path function-signature <code>;</code>
+resource-method-quals :=
+   resource-qual function-quals
+   | isolated-qual [transactional-qual] resource-qual
+   | transactional-qual [isolated-qual] resource-qual
+   | isolated-qual resource-qual transactional-qual
+   | transactional-qual resource-qual isolated-qual
+resource-qual := <code>resource</code>
+resource-method-name := identifier
+resource-path :=
+   dot-resource-path
+   | resource-path-segment (<code>/</code> resource-path-segment)* [<code>/</code> resource-path-rest-param]
+   | resource-path-rest-param
+dot-resource-path := <code>.</code>
+resource-path-segment := resource-path-segment-name | resource-path-segment-param
+resource-path-segment-name := identifier
+resource-path-segment-param := <code>[</code>[annots] type-descriptor [param-name]<code>]</code>
+resource-path-rest-param := <code>[</code>[annots] type-descriptor <code>...</code> [param-name]<code>]</code>
+</pre>
+
+<p>
+In addition to remote methods, a service object can use <em>resources</em> to
+support network interaction. Resources support a more data-oriented style of
+network interaction, which complements the RPC style supported by remote
+methods. A service object's resources are arranged in a tree. Each resource
+exposes one or more named methods; by convention the method name
+<code>get</code> is used for retrieving the resource. A listener thus identifies
+a resource method to be called using the combination of a hierarchical path,
+which identifies the resource, and the resource method name. A resource method
+can also specify that a segment of the path provided by the listener should be
+treated as a parameter. A resource method can only be invoked by a listener
+object.
+</p>
+<p>
+The <code>resource-path</code>
+specifies the node in the service object's resource tree to which the method is
+attached and the <code>resource-method-name</code> specifies the method name. It
+is an error to have two <code>resource-method-defn</code>s that both have the
+same name and have a path that refers to the same node. A
+<code>dot-resource-path</code> specifies the root of the service object's
+resource tree. In a service object's resource tree, each edge from a parent node
+to a child node has a label, which uniquely identifies the child relative to its
+siblings. A label is either a string or one of two special values that indicate
+that the corresponding path segment should be treated as a parameter. It is an
+error for a parent node to have more than one edge to a child node labelled with
+one of the two special values. A <code>resource-path-segment-name</code>
+specifies a label that is a string. The two special label values come from a
+<code>resource-path-segment-param</code> and a
+<code>resource-path-rest-param</code> respectively. A parameter in a
+<code>resource-path-segment-param</code> will be bound to a value representing a
+single path segment; a parameter in a <code>resource-path-rest-param</code> will
+be bound to a list representing zero or more path segments, with each member
+representing a single path segment. The type of a path segment depends on the
+listener, but the listener must be able to convert it into a string. For
+example, in HTTP a path segment is natively a sequence of bytes, and an HTTP
+listener could convert it into a string by decoding with UTF-8. It also depends
+on the listener which types other than string it is able to convert a path
+segment to.
+</p>
+<p>
+The return type of a resource method must not allow values belonging to the
+function basic type. A resource method with a name of <code>get</code> that can
+return a service object represents a subservice. It is subject to the following
+restrictions:
+</p>
+<ul>
+<li>the return type must not allow anything other that service
+objects and errors;</li>
+<li>the resource path must not end with a <code>resource-path-rest-param</code>;</li>
+<li>the method's node must not have any child nodes.</li>
+</ul>
+<p>
+The semantics of hierarchical resources are defined by a lookup function, which
+takes four parameters:
+</p>
+<ul>
+<li><var>m</var> is the name of the method;</li>
+<li><var>p</var> is the resource path;</li>
+<li><var>r</var> refers to a node in the resource tree of a service object;</li>
+<li><var>v</var> is the list path segments bound so far.</li>
+</ul>
+<p>
+It returns an error or a tuple [<var>r</var>, <var>v</var>], where
+</p>
+<ul>
+<li><var>r</var> is a node in the resource tree with an m method, which is the
+method to be called;</li>
+<li><var>v</var> is a list of path segments to be bound to the method’s variable
+resource path parameters.</li>
+</ul>
+<p>
+The function lookup(<var>m</var>, <var>p</var>, <var>r</var>, <var>v</var>) is
+defined as follows:
+</p>
+<ol>
+<li>If <var>r</var> has a <code>get</code> method that can return a service
+object, then call the <code>get</code> method of <var>r</var> using <var>v</var>
+to bind the path parameters; if the result is an error, then return that error;
+otherwise, the result must be a service object. Let <var>r</var>' be the root of
+its resource tree. Return lookup(<var>m</var>, <var>p</var>, <var>r</var>',
+[]).</li>
+<li>If <var>p</var> is empty: 
+<ol>
+<li>if <var>r</var> has a method <var>m</var>, then return
+[<var>r</var>,<var>v</var>];</li>
+<li>otherwise, if <var>r</var> has a child labelled as repeated variable path
+segment and that child has a method <var>m</var>, then let <var>r</var>' be
+child with that label and return [<var>r</var>',<var>v</var>];</li>
+<li>otherwise, return an error.</li> 
+</ol>
+</li>
+<li>Let the first segment in <var>p</var> be <var>s</var> and let <var>p</var>'
+be a list of the 2nd and subsequent members of <var>p</var>.</li>
+<li>If <var>r</var> has a child labelled with the string that results from
+converting <var>s</var> to a string, then let <var>r</var>' be the child with
+that label. Return lookup(<var>m</var>, <var>p</var>', <var>r</var>',
+<var>v</var>).</li>
+<li>If <var>r</var> has an edge to a child labelled as a single path segment
+parameter, then let <var>r</var>' be that child and let <var>v</var>' be the
+result of adding <var>s</var> to the end of <var>v</var>. Return
+lookup(<var>m</var>, <var>p</var>', <var>r</var>', <var>v</var>').</li>
+<li>If <var>r</var> has an edge to a child labelled as a rest parameter and that
+child has a method <var>m</var>, then let <var>r</var>' be that child, and let
+<var>v</var>' be the result of concatenating <var>v</var> and <var>p</var>.
+Return [<var>r</var>',<var>v</var>'].</li>
+<li>Otherwise, return an error.</li>
+</ol>
+<p>
+The syntax allows only the last of a resource method's path parameters to be a
+rest parameter. When a list of path segments is bound to the path parameters of
+a resource method, one path segment is bound to each path parameter that is not
+a rest parameter and a list of the remaining path segments is bound to the rest
+parameter, if any.
 </p>
 
 </section>
@@ -4858,7 +4996,7 @@ private.
 </section>
 
 <section>
-<h5>Methods</h5>
+<h5>Methods and resources</h5>
 
 <pre
 class="grammar">method-defn :=
@@ -4882,6 +5020,18 @@ when an <code>object-network-qual</code> is present in the
 </p>
 
 <pre
+class="grammar">resource-method-defn :=
+   metadata resource-method-quals
+   <code>function</code> resource-method-name resource-path function-signature method-defn-body
+</pre>
+
+<p>
+A <code>resource-method-defn</code> defines a resource method. This is allowed only
+when an <code>object-network-qual</code> is present in the
+<code>object-constructor-expr</code>.
+</p>
+
+<pre
 class="grammar">method-defn-body := function-defn-body
 </pre>
 <p>
@@ -4898,152 +5048,6 @@ statement, except when <code>self</code> is part of a
 If <code>isolated-qual</code> is present, then the method has its isolated bit
 set and its <code>method-defn-body</code> must satisfy the requirements for an
 <a href="#isolated_functions">isolated function</a>.
-</p>
-
-</section>
-
-<section>
-<h5 id="resources">Resources</h5>
-
-<p>
-In addition to remote methods, a service object can use <em>resources</em> to
-support network interaction. Resources support a more data-oriented style of
-network interaction, which complements the RPC style supported by remote
-methods. A service object's resources are arranged in a tree. Each resource
-exposes one or more named methods; by convention the method name
-<code>get</code> is used for retrieving the resource. A listener thus identifies
-a resource method to be called using the combination of a hierarchical path,
-which identifies the resource, and the resource method name. A resource method
-can also specify that a segment of the path provided by the listener should be
-treated as a parameter. A resource method can only be invoked by a listener
-object.
-</p>
-
-<pre
-class="grammar">resource-method-defn :=
-   metadata resource-method-quals
-   <code>function</code> resource-method-name resource-path function-signature method-defn-body
-resource-method-quals :=
-   resource-qual function-quals
-   | isolated-qual [transactional-qual] resource-qual
-   | transactional-qual [isolated-qual] resource-qual
-   | isolated-qual resource-qual transactional-qual
-   | transactional-qual resource-qual isolated-qual
-resource-qual := <code>resource</code>
-resource-method-name := identifier
-resource-path :=
-   dot-resource-path
-   | resource-path-segment (<code>/</code> resource-path-segment)* [<code>/</code> resource-path-rest-param]
-   | resource-path-rest-param
-dot-resource-path := <code>.</code>
-resource-path-segment := resource-path-segment-name | resource-path-segment-param
-resource-path-segment-name := identifier
-resource-path-segment-param := <code>[</code>[annots] type-descriptor param-name<code>]</code>
-resource-path-rest-param := <code>[</code>[annots] type-descriptor <code>...</code> param-name<code>]</code>
-</pre>
-
-<p>
-A <code>resource-method-defn</code> defines a resource method. This is allowed
-only when an <code>object-network-qual</code> of <code>service</code> is present
-in the <code>object-constructor-expr</code>. The <code>resource-path</code>
-specifies the node in the service object's resource tree to which the method is
-attached and the <code>resource-method-name</code> specifies the method name. It
-is an error to have two <code>resource-method-defn</code>s that both have the
-same name and have a path that refers to the same node. A
-<code>dot-resource-path</code> specifies the root of the service object's
-resource tree. In a service object's resource tree, each edge from a parent node
-to a child node has a label, which uniquely identifies the child relative to its
-siblings. A label is either a string or one of two special values that indicate
-that the corresponding path segment should be treated as a parameter. It is an
-error for a parent node to have more than one edge to a child node labelled with
-one of the two special values. A <code>resource-path-segment-name</code>
-specifies a label that is a string. The two special label values come from a
-<code>resource-path-segment-param</code> and a
-<code>resource-path-rest-param</code> respectively. A parameter in a
-<code>resource-path-segment-param</code> will be bound to a value representing a
-single path segment; a parameter in a <code>resource-path-rest-param</code> will
-be bound to a list representing zero or more path segments, with each member
-representing a single path segment. The type of a path segment depends on the
-listener, but the listener must be able to convert it into a string. For
-example, in HTTP a path segment is natively a sequence of bytes, and an HTTP
-listener could convert it into a string by decoding with UTF-8. It also depends
-on the listener which types other than string it is able to convert a path
-segment to.
-</p>
-<p>
-The return type of a resource method must not allow values belonging to the
-function basic type. A resource method with a name of <code>get</code> that can
-return a service object represents a subservice. It is subject to the following
-restrictions:
-</p>
-<ul>
-<li>the return type must not allow anything other that service
-objects and errors;</li>
-<li>the resource path must not end with a <code>resource-path-rest-param</code>;</li>
-<li>the method's node must not have any child nodes.</li>
-</ul>
-<p>
-The semantics of hierarchical resources are defined by a lookup function, which
-takes four parameters:
-</p>
-<ul>
-<li><var>m</var> is the name of the method;</li>
-<li><var>p</var> is the resource path;</li>
-<li><var>r</var> refers to a node in the resource tree of a service object;</li>
-<li><var>v</var> is the list path segments bound so far.</li>
-</ul>
-<p>
-It returns an error or a tuple [<var>r</var>, <var>v</var>], where
-</p>
-<ul>
-<li><var>r</var> is a node in the resource tree with an m method, which is the
-method to be called;</li>
-<li><var>v</var> is a list of path segments to be bound to the method’s variable
-resource path parameters.</li>
-</ul>
-<p>
-The function lookup(<var>m</var>, <var>p</var>, <var>r</var>, <var>v</var>) is
-defined as follows:
-</p>
-<ol>
-<li>If <var>r</var> has a <code>get</code> method that can return a service
-object, then call the <code>get</code> method of <var>r</var> using <var>v</var>
-to bind the path parameters; if the result is an error, then return that error;
-otherwise, the result must be a service object. Let <var>r</var>' be the root of
-its resource tree. Return lookup(<var>m</var>, <var>p</var>, <var>r</var>',
-[]).</li>
-<li>If <var>p</var> is empty: 
-<ol>
-<li>if <var>r</var> has a method <var>m</var>, then return
-[<var>r</var>,<var>v</var>];</li>
-<li>otherwise, if <var>r</var> has a child labelled as repeated variable path
-segment and that child has a method <var>m</var>, then let <var>r</var>' be
-child with that label and return [<var>r</var>',<var>v</var>];</li>
-<li>otherwise, return an error.</li> 
-</ol>
-</li>
-<li>Let the first segment in <var>p</var> be <var>s</var> and let <var>p</var>'
-be a list of the 2nd and subsequent members of <var>p</var>.</li>
-<li>If <var>r</var> has a child labelled with the string that results from
-converting <var>s</var> to a string, then let <var>r</var>' be the child with
-that label. Return lookup(<var>m</var>, <var>p</var>', <var>r</var>',
-<var>v</var>).</li>
-<li>If <var>r</var> has an edge to a child labelled as a single path segment
-parameter, then let <var>r</var>' be that child and let <var>v</var>' be the
-result of adding <var>s</var> to the end of <var>v</var>. Return
-lookup(<var>m</var>, <var>p</var>', <var>r</var>', <var>v</var>').</li>
-<li>If <var>r</var> has an edge to a child labelled as a rest parameter and that
-child has a method <var>m</var>, then let <var>r</var>' be that child, and let
-<var>v</var>' be the result of concatenating <var>v</var> and <var>p</var>.
-Return [<var>r</var>',<var>v</var>'].</li>
-<li>Otherwise, return an error.</li>
-</ol>
-<p>
-The syntax allows only the last of a resource method's path parameters to be a
-rest parameter. When a list of path segments is bound to the path parameters of
-a resource method, one path segment is bound to each path parameter that is not
-a rest parameter and a list of the remaining path segments is bound to the rest
-parameter, if any.
 </p>
 
 </section>
