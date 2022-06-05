@@ -3798,7 +3798,7 @@ same identifier in the same symbol space also with block-scope.
 <h2 id="expressions">6. Expressions</h2>
 
 <pre
-class="grammar">expression := 
+class="grammar">expr-only := 
    literal
    | string-template-expr
    | xml-template-expr
@@ -3817,7 +3817,6 @@ class="grammar">expression :=
    | error-constructor-expr
    | anonymous-function-expr
    | let-expr
-   | type-cast-expr
    | typeof-expr
    | unary-logical-expr
    | nil-lifted-expr
@@ -3827,11 +3826,15 @@ class="grammar">expression :=
    | equality-expr
    | logical-expr
    | conditional-expr
+   | xml-navigate-expr
+   | transactional-expr
+
+expression :=
+   expr-only
+   | type-cast-expr
    | checking-expr
    | trap-expr
    | query-expr
-   | xml-navigate-expr
-   | transactional-expr
    | <code>(</code> expression <code>)</code>
 </pre>
 <p>
@@ -7077,15 +7080,20 @@ class="grammar">action :=
    | flush-action
    | client-remote-method-call-action
    | query-action
-   | type-cast-action
-   | checking-action
-   | trap-action
    | commit-action
+
+action-or-expr :=
+   expr-only
+   | action
+   | type-cast-action-or-expr
+   | checking-action-or-expr
+   | trap-action-or-expr
+   | query-action-or-expr
    | <code>(</code> action <code>)</code>
-action-or-expr := action | expression
-type-cast-action := <code>&lt;</code> type-cast-param <code>&gt;</code> action
-checking-action := checking-keyword action
-trap-action := <code>trap</code> action
+
+type-cast-action-or-expr := <code>&lt;</code> type-cast-param <code>&gt;</code> action-or-expr
+checking-action-or-expr := checking-keyword action-or-expr
+trap-action-or-expr := <code>trap</code> action-or-expr
 </pre>
 <p>
 Actions are an intermediate syntactic category between expressions and
@@ -7095,19 +7103,44 @@ part of a statement or nested inside other actions. This is because actions are
 shown in the sequence diagram in the graphical syntax.
 </p>
 <p>
-The syntax for actions is defined by the above grammar and precedence rules. The
-precedence rules are that a client-remote-method-call-action has higher
-precedence than a checking-action or a trap-action.
+As with the grammar for expression, the grammar for action-or-expr is ambiguous.
+The precedence for action-or-expr is the same as for expression, with the
+addition that the <code>-&gt;</code> operator used in a
+client-remote-method-call-action has the same precedence as the <code>.</code>
+operator used in a method-call-expr.
 </p>
 <p>
 An action is evaluated in the same way as an expression. Static typing for
 actions is the same as for expressions.
 </p>
 <p>
-A <code>type-cast-action</code>, <code>checking-action</code> or
-<code>trap-action</code> is evaluated in the same way as a
+A <code>type-cast-action-or-expr</code>, <code>checking-action-or-expr</code> or
+<code>trap-action-or-expr</code> is evaluated in the same way as a
 <code>type-cast-expr</code>, <code>checking-expr</code> or
 <code>trap-expr</code> respectively.
+</p>
+
+<pre
+class="grammar">query-action-or-expr :=
+   [query-construct-type] query-action-pipeline select-action-clause [on-conflict-clause]
+query-action-pipeline := from-action-clause intermediate-action-clause*
+intermediate-action-clause :=
+   from-action-clause
+   | let-action-clause
+   | where-clause
+   | join-clause
+   | order-by-clause
+   | limit-clause
+
+from-action-clause := <code>from</code> typed-binding-pattern <code>in</code> action-or-expr
+let-action-clause := <code>let</code> let-action-var-decl [<code>,</code> let-action-var-decl]*
+let-action-var-decl := [annots] typed-binding-pattern <code>=</code> action-or-expr
+select-action-clause := <code>select</code> action-or-expr
+</pre>
+<p>
+A <code>query-action-or-expr</code> is a <code>query-expr</code> in which
+certain subexpressions are allowed to be an <code>action-or-expr</code>. It is
+evaluated in the same way as a <code>query-expr</code>.
 </p>
 
 </section>
@@ -7380,6 +7413,7 @@ class="grammar">statement :=
    | compound-assignment-stmt
    | destructuring-assignment-stmt
    | call-stmt
+   | checking-stmt
    | if-else-stmt
    | regular-compound-stmt
    | continue-stmt
@@ -8002,7 +8036,7 @@ expression, except that it is used for a client object method with the
 <section>
 <h3>Query action</h3>
 <pre
-class="grammar">query-action := query-pipeline do-clause
+class="grammar">query-action := query-action-pipeline do-clause
 do-clause := <code>do</code> statement-block
 </pre>
 <p>
@@ -8644,17 +8678,25 @@ the static type of an action in an action-stmt is not nil.
 
 <pre
 class="grammar">call-stmt := call-expr <code>;</code>
-call-expr :=
-   function-call-expr
-   | method-call-expr
-   | checking-keyword call-expr
+call-expr := function-call-expr | method-call-expr
 </pre>
 <p>
 A call-stmt is executed by evaluating call-expr as an expression and discarding
-the resulting value, which must be nil. The static type of the call-expr in an
+the resulting value, which must be nil. The static type of the call-expr in a
 call-stmt must be either <code>()</code> or <code>never</code>. If it is
 <code>never</code>, then it is possible for the call-stmt to complete normally.
+</p>
+</section>
+<section>
+<h3>Checking statement</h3>
 
+<pre
+class="grammar">checking-stmt := checking-action-or-expr <code>;</code>
+</pre>
+<p>
+A checking-stmt is executed by evaluating checking-action-or-expr as an
+expression and discarding the resulting value, which must be nil. The static
+type of the checking-action-or-expr in a checking-stmt must be <code>()</code>.
 </p>
 </section>
 <section>
@@ -10864,6 +10906,10 @@ interpolated expressions in XML templates.</li>
 to allow for dynamically calling a function.</li>
 <li>An <code>onGracefulStop</code> function has been added to
 <code>lang.runtime</code>.</li>
+<li>The grammar now allows an action such as a remote method call to occur
+inside a query.</li>
+<li>A <code>check</code> expression is now allowed as a statement, provided that
+its type is nil.</li>
 </ol>
 </section>
 
