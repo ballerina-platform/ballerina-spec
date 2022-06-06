@@ -18,23 +18,13 @@ function errorFunction() {
 }
 
 Test-Case: output
-Description: Test type cast param containing annotations.
+Description: Test type cast param with a type containing annotations.
 Labels: annotation, annotation-decl, any, map-type, mapping-constructor-expr, string, type-cast-expr
 
 annotation map<string> myAnnot on type;
 
 function init() {
     any a = 5;
-
-    any b = <@myAnnot {name: "Ballerina"}>a;
-    io:println(b); // @output 5
-
-    any c = <@untainted>a;
-    io:println(c); // @output 5
-
-    any d = <@deprecated>a;
-    io:println(d); // @output 5
-
     int e = <@myAnnot {name: "Ballerina"} int>a;
     io:println(e); // @output 5
 
@@ -43,6 +33,24 @@ function init() {
 
     int g = <@deprecated int>a;
     io:println(g); // @output 5
+}
+
+Test-Case: output
+Description: Test type cast param containing only annotations.
+Labels: annotation, annotation-decl, any, map-type, mapping-constructor-expr, string, type-cast-expr
+
+annotation map<string> myAnnot on type;
+
+function init() {
+    any a = 5;
+    any b = <@myAnnot {name: "Ballerina"}>a;
+    io:println(b); // @output 5
+
+    any c = <@untainted>a;
+    io:println(c); // @output 5
+
+    any d = <@deprecated>a;
+    io:println(d); // @output 5
 }
 
 Test-Case: error
@@ -74,7 +82,7 @@ function errorFunction() {
 Test-Case: output
 Description: Test if the value v of the expression belongs to the type described by the type cast expression then the 
              result of the type cast expression is v using simple types.
-Labels: any, boolean, decimal, DecimalFloatingPointNumber, float, FloatingPointTypeSuffix, map-type, nil-type, string, 
+Labels: any, boolean, decimal, DecimalFloatingPointNumber, float, FloatingPointTypeSuffix, nil-type, null, 
         type-cast-expr, value:toBalString
 
 function init() {
@@ -208,7 +216,7 @@ function init() {
 Test-Case: output
 Description: Test if the value v of the expression belongs to the type described by the type cast expression then the 
              result of the type cast expression is v using list type.
-Labels: any, array-type, boolean, list-constructor-expr, module-type-defn, string, tuple-type-rest-descriptor, tuple-type, 
+Labels: any, array-type, boolean, list-constructor-expr, module-type-defn, string, tuple-rest-descriptor, tuple-type, 
         type-cast-expr, union-type
 
 type MyStringArr string[];
@@ -706,7 +714,12 @@ function init() {
     io:println(a1.next()["value"]); // @output 1
 
     stream a2 = <stream>a;
-    io:println(a2.next()["value"]); // @output 2
+    var a3 = a2.next();
+    if a3 is record {|int value;|} {
+        io:println(a3["value"]); // @output 2
+    } else {
+        io:println("This line should not be reached");
+    }
 
     var stringGenObj = object {
         string objectString = "hello";
@@ -767,7 +780,8 @@ function init() {
 Test-Case: output
 Description: Test if the value v of the expression belongs to the type described by the type cast expression then the 
              result of the type cast expression is v using optional type.
-Labels: any, module-type-defn, optional-type, singleton-type, string, type-cast-expr, union-type, value:toBalString
+Labels: any, module-type-defn, nil-type, optional-type, singleton-type, string, type-cast-expr, union-type, 
+        value:toBalString
 
 type MyType1 true?;
 
@@ -800,7 +814,8 @@ function init() {
 Test-Case: output
 Description: Test if the value v of the expression belongs to the type described by the type cast expression then the 
              result of the type cast expression is v using anydata, byte and json type.
-Labels: any, anydata, byte, json, string, type-cast-expr, union-type, xml
+Labels: any, array-type, anydata, byte, json, list-constructor-expr, map-type, record-type, string, type-cast-expr, 
+        union-type, xml
 
 function init() {
     any a = 5;
@@ -810,14 +825,39 @@ function init() {
     anydata|json b0 = 55;
     anydata b1 = <anydata>b0;
     io:println(b1); // @output 55
-    
+
     byte|json c = 4;
-    byte c1 = <byte> c;
+    byte c1 = <byte>c;
     io:println(c1); // @output 4
 
     xml|json d = 4;
-    json d2 = <(json)> d;
+    json d2 = <(json)>d;
     io:println(d2); // @output 4
+
+    int[3] e3 = [1, 2, 3];
+    json[3] e4 = <json[3]>e3;
+    io:println(e4); // @output [1,2,3]
+
+    record {| int field1; int[2] field2;|} f = {field1: 3, field2: [1, 2]};
+    map<json> f2 = <map<json>>f;
+    io:println(f2); // @output {"field1":3,"field2":[1,2]}
+}
+
+Test-Case: output
+Description: Test if the value v of the expression belongs to the type described by the type cast expression then the 
+             result of the type cast expression is v using by casting int variable length array to json fixed 
+             length array.
+Fail-Issue: ballerina-platform/ballerina-lang#36433
+Labels: array-type, json, list-constructor-expr, type-cast-expr
+
+function init() {
+    int[] e = [1, 2, 3];
+    json[3] e2 = <json[3]>e;
+    io:println(e2); // @output [1,2,3]
+}
+
+function printResult(any result) {
+    io:println(result);
 }
 
 Test-Case: output
@@ -874,6 +914,230 @@ function init() {
     decimal u = -9223372036854775809e300d;
     float v = <float>u;
     io:println(v); // @output -Infinity
+}
+
+Test-Case: output
+Description: Test numeric conversion of values by casting to a union in which every member belongs to a same 
+             basic numeric type.
+Labels: byte, decimal, DecimalFloatingPointNumber, float, FloatingPointTypeSuffix, int, multiplicative-expr, 
+        type-cast-expr, unary-minus
+        
+function init() {
+    float floatVar = 1;
+    decimal decimalVar = 1;
+
+    int:Unsigned8|int:Unsigned16 n = <int:Unsigned8|int:Unsigned16>floatVar;
+    io:println(n); // @output 1
+
+    int:Unsigned8|int:Unsigned16 p = <int:Unsigned8|int:Unsigned16>decimalVar;
+    io:println(p); // @output 1
+
+    int:Unsigned8|int:Unsigned32 q = <int:Unsigned8|int:Unsigned32>floatVar;
+    io:println(q); // @output 1
+
+    int:Unsigned8|int:Unsigned32 r = <int:Unsigned8|int:Unsigned32>decimalVar;
+    io:println(r); // @output 1
+
+    int:Unsigned8|int:Signed8 s = <int:Unsigned8|int:Signed8>floatVar;
+    io:println(s); // @output 1
+
+    int:Unsigned8|int:Signed8 t = <int:Unsigned8|int:Signed8>decimalVar;
+    io:println(t); // @output 1
+
+    int:Unsigned8|int:Signed16 u = <int:Unsigned8|int:Signed16>floatVar;
+    io:println(u); // @output 1
+
+    int:Unsigned8|int:Signed16 v = <int:Unsigned8|int:Signed16>decimalVar;
+    io:println(v); // @output 1
+
+    int:Unsigned8|int:Signed32 w = <int:Unsigned8|int:Signed32>floatVar;
+    io:println(w); // @output 1
+
+    int:Unsigned8|int:Signed32 x = <int:Unsigned8|int:Signed32>decimalVar;
+    io:println(x); // @output 1
+
+    int:Unsigned16|int:Unsigned32 y = <int:Unsigned16|int:Unsigned32>x;
+    io:println(y); // @output 1
+
+    int:Unsigned16|int:Unsigned32 z = <int:Unsigned16|int:Unsigned32>y;
+    io:println(z); // @output 1
+
+    int:Unsigned16|int:Signed8 a1 = <int:Unsigned16|int:Signed8>floatVar;
+    io:println(a1); // @output 1
+
+    int:Unsigned16|int:Signed8 b1 = <int:Unsigned16|int:Signed8>decimalVar;
+    io:println(b1); // @output 1
+
+    int:Unsigned16|int:Signed16 c1 = <int:Unsigned16|int:Signed16>floatVar;
+    io:println(c1); // @output 1
+
+    int:Unsigned16|int:Signed16 d1 = <int:Unsigned16|int:Signed16>decimalVar;
+    io:println(d1); // @output 1
+
+    int:Unsigned16|int:Signed32 e1 = <int:Unsigned16|int:Signed32>floatVar;
+    io:println(e1); // @output 1
+
+    int:Unsigned16|int:Signed32 f1 = <int:Unsigned16|int:Signed32>decimalVar;
+    io:println(f1); // @output 1
+
+    int:Unsigned32|int:Signed8 g1 = <int:Unsigned32|int:Signed8>floatVar;
+    io:println(g1); // @output 1
+
+    int:Unsigned32|int:Signed8 h1 = <int:Unsigned32|int:Signed8>decimalVar;
+    io:println(h1); // @output 1
+
+    int:Unsigned32|int:Signed16 i1 = <int:Unsigned32|int:Signed16>floatVar;
+    io:println(i1); // @output 1
+
+    int:Unsigned32|int:Signed16 j1 = <int:Unsigned32|int:Signed16>decimalVar;
+    io:println(j1); // @output 1
+
+    int:Unsigned32|int:Signed32 k1 = <int:Unsigned32|int:Signed32>floatVar;
+    io:println(k1); // @output 1
+
+    int:Unsigned32|int:Signed32 m1 = <int:Unsigned32|int:Signed32>decimalVar;
+    io:println(m1); // @output 1
+
+    int:Signed8|int:Signed16 i2 = <int:Signed8|int:Signed16>floatVar;
+    io:println(i2); // @output 1
+
+    int:Signed8|int:Signed16 j2 = <int:Signed8|int:Signed16>decimalVar;
+    io:println(j2); // @output 1
+
+    int:Signed8|int:Signed32 k2 = <int:Signed8|int:Signed32>floatVar;
+    io:println(k2); // @output 1
+
+    int:Signed8|int:Signed32 m2 = <int:Signed8|int:Signed32>decimalVar;
+    io:println(m2); // @output 1
+
+    int:Signed16|int:Signed32 k3 = <int:Signed16|int:Signed32>floatVar;
+    io:println(k3); // @output 1
+
+    int:Signed16|int:Signed32 m3 = <int:Signed16|int:Signed32>decimalVar;
+    io:println(m3); // @output 1
+
+    int|int a5 = <int|int>floatVar;
+    io:println(a5); // @output 1
+    int|int b5 = <int|int>decimalVar;
+    io:println(b5); // @output 1
+
+    byte|byte c5 = <byte|byte>floatVar;
+    io:println(c5); // @output 1
+    byte|byte d5 = <byte|byte>decimalVar;
+    io:println(d5); // @output 1
+
+    int:Unsigned8|int:Unsigned8 e5 = <int:Unsigned8|int:Unsigned8>floatVar;
+    io:println(e5); // @output 1
+    int:Unsigned8|int:Unsigned8 f5 = <int:Unsigned8|int:Unsigned8>decimalVar;
+    io:println(f5); // @output 1
+
+    int:Unsigned16|int:Unsigned16 g5 = <int:Unsigned16|int:Unsigned16>floatVar;
+    io:println(g5); // @output 1
+    int:Unsigned16|int:Unsigned16 h5 = <int:Unsigned16|int:Unsigned16>decimalVar;
+    io:println(h5); // @output 1
+
+    int:Unsigned32|int:Unsigned32 i5 = <int:Unsigned32|int:Unsigned32>floatVar;
+    io:println(i5); // @output 1
+    int:Unsigned32|int:Unsigned32 j5 = <int:Unsigned32|int:Unsigned32>decimalVar;
+    io:println(j5); // @output 1
+
+    int:Signed8|int:Signed8 k5 = <int:Signed8|int:Signed8>floatVar;
+    io:println(k5); // @output 1
+    int:Signed8|int:Signed8 m5 = <int:Signed8|int:Signed8>decimalVar;
+    io:println(m5); // @output 1
+
+    int:Signed16|int:Signed16 n5 = <int:Signed16|int:Signed16>floatVar;
+    io:println(n5); // @output 1
+    int:Signed16|int:Signed16 p5 = <int:Signed16|int:Signed16>decimalVar;
+    io:println(p5); // @output 1
+
+    int:Signed32|int:Signed32 q5 = <int:Signed32|int:Signed32>floatVar;
+    io:println(q5); // @output 1
+    int:Signed32|int:Signed32 r5 = <int:Signed32|int:Signed32>decimalVar;
+    io:println(r5); // @output 1
+}
+
+Test-Case: output
+Description: Test numeric conversion of values by casting to a union in which every member belongs to a same 
+             basic numeric type.
+Fail-Issue: ballerina-platform/ballerina-lang#36418
+Labels: byte, decimal, DecimalFloatingPointNumber, float, FloatingPointTypeSuffix, int, multiplicative-expr, 
+        type-cast-expr, unary-minus
+
+function init() {
+    float floatVar = 1;
+    decimal decimalVar = 1;
+
+    byte|int:Unsigned8 a = <byte|int:Unsigned8>floatVar;
+    io:println(a); // @output 1
+
+    byte|int:Unsigned8 b = <byte|int:Unsigned8>decimalVar;
+    io:println(b); // @output 1
+
+    byte|int:Unsigned16 c = <byte|int:Unsigned16>floatVar;
+    io:println(c); // @output 1
+
+    byte|int:Unsigned16 d = <byte|int:Unsigned16>decimalVar;
+    io:println(d); // @output 1
+
+    byte|int:Unsigned32 e = <byte|int:Unsigned32>floatVar;
+    io:println(e); // @output 1
+
+    byte|int:Unsigned32 f = <byte|int:Unsigned32>decimalVar;
+    io:println(f); // @output 1
+
+    byte|int:Signed8 g = <byte|int:Signed8>floatVar;
+    io:println(g); // @output 1
+
+    byte|int:Signed8 h = <byte|int:Signed8>decimalVar;
+    io:println(h); // @output 1
+
+    byte|int:Signed16 i = <byte|int:Signed16>floatVar;
+    io:println(i); // @output 1
+
+    byte|int:Signed16 j = <byte|int:Signed16>decimalVar;
+    io:println(j); // @output 1
+
+    byte|int:Signed32 k = <byte|int:Signed32>floatVar;
+    io:println(k); // @output 1
+
+    byte|int:Signed32 m = <byte|int:Signed32>decimalVar;
+    io:println(m); // @output 1
+
+    int|int:Unsigned8 a4 = <int|int:Unsigned8>floatVar;
+    io:println(a4); // @output 1
+
+    int|int:Unsigned8 b4 = <int|int:Unsigned8>decimalVar;
+    io:println(b4); // @output 1
+
+    int|int:Unsigned16 c4 = <int|int:Unsigned16>floatVar;
+    io:println(c4); // @output 1
+
+    int|int:Unsigned16 d4 = <int|int:Unsigned16>decimalVar;
+    io:println(d4); // @output 1
+
+    int|int:Unsigned32 e4 = <int|int:Unsigned32>floatVar;
+    io:println(e4); // @output 1
+
+    int|int:Unsigned32 f4 = <int|int:Unsigned32>decimalVar;
+    io:println(f4); // @output 1
+    int|int:Signed8 g4 = <int|int:Signed8>floatVar;
+    io:println(g4); // @output 1
+
+    int|int:Signed8 h4 = <int|int:Signed8>decimalVar;
+    io:println(h4); // @output 1
+
+    int|int:Signed16 i4 = <int|int:Signed16>floatVar;
+    io:println(i4); // @output 1
+
+    int|int:Signed16 j4 = <int|int:Signed16>decimalVar;
+    io:println(j4); // @output 1
+
+    int|int:Signed32 k4 = <int|int:Signed32>floatVar;
+    io:println(k4); // @output 1
+
+    int|int:Signed32 m4 = <int|int:Signed32>decimalVar;
+    io:println(m4); // @output 1
 }
 
 Test-Case: output
@@ -1177,7 +1441,7 @@ function errorFunction() {
 
 Test-Case: panic
 Description: Test panic when casting float infinity to int.
-Labels: float, int, type-cast-expr
+Labels: float, infinity, int, type-cast-expr
 
 function init() {
     float a = float:Infinity;
@@ -1186,16 +1450,7 @@ function init() {
 
 Test-Case: panic
 Description: Test panic when casting float NaN to int.
-Labels: float, int, type-cast-expr
-
-function init() {
-    float a = float:NaN;
-    int _ = <int>a; // @panic 'float' value 'NaN' cannot be converted to 'int'
-}
-
-Test-Case: panic
-Description: Test panic when casting float NaN to int.
-Labels: float, int, type-cast-expr
+Labels: float, int, nan, type-cast-expr
 
 function init() {
     float a = float:NaN;
@@ -1277,7 +1532,7 @@ function init() {
 Test-Case: panic
 Description: Test panic when casting float NaN to decimal
 Fail-Issue: ballerina-platform/ballerina-lang#33805
-Labels: decimal, float, type-cast-expr
+Labels: decimal, float, nan, type-cast-expr
 
 function init() {
     float a = float:NaN;
@@ -1287,7 +1542,7 @@ function init() {
 Test-Case: panic
 Description: Test panic when casting float Infinity to decimal
 Fail-Issue: ballerina-platform/ballerina-lang#33805
-Labels: decimal, float, type-cast-expr
+Labels: decimal, float, infinity, type-cast-expr
 
 function init() {
     float a = float:Infinity;
@@ -1307,7 +1562,7 @@ function init() {
 Test-Case: panic
 Description: Test panic when value is not belonging to the type described by the type desc and numeric convert is not 
              applicable by casting string to int.
-Labels: any, int, type-cast-expr
+Labels: any, int, string, type-cast-expr
 
 function init() {
     any c = "43";
@@ -1568,9 +1823,33 @@ function errorFunction() {
     stream<string> _ = <stream<string>>streamName; // @error 'stream<int>' cannot be cast to 'stream<string>'
 }
 
+Test-Case: output
+Description: Test static type of the type cast expression is the intersection of type described by the type descriptor 
+             and TE' where TE' is static type of the expression with its numeric shapes transformed to take account of 
+             the possibility of the numeric conversion.
+Fail-Issue: ballerina-platform/ballerina-lang#24559
+Labels: any, anydata, boolean, DecimalFloatingPointNumber, float, json, type-cast-expr
+
+function init() {
+    boolean a = true;
+    boolean b = <json>a;
+    io:println(b); // @output true
+
+    int c = 5;
+    int d = <json>c;
+    io:println(d); // @output 5
+
+    float e = 5.3;
+    float f = <any>e;
+    io:println(f); // @output 5.3
+
+    float g = <anydata>e;
+    io:println(g); // @output 5.3
+}
+
 Test-Case: error
 Description: Test error when attempting to use a type cast to cast away an error.
-Labels: error, module-type-defn, string, type-cast-expr, union-type
+Labels: error-type, module-type-defn, string, type-cast-expr, union-type
 
 type MyError error;
 
@@ -1593,7 +1872,7 @@ function getString() returns error|string {
 Test-Case: output
 Description: Test if static type of expression contains error, then the intersection of T and error must 
              also be non-empty.
-Labels: error, error-constructor-expr, error-type-parameter, field-access-expr, method-call-expr, module-type-defn, 
+Labels: error-type, error-constructor-expr, error-type-parameter, field-access-expr, method-call-expr, module-type-defn, 
         record-type, string, type-cast-expr, union-type
 
 type MyError error<record {|int severity;|}>;
@@ -1614,7 +1893,8 @@ Test-Case: output
 Description: Test the contextually expected type for expression is the intersection of the contextually expected type 
              of the type-cast-expr and the type described by the type-descriptor
 Labels: any, array-type, byte, decimal, DecimalFloatingPointNumber, float, mapping-constructor-expr, 
-        record-rest-descriptor, record-type, record-type-readonly-field, string, tuple-type, type-cast-expr, union-type
+        record-rest-descriptor, record-type, record-type-readonly-field, string, tuple-type, type-cast-expr, union-type,
+        value:toBalString
 
 function init() {
     record {|int a;string...; |} a = <record {|int a;|}>{a: 5};
@@ -1695,4 +1975,14 @@ function init() {
     ];
     table<record {|int a;|}> e = <readonly>e1;
     io:println(typeof e); // @output typedesc [{"a":54}]
+}
+
+Test-Case: panic
+Description: Test cast to readonly can be used to verify that the value resulting from the evaluation of expression 
+             has its read-only bit on via runtime panic. 
+Labels: array-type, list-constructor-expr, readonly-type, type-cast-expr
+        
+function init() {
+    int[] a1 = [1, 2];
+    int[] a = <readonly>a1; // @panic `a1` is not readonly
 }
