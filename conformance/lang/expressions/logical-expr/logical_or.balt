@@ -1,0 +1,708 @@
+Test-Case: error
+Description: Test static type of expression in logical expression via invalid types using literals.
+Labels: logical-expr, list-constructor-expr, nil-literal, float
+
+function errorFunction() {
+    boolean _ = true || (); // @error static type of each expression must be a subtype of boolean
+    boolean _ = () || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = () || (); // @error static type of each expression must be a subtype of boolean
+
+    boolean _ = true || 12; // @error static type of each expression must be a subtype of boolean
+    boolean _ = 12 || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = 12 || 13; // @error static type of each expression must be a subtype of boolean
+
+    boolean _ = true || "text"; // @error static type of each expression must be a subtype of boolean
+    boolean _ = "text" || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = "text" || "text"; // @error static type of each expression must be a subtype of boolean
+
+    boolean _ = true || 12.4; // @error static type of each expression must be a subtype of boolean
+    boolean _ = 0xb34.3 || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = 0xb34.3 || 23.4; // @error static type of each expression must be a subtype of boolean
+
+    boolean _ = true || [true,1]; // @error static type of each expression must be a subtype of boolean
+    boolean _ = [true,1] || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = [true,1] || [true,1]; // @error static type of each expression must be a subtype of boolean
+
+    boolean _ = true || [true,false]; // @error static type of each expression must be a subtype of boolean
+    boolean _ = [true,true] || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = [true,false] || [true,true]; // @error static type of each expression must be a subtype of boolean
+}
+
+Test-Case: error
+Description: Test static type of expression in logical expression via invalid types using literal unions.
+Labels: logical-expr, union-type, nil-type, anydata
+
+function errorFunction() {
+    boolean|int a = true;
+    boolean|() b = true;
+    anydata|boolean c = true;
+
+    boolean _ = true || a; // @error static type of each expression must be a subtype of boolean
+    boolean _ = a || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = a || a; // @error static type of each expression must be a subtype of boolean
+
+    boolean _ = true || b; // @error static type of each expression must be a subtype of boolean
+    boolean _ = b || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = b || b; // @error static type of each expression must be a subtype of boolean
+
+    boolean _ = true || c; // @error static type of each expression must be a subtype of boolean
+    boolean _ = c || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = c || c; // @error static type of each expression must be a subtype of boolean
+}
+
+Test-Case: error
+Description: Test static type of expression in logical expression via invalid types using user defined types.
+Labels: logical-expr, union-type, list-constructor-expr, array-type, module-type-defn
+
+type B true|3;
+type C true|false;
+type D boolean[];
+type E [true, false];
+
+function errorFunction() {
+    B a = true;
+    C b = true;
+    D c = [true];
+    E d = [true, false];
+
+    boolean _ = true || a; // @error static type of each expression must be a subtype of boolean
+    boolean _ = a || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = a || a; // @error static type of each expression must be a subtype of boolean
+
+    boolean _ = true || b; // @error static type of each expression must be a subtype of boolean
+    boolean _ = b || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = b || b; // @error static type of each expression must be a subtype of boolean
+
+    boolean _ = true || c; // @error static type of each expression must be a subtype of boolean
+    boolean _ = c || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = c || c; // @error static type of each expression must be a subtype of boolean
+
+    boolean _ = true || d; // @error static type of each expression must be a subtype of boolean
+    boolean _ = d || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = d || d; // @error static type of each expression must be a subtype of boolean
+}
+
+Test-Case: error
+Description: Test static type of expression in logical expression via invalid types using string template expression.
+Labels: logical-expr, string-template-expr, string
+
+function errorFunction() {
+    string isTrue = "true";
+    boolean _ = true || string `test ${isTrue}`; // @error static type of each expression must be a subtype of boolean
+    boolean _ = string `test ${isTrue}` || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = string `test ${isTrue}` || string `test ${isTrue}`; // @error static type of each expression must be a subtype of boolean
+}
+
+Test-Case: error
+Description: Test static type of expression in logical expression via invalid types using xml template expression.
+Labels: logical-expr, xml-template-expr
+
+function errorFunction() {
+    boolean _ = true || xml `false`; // @error static type of each expression must be a subtype of boolean
+    boolean _ = xml `true` || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = xml `true` || xml `false`; // @error static type of each expression must be a subtype of boolean
+}
+
+Test-Case: error
+Description: Test static type of expression in logical expression via invalid types using raw template expression.
+Labels: logical-expr, raw-template-expr, string
+
+function errorFunction() {
+    string a = "true";
+    string b = "false";
+    boolean _ = true || `rawTemplate ${a}`; // @error static type of each expression must be a subtype of boolean
+    boolean _ = `rawTemplate ${b}` || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = `rawTemplate ${b}` || `rawTemplate ${a}`; // @error static type of each expression must be a subtype of boolean
+}
+
+Test-Case: error
+Description: Test static type of expression in logical expression via invalid types using structural constructor expression.
+Labels: logical-expr, list-constructor-expr
+
+function errorFunction() {
+    boolean _ = true || [1, 2, 3]; // @error static type of each expression must be a subtype of boolean
+    boolean _ = [1, 2, 3] || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = [1, 2, 3] || [1, 7, 3]; // @error static type of each expression must be a subtype of boolean
+}
+
+Test-Case: error
+Description: Test static type of expression in logical expression via invalid types using object constructor expression.
+Labels: logical-expr, object-constructor-expr
+
+function errorFunction() {
+    boolean _ = true || object Person {int a = 20; public function init() {self.a = 24;}; // @error static type of each expression must be a subtype of boolean
+    boolean _ = object Person {int a = 20; public function init() {self.a = 24;} || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = object Person {int a = 20; public function init() {self.a = 24;} || object Person {int a = 30; public function init() {self.a = 34;}; // @error static type of each expression must be a subtype of boolean
+}
+
+Test-Case: error
+Description: Test static type of expression in logical expression via invalid types using new expression.
+Labels: logical-expr, new-expr, module-class-defn
+
+class Person {
+    int a = 0;
+
+    function init() {
+        self.a = 4;
+    }
+}
+
+function errorFunction() {
+    boolean _ = true || new Person(); // @error static type of each expression must be a subtype of boolean
+    boolean _ = new Person() || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = new Person() || new Person(); // @error static type of each expression must be a subtype of boolean
+}
+
+Test-Case: error
+Description: Test static type of expression in logical expression via invalid types using variable reference expression.
+Labels: logical-expr, variable-reference-expr
+
+function errorFunction() {
+    int b = 3;
+    boolean _ = true || b; // @error static type of each expression must be a subtype of boolean
+    boolean _ = b || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = b || b; // @error static type of each expression must be a subtype of boolean
+}
+
+Test-Case: error
+Description: Test static type of expression in logical expression via invalid types using field access expression.
+Labels: logical-expr, field-access-expr, module-class-defn, new-expr
+
+class Person {
+    int a = 0;
+
+    function init() {
+        self.a = 4;
+    }
+}
+
+function errorFunction() {
+    Person newPerson = new Person();
+    boolean _ = true || newPerson.a; // @error static type of each expression must be a subtype of boolean
+    boolean _ = newPerson.a || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = newPerson.a || newPerson.a; // @error static type of each expression must be a subtype of boolean
+}
+
+Test-Case: error
+Description: Test static type of expression in logical expression via invalid types using optional field access expression.
+Labels: logical-expr, optional-field-access-expr, record-type
+
+type People record {|
+    string fname = "N/A";
+    string lname?;
+|};
+
+function errorFunction() {
+    People newPerson = {};
+    boolean _ = true || newPerson?.lname; // @error static type of each expression must be a subtype of boolean
+    boolean _ = newPerson?.lname || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = newPerson?.lname || newPerson?.lname; // @error static type of each expression must be a subtype of boolean
+}
+
+Test-Case: error
+Description: Test static type of expression in logical expression via invalid types using xml attribute access expression.
+Labels: logical-expr, xml-required-attribute-access-expr, xml, xml-template-expr
+
+function errorFunction() {
+    xml x = xml `<root attr="attr-val"><ele></ele></root>`;
+    boolean _ = true || x.attr; // @error static type of each expression must be a subtype of boolean
+    boolean _ = x.attr || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = x.attr || x.attr; // @error static type of each expression must be a subtype of boolean
+}
+
+Test-Case: error
+Description: Test static type of expression in logical expression via invalid types using annotation access expr expression.
+Labels: logical-expr, annot-access-expr, record-type, annotation-decl, string, any, typeof-expr
+
+public annotation Annot v1 on type, class;
+
+type Annot record {
+    string foo;
+    int bar?;
+};
+
+@v1 {
+    foo: "text",
+    bar: 1
+}
+
+public type A1 record {
+    string name;
+};
+
+A1 a = { name: "Anne" };
+
+function errorFunction() {
+    typedesc<any> t = typeof a;
+
+    boolean _ = true || t.@v1; // @error static type of each expression must be a subtype of boolean
+    boolean _ = t.@v1 || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = t.@v1 || t.@v1; // @error static type of each expression must be a subtype of boolean
+}
+
+Test-Case: error
+Description: Test static type of expression in logical expression via invalid types using member access expression.
+Labels: logical-expr, member-access-expr, list-constructor-expr, array-type
+
+function errorFunction() {
+    int[] x = [1,2,3];
+    boolean _ = true || x[0]; // @error static type of each expression must be a subtype of boolean
+    boolean _ = x[0] || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = x[0] || x[0]; // @error static type of each expression must be a subtype of boolean
+}
+
+Test-Case: error
+Description: Test static type of expression in logical expression via invalid types using function call expression.
+Labels: logical-expr, function-call-expr
+
+function errorFunction() {
+    boolean _ = true || getNum(12); // @error static type of each expression must be a subtype of boolean
+    boolean _ = getNum(12) || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = getNum(12) || getNum(12); // @error static type of each expression must be a subtype of boolean
+}
+
+function getNum(int x) returns int {
+    return x;
+}
+
+Test-Case: error
+Description: Test static type of expression in logical expression via invalid types using method call expression.
+Labels: logical-expr, value:toBalString
+
+function errorFunction() {
+    boolean _ = true || 23.toBalString(); // @error static type of each expression must be a subtype of boolean
+    boolean _ = 23.toBalString() || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = 23.toBalString() || 23.toBalString(); // @error static type of each expression must be a subtype of boolean
+}
+
+Test-Case: error
+Description: Test static type of expression in logical expression via invalid types using error constructor expression.
+Labels: logical-expr, error-constructor-expr
+
+function errorFunction() {
+    boolean _ = true || error("Message"); // @error static type of each expression must be a subtype of boolean
+    boolean _ = error("Message") || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = error("Message") || error("Message"); // @error static type of each expression must be a subtype of boolean
+}
+
+Test-Case: error
+Description: Test static type of expression in logical expression via invalid types using anonymous function expression.
+Labels: logical-expr, explicit-anonymous-function-expr, string, additive-expr
+
+function errorFunction() {
+    boolean _ = true || function (string x, string y) returns string {return x + y;}; // @error static type of each expression must be a subtype of boolean
+    boolean _ = function (string x, string y) returns string {return x + y;} || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = function (string x, string y) returns string {return x + y;} || function (string x, string y) returns string {return x + y;}; // @error static type of each expression must be a subtype of boolean
+}
+
+Test-Case: error
+Description: Test static type of expression in logical expression via invalid types using type cast expression.
+Labels: logical-expr, type-cast-expr, float
+
+function errorFunction() {
+    boolean _ = true || <float>12; // @error static type of each expression must be a subtype of boolean
+    boolean _ = <float>12 || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = <float>12 || <float>12; // @error static type of each expression must be a subtype of boolean
+}
+
+Test-Case: error
+Description: Test static type of expression in logical expression via invalid types using typeof expression.
+Labels: logical-expr, typeof-expr
+
+function errorFunction() {
+    boolean _ = true || typeof 12; // @error static type of each expression must be a subtype of boolean
+    boolean _ = typeof 12 || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = typeof 12 || typeof 12; // @error static type of each expression must be a subtype of boolean
+}
+
+Test-Case: error
+Description: Test static type of expression in logical expression via invalid types using typeof expression.
+Labels: logical-expr, typeof-expr
+
+function errorFunction() {
+    boolean _ = true || typeof true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = typeof true || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = typeof false || typeof true; // @error static type of each expression must be a subtype of boolean
+}
+
+Test-Case: error
+Description: Test static type of expression in logical expression via invalid types using unary expression.
+Labels: logical-expr, unary-complement, unary-minus, unary-plus
+
+function errorFunction() {
+    boolean _ = true || +2; // @error static type of each expression must be a subtype of boolean
+    boolean _ = -2 || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = ~2 || !true; // @error static type of each expression must be a subtype of boolean
+}
+
+Test-Case: error
+Description: Test static type of expression in logical expression via invalid types using multiplicative expression.
+Labels: logical-expr, multiplicative-expr
+
+function errorFunction() {
+    boolean _ = true || 1 * 2; // @error static type of each expression must be a subtype of boolean
+    boolean _ = 1 / 2 || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = 1 % 2 || 1 * 2; // @error static type of each expression must be a subtype of boolean
+}
+
+Test-Case: error
+Description: Test static type of expression in logical expression via invalid types using additive expression.
+Labels: logical-expr, additive-expr
+
+function errorFunction() {
+    boolean _ = true || 1 + 2; // @error static type of each expression must be a subtype of boolean
+    boolean _ = 1 - 2 || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = 1 + 2 || 1 - 2; // @error static type of each expression must be a subtype of boolean
+}
+
+Test-Case: error
+Description: Test static type of expression in logical expression via invalid types using shift expression.
+Labels: logical-expr, shift-expr
+
+function errorFunction() {
+    boolean _ = true || 1 << 2; // @error static type of each expression must be a subtype of boolean
+    boolean _ = 1 >> 2 || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = 1 >> 2 || 1 << 2; // @error static type of each expression must be a subtype of boolean
+}
+
+Test-Case: error
+Description: Test static type of expression in logical expression via invalid types using range expression.
+Labels: logical-expr, range-expr
+
+function errorFunction() {
+    boolean _ = true || (1 ..< 5).iterator().next(); // @error static type of each expression must be a subtype of boolean
+    boolean _ = (1 ... 5).iterator().next() || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = (1 ..< 5).iterator().next() || (1 ... 5).iterator().next(); // @error static type of each expression must be a subtype of boolean
+}
+
+Test-Case: error
+Description: Test static type of expression in logical expression via invalid types using binary bitwise expression.
+Labels: logical-expr, binary-bitwise-expr
+
+function errorFunction() {
+    boolean _ = true || 97 & 64; // @error static type of each expression must be a subtype of boolean
+    boolean _ = 97 & 64 || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = 97 & 64 || 97 & 64; // @error static type of each expression must be a subtype of boolean
+
+    boolean _ = true || 97 ^ 64; // @error static type of each expression must be a subtype of boolean
+    boolean _ = 97 ^ 64 || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = 97 ^ 64 || 97 ^ 64; // @error static type of each expression must be a subtype of boolean
+
+    boolean _ = true || 97 | 64; // @error static type of each expression must be a subtype of boolean
+    boolean _ = 97 | 64 || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = 97 | 64 || 97 | 64; // @error static type of each expression must be a subtype of boolean
+}
+
+Test-Case: error
+Description: Test static type of expression in logical expression via invalid types using conditional expression.
+Fail-Issue: ballerina-platform/ballerina-lang#33358
+Labels: logical-expr, conditional-expr
+
+function errorFunction() {
+    string a = "text";
+    boolean _ = true || a == "text"? 2 : 1; // @error static type of each expression must be a subtype of boolean
+    boolean _ = false || a == "text"? 2 : 1; // @error static type of each expression must be a subtype of boolean
+}
+
+Test-Case: error
+Description: Test static type of expression in logical expression via invalid types using conditional expression.
+Labels: logical-expr, conditional-expr
+
+function errorFunction() {
+    string a = "text";
+    boolean _ = a == "text"? 2 : 1 || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = a == "text"? 2 : 1 || false; // @error static type of each expression must be a subtype of boolean
+    boolean _ = a == "text"? 2 : 1 || a == "text"? 2 : 1; // @error static type of each expression must be a subtype of boolean
+}
+
+Test-Case: error
+Description: Test static type of expression in logical expression via invalid types using conditional expression with paranthesis.
+Labels: logical-expr, conditional-expr
+
+function errorFunction() {
+    string a = "text";
+    boolean _ = (a == "text"? 2 : 1) || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = true || (a == "text"? 2 : 1); // @error static type of each expression must be a subtype of boolean
+    boolean _ = false || (a == "text"? 2 : 1); // @error static type of each expression must be a subtype of boolean
+    boolean _ = (a == "text"? 2 : 1) || false; // @error static type of each expression must be a subtype of boolean
+    boolean _ = (a == "text"? 2 : 1) || (a == "text"? 2 : 1); // @error static type of each expression must be a subtype of boolean
+}
+
+Test-Case: error
+Description: Test static type of expression in logical expression via invalid types using checking expression.
+Labels: logical-expr, checking-expr, int:fromString
+
+function errorFunction() {
+    boolean _ = true || check int:fromString("123"); // @error static type of each expression must be a subtype of boolean
+    boolean _ = check int:fromString("123") || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = check int:fromString("123") || check int:fromString("123"); // @error static type of each expression must be a subtype of boolean
+}
+
+Test-Case: error
+Description: Test static type of expression in logical expression via invalid types using trap expression.
+Labels: logical-expr, trap-expr, multiplicative-expr
+
+function errorFunction() {
+    boolean _ = true || trap divideNum(1, 0); // @error static type of each expression must be a subtype of boolean
+    boolean _ = divideNum(1, 0) || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = divideNum(1, 0) || divideNum(1, 0); // @error static type of each expression must be a subtype of boolean
+}
+
+function divideNum(int a, int b) returns int {
+    return a / b;
+}
+
+Test-Case: error
+Description: Test static type of expression in logical expression via invalid types using xml navigate expression.
+Labels: logical-expr, xml-step-expr, xml, xml-template-expr
+
+function errorFunction() {
+    xml a = xml `<root><ele>true</ele><ele>false</ele></root>`;
+    boolean _ = true || a/*; // @error static type of each expression must be a subtype of boolean
+    boolean _ = a/* || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = a/* || a/*; // @error static type of each expression must be a subtype of boolean
+    
+    boolean _ = true || a/<ele>; // @error static type of each expression must be a subtype of boolean
+    boolean _ = a/<ele> || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = a/<ele> || a/<ele>; // @error static type of each expression must be a subtype of boolean
+
+    boolean _ = true || a/<ele>/*; // @error static type of each expression must be a subtype of boolean
+    boolean _ = a/<ele>/* || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = a/<ele>/* || a/<ele>/*; // @error static type of each expression must be a subtype of boolean
+}
+
+Test-Case: output
+Description: Test logical expression output.
+Labels: logical-expr
+
+function init() {
+    io:println(true || true); // @output true
+    io:println(false || true); // @output true
+    io:println(true || false); // @output true
+    io:println(false|| false); // @output false
+}
+
+Test-Case: output
+Description: Test logical expression output type.
+Labels: logical-expr, is-expr
+
+function init() {
+    io:println((true || true) is boolean); // @output true
+    io:println((false || true) is boolean); // @output true
+    io:println((true || false) is boolean); // @output true
+    io:println((false || false) is boolean); // @output true
+}
+
+Test-Case: output
+Description: Test static type of expression in logical expression using literal unions.
+Fail-Issue: ballerina-platform/ballerina-lang#33359
+Labels: logical-expr, union-type
+
+function init() {
+    boolean|boolean a = true;
+    io:println(a || true); // @output true
+    io:println(false || a); // @output true
+    io:println(a || a); // @output true
+}
+
+Test-Case: output
+Description: Test logical expression using variable reference expression.
+Labels: logical-expr, variable-reference-expr
+
+function init() {
+    boolean b = true;
+    io:println(true || b); // @output true
+    io:println(b || true); // @output true
+    io:println(b || false); // @output true
+    io:println(false || b); // @output true
+    io:println(b || b); // @output true
+}
+
+Test-Case: output
+Description: Test logical expression using field access expression.
+Labels: logical-expr, field-access-expr, module-class-defn
+
+class Person1 {
+    boolean a = false;
+
+    function init() {
+        self.a = true;
+    }
+}
+
+function init() {
+    Person1 newPerson = new Person1();
+    io:println(true || newPerson.a); // @output true
+    io:println(newPerson.a || true); // @output true
+    io:println(newPerson.a || newPerson.a); // @output true
+}
+
+Test-Case: output
+Description: Test logical expression using type cast expression.
+Labels: logical-expr, type-cast-expr
+
+type A true;
+
+function init() {
+    A a = true;
+    io:println(true || <boolean>a); // @output true
+    io:println(<boolean>a || true); // @output true
+    io:println(false || <boolean>a); // @output true
+    io:println(<boolean>a || false); // @output true
+    io:println(<boolean>a || <boolean>a); // @output true
+}
+
+Test-Case: output
+Description: Test logical expression using unary expression.
+Labels: logical-expr, unary-not
+
+function init() {
+    io:println(true || !false); // @output true
+    io:println(!false|| true); // @output true
+    io:println(!true|| false); // @output false
+    io:println(false|| !true); // @output false
+    io:println(!true || !false); // @output true
+}
+
+
+Test-Case: output
+Description: Test logical expression using relational expression.
+Labels: logical-expr, relational-expr
+
+function init() {
+    io:println(true || 4 > 2); // @output true
+    io:println(4 > 2 || true); // @output true
+    io:println(false || 4 > 2); // @output true
+    io:println(4 > 2 || false); // @output true
+    io:println(4 > 3 || 4 > 3); // @output true
+
+    io:println(true || 4 < 2); // @output true
+    io:println(4 < 2 || true); // @output true
+    io:println(false || 4 < 2); // @output false
+    io:println(4 < 2 || false); // @output false
+    io:println(4 < 3 || 4 < 3); // @output false
+
+    io:println(true || 4 >= 2); // @output true
+    io:println(4 >= 2 || true); // @output true
+    io:println(false || 4 >= 2); // @output true
+    io:println(4 >= 2 || false); // @output true
+    io:println(4 >= 3 || 4 >= 3); // @output true
+
+    io:println(true || 4 <= 2); // @output true
+    io:println(4 <= 2 || true); // @output true
+    io:println(false || 4 <= 2); // @output false
+    io:println(4 <= 2 || false); // @output false
+    io:println(4 <= 3 || 4 <= 3); // @output false
+
+    io:println(4 < 2 || 4 > 2); // @output true
+    io:println(4 >= 2 || 4 <= 3); // @output true
+    io:println(4 > 2 || 4 <= 2); // @output true
+    io:println(4 >= 2 || 4 < 2); // @output true
+}
+
+Test-Case: output
+Description: Test logical expression using is expression.
+Labels: logical-expr, is-expr
+
+function init() {
+    io:println(true || 2 is int); // @output true
+    io:println(2 is int || true); // @output true
+    io:println(false || 2 is int); // @output true
+    io:println(2 is int || false); // @output true
+    io:println(2 is int || 2 is int); // @output true
+}
+
+Test-Case: output
+Description: Test logical expression using equality expression.
+Labels: logical-expr, equality
+
+function init() {
+    io:println(true || 2 == 3); // @output true
+    io:println(3 == 3 || true); // @output true
+    io:println(false || 3 == 3); // @output true
+    io:println(2 == 3 || false); // @output false
+    io:println(2 == 3 || 3 == 3); // @output true
+
+    io:println(true || 2 != 3); // @output true
+    io:println(3 != 3 || true); // @output true
+    io:println(false || 3 != 3); // @output false
+    io:println(2 != 3 || false); // @output true
+    io:println(2 != 3 || 3 != 3); // @output true
+
+    io:println(true || 2 === 3); // @output true
+    io:println(3 === 3 || true); // @output true
+    io:println(false || 3 === 3); // @output true
+    io:println(2 === 3 || false); // @output false
+    io:println(2 === 3 || 3 === 3); // @output true
+
+    io:println(true || 2 !== 3); // @output true
+    io:println(3 !== 3 || true); // @output true
+    io:println(false || 3 !== 3); // @output false
+    io:println(2 !== 3 || false); // @output true
+    io:println(2 !== 3 || 3 !== 3); // @output true
+}
+
+Test-Case: output
+Description: Test logical expression with logical expression.
+Labels: logical-expr
+
+function init() {
+    io:println(true || true || false); // @output true
+    io:println(true || false || true); // @output true
+    io:println(false || true || false); // @output true
+    io:println(true || false || false); // @output true
+    io:println(true || false || true || false); // @output true
+}
+
+Test-Case: output
+Description: Test evaluation order of logical expression.
+Labels: logical-expr, function-call-expr, additive-expr, is-expr
+
+int falseEval = 0;
+int trueEval = 0;
+
+function returnTrueVal() returns boolean {
+    trueEval = trueEval + 1;
+    return true;
+}
+
+function returnFalseVal() returns boolean {
+    falseEval = falseEval + 1;
+    return false;
+}
+
+function resetEvalIndicators() {
+    falseEval = 0;
+    trueEval = 0;
+}
+
+function init() {
+    boolean a = returnFalseVal() || returnTrueVal();  
+    io:println(falseEval); // @output 1
+    io:println(trueEval); // @output 1
+    io:println(a is true); // @output true
+
+    resetEvalIndicators();
+    a = returnTrueVal() || returnFalseVal();    
+    io:println(falseEval); // @output 0
+    io:println(trueEval); // @output 1
+    io:println(a is true); // @output true
+
+    resetEvalIndicators();
+    a = returnTrueVal() || returnTrueVal();    
+    io:println(trueEval); // @output 1
+    io:println(a is true); // @output true
+
+    resetEvalIndicators();
+    a = returnFalseVal() || returnFalseVal();
+    io:println(falseEval); // @output 2
+    io:println(a is false); // @output true
+}
+
+Test-Case: output
+Description: Test logical operator precedence in a logical expression.
+Labels: logical-expr
+
+function init() {
+    io:println(false || false && true || true); // @output true
+}
