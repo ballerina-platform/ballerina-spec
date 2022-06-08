@@ -1,6 +1,70 @@
 Test-Case: output
-Description: Test trap-expr when the expression is a nil-literal.
-Labels: trap-expr, error-type, null, nil-literal, is-expr
+Description: Test the result of the trap expression being `e`,
+             when evaluation of the expression completes abruptly with panic with associated value `e`.
+Labels: error-type, function-call-expr, function-defn, optional-type, panic, trap-expr
+
+function foo() {
+    panic error("foo panics");
+}
+
+function init() {
+    error? e1 = trap foo();
+    io:println(e1); // @output error("foo panics")
+}
+
+Test-Case: output
+Description: Test the result of the trap expression being `v`,
+             when evaluation of the expression does not complete abruptly with panic.
+Labels: error-type, function-call-expr, function-defn, int, nil-literal, nil-type, optional-type, trap-expr, union-type, variable-reference-expr
+
+function init() {
+    int? nilVal = ();
+    int|error? e = trap nilVal;
+    io:println(e is ()); // @output true
+}
+
+Test-Case: error
+Description: If type of expr is T, then type of trap expr is T|error.
+Labels: error-type, int, local-init-var-decl-stmt, multiplicative-expr, nil-literal, optional-type, string, trap-expr, union-type, variable-reference-expr
+
+function errorFunction() {
+    int zero = 0;
+    int? nilVal = ();
+    int _ = trap 2 / zero; // @error incompatible types: expected 'int', found '(int|error)'
+    string|error? x = trap nilVal; // @error incompatible types: expected '(string|error)?', found 'int?'
+    int _ = trap 2; // @error incompatible types: expected 'int', found '(int|error)'
+    string _ = trap "str"; // @error incompatible types: expected 'string', found '(string|error)'
+    float _ = trap 2.3f; // @error incompatible types: expected 'float', found '(float|error)'
+}
+
+Test-Case: error
+Description: If type of expr is T, then type of trap expr is T|error.
+Fail-Issue: ballerina-platform/ballerina-lang#36472
+Labels: error-type, int, local-init-var-decl-stmt, multiplicative-expr, trap-expr, variable-reference-expr
+
+function errorFunction() {
+    int zero = 0;
+    error e = trap 2 / zero; // @error incompatible types: expected 'error', found 'int'
+}
+
+Test-Case: output
+Description: Test trap expression when the type of expression is never.
+Labels: boolean, error-constructor-expr, error-type, function-call-expr, function-defn, int, never, panic, return-stmt, trap-expr, union-type
+
+function funcNeverReturns() returns never {
+    panic error("msg");
+}
+
+function init() {
+    never|error e1 = trap funcNeverReturns();
+    io:println(e1); // @output error("msg")
+    error e2 = trap funcNeverReturns();
+    io:println(e2); // @output error("msg")
+}
+
+Test-Case: output
+Description: Test trap expression when the expression is a nil-literal and it does not panic.
+Labels: error-type, is-expr, nil-literal, nil-type, null, optional-type, trap-expr, union-type
 
 function init() {
     ()|error t1 = trap ();
@@ -11,8 +75,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test trap-expr when the expression is a boolean-literal.
-Labels: trap-expr, error-type, boolean, boolean-literal
+Description: Test trap expression when the expression is a boolean-literal and it does not panic.
+Labels: boolean, boolean-literal, error-type, trap-expr, union-type
 
 function init() {
     boolean|error t = trap false;
@@ -20,8 +84,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test trap-expr when the expression is a numeric-literal.
-Labels: trap-expr, error-type, int, float, decimal
+Description: Test trap expression when the expression is a numeric-literal and it does not panic.
+Labels: decimal, error-type, float, int, trap-expr, union-type
 
 function init() {
     int|error t1 = trap 2;
@@ -33,8 +97,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test trap-expr when the expression is a string-literal.
-Labels: trap-expr, string
+Description: Test trap expression when the expression is a string-literal and it does not panic.
+Labels: string, trap-expr, union-type
 
 function init() {
     string|error t1 = trap "Hello";
@@ -44,31 +108,31 @@ function init() {
 }
 
 Test-Case: output
-Description: Test trap-expr when the expression is a byte-array-literal.
-Labels: trap-expr, error-type, byte, byte-array-literal
+Description: Test trap expression when the expression is a byte-array-literal and it does not panic.
+Labels: byte, byte-array-literal, error-type, trap-expr, union-type
 
 function init() {
     byte[]|error t1 = trap base16 `aeeecdefabcd12345567888822`;
     io:println(t1); // @output [174,238,205,239,171,205,18,52,85,103,136,136,34]
-    t1 = base64 `aGVsbG8gYmFsbGVyaW5hICEhIQ==`;
+    t1 = trap base64 `aGVsbG8gYmFsbGVyaW5hICEhIQ==`;
     io:println(t1); // @output [104,101,108,108,111,32,98,97,108,108,101,114,105,110,97,32,33,33,33]
 }
 
 Test-Case: output
-Description: Test trap-expr when the expression is a string-template-expr.
-Labels: trap-expr, error-type, string-template-expr
+Description: Test trap expression when the expression is a string-template-expr and it does not panic.
+Labels: error-type, string-template-expr, trap-expr, union-type
 
 function init() {
     string|error t1 = trap string `Hello World!`;
     io:println(t1); // @output Hello World!
     string s = string `Hello World!`;
-    string|error t2 = string `${s}`;
+    string|error t2 = trap string `${s}`;
     io:println(t2); // @output Hello World!
 }
 
 Test-Case: output
-Description: Test trap-expr when the expression is a xml-template-expr.
-Labels: trap-expr, error-type, xml-template-expr
+Description: Test trap expression when the expression is a xml-template-expr and it does not panic.
+Labels: error-type, trap-expr, union-type, xml-template-expr
 
 function init() {
     xml|error t1 = trap xml `<Greeting>Hello!</Greeting>`;
@@ -76,8 +140,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test trap-expr when the expression is a list-constructor-expr.
-Labels: trap-expr, error-type, int, string, union-type, list-constructor-expr
+Description: Test trap expression when the expression is a list constructor expression. Test 1.
+Labels: array-type, error-type, int, list-constructor-expr, string, trap-expr, union-type
 
 function init() {
     int[]|error t1 = trap [1, 2, 3, 4];
@@ -87,8 +151,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test trap-expr when the expression is a list-constructor-expr.
-Labels: trap-expr, error-type, int, string, union-type, list-constructor-expr, type-cast-expr, function-call-expr
+Description: Test trap expression when the expression is a list constructor expression. Test 2.
+Labels: array-type, error-type, function-call-expr, function-defn, int, list-constructor-expr, return-stmt, string, trap-expr, type-cast-expr, union-type
 
 function foo() returns int|string {
     return "2";
@@ -100,8 +164,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test trap-expr when the expression is a list-constructor-expr.
-Labels: trap-expr, error-type, int, string, union-type, table-constructor-expr, multiplicative-expr
+Description: Test trap expression when the expression is a table constructor expression.
+Labels: error-type, int, multiplicative-expr, record-type, record-type-readonly-field, string, table-constructor-expr, union-type, trap-expr
 
 function init() {
     (table<record {|readonly string name; int id;|}> key(name))|error tbl1 = trap table key(name) [
@@ -111,8 +175,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test trap-expr when the expression is a object-constructor-expr.
-Labels: trap-expr, error-type, object-constructor-expr, method-call-expr, panic
+Description: Test trap expression when the expression is a object constructor expression.
+Labels: error-type, function-type, method-call-expr, object-constructor-expr, optional-type, panic, trap-expr
 
 function init() {
     object { function bar(); } obj = object {
@@ -129,8 +193,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test trap-expr when the expression is a new-expr.
-Labels: trap-expr, error-type, new-expr, method-call-expr, panic, error-constructor-expr
+Description: Test trap expression when the expression is a new expression.
+Labels: error-constructor-expr, error-type, function-defn, method-call-expr, module-class-defn, new-expr, optional-type, panic, trap-expr
 
 class Obj {
     function bar() {
@@ -145,8 +209,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test trap-expr when the expression is a member-access-expr.
-Labels: trap-expr, error-type, int, array-type, member-access-expr
+Description: Test trap expression when the expression is a member access expression.
+Labels: array-type, error-type, int, member-access-expr, trap-expr
 
 function init() {
     int[] i = [];
@@ -154,8 +218,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test trap-expr when the expression is a function-call-expr.
-Labels: trap-expr, error-type, int, function-call-expr, array-type, union-type, error-constructor-expr
+Description: Test trap expression when the expression is a function call expression.
+Labels: array-type, error-constructor-expr, error-type, function-call-expr, function-defn, int, optional-type, return-stmt, trap-expr, union-type
 
 function foo() returns int {
     int[] i = [];
@@ -174,8 +238,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test trap-expr when the expression is a type-cast-expr.
-Labels: trap-expr, error-type, int, string, function-call-expr, union-type, type-cast-expr
+Description: Test trap expression when the expression is a type cast expression.
+Labels: error-type, function-call-expr, function-defn, int, return-stmt, string, trap-expr, type-cast-expr, union-type
 
 function foo() returns int|string {
     return "str";
@@ -184,11 +248,13 @@ function foo() returns int|string {
 function init() {
     int|error t1 = trap <int>foo();
     io:println(t1); // @output error("{ballerina}TypeCastError",message="incompatible types: 'string' cannot be cast to 'int'")
+    string|error t2 = trap <string>foo();
+    io:println(t2); // @output str
 }
 
 Test-Case: output
-Description: Test trap-expr when the expression is a unary-logical-expr.
-Labels: trap-expr, error-type, int, boolean, function-call-expr, union-type
+Description: Test trap expression when the expression is a unary logical expression.
+Labels: boolean, error-type, function-call-expr, function-defn, int, return-stmt, trap-expr, union-type
 
 function foo() returns int|boolean {
     return 23;
@@ -200,53 +266,86 @@ function init() {
 }
 
 Test-Case: output
-Description: Test trap-expr when the expression is a multiplicative-expr.
-Labels: trap-expr, error-type, int, boolean, function-call-expr, multiplicative-expr
-
-function foo() returns int {
-    return 0;
-}
+Description: Test trap expression when the expression is a multiplicative expression.
+Labels: boolean, error-type, function-call-expr, function-defn, int, local-init-var-decl-stmt, multiplicative-expr, trap-expr, union-type, variable-reference-expr
 
 function init() {
-    int|error t1 = trap 2 / foo();
+    int zero = 0;
+    int|error t1 = trap 2 / zero;
+    io:println(t1); // @output error("{ballerina}DivisionByZero",message=" / by zero")
+    int|error t2 = trap int:MAX_VALUE * int:MAX_VALUE;
+    io:println(t2); // @output error("{ballerina}NumberOverflow",message="int range overflow")
+}
+
+Test-Case: output
+Description: Test trap expression when the expression is a trap expression.
+Labels: boolean, error-type, function-call-expr, function-defn, int, local-init-var-decl-stmt, multiplicative-expr, trap-expr, union-type, variable-reference-expr
+
+function init() {
+    int zero = 0;
+    int|error t1 = trap trap 2 / zero;
     io:println(t1); // @output error("{ballerina}DivisionByZero",message=" / by zero")
 }
 
 Test-Case: output
-Description: Test trap-expr when the expression is a trap-expr.
-Labels: trap-expr, error-type, int, boolean, function-call-expr, multiplicative-expr
-
-function foo() returns int {
-    return 0;
-}
+Description: Test trap expression when the expression is a checking expression.
+Labels: boolean, check, checkpanic, error-type, int, local-init-var-decl-stmt, multiplicative-expr, trap-expr, union-type, variable-reference-expr
 
 function init() {
-    int|error t1 = trap trap 2 / foo();
-    io:println(t1); // @output error("{ballerina}DivisionByZero",message=" / by zero")
-}
-
-Test-Case: error
-Description: Check the type of trap-expr.
-Labels: trap-expr, error-type, int, function-call-expr, multiplicative-expr
-
-function foo() returns int {
-    return 0;
-}
-
-function errorFunction() {
-    int _ = trap 2 / foo(); // @error incompatible types: expected 'int', found '(int|error)'
-    error e = trap 2 / foo(); // @error incompatible types: expected 'error', found 'int'
+    int zero = 0;
+    int|error e1 = trap (check 2 / zero);
+    io:println(e1); // @output error("{ballerina}DivisionByZero",message=" / by zero")
+    int|error e2 = trap (checkpanic 2 / zero);
+    io:println(e2); // @output error("{ballerina}DivisionByZero",message=" / by zero")
 }
 
 Test-Case: output
-Description: Test trap-expr when the type of expression is never.
-Labels: trap-expr, error-type, int, boolean, function-call-expr, error-constructor-expr
-
-function funcNeverReturns() returns never {
-    panic error("msg");
-}
+Description: Test trap expression when the expression is a char and it does not panic.
+Labels: boolean, error-type, local-init-var-decl-stmt, string:Char, trap-expr, union-type, variable-reference-expr
 
 function init() {
-    never|error e = trap funcNeverReturns();
-    io:println(e); // @output error("msg")
+    string:Char c = "c";
+    string:Char|error e1 = trap c;
+    io:println(e1); // @output c
+}
+
+Test-Case: output
+Description: Test trap expression when the expression is a byte value and it does not panic.
+Labels: boolean, byte, error-type, local-init-var-decl-stmt, trap-expr, union-type, variable-reference-expr
+
+function init() {
+    byte b = 0;
+    byte|error e = trap b;
+    io:println(e); // @output 0
+}
+
+Test-Case: output
+Description: Test trap expression when the expression is a byte value and it does not panic.
+Labels: boolean, error-type, int:Signed32, int:Unsigned32, local-init-var-decl-stmt, trap-expr, union-type, variable-reference-expr
+
+function init() {
+    int:Signed32 i1 = -12;
+    int:Signed32|error e1 = trap i1;
+    io:println(e1); // @output -12
+    int:Unsigned32 i2 = 1234;
+    int:Unsigned32|error e2 = trap i2;
+    io:println(e2); // @output 1234
+}
+
+Test-Case: output
+Description: Test trap expression when the expression is a query expression
+Labels: array-type, error-type, list-constructor-expr, query-expr, trap-expr, union-type
+
+function init() {
+    int[]|error res = trap from var item in [1, 0, 4]
+                                  select 5/item;
+    io:println(res); // @output error("{ballerina}DivisionByZero",message=" / by zero")
+}
+
+Test-Case: output
+Description: Test trap expression when the expression is a transactional expression and it does not panic.
+Labels: transactional-expr, trap-expr
+
+function init() {
+    io:println(trap transactional); // @output false
 }
