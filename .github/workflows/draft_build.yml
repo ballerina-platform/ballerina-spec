@@ -18,7 +18,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Clone ballerina-dev-website
-        run: git clone https://ballerina-bot:$GITHUB_TOKEN@github.com/ballerina-platform/ballerina-dev-website.git
+        run: git clone -b master --single-branch https://ballerina-bot:$GITHUB_TOKEN@github.com/ballerina-platform/ballerina-dev-website.git
 
       - name: Make new folder location in ballerina-dev-website
         run: |
@@ -46,7 +46,7 @@ jobs:
           mv build/spec.html build/index.html
           
       - name: Copy new spec to ballerina-dev-website
-        run: cp -r lang/build/ ballerina-dev-website/spec/lang/draft/$NEW_FOLDER
+        run: cp -r lang/build/* ballerina-dev-website/spec/lang/draft/$NEW_FOLDER
 
       - name: Update the list of draft specs in ballerina-dev-website
         run: python3 .github/scripts/append.py ballerina-dev-website/_data/draft_spec.json $NEW_FOLDER
@@ -54,7 +54,7 @@ jobs:
       - name: Sync ballerina-spec with ballerina-dev-website
         run: |
           cd ballerina-dev-website
-          git pull origin dev
+          git pull origin master
 
           git config --global user.email "ballerina-bot@ballerina.org"
           git config --global user.name "ballerina-bot"
