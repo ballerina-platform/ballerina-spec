@@ -8,6 +8,7 @@ on:
 
 jobs:
   sync_draft_spec:
+    if: contains(github.ref_name, '-')
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.BAL_BOT_PAT }}
@@ -17,10 +18,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Clone ballerina-dev-website
-        run: git clone https://ballerina-bot:$GITHUB_TOKEN@github.com/ballerina-platform/ballerina-dev-website.git
-
-      - name: Clone ballerina-prod-website
-        run: git clone https://ballerina-bot:$GITHUB_TOKEN@github.com/ballerina-platform/ballerina-platform.github.io.git
+        run: git clone -b master --single-branch https://ballerina-bot:$GITHUB_TOKEN@github.com/ballerina-platform/ballerina-dev-website.git
 
       - name: Make new folder location in ballerina-dev-website
         run: |
@@ -32,20 +30,9 @@ jobs:
           mkdir "${array[len-1]}"
           echo "NEW_FOLDER=${array[len-1]}" >> $GITHUB_ENV
 
-      - name: Make new folder location in ballerina-prod-website
-        run: |
-          cd ballerina-platform.github.io/spec/lang/draft
-          if [ -d "${NEW_FOLDER}" ]; then rm -Rf "${NEW_FOLDER}"; fi
-          mkdir "${NEW_FOLDER}"
-
       - name: Update the latest to new url in ballerina-dev-website
         run: |
           cd ballerina-dev-website/spec/lang/draft/latest
-          echo -e "---\nredirect_to: /spec/lang/draft/$NEW_FOLDER/\n---" > index.md
-
-      - name: Update the latest to new url in ballerina-prod-website
-        run: |
-          cd ballerina-platform.github.io/spec/lang/draft/latest
           echo -e "---\nredirect_to: /spec/lang/draft/$NEW_FOLDER/\n---" > index.md
 
       - name: Install xsltproc
@@ -59,32 +46,14 @@ jobs:
           mv build/spec.html build/index.html
           
       - name: Copy new spec to ballerina-dev-website
-        run: cp -r lang/build/ ballerina-dev-website/spec/lang/draft/$NEW_FOLDER
-
-      - name: Copy new spec to ballerina-prod-website
-        run: cp -r lang/build/ ballerina-platform.github.io/spec/lang/draft/$NEW_FOLDER
+        run: cp -r lang/build/* ballerina-dev-website/spec/lang/draft/$NEW_FOLDER
 
       - name: Update the list of draft specs in ballerina-dev-website
         run: python3 .github/scripts/append.py ballerina-dev-website/_data/draft_spec.json $NEW_FOLDER
 
-      - name: Update the list of draft specs in ballerina-prod-website
-        run: python3 .github/scripts/append.py ballerina-platform.github.io/_data/draft_spec.json $NEW_FOLDER
-
       - name: Sync ballerina-spec with ballerina-dev-website
         run: |
           cd ballerina-dev-website
-          git pull origin dev
-
-          git config --global user.email "ballerina-bot@ballerina.org"
-          git config --global user.name "ballerina-bot"
-
-          git add _data/draft_spec.json
-          git add spec/lang/draft/
-          git commit --allow-empty -m "[Automated] Sync new spec-tag with ballerina dev site"
-
-      - name: Sync ballerina-spec with ballerina-prod-website
-        run: |
-          cd ballerina-platform.github.io
           git pull origin master
 
           git config --global user.email "ballerina-bot@ballerina.org"
@@ -92,21 +61,12 @@ jobs:
 
           git add _data/draft_spec.json
           git add spec/lang/draft/
-          git commit --allow-empty -m "[Automated] Sync new spec-tag with ballerina prod site"
+          git commit --allow-empty -m "[Automated] Sync new spec-tag with ballerina dev site"
           
       - name: Push new changes to ballerina-dev-website
         shell: bash
         run: |
           cd ballerina-dev-website
-          curl -fsSL https://github.com/github/hub/raw/master/script/get | bash -s 2.14.1
-          bin/hub push
-        env:
-          GITHUB_TOKEN: ${{ secrets.BAL_BOT_PAT }}
-          
-      - name: Push new changes to ballerina-prod-website
-        shell: bash
-        run: |
-          cd ballerina-platform.github.io
           curl -fsSL https://github.com/github/hub/raw/master/script/get | bash -s 2.14.1
           bin/hub push
         env:
