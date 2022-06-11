@@ -4963,7 +4963,7 @@ private.
 </section>
 
 <section>
-<h5>Methods and resources</h5>
+<h5>Methods</h5>
 
 <pre
 class="grammar">method-defn :=
@@ -4976,6 +4976,30 @@ A <code>method-defn</code> defines a method of an object.
 </p>
 
 <pre
+class="grammar">method-defn-body := function-defn-body
+</pre>
+<p>
+Within a <code>method-defn-body</code>, the fields and methods of the object are
+not implicitly in-scope; instead the variable <code>self</code> is bound to the
+object and can be used to access fields and methods of the object. If the
+<code>object-constructor-expr</code> is explicitly isolated, then the
+<code>self</code> variable must be accessed only within the scope of a lock
+statement, except when <code>self</code> is part of a
+<code>field-access-expr</code> of the form <code>self.<var>f</var></code>, where
+<code><var>f</var></code> is the name of an isolated field.
+</p>
+<p>
+If <code>isolated-qual</code> is present, then the method has its isolated bit
+set and its <code>method-defn-body</code> must satisfy the requirements for an
+<a href="#isolated_functions">isolated function</a>.
+</p>
+
+</section>
+
+<section>
+<h5>Remote methods</h5>
+
+<pre
 class="grammar">remote-method-defn :=
    metadata remote-method-quals
    <code>function</code> remote-method-name function-signature method-defn-body
@@ -4985,6 +5009,11 @@ A <code>remote-method-defn</code> defines a remote method. This is allowed only
 when an <code>object-network-qual</code> is present in the
 <code>object-constructor-expr</code>.
 </p>
+
+</section>
+
+<section>
+<h5>Resources</h5>
 
 <pre
 class="grammar">resource-method-defn :=
@@ -5009,25 +5038,72 @@ resource method, one path segment is bound to each path parameter that is not a
 rest parameter and a list of the remaining path segments is bound to the rest
 parameter, if any.
 </p>
-
-<pre
-class="grammar">method-defn-body := function-defn-body
-</pre>
 <p>
-Within a <code>method-defn-body</code>, the fields and methods of the object are
-not implicitly in-scope; instead the variable <code>self</code> is bound to the
-object and can be used to access fields and methods of the object. If the
-<code>object-constructor-expr</code> is explicitly isolated, then the
-<code>self</code> variable must be accessed only within the scope of a lock
-statement, except when <code>self</code> is part of a
-<code>field-access-expr</code> of the form <code>self.<var>f</var></code>, where
-<code><var>f</var></code> is the name of an isolated field.
+XXX A resource method with a name of <code>get</code> that can return a service
+object represents a subservice. It is subject to the following restrictions:
 </p>
+<ul>
+<li>the return type must not allow anything other than service objects and
+errors;</li>
+<li>the resource path must not end with a <code>resource-path-rest-param</code>;</li>
+<li>the method's node must not have any child nodes.</li>
+</ul>
 <p>
-If <code>isolated-qual</code> is present, then the method has its isolated bit
-set and its <code>method-defn-body</code> must satisfy the requirements for an
-<a href="#isolated_functions">isolated function</a>.
+The semantics of hierarchical resources are defined by a lookup function, which
+takes four parameters:
 </p>
+<ul>
+<li><var>m</var> is the name of the method;</li>
+<li><var>p</var> is the resource path;</li>
+<li><var>r</var> refers to a node in the resource tree of a service object;</li>
+<li><var>v</var> is the list path segments bound so far.</li>
+</ul>
+<p>
+It returns an error or a tuple [<var>r</var>, <var>v</var>], where
+</p>
+<ul>
+<li><var>r</var> is a node in the resource tree with an m method, which is the
+method to be called;</li>
+<li><var>v</var> is a list of path segments to be bound to the method’s variable
+resource path parameters.</li>
+</ul>
+<p>
+The function lookup(<var>m</var>, <var>p</var>, <var>r</var>, <var>v</var>) is
+defined as follows:
+</p>
+<ol>
+<li>If <var>r</var> has a <code>get</code> method that can return a service
+object, then call the <code>get</code> method of <var>r</var> using <var>v</var>
+to bind the path parameters; if the result is an error, then return that error;
+otherwise, the result must be a service object. Let <var>r</var>' be the root of
+its resource tree. Return lookup(<var>m</var>, <var>p</var>, <var>r</var>',
+[]).</li>
+<li>If <var>p</var> is empty: 
+<ol>
+<li>if <var>r</var> has a method <var>m</var>, then return
+[<var>r</var>,<var>v</var>];</li>
+<li>otherwise, if <var>r</var> has a child labelled as repeated variable path
+segment and that child has a method <var>m</var>, then let <var>r</var>' be
+child with that label and return [<var>r</var>',<var>v</var>];</li>
+<li>otherwise, return an error.</li> 
+</ol>
+</li>
+<li>Let the first segment in <var>p</var> be <var>s</var> and let <var>p</var>'
+be a list of the 2nd and subsequent members of <var>p</var>.</li>
+<li>If <var>r</var> has a child labelled with the string that results from
+converting <var>s</var> to a string, then let <var>r</var>' be the child with
+that label. Return lookup(<var>m</var>, <var>p</var>', <var>r</var>',
+<var>v</var>).</li>
+<li>If <var>r</var> has an edge to a child labelled as a single path segment
+parameter, then let <var>r</var>' be that child and let <var>v</var>' be the
+result of adding <var>s</var> to the end of <var>v</var>. Return
+lookup(<var>m</var>, <var>p</var>', <var>r</var>', <var>v</var>').</li>
+<li>If <var>r</var> has an edge to a child labelled as a rest parameter and that
+child has a method <var>m</var>, then let <var>r</var>' be that child, and let
+<var>v</var>' be the result of concatenating <var>v</var> and <var>p</var>.
+Return [<var>r</var>',<var>v</var>'].</li>
+<li>Otherwise, return an error.</li>
+</ol>
 
 </section>
 
@@ -9901,76 +9977,6 @@ fails.</li>
 </ol>
 </section>
 
-<section>
-<h4>Hierarchical services</h4>
-<p>
-A resource method with a name of <code>get</code> that can return a service
-object represents a subservice. It is subject to the following restrictions:
-</p>
-<ul>
-<li>the return type must not allow anything other than service objects and
-errors;</li>
-<li>the resource path must not end with a <code>resource-path-rest-param</code>;</li>
-<li>the method's node must not have any child nodes.</li>
-</ul>
-<p>
-The semantics of hierarchical resources are defined by a lookup function, which
-takes four parameters:
-</p>
-<ul>
-<li><var>m</var> is the name of the method;</li>
-<li><var>p</var> is the resource path;</li>
-<li><var>r</var> refers to a node in the resource tree of a service object;</li>
-<li><var>v</var> is the list path segments bound so far.</li>
-</ul>
-<p>
-It returns an error or a tuple [<var>r</var>, <var>v</var>], where
-</p>
-<ul>
-<li><var>r</var> is a node in the resource tree with an m method, which is the
-method to be called;</li>
-<li><var>v</var> is a list of path segments to be bound to the method’s variable
-resource path parameters.</li>
-</ul>
-<p>
-The function lookup(<var>m</var>, <var>p</var>, <var>r</var>, <var>v</var>) is
-defined as follows:
-</p>
-<ol>
-<li>If <var>r</var> has a <code>get</code> method that can return a service
-object, then call the <code>get</code> method of <var>r</var> using <var>v</var>
-to bind the path parameters; if the result is an error, then return that error;
-otherwise, the result must be a service object. Let <var>r</var>' be the root of
-its resource tree. Return lookup(<var>m</var>, <var>p</var>, <var>r</var>',
-[]).</li>
-<li>If <var>p</var> is empty: 
-<ol>
-<li>if <var>r</var> has a method <var>m</var>, then return
-[<var>r</var>,<var>v</var>];</li>
-<li>otherwise, if <var>r</var> has a child labelled as repeated variable path
-segment and that child has a method <var>m</var>, then let <var>r</var>' be
-child with that label and return [<var>r</var>',<var>v</var>];</li>
-<li>otherwise, return an error.</li> 
-</ol>
-</li>
-<li>Let the first segment in <var>p</var> be <var>s</var> and let <var>p</var>'
-be a list of the 2nd and subsequent members of <var>p</var>.</li>
-<li>If <var>r</var> has a child labelled with the string that results from
-converting <var>s</var> to a string, then let <var>r</var>' be the child with
-that label. Return lookup(<var>m</var>, <var>p</var>', <var>r</var>',
-<var>v</var>).</li>
-<li>If <var>r</var> has an edge to a child labelled as a single path segment
-parameter, then let <var>r</var>' be that child and let <var>v</var>' be the
-result of adding <var>s</var> to the end of <var>v</var>. Return
-lookup(<var>m</var>, <var>p</var>', <var>r</var>', <var>v</var>').</li>
-<li>If <var>r</var> has an edge to a child labelled as a rest parameter and that
-child has a method <var>m</var>, then let <var>r</var>' be that child, and let
-<var>v</var>' be the result of concatenating <var>v</var> and <var>p</var>.
-Return [<var>r</var>',<var>v</var>'].</li>
-<li>Otherwise, return an error.</li>
-</ol>
-
-</section>
 
 <section>
 <h4>Isolated inference</h4>
