@@ -2339,7 +2339,7 @@ supported resource method names are determined by the listener; a listener that
 supports resources should always support the name <code>get</code>.
 </p>
 <p>
-A <code>resource-method-decl</code> declares a remote method for one or more
+A <code>resource-method-decl</code> declares a resource method for one or more
 resources. An object can include a <code>resource-method-decl</code> only if it
 is a network interaction object.
 </p>
@@ -5013,7 +5013,7 @@ when an <code>object-network-qual</code> is present in the
 </section>
 
 <section>
-<h5>Resources</h5>
+<h5 id="resources_defn">Resources</h5>
 
 <pre
 class="grammar">resource-method-defn :=
@@ -5022,22 +5022,31 @@ class="grammar">resource-method-defn :=
 </pre>
 
 <p>
-A <code>resource-method-defn</code> defines a resource method. This is allowed only
-when an <code>object-network-qual</code> is present in the
-<code>object-constructor-expr</code>.
+A <code>resource-method-defn</code> defines a resource method for one or more
+resources. This is allowed only when an <code>object-network-qual</code> is
+present in the <code>object-constructor-expr</code>. The semantics of
+<code>resource-method-defn</code> extends the semantics of a
+<code>resource-method-decl</code> by associating a function with each declared
+resource method.
+</p>
+<p>
+A network interaction object uses <code>resource-method-defn</code>s to provide
+a resource access operation. The inputs to the resource access operation are a
+string giving the resource method name, a list of values for the resource path,
+and a list of values for the argument list. The operation looks up the function
+associated with the resource method name and resource path, and then invokes the
+function with the supplied argument list.
+</p>
+<p>
+The list of values supplied for the resource path are used to bind parameters
+specified in the <code>resource-path</code> before the function is invoked.
+These parameters are in scope in the <code>method-defn-body</code>. A parameter
+in a <code>resource-path-segment-param</code> will be bound to the value at the
+corresponding position in the list; a parameter in a
+<code>resource-path-rest-param</code> will be bound to a list of all the values
+from the corresponding position onwards.
 </p>
 
-<p>
-XXX A parameter in a <code>resource-path-segment-param</code> will be bound to a
-value representing a single path segment; a parameter in a
-<code>resource-path-rest-param</code> will be bound to a list representing zero
-or more path segments, with each member representing a single path segment. The
-syntax allows only the last of a resource method's path parameters to be a rest
-parameter. When a list of path segments is bound to the path parameters of a
-resource method, one path segment is bound to each path parameter that is not a
-rest parameter and a list of the remaining path segments is bound to the rest
-parameter, if any.
-</p>
 <p>
 XXX A resource method with a name of <code>get</code> that can return a service
 object represents a subservice. It is subject to the following restrictions:
@@ -8122,10 +8131,45 @@ computed-resource-access-path-segment := <code>[</code> expression <code>]</code
 resource-access-rest-segment := <code>[</code> <code>...</code> expression <code>]</code>
 </pre>
 <p>
-In a <code>resource-method-call-action</code>, an omitted
-<code>resource-method-name</code> defaults to <code>get</code>; if the
-parentheses and the <code>arg-list</code> are omitted, then they default to <code>()</code>,
-with arguments being defaulted as usual.
+A <code>client-resource-access-action</code> performs a <a
+href="resources_defn">resource access operation</a> on a client object. An
+omitted <code>resource-method-name</code> defaults to <code>get</code>; if the
+parentheses and the <code>arg-list</code> are omitted, then they default to
+<code>()</code>, with arguments being defaulted as usual.
+</p>
+<p>
+A <code>client-resouce-access-action</code> is evaluated by:
+</p>
+<ul>
+<li>evaluating the code expression preceding the <code>-&gt;</code> resulting in
+a client object <var>c</var>;</li>
+<li>evaluating the <code>resource-access-path</code> to get a list of values
+<var>p</var>
+<ul>
+<li>a <code>resource-access-path</code> that is just <code></code> makes <var>p</var> be
+an empty list</li>
+<li>a <code>resource-path-segment-name</code> appends a string to <var>p</var></li>
+<li>a <code>computed-resource-access-path-segment</code> is evaluated and the
+result is appended to <var>p</var>;</li>
+<li>a <code>resource-access-rest-segment</code> is evaluated and every member
+of the result, which must be a list, is appended to <var>p</var>;</li>
+</ul>
+</li>
+<li>evaluating the <code>arg-list</code> to get an argument list
+<var>a</var>;</li>
+<li>invoking the resource access operation on the <var>c</var> using the
+<code>resource-method-name</code>, <var>p</var> and <var>a</var>, resulting in a value
+<var>v</var>.</li>
+</ul>
+<p>
+The result of the <code>client-resource-access-action</code> is <var>v</var>.
+</p>
+<p>
+The static type of the client object must contain a resource with specified
+method name for every list value that may be constructed by the evaluation of
+the <code>resource-access-path</code>. The argument list and result value are
+typed using the intersection of the function types allowed for the method name
+with any of the resource paths.
 </p>
 
 </section>
