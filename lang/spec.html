@@ -2391,6 +2391,24 @@ diverges from R at position i and has has a resource path that has a
 whose corresponding path segment belongs to the narrowed type T' rather than T.
 </p>
 <p>
+When a resource [s<sub>1</sub>,...,s<sub>m</sub>] of a service object S has a
+method <code>get</code> with a return value that includes a service object type,
+then this has the semantics that the service object S delegates each resource
+with a path [s<sub>1</sub>,...,s<sub>m</sub>,...,s<sub>n</sub>] to a resource
+[s<sub>m+1</sub>,...,s<sub>n</sub>] of the service object returned by the
+<code>get</code> method of S. Accordingly, if the return type of a
+<code>resource-method-decl</code> with a method name of <code>get</code> and a
+<code>resource-path</code> <var>p</var> includes a service object type:
+</p>
+<ul>
+<li>the return type must not allow anything other than service objects and
+errors;</li>
+<li>the <code>resource-path</code> must not end with a
+<code>resource-path-rest-param</code>;</li>
+<li>there must be no <code>resource-method-decl</code> that has a
+<code>resource-path</code> with <var>p</var> as a prefix.</li>
+</ul>
+<p>
 The return type of a resource method must not allow values belonging to the
 function basic type.
 </p>
@@ -5046,73 +5064,11 @@ corresponding position in the list; a parameter in a
 <code>resource-path-rest-param</code> will be bound to a list of all the values
 from the corresponding position onwards.
 </p>
-
 <p>
-XXX A resource method with a name of <code>get</code> that can return a service
-object represents a subservice. It is subject to the following restrictions:
+The resource access operation of a service object is responsible for
+implementing the delegation semantics of a resource method that returns a
+service object. XXX say more
 </p>
-<ul>
-<li>the return type must not allow anything other than service objects and
-errors;</li>
-<li>the resource path must not end with a <code>resource-path-rest-param</code>;</li>
-<li>the method's node must not have any child nodes.</li>
-</ul>
-<p>
-The semantics of hierarchical resources are defined by a lookup function, which
-takes four parameters:
-</p>
-<ul>
-<li><var>m</var> is the name of the method;</li>
-<li><var>p</var> is the resource path;</li>
-<li><var>r</var> refers to a node in the resource tree of a service object;</li>
-<li><var>v</var> is the list path segments bound so far.</li>
-</ul>
-<p>
-It returns an error or a tuple [<var>r</var>, <var>v</var>], where
-</p>
-<ul>
-<li><var>r</var> is a node in the resource tree with an m method, which is the
-method to be called;</li>
-<li><var>v</var> is a list of path segments to be bound to the method’s variable
-resource path parameters.</li>
-</ul>
-<p>
-The function lookup(<var>m</var>, <var>p</var>, <var>r</var>, <var>v</var>) is
-defined as follows:
-</p>
-<ol>
-<li>If <var>r</var> has a <code>get</code> method that can return a service
-object, then call the <code>get</code> method of <var>r</var> using <var>v</var>
-to bind the path parameters; if the result is an error, then return that error;
-otherwise, the result must be a service object. Let <var>r</var>' be the root of
-its resource tree. Return lookup(<var>m</var>, <var>p</var>, <var>r</var>',
-[]).</li>
-<li>If <var>p</var> is empty: 
-<ol>
-<li>if <var>r</var> has a method <var>m</var>, then return
-[<var>r</var>,<var>v</var>];</li>
-<li>otherwise, if <var>r</var> has a child labelled as repeated variable path
-segment and that child has a method <var>m</var>, then let <var>r</var>' be
-child with that label and return [<var>r</var>',<var>v</var>];</li>
-<li>otherwise, return an error.</li> 
-</ol>
-</li>
-<li>Let the first segment in <var>p</var> be <var>s</var> and let <var>p</var>'
-be a list of the 2nd and subsequent members of <var>p</var>.</li>
-<li>If <var>r</var> has a child labelled with the string that results from
-converting <var>s</var> to a string, then let <var>r</var>' be the child with
-that label. Return lookup(<var>m</var>, <var>p</var>', <var>r</var>',
-<var>v</var>).</li>
-<li>If <var>r</var> has an edge to a child labelled as a single path segment
-parameter, then let <var>r</var>' be that child and let <var>v</var>' be the
-result of adding <var>s</var> to the end of <var>v</var>. Return
-lookup(<var>m</var>, <var>p</var>', <var>r</var>', <var>v</var>').</li>
-<li>If <var>r</var> has an edge to a child labelled as a rest parameter and that
-child has a method <var>m</var>, then let <var>r</var>' be that child, and let
-<var>v</var>' be the result of concatenating <var>v</var> and <var>p</var>.
-Return [<var>r</var>',<var>v</var>'].</li>
-<li>Otherwise, return an error.</li>
-</ol>
 
 </section>
 
@@ -9865,8 +9821,8 @@ unsuccessful, terminates the program execution.
 Service objects support network interaction using remote methods and resource
 methods. Listeners provide the interface between the network and service
 objects. A listener object receives network messages from a remote process
-according to some protocol and translates the received messages into calls on
-the remote and resource methods of service objects that have been attached to
+according to some protocol and translates the received messages into remote
+methods calls or resource accesses of service objects that have been attached to
 the listener object. It is up to the listener object to determine how this
 translation happens. A resource path segment may correspond to something that at
 the protocol level is not a string. For example, in HTTP a path segment is
@@ -11037,6 +10993,10 @@ more than one basic type..</p>
 <section>
 <h3>Summary of changes from 2021R2 to 2022R3</h3>
 <ol>
+<li>Client objects can declare resource methods, which can be accessed using new
+<code>client-resource-access-action</code> syntax. Resource methods are now part
+of the type of network interaction objects and can be specified in object type
+descriptors.</li>
 <li>The <code>isolated</code> feature can now be used to identify cases where
 a strand created by <code>start</code> or a named worker can be run safely on
 a separate thread.</li>
