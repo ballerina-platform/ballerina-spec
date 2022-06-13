@@ -2398,7 +2398,8 @@ with a path [s<sub>1</sub>,...,s<sub>m</sub>,...,s<sub>n</sub>] to a resource
 [s<sub>m+1</sub>,...,s<sub>n</sub>] of the service object returned by the
 <code>get</code> method of S. Accordingly, if the return type of a
 <code>resource-method-decl</code> with a method name of <code>get</code> and a
-<code>resource-path</code> <var>p</var> includes a service object type:
+<code>resource-path</code> <var>p</var> includes a service object type that
+includes one or more resource methods:
 </p>
 <ul>
 <li>the return type must not allow anything other than service objects and
@@ -2410,7 +2411,8 @@ errors;</li>
 </ul>
 <p>
 The return type of a resource method must not allow values belonging to the
-function basic type.
+function basic type and must not allow client object types that include one or
+more resource methods.
 </p>
 
 </section>
@@ -5067,7 +5069,17 @@ from the corresponding position onwards.
 <p>
 The resource access operation of a service object is responsible for
 implementing the delegation semantics of a resource method that returns a
-service object. XXX say more
+service object. A <code>resource-path</code> is <em>delegated</em> if it occurs
+in a <code>resource-method-defn</code> with a <code>resource-method-name</code>
+of <code>get</code> and a return value includes a service object type that has
+one or more resources. If a resource access operation has a resource path
+<var>r</var>, which has a prefix <var>p</var> (which may be the entire path)
+that is delegated, then the <code>get</code> method that provides the delegation
+is first called with no arguments but with resource parameters bound as usual
+resulting in a value <var>v</var>; if <var>v</var> is an error, then the result
+of the resource access operation is <var>v</var>; otherwise a resource access
+operation is performed on the <var>v</var> with the resource path being
+<var>r</var> with <var>p</var> removed.
 </p>
 
 </section>
