@@ -2359,12 +2359,47 @@ It is a compile error if a <code>object-type-descriptor</code> has two
 <code>resource-path</code>s that map to the same tuple type descriptor.
 </p>
 <p>
-Two tuple type descriptors [X<sub>1</sub>,...,X<sub>m</sub>] and
-[Y<sub>1</sub>,...,Y<sub>n</sub>] <em>diverge at</em> position i if and only if:
+When a resource with path [s<sub>1</sub>,...,s<sub>m</sub>] of a service object
+S has a method <code>get</code> with a return value that includes a service
+object type, then this has the semantics that the service object S delegates
+each resource with a path [s<sub>1</sub>,...,s<sub>m</sub>,...,s<sub>n</sub>] to
+a resource [s<sub>m+1</sub>,...,s<sub>n</sub>] of the service object returned by
+the <code>get</code> method of S. Accordingly, if the return type of a
+<code>resource-method-decl</code> with a method name of <code>get</code> and a
+<code>resource-path</code> <var>p</var> includes a service object type:
+</p>
+<ul>
+<li>the return type must not allow anything other than service objects and
+errors;</li>
+<li>the <code>resource-path</code> must not end with a
+<code>resource-path-rest-param</code>;</li>
+<li>there must be no <code>resource-method-decl</code> that has a
+<code>resource-path</code> with <var>p</var> as a prefix.</li>
+</ul>
+<p>
+The set of resource method names <em>applicable</em> for a
+<code>resource-method-decl</code> with <code>resource-method-name</code> m at a
+resource path position is defined as follows:
+</p>
+<ul>
+<li>if the position is not the last position of the resource path, then the
+applicable set consists of just <code>get</code></li>
+<li>otherwise, if the <code>resource-path</code> ends with a <code>resource-path-segment</code>,
+then the applicable set consists of just m;</li>
+<li>otherwise, the <code>resource-path</code> ends with
+<code>resource-path-rest-param</code> and the applicable set consists of
+<code>get</code> and m.</li>
+</ul>
+<p>
+Two <code>resource-method-decl</code>s X and Y that map to tuple type descriptors
+[X<sub>1</sub>,...,X<sub>m</sub>] and [Y<sub>1</sub>,...,Y<sub>n</sub>]
+<em>diverge at position</em> i if and only if:
 </p>
 <ul>
 <li>i &#x2264; m;</li>
 <li>i &#x2264; n;</li>
+<li>the intersection of the sets of resource method names applicable for X and Y
+at position i is non-empty;</li>
 <li>for all j &lt; i, X<sub>j</sub> is the same type as as Y<sub>j</sub>;</li>
 <li>X<sub>i</sub> and Y<sub>i</sub> are not the same (to be the same, they must
 both be a member-type-descriptor or both be a tuple-rest-descriptor, and the
@@ -2391,28 +2426,8 @@ diverges from R at position i and has has a resource path that has a
 whose corresponding path segment belongs to the narrowed type T' rather than T.
 </p>
 <p>
-When a resource [s<sub>1</sub>,...,s<sub>m</sub>] of a service object S has a
-method <code>get</code> with a return value that includes a service object type,
-then this has the semantics that the service object S delegates each resource
-with a path [s<sub>1</sub>,...,s<sub>m</sub>,...,s<sub>n</sub>] to a resource
-[s<sub>m+1</sub>,...,s<sub>n</sub>] of the service object returned by the
-<code>get</code> method of S. Accordingly, if the return type of a
-<code>resource-method-decl</code> with a method name of <code>get</code> and a
-<code>resource-path</code> <var>p</var> includes a service object type that
-includes one or more resource methods:
-</p>
-<ul>
-<li>the return type must not allow anything other than service objects and
-errors;</li>
-<li>the <code>resource-path</code> must not end with a
-<code>resource-path-rest-param</code>;</li>
-<li>there must be no <code>resource-method-decl</code> that has a
-<code>resource-path</code> with <var>p</var> as a prefix.</li>
-</ul>
-<p>
 The return type of a resource method must not allow values belonging to the
-function basic type and must not allow client object types that include one or
-more resource methods.
+function basic type and must not allow client object types.
 </p>
 
 </section>
@@ -5071,8 +5086,8 @@ The resource access operation of a service object is responsible for
 implementing the delegation semantics of a resource method that returns a
 service object. A <code>resource-path</code> is <em>delegated</em> if it occurs
 in a <code>resource-method-defn</code> with a <code>resource-method-name</code>
-of <code>get</code> and a return value includes a service object type that has
-one or more resources. If a resource access operation has a resource path
+of <code>get</code> and a return value that includes a service object type that
+has one or more resources. If a resource access operation has a resource path
 <var>r</var>, which has a prefix <var>p</var> (which may be the entire path)
 that is delegated, then the <code>get</code> method that provides the delegation
 is first called with no arguments but with resource parameters bound as usual
