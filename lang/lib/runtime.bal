@@ -64,4 +64,4 @@ public type StopHandler function() returns error?;
 # after calling `gracefulStop` on all registered listeners,
 # in reverse order of the corresponding calls to `onGracefulStop`.
 # + handler - function to be called
-public isolated function onGracefulStop(StopHandler handler);
+public isolated function onGracefulStop(StopHandler handler) = external;
