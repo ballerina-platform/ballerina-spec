@@ -1,4 +1,30 @@
 Test-Case: output
+Description:  If the evaluated expression has a value of basic type error then the check-expression will complete
+              abruptly with a check-fail with associated error value.
+Labels: any, check, error, optional-type
+
+function init() {
+    error? out = fn();
+    io:println(out); // @output error("Error")
+}
+
+function fn() returns error? {
+    any|error x = error("Error");
+    any _ = check x;
+    io:println("No Errors");
+}
+
+Test-Case: error
+Description:  If the evaluated expression has a value of basic type error then the check-expression will complete
+              abruptly with a check-fail with associated error value.
+Labels: any, check, error, optional-type
+
+function errorFunction() {
+    any|error x = error("Error");
+    any _ = check x; // @error no matching error return type
+}
+
+Test-Case: output
 Description: Test check-expr with basic types.
 Labels: check, decimal, DecimalFloatingPointNumber, DecimalNumber, error-type, float, FloatingPointTypeSuffix,
         function-call-expr, function-defn, HexFloatingPointLiteral, HexIntLiteral, int, int:MAX_VALUE, int:MIN_VALUE,
@@ -163,7 +189,7 @@ function fn2(int a, int b) returns error|string {
 
 Test-Case: error
 Description: Test the static type of the check-expr when it is applied to string template expressions via invalid
-             assignments
+             assignments.
 Labels: check, decimal, DecimalNumber, error-type, float, function-call-expr, function-defn, int, optional-type,
         return-stmt, string, string-template-expr
 
@@ -620,7 +646,8 @@ Description: Test check-expr with unary expression, multiplicative expression, a
              binary bitwise expression and logical expression.
 Labels: additive-expr, binary-bitwise-expr, check, decimal, DecimalFloatingPointNumber, DecimalNumber, error-type,
         float, FloatingPointTypeSuffix, function-call-expr, function-defn, int, int:MAX_VALUE, int:MIN_VALUE,
-        multiplicative-expr, optional-type, shift-expr, unary-complement, unary-minus, unary-not, unary-plus
+        multiplicative-expr, optional-type, shift-expr, unary-complement, unary-minus, unary-not, unary-plus,
+        value:toBalString
 
 function init() {
     error? x1 = testAdditiveExpr1(1, 3); // @output 4
@@ -680,7 +707,7 @@ function init() {
     error? x16 = testShiftExpr(int:MAX_VALUE, 1); // @output -2
                                                   // @output 4611686018427387903
                                                   // @output 4611686018427387903
-    io:println(x16); // @output
+    io:println(x16 is error? x16 : x16.toBalString()); // @output ()
 }
 
 function testAdditiveExpr1(int a, int b) returns error? {
@@ -780,7 +807,7 @@ function testShiftExpr(int a, int b) returns error? {
 Test-Case: output
 Description: Test check-expr with type test expression.
 Labels: boolean, check, DecimalFloatingPointNumber, DecimalNumber, float, function-call-expr, function-defn, int,
-        is-expr, nil-literal, optional-type, string, value:toBalString, is-expr, ternary-conditional-expr
+        is-expr, nil-literal, optional-type, string, ternary-conditional-expr, value:toBalString
 
 function init() {
     error? x1 = typeTestExpr(1); // @output true
@@ -805,7 +832,7 @@ function init() {
                                        // @output false
                                        // @output true
                                        // @output false
-    io:println((x4 is error? (<error> x4).message():x4).toBalString()); // @output
+    io:println((x4 is error? (<error> x4).message():x4).toBalString()); // @output ()
 }
 
 function typeTestExpr(anydata a) returns error? {
@@ -822,7 +849,7 @@ function typeTestExpr(anydata a) returns error? {
 Test-Case: output
 Description: Test check-expr with trap expression.
 Labels: anydata, check, DecimalNumber, error-type, float, FloatingPointTypeSuffix, function-call-expr, function-defn,
-        int, multiplicative-expr, optional-type, string, trap-expr, typecast-expr
+        int, multiplicative-expr, optional-type, string, trap-expr, type-cast-expr
 
 function init() {
     error? x1 = testTrapExpr1(1); // @output 1
@@ -851,7 +878,7 @@ function testTrapExpr2(int a, int b) returns error? {
 Test-Case: output
 Description: Test check-expr with conditional expression.
 Labels: binary-conditional-expr, boolean, check, DecimalNumber, error-constructor-expr, error-type, function-call-expr,
-        function-defn, int, optional-type, string, ternary-conditional-expr, typecast-expr
+        function-defn, int, optional-type, string, ternary-conditional-expr, type-cast-expr
 
 function init() {
     error? x1 = testTernaryExpr1(1, 2, false); // @output 2
@@ -1507,6 +1534,211 @@ function jsonInvalidTypeTestWithEnsureType5(json j) returns error? {
 }
 
 Test-Case: output
+Description: Test check-expr when it is used to convert json to simple types. Test case 5.
+Labels: boolean, check, decimal, DecimalFloatingPointNumber, DecimalNumber, field-access-expr, float,
+        FloatingPointTypeSuffix, function-call-expr, function-defn, HexFloatingPointLiteral, HexIntLiteral,
+        int:MAX_VALUE, int:MIN_VALUE, json, map-type, mapping-constructor-expr, nil-literal, optional-type, string,
+        unary-minus, unary-not
+
+import ballerina/lang.value;
+
+type S ()|boolean|int|float|decimal|string;
+type S1 int|float|decimal;
+type S2 ()|boolean;
+type S3 int:Unsigned32|int:Signed8;
+
+function init() {
+    error? x1 = jsonTest1(); // @output 9223372036854775807
+                             // @output true
+                             // @output -9223372036854775808
+                             // @output true
+                             // @output 298
+                             // @output true
+                             // @output 12.121
+                             // @output true
+                             // @output -2122.1
+                             // @output true
+                             // @output 12.212
+                             // @output true
+                             // @output -212.1
+                             // @output true
+                             // @output true
+                             // @output true
+                             // @output false
+                             // @output true
+                             // @output abc
+                             // @output true
+                             // @output
+                             // @output true
+                             // @output
+                             // @output true
+    io:println(x1); // @output
+
+    error? x3 = mapOfJsonTest1(); // @output 9223372036854775807
+                                  // @output true
+                                  // @output -9223372036854775808
+                                  // @output true
+                                  // @output 298
+                                  // @output true
+                                  // @output 12.121
+                                  // @output true
+                                  // @output -2122.1
+                                  // @output true
+                                  // @output 12.212
+                                  // @output true
+                                  // @output -212.1
+                                  // @output true
+                                  // @output true
+                                  // @output true
+                                  // @output false
+                                  // @output true
+                                  // @output abc
+                                  // @output true
+                                  // @output
+                                  // @output true
+                                  // @output
+                                  // @output true
+    io:println(x3); // @output
+}
+
+json j1 = {i1: int:MAX_VALUE, i2:int:MIN_VALUE, i3: 0x12a, f1: 12.121, f2: -2122.1, f3: -0x12.1ab, d1: 12.212d, d2: -212.1d};
+json j2 = {t: true, f: false, t2: !false};
+json j3 = {s1: "abc", s2: "123"};
+json j4 = {n1: null, n2: ()};
+
+map<json> mapj1 = {i1: int:MAX_VALUE, i2: int:MIN_VALUE, i3: 0x12a, f1: 12.121, f2: -2122.1, f3: -0x12.1ab, d1: 12.212d, d2: -212.1d};
+map<json> mapj2 = {t: true, f: false, t2: !false};
+map<json> mapj3 = {s1: "abc", s2: "123"};
+map<json> mapj4 = {n1: null, n2: ()};
+
+function jsonTest1() returns error? {
+    S i1 = check j1.i1;
+    S1 i2 = check j1.i2;
+    S3 i3 = check j1.i3;
+    S f1 = check j1.f1;
+    S1 f2 = check j1.f2;
+    S d1 = check j1.d1;
+    S1 d2 = check j1.d2;
+
+    S b1 = check j2.t;
+    S2 b2 = check j2.f;
+
+    S s1 = check j3.s1;
+
+    S n1 = check j4.n1;
+    S2 n2 = check j4.n2;
+
+    io:println(i1);
+    io:println((check j1.i1) == value:ensureType(j1.i1, S));
+    io:println(i2);
+    io:println((check j1.i2) == value:ensureType(j1.i2, S1));
+    io:println(i3);
+    io:println((check j1.i3) == value:ensureType(j1.i3, S3));
+    io:println(f1);
+    io:println((check j1.f1) == value:ensureType(j1.f1, S));
+    io:println(f2);
+    io:println((check j1.f2) == value:ensureType(j1.f2, S1));
+    io:println(d1);
+    io:println((check j1.d1) == value:ensureType(j1.d1, S));
+    io:println(d2);
+    io:println((check j1.d2) == value:ensureType(j1.d2, S1));
+    io:println(b1);
+    io:println((check j2.t) == value:ensureType(j2.t, S));
+    io:println(b2);
+    io:println((check j2.f) == value:ensureType(j2.f, S2));
+    io:println(s1);
+    io:println((check j3.s1) == value:ensureType(j3.s1, S));
+    io:println(n1);
+    io:println((check j4.n1) == value:ensureType(j4.n1, S));
+    io:println(n2);
+    io:println((check j4.n2) == value:ensureType(j4.n2, S2));
+}
+
+function mapOfJsonTest1() returns error? {
+    S i1 = check mapj1.i1;
+    S1 i2 = check mapj1.i2;
+    S3 i3 = check mapj1.i3;
+    S f1 = check mapj1.f1;
+    S1 f2 = check mapj1.f2;
+    S d1 = check mapj1.d1;
+    S1 d2 = check mapj1.d2;
+
+    S b1 = check mapj2.t;
+    S2 b2 = check mapj2.f;
+
+    S s1 = check mapj3.s1;
+
+    S n1 = check mapj4.n1;
+    S2 n2 = check mapj4.n2;
+
+    io:println(i1);
+    io:println((check mapj1.i1) == value:ensureType(mapj1.i1, S));
+    io:println(i2);
+    io:println((check mapj1.i2) == value:ensureType(mapj1.i2, S1));
+    io:println(i3);
+    io:println((check mapj1.i3) == value:ensureType(mapj1.i3, S3));
+    io:println(f1);
+    io:println((check mapj1.f1) == value:ensureType(mapj1.f1, S));
+    io:println(f2);
+    io:println((check mapj1.f2) == value:ensureType(mapj1.f2, S1));
+    io:println(d1);
+    io:println((check mapj1.d1) == value:ensureType(mapj1.d1, S));
+    io:println(d2);
+    io:println((check mapj1.d2) == value:ensureType(mapj1.d2, S1));
+    io:println(b1);
+    io:println((check mapj2.t) == value:ensureType(mapj2.t, S));
+    io:println(b2);
+    io:println((check mapj2.f) == value:ensureType(mapj2.f, S2));
+    io:println(s1);
+    io:println((check mapj3.s1) == value:ensureType(mapj3.s1, S));
+    io:println(n1);
+    io:println((check mapj4.n1) == value:ensureType(mapj4.n1, S));
+    io:println(n2);
+    io:println((check mapj4.n2) == value:ensureType(mapj4.n2, S2));
+}
+
+Test-Case: output
+Description: Test check-expr when it is used to convert json to simple types. Test case 6.
+Fail-Issue: ballerina-platform/ballerina-lang#36955
+Labels: boolean, check, DecimalFloatingPointNumber, field-access-expr, float,
+        function-call-expr, function-defn,
+        int:MAX_VALUE, json, mapping-constructor-expr, nil-literal, optional-type, string
+
+type Nil null;
+type S1 int:MAX_VALUE;
+type S2 12.1;
+type S3 true|"abc";
+
+function init() {
+    error? x1 = jsonTest1(); // @output 9223372036854775807
+                             // @output 12.1
+                             // @output true
+                             // @output abc
+                             // @output
+
+    io:println(x1); // @output
+}
+
+json j1 = {i: int:MAX_VALUE, f: 12.1};
+json j2 = {t: true};
+json j3 = {s: "abc"};
+json j4 = {n: null};
+
+function jsonTest1() returns error? {
+    S1 a1 = check j1.i;
+    S2 a2 = check j1.f;
+    S3 a3 = check j2.t;
+    S3 a4 = check j3.s;
+    Nil a5 = check j4.n1;
+
+    io:println(a1);
+    io:println(a2);
+    io:println(a3);
+    io:println(a4);
+    io:println(a5);
+}
+
+Test-Case: output
 Description: Test check-expr when it is used to convert json to simple types. Test the subtypes of int and string.
 Labels: array-type, boolean, decimal, DecimalFloatingPointNumber, DecimalNumber, field-access-expr, float,
         FloatingPointTypeSuffix, HexFloatingPointLiteral, HexIntLiteral, json, list-constructor-expr,
@@ -1689,17 +1921,24 @@ Labels: array-type, boolean, decimal, DecimalFloatingPointNumber, DecimalNumber,
         mapping-constructor-expr, nil-literal, readonly-type, string
 
 function init() {
-    error? x1 = testByte();
-    io:println(x1); // @output 0
-                    // @output 255
-                    // @output 255
-                    // @output 0
-                    // @output 255
-                    // @output 255
+    error? x1 = testByte(); // @output 0
+                            // @output 255
+                            // @output 255
+                            // @output 0
+                            // @output 255
+                            // @output 255
+    io:println(x1); // @output
+
+    error? x2 = testByte2(); // @output 0
+                             // @output 255
+                             // @output 255
+                             // @output 0
+                             // @output 255
+                             // @output 255
+    io:println(x2); // @output
 }
 
 json j1 = {i1: 0, i2: 255, i3: int:UNSIGNED8_MAX_VALUE};
-
 map<json> mapj1 = {i1: 0, i2: 255, i3: int:UNSIGNED8_MAX_VALUE};
 
 function testByte() returns error? {
@@ -1719,34 +1958,17 @@ function testByte() returns error? {
     io:println(i6);
 }
 
-Test-Case: output
-Description: Test check-expr when it is used to convert json to simple types. Test the byte type.
-Labels: array-type, boolean, decimal, DecimalFloatingPointNumber, DecimalNumber, field-access-expr, float,
-        FloatingPointTypeSuffix, HexFloatingPointLiteral, HexIntLiteral, json, list-constructor-expr,
-        mapping-constructor-expr, nil-literal, readonly-type, string
+function testByte2() returns error? {
+    json j1 = {k1: 0, k2: 255, k3: int:UNSIGNED8_MAX_VALUE};
+    map<json> mapj1 = {k1: 0, k2: 255, k3: int:UNSIGNED8_MAX_VALUE};
 
-function init() {
-    error? x1 = testByte();
-    io:println(x1); // @output 0
-                    // @output 255
-                    // @output 255
-                    // @output 0
-                    // @output 255
-                    // @output 255
-}
+    byte i1 = check j1.k1;
+    byte i2 = check j1.k2;
+    byte i3 = check j1.k3;
 
-json j1 = {i1: 0, i2: 255, i3: int:UNSIGNED8_MAX_VALUE};
-
-map<json> mapj1 = {i1: 0, i2: 255, i3: int:UNSIGNED8_MAX_VALUE};
-
-function testByte() returns error? {
-    byte i1 = check j1.i1;
-    byte i2 = check j1.i2;
-    byte i3 = check j1.i3;
-
-    byte i4 = check mapj1.i1;
-    byte i5 = check mapj1.i2;
-    byte i6 = check mapj1.i3;
+    byte i4 = check mapj1.k1;
+    byte i5 = check mapj1.k2;
+    byte i6 = check mapj1.k3;
 
     io:println(i1);
     io:println(i2);

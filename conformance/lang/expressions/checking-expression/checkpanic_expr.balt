@@ -54,9 +54,9 @@ function fn5(() x) returns () {
 
 Test-Case: output
 Description: Test checkpanic-expr with literal values.
-Labels: additive-epr, checkpanic, decimal, DecimalFloatingPointNumber, DecimalNumber, error-type, float,
+Labels: additive-expr, checkpanic, decimal, DecimalFloatingPointNumber, DecimalNumber, error-type, float,
         FloatingPointTypeSuffix, function-call-expr, function-defn, HexFloatingPointLiteral, HexIntLiteral, int,
-        nil-literal, nil-type, optional-type, return-stmt, unary-minus, value:toBalString()
+        nil-literal, nil-type, optional-type, return-stmt, unary-minus, value:toBalString
 
 function init() {
     fn1(); // @output 123
@@ -382,11 +382,13 @@ function init() {
                    // @output [true,false,false]
                    // @output 21
                    // @output 21
+                   // @output true
+                   // @output true
 
     memberAccess(); // @output 2
                     // @output abc
                     // @output [true,false,false]
-                    // @output [true,false,false]
+                    // @output []
                     // @output 1
 }
 
@@ -421,9 +423,9 @@ function fieldAccess() {
     json i4 = checkpanic j1?.a;
     io:println(i4);
 
-    json b3 = checkpanic j1.b1;
+    json b3 = checkpanic j1.b;
     io:println(b3);
-    json b4 = checkpanic j1?.b1;
+    json b4 = checkpanic j1?.b;
     io:println(b4);
 }
 
@@ -440,7 +442,7 @@ function memberAccess() {
     io:println(b1);
 
     anydata a1 = checkpanic rec["a"];
-    io:println(b1);
+    io:println(a1);
 
     json i3 = checkpanic j1[0];
     io:println(i3);
@@ -523,10 +525,10 @@ function init() {
                       // @output 1
                       // @output 0
                       // @output function
-    io:println(x);
+    io:println(x); // @output error("error1!")
 }
 
-function testFunction3(int i) error? {
+function testFunction3(int i) returns error? {
     return trap (checkpanic recursiveFn(i));
 }
 
@@ -546,24 +548,24 @@ function fn() returns error {
 Test-Case: panic
 Description: Test checkpanic-expr with method call expressions.
 Labels: boolean, checkpanic, DecimalNumber, error-type, explicit-new-expr, function-call-expr, function-defn,
-        if-else-stmt, module-class-defn, nil-literal, optional-type, relational-expr, returm-stmt, return-stmt, string
+        if-else-stmt, module-class-defn, nil-literal, optional-type, relational-expr, return-stmt, string
 
 function init() {
-    methodCall(1);
+    methodCall(1); // @panic error1
 }
 
 class C1 {
     C2 c2 = new();
 
     public function method1(int i) {
-        checkpanic self.c2.method2(i); // @panic error1
+        checkpanic self.c2.method2(i);
     }
 }
 
 class C2 {
     public int x = 1;
 
-    public function method2(int i) {
+    public function method2(int i) returns error? {
         if i == 0 {
             return;
         }
@@ -606,7 +608,7 @@ function init() {
     io:println(letExpr(0)); // @output 0
 }
 
-function letExpr(int i) int {
+function letExpr(int i) returns int {
     return checkpanic (let int s = - checkpanic fn1(i) in fn2(s));
 }
 
@@ -907,27 +909,27 @@ function typeTestExpr(anydata a) {
 Test-Case: panic
 Description: Test checkpanic-expr with trap expression. Test case 1.
 Labels: anydata, checkpanic, DecimalNumber, error-type, float, FloatingPointTypeSuffix, function-call-expr,
-        function-defn, int, multiplicative-expr, optional-type, string, trap-expr, typecast-expr
+        function-defn, int, multiplicative-expr, optional-type, string, trap-expr, type-cast-expr
 
 function init() {
-    testTrapExpr1("1.0");
+    testTrapExpr1("1.0"); // @panic {ballerina}TypeCastError {"message":"incompatible types: 'string' cannot be cast to 'int'"}
 }
 
 function testTrapExpr1(anydata a) {
-    int _ = checkpanic (trap (<int> a)); // @panic incompatible types: 'string' cannot be cast to 'int'
+    int _ = checkpanic (trap (<int> a));
 }
 
 Test-Case: panic
 Description: Test checkpanic-expr with trap expression. Test case 2.
 Labels: anydata, checkpanic, DecimalNumber, error-type, float, FloatingPointTypeSuffix, function-call-expr,
-        function-defn, int, multiplicative-expr, optional-type, string, trap-expr, typecast-expr
+        function-defn, int, multiplicative-expr, optional-type, string, trap-expr, type-cast-expr
 
 function init() {
-    testTrapExpr2(1, 0);
+    testTrapExpr2(1, 0); // @panic {ballerina}DivisionByZero {"message":" / by zero"}
 }
 
 function testTrapExpr2(int a, int b) {
-    int _ = checkpanic (trap (a/b)); // @panic DivisionByZero
+    int _ = checkpanic (trap (a/b));
 }
 
 Test-Case: output
@@ -950,7 +952,7 @@ function testTrapExpr2(error|int a) returns error|int {
 Test-Case: output
 Description: Test checkpanic-expr with conditional expression. Test case 1.
 Labels: binary-conditional-expr, boolean, checkpanic, DecimalNumber, error-constructor-expr, error-type,
-        function-call-expr, function-defn, int, optional-type, string, ternary-conditional-expr, typecast-expr,
+        function-call-expr, function-defn, int, optional-type, string, ternary-conditional-expr, type-cast-expr,
         union-type
 
 function init() {
@@ -1025,14 +1027,34 @@ type CustomError error<CustomErrorDetail>;
 CustomError e1 = error ("error msg", message = "error 1", code = 500);
 
 function init() {
-    error|int x1 = fn1(-1);
-    io:println(0); // @output 0
-
-    error? x2 = fn1(2);
+    int x2 = fn1(2);
     io:println(x2); // @panic error msg {"message":"error 1","code":500}
 }
 
-function fn1(int i) returns error|int {
+function fn1(int i) returns int {
+    return checkpanic (i > 0? e1:0);
+}
+
+Test-Case: output
+Description: Test checkpanic-expr with custom error types.
+Labels: checkpanic, DecimalNumber, error-type, error-type-parameter, function-call-expr, function-defn, int, nil-type,
+        record-type, return-stmt, string, unary-minus
+
+type CustomErrorDetail record {|
+    string message;
+    int code;
+|};
+
+type CustomError error<CustomErrorDetail>;
+
+CustomError e1 = error ("error msg", message = "error 1", code = 500);
+
+function init() {
+    int x1 = fn1(-1);
+    io:println(x1); // @output 0
+}
+
+function fn1(int i) returns int {
     return checkpanic (i > 0? e1:0);
 }
 
