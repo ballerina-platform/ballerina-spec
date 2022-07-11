@@ -1,6 +1,19 @@
+Test-Case: parser-error
+Description: Test let expression with missing tokens.
+Labels: int, let-expr
+
+function errorFunction() {
+    io:println(let int i in i); // @error missing variable initialization
+    io:println(let i = 2 in i); // @error missing type descriptor
+    io:println(let int i = 2 i); // @error missing in keyword
+    io:println(let int i = 2 int j = 2 in i + j); // @error missing comma token
+    io:println(let in i); // @error missing let variable declaration
+    io:println(let i); // @error variable initialization and expression after in keyword
+}
+
 Test-Case: output
 Description: Test nil-literal and nil-type in let-var-decl.
-Labels: let-expr, nil-literal, nil-type, function-call-expr
+Labels: function-call-expr, let-expr, nil-literal, nil-type, null
 
 function init() {
     io:println(let () n = () in n.toBalString()); // @output ()
@@ -9,7 +22,7 @@ function init() {
 
 Test-Case: output
 Description: Test nil-type, boolean in let-var-decl.
-Labels: let-expr, nil-literal, nil-type, boolean, boolean-literal, function-call-expr
+Labels: boolean, boolean-literal, function-call-expr, let-expr, nil-literal, nil-type, null,
 
 function init() {
     io:println(let null n = null in n.toBalString()); // @output ()
@@ -18,7 +31,7 @@ function init() {
 
 Test-Case: output
 Description: Test StringNumericEscape in the expression of let-var-decl.
-Labels: let-expr, string, StringNumericEscape, function-call-expr
+Labels: function-call-expr, let-expr, string, StringNumericEscape
 
 function init() {
     io:println(let string s = "\u{0633}" in s); // @output س
@@ -26,8 +39,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test let-expr when expression after `in` is a list-constructor-expr.
-Labels: let-expr, nil-literal, nil-type, boolean, string, boolean-literal, function-call-expr, list-constructor-expr
+Description: Test let expression when expression after `in` is a list-constructor-expr.
+Labels: boolean, boolean-literal, function-call-expr, let-expr, list-constructor-expr, nil-literal, nil-type, null, string
 
 function init() {
     io:println(let null n = () in [n, n, n]); // @output [null,null,null]
@@ -37,8 +50,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test let-expr when expression after `in` is a mapping-constructor-expr.
-Labels: let-expr, nil-literal, nil-type, boolean, boolean-literal, function-call-expr, mapping-constructor-expr
+Description: Test let expression when expression after `in` is a mapping-constructor-expr.
+Labels: boolean, boolean-literal, function-call-expr, let-expr, mapping-constructor-expr, nil-literal, nil-type, null
 
 function init() {
     io:println(let null nx = (), null ny = () in {"n": nx, n1: nx, ny, ["a"]: [nx, ny]}); // @output {"n":null,"n1":null,"ny":null,"a":[null,null]}
@@ -48,8 +61,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test let-expr when expression after `in` is a mapping-constructor-expr.
-Labels: let-expr, nil-literal, nil-type, record-type, union-type, int, function-call-expr, mapping-constructor-expr
+Description: Test let expression when expression after `in` is a mapping-constructor-expr.
+Labels: function-call-expr, int, let-expr, mapping-constructor-expr, nil-literal, nil-type, null, module-type-defn, optional-type, record-type, union-type
 
 type Record record {|
     int|boolean? i;
@@ -61,8 +74,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test let-expr when expression after `in` is a mapping-constructor-expr.
-Labels: let-expr, boolean, boolean-literal, union-type, record-type, int, function-call-expr, mapping-constructor-expr
+Description: Test let expression when expression after `in` is a mapping-constructor-expr.
+Labels: boolean, boolean-literal, function-call-expr, int, let-expr, mapping-constructor-expr, module-type-defn, record-type, union-type
 
 type Record record {|
     int|boolean? i;
@@ -75,8 +88,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test let-expr when expression after `in` is a mapping-constructor-expr.
-Labels: let-expr, string, record-type, array-type, mapping-constructor-expr
+Description: Test let expression when expression after `in` is a mapping-constructor-expr.
+Labels: array-type, let-expr, mapping-constructor-expr, module-type-defn, record-type, string
 
 type Names record {|
     string country;
@@ -89,28 +102,42 @@ function init() {
 }
 
 Test-Case: output
-Description: Test let-expr when expression after `in` is a table-constructor-expr.
-Labels: let-expr, string, boolean, boolean-literal, record-type, array-type, function-call-expr, table-constructor-expr
+Description: Test let expression when expression after `in` is a table-constructor-expr.
+Labels: array-type, boolean, boolean-literal, function-call-expr, let-expr, module-type-defn, null, record-type, string, table-constructor-expr, table-constructor-key-specifier, table-type
 
 type Names record {|
     string country;
     string[] names;
 |};
 
+type Rec1 record {|
+    readonly string n1;
+    int? n2;
+|};
+
+type Rec2 record {|
+    readonly string name;
+    boolean isValid;
+|};
+
 function init() {
-    io:println(let null n = () in table key(n1) [{n1: "N1", n2: n}, {n1: "N2", n2: n}]); // @output [{"n1":"N1","n2":null},{"n1":"N2","n2":null}]
-    io:println(let boolean b1 = true, boolean b2 = true
-        in table key(name) [{isValid: b1, name: "XX"}, {isValid: b2, name: "YY"}]); // @output [{"isValid":true,"name":"XX"},{"isValid":true,"name":"YY"}]
-    io:println(let boolean b1 = true, boolean b2 = false in table key(name) [{isValid: b1 && b2, name: "XX"}]); // @output [{"isValid":false,"name":"XX"}]
+    table<Rec1> key(n1) tbl1 = let null n = () in table key(n1) [{n1: "N1", n2: n}, {n1: "N2", n2: n}];
+    io:println(tbl1.get("N1").n2 is ()); // @output true
+    io:println(tbl1.get("N2").n2 is ()); // @output true
+    table<Rec2> key(name) tbl2 = let boolean b1 = true, boolean b2 = true
+        in table key(name) [{isValid: b1, name: "XX"}, {isValid: b2, name: "YY"}];
+    io:println(tbl2.get("XX").isValid); // @output true
+    io:println(tbl2.get("YY").isValid); // @output true
+    table<Rec2> key(name) tbl3 = let boolean b1 = true, boolean b2 = false in table key(name) [{isValid: b1 && b2, name: "XX"}];
+    io:println(tbl3.get("XX").isValid); // @output false
     table<Names> tbNames = table [];
     _ = let Names val = let string[] names = ["Sam", "John", "Ann"] in {country: "Ireland", names: names} in tbNames.add(val);
     io:println(tbNames); // @output [{"country":"Ireland","names":["Sam","John","Ann"]}]
 }
 
 Test-Case: output
-Description: Test let-expr when expression after `in` is an object-constructor-expr.
-Labels: let-expr, nil-literal, nil-type, function-call-expr, object-type, object-constructor-expr, equality,
-        method-call-expr
+Description: Test let expression when expression after `in` is an object-constructor-expr.
+Labels: equality, explicit-new-expr, field-access-expr, function-call-expr, implicit-new-expr, let-expr, method-call-expr, module-class-defn, nil-literal, nil-type, null, object-constructor-expr, object-type, var
 
 class NilClass {
     null n;
@@ -143,9 +170,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test let-expr when expression after `in` is an object-constructor-expr.
-Labels: let-expr, boolean, boolean-literal, function-call-expr, object-type, object-constructor-expr, logical-expr,
-        method-call-expr
+Description: Test let expression when expression after `in` is an object-constructor-expr.
+Labels: boolean, boolean-literal, explicit-new-expr, function-call-expr, let-expr, logical-expr, method-call-expr, module-class-defn, object-constructor-expr, object-type
 
 class BoolClass {
     boolean b1;
@@ -171,8 +197,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test let-expr when expression after `in` is a function-call-expr.
-Labels: let-expr, nil-literal, nil-type, boolean, boolean-literal, equality, function-call-expr, function-defn
+Description: Test let expression when expression after `in` is a function-call-expr.
+Labels: boolean, boolean-literal, equality, function-call-expr, function-defn, let-expr, nil-literal, nil-type, null, optional-type
 
 function init() {
     io:println(let null n = () in isNil(n)); // @output true
@@ -188,8 +214,8 @@ function isTrue(boolean b) returns boolean {
 }
 
 Test-Case: output
-Description: Test let-expr when expression after `in` is a object-constructor-expr.
-Labels: let-expr, nil-literal, nil-type, method-call-expr, new-expr
+Description: Test let expression when expression after `in` is an object-constructor-expr.
+Labels: let-expr, method-call-expr, module-class-defn, implicit-new-expr, nil-literal, nil-type, null
 
 class NilClass {
     null n;
@@ -208,8 +234,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test let-expr when expression after `in` is an error-constructor-expr.
-Labels: let-expr, nil-literal, nil-type, boolean, boolean-literal, error-constructor-expr
+Description: Test let expression when expression after `in` is an error-constructor-expr.
+Labels: boolean, boolean-literal, error-constructor-expr, let-expr, nil-literal, nil-type, null
 
 function init() {
     io:println(let null n = null in error("Message", n, n = n)); // @output error("Message",n=null)
@@ -217,8 +243,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test let-expr when expression after `in` is a let-expr.
-Labels: let-expr, nil-literal, nil-type, error-constructor-expr
+Description: Test let expression when expression after `in` is a let-expr.
+Labels: error-constructor-expr, let-expr, nil-literal, nil-type, null
 
 function init() {
     io:println(() == let null n1 = null in let null n2 = n1 in n2); // @output true
@@ -228,24 +254,24 @@ function init() {
 }
 
 Test-Case: output
-Description: Test let-expr when expression after `in` is a type-cast-expr.
-Labels: let-expr, nil-literal, nil-type, type-cast-expr
+Description: Test let expression when expression after `in` is a type-cast-expr.
+Labels: let-expr, nil-literal, nil-type, null, type-cast-expr
 
 function init() {
     io:println(() == let null n = null in <()>n); // @output true
 }
 
 Test-Case: output
-Description: Test let-expr when expression after `in` is a type-cast-expr
-Labels: let-expr, nil-literal, nil-type, typeof-expr
+Description: Test let expression when expression after `in` is a typeof-expr.
+Labels: let-expr, nil-literal, nil-type, null, typeof-expr
 
 function init() {
     io:println(let null n = null in typeof n); // @output typedesc ()
 }
 
 Test-Case: output
-Description: Test let-expr when expression after `in` is a type-cast-expr.
-Labels: let-expr, nil-literal, nil-type, equality, exact-equality
+Description: Test let expression when expression after `in` is a unary-logical-expr.
+Labels: equality, exact-equality, let-expr, nil-literal, nil-type, null
 
 function init() {
     io:println(let null n = null in !(n == ())); // @output false
@@ -256,24 +282,24 @@ function init() {
 }
 
 Test-Case: output
-Description: Test let-expr when expression after `in` is a type-cast-expr
-Labels: let-expr, nil-literal, nil-type, is-expr
+Description: Test let expression when expression after `in` is a is-expr.
+Labels: is-expr, let-expr, nil-literal, nil-type, null
 
 function init() {
     io:println(let null n = null in n is null); // @output true
 }
 
 Test-Case: output
-Description: Test let-expr when expression after `in` is a type-cast-expr
-Labels: let-expr, nil-literal, nil-type, binary-conditional-expr
+Description: Test let expression when expression after `in` is a conditional-expr.
+Labels: binary-conditional-expr, let-expr, nil-literal, nil-type, null
 
 function init() {
     io:println(let null n = null in n == () ? true : false); // @output true
 }
 
 Test-Case: output
-Description: Test let-expr when expression after `in` is a query-expr.
-Labels: let-expr, nil-literal, nil-type, string, query-expr, list-constructor-expr, mapping-constructor-expr
+Description: Test let expression when expression after `in` is a query-expr.
+Labels: field-access-expr, let-expr, list-constructor-expr, query-expr, mapping-constructor-expr, method-call-expr, nil-literal, nil-type, null, optional-type, string, var
 
 function init() {
     var a = let null n = null in from var i in [1, n, 2, n] select i;
@@ -300,9 +326,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test let-expr, when type-descriptor is a int-type-descriptor or floating-point-type-descriptor.
-Labels: let-expr, list-constructor-expr, type-cast-expr, function-call-expr, DecimalFloatingPointNumber, int, float,
-        decimal, optional-type
+Description: Test let expression, when type-descriptor is a int-type-descriptor or floating-point-type-descriptor.
+Labels: decimal, DecimalFloatingPointNumber, int, float, function-call-expr, let-expr, list-constructor-expr, optional-type, type-cast-expr
 
 function init() {
     io:println(let int i = 2, float f = 2.2f, decimal d = 1.2d in i + <int>f + <int>d); // @output 5
@@ -325,8 +350,8 @@ function baz(int i) returns int? {
 }
 
 Test-Case: output
-Description: Test string in let-expr.
-Labels: let-expr, string, string-template-expr, function-call-expr
+Description: Test string in let expression.
+Labels: function-call-expr, let-expr, string, string-template-expr
 
 function init() {
     io:println(() == let string str = "ABCDEF", string subStr = "PQR" in str.indexOf(subStr)); // @output true
@@ -336,8 +361,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test let-expr, when type-descriptor is a xml-type-descriptor.
-Labels: let-expr, xml, xml:Element, xml:ProcessingInstruction, xml:Comment, xml:Text, xml-type-parameter
+Description: Test let expression, when type-descriptor is a xml-type-descriptor.
+Labels: let-expr, xml, xml:Comment, xml:Element, xml:ProcessingInstruction, xml:Text, xml-type-parameter
 
 function init() {
     xmlns "foo" as ns;
@@ -357,8 +382,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test let-expr, when type-descriptor is a list-type-descriptor.
-Labels: let-expr, list-constructor-expr, function-call-expr, var, array-type, member-access-expr
+Description: Test let expression, when type-descriptor is a list-type-descriptor.
+Labels: array:length, array:push, array-type, function-call-expr, let-expr, list-constructor-expr, member-access-expr, method-call-expr, nil-literal, tuple-type, var
 
 function init() {
     io:println(let var l = ["A", 2] in l[0]); // @output A
@@ -371,8 +396,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test let-expr, when type-descriptor is a mapping-type-descriptor.
-Labels: let-expr, mapping-constructor-expr, map-type, any, anydata, member-access-expr
+Description: Test let expression, when type-descriptor is a mapping-type-descriptor.
+Labels: any, anydata, let-expr, mapping-constructor-expr, map-type, member-access-expr
 
 function init() {
     io:println(() == let map<any> addressOne = {city: "Colombo", "country": "SriLanka"}, map<any>[] array = []
@@ -388,8 +413,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test let-expr, when type-descriptor is a record-type-descriptor.
-Labels: let-expr, record-type, mapping-constructor-expr, list-constructor-expr, array-type
+Description: Test let expression, when type-descriptor is a record-type-descriptor.
+Labels: array-type, let-expr, list-constructor-expr, mapping-constructor-expr, module-type-defn, record-type
 
 type Department record {
     string dptName = "";
@@ -422,8 +447,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test let-expr, when type-descriptor is a table-type-descriptor.
-Labels: let-expr, record-type, table-constructor-expr
+Description: Test let expression, when type-descriptor is a table-type-descriptor.
+Labels: let-expr, module-type-defn, record-type, table-constructor-expr
 
 type Foo record {
     readonly map<string> m;
@@ -450,8 +475,8 @@ function init() {
 }
 
 Test-Case: output
-Description: Test let-expr with query expressions.
-Labels: let-expr, record-type, array-type, list-constructor-expr
+Description: Test let expression with query expressions.
+Labels: array-type, let-expr, list-constructor-expr, module-type-defn, record-type, var
 
 type Department record {|
    int id;
@@ -492,31 +517,9 @@ function init() {
     io:println(l); // @output [{"fname":"Sam","lname":"George","dept":"HR"}]
 }
 
-Test-Case: parser-error
-Description: let-expr with missing tokens.
-Labels: let-expr
-
-function errorFunction() {
-    io:println(let int i in i); // @error missing equal token
-                                // @error missing identifier
-    io:println(let i = 2 in i); // @error unknown type 'i'
-                                // @error missing identifier
-                                // @error undefined symbol 'i'
-    io:println(let int i = 2 i); // @error missing in keyword
-    io:println(let int i = 2 int j = 2 in i + j); // @error missing comma token
-    io:println(let in i); // @error missing let variable declaration
-                          // @error undefined symbol 'i'
-    io:println(let i); // @error unknown type 'i'
-                       // @error missing equal token
-                       // @error missing identifier
-                       // @error missing identifier
-                       // @error missing identifier
-                       // @error missing in keyword
-}
-
 Test-Case: error
-Description: let-expr when variables are declared outside its' scope.
-Labels: let-expr, int
+Description: Test let expression when let variable is declared outside let expression.
+Labels: int, let-expr
 
 function errorFunction() {
     int i = 2;
@@ -524,8 +527,8 @@ function errorFunction() {
 }
 
 Test-Case: error
-Description: let-expr when the type of let-var-decl does not match
-Labels: let-expr
+Description: Test let expression when the type of let variables does not compatible with let expression.
+Labels: function-call-expr, int, let-expr, optional-type, string, string-literal, var
 
 function errorFunction() {
     io:println(let string i = "2", int j = 3 in i + j); // @error operator '+' not defined for 'string' and 'int'
@@ -537,10 +540,19 @@ function foo(string? s) returns string? {
     return s;
 }
 
+Test-Case: error
+Description: Test let expression when when the let variables are incorrect.
+Labels: int, let-expr, string-literal
+
+function errorFunction() {
+    io:println(let int i = "not int" in i); // @error incompatible types: expected 'int', found 'string'
+}
+
 Test-Case: output
-Description: Test let-expr being an isolated expression, when the expression following `in` is isolated.
-             Referenced variables bound by let-var-decls are initialized using isolated expressions.
-Labels: let-expr, function-call-expr, int
+Description: Test let expression being an isolated expression, when the expression following `in` is isolated.
+             A reference in that expression to a variable bound by a let-var-decl will be treated as isolated
+             if the expression initializing the variable in the let-var-decl is isolated.
+Labels: function-call-expr, int, let-expr
 
 isolated int x = 2;
 isolated int y = 4;
@@ -566,16 +578,16 @@ isolated function init() {
 }
 
 Test-Case: error
-Description: Test error cases when let-expr is assigned to an isolated expression.
-             Non isolated expressions cannot be used to initialize let-var-decl when expression following in is isolated.
-Labels: let-expr, function-call-expr, array-type
+Description: Test error cases when let expression is assigned to an isolated variable.
+             Non isolated expressions cannot be used to initialize let-var-decl when expression following in expected to be isolated.
+Labels: array-type, function-call-expr, let-expr
 
 isolated int[] x = [];
 
 function foo() {
     lock {
         int[] y = [23];
-        x = let int[] i = y in i; // @error invalid attempt to transfer out a value from a 'lock' statement with restricted variable usage: expected an isolated expression and invalid attempt to transfer a value into a 'lock' statement with restricted variable usage
+        x = let int[] i = y in i; // @error the let expression is not isolated because the expression that initializes variable i is not isolated
     }
 }
 
@@ -587,7 +599,7 @@ Test-Case: output
 Description: Test behaviour if the typed-binding-pattern uses var.
              The type of the variable should be inferred from the precise static type of the expression following =.
 Fail-Issue: ballerina-platform/ballerina-lang#35527
-Labels: let-expr, var, function-call-expr, string-literal
+Labels: function-call-expr, let-expr, module-type-defn, singleton-type, string-literal, var
 
 type X "char_X";
 
@@ -597,4 +609,42 @@ function foo(X x) returns boolean {
 
 function init() {
     _ = let var x = "char_X" in foo(x); // @output true
+}
+
+Test-Case: output
+Description: Test let expression located in module level.
+Labels: function-call-expr, int, let-expr, nil-literal, nil-type, var
+
+var t1 = let int i = 2, int j = 3 in i + j;
+var t2 = let () n = () in n.toBalString();
+
+function init() {
+    io:println(t1); // @output 5
+    io:println(t2); // @output ()
+}
+
+Test-Case: error
+Description: Test let expression when the variables bound in a let-var-decl are modified.
+Fail-Issue: ballerina-platform/ballerina-lang#37595
+Labels: let-expr, string, string-literal, var
+
+public function init() {
+    var r = let string str = "hello" in function () {
+        str = "bye"; // @error the variables bound in a let-var-decl are implicitly final
+    };
+}
+
+Test-Case: output
+Description: Test let expression when annotations are attached to let-var-decl.
+Labels: annotation-decl, int, let-expr, module-type-defn, record-type, string, string-literal
+
+type Annot record {
+    string val;
+};
+
+public const annotation Annot v1 on source var;
+
+function init() {
+    int y = let @v1 {val: "v1"} int x = 4 in 2 * x;
+    io:println(y); // @output 8
 }
