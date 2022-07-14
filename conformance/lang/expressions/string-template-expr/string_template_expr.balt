@@ -1,5 +1,5 @@
 Test-Case: output
-Description: Test whether string-template-expr interpolates the results of evaluating expressions into a literal string.
+Description: Test whether string template expression interpolates the results of evaluating expressions into a literal string.
 Labels: additive-expr, int, string, string-literal, string-template-expr
 
 function init() {
@@ -17,7 +17,7 @@ function init() {
 }
 
 Test-Case: error
-Description: Test whether string-template-expr interpolates the results of evaluating expressions into a literal string.
+Description: Test string template expression when expected type is not a string.
 Labels: additive-expr, int, string, string-literal, string-template-expr
 
 function errorFunction() {
@@ -27,11 +27,10 @@ function errorFunction() {
     int _ = string `${a2}`; // @error expected 'int' but found 'string'
     int a3 = 13;
     int _ = string `${a2 + a3}`; // @error expected 'int' but found 'string'
-    int _ = <int> string `${a2 + a3}`; // @error 'string' cannot be cast to 'int'
 }
 
 Test-Case: output
-Description: Test type of the expression in each interpolation of string-template-expr.
+Description: Test string template expression with basic type literals.
 Labels: boolean, DecimalNumber, float, int, string, string-template-expr
 
 function init() {
@@ -62,7 +61,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test type of the expression in each interpolation of string-template-expr.
+Description: Test string template expression with union type literals.
 Labels: decimal, float, int, string, string-template-expr, union-type
 
 function init() {
@@ -84,23 +83,20 @@ function init() {
 }
 
 Test-Case: output
-Description: Test type of the expression in each interpolation of string-template-expr.
+Description: Test string template expression with intersection type literals.
 Labels: decimal, float, int, intersection-type, string, string-template-expr, union-type
 
 function init() {
-    string|int & readonly a1 = "a1";
-    string temp1 = string `${a1}`;
-    io:println(temp1); // @output a1
-    int|float|decimal & readonly a2 = 12;
-    string temp2 = string `${a2}`;
+    int|float|decimal & readonly a1 = 12;
+    string temp2 = string `${a1}`;
     io:println(temp2); // @output 12
-    string|int|decimal|float|boolean & readonly a3 = true;
-    string temp3 = string `${a3}`;
+    string|int|decimal|float|boolean & readonly a2 = true;
+    string temp3 = string `${a2}`;
     io:println(temp3); // @output true
 }
 
 Test-Case: output
-Description: Test type of the expression in each interpolation of string-template-expr.
+Description: Test string template expression with defined type literals.
 Labels: module-type-defn, singleton-type, string, string-literal, string-template-expr, union-type
 
 type T1 "c";
@@ -128,7 +124,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test type of the expression in each interpolation of string-template-expr.
+Description: Test string template expression with sub types of basic type literals.
 Labels: byte, check, int, string, string-template-expr, union-type
 
 function init() {
@@ -159,7 +155,7 @@ function init() {
 }
 
 Test-Case: error
-Description: Test type of the expression in each interpolation of string-template-expr.
+Description: Test string template expression with structured and behaviour type literals.
 Labels: function-type, int, optional-type, record-type, string, string-template-expr, tuple-type
 
 function errorFunction() {
@@ -182,8 +178,8 @@ function f1() returns int {
 }
 
 Test-Case: error
-Description: Test type of the expression in each interpolation of string-template-expr.
-Labels: array-type, int, map-type, module-type-defn, string, string-template-expr, union-type
+Description: Test string template expression with singleton type literals.
+Labels: array-type, int, map-type, module-type-defn, singleton-type, string, string-template-expr, union-type
 
 type T1 "C"|"S"|map<int>;
 type T2 true|record {};
@@ -258,17 +254,15 @@ function f2() {
 
 Test-Case: error
 Description: Test every character that is not part of an interpolation is interpreted as a literal character.
+Fail-Issue: ballerina-platform/ballerina-lang#36974
 Labels: string, string-template-expr
 
 function errorFunction() {
     string _ = string `${`}`; // @error backtick as a expression
-    string _ = string ```; // @error backtick within BacktickString
-    string _ = string ````; // @error backtick within BacktickString
-    string _ = string ``````; // @error backtick within BacktickString
 }
 
 Test-Case: output
-Description: Test string-template-expr is evaluated by evaluating the expression in each interpolation in the order in
+Description: Test string template expression is evaluated by evaluating the expression in each interpolation in the order in
 which they occur.
 Labels: boolean, function-call-expr, int, string, string-template-expr
 
@@ -278,7 +272,7 @@ function init() {
     string temp1 = string `${a1} ${b1}`;
     io:println(temp1); // @output a1 b1
     int a2 = 12;
-    string temp2 = string `${a2} ${b1+ a1}`;
+    string temp2 = string `${a2} ${b1 + a1}`;
     io:println(temp2); // @output 12 b1a1
     int a3 = 13;
     int b2 = 15;
