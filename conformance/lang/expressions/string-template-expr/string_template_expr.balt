@@ -315,3 +315,32 @@ Labels: string, string-template-expr
 function errorFunction() {
     string _ = string `${}`; // @error missing expression
 }
+
+Test-Case: output
+Description: Test nested string template expressions.
+Labels: string, string-template-expr
+
+function init() {
+    string a1 = "abc";
+    string temp1 = string `${string `$ $ ${a1} $ $`}`;
+    io:println(temp1); // @output $ $ abc $ $
+    string a2 = "xyz";
+    string temp2 = string `${string `$ $ ${string `$ $ ${a1} ${a2} $ $`} $ $`}`;
+    io:println(temp2); // @output $ $ $ $ abc xyz $ $ $ $
+}
+
+Test-Case: output
+Description: Test string template expressions with string single escapes.
+Labels: string, string-template-expr
+
+function init() {
+    string a1 = "\t";
+    string temp1 = string `$${a1}$`;
+    io:println(temp1); // @output $ $
+    string a2 = "\n";
+    string temp2 = string `$${a2}$`;
+    io:println(temp2); // @output $
+    string a3 = "\r";
+    string temp3 = string `$${a3}$`;
+    io:println(temp3); // @output $
+}
