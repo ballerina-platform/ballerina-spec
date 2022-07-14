@@ -21,62 +21,66 @@ Test-Case: output
 Description: Test type cast param with a type containing annotations.
 Labels: annotation, annotation-decl, any, map-type, mapping-constructor-expr, string, type-cast-expr
 
-annotation map<string> myAnnot on type;
+annotation map<string> MyAnnot on type;
 
 function init() {
     any a = 5;
-    int e = <@myAnnot {name: "Ballerina"} int>a;
-    io:println(e); // @output 5
+    int _ = <@MyAnnot {name: "Ballerina"} int>a;
+}
 
-    int f = <@untainted int>a;
-    io:println(f); // @output 5
+Test-Case: output
+Description: Test type cast param with a type containing deprecated annotation.
+Labels: annotation, any, deprecated, type-cast-expr
 
-    int g = <@deprecated int>a;
-    io:println(g); // @output 5
+function init() {
+    any a = 5;
+    int _ = <@deprecated int>a;
 }
 
 Test-Case: output
 Description: Test type cast param containing only annotations.
 Labels: annotation, annotation-decl, any, map-type, mapping-constructor-expr, string, type-cast-expr
 
-annotation map<string> myAnnot on type;
+annotation map<string> MyAnnot on type;
 
 function init() {
     any a = 5;
-    any b = <@myAnnot {name: "Ballerina"}>a;
-    io:println(b); // @output 5
+    any _ = <@MyAnnot {name: "Ballerina"}>a;
+}
 
-    any c = <@untainted>a;
-    io:println(c); // @output 5
+Test-Case: output
+Description: Test type cast param containing only deprecated annotation.
+Labels: annotation, annotation-decl, any, deprecated, type-cast-expr
 
-    any d = <@deprecated>a;
-    io:println(d); // @output 5
+function init() {
+    any a = 5;
+    any _ = <@deprecated>a;
 }
 
 Test-Case: error
 Description: Test type cast param containing annotations that are not allowed on type.
-Labels: annotation, annotation-decl, any, map-type, mapping-constructor-expr, string, type-cast-expr
+Labels: annotation, annotation-decl, any, type-cast-expr
 
-const annotation map<string> myAnnot on source var;
+const annotation MyAnnot on source var;
 
-const annotation myAnnot2 on function;
+const annotation MyAnnot2 on function;
 
-const annotation record {} myAnnot3 on source worker;
+const annotation MyAnnot3 on source worker;
 
 function errorFunction() {
     any a = 5;
 
-    any b = <@myAnnot {name: "Ballerina"}>a; // @error annotation 'myAnnot' is not allowed on type
+    any b = <@MyAnnot>a; // @error annotation 'MyAnnot' is not allowed on type
 
-    any c = <@myAnnot2>a; // @error annotation 'myAnnot2' is not allowed on type
+    any c = <@MyAnnot2>a; // @error annotation 'MyAnnot2' is not allowed on type
 
-    any d = <@myAnnot3 {id: 3}>a; // @error annotation 'myAnnot3' is not allowed on type
+    any d = <@MyAnnot3>a; // @error annotation 'MyAnnot3' is not allowed on type
 
-    any e = <@myAnnot {name: "Ballerina"} int>a; // @error annotation 'myAnnot' is not allowed on type
+    any e = <@MyAnnot int>a; // @error annotation 'MyAnnot' is not allowed on type
 
-    any f = <@myAnnot2 int>a; // @error annotation 'myAnnot2' is not allowed on type
+    any f = <@MyAnnot2 int>a; // @error annotation 'MyAnnot2' is not allowed on type
 
-    any g = <@myAnnot3 {severity: 3} int>a; // @error annotation 'myAnnot3' is not allowed on type
+    any g = <@MyAnnot3 int>a; // @error annotation 'MyAnnot3' is not allowed on type
 }
 
 Test-Case: output
@@ -179,14 +183,21 @@ function init() {
 
 Test-Case: output
 Description: Test if the value v of the expression belongs to the type described by the type cast expression then the 
-             result of the type cast expression is v using sequence types.
-Labels: any, string, type-cast-expr, xml, xml-template-expr, xml:Element
+             result of the type cast expression is v using string type.
+Labels: any, string, type-cast-expr
 
 function init() {
     any a = "Ballerina";
     string a1 = <string>a;
     io:println(a1); // @output Ballerina
+}
 
+Test-Case: output
+Description: Test if the value v of the expression belongs to the type described by the type cast expression then the 
+             result of the type cast expression is v using xml type.
+Labels: any, type-cast-expr, xml, xml-template-expr, xml:Element
+
+function init() {
     any b = xml `<e>content</e>`;
     xml b1 = <xml>b;
     io:println(b1); // @output <e>content</e>
@@ -613,7 +624,7 @@ function init() {
 Test-Case: output
 Description: Test if the value v of the expression belongs to the type described by the type cast expression then the 
              result of the type cast expression is v using future type.
-Labels: any, checkpanic, future, future-type-parameter, named-worker-decl, single-wait-action, string, type-cast-expr, 
+Labels: any, future, future-type-parameter, named-worker-decl, single-wait-action, string, type-cast-expr, 
         union-type
 
 function init() {
@@ -626,12 +637,12 @@ function init() {
 
     future a0 = w1;
     future<string> a1 = <future<string>>a0;
-    string a2 = checkpanic wait a1;
+    string|error a2 = wait a1;
     io:println(a2); // @output ballerina
 
     future<string>|future<int> b0 = w2;
     future<int> b1 = <future<int>>b0;
-    int b2 = checkpanic wait b1;
+    int|error b2 = wait b1;
     io:println(b2); // @output 32
 }
 
@@ -639,7 +650,7 @@ Test-Case: output
 Description: Test if the value v of the expression belongs to the type described by the type cast expression then the 
              result of the type cast expression is v using user defined future type.
 Fail-Issue: ballerina-platform/ballerina-lang#35363
-Labels: any, checkpanic, future, future-type-parameter, module-type-defn, named-worker-decl, single-wait-action, string, 
+Labels: any, future, future-type-parameter, module-type-defn, named-worker-decl, single-wait-action, string, 
         type-cast-expr, union-type
 
 type MyFuture future<int>;
@@ -651,7 +662,7 @@ function init() {
 
     future<string>|future<int> b0 = w2;
     MyFuture b1 = <MyFuture> b0;
-    int b2 = checkpanic wait b1;
+    int|error b2 = wait b1;
     io:println(b2) // @output 32
 }
 
@@ -813,7 +824,7 @@ function init() {
 
 Test-Case: output
 Description: Test if the value v of the expression belongs to the type described by the type cast expression then the 
-             result of the type cast expression is v using anydata, byte and json type.
+             result of the type cast expression is v using anydata, byte, xml and json type.
 Labels: any, array-type, anydata, byte, json, list-constructor-expr, map-type, record-type, string, type-cast-expr, 
         union-type, xml
 
