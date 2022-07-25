@@ -1,20 +1,20 @@
-name: Sync spec in master with ballerina.io
+name: Delete draft spec release in ballerina.io
 
-on: 
-  push:
-    branches:
-      - master
-    paths-ignore:
-      - '.github/**'
-      - 'conformance/**'
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version of the draft (directory name)'
+        required: true
+        default: ''
 
 jobs:
-  sync_master_spec:
+  delete_release_spec:
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.BAL_BOT_PAT }}
 
-    steps:       
+    steps:
       - name: Checkout ballerina-spec
         uses: actions/checkout@v2
 
@@ -24,16 +24,7 @@ jobs:
       - name: Clone ballerina-prod-website
         run: git clone https://ballerina-bot:$GITHUB_TOKEN@github.com/ballerina-platform/ballerina-platform.github.io.git
 
-      - name: Install xsltproc
-        run: sudo apt-get install -y xsltproc
-
-      - name: Make
-        run: |
-          cd lang
-          make all
-          mv build/spec.html build/index.html
-
-      - name: Sync spec in master with ballerina-dev-website
+      - name: Delete spec directory from ballerina-dev-website
         run: |
           cd ballerina-dev-website
           git pull origin master
@@ -41,12 +32,11 @@ jobs:
           git config --global user.email "ballerina-bot@ballerina.org"
           git config --global user.name "ballerina-bot"
 
-          git rm -r spec/lang/master/
-          cp -r ../lang/build/ spec/lang/master/
-          git add spec/lang/master/
-          git commit --allow-empty -m "[Automated] Update spec in master"
+          if [ -d "spec/lang/draft/${{ github.event.inputs.version }}" ]; then rm -Rf "spec/lang/draft/${{ github.event.inputs.version }}"; else echo "${{ github.event.inputs.version }} directory not found"; fi
+          git add spec/lang/draft
+          git commit --allow-empty -m "[Automated] Delete draft in master"
 
-      - name: Sync spec in master with ballerina-prod-website
+      - name: Delete spec directory from ballerina-prod-website
         run: |
           cd ballerina-platform.github.io
           git pull origin master
@@ -54,11 +44,10 @@ jobs:
           git config --global user.email "ballerina-bot@ballerina.org"
           git config --global user.name "ballerina-bot"
 
-          git rm -r spec/lang/master/
-          cp -r ../lang/build/ spec/lang/master/
-          git add spec/lang/master/
-          git commit --allow-empty -m "[Automated] Update spec in master"
-          
+          if [ -d "spec/lang/draft/${{ github.event.inputs.version }}" ]; then rm -Rf "spec/lang/draft/${{ github.event.inputs.version }}"; else echo "${{ github.event.inputs.version }} directory not found"; fi
+          git add spec/lang/draft
+          git commit --allow-empty -m "[Automated] Delete draft in master"
+
       - name: Push new changes to ballerina-dev-website
         shell: bash
         run: |
