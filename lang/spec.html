@@ -6622,11 +6622,19 @@ clause in the pipeline is executed lazily, pulling input from its preceding
 clause. The input to the first clause is a single empty frame.
 </p>
 <p>
-The execution of a clause may complete early with an error value, in which case
-this error value is the result of the query, except when constructing a stream.
-Otherwise, the result of evaluating a query expression is a single value, which
-is constructed from the sequence of values emitted by the last clause. The
-result must be one of the following basic types:
+When a <code>from</code> or <code>join</code> clause is executed, it makes calls
+to the <code>next</code> method of an Iterator object. If any of these calls
+return an error value <var>e</var>, then we say that the clause <em>completes
+early</em> with error value <var>e</var>.
+</p>
+<p>
+A query-expr that does not construct a stream is evaluated as described in this
+paragraph. If a clause completes early with error value <var>e</var>, then the
+result of evaluating the query-expr is <var>e</var>. The normal rules apply if
+the execution of any clause results in the evaluation of an expression
+completing abruptly. Otherwise, the result of evaluating a query expression is a
+single value, which is constructed from the sequence of values emitted by the
+last clause. The result must be one of the following basic types:
 </p>
 <ul>
 <li>list - the constructed list has a member for each emitted value; every
