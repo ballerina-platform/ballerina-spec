@@ -1,5 +1,5 @@
 Test-Case: output
-Description: Test field access expression by accessing existing fields when they belong to JSON objects. Here, the
+Description: Test field access expression by accessing existing fields, when they belong to JSON objects. Here, the
              field-names are string-literals.
 Labels: array-type, boolean, decimal, DecimalFloatingPointNumber, DecimalNumber, field-access-expr, float,
         FloatingPointTypeSuffix, HexFloatingPointLiteral, HexIntLiteral, json, list-constructor-expr,
@@ -17,7 +17,7 @@ function init() {
     io:println(x5.a); // @output 2
     io:println(x5.e); // @output [12,"JSON",null]
 
-    io:println(x6.b); // @output {"a":2,"b":.1,"c":"string","d":false}
+    io:println(x6.b); // @output {"a":2,"b":0.1,"c":"string","d":false}
     io:println(x6.b.b); // @output 0.1
     io:println(x6.b.c); // @output string
 
@@ -26,11 +26,11 @@ function init() {
     io:println(x7.b.a.a); // @output 2
     io:println(x7.e); // @output 1977011
     io:println(x7.f); // @output 0.12955856323242188
-    io:println(x7.x1); // @output {"a":2,"b":0.1,"c":"string","d":false}
+    io:println(x7.x1); // @output 12
 }
 
 Test-Case: output
-Description: Test field access expression by accessing existing fields when they belong to JSON objects. Here,
+Description: Test field access expression by accessing existing fields, when they belong to JSON objects. Here,
              field-names are variable-names.
 Labels: array-type, boolean, decimal, DecimalFloatingPointNumber, DecimalNumber, field-access-expr, float,
         FloatingPointTypeSuffix, HexFloatingPointLiteral, HexIntLiteral, json, list-constructor-expr,
@@ -45,7 +45,7 @@ function init() {
     json x6 = 12;
     json x7 = "JSON";
     json x8 = ();
-    json[] x9 = [x1, x2, x3];
+    json[] & readonly x9 = [x1, x2, x3];
     json x10 = {x1, x9};
     json x11 = {x1, x2, x3, x4, x5, x6, x7, x8, readonly x9, x10};
 
@@ -64,7 +64,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test field access expression by accessing existing fields when they belong to JSON objects with valid
+Description: Test field access expression by accessing existing fields, when they belong to JSON objects with valid
              field-names.
 Labels: array-type, boolean, decimal, DecimalFloatingPointNumber, DecimalNumber, field-access-expr, float,
         FloatingPointTypeSuffix, HexFloatingPointLiteral, HexIntLiteral, json, list-constructor-expr,
@@ -106,17 +106,138 @@ function init() {
 }
 
 Test-Case: output
-Description: Test field access expression by accessing existing fields when they belong to JSON objects. Here, mapping
-             constructor contains computed-name-field. Test case 1.
+Description: Test field access expression by accessing missing fields from JSON objects.
+Labels: field-access-expr, json, mapping-constructor-expr
+
+json x1 = {};
+json x2 = {};
+json x3 = {};
+json x4 = {};
+
+json|error y1 = x1.a;
+json|error y2 = x1.A;
+json|error y3 = x1._1;
+json|error y4 = x1._A;
+json|error y5 = x1.__;
+
+json|error y6 = x2.\"y;
+json|error y7 = x2.\u{21};
+json|error y8 = x2._\_;
+json|error y9 = x2._\u{12e};
+
+json|error y10 = x3.'02;
+json|error y11 = x3.'1;
+json|error y12 = x3.'int;
+
+json|error y13 = x4.__.__;
+
+function init() {
+    json x5 = {};
+    json x6 = {};
+    json x7 = {};
+    json x8 = {};
+
+    io:println(y1); // @output error("{ballerina/lang.map}KeyNotFound",message="key 'a' not found in JSON mapping")
+    io:println(x5.z); // @output error("{ballerina/lang.map}KeyNotFound",message="key 'z' not found in JSON mapping")
+    io:println(y2); // @output error("{ballerina/lang.map}KeyNotFound",message="key 'A' not found in JSON mapping")
+    io:println(x5.Z); // @output error("{ballerina/lang.map}KeyNotFound",message="key 'Z' not found in JSON mapping")
+    io:println(y3); // @output error("{ballerina/lang.map}KeyNotFound",message="key '_1' not found in JSON mapping")
+    io:println(x5._a); // @output error("{ballerina/lang.map}KeyNotFound",message="key '_a' not found in JSON mapping")
+    io:println(y4); // @output error("{ballerina/lang.map}KeyNotFound",message="key '_A' not found in JSON mapping")
+    io:println(x5._12); // @output error("{ballerina/lang.map}KeyNotFound",message="key '_12' not found in JSON mapping")
+    io:println(y5); // @output error("{ballerina/lang.map}KeyNotFound",message="key '__' not found in JSON mapping")
+    io:println(x5.සිංහල); // @output error("{ballerina/lang.map}KeyNotFound",message="key 'සිංහල' not found in JSON mapping")
+
+    io:println(y6); // @output error("{ballerina/lang.map}KeyNotFound",message="key '"y' not found in JSON mapping")
+    io:println(x6.\_); // @output error("{ballerina/lang.map}KeyNotFound",message="key '_' not found in JSON mapping")
+    io:println(y7); // @output error("{ballerina/lang.map}KeyNotFound",message="key '!' not found in JSON mapping")
+    io:println(x6.\u{12e}); // @output error("{ballerina/lang.map}KeyNotFound",message="key 'Į' not found in JSON mapping")
+    io:println(y8); // @output error("{ballerina/lang.map}KeyNotFound",message="key '__' not found in JSON mapping")
+    io:println(x6.a\u{21}); // @output error("{ballerina/lang.map}KeyNotFound",message="key 'a!' not found in JSON mapping")
+    io:println(y9); // @output error("{ballerina/lang.map}KeyNotFound",message="key '_Į' not found in JSON mapping")
+
+    io:println(y10); // @output error("{ballerina/lang.map}KeyNotFound",message="key '02' not found in JSON mapping")
+    io:println(x7.'_1); // @output error("{ballerina/lang.map}KeyNotFound",message="key '_1' not found in JSON mapping")
+    io:println(y11); // @output error("{ballerina/lang.map}KeyNotFound",message="key '1' not found in JSON mapping")
+    io:println(x7.'\u{ab1}); // @output error("{ballerina/lang.map}KeyNotFound",message="key '઱' not found in JSON mapping")
+    io:println(y12); // @output error("{ballerina/lang.map}KeyNotFound",message="key 'int' not found in JSON mapping")
+
+    io:println(y13); // @output error("{ballerina/lang.map}KeyNotFound",message="key '__' not found in JSON mapping")
+    io:println(x8.\..__); // @output error("{ballerina/lang.map}KeyNotFound",message="key '.' not found in JSON mapping")
+}
+
+Test-Case: output
+Description: Test field access expression by accessing missing fields from map<T>. Here, T is lax.
+Labels: field-access-expr, json, map-type, mapping-constructor-expr
+
+map<json> x1 = {};
+map<json> x2 = {};
+map<map<json>> x3 = {};
+map<map<json>> x4 = {};
+
+json|error y1 = x1.a;
+json|error y2 = x1.A;
+json|error y3 = x1._1;
+json|error y4 = x1._A;
+json|error y5 = x1.__;
+
+json|error y6 = x2.\"y;
+json|error y7 = x2.\u{32};
+json|error y8 = x2._\_;
+json|error y9 = x2._\u{12e};
+
+json|error y10 = x3.'02;
+json|error y11 = x3.'1;
+var y12 = x3.'int;
+
+var y13 = x4.__.__;
+
+function init() {
+    map<json> x5 = {};
+    map<json> x6 = {};
+    map<map<json>> x7 = {};
+    map<map<json>> x8 = {};
+
+    io:println(y1); // @output error("{ballerina/lang.map}KeyNotFound",message="key 'a' not found in JSON mapping")
+    io:println(x5.z); // @output error("{ballerina/lang.map}KeyNotFound",message="key 'z' not found in JSON mapping")
+    io:println(y2); // @output error("{ballerina/lang.map}KeyNotFound",message="key 'A' not found in JSON mapping")
+    io:println(x5.Z); // @output error("{ballerina/lang.map}KeyNotFound",message="key 'Z' not found in JSON mapping")
+    io:println(y3); // @output error("{ballerina/lang.map}KeyNotFound",message="key '_1' not found in JSON mapping")
+    io:println(x5._a); // @output error("{ballerina/lang.map}KeyNotFound",message="key '_a' not found in JSON mapping")
+    io:println(y4); // @output error("{ballerina/lang.map}KeyNotFound",message="key '_A' not found in JSON mapping")
+    io:println(x5._12); // @output error("{ballerina/lang.map}KeyNotFound",message="key '_12' not found in JSON mapping")
+    io:println(y5); // @output error("{ballerina/lang.map}KeyNotFound",message="key '__' not found in JSON mapping")
+    io:println(x5.සිංහල); // @output error("{ballerina/lang.map}KeyNotFound",message="key 'සිංහල' not found in JSON mapping")
+
+    io:println(y6); // @output error("{ballerina/lang.map}KeyNotFound",message="key '"y' not found in JSON mapping")
+    io:println(x6.\_); // @output error("{ballerina/lang.map}KeyNotFound",message="key '_' not found in JSON mapping")
+    io:println(y7); // @output error("{ballerina/lang.map}KeyNotFound",message="key '2' not found in JSON mapping")
+    io:println(x6.\u{12e}); // @output error("{ballerina/lang.map}KeyNotFound",message="key 'Į' not found in JSON mapping")
+    io:println(y8); // @output error("{ballerina/lang.map}KeyNotFound",message="key '__' not found in JSON mapping")
+    io:println(y9); // @output error("{ballerina/lang.map}KeyNotFound",message="key '_Į' not found in JSON mapping")
+
+    io:println(y10); // @output error("{ballerina/lang.map}KeyNotFound",message="key '02' not found in JSON mapping")
+    io:println(x7.'_1); // @output error("{ballerina/lang.map}KeyNotFound",message="key '_1' not found in JSON mapping")
+    io:println(y11); // @output error("{ballerina/lang.map}KeyNotFound",message="key '1' not found in JSON mapping")
+    io:println(x7.'\u{ab1}); // @output error("{ballerina/lang.map}KeyNotFound",message="key '઱' not found in JSON mapping")
+    io:println(y12); // @output error("{ballerina/lang.map}KeyNotFound",message="key 'int' not found in JSON mapping")
+
+    io:println(y13); // @output error("{ballerina/lang.map}KeyNotFound",message="key '__' not found in JSON mapping")
+    io:println(x8.\..__); // @output error("{ballerina/lang.map}KeyNotFound",message="key '.' not found in JSON mapping")
+}
+
+Test-Case: output
+Description: Test field access expression by accessing existing fields, when they belong to JSON objects. Here, mapping
+             constructor contains computed-name-fields. Test case 1.
 Labels: array-type, computed-name-field, DecimalNumber, error-type, field-access-expr, if-else-stmt, is-expr, json,
-        list-constructor-expr, logical-negation, mapping-constructor-expr, nil-literal, string, value:toBalString
+        list-constructor-expr, mapping-constructor-expr, nil-literal, null, string, unary-not, value:toBalString
 
 function init() {
     string[] list = ["int"];
-    json x1 = {["A" + "B"]: "AB", [getName()]: null, [list[0]]: 12};
+    json x1 = {["A" + "B"]: "AB", [getName()]: null, [list[0]]: 12, nil: null};
 
     if x1.nil !is error {
-        io:println(x1.nil.toBalString); // @output ()
+        io:println(x1.nil); // @output
     }
     io:println(x1.AB); // @output AB
     io:println(x1.'int); // @output 12
@@ -127,7 +248,7 @@ function getName() returns string {
 }
 
 Test-Case: output
-Description: Test field access expression by accessing existing fields when they belong to JSON objects. Here, mapping
+Description: Test field access expression by accessing existing fields, when they belong to JSON objects. Here, mapping
              constructor contains computed-name-field. Test case 2.
 Fail-Issue: ballerina-platform/ballerina-lang#33293
 Labels: array-type, computed-name-field, DecimalNumber, field-access-expr, json, list-constructor-expr,
@@ -145,7 +266,7 @@ function getName() returns string {
 }
 
 Test-Case: output
-Description: Test field access expression by accessing valid built-in subtypes when they belong to JSON objects.
+Description: Test field access expression by accessing valid built-in subtypes, when they belong to JSON objects.
 Labels: DecimalNumber, field-access-expr, int:Signed16, int:SIGNED16_MAX_VALUE, int:SIGNED16_MIN_VALUE, int:Signed32,
         int:SIGNED32_MAX_VALUE, int:SIGNED32_MIN_VALUE, int:Signed8, int:SIGNED8_MAX_VALUE, int:SIGNED8_MIN_VALUE,
         int:Unsigned16, int:Unsigned32, int:Unsigned8, json, mapping-constructor-expr, string, string:Char, unary-minus
@@ -208,7 +329,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test field access expression by accessing valid built-in subtypes when they belong to JSON objects which
+Description: Test field access expression by accessing valid built-in subtypes, when they belong to JSON objects which
              are defined in module level.
 Labels: DecimalNumber, field-access-expr, int:Signed16, int:SIGNED16_MAX_VALUE, int:SIGNED16_MIN_VALUE, int:Signed32,
         int:SIGNED32_MAX_VALUE, int:SIGNED32_MIN_VALUE, int:Signed8, int:SIGNED8_MAX_VALUE, int:SIGNED8_MIN_VALUE,
@@ -230,49 +351,81 @@ string:Char b3 = "3";
 string:Char b4 = "+";
 
 json x1 = {a1, a2, a3, a4, a5, a6, a7, a8, a9};
-json x2 = {a1: int:SIGNED8_MAX_VALUE, "a2": int:SIGNED8_MIN_VALUE, a3:int: UNSIGNED8_MAX_VALUE};
-json x3 = {a1: int:SIGNED16_MAX_VALUE, "a2": int:SIGNED16_MIN_VALUE, a3:int: UNSIGNED16_MAX_VALUE};
-json x4 = {a1: int:SIGNED32_MAX_VALUE, "a2": int:SIGNED32_MIN_VALUE, a3:int: UNSIGNED32_MAX_VALUE};
+json x2 = {a1: int:SIGNED8_MAX_VALUE, "a2": int:SIGNED8_MIN_VALUE, a3: int:UNSIGNED8_MAX_VALUE};
+json x3 = {a1: int:SIGNED16_MAX_VALUE, "a2": int:SIGNED16_MIN_VALUE, a3: int:UNSIGNED16_MAX_VALUE};
+json x4 = {a1: int:SIGNED32_MAX_VALUE, "a2": int:SIGNED32_MIN_VALUE, a3: int:UNSIGNED32_MAX_VALUE};
 
 json x5 = {b1, b2, b3, b4};
 json x6 = {b1: "C", "b2": "h", b3: "1", b4: "-"};
 
+json|error y1 = x1.a1;
+json|error y2 = x1.a2;
+json|error y3 = x1.a3;
+json|error y4 = x1.a4;
+json|error y5 = x1.a5;
+json|error y6 = x1.a6;
+json|error y7 = x1.a7;
+json|error y8 = x1.a8;
+json|error y9 = x1.a9;
+
+json|error y10 = x2.a1;
+json|error y11 = x2.a2;
+json|error y12 = x2.a3;
+
+json|error y13 = x3.a1;
+json|error y14 = x3.a2;
+json|error y15 = x3.a3;
+
+json|error y16 = x4.a1;
+json|error y17 = x4.a2;
+json|error y18 = x4.a3;
+
+json|error y19 = x5.b1;
+json|error y20 = x5.b2;
+json|error y21 = x5.b3;
+json|error y22 = x5.b4;
+
+json|error y23 = x6.b1;
+json|error y24 = x6.b2;
+json|error y25 = x6.b3;
+json|error y26 = x6.b4;
+
 function init() {
-    io:println(x1.a1); // @output 127
-    io:println(x1.a2); // @output -128
-    io:println(x1.a3); // @output 255
-    io:println(x1.a4); // @output 32767
-    io:println(x1.a5); // @output -32768
-    io:println(x1.a6); // @output 65535
-    io:println(x1.a7); // @output 2147483647
-    io:println(x1.a8); // @output -2147483648
-    io:println(x1.a9); // @output 4294967295
+    io:println(y1); // @output 127
+    io:println(y2); // @output -128
+    io:println(y3); // @output 255
+    io:println(y4); // @output 32767
+    io:println(y5); // @output -32768
+    io:println(y6); // @output 65535
+    io:println(y7); // @output 2147483647
+    io:println(y8); // @output -2147483648
+    io:println(y9); // @output 4294967295
 
-    io:println(x2.a1); // @output 127
-    io:println(x2.a2); // @output -128
-    io:println(x2.a3); // @output 255
+    io:println(y10); // @output 127
+    io:println(y11); // @output -128
+    io:println(y12); // @output 255
 
-    io:println(x3.a1); // @output 32767
-    io:println(x3.a2); // @output -32768
-    io:println(x3.a3); // @output 65535
+    io:println(y13); // @output 32767
+    io:println(y14); // @output -32768
+    io:println(y15); // @output 65535
 
-    io:println(x4.a1); // @output 2147483647
-    io:println(x4.a2); // @output -2147483648
-    io:println(x4.a3); // @output 4294967295
+    io:println(y16); // @output 2147483647
+    io:println(y17); // @output -2147483648
+    io:println(y18); // @output 4294967295
 
-    io:println(x5.b1); // @output A
-    io:println(x5.b2); // @output b
-    io:println(x5.b3); // @output 3
-    io:println(x5.b4); // @output +
+    io:println(y19); // @output A
+    io:println(y20); // @output b
+    io:println(y21); // @output 3
+    io:println(y22); // @output +
 
-    io:println(x6.b1); // @output C
-    io:println(x6.b2); // @output h
-    io:println(x6.b3); // @output 1
-    io:println(x6.b4); // @output -
+    io:println(y23); // @output C
+    io:println(y24); // @output h
+    io:println(y25); // @output 1
+    io:println(y26); // @output -
 }
 
 Test-Case: output
-Description: Test field access expression by accessing bytes when they belong to JSON objects.
+Description: Test field access expression by accessing bytes, when they belong to JSON objects.
 Labels: byte, DecimalNumber, field-access-expr, json, mapping-constructor-expr, string
 
 function init() {
@@ -293,9 +446,9 @@ function init() {
 }
 
 Test-Case: output
-Description: Test field access expression by accessing bytes when they belong to JSON objects which are defined in
+Description: Test field access expression by accessing bytes, when they belong to JSON objects which are defined in
              module-level.
-Labels: DecimalNumber, field-access-expr, HexIntLiteral, json, mapping-constructor-expr, string
+Labels: byte, DecimalNumber, field-access-expr, HexIntLiteral, json, mapping-constructor-expr, string
 
 byte a1 = 255;
 byte a2 = 0;
@@ -307,20 +460,34 @@ byte a6 = 0x80;
 json x1 = {a1, a2, a3, a4, a5, a6};
 json x2 = {a1: 0, "a2": 255, a3: 127, a4: 0xFF, a5: 0x00, a6: 0X80};
 
-function init() {
-    io:println(x1.a1); // @output 255
-    io:println(x1.a2); // @output 0
-    io:println(x1.a3); // @output 128
-    io:println(x1.a4); // @output 255
-    io:println(x1.a5); // @output 0
-    io:println(x1.a6); // @output 128
+json|error y1 = x1.a1;
+json|error y2 = x1.a2;
+json|error y3 = x1.a3;
+json|error y4 = x1.a4;
+json|error y5 = x1.a5;
+json|error y6 = x1.a6;
 
-    io:println(x2.a1); // @output 0
-    io:println(x2.a2); // @output 255
-    io:println(x2.a3); // @output 127
-    io:println(x2.a4); // @output 255
-    io:println(x2.a5); // @output 0
-    io:println(x2.a6); // @output 128
+json|error y7 = x2.a1;
+json|error y8 = x2.a2;
+json|error y9 = x2.a3;
+json|error y10 = x2.a4;
+json|error y11 = x2.a5;
+json|error y12 = x2.a6;
+
+function init() {
+    io:println(y1); // @output 255
+    io:println(y2); // @output 0
+    io:println(y3); // @output 128
+    io:println(y4); // @output 255
+    io:println(y5); // @output 0
+    io:println(y6); // @output 128
+
+    io:println(y7); // @output 0
+    io:println(y8); // @output 255
+    io:println(y9); // @output 127
+    io:println(y10); // @output 255
+    io:println(y11); // @output 0
+    io:println(y12); // @output 128
 }
 
 Test-Case: output
@@ -328,7 +495,7 @@ Description: Test field access expression by accessing user-defined types when t
 Fail-Issue: ballerina-platform/ballerina-lang#35105
 Labels: decimal, DecimalFloatingPointNumber, DecimalNumber, field-access-expr, float, FloatingPointTypeSuffix, int,
         int:MAX_VALUE, int:SIGNED16_MIN_VALUE, int:SIGNED32_MAX_VALUE, int:SIGNED8_MAX_VALUE, json,
-        mapping-constructor-expr, module-type-defn, nil-literal, string, union-type
+        mapping-constructor-expr, module-type-defn, nil-literal, null, string, union-type
 
 type T1 12|int:MAX_VALUE;
 type T2 1.21|212f|212.1d;
@@ -431,7 +598,7 @@ function init() {
     io:println(x1.d); // @output false
     io:println(x1.e); // @output
 
-    io:println(x2.a); // @output {"a":2, "b":0.1, "c":"string", "d":false}
+    io:println(x2.a); // @output {"a":2,"b":0.1,"c":"string","d":false}
     io:println(x2.a.a); // @output 2
     io:println(x2.a.b); // @output 0.1
     io:println(x2.a.c); // @output string
@@ -613,53 +780,85 @@ map<map<json>> x5 = {a1: {a1: int:SIGNED32_MAX_VALUE}, "a2": {a2: int:SIGNED32_M
 map<json> x6 = {b1, b2, b3, b4};
 map<json> x7 = {b1: "C", "b2": "h", b3: "1", b4: "-"};
 
+json|error y1 = x1.a1;
+json|error y2 = x1.a2;
+json|error y3 = x1.a3;
+json|error y4 = x1.a4;
+json|error y5 = x1.a5;
+json|error y6 = x1.a6;
+json|error y7 = x1.a7;
+json|error y8 = x1.a8;
+json|error y9 = x1.a9;
+
+json|error y10 = x2.x1.a1;
+json|error y11 = x2.x1.a2;
+json|error y12 = x2.x1.a3;
+
+json|error y13 = x3.a1;
+json|error y14 = x3.a2;
+json|error y15 = x3.a3;
+
+json|error y16 = x4.a1;
+json|error y17 = x4.a2;
+json|error y18 = x4.a3;
+
+json|error y19 = x5.a1.a1;
+json|error y20 = x5.a2.a2;
+json|error y21 = x5.a3.a3;
+json|error y22 = x5.a4;
+
+json|error y23 = x6.b1;
+json|error y24 = x6.b2;
+json|error y25 = x6.b3;
+json|error y26 = x6.b4;
+
+json|error y27 = x7.b1;
+json|error y28 = x7.b2;
+json|error y29 = x7.b3;
+json|error y30 = x7.b4;
+
 function init() {
-    io:println(x1.a1); // @output 127
-    io:println(x1.a2); // @output -128
-    io:println(x1.a3); // @output 255
-    io:println(x1.a4); // @output 32767
-    io:println(x1.a5); // @output -32768
-    io:println(x1.a6); // @output 65535
-    io:println(x1.a7); // @output 2147483647
-    io:println(x1.a8); // @output -2147483648
-    io:println(x1.a9); // @output 4294967295
+    io:println(y1); // @output 127
+    io:println(y2); // @output -128
+    io:println(y3); // @output 255
+    io:println(y4); // @output 32767
+    io:println(y5); // @output -32768
+    io:println(y6); // @output 65535
+    io:println(y7); // @output 2147483647
+    io:println(y8); // @output -2147483648
+    io:println(y9); // @output 4294967295
 
-    io:println(x2.x1.a1); // @output 127
-    io:println(x2.x1.a2); // @output -128
-    io:println(x2.x1.a3); // @output 255
-    io:println(x2.x1.a4); // @output 32767
-    io:println(x2.x1.a5); // @output -32768
-    io:println(x2.x1.a6); // @output 65535
-    io:println(x2.x1.a7); // @output 2147483647
-    io:println(x2.x1.a8); // @output -2147483648
-    io:println(x2.x1.a9); // @output 4294967295
+    io:println(y10); // @output 127
+    io:println(y11); // @output -128
+    io:println(y12); // @output 255
 
-    io:println(x3.a1); // @output 127
-    io:println(x3.a2); // @output -128
-    io:println(x3.a3); // @output 255
+    io:println(y13); // @output 127
+    io:println(y14); // @output -128
+    io:println(y15); // @output 255
 
-    io:println(x4.a1.a1); // @output 32767
-    io:println(x4.a2.a2); // @output -32768
-    io:println(x4.a3.a3); // @output 65535
+    io:println(y16); // @output {"a1":32767}
+    io:println(y17); // @output {"a2":-32768}
+    io:println(y18); // @output {"a3":65535}
 
-    io:println(x5.a1.a1); // @output 2147483647
-    io:println(x5.a2.a2); // @output -2147483648
-    io:println(x5.a3.a3); // @output 4294967295
+    io:println(y19); // @output 2147483647
+    io:println(y20); // @output -2147483648
+    io:println(y21); // @output 4294967295
+    io:println(y22); // @output error("{ballerina/lang.map}KeyNotFound",message="key 'a4' not found in JSON mapping")
 
-    io:println(x6.b1); // @output A
-    io:println(x6.b2); // @output b
-    io:println(x6.b3); // @output 3
-    io:println(x6.b4); // @output +
+    io:println(y23); // @output A
+    io:println(y24); // @output b
+    io:println(y25); // @output 3
+    io:println(y26); // @output +
 
-    io:println(x7.b1); // @output C
-    io:println(x7.b2); // @output h
-    io:println(x7.b3); // @output 1
-    io:println(x7.b4); // @output -
+    io:println(y27); // @output C
+    io:println(y28); // @output h
+    io:println(y29); // @output 1
+    io:println(y30); // @output -
 }
 
 Test-Case: output
 Description: Test field access expression by accessing bytes when they belong to map<T>. Here, T is lax.
-Labels: DecimalNumber, field-access-expr, HexIntLiteral, json, map-type, mapping-constructor-expr, string
+Labels: byte, DecimalNumber, field-access-expr, HexIntLiteral, json, map-type, mapping-constructor-expr, string
 
 function init() {
     byte a1 = 255;
@@ -690,7 +889,7 @@ function init() {
 Test-Case: output
 Description: Test field access expression by accessing bytes when they belong to map<T> which are defined in module
              level. Here, T is lax.
-Labels: DecimalNumber, field-access-expr, HexIntLiteral, json, map-type, mapping-constructor-expr, string
+Labels: byte, DecimalNumber, field-access-expr, HexIntLiteral, json, map-type, mapping-constructor-expr, string
 
 byte a1 = 255;
 byte a2 = 0;
@@ -702,20 +901,34 @@ byte a6 = 0x80;
 map<json> x1 = {a1, a2, a3, a4, a5, a6};
 map<map<json>|json> x2 = {a1: {a1: 0}, a2: {a2: {"a2": 255}}, a3: {a3: {a3: 127}}, a4: {a4: {a4: 0xFf}}, a5: {a5: {a5: 0x00}}, a6: {a6: {a6: 0X80}}};
 
-function init() {
-    io:println(x1.a1); // @output 255
-    io:println(x1.a2); // @output 0
-    io:println(x1.a3); // @output 128
-    io:println(x1.a4); // @output 255
-    io:println(x1.a5); // @output 0
-    io:println(x1.a6); // @output 128
+json|error y1 = x1.a1;
+json|error y2 = x1.a2;
+json|error y3 = x1.a3;
+json|error y4 = x1.a4;
+json|error y5 = x1.a5;
+json|error y6 = x1.a6;
 
-    io:println(x2.a1.a1); // @output 0
-    io:println(x2.a2.a2); // @output {"a2":255}
-    io:println(x2.a3.a3); // @output {"a3":127}
-    io:println(x2.a4.a4); // @output {"a4":255}
-    io:println(x2.a5.a5); // @output {"a5":0}
-    io:println(x2.a6.a6); // @output {"a6":128}
+json|error y7 = x2.a1.a1;
+json|error y8 = x2.a2.a2.a2;
+json|error y9 = x2.a3.a3.a3;
+json|error y10 = x2.a4.a4.a4;
+json|error y11 = x2.a5.a5.a5;
+json|error y12 = x2.a6.a6.a6;
+
+function init() {
+    io:println(y1); // @output 255
+    io:println(y2); // @output 0
+    io:println(y3); // @output 128
+    io:println(y4); // @output 255
+    io:println(y5); // @output 0
+    io:println(y6); // @output 128
+
+    io:println(y7); // @output 0
+    io:println(y8); // @output 255
+    io:println(y9); // @output 127
+    io:println(y10); // @output 255
+    io:println(y11); // @output 0
+    io:println(y12); // @output 128
 }
 
 Test-Case: output
@@ -723,7 +936,7 @@ Description: Test field access expression by accessing user-defined subtypes whe
 Fail-Issue: ballerina-platform/ballerina-lang#35105, #35134
 Labels: decimal, DecimalFloatingPointNumber, DecimalNumber, field-access-expr, float, FloatingPointTypeSuffix, int,
         int:MAX_VALUE, int:SIGNED16_MIN_VALUE, int:SIGNED32_MAX_VALUE, int:SIGNED8_MAX_VALUE, json, map-type,
-        mapping-constructor-expr, module-type-defn, nil-literal, string, union-type
+        mapping-constructor-expr, module-type-defn, nil-literal, null, string, union-type
 
 type T1 12|int:MAX_VALUE;
 type T2 1.21|212f|212.1d;
@@ -814,10 +1027,10 @@ function init() {
 }
 
 Test-Case: error
-Description: Test the static type of field-access-expr for lax type.
+Description: Test the static type of field-access-expr for lax type. Test case 1.
 Labels: array-type, boolean, decimal, DecimalFloatingPointNumber, DecimalNumber, error-type, field-access-expr, float,
-        FloatingPointTypeSuffix, HexFloatingPointLiteral, json, list-constructor-expr, mapping-constructor-expr,
-        member-access-expression, nil-literal, readonly-type, string
+        FloatingPointTypeSuffix, HexFloatingPointLiteral, json, list-constructor-expr, map-type,
+        mapping-constructor-expr, member-access-expr, nil-literal, null, readonly-type, string
 
 function errorFunction() {
     json a1 = 1;
@@ -835,6 +1048,9 @@ function errorFunction() {
     map<json> a13 = {x: 1};
     map<json> a14 = {x: {y: "12abc"}};
     map<map<json>> a15 = {x: {y: [1, "2", null]}};
+    map<map<map<json>>> a16 = {x: {y: {z: [1, "2", null]}}};
+    map<map<json|map<json>>> a17 = {x: {y: [1, "2", null]}};
+    map<map<json>>|json a18 = {x: [1, "2", null]};
 
     json x1 = a1.x; // @error expected 'json' but found '(json|error)'
     json x2 = a2.x; // @error expected 'json' but found '(json|error)'
@@ -850,40 +1066,161 @@ function errorFunction() {
     json x12 = a12.x; // @error expected 'json' but found '(json|error)'
     int x13 = a13.x; // @error expected 'int' but found '(json|error)'
     string x14 = a14.x.y; // @error expected 'string' but found '(json|error)'
-    error x15 = a15.x.y.'1; // @error expected 'error' but found '(json|error)'
-}
-
-Test-Case: panic
-Description: Test if the expression has basic type error, the result of the field access expression will be that same
-             error. Test case 1.
-Labels: DecimalNumber, error-type, field-access-expr, json, mapping-constructor-expr, string, union-type
-
-function init() {
-    map<map<map<json>>> x1 = {"a": {"a":{"a":2}}, "b": {"a": {"c": "string"}}};
-    json|error y1 = (x1.remove("c")).a.b.c.d.e; // @panic missing key 'c'
-}
-
-Test-Case: panic
-Description: Test if the expression has basic type error, the result of the field access expression will be that same
-             error. Test case 2.
-Labels: error-type, field-access-expr, json, mapping-constructor-expr, record-type, union-type
-
-type R record {|
-    error x;
-|};
-
-function init() {
-    json|R x1 = {x: error("a")};
-    json|error y1 = (<json> x1).a.b.c.d.e; // @panic type 'R' cannot be cast to 'json'
+    string x15 = a15.x; // @error expected 'string', found '(map<json>|error)'
+    error x16 = a16.x.y.'1; // @error expected 'error' but found '(json|error)'
+    json x17 = a17.x; // @error expected 'json', found '(map<(json|map<json>)>|error)'
+    json x18 = a18.x; // @error expected 'json', found '(map<json>|json|error)'
 }
 
 Test-Case: error
-Description: Test if the expression does not have basic type mapping, the result is a new error value.
-Fail-Issue: ballerina-platform/ballerina-lang#35133
-Labels: array-type, boolean, DecimalNumber, field-access-expr, float, json, list-constructor-expr, mapping-constructor,
+Description: Test the static type of field-access-expr for lax type. Test case 2.
+Labels: array-type, boolean, decimal, DecimalFloatingPointNumber, DecimalNumber, error-type, field-access-expr, float,
+        FloatingPointTypeSuffix, HexFloatingPointLiteral, json, list-constructor-expr, map-type,
+        mapping-constructor-expr, member-access-expr, nil-literal, null, readonly-type, string
+
+json a1 = 1;
+json a2 = 1.012;
+json a3 = 0.9121d;
+json a4 = 0x0.12abF;
+json a5 = true;
+json a6 = false;
+json a7 = "1";
+json a8 = null;
+json a9 = ();
+json a10 = ["12", 12, 0.12, true];
+json[] a11 = ["12", 12, 0.12, true];
+json a12 = {y: 1};
+map<json> a13 = {x: 1};
+map<json> a14 = {x: {y: "12abc"}};
+map<map<json>> a15 = {x: {y: [1, "2", null]}};
+map<map<map<json>>> a16 = {x: {y: {z: [1, "2", null]}}};
+map<map<json|map<json>>> a17 = {x: {y: [1, "2", null]}};
+map<map<json>>|json a18 = {x: [1, "2", null]};
+
+json x1 = a1.x; // @error expected 'json' but found '(json|error)'
+json x2 = a2.x; // @error expected 'json' but found '(json|error)'
+json x3 = a3.x; // @error expected 'json' but found '(json|error)'
+json x4 = a4.x; // @error expected 'json' but found '(json|error)'
+json x5 = a5.x; // @error expected 'json' but found '(json|error)'
+json x6 = a6.x; // @error expected 'json' but found '(json|error)'
+json x7 = a7.x; // @error expected 'json' but found '(json|error)'
+json x8 = a8.x; // @error expected 'json' but found '(json|error)'
+json x9 = a9.x; // @error expected 'json' but found '(json|error)'
+json x10 = a10.x; // @error expected 'json' but found '(json|error)'
+json x11 = a11[1].x; // @error expected 'json' but found '(json|error)'
+json x12 = a12.x; // @error expected 'json' but found '(json|error)'
+int x13 = a13.x; // @error expected 'int' but found '(json|error)'
+string x14 = a14.x.y; // @error expected 'string' but found '(json|error)'
+string x15 = a15.x; // @error expected 'string', found '(map<json>|error)'
+error x16 = a16.x.y.'1; // @error expected 'error' but found '(json|error)'
+json x17 = a17.x; // @error expected 'json', found '(map<(json|map<json>)>|error)'
+json x18 = a18.x; // @error expected 'json', found '(map<json>|json|error)'
+
+function errorFunction() {
+    json x1 = a1.x; // @error expected 'json' but found '(json|error)'
+    json x2 = a2.x; // @error expected 'json' but found '(json|error)'
+    json x3 = a3.x; // @error expected 'json' but found '(json|error)'
+    json x4 = a4.x; // @error expected 'json' but found '(json|error)'
+    json x5 = a5.x; // @error expected 'json' but found '(json|error)'
+    json x6 = a6.x; // @error expected 'json' but found '(json|error)'
+    json x7 = a7.x; // @error expected 'json' but found '(json|error)'
+    json x8 = a8.x; // @error expected 'json' but found '(json|error)'
+    json x9 = a9.x; // @error expected 'json' but found '(json|error)'
+    json x10 = a10.x; // @error expected 'json' but found '(json|error)'
+    json x11 = a11[1].x; // @error expected 'json' but found '(json|error)'
+    json x12 = a12.x; // @error expected 'json' but found '(json|error)'
+    int x13 = a13.x; // @error expected 'int' but found '(json|error)'
+    string x14 = a14.x.y; // @error expected 'string' but found '(json|error)'
+    string x15 = a15.x; // @error expected 'string', found '(map<json>|error)'
+    error x16 = a16.x.y.'1; // @error expected 'error' but found '(json|error)'
+    json x17 = a17.x; // @error expected 'json', found '(map<(json|map<json>)>|error)'
+    json x18 = a18.x; // @error expected 'json', found '(map<json>|json|error)'
+}
+
+Test-Case: error
+Description: Test the static type of field-access-expr for lax type. Test case 3.
+Fail-Issue: ballerina-platform/ballerina-lang#36982
+Labels: DecimalNumber, field-access-expr, json, list-constructor-expr, map-type, mapping-constructor-expr, null,
         readonly-type, string
 
 function errorFunction() {
+    json & readonly a1 = {x: {y: [1, "2", null]}};
+    map<map<json>> & readonly a2 = {x: {y: [1, "2", null]}};
+    map<map<(json|map<json>) & readonly>> a3 = {x: {y: [1, "2", null]}};
+
+    json x19 = a1.x; // @error expected 'json' but found '(json & readonly|error)'
+    json x20 = a2.x; // @error expected 'json' but found 'map<(map<json> & readonly)> & readonly'
+    json x21 = a3.x; // @error expected 'json' but found 'map<map<((json|map<json>) & readonly)>>'
+}
+
+Test-Case: error
+Description: If the expression is lax, then the only compile-time requirement is M is non-empty. Here, M is the member
+             type of accessing field.
+Labels: error-type, json, mapping-constructor-expr, optional-type
+
+function errorFunction() returns error? {
+    json _ = {x: check error("Error")}; // @error expression of type 'never' or equivalent to type 'never' not allowed here
+}
+
+Test-Case: error
+Description: If the expression is not lax, then T must be a object basic type or subtype of the mapping basic type and K
+             must be a required key type for T. Here, T is static type of the expression and K is K be the singleton
+             type containing just the string field-name.
+Labels: array-type, DecimalNumber, field-access-expr, json, list-constructor-expr, map-type, mapping-constructor-expr,
+        string, var
+
+function errorFunction() {
+    json|json[] a1 = {x: 1};
+    map<json>|json[] a2 = {x: 1};
+    map<json|json[]> a3 = {x: 1};
+    map<json|int> a4 = {x: "1"};
+
+    json|error x1 = a1.x; // @error type '(json|json[])' does not support field access
+    var x2 = a2.y; // @error type '(map<json>|json[])' does not support field access
+    json|error x3 = a3.x; // @error type 'map<(json|json[])>' does not support field access
+    var x4 = a4.y; // @error type 'map<(json|int)>' does not support field access
+}
+
+Test-Case: output
+Description: Test if the expression has basic type error, the result of the field access expression will be that same
+             error.
+Labels: DecimalNumber, error-type, field-access-expr, json, map-type, mapping-constructor-expr, string, union-type
+
+function init() {
+    json x1 = {a: [1, 2]};
+    map<map<map<json>>> x2 = {a: {a: {a: 2}}, b: {a: {c: "string"}}};
+
+    json|error y1 = (x1.a).b;
+    io:println(y1); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+
+    json|error y2 = (x1.b).b;
+    io:println(y2); // @output error("{ballerina/lang.map}KeyNotFound",message="key 'b' not found in JSON mapping")
+
+    json|error y3 = (((x2.a).a).a).a;
+    io:println(y3); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+
+    json|error y4 = ((x2.b).a).a;
+    io:println(y4); // @output error("{ballerina/lang.map}KeyNotFound",message="key 'a' not found in JSON mapping")
+}
+
+Test-Case: output
+Description: Test if the expression has basic type error, the result of the field access expression will be that same
+             error.
+Fail-Issue: ballerina-platform/ballerina-lang#36988
+Labels: DecimalNumber, error-type, field-access-expr, json, map-type, mapping-constructor-expr, string, union-type
+
+function init() {
+    map<map<map<json>>> x = {a: {a: {a: 2}}, b: {a: {c: "string"}}};
+    json|error y = (x.c).b;
+    io:println(y); // @output error("{ballerina/lang.map}KeyNotFound",message="key 'c' not found in JSON mapping")
+}
+
+Test-Case: output
+Description: Test if the expression does not have basic type mapping, the result is a new error value.
+Labels: array-type, boolean, DecimalNumber, field-access-expr, float, json, list-constructor-expr, map-type,
+        mapping-constructor-expr, null, readonly-type, string
+
+function init() {
     json a1 = 1;
     json a2 = true;
     json a3 = "json";
@@ -898,196 +1235,217 @@ function errorFunction() {
 
     json|map<json> c1 = true;
     json|map<json> c2 = [1, 2.31, (), null, true];
-    json|map<json & readonly> c3 = true;
-    json & readonly|map<json> c4 = {a8, a7};
-    json & readonly c5 = [];
+    json & readonly|map<json> c3 = {a8, a7};
+    json & readonly c4 = [];
 
-    io:println(a1.x); // @error JSON value is not a mapping
-    io:println(a2.x); // @error JSON value is not a mapping
-    io:println(a3.x); // @error JSON value is not a mapping
-    io:println(a4.x); // @error JSON value is not a mapping
-    io:println(a5.x); // @error JSON value is not a mapping
-    io:println(a6.x); // @error JSON value is not a mapping
-    io:println(a7.x); // @error JSON value is not a mapping
-    io:println(a8.x); // @error JSON value is not a mapping
+    io:println(a1.x); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+    io:println(a2.x); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+    io:println(a3.x); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+    io:println(a4.x); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+    io:println(a5.x); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+    io:println(a6.x); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+    io:println(a7.x); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+    io:println(a8.x); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
 
-    io:println(b1.a2.y); // @error JSON value is not a mapping
-    io:println(b1.a1.x); // @error JSON value is not a mapping
-    io:println(b1.x.y.z); // @error JSON value is not a mapping
-    io:println(b1.x.y.z); // @error JSON value is not a mapping
-    io:println(b2.x.y.a.b); // @error JSON value is not a mapping
+    io:println(b1.a2.y); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+    io:println(b1.a1.x); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+    io:println(b1.x.y.z); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+    io:println(b1.x.y.z); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+    io:println(b2.x.y.a.b); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
 
-    io:println(c1.x); // @error JSON value is not a mapping
-    io:println(c2.x); // @error JSON value is not a mapping
-    io:println(c3.x); // @error JSON value is not a mapping
-    io:println(c4.a8.x); // @error JSON value is not a mapping
-    io:println(c5.x); // @error JSON value is not a mapping
+    io:println(c1.x); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+    io:println(c2.x); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+    io:println(c3.a8.x); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+    io:println(c4.x); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
 }
 
-Test-Case: error
-Description: Test field access expression by attempting to access fields from non-mapping JSON which are defined in
-             module level.
-Labels: boolean, decimal, DecimalFloatingPointNumber, DecimalNumber, field-access-expr, float, FloatingPointTypeSuffix,
-        json, nil-literal, string
+Test-Case: output
+Description: Test if the expression does not have basic type mapping, the result is a new error value. Here, field
+             access expressions are defined in module level.
+Labels: array-type, boolean, DecimalNumber, field-access-expr, float, json, list-constructor-expr, map-type,
+        mapping-constructor-expr, null, readonly-type, string
 
-json x1 = ();
-json x2 = false;
-json x3 = true;
-json x4 = 123;
-json x5 = 1.212f;
-json x6 = 42.2d;
-json x7 = "x7";
+json a1 = 1;
+json a2 = true;
+json a3 = "json";
+json a4 = 1f;
+json a5 = 1d;
+json a6 = [];
+json a7 = null;
+json a8 = ();
 
-function errorFunction() {
-    io:println(x1.Key); // @error 'x1' is not a JSON object
-    io:println(x2.Key); // @error 'x2' is not a JSON object
-    io:println(x3.Key); // @error 'x3' is not a JSON object
-    io:println(x4.Key); // @error 'x4' is not a JSON object
-    io:println(x5.Key); // @error 'x5' is not a JSON object
-    io:println(x6.Key); // @error 'x6' is not a JSON object
-    io:println(x7.Key); // @error 'x7' is not a JSON object
+map<json> b1 = {a1, a2, x: {y: null}};
+map<map<json>> b2 = {x: {y: [1, 2]}};
+
+json|map<json> c1 = true;
+json|map<json> c2 = [1, 2.31, (), null, true];
+json & readonly|map<json> c3 = {a8, a7};
+json & readonly c4 = [];
+
+var y1 = a1.x;
+json|error y2 = a2.x;
+json|error y3 = a3.x;
+json|error y4 = a4.x;
+json|error y5 = a5.x;
+json|error y6 = a6.x;
+json|error y7 = a7.x;
+json|error y8 = a8.x;
+
+json|error y9 = b1.a2.y;
+json|error y10 = b1.a1.x;
+json|error y11 = b1.x.y.z;
+json|error y12 = b1.x.y.z;
+json|error y13 = b2.x.y.a.b;
+
+json|error y14 = c1.x;
+json|error y15 = c2.x;
+json|error y16 = c3.a8.x;
+json|error y17 = c4.x;
+
+function init() {
+    io:println(y1); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+    io:println(y2); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+    io:println(y3); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+    io:println(y4); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+    io:println(y5); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+    io:println(y6); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+    io:println(y7); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+    io:println(y8); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+
+    io:println(y9); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+    io:println(y10); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+    io:println(y11); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+    io:println(y12); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+    io:println(y13); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+
+    io:println(y14); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+    io:println(y15); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+    io:println(y16); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+    io:println(y17); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
 }
 
-Test-Case: error
+Test-Case: output
 Description: Test if the resultant expression does not have a member whose key is field-name, the result is a new error
              value.
-Labels: DecimalNumber, field-access-expr, json, list-constructor-expr, map-type, mapping-constructor-expr, string
+Labels: array-type, DecimalNumber, field-access-expr, json, list-constructor-expr, map-type, mapping-constructor-expr,
+        member-access-expr, string, type-cast-expr
 
-function errorFunction() {
+function init() {
     json a1 = {};
     json a2 = {"a": 1, "b": 2};
     map<map<json>> a3 = {"a": {"b": {}}, "c": {"d": {"e": {}}}};
     json a4 = [[{"a": 1}], []];
 
-    io:println(a1.x); // @error key 'x' not found in JSON mapping
-    io:println(a2.c); // @error key 'c' not found in JSON mapping
-    io:println(a3.b); // @error key 'b' not found in JSON mapping
-    io:println(a3.a.c); // @error key 'c' not found in JSON mapping
-    io:println(a3.a.b.c); // @error key 'c' not found in JSON mapping
-    io:println(a3.c.d.e.f); // @error key 'f' not found in JSON mapping
-    io:println((<json[]> (<json[]> a4)[0])[0].b); // @error key 'b' not found in JSON mapping
+    io:println(a1.x); // @output error("{ballerina/lang.map}KeyNotFound",message="key 'x' not found in JSON mapping")
+    io:println(a2.c); // @output error("{ballerina/lang.map}KeyNotFound",message="key 'c' not found in JSON mapping")
+    io:println(a3.b); // @output error("{ballerina/lang.map}KeyNotFound",message="key 'b' not found in JSON mapping")
+    io:println(a3.a.c); // @output error("{ballerina/lang.map}KeyNotFound",message="key 'c' not found in JSON mapping")
+    io:println(a3.a.b.c); // @output error("{ballerina/lang.map}KeyNotFound",message="key 'c' not found in JSON mapping")
+    io:println(a3.c.d.e.f); // @output error("{ballerina/lang.map}KeyNotFound",message="key 'f' not found in JSON mapping")
+    io:println((<json[]> (<json[]> a4)[0])[0].A); // @output error("{ballerina/lang.map}KeyNotFound",message="key 'A' not found in JSON mapping")
 }
 
-Test-Case: error
-Description: Test field access expression by accessing missing fields from map<T>. Here, T is lax.
-Fail-Issue:
-Labels: field-access-expr, json, map-type, mapping-constructor-expr
+Test-Case: output
+Description: Test field accessing with different expressions.
+Labels: array-type, binary-conditional-expr, boolean, check, checkpanic, DecimalNumber, error-type, explicit-new-expr,
+        field-access-expr, function-call-expr, json, list-constructor-expr, map-type, mapping-constructor-expr,
+        member-access-expr, method-call-expr, module-class-defn, nil-literal, null, optional-type, readonly-type,
+        return-stmt, string, ternary-conditional-expr, type-cast-expr, union-type
 
-map<json> x1 = {};
-map<json> x2 = {};
-map<map<json>> x3 = {};
-map<map<json>> x4 = {};
-
-function errorFunction() {
-    map<json> x5 = {};
-    map<json> x6 = {};
-    map<map<json>> x7 = {};
-    map<map<json>> x8 = {};
-
-    io:println(x1.a); // @error key 'a' is not found in JSON mapping
-    io:println(x5.z); // @error key 'z' is not found in JSON mapping
-    io:println(x1.A); // @error key 'A' is not found in JSON mapping
-    io:println(x5.Z); // @error key 'Z' is not found in JSON mapping
-    io:println(x1._1); // @error key '_1' is not found in JSON mapping
-    io:println(x5._a); // @error key '_a' is not found in JSON mapping
-    io:println(x1._A); // @error key '_A' is not found in JSON mapping
-    io:println(x5._12); // @error key '_12' is not found in JSON mapping
-    io:println(x1.__); // @error key '__' is not found in JSON mapping
-    io:println(x5.සිංහල); // @error key 'සිංහල' is not found in JSON mapping
-
-    io:println(x2.\1y); // @error key 'y' is not found in JSON mapping
-    io:println(x6.\_); // @error key '_' is not found in JSON mapping
-    io:println(x2.\u{f}); // @error key '' is not found in JSON mapping
-    io:println(x6.\u{12e}); // @error key 'Į' is not found in JSON mapping
-    io:println(x2._\_); // @error key '__' is not found in JSON mapping
-    io:println(x6.a\u{f}); // @error key 'a' is not found in JSON mapping
-    io:println(x2._\u{12e}); // @error key '_Į' is not found in JSON mapping
-
-    io:println(x3.'02); // @error key ''02' is not found in JSON mapping
-    io:println(x7.'_1); // @error key '_1' is not found in JSON mapping
-    io:println(x3.'\1); // @error key '' is not found in JSON mapping
-    io:println(x7.'\u{ab1}); // @error key '઱' is not found in JSON mapping
-    io:println(x3.'int); // @error key 'int' is not found in JSON mapping
-
-    io:println(x4.__.__); // @error key '____' is not found in JSON mapping
-    io:println(x8.\..__); // @error key '.' is not found in JSON mapping
+class NewClass {
+    public function method1() returns json {
+        return {x: 1};
+    }
 }
 
-Test-Case: error
-Description: Test field access expression by accessing missing fields from JSON objects.
-Labels: field-access-expr, json, mapping-constructor-expr
+function init() {
+    json a1 = {x: {y: 1}};
 
-function errorFunction() {
-    json x1 = {};
-    json x2 = {};
-    json x3 = {};
-    json x4 = {};
+    io:println(getExpr(true).a); // @output 1
+    io:println(getExpr(false).a); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
 
-    io:println(x1.a); // @output key 'a' is not found in JSON mapping
-    io:println(x1.z); // @output key 'z' is not found in JSON mapping
-    io:println(x1.A); // @output key 'A' is not found in JSON mapping
-    io:println(x1.Z); // @output key 'Z' is not found in JSON mapping
-    io:println(x1._1); // @output key '_1' is not found in JSON mapping
-    io:println(x1._a); // @output key '_a' is not found in JSON mapping
-    io:println(x1._A); // @output key '_A' is not found in JSON mapping
-    io:println(x1._12); // @output key '_12' is not found in JSON mapping
-    io:println(x1.__); // @output key '__' is not found in JSON mapping
-    io:println(x1.සිංහල); // @output key 'සිංහල' is not found in JSON mapping
+    methodAccessExpr(); // @output 1
 
-    io:println(x2.\1y); // @output key 'y' is not found in JSON mapping
-    io:println(x2.\_); // @output key '_' is not found in JSON mapping
-    io:println(x2.\u{f}); // @output key '' is not found in JSON mapping
-    io:println(x2.\u{12e}); // @output key 'Į' is not found in JSON mapping
-    io:println(x2._\_); // @output key '__' is not found in JSON mapping
-    io:println(x2.a\u{f}); // @output key 'a' is not found in JSON mapping
-    io:println(x2._\u{12e}); // @output key '_Į' is not found in JSON mapping
+    memberAccessExpr(); // @output 1
+                        // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+                        // @output 1
 
-    io:println(x3.'02); // @output key ''02' is not found in JSON mapping
-    io:println(x3.'_1); // @output key '_1' is not found in JSON mapping
-    io:println(x3.'\1); // @output key '' is not found in JSON mapping
-    io:println(x3.'\u{ab1}); // @output key '઱' is not found in JSON mapping
-    io:println(x3.'int); // @output key 'int' is not found in JSON mapping
+    structuralConstructorExpr(); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+                                 // @output 1
+                                 // @output 1
 
-    io:println(x4.__.__); // @output key '____' is not found in JSON mapping
-    io:println(x4.\..__); // @output key '.' is not found in JSON mapping
+    testOptionalFieldAccessExpr(); // @output 1
+
+    testTypeCastExpr(); // @output {"y":1}
+                        // @output 1
+                        // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+
+    testTernayExpr(true); // @output {"y":1}
+    testTernayExpr(false); // @output {"y":2}
+
+    testElvisExpr(a1); // @output {"y":1}
+    testElvisExpr(null); // @output {"y":2}
+
+    error? x1 = testCheckingExpr(); // @output error("{ballerina/lang.map}KeyNotFound",message="key 'a' not found in JSON mapping")
+    io:println(x1); // @output
+    io:println((checkpanic fieldAccess(a1)).a); // @output error("{ballerina/lang.map}KeyNotFound",message="key 'a' not found in JSON mapping")
+
+    io:println((<json> {a: 1}).a); // @output 1
 }
 
-Test-Case: error
-Description: Test field access expression by accessing missing fields from JSON objects which are defined in module
-             level.
-Labels: field-access-expr, json, mapping-constructor-expr
+function methodAccessExpr() {
+    NewClass newClass = new();
+    io:println(newClass.method1().x);
+}
 
-json x1 = {};
-json x2 = {};
-json x3 = {};
-json x4 = {};
+function memberAccessExpr() {
+    map<json> a1 = {"x": {"y": 1}};
+    json[] a2 = [1, {x: 1}];
 
-function errorFunction() {
-    io:println(x1.a); // @output key 'a' is not found in JSON mapping
-    io:println(x1.z); // @output key 'z' is not found in JSON mapping
-    io:println(x1.A); // @output key 'A' is not found in JSON mapping
-    io:println(x1.Z); // @output key 'Z' is not found in JSON mapping
-    io:println(x1._1); // @output key '_1' is not found in JSON mapping
-    io:println(x1._a); // @output key '_a' is not found in JSON mapping
-    io:println(x1._A); // @output key '_A' is not found in JSON mapping
-    io:println(x1._12); // @output key '_12' is not found in JSON mapping
-    io:println(x1.__); // @output key '__' is not found in JSON mapping
-    io:println(x1.සිංහල); // @output key 'සිංහල' is not found in JSON mapping
+    io:println(a1["x"].y);
+    io:println(a2[0].x);
+    io:println(a2[1].x);
+}
 
-    io:println(x2.\1y); // @output key 'y' is not found in JSON mapping
-    io:println(x2.\_); // @output key '_' is not found in JSON mapping
-    io:println(x2.\u{f}); // @output key '' is not found in JSON mapping
-    io:println(x2.\u{12e}); // @output key 'Į' is not found in JSON mapping
-    io:println(x2._\_); // @output key '__' is not found in JSON mapping
-    io:println(x2.a\u{f}); // @output key 'a' is not found in JSON mapping
-    io:println(x2._\u{12e}); // @output key '_Į' is not found in JSON mapping
+function structuralConstructorExpr() {
+    io:println((<json> [{a: 1}]).a);
+    io:println((<json> {a: 1}).a);
+    io:println((<map<json>> {a: 1}).a);
+}
 
-    io:println(x3.'02); // @output key ''02' is not found in JSON mapping
-    io:println(x3.'_1); // @output key '_1' is not found in JSON mapping
-    io:println(x3.'\1); // @output key '' is not found in JSON mapping
-    io:println(x3.'\u{ab1}); // @output key '઱' is not found in JSON mapping
-    io:println(x3.'int); // @output key 'int' is not found in JSON mapping
+function testOptionalFieldAccessExpr() {
+    json a1 = {x: {y: 1}};
+    io:println(a1?.x.y);
+}
 
-    io:println(x4.__.__); // @output key '____' is not found in JSON mapping
-    io:println(x4.\..__); // @output key '.' is not found in JSON mapping
+function testTypeCastExpr() {
+    json a = {x: {y: 1}};
+
+    io:println((<map<json>> a).x);
+    io:println((<json> {a: 1}).a);
+    io:println((<json> [1]).a);
+}
+
+function testElvisExpr(json? param) {
+    json a1 = {x: {y: 2}};
+    io:println((param ?: a1).x);
+}
+
+function testTernayExpr(boolean condition) {
+    json a1 = {x: {y: 1}};
+    map<json> a2 = {x: {y: 2}};
+    io:println((condition? a1 : a2).x);
+}
+
+function testCheckingExpr() returns error? {
+    json a1 = {x: {y: 1}};
+    io:println((check fieldAccess(a1)).a);
+}
+
+function getExpr(boolean isMap) returns json|map<json> {
+    return isMap? {a: 1} : [1, 2];
+}
+
+function fieldAccess(json a) returns json|error {
+    return a.x;
 }
