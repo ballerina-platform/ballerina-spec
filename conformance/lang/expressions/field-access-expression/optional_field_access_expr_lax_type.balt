@@ -1,9 +1,9 @@
 Test-Case: output
-Description: Test optional field access expression by accessing existing fields when they belong to JSON objects. Here, 
+Description: Test optional field access expression by accessing existing fields when they belong to JSON objects. Here,
              the field-names are string-literals.
-Labels: array-type, boolean, decimal, DecimalFloatingPointNumber, DecimalNumber, optional-field-access-expr, float,
-        FloatingPointTypeSuffix, HexFloatingPointLiteral, HexIntLiteral, json, list-constructor-expr,
-        mapping-constructor-expr, nil-literal, readonly-type, string
+Labels: array-type, boolean, decimal, DecimalFloatingPointNumber, DecimalNumber, float, FloatingPointTypeSuffix,
+        HexFloatingPointLiteral, HexIntLiteral, json, list-constructor-expr, mapping-constructor-expr, nil-literal,
+        optional-field-access-expr, readonly-type, string
 
 function init() {
     json x1 = 12;
@@ -17,7 +17,7 @@ function init() {
     io:println(x5?.a); // @output 2
     io:println(x5?.e); // @output [12,"JSON",null]
 
-    io:println(x6?.b); // @output {"a":2,"b":.1,"c":"string","d":false}
+    io:println(x6?.b); // @output {"a":2,"b":0.1,"c":"string","d":false}
     io:println(x6?.b?.b); // @output 0.1
     io:println(x6?.b?.c); // @output string
 
@@ -32,9 +32,9 @@ function init() {
 Test-Case: output
 Description: Test optional field access expression by accessing existing fields when they belong to JSON objects. Here,
              field-names are variable-names.
-Labels: array-type, boolean, decimal, DecimalFloatingPointNumber, DecimalNumber, optional-field-access-expr, float,
-        FloatingPointTypeSuffix, HexFloatingPointLiteral, HexIntLiteral, json, list-constructor-expr,
-        mapping-constructor-expr, nil-literal, readonly-type, string
+Labels: array-type, boolean, decimal, DecimalFloatingPointNumber, DecimalNumber, float, FloatingPointTypeSuffix,
+        HexFloatingPointLiteral, HexIntLiteral, json, list-constructor-expr, mapping-constructor-expr, nil-literal,
+        optional-field-access-expr, readonly-type, string
 
 function init() {
     int x1 = 2;
@@ -66,9 +66,9 @@ function init() {
 Test-Case: output
 Description: Test optional field access expression by accessing existing fields when they belong to JSON objects with
              valid field-names.
-Labels: array-type, boolean, decimal, DecimalFloatingPointNumber, DecimalNumber, optional-field-access-expr, float,
-        FloatingPointTypeSuffix, HexFloatingPointLiteral, HexIntLiteral, json, list-constructor-expr,
-        mapping-constructor-expr, nil-literal, readonly-type, string
+Labels: array-type, boolean, decimal, DecimalFloatingPointNumber, DecimalNumber, float, FloatingPointTypeSuffix,
+        HexFloatingPointLiteral, HexIntLiteral, json, list-constructor-expr, mapping-constructor-expr, nil-literal,
+        null, optional-field-access-expr, readonly-type, string
 
 function init() {
     json x1 = {a: 2, z: .1, A: "string1", Z: false, _1: 21.3d, _a: 0x12, _A: 0x.21, _12: true, __: (), සිංහල: "Sinhala"};
@@ -102,12 +102,12 @@ function init() {
     io:println(x3?.'int); // @output 12
 
     io:println(x4?.__?.__); // @output
-    io:println(x4?.\?.?.__); // @output 1
+    io:println(x4?.\..\_); // @output 1
 }
 
 Test-Case: error
 Description: Test optional field access expression by attempting to access missing fields from JSON.
-Labels: optional-field-access-expr, json, mapping-constructor-expr
+Labels: json, mapping-constructor-expr, optional-field-access-expr
 
 function errorFunction() {
     json x1 = {};
@@ -146,7 +146,7 @@ function errorFunction() {
 
 Test-Case: output
 Description: Test optional field access expression with accessing missing fields from JSON which are defined in module-level.
-Labels: optional-field-access-expr, json, mapping-constructor-expr
+Labels: json, mapping-constructor-expr, optional-field-access-expr
 
 json x1 = {};
 json x2 = {};
@@ -185,7 +185,7 @@ function init() {
 
 Test-Case: output
 Description: Test optional field access expression with accessing missing fields from map<T>. Here, T is lax.
-Labels: optional-field-access-expr, json, map-type, mapping-constructor-expr
+Labels: json, map-type, mapping-constructor-expr, optional-field-access-expr
 
 map<json> x1 = {};
 map<json> x2 = {};
@@ -209,17 +209,17 @@ function init() {
     io:println(x1?.__); // @output
     io:println(x5?.සිංහල); // @output
 
-    io:println(x2?.\1y); // @output key
-    io:println(x6?.\_); // @output key
+    io:println(x2?.\1y); // @output
+    io:println(x6?.\_); // @output
     io:println(x2?.\u{f}); // @output
     io:println(x6?.\u{12e}); // @output
     io:println(x2?._\_); // @output
     io:println(x6?.a\u{f}); // @output
     io:println(x2?._\u{12e}); // @output
 
-    io:println(x3?.'02); // @output key
-    io:println(x7?.'_1); // @output key
-    io:println(x3?.'\1); // @output key
+    io:println(x3?.'02); // @output
+    io:println(x7?.'_1); // @output
+    io:println(x3?.'\1); // @output
     io:println(x7?.'\u{ab1}); // @output
     io:println(x3?.'int); // @output
 
@@ -230,8 +230,8 @@ function init() {
 Test-Case: output
 Description: Test optional field access expression by accessing existing fields when they belong to JSON objects. Here,
              mapping constructor contains computed-name-field.
-Labels: array-type, computed-name-field, DecimalNumber, optional-field-access-expr, json, list-constructor-expr,
-        mapping-constructor-expr, nil-literal, string
+Labels: array-type, computed-name-field, DecimalNumber, json, list-constructor-expr, mapping-constructor-expr,
+        nil-literal, null, optional-field-access-expr, string
 
 function init() {
     string[] list = ["int"];
@@ -249,9 +249,10 @@ function getName() returns string {
 
 Test-Case: output
 Description: Test optional field access expression by accessing valid built-in subtypes when they belong to JSON objects.
-Labels: DecimalNumber, optional-field-access-expr, int:Signed16, int:SIGNED16_MAX_VALUE, int:SIGNED16_MIN_VALUE, int:Signed32,
+Labels: DecimalNumber, int:Signed16, int:SIGNED16_MAX_VALUE, int:SIGNED16_MIN_VALUE, int:Signed32,
         int:SIGNED32_MAX_VALUE, int:SIGNED32_MIN_VALUE, int:Signed8, int:SIGNED8_MAX_VALUE, int:SIGNED8_MIN_VALUE,
-        int:Unsigned16, int:Unsigned32, int:Unsigned8, json, mapping-constructor-expr, string, string:Char, unary-minus
+        int:Unsigned16, int:Unsigned32, int:Unsigned8, json, mapping-constructor-expr, optional-field-access-expr,
+        string, string:Char, unary-minus
 
 function init() {
     int:Signed8 a1 = 127;
@@ -313,9 +314,10 @@ function init() {
 Test-Case: output
 Description: Test optional field access expression by accessing valid built-in subtypes when they belong to JSON objects
              which are defined in module level.
-Labels: DecimalNumber, optional-field-access-expr, int:Signed16, int:SIGNED16_MAX_VALUE, int:SIGNED16_MIN_VALUE, int:Signed32,
+Labels: DecimalNumber, int:Signed16, int:SIGNED16_MAX_VALUE, int:SIGNED16_MIN_VALUE, int:Signed32,
         int:SIGNED32_MAX_VALUE, int:SIGNED32_MIN_VALUE, int:Signed8, int:SIGNED8_MAX_VALUE, int:SIGNED8_MIN_VALUE,
-        int:Unsigned16, int:Unsigned32, int:Unsigned8, json, mapping-constructor-expr, string, string:Char, unary-minus
+        int:Unsigned16, int:Unsigned32, int:Unsigned8, json, mapping-constructor-expr, optional-field-access-expr,
+        string, string:Char, unary-minus
 
 int:Signed8 a1 = 127;
 int:Signed8 a2 = -128;
@@ -376,7 +378,7 @@ function init() {
 
 Test-Case: output
 Description: Test optional field access expression by accessing bytes when they belong to JSON objects.
-Labels: byte, DecimalNumber, optional-field-access-expr, json, mapping-constructor-expr, string
+Labels: byte, DecimalNumber, json, mapping-constructor-expr, optional-field-access-expr, string
 
 function init() {
     byte a1 = 255;
@@ -399,7 +401,7 @@ function init() {
 Test-Case: output
 Description: Test optional field access expression by accessing bytes when they belong to JSON objects which are defined
              in module-level.
-Labels: DecimalNumber, optional-field-access-expr, HexIntLiteral, json, mapping-constructor-expr, string, byte
+Labels: byte, DecimalNumber, HexIntLiteral, json, mapping-constructor-expr, optional-field-access-expr, string
 
 byte a1 = 255;
 byte a2 = 0;
@@ -430,9 +432,9 @@ function init() {
 Test-Case: output
 Description: Test optional field access expression by accessing user-defined types when they belong to JSON.
 Fail-Issue: ballerina-platform/ballerina-lang#35105, #35107, #35108
-Labels: decimal, DecimalFloatingPointNumber, DecimalNumber, optional-field-access-expr, float, FloatingPointTypeSuffix, int,
-        int:MAX_VALUE, int:SIGNED16_MIN_VALUE, int:SIGNED32_MAX_VALUE, int:SIGNED8_MAX_VALUE, json,
-        mapping-constructor-expr, module-type-defn, nil-literal, string, union-type
+Labels: decimal, DecimalFloatingPointNumber, DecimalNumber, float, FloatingPointTypeSuffix, int, int:MAX_VALUE,
+        int:SIGNED16_MIN_VALUE, int:SIGNED32_MAX_VALUE, int:SIGNED8_MAX_VALUE, json, mapping-constructor-expr,
+        module-type-defn, nil-literal, null, optional-field-access-expr, string, union-type
 
 type T1 12|int:MAX_VALUE;
 type T2 1.21|212f|212.1d;
@@ -517,8 +519,8 @@ function init() {
 Test-Case: output
 Description: Test optional field access expression by accessing existing fields when they belong to map<T>, where T is
              lax.
-Labels: boolean, computed-name-field, DecimalFloatingPointNumber, DecimalNumber, optional-field-access-expr, float, json,
-        map-type, mapping-constructor-expr, nil-literal, spread-field, string
+Labels: boolean, computed-name-field, DecimalFloatingPointNumber, DecimalNumber, float, json, map-type,
+        mapping-constructor-expr, nil-literal, null, optional-field-access-expr, spread-field, string
 
 function init() {
     map<json> x1 = {"a": 2, "b": .1, "c": "string", d: false, e: ()};
@@ -536,7 +538,7 @@ function init() {
     io:println(x1?.d); // @output false
     io:println(x1?.e); // @output
 
-    io:println(x2?.a); // @output {"a":2, "b":0.1, "c":"string", "d":false}
+    io:println(x2?.a); // @output {"a":2,"b":0.1,"c":"string","d":false}
     io:println(x2?.a?.a); // @output 2
     io:println(x2?.a?.b); // @output 0.1
     io:println(x2?.a?.c); // @output string
@@ -571,9 +573,9 @@ function getName2() returns string {
 Test-Case: output
 Description: Test optional field access expression by accessing existing fields when they belong to map<T> with valid
              field-names. Here, T is lax.
-Labels: array-type, boolean, decimal, DecimalFloatingPointNumber, DecimalNumber, optional-field-access-expr, float,
-        FloatingPointTypeSuffix, HexFloatingPointLiteral, HexIntLiteral, json, list-constructor-expr, map-type,
-        mapping-constructor-expr, nil-literal, readonly-type, string
+Labels: array-type, boolean, decimal, DecimalFloatingPointNumber, DecimalNumber, float, FloatingPointTypeSuffix,
+        HexFloatingPointLiteral, HexIntLiteral, json, list-constructor-expr, map-type, mapping-constructor-expr,
+        nil-literal, null, optional-field-access-expr, readonly-type, string
 
 function init() {
     map<json> x1 = {a: 2, z: .1, A: "string1", Z: false, _1: 21.3d, _a: 0x12, _A: 0x.21, _12: true, __: (), සිංහල: "Sinhala"};
@@ -613,10 +615,10 @@ function init() {
 Test-Case: output
 Description: Test optional field access expression by accessing valid built-in subtypes when they belong to map<T>.
              Here, T is lax.
-Labels: DecimalNumber, optional-field-access-expr, int:Signed16, int:SIGNED16_MAX_VALUE, int:SIGNED16_MIN_VALUE, int:Signed32,
+Labels: DecimalNumber, int:Signed16, int:SIGNED16_MAX_VALUE, int:SIGNED16_MIN_VALUE, int:Signed32,
         int:SIGNED32_MAX_VALUE, int:SIGNED32_MIN_VALUE, int:Signed8, int:SIGNED8_MAX_VALUE, int:SIGNED8_MIN_VALUE,
-        int:Unsigned16, int:Unsigned32, int:Unsigned8, json, map-type, mapping-constructor-expr, string, string:Char,
-        unary-minus
+        int:Unsigned16, int:Unsigned32, int:Unsigned8, json, map-type, mapping-constructor-expr,
+        optional-field-access-expr, string, string:Char, unary-minus
 
 function init() {
     int:Signed8 a1 = 127;
@@ -689,10 +691,10 @@ function init() {
 Test-Case: output
 Description: Test optional field access expression by accessing valid built-in subtypes when they belong to JSON objects
              which are defined in module level.
-Labels: DecimalNumber, optional-field-access-expr, int:Signed16, int:SIGNED16_MAX_VALUE, int:SIGNED16_MIN_VALUE, int:Signed32,
+Labels: DecimalNumber, int:Signed16, int:SIGNED16_MAX_VALUE, int:SIGNED16_MIN_VALUE, int:Signed32,
         int:SIGNED32_MAX_VALUE, int:SIGNED32_MIN_VALUE, int:Signed8, int:SIGNED8_MAX_VALUE, int:SIGNED8_MIN_VALUE,
-        int:Unsigned16, int:Unsigned32, int:Unsigned8, json, map-type, mapping-constructor-expr, string, string:Char,
-        unary-minus
+        int:Unsigned16, int:Unsigned32, int:Unsigned8, json, map-type, mapping-constructor-expr,
+        optional-field-access-expr, string, string:Char, unary-minus
 
 int:Signed8 a1 = 127;
 int:Signed8 a2 = -128;
@@ -764,7 +766,7 @@ function init() {
 
 Test-Case: output
 Description: Test optional field access expression by accessing bytes when they belong to map<T>. Here, T is lax.
-Labels: DecimalNumber, optional-field-access-expr, HexIntLiteral, json, map-type, mapping-constructor-expr, string, byte
+Labels: byte, DecimalNumber, HexIntLiteral, json, map-type, mapping-constructor-expr, optional-field-access-expr, string
 
 function init() {
     byte a1 = 255;
@@ -795,7 +797,7 @@ function init() {
 Test-Case: output
 Description: Test optional field access expression by accessing bytes when they belong to map<T> which are defined in
              module level. Here, T is lax.
-Labels: DecimalNumber, optional-field-access-expr, HexIntLiteral, json, map-type, mapping-constructor-expr, string, byte
+Labels: byte, DecimalNumber, HexIntLiteral, json, map-type, mapping-constructor-expr, optional-field-access-expr, string
 
 byte a1 = 255;
 byte a2 = 0;
@@ -827,9 +829,9 @@ Test-Case: output
 Description: Test optional field access expression by accessing user-defined subtypes when they belong to map<T>. Here,
              T is lax.
 Fail-Issue: ballerina-platform/ballerina-lang#35105, #35107, #35108
-Labels: decimal, DecimalFloatingPointNumber, DecimalNumber, optional-field-access-expr, float, FloatingPointTypeSuffix, int,
-        int:MAX_VALUE, int:SIGNED16_MIN_VALUE, int:SIGNED32_MAX_VALUE, int:SIGNED8_MAX_VALUE, json, map-type,
-        mapping-constructor-expr, module-type-defn, nil-literal, string, union-type
+Labels: decimal, DecimalFloatingPointNumber, DecimalNumber, float, FloatingPointTypeSuffix, int, int:MAX_VALUE,
+        int:SIGNED16_MIN_VALUE, int:SIGNED32_MAX_VALUE, int:SIGNED8_MAX_VALUE, json, map-type, mapping-constructor-expr,
+        module-type-defn, nil-literal, null, optional-field-access-expr, string, union-type
 
 type T1 12|int:MAX_VALUE;
 type T2 1.21|212f|212.1d;
@@ -911,7 +913,7 @@ function init() {
     io:println(t14?.c); // @output
 }
 
-Test-Case: error :swj
+Test-Case: error
 Description: Test the static type of field-access-expr for lax type. Test case 1.
 Labels: array-type, boolean, decimal, DecimalFloatingPointNumber, DecimalNumber, error-type, field-access-expr, float,
         FloatingPointTypeSuffix, HexFloatingPointLiteral, json, list-constructor-expr, map-type,
@@ -953,7 +955,7 @@ function errorFunction() {
     string x14 = a14?.x?.y; // @error expected 'string' but found '(json|error)'
     string x15 = a15?.x; // @error expected 'string', found '(map<json>|error)'
     error x16 = a16?.x?.y?.'1; // @error expected 'error' but found '(json|error)'
-    json x17 = a17?.x; // @error expected 'json', found '(map<(json|map<json>)>|error)'
+    json x17 = a17?.x?.x?.x; // @error expected 'json', found '(json|error)'
     json x18 = a18?.x; // @error expected 'json', found '(map<json>|json|error)'
 }
 
@@ -1163,6 +1165,7 @@ function init() {
     io:println(c3?.a8?.x); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
     io:println(c4?.x); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
 }
+
 Test-Case: output
 Description: Test if the expression does not have basic type mapping, the result is a new error value. Here, field
              access expressions are defined in module level.
@@ -1357,10 +1360,10 @@ function fieldOptionalAccess(json a) returns json|error {
 Test-Case: output
 Description: Test optional field access expression by trying to access fields from non-mapping JSON which are defined
              in module level.
-Labels: boolean, decimal, DecimalFloatingPointNumber, DecimalNumber, optional-field-access-expr, float, FloatingPointTypeSuffix,
-        json, nil-literal, string
+Labels: boolean, decimal, DecimalFloatingPointNumber, DecimalNumber, float, FloatingPointTypeSuffix, json, nil-literal,
+        optional-field-access-expr, string
 
-json x1 = ();
+json x1 = [];
 json x2 = false;
 json x3 = true;
 json x4 = 123;
@@ -1369,11 +1372,11 @@ json x6 = 42.2d;
 json x7 = "x7";
 
 function init() {
-    io:println(a1?.x); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
-    io:println(a2?.x); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
-    io:println(a3?.x); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
-    io:println(a4?.x); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
-    io:println(a5?.x); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
-    io:println(a6?.x); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
-    io:println(a7?.x); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+    io:println(x1?.x); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+    io:println(x2?.x); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+    io:println(x3?.x); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+    io:println(x4?.x); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+    io:println(x5?.x); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+    io:println(x6?.x); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
+    io:println(x7?.x); // @output error("{ballerina}JSONOperationError",message="JSON value is not a mapping")
 }
