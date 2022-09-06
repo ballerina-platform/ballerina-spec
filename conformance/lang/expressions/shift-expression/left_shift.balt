@@ -75,7 +75,7 @@ function init() {
 
 Test-Case: output
 Description: Test left shift expression for positive and negative 'int' HexIntLiteral as operands.
-Labels: HexIntliteral, shift-expr, unary-minus
+Labels: HexIntLiteral, shift-expr, unary-minus
 
 function init() {
     io:println(-0x1f << 0x1a); // @output -2080374784
@@ -84,7 +84,7 @@ function init() {
 
 Test-Case: output
 Description: Test left shift expression for positive and negative IntLiterals as operands.
-Labels: DecimalNumber, HexIntliteral, shift-expr, unary-minus
+Labels: DecimalNumber, HexIntLiteral, shift-expr, unary-minus
 
 function init() {
     io:println(-111 << 2); // @output -444
@@ -3338,7 +3338,7 @@ Description: Test resultant type of the left shift expression with user-defined 
              user-defined subtype of integer as the RHS operand.
 Labels: DecimalNumber, int, module-type-defn, shift-expr, unary-minus, union-type
 
-type Ints1 int;
+type Ints1 1|2;
 type Ints2 -1|2|-128;
 
 function errorFunction(Ints1 x, Ints2 a) {
@@ -3353,8 +3353,8 @@ Labels: DecimalNumber, int, int:Signed16, module-type-defn, optional-type, shift
 
 type Ints 12|-12;
 
-function errorFunction(Ints x = 12, int? a) {
-    int:Signed16 _ = x << a; // @error  'int:Signed16' but found 'int?'
+function errorFunction(Ints x, int? a) {
+    int:Signed16 _ = x << a; // @error  expected 'int:Signed16' but found 'int?'
     int _ = x << a; // @error expected 'int' but found 'int?'
 }
 
@@ -3686,7 +3686,7 @@ type Record record {
 
 Test-Case: output
 Description: Test left shift expression with member access as operands.
-Labels: array-type, DecimalNumber, int, list-constructor, member-access-expr, shift-expr
+Labels: array-type, DecimalNumber, int, list-constructor-expr, member-access-expr, shift-expr
 
 function init() {
     int[] b = [3, 40];
@@ -3744,9 +3744,8 @@ function init() {
 
 Test-Case: output
 Description: Test left shift expression with type cast expressions as operands.
-Labels: byte, DecimalFloatingPointNumber, DecimalTypeSuffix, FloatingPointTypeSuffix, int, int:Signed16, int:Signed32,
-        int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8, shift-expr, type-cast-expr, unary-minus
-
+Labels: byte, DecimalFloatingPointNumber, FloatingPointTypeSuffix, int, int:Signed16, int:Signed32, int:Signed8,
+        int:Unsigned16, int:Unsigned32, int:Unsigned8, shift-expr, type-cast-expr, unary-minus
 
 function init() {
     int a = <int> 6.0 << <int> 7d;
@@ -3756,34 +3755,34 @@ function init() {
     io:println(b); // @output -144115188075855872
 
     int c = <int:Signed16> 32767 << <int:Signed16> 7.4d;
-    io:println(c); // @output -144115188075855872
+    io:println(c); // @output 4194176
 
     int d = <int:Signed32> 2147483647.3 << <int:Signed32> -7;
-    io:println(d); // @output 32640
+    io:println(d); // @output -144115188075855872
 
     int e = <int:Unsigned8> 255.0 << <int:Unsigned8> 7d;
-    io:println(e); // @output 8388480
+    io:println(e); // @output 32640
 
     int f = <int:Unsigned16> 65535.3 << <int:Unsigned16> 7d;
-    io:println(f); // @output 549755813760
+    io:println(f); // @output 8388480
 
     int g = <int:Unsigned32> 4294967295 << <int:Unsigned32> 7d;
-    io:println(g); // @output 768
+    io:println(g); // @output 549755813760
 
     int h = <int:Signed32> 6.0 << <int:Unsigned16> 7d;
     io:println(h); // @output 768
 
     int i = <int:Unsigned16> 6.0 << <int:Unsigned32> 7d;
-    io:println(i); // @output 32640
+    io:println(i); // @output 768
 
     int j = <byte> 255 << <byte> 7d;
-    io:println(j); // @output 6
+    io:println(j); // @output 32640
 
     int k = <int:Signed32> 6.0 << <byte> -0;
-    io:println(k); // @output 768
+    io:println(k); // @output 6
 
     int l = <byte> 6.0 << <int:Unsigned32> 7d;
-    io:println(l); // @output 32767
+    io:println(l); // @output 768
 }
 
 Test-Case: output
