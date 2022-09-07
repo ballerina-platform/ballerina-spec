@@ -1,14 +1,10 @@
 Test-Case: error
-Description: Test multiplicative expression with static type of operands belonging to int and float resulting in an error.
+Description: Test invalid multiplicative expression where the static type of the dividend is int and the divisor is float resulting in an error.
 Labels: multiplicative-expr, int, float
 
 function errorFunction(int a, float b) {
-    int _ = a * b; // @error * is not allowed with operands of different basic types
-    int _ = a / b; // @error / is not allowed with operands of different basic types
-    int _ = a % b; // @error % is not allowed with operands of different basic types
-    float _ = b * a; // @error * is not allowed with operands of different basic types
-    float _ = b / a; // @error / is not allowed with operands of different basic types
-    float _ = b % a; // @error % is not allowed with operands of different basic types
+    int _ = a / b; // @error / is not allowed with an int dividend and float divisor
+    int _ = a % b; // @error % is not allowed with an int dividend and float divisor
 }
 
 Test-Case: error
@@ -16,8 +12,7 @@ Description: Test multiplicative expression with static type of operands belongi
 Labels: multiplicative-expr, int, float, decimal
 
 function errorFunction(int a, float b, decimal c) {
-    int _ = a * c; // @error * is not allowed with operands of different basic types
-    decimal _ = c / a; // @error / is not allowed with operands of different basic types
+    decimal _ = a / c; // @error / is not allowed with operands of different basic types
     int _ = a % c; // @error % is not allowed with operands of different basic types
     float _ = b * c; // @error * is not allowed with operands of different basic types
     float _ = b / c; // @error / is not allowed with operands of different basic types
@@ -30,14 +25,9 @@ Labels: multiplicative-expr, int, float, decimal, optional-type, numeric-nil-lif
 
 function errorFunction(int a, float b, decimal c,
                      int? d, float? e, decimal? f) {
-    int _ = d * e; // @error * is not allowed with operands of different basic types
     int _ = d / e; // @error / is not allowed with operands of different basic types
     int _ = a % e; // @error % is not allowed with operands of different basic types
-    float _ = e * a; // @error * is not allowed with operands of different basic types
-    float _ = b / d; // @error / is not allowed with operands of different basic types
-    float _ = e % d; // @error % is not allowed with operands of different basic types
-    int _ = d * c; // @error * is not allowed with operands of different basic types
-    decimal? _ = f / d; // @error / is not allowed with operands of different basic types
+    decimal? _ = d / f; // @error / is not allowed with operands of different basic types
     int _ = d % f; // @error % is not allowed with operands of different basic types
     float _ = b * f; // @error * is not allowed with operands of different basic types
     float _ = e / c; // @error / is not allowed with operands of different basic types
@@ -79,14 +69,10 @@ type Ints 1|2;
 type Floats 2.0|3.0|4.0;
 type Decimals 1d|4.12d;
 
-function errorFunction(int:Signed8 a, int:Signed16 b, int:Signed32 c,
-                     int:Unsigned8 d, int:Unsigned16 e, int:Unsigned32 f, 
-                     byte g, Ints h, Floats i, Decimals j, 
-                     int:Unsigned8? k, Ints? l, Floats? m, Decimals? n) {
+function errorFunction(int:Signed8 a, int:Signed32 c, int:Unsigned16 e, int:Unsigned32 f, byte g,
+                    Ints h, Floats i, Decimals j, int:Unsigned8? k, Ints? l, Floats? m, Decimals? n) {
     int:Signed8 _ = a * i; // @error * is not allowed with operands of different basic types
-    decimal _ = j / b; // @error / is not allowed with operands of different basic types
     float _ = c % m; // @error % is not allowed with operands of different basic types
-    float _ = i * d; // @error * is not allowed with operands of different basic types
     int _ = e / j; // @error / is not allowed with operands of different basic types
     float _ = m % f; // @error % is not allowed with operands of different basic types
     int _ = g * n; // @error * is not allowed with operands of different basic types

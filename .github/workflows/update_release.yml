@@ -1,0 +1,119 @@
+name: Update major spec releases in ballerina.io
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  sync_major_spec:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.BAL_BOT_PAT }}
+
+    steps:
+      - name: Checkout ballerina-spec
+        uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install Python Packages
+        run: |
+          pip install requests
+
+      - name: Clone ballerina-dev-website
+        run: git clone -b master --single-branch https://ballerina-bot:$GITHUB_TOKEN@github.com/ballerina-platform/ballerina-dev-website.git
+
+      - name: Clone ballerina-prod-website
+        run: git clone https://ballerina-bot:$GITHUB_TOKEN@github.com/ballerina-platform/ballerina-platform.github.io.git
+
+      - name: Make new folder location in ballerina-dev-website
+        run: |
+          cd ballerina-dev-website/public/spec/lang
+          array=($(echo $GITHUB_REF | tr "/" "\n"))
+          len=${#array[@]}
+          tag="${array[len-1]}"
+          folder_name="${tag:1}"
+          if [ -d "$folder_name" ]; then rm -Rf "$folder_name"; fi
+          mkdir "$folder_name"
+          echo "NEW_FOLDER=$folder_name" >> $GITHUB_ENV
+
+      - name: Make new folder location in ballerina-prod-website
+        run: |
+          cd ballerina-platform.github.io/spec/lang
+          if [ -d "${NEW_FOLDER}" ]; then rm -Rf "${NEW_FOLDER}"; fi
+          mkdir "${NEW_FOLDER}"
+
+      - name: Update the latest to new url in ballerina-dev-website
+        run: |
+          cd ballerina-dev-website/public/spec/lang
+          echo -e "---\nredirect_to: /spec/\n---" > index.md
+
+      - name: Update the latest to new url in ballerina-prod-website
+        run: |
+          cd ballerina-platform.github.io/spec/lang
+          echo -e "---\nredirect_to: /spec/\n---" > index.md
+
+      - name: Install xsltproc
+        run: sudo apt-get install -y xsltproc
+
+      - name: Make
+        run: |
+          git checkout $GITHUB_REF -b tmp
+          cd lang
+          make all
+          mv build/spec.html build/index.html
+
+      - name: Copy new spec to ballerina-dev-website
+        run: cp -r lang/build/* ballerina-dev-website/public/spec/lang/$NEW_FOLDER
+
+      - name: Copy new spec to ballerina-prod-website
+        run: cp -r lang/build/* ballerina-platform.github.io/spec/lang/$NEW_FOLDER
+
+      - name: Update the list of draft specs in ballerina-dev-website
+        run: python3 .github/scripts/update_specs_table.py ballerina-dev-website/spec/spec.md
+
+      - name: Update the list of draft specs in ballerina-prod-website
+        run: python3 .github/scripts/update_specs_table.py ballerina-platform.github.io/spec/spec.md
+
+      - name: Sync ballerina-spec with ballerina-dev-website
+        run: |
+          cd ballerina-dev-website
+          git pull origin master
+
+          git config --global user.email "ballerina-bot@ballerina.org"
+          git config --global user.name "ballerina-bot"
+
+          git add spec/
+          git commit --allow-empty -m "[Automated] Sync new spec release with ballerina dev site"
+
+      - name: Sync ballerina-spec with ballerina-prod-website
+        run: |
+          cd ballerina-platform.github.io
+          git pull origin master
+
+          git config --global user.email "ballerina-bot@ballerina.org"
+          git config --global user.name "ballerina-bot"
+
+          git add spec/
+          git commit --allow-empty -m "[Automated] Sync new spec release with ballerina prod site"
+
+      - name: Push new changes to ballerina-dev-website
+        shell: bash
+        run: |
+          cd ballerina-dev-website
+          curl -fsSL https://github.com/github/hub/raw/master/script/get | bash -s 2.14.1
+          bin/hub push
+        env:
+          GITHUB_TOKEN: ${{ secrets.BAL_BOT_PAT }}
+
+      - name: Push new changes to ballerina-prod-website
+        shell: bash
+        run: |
+          cd ballerina-platform.github.io
+          curl -fsSL https://github.com/github/hub/raw/master/script/get | bash -s 2.14.1
+          bin/hub push
+        env:
+          GITHUB_TOKEN: ${{ secrets.BAL_BOT_PAT }}

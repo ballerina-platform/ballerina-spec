@@ -1,0 +1,544 @@
+Test-Case: output
+Description: Test declaration and initialization of a field of an object.
+Labels: field-access-expr, module-type-defn, object-constructor-expr, object-type
+
+type ObjectType object {
+    int val;
+};
+
+function init() {
+    ObjectType obj = object {
+        int val = 10;
+    };
+    io:println(obj.val); // @output 10
+}
+
+Test-Case: output
+Description: Test declaration and initialization of a field of an object with visibility qualifier.
+Labels: field-access-expr, method-call-expr, object-constructor-expr, var
+
+function init() {
+    var obj = object {
+        private int val = 10;
+
+        function getVal() returns int {
+            return self.val;
+        }
+    };
+    io:println(obj.getVal()); // @output 10
+
+    var obj2 = object {
+        public int val = 10;
+    };
+    io:println(obj2.val); // @output 10
+}
+
+Test-Case: output
+Description: Test declaration and initialization of a field of an object with meta data.
+Fail-Issue: ballerina-platform/ballerina-lang#34859
+Labels: annotation-decl, annotation, field-access-expr, int, module-type-defn, object-constructor-expr,
+        record-type, string, type-cast-expr, typeof-expr, var
+
+type Annot record {
+    string a;
+};
+
+annotation Annot v1 on object field;
+
+function init() {
+    var obj = object {
+        # This is a document.
+        # It is for an object field.
+        @v1 {
+            a: "v1"
+        }
+        int val = 10;
+    };
+
+    Annot annot = <Annot>(typeof obj.val).@v1;
+    io:println(annot.a); // @output v1
+}
+
+Test-Case: output
+Description: Test declaration and initialization of a final field of an object.
+Labels: field-access-expr, method-call-expr, object-constructor-expr, var
+
+function init() {
+    var obj = object {
+        final int val = 10;
+
+        function getVal() returns int {
+            return self.val;
+        }
+    };
+    io:println(obj.val); // @output 10
+    io:println(obj.getVal()); // @output 10
+}
+
+Test-Case: output
+Description: Test initializing a field when the field does not specify a field-initializer in init method.
+Labels: field-access-expr, object-constructor-expr, var
+
+function init() {
+    var obj = object {
+        int val;
+
+        function init() {
+            self.val = 10;
+        }
+    };
+    io:println(obj.val); // @output 10
+}
+
+Test-Case: output
+Description: Test initializing a final field when the field does not specify a field-initializer in init method.
+Labels: field-access-expr, object-constructor-expr, var
+
+function init() {
+    var obj = object {
+        final int val;
+
+        function init() {
+            self.val = 10;
+        }
+    };
+    io:println(obj.val); // @output 10
+}
+
+Test-Case: error
+Description: Test behaviour when a field does not specify a field-initializer and there is no init method
+             initializing the field.
+Labels: object-constructor-expr, var
+
+function errorFunction() {
+    var _ = object {
+        int val; // @error uninitialized field
+        final int val2; // @error uninitialized field
+    };
+}
+
+Test-Case: error
+Description: Test behaviour of assigning a value to a final field which does not specify a field-initializer and there
+             is no init method initializing the field.
+Labels: object-constructor-expr, var
+
+function errorFunction() {
+    var _ = object {
+        final int val;
+
+        function setValue() {
+            self.val = 1; // @error cannot update readonly value
+        }
+    };
+}
+
+Test-Case: output
+Description: Test field-initializer meeting the requirements for an isolated expression when the init method is not
+             present and not declared as isolated.
+Labels: array-type, field-access-expr, int, intersection-type, list-constructor-expr, module-init-var-decl,
+        object-constructor-expr, readonly-type, var
+
+final int[] & readonly intArr = [10];
+final int intVal = 10;
+
+function init() {
+    var obj = object {
+        int[] val = intArr;
+        int val2 = intVal;
+    };
+    io:println(obj.val); // @output [10]
+    io:println(obj.val2); // @output 10
+}
+
+Test-Case: output
+Description: Test field-initializer meeting the requirements for an isolated expression when the init method is not
+             present and declared as isolated.
+Labels: field-access-expr, function-call-expr, int, intersection-type, isolated-function, module-init-var-decl,
+        object-constructor-expr, var
+
+function init() {
+    var obj = object {
+        int val = getIntVal();
+    };
+    io:println(obj.val); // @output 10
+}
+
+isolated function getIntVal() returns int {
+    return 10;
+}
+
+Test-Case: error
+Description: Test field-initializer meeting the requirements for an isolated expression when the init method is not
+             present and not declared as isolated.
+Labels: function-call-expr, int, module-init-var-decl, object-constructor-expr, var
+
+int intVal = 10;
+
+function errorFunction() {
+    var _ = object {
+        int val = intVal; // @error invalid access of mutable storage in the initializer
+        int val2 = getIntVal(); // @error invalid invocation of a non-isolated function in the initializer
+    };
+}
+
+function getIntVal() returns int {
+    return 10;
+}
+
+Test-Case: output
+Description: Test field-initializer not required to meet the requirements for an isolated expression when the
+             init method is present.
+Labels: field-access-expr, function-call-expr, int, module-init-var-decl, object-constructor-expr, var
+
+int intVal = 10;
+
+function init() {
+    var obj = object {
+        int val = getIntVal();
+        int val2 = intVal;
+
+        function init() {
+        }
+    };
+    io:println(obj.val); // @output 10
+    io:println(obj.val2); // @output 10
+}
+
+function getIntVal() returns int {
+    return 10;
+}
+
+Test-Case: output
+Description: Test whether the contextually expected type for a field-initializer is the intersection of readonly
+             and the type specified in the type-descriptor of the object-field when the object-constructor-expr
+             is implicitly read-only.
+Labels: array-type, field-access-expr, function-call-expr, int, intersection-type, is-expr, list-constructor-expr,
+        module-type-defn, object-constructor-expr, object-type, readonly-type
+
+type ObjectType readonly & object {
+    int[] val;
+};
+
+function init() {
+    ObjectType obj = object {
+        int[] val = getIntVal();
+
+        function init() {
+        }
+    };
+    io:println(<any>obj.val is int[] & readonly); // @output true
+    io:println(obj.val); // @output [1,2]
+}
+
+function getIntVal() returns int[] & readonly {
+    return [1, 2];
+}
+
+Test-Case: error
+Description: Test whether the contextually expected type for a field-initializer is the intersection of readonly
+             and the type specified in the type-descriptor of the object-field when the object-constructor-expr
+             is implicitly read-only.
+Labels: array-type, field-access-expr, function-call-expr, int, intersection-type, list-constructor-expr, module-type-defn,
+        object-constructor-expr, object-type, readonly-type
+
+type ObjectType readonly & object {
+    int[] val;
+};
+
+function errorFunction() {
+    ObjectType _ = object {
+        int[] val = getIntVal(); // @error expected 'int[] & readonly', found 'int[]'
+
+        function init() {
+        }
+    };
+}
+
+function getIntVal() returns int[] {
+    return [1, 2];
+}
+
+Test-Case: error
+Description: Test whether the field is assigned to exactly once, either by its initializer or in the init method
+             when final is present.
+Labels: array-type, field-access-expr, int, list-constructor-expr, object-constructor-expr, object-type, var
+
+function errorFunction() {
+    var _ = object {
+        final int[] val = [];
+
+        function init() {
+            self.val = [1, 2]; // @error cannot assign a value to final variable
+        }
+    };
+}
+
+Test-Case: error
+Description: Test whether the field is assigned to exactly once, either by its initializer or in the init method
+             when final is present.
+Labels: array-type, field-access-expr, int, list-constructor-expr, object-constructor-expr, object-type, var
+
+function errorFunction() {
+    var _ = object {
+        final int[] val;
+
+        function init() {
+            self.val = [];
+        }
+
+        function setValue() {
+            self.val = [1 ,2]; // @error cannot assign a value to final variable
+        }
+    };
+}
+
+Test-Case: output
+Description: Test object-constructor-expr constructing an object with its read-only bit set if every object-field
+             is declared as final and has a type-descriptor that is a subtype of readonly.
+Labels: any, array-type, int, intersection-type, is-expr, list-constructor-expr, module-type-defn,
+        object-constructor-expr, object-type, readonly-type, type-cast-expr, var
+
+type ObjectType object {
+    int[] val;
+    int val2;
+};
+
+function init() {
+    var obj = object {
+        final int[] & readonly val = [];
+        final int val2 = 10;
+
+        function init() {
+        }
+    };
+    io:println(obj is readonly); // @output true
+    io:println(obj is ObjectType & readonly); // @output true
+
+    ObjectType & readonly obj2 = obj;
+    io:println(obj2.val); // @output []
+    io:println(obj2.val2); // @output 10
+
+    var obj3 = object {
+        final int[] val = [];
+        final int val2 = 10;
+
+        function init() {
+        }
+    };
+    io:println(<any>obj3 is readonly); // @output false
+    io:println(<any>obj3 is ObjectType & readonly); // @output false
+}
+
+Test-Case: error
+Description: Test object-constructor-expr constructing an object with its read-only bit set if every object-field
+             is declared as final and has a type-descriptor that is a subtype of readonly.
+Labels: array-type, int, intersection-type, list-constructor-expr, module-type-defn, object-constructor-expr,
+        object-type, readonly-type, var
+
+type ObjectType object {
+    int[] val;
+    int val2;
+};
+
+function errorFunction() {
+    ObjectType obj = object {
+        final int[] val = [];
+        final int val2 = 10;
+
+        function init() {
+        }
+    };
+    ObjectType & readonly _ = obj; // @error incompatible types, expected '(ObjectType & readonly)'
+}
+
+Test-Case: output
+Description: Test isolatedness of object field if it is declared as final and has a type-descriptor that is a subtype of
+             readonly.
+Labels: array-type, field-access-expr, int, intersection-type, list-constructor-expr, lock-stmt, module-init-var-decl,
+        object-constructor-expr, readonly-type, var
+
+var obj = object {
+    final int[] & readonly val = [1, 2];
+};
+
+isolated int[][] b = [[12], obj.val];
+
+function init() {
+    lock {
+        io:println(b); // @output [[12],[1,2]]
+    }
+}
+
+Test-Case: output
+Description: Test isolatedness of object field if its type-descriptor is isolated object {}.
+Labels: any, array-type, field-access-expr, int, is-expr, isolated-object, list-constructor-expr, lock-stmt, member-access-expr,
+        method-call-expr, module-init-var-decl, object-constructor-expr, object-type, var
+
+var obj = object {
+    isolated object {
+        int v;
+    } val = isolated object {
+        final int v = 10;
+    };
+};
+
+isolated any[][] b = [[12], [obj.val]];
+
+function init() {
+    lock {
+        io:println(b[1][0] is isolated object{}); // @output true
+    }
+}
+
+Test-Case: output
+Description: Test isolatedness of object field if the object-constructor-expr is implicitly read-only.
+Labels: any, array-type, field-access-expr, int, intersection-type, isolated-function, list-constructor-expr, lock-stmt,
+        member-access-expr, method-call-expr, module-type-defn, object-constructor-expr, 
+        object-type, readonly-type
+
+type ObjectType readonly & object {
+    int[] val;
+};
+
+ObjectType obj = object {
+    int[] val = [1, 2];
+};
+
+isolated any[][] b = [[12], [obj.val]];
+
+function init() {
+    lock {
+        io:println(b[1][0]); // @output [1,2]
+    }
+}
+
+Test-Case: error
+Description: Test non-isolatedness of object field if it is not final, not have a type-descriptor that
+             is a subtype of readonly or isolated object {}, nor implicitly read-only.
+Labels: array-type, field-access-expr, int, list-constructor-expr, module-init-var-decl, object-constructor-expr,
+        var
+
+var obj = object {
+    int[] val = [23];
+};
+
+isolated int[][] b = [[12], obj.val]; // @error invalid initial value expression: expected an isolated expression
+
+Test-Case: output
+Description: Test whether an object-constructor-expr is implicitly isolated if it is implicitly readonly.
+Labels: any, array-type, int, intersection-type, is-expr, isolated-object, list-constructor-expr, module-type-defn,
+        object-constructor-expr, object-type, readonly-type, type-cast-expr
+
+type ObjectType readonly & object {
+    int[] val;
+};
+
+function init() {
+    io:println(<any>object ObjectType {
+        int[] val = [];
+    } is isolated object {}); // @output true
+}
+
+Test-Case: output
+Description: Test object-constructor-expr that is implicitly isolated constructing an object with its isolated bit set.
+Labels: any, array-type, int, intersection-type, is-expr, isolated-object, list-constructor-expr, module-type-defn,
+        object-constructor-expr, object-type, readonly-type, type-cast-expr
+
+type ObjectType readonly & object {
+    int[] val;
+};
+
+function init() {
+    ObjectType obj = object {
+        int[] val = [];
+    };
+
+    io:println(<any>obj is isolated object {}); // @output true
+}
+
+Test-Case: output
+Description: Test whether an object-constructor-expr is implicitly isolated if every object field is isolated.
+Labels: any, array-type, int, intersection-type, is-expr, isolated-object, list-constructor-expr,
+        object-constructor-expr, readonly-type, type-cast-expr
+
+function init() {
+    io:println(<any>object {
+        final readonly & int[] val = [];
+        final int val2 = 12;
+    } is isolated object {}); // @output true
+}
+
+Test-Case: output
+Description: Test object-constructor-expr that is implicitly isolated constructing an object with its isolated bit set.
+Labels: any, array-type, int, intersection-type, is-expr, isolated-object, list-constructor-expr,
+        object-constructor-expr, readonly-type, type-cast-expr, var
+
+function init() {
+    var obj = object {
+        final readonly & int[] val = [];
+        final int val2 = 12;
+    };
+
+    io:println(<any>obj is isolated object {}); // @output true
+}
+
+Test-Case: output
+Description: Test the static type of the object-constructor-expr being intersected with isolated object {} when the
+             object-constructor-expr is implicitly isolated.
+Labels: array-type, field-access-expr, int, intersection-type, isolated-object, list-constructor-expr,
+        object-constructor-expr, object-type, readonly-type
+
+function init() {
+    isolated object {
+        int[] val;
+        int val2;
+    } obj = object {
+        final readonly & int[] val = [1, 2];
+        final int val2 = 12;
+    };
+    io:println(obj.val); // @output [1,2]
+    io:println(obj.val2); // @output 12
+}
+
+Test-Case: error
+Description: Test invalid static type of the object-constructor-expr intersected with isolated object {} when the
+             object-constructor-expr is not implicitly isolated.
+Labels: array-type, int, isolated-object, list-constructor-expr, object-constructor-expr, object-type
+
+function errorFunction() {
+    isolated object {} _ = object { // @error incompatible types, expected 'isolated object { }'
+        int[] val = [1, 2];
+        int val2 = 12;
+    };
+}
+
+Test-Case: output
+Description: Test every field-initializer being an isolated expression and any field that is not isolated being
+             declared as private when the object-constructor-expr is explicitly isolated.
+Labels: array-type, function-call-expr, int, intersection-type, isolated-function, isolated-object,
+        list-constructor-expr, object-constructor-expr, readonly-type, var
+
+function init() {
+    var _ = isolated object {
+        private int[] val = getIntArr();
+        final readonly & int[] val2 = getIntArr();
+    };
+}
+
+isolated function getIntArr() returns int[] & readonly {
+    return [1, 2];
+}
+
+Test-Case: error
+Description: Test field-initializer not being an isolated expression and any field that is not isolated not being
+             declared as private when the object-constructor-expr is explicitly isolated.
+Labels: array-type, int, isolated-object, list-constructor-expr, object-constructor-expr, var
+
+function errorFunction() {
+    int[] arr = [];
+    var _ = isolated object {
+        int[] val = arr; // @error invalid non-private mutable field in an isolated object and invalid initial value expression: expected an isolated expression
+        function init() {
+        }
+    };
+}

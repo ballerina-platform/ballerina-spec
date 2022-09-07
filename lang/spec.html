@@ -13,7 +13,7 @@
   </style>
 </head>
 <body>
-<h1>Ballerina Language Specification, 2021R1</h1>
+<h1>Ballerina Language Specification, 2022R4 preview</h1>
 <p>
 Primary contributors:
 </p>
@@ -27,7 +27,7 @@ Primary contributors:
 (Other contributors are listed in <a href="#contributors">Appendix D</a>.)
 </p>
 <p>
-Copyright © 2018-2021 <a href="https://wso2.com/">WSO2</a>
+Copyright © 2018-2022 <a href="https://wso2.com/">WSO2</a>
 </p>
 <p>
 Licensed under the <a
@@ -247,7 +247,7 @@ code points:
 <li>surrogates (0xD800 to 0xDFFF)</li>
 <li>non-characters (the 66 code points that Unicode designates as
 non-characters)</li>
-<li>C0 control characters (0x0 to 0x1F and 0x1F) other than whitespace (0x9,
+<li>C0 control characters (0x0 to 0x1F and 0x1F) other than white space (0x9,
 0xA, 0xC, 0xD)</li>
 <li>C1 control characters (0x80 to 0x9F)</li>
 </ul>
@@ -298,6 +298,17 @@ point; more precisely, it must be a hexadecimal numeral denoting an integer
 </p>
 
 <pre
+class="grammar">RestrictedIdentifier := AsciiLetter RestrictedFollowingChar* RestrictedIdentifierWord*
+RestrictedIdentifierWord := <code>_</code> RestrictedFollowingChar+
+RestrictedFollowingChar := AsciiLetter | Digit
+</pre>
+
+<p>
+Identifiers used for the names of organizations and modules are restricted to
+<code>RestrictedIdentifier</code>.
+</p>
+
+<pre
 class="grammar">TokenWhiteSpace := (Comment | WhiteSpaceChar)*
 Comment := <code>//</code> AnyCharButNewline*
 AnyCharButNewline := ^ 0xA
@@ -307,6 +318,17 @@ WhiteSpaceChar := 0x9 | 0xA | 0xD | 0x20
 <code>TokenWhiteSpace</code> is implicitly allowed on the right hand side of
 productions for non-terminals whose names start with a lower-case letter.
 </p>
+
+<pre
+class="grammar">NoSpaceColon := <code>:</code>
+</pre>
+<p>
+When <code>NoSpaceColon</code> is used in a production,
+<code>TokenWhiteSpace</code> is not allowed immediately before or after the
+colon. When a literal <code>:</code> is used in a production, white space is
+handled in the same was as for any other character.
+</p>
+
 </section>
 <section>
 <h2 id="values_types">5. Values, types and variables</h2>
@@ -459,7 +481,7 @@ Each selectively immutable basic type can be partitioned into two
 <em>uniform</em> types, one containing values with the read-only bit on, and one
 containing values where the read-only bit is off. For every other basic type,
 there is a single uniform type. Every uniform type is thus either completely
-readonly or completely mutable; every value thus belongs to exactly one unform
+readonly or completely mutable; every value thus belongs to exactly one uniform
 type, and mutation cannot change the uniform type to which a value belongs.
 </p>
 <p>
@@ -931,7 +953,7 @@ class="grammar">simple-type-descriptor :=
 <h4>Nil</h4>
 
 <pre
-class="grammar">nil-type-descriptor :=  <code>(</code> <code>)</code>
+class="grammar">nil-type-descriptor := nil-literal
 nil-literal :=  <code>(</code> <code>)</code> | <code>null</code>
 </pre>
 <p>
@@ -942,8 +964,7 @@ use of null should be restricted to JSON-related contexts.
 </p>
 <p>
 The nil type is special, in that it is the only basic type that consists of a
-single value. The type descriptor for the nil type is not written using a
-keyword, but is instead written <code>()</code> like the value.
+single value. 
 </p>
 </section>
 <section>
@@ -995,7 +1016,7 @@ DecimalFloatingPointNumber :=
    | DottedDecimalNumber [Exponent] [FloatingPointTypeSuffix]
    | DecimalNumber FloatingPointTypeSuffix
 DottedDecimalNumber :=
-   DecimalNumber <code>.</code> Digit*
+   DecimalNumber <code>.</code> Digit+
    | <code>.</code> Digit+
 Exponent := ExponentIndicator [Sign] Digit+
 ExponentIndicator := <code>e</code> | <code>E</code>
@@ -1004,7 +1025,7 @@ HexFloatingPointNumber :=
    HexNumber HexExponent
    | DottedHexNumber [HexExponent]
 DottedHexNumber :=
-   HexDigit+ <code>.</code> HexDigit*
+   HexDigit+ <code>.</code> HexDigit+
    | <code>.</code> HexDigit+
 HexExponent := HexExponentIndicator [Sign] Digit+
 HexExponentIndicator := <code>p</code> | <code>P</code>
@@ -1474,12 +1495,12 @@ that the value for all members must belong to, and optionally, a length.
 </p>
 
 <pre
-class="grammar">array-type-descriptor := member-type-descriptor <code>[</code> [ array-length ] <code>]</code>
-member-type-descriptor := type-descriptor
-array-length :=
-   int-literal
-   | constant-reference-expr
-   | inferred-array-length
+class="grammar">array-type-descriptor := array-member-type-descriptor inferable-array-dimension array-dimension*
+inferable-array-dimension := <code>[</code> [ inferable-array-length ] <code>]</code>
+array-dimension := <code>[</code> [ array-length ] <code>]</code>
+array-member-type-descriptor := type-descriptor <em>but not</em> array-type-descriptor
+inferable-array-length := array-length | inferred-array-length
+array-length := int-literal | constant-reference-expr
 inferred-array-length := <code>*</code>
 </pre>
 <p>
@@ -1488,11 +1509,29 @@ are in <code>T</code>. A type <code>T[n]</code> contains a list shape if in
 addition the length of the list shape is n.
 </p>
 <p>
+When an <code>array-type-descriptor</code> includes multiple
+array dimensions, th array dimensions are interpreted
+so that the order of the dimensions in the <code>array-type-descriptor</code> is
+consistent with the order of the dimensions in a
+<code>member-access-expr</code>. Specifically, a type
+<code>T[n<sub>1</sub>]...[n<sub>k - 1</sub>][n<sub>k</sub>]</code> is
+interpreted as <code>(T[n<sub>k</sub>])[n<sub>1</sub>]...[n<sub>k -
+1</sub>]</code>. Thus, for a value <code>v</code> of type <code>T[M][N]</code>,
+a member-access-expr <code>v[i][j]</code> will evaluate to an value of type
+<code>T</code> if and only if 0 &#x2264; <code>i</code> &#x2264; <code>M</code>
+and 0 &#x2264; <code>j</code> &#x2264; <code>N</code>. An
+<code>array-type-descriptor</code> is parsed to include all following
+<code>array-dimension</code>s: an <code>array-type-descriptor</code> is not
+recognized as <code>array-member-type-descriptor</code>.
+</p>
+<p>
 A <code>constant-reference-expr</code> in an <code>array-length</code> must
 evaluate to a non-negative integer. An array length of <code>*</code> means that
-the length of the array is to be inferred from the context; this is allowed only
-within a type descriptor occurring in a context that is specified to be
-inferable; its meaning is the same as if the length was specified explicitly.
+the length of the array is to be inferred from an initializer; this is allowed
+when the array-type-descriptor specifies the type of variable for which an
+initializer is specified, i.e. in a <code>local-init-var-decl-stmt</code>, a
+<code>module-init-var-decl</code> or a <code>module-const-decl</code>; its
+meaning is the same as if the length was specified explicitly.
 </p>
 <p>
 Note also that <code>T[n]</code> is a subtype of <code>T[]</code>, and that if
@@ -1518,6 +1557,7 @@ class="grammar">tuple-type-descriptor :=
 tuple-member-type-descriptors :=
    member-type-descriptor (<code>,</code> member-type-descriptor)* [<code>,</code> tuple-rest-descriptor]
    | [ tuple-rest-descriptor ]
+member-type-descriptor := [annots] type-descriptor
 tuple-rest-descriptor := type-descriptor <code>...</code>
 
 </pre>
@@ -1565,12 +1605,6 @@ the field is also on. The read-only bit of a field is part of the read-only
 aspect of the mapping value's shape.
 </p>
 <p>
-A mapping is iterable: the iteration sequence consists of the members of the
-mapping and the iteration completion value is always nil. The order of the iteration
-sequence is implementation-dependent, but implementations are encouraged to
-preserve and use the order in which the fields were added.
-</p>
-<p>
 The type of mapping values can be described by two kinds of type descriptors.
 </p>
 
@@ -1589,6 +1623,15 @@ constraint is not merely that the value looks like T<sub><em>f</em></sub>.
 <p>
 Both kinds of type descriptor are covariant in the types of their members.
 </p>
+<p>
+A mapping value is iterable: the iteration sequence consists of the members of
+the mapping value and the iteration completion value is always nil. When the
+inherent type of a mapping value is equivalent to a
+<code>map-type-descriptor</code>, the order of iteration must correspond to the
+order in which fields were added. In other cases, the order of the iteration
+sequence is implementation-dependent.
+</p>
+
 <section>
 <h5>Map types</h5>
 <p>
@@ -2114,6 +2157,7 @@ object-member-descriptor :=
    object-field-descriptor
    | method-decl
    | remote-method-decl
+   | resource-method-decl
    | object-type-inclusion
 </pre>
 
@@ -2152,14 +2196,9 @@ is not allowed in conjunction with <code>public</code>.
 </p>
 
 <p>
-Network interaction objects provide two additional features: remote methods and
-resources. Remote methods are supported by both client and service objects. The
-remote methods of an object are in a separate symbol space from the other
-methods of the object. Resources are supported only by service objects. Object
-type descriptors do not provide a way to describe the resources of a service
-object: whether a service object belongs to an object type is not affected by
-the service object's resources. Resources are described in detail in the <a
-href="#resources">section</a> on object constructors.
+Network interaction objects can have, in addition to fields and methods, two
+additional kinds of member: remote methods and resources; both of these are in a
+different symbol space from fields and (non-remote) methods.
 </p>
 
 </section>
@@ -2194,7 +2233,8 @@ class="grammar">method-decl :=
    metadata [<code>public</code>] method-quals
    <code>function</code> method-name function-signature <code>;</code>
 method-quals := function-quals
-method-name := identifier
+method-name := identifier | special-method-name
+special-method-name := <code>map</code> | <code>join</code> | <code>start</code>
 </pre>
 <p>
 A <code>method-decl</code> describes a method of the object. The
@@ -2204,7 +2244,9 @@ A <code>method-decl</code> describes a method of the object. The
 every <code>object-field-descriptor</code> in the
 <code>object-type-descriptor</code>. Note that here is no method overloading.
 The <code>method-name</code> in a <code>method-decl</code> must not be
-<code>init</code>.
+<code>init</code>. The identifiers <code>map</code>, <code>join</code> and
+<code>start</code>, which are usually reserved keywords, are allowed as method
+names.
 </p>
 
 <p>
@@ -2212,11 +2254,14 @@ The <code>isolated-qual</code> together with the <code>function-signature</code>
 give the function type of the method. An isolated method has the same access to
 the object on which the method is invoked that it has to parameters.
 </p>
+</section>
 
+<section>
+<h5>Remote methods</h5>
 <pre
 class="grammar">remote-method-decl :=
    metadata remote-method-quals 
-   <code>function</code> method-name function-signature <code>;</code>
+   <code>function</code> remote-method-name function-signature <code>;</code>
 remote-method-quals :=
    remote-qual function-quals
    | isolated-qual [transactional-qual] remote-qual
@@ -2224,15 +2269,16 @@ remote-method-quals :=
    | isolated-qual remote-qual transactional-qual
    | transactional-qual remote-qual isolated-qual
 remote-qual := <code>remote</code>
+remote-method-name := identifier
 </pre>
 <p>
 A <code>remote-method-decl</code> declares a remote method. An object can
 include a <code>remote-method-decl</code> only if it is a network interaction
 object. A remote method is a method for network interaction: a remote method of
 a client object is for outbound network interaction; a remote method of a
-service object is for inbound network interaction. The <code>method-name</code>
+service object is for inbound network interaction. The <code>remote-method-name</code>
 of a <code>remote-method-decl</code> must be distinct from the
-<code>method-name</code> of every other <code>remote-method-decl</code> in the
+<code>remote-method-name</code> of every other <code>remote-method-decl</code> in the
 <code>object-type-descriptor</code>. However, a <code>method-decl</code> and a
 <code>remote-method-decl</code> can have the same name. A remote method cannot
 be called using the normal method call syntax. A remote method of a client
@@ -2241,6 +2287,147 @@ The return type of the remote method of a client object must not be
 <code>never</code>. A remote method of a service object is invoked by a listener
 object provided by a library module; Ballerina does not yet define a mechanism
 to allow such a library module to be implemented completely in Ballerina.
+</p>
+
+</section>
+
+<section>
+<h5>Resources</h5>
+
+<pre
+class="grammar">resource-method-decl :=
+   metadata resource-method-quals
+   <code>function</code> resource-method-name resource-path function-signature <code>;</code>
+resource-method-quals :=
+   resource-qual function-quals
+   | isolated-qual [transactional-qual] resource-qual
+   | transactional-qual [isolated-qual] resource-qual
+   | isolated-qual resource-qual transactional-qual
+   | transactional-qual resource-qual isolated-qual
+resource-qual := <code>resource</code>
+resource-method-name := identifier
+resource-path :=
+   dot-resource-path
+   | resource-path-segment (<code>/</code> resource-path-segment)* [<code>/</code> resource-path-rest-param]
+   | resource-path-rest-param
+dot-resource-path := <code>.</code>
+resource-path-segment := resource-path-segment-name | resource-path-segment-param
+resource-path-segment-name := identifier
+resource-path-segment-param := <code>[</code>[annots] type-descriptor [param-name]<code>]</code>
+resource-path-rest-param := <code>[</code>[annots] type-descriptor <code>...</code> [param-name]<code>]</code>
+</pre>
+<p>
+As well as remote methods, a network interaction object may include members that
+are resources. Resources support a more data-oriented style of network
+interaction, which complements the RPC style supported by remote methods. A
+resource of a client object is for outbound network interaction; a resource of a
+service object is for inbound network interaction. A resource of a client object
+can be accessed only using a <code>client-resource-access-action</code>. A
+resource of a service object is accessed by a listener object provided by a
+library module; Ballerina does not yet define a mechanism to allow such a
+library module to be implemented completely in Ballerina.
+</p>
+<p>
+Each resource is named within an object by a <em>resource path</em>, which
+consists of a list of resource path segments. A resource path segment is most
+commonly a string, but can be any value of type anydata. A resource has one or
+more named methods. A resource method is thus uniquely identified within its
+object by its path and method name. Each resource method corresponds to a way
+that the resource can be accessed; the name <code>get</code> should be used for
+a resource method that just fetches the resource. For a service object, the
+supported resource method names are determined by the listener; a listener that
+supports resources should always support the name <code>get</code>.
+</p>
+<p>
+A <code>resource-method-decl</code> declares a resource method for one or more
+resources. An object can include a <code>resource-method-decl</code> only if it
+is a network interaction object.
+</p>
+<p>
+A <code>resource-path</code> can be mapped onto a tuple type descriptor as
+follows. A <code>dot-resource-path</code> maps to <code>[]</code> (an empty
+tuple type). A <code>resource-path-segment-name</code> maps to a member type
+descriptor that is a singleton string. A
+<code>resource-path-segment-param</code> with type descriptor <code>T</code>
+maps to a member type descriptor <code>T</code>. A
+<code>resource-path-rest-param</code> with type descriptor <code>T</code> maps
+to a tuple rest descriptor <code>T...</code>.
+</p>
+<p>
+It is a compile error if a <code>object-type-descriptor</code> has two
+<code>resource-method-decl</code>s with the same name and with
+<code>resource-path</code>s that map to the same tuple type descriptor.
+</p>
+<p>
+When a resource with path [s<sub>1</sub>,...,s<sub>m</sub>] of a service object
+S has a method <code>get</code> with a return value that includes a service
+object type, then this has the semantics that the service object S delegates
+each resource with a path [s<sub>1</sub>,...,s<sub>m</sub>,...,s<sub>n</sub>] to
+a resource [s<sub>m+1</sub>,...,s<sub>n</sub>] of the service object returned by
+the <code>get</code> method of S. Accordingly, if the return type of a
+<code>resource-method-decl</code> with a method name of <code>get</code> and a
+<code>resource-path</code> <var>p</var> includes a service object type:
+</p>
+<ul>
+<li>the return type must not allow anything other than service objects and
+errors;</li>
+<li>the <code>resource-path</code> must not end with a
+<code>resource-path-rest-param</code>;</li>
+<li>there must be no <code>resource-method-decl</code> that has a
+<code>resource-path</code> with <var>p</var> as a prefix.</li>
+</ul>
+<p>
+The set of resource method names <em>applicable</em> for a
+<code>resource-method-decl</code> with <code>resource-method-name</code> m at a
+resource path position is defined as follows:
+</p>
+<ul>
+<li>if the position is not the last position of the resource path, then the
+applicable set consists of just <code>get</code></li>
+<li>otherwise, if the <code>resource-path</code> ends with a <code>resource-path-segment</code>,
+then the applicable set consists of just m;</li>
+<li>otherwise, the <code>resource-path</code> ends with
+<code>resource-path-rest-param</code> and the applicable set consists of
+<code>get</code> and m.</li>
+</ul>
+<p>
+Two <code>resource-method-decl</code>s X and Y that map to tuple type descriptors
+[X<sub>1</sub>,...,X<sub>m</sub>] and [Y<sub>1</sub>,...,Y<sub>n</sub>]
+<em>diverge at position</em> i if and only if:
+</p>
+<ul>
+<li>i &#x2264; m;</li>
+<li>i &#x2264; n;</li>
+<li>the intersection of the sets of resource method names applicable for X and Y
+at position i is non-empty;</li>
+<li>for all j &lt; i, X<sub>j</sub> is the same type as as Y<sub>j</sub>;</li>
+<li>X<sub>i</sub> and Y<sub>i</sub> are not the same (to be the same, they must
+both be a member-type-descriptor or both be a tuple-rest-descriptor, and the
+types must be the same).</li>
+</ul>
+<p>
+If two <code>resource-method-decl</code>s diverge at position i, then it is a
+compile-time error unless the <code>resource-path</code> of at least one of them
+maps to a tuple type descriptor that at position i has a
+<code>member-type-descriptor</code> that denotes a singleton string.
+</p>
+<p>
+A <code>resource-path-segment</code> that maps to a singleton string takes
+priority over other types in the following sense. When a
+<code>resource-method-decl</code> R has a resource path that has a
+<code>resource-path-segment</code> at position i that maps to a
+<code>member-type-descriptor</code> that denotes a type T that is not a
+singleton string, then T is narrowed to a type T' by removing every singleton
+string type S such that there is a <code>resource-method-decl</code> that
+diverges from R at position i and has has a resource path that has a
+<code>resource-path-segment</code> at position i that maps to a
+<code>member-type-descriptor</code> that denotes S. The
+<code>resource-method-decl</code> declares resources methods for resources that
+whose corresponding path segment belongs to the narrowed type T' rather than T.
+</p>
+<p>
+The return type of a resource method must not allow values belonging to the
+function basic type and must not allow client object types.
 </p>
 
 </section>
@@ -2306,7 +2493,7 @@ Every type descriptor referenced directly or indirectly by a
 <code>type-reference</code> in an <code>object-type-inclusion</code> must be an
 <code>object-type-descriptor</code>, <code>distinct-type-descriptor</code>,
 <code>intersection-type-descriptor</code> or
-a class without a <code>readonly</code> qualifier; the
+a class that has no <code>private</code> members and no <code>readonly</code> qualifier; the
 referenced type descriptor will thus necessarily be definite and a subtype of
 object. If a referenced object-type-descriptor or class has an
 <code>isolated</code>, <code>service</code> or <code>client</code> qualifier
@@ -2869,7 +3056,7 @@ described by the following object type descriptor:
 <pre>object {
    public function attach(T svc, A attachPoint) returns error?;
    public function detach(T svc) returns error?;
-   public function 'start() returns error?;
+   public function start() returns error?;
    public function gracefulStop() returns error?;
    public function immediateStop() returns error?;
 }
@@ -3450,7 +3637,7 @@ which both x and y belong, then:
 </ul>
 <p>
 The most straightforward ordered types are basic types where all the values of
-the type can be put into an order. These types are boolean, int, string. For
+the type can be put into an order. These types are nil, boolean, int, string. For
 each of these three types, for any pair of values x, y belonging to the type
 </p>
 <ul>
@@ -3751,7 +3938,7 @@ same identifier in the same symbol space also with block-scope.
 <h2 id="expressions">6. Expressions</h2>
 
 <pre
-class="grammar">expression := 
+class="grammar">expr-only := 
    literal
    | string-template-expr
    | xml-template-expr
@@ -3770,24 +3957,24 @@ class="grammar">expression :=
    | error-constructor-expr
    | anonymous-function-expr
    | let-expr
-   | type-cast-expr
    | typeof-expr
-   | unary-expr
-   | multiplicative-expr
-   | additive-expr
-   | shift-expr
+   | unary-logical-expr
+   | nil-lifted-expr
    | range-expr
    | relational-expr
    | is-expr
    | equality-expr
-   | binary-bitwise-expr
    | logical-expr
    | conditional-expr
+   | xml-navigate-expr
+   | transactional-expr
+
+expression :=
+   expr-only
+   | type-cast-expr
    | checking-expr
    | trap-expr
    | query-expr
-   | xml-navigate-expr
-   | transactional-expr
    | <code>(</code> expression <code>)</code>
 </pre>
 <p>
@@ -3884,6 +4071,8 @@ associativity.
 <code>x &gt;= y</code>
 <br />
 <code>x is y</code>
+<br />
+<code>x !is y</code>
    </td>
    <td>non</td>
   </tr>
@@ -4075,7 +4264,61 @@ singleton type <code>"X"</code>, but the broad type is <code>string</code>.
 </p>
 </section>
 <section>
-<h4>Isolated expressions</h4>
+<h4 id="singleton_typing">Singleton typing</h4>
+<p>
+The specification of a particular kind of compound expression may say that the
+static type of the result of an expression E is a type T <em>modified by the
+usual singleton typing rules</em>. This means that when all subexpressions of
+the compound expression have a singleton type, then the static type of E is a
+singleton subtype of T. This subtype is computed by evaluating the expression at
+compile-time with operands whose values belong to the corresponding singleton
+types.
+</p>
+</section>
+<section>
+<h4 id="nil_lifting">Nil lifting</h4>
+
+<pre
+class="grammar">nil-lifted-expr := 
+  unary-numeric-expr
+  | multiplicative-expr
+  | additive-expr
+  | shift-expr
+  | binary-bitwise-expr
+</pre>
+<p>
+A <code>nil-lifted-expr</code> supports nil lifting for its operands. This means
+that the operators used in a <code>nil-lifted-expr</code> have two forms: an
+underlying form and a lifted form. The underlying form of the operator is used
+when the static type of the subexpressions for all operands does not allow nil;
+this form of the operator is described in the section for each kind of operator.
+The lifted form of the operator is used when the static type of the
+subexpressions for one or more operands does allow nil; the semantics of this
+form of the operator are derived from the underlying form as described in this
+section.
+</p>
+<p>
+A <code>nil-lifted-expr</code> is evaluated by evaluating the subexpressions for
+every operand. If the result of any of these evaluations is nil, then the result
+of the <code>nil-lifted-expr</code> is nil. Otherwise, the evaluation is
+completed in the same way as with the underlying form of the operator.
+</p>
+<p>
+The static types of the operand subexpressions with nil removed must be valid
+for the underlying form of the operator. The static type of the
+<code>nil-lifted-expr</code> is T<code>?</code>, where T is what the static type
+of the <code>nil-lifted-expr</code> would be if nil was removed from the static
+type of the operand subexpressions, except that the usual <a
+href="#singleton_rules">singleton typing</a> rules are not applied in computing
+T. (The singleton typing rules are applied to the static types before the
+removal of nil and thus have no effect, because the lifted form of the operator
+is never applicable when all operands have singleton type.)
+</p>
+
+</section>
+
+<section>
+<h4 id="isolated_expressions">Isolated expressions</h4>
 <p>
 Ballerina defines requirements for when an expression is <em>isolated</em>. If
 an expression meets the requirements, then it is compile-time guaranteed that
@@ -4140,15 +4383,12 @@ class="grammar">const-expr :=
    | structural-constructor-expr
    | constant-reference-expr
    | type-cast-expr
-   | unary-expr
-   | multiplicative-expr
-   | additive-expr
-   | shift-expr
+   | unary-logical-expr
+   | nil-lifted-expr
    | range-expr
    | relational-expr
    | is-expr
    | equality-expr
-   | binary-bitwise-expr
    | logical-expr
    | conditional-expr
    | <code>(</code> const-expr <code>)</code>
@@ -4204,30 +4444,29 @@ class="grammar">literal :=
 numeric-literal := int-literal | floating-point-literal
 </pre>
 <p>
-A numeric-literal represents a value belonging to one of the basic types
-int, float or decimal. The basic type to which the value belongs is determined
-as follows:
+A numeric-literal represents a value belonging to one of the basic types int,
+float or decimal. The basic type to which the value belongs is determined in
+three stages.
 </p>
+<ol>
+<li>The syntactic form of numeric literal determines which of int, float and
+decimal are candidates:
 <ul>
-<li>if the numeric-literal includes a <code>FloatTypeSuffix</code>, then the
-basic type is float;</li>
+<li>if the numeric-literal includes a <code>FloatTypeSuffix</code> or is a
+<code>HexFloatingPointLiteral</code>, then the the only candidate is float;</li>
 <li>if the numeric-literal includes a <code>DecimalTypeSuffix</code>, then the
-basic type is decimal;</li>
-<li>if the numeric-literal is a <code>HexFloatingPointLiteral</code>, then the
-basic type is float;</li>
-<li>otherwise, the basic type depends on the applicable expected numeric type
-(where the possible basic types are int, float and decimal):
-<ul>
-<li>if the applicable contextually expected type is a subtype of decimal, then
-the basic type is decimal;</li>
-<li>if the applicable contextually expected type is a subtype of float, then the
-basic type is float;</li>
-<li>otherwise, if the numeric literal is an int-literal, then the basic type is
-int;</li>
-<li>otherwise, the basic type is float.</li>
+only candidate is decimal;</li>
+<li>otherwise, if the numeric-literal is a <code>floating-point-literal</code>,
+the candidates are float and decimal;</li>
+<li>otherwise, all three basic types are candidates.</li>
 </ul>
 </li>
-</ul>
+<li>Any candidate basic type N such that the intersection of N with the
+contextually expected type is empty is eliminated, unless this would eliminate
+all candidates remaining after the first stage.</li>
+<li>From remaining candidates, the first in the order int, float, decimal is
+selected.</li>
+</ol>
 <p>
 The precise type of a numeric-literal is the singleton type containing just the
 shape of the value that the numeric-literal represents. The broad type is
@@ -4249,9 +4488,14 @@ PaddingChar := <code>=</code>
 WS := WhiteSpaceChar*
 </pre>
 <p>
-The static type of byte-array-literal is <code>byte[N]</code>, where N is the
-number of bytes encoded by the Base16Literal or Base64Literal. The inherent type
-of the array value created is also <code>byte[N]</code>.
+Let N be number of bytes encoded by the Base16Literal or Base64Literal. If the
+applicable contextually expected type is a subtype of readonly or if the
+byte-array-literal occurs within a const-expr, then the literal constructs a
+list value with its read-only bit set; in this case, the static type of the
+byte-array-literal is a singleton subtype of <code>readonly &amp;
+byte[N]</code>. Otherwise, the static type of byte-array-literal is
+<code>byte[N]</code>, and the inherent type of the list value created is also
+<code>byte[N]</code>.
 </p>
 </section>
 <section>
@@ -4295,6 +4539,11 @@ and the results of evaluating and converting the interpolations, in the order in
 which they occur in the <code>BacktickString</code>.
 </p>
 <p>
+The static type of the result of the string-template-expr is
+<code>string</code>, modified by the usual <a href="#singleton_rules">singleton
+typing</a> rules.
+</p>
+<p>
 A literal <code>`</code> can be included in string template by using an
 interpolation <code>${"`"}</code>.
 </p>
@@ -4328,12 +4577,16 @@ value at which the value of the expression is to be inserted.</li>
 <li>The static type of an expression occurring in an attribute value must be a
 simple type and must not be nil. The static type type of an expression occurring
 in content can either be xml or a non-nil simple type.</li>
-<li>When the xml-template-expr is evaluated, the interpolated expressions are evaluated
-in the order in which they occur in the <code>BacktickString</code>, and
-converted to strings if necessary. A new copy is made of the xml value and the
-result of the expression evaluations are inserted into the corresponding
+<li>When the xml-template-expr is evaluated, the interpolated expressions are
+evaluated in the order in which they occur in the <code>BacktickString</code>,
+and converted to strings if necessary. A new copy is made of the xml value and
+the result of the expression evaluations are inserted into the corresponding
 position in the newly created xml value. This xml value is the result of the
-evaluation.</li>
+evaluation. The contextually expected type for an interpolated expression that
+occurs within an Attribute Information Item is string, and otherwise is xml;
+this ensures that a query expr will work as expected. Note that if the static
+type is not a subtype of the contextually expected type, it is not an error:
+rather the value will be converted to a string.</li>
 </ol>
 <p>
 An xml-template-expr occurring within a const-expr will construct an xml value
@@ -4406,35 +4659,59 @@ structural value that has its read-only bit on.
 <h4>List constructor</h4>
 
 <pre
-class="grammar">list-constructor-expr := <code>[</code> [ expr-list ] <code>]</code>
-expr-list := expression (<code>,</code> expression)*
+class="grammar">list-constructor-expr := <code>[</code> [ list-member-list ] <code>]</code>
+list-member-list := list-member (<code>,</code> list-member)*
+list-member := single-list-member | spread-list-member
+single-list-member := expression
+spread-list-member := <code>...</code> expression
 </pre>
 <p>
-A list-constructor-expr creates a new list value. The members of the list come from evaluating each
-expression in the expr-list in order.
+A list-constructor-expr creates a new list value. The list is constructed by
+processing each list-member in the order specified as follows. The expression in
+the list-member is first evaluated resulting in a value <var>v</var>. If the
+list-member is a single-list-member, then <var>v</var> is added to the list
+being constructed. Otherwise <var>v</var> must be a list, and every member of
+<var>v</var> is added in order to the list being constructed. It is a
+compile-time error if the static type of the expression in a spread-list-member
+is not a subtype of list.
 </p>
 <p>
 If there is a contextually expected type, then the inherent type of the newly
 created list is derived from the applicable contextually expected type. If the
 applicable contextually expected type is a list type descriptor, then that used
 as the inherent type. If the applicable contextually expected type is a union
-type descriptor, then any members of the union that do not contain list shapes
-of length N will be ignored, where N is the number of expressions in the
-<code>expr-list</code>; it is a compile-time error if this does not leave a
-single list type descriptor, which is then used as the inherent type. The static
-type of the list-constructor-expr will be the same as the inherent type.
+type descriptor, then it is a compile-time error unless there is exactly one
+member of the union that is a list type descriptor and that allows list shapes
+of a length that the static types of the expressions in the list-member-list
+make it possible for the constructed list to have; this list type descriptor is
+used as the inherent type. If there is a spread-list-member, and the type of its
+expression is not fixed length, then the minimum of the total number of members
+that may be added to the list being constructed by this spread-list-member and
+any previous list-member must be greater than or equal to the minimum length
+required by the inherent type. The static type of the list-constructor-expr will
+be the same as the inherent type.
 </p>
 <p>
 If there is no contextually expected type, then the inherent type will be a
-tuple-type-descriptor with a member-type-descriptor for each expression in the
-expr-list; the type of each member-type-descriptor will be the broad type of the
-corresponding expression in the expr-list.
+tuple-type-descriptor derived from the static type of each expression in the
+list-member-list. Each single-list-member that does not have a preceding
+spread-list-member contributes a member-type-descriptor to the
+tuple-type-descriptor; the type of the member-type-descriptor will be the broad
+type of the expression in the single-list-member. If there is a
+spread-list-member, then a tuple-rest-descriptor <code>T...</code> is added
+where T is the smallest type such that the broad type of the expression in every
+other single-list-member is a subtype of <code>T</code>, and the type of the
+expression in each spread-list-member is a subtype of <code>T[]</code>.
 </p>
 <p>
-If there is a contextually expected type, then the type that the inherent type
-requires for each list member provides the contextually expected type for the
-expression for the member; otherwise there is no contextually expected type for
-the expressions for members.
+If the list-constructor-expr does not have a contextually expected type, then
+the contextually expected type for the expression in a spread-list-member is
+<code>(any|error)[]</code>, and the expression in a single-list-member does not
+have a contextually expected type. Otherwise the contextually expected type for
+each list-member is derived from the contextually expected type of the
+list-constructor-expr. If there is a spread-list-member that is not the last
+list-member in the list-member-list, then the contextually expected type used
+from that point on is approximated with a tuple-rest-descriptor.
 </p>
 <p>
 A member of a list can be filled in automatically if the <a
@@ -4458,7 +4735,7 @@ field :=
   | spread-field
 specific-field :=
    [<code>readonly</code>] (field-name | string-literal) <code>:</code> value-expr
-   | [<code>readonly</code>] [variable-name]
+   | [<code>readonly</code>] variable-name
 value-expr := expression
 computed-name-field := <code>[</code> field-name-expr <code>]</code> <code>:</code> value-expr
 field-name-expr := expression
@@ -4537,6 +4814,13 @@ the mapping-constructor-expr will panic. The modifications are performed in the
 order in which the computed-name-fields occur in the mapping-constructor-expr.
 </p>
 <p>
+When the inherent type is equivalent to a map-type-descriptor, the order in
+which fields are added to mapping value being constructed (and thus the
+iteration order of the fields) is the same as the order of the fields in the
+mapping-constructor-expr, except that all fields specified by a
+computed-named-field are added after all other fields.
+</p>
+<p>
 If the applicable contextually expected type is a subtype of readonly, then the
 mapping will be constructed with its read-only bit on. If the inherent type
 makes a specific field readonly, then that field will be constructed with its
@@ -4570,7 +4854,7 @@ The inherent type of the constructed table is a table type descriptor including
 a key-specifier <code>table&lt;<var>T</var>&gt; key(<var>ks</var>)</code>, where
 <code><var>T</var></code> is the member type and <code><var>ks</var></code> is
 the key sequence. The inherent type is determined from the contextually expected
-type togther with the table-constructor-expr. The static type of the
+type together with the table-constructor-expr. The static type of the
 table-constructor-expr will be the same as this inherent type.
 </p>
 <p>
@@ -4598,7 +4882,7 @@ a compile-time error if two or more rows of the table have the same key value.
 <p>
 If there is a contextually expected type, then the type that the inherent type
 requires for each table member provides the contextually expected type for the
-expressions in the expr-list; otherwise there is no contextually expected type
+expressions in the row-list; otherwise there is no contextually expected type
 for these expressions.
 </p>
 
@@ -4732,17 +5016,6 @@ A <code>method-defn</code> defines a method of an object.
 </p>
 
 <pre
-class="grammar">remote-method-defn :=
-   metadata remote-method-quals
-   <code>function</code> method-name function-signature method-defn-body
-</pre>
-<p>
-A <code>remote-method-defn</code> defines a remote method. This is allowed only
-when an <code>object-network-qual</code> is present in the
-<code>object-constructor-expr</code>.
-</p>
-
-<pre
 class="grammar">method-defn-body := function-defn-body
 </pre>
 <p>
@@ -4764,147 +5037,69 @@ set and its <code>method-defn-body</code> must satisfy the requirements for an
 </section>
 
 <section>
-<h5 id="resources">Resources</h5>
+<h5>Remote methods</h5>
 
+<pre
+class="grammar">remote-method-defn :=
+   metadata remote-method-quals
+   <code>function</code> remote-method-name function-signature method-defn-body
+</pre>
 <p>
-In addition to remote methods, a service object can use <em>resources</em> to
-support network interaction. Resources support a more data-oriented style of
-network interaction, which complements the RPC style supported by remote
-methods. A service object's resources are arranged in a tree. Each resource
-exposes one or more named methods; by convention the method name
-<code>get</code> is used for retrieving the resource. A listener thus identifies
-a resource method to be called using the combination of a hierarchical path,
-which identifies the resource, and the resource method name. A resource method
-can also specify that a segment of the path provided by the listener should be
-treated as a parameter. A resource method can only be invoked by a listener
-object.
+A <code>remote-method-defn</code> defines a remote method. This is allowed only
+when an <code>object-network-qual</code> is present in the
+<code>object-constructor-expr</code>.
 </p>
+
+</section>
+
+<section>
+<h5 id="resources_defn">Resources</h5>
 
 <pre
 class="grammar">resource-method-defn :=
    metadata resource-method-quals
    <code>function</code> resource-method-name resource-path function-signature method-defn-body
-resource-method-quals :=
-   resource-qual function-quals
-   | isolated-qual [transactional-qual] resource-qual
-   | transactional-qual [isolated-qual] resource-qual
-   | isolated-qual resource-qual transactional-qual
-   | transactional-qual resource-qual isolated-qual
-resource-qual := <code>resource</code>
-resource-method-name := identifier
-resource-path :=
-   dot-resource-path
-   | resource-path-segment (<code>/</code> resource-path-segment)* [<code>/</code> resource-path-rest-param]
-   | resource-path-rest-param
-dot-resource-path := <code>.</code>
-resource-path-segment := resource-path-segment-name | resource-path-segment-param
-resource-path-segment-name := identifier
-resource-path-segment-param := <code>[</code>[annots] type-descriptor param-name<code>]</code>
-resource-path-rest-param := <code>[</code>[annots] type-descriptor <code>...</code> param-name<code>]</code>
 </pre>
 
 <p>
-A <code>resource-method-defn</code> defines a resource method. This is allowed
-only when an <code>object-network-qual</code> of <code>service</code> is present
-in the <code>object-constructor-expr</code>. The <code>resource-path</code>
-specifies the node in the service object's resource tree to which the method is
-attached and the <code>resource-method-name</code> specifies the method name. It
-is an error to have two <code>resource-method-defn</code>s that both have the
-same name and have a path that refers to the same node. A
-<code>dot-resource-path</code> specifies the root of the service object's
-resource tree. In a service object's resource tree, each edge from a parent node
-to a child node has a label, which uniquely identifies the child relative to its
-siblings. A label is either a string or one of two special values that indicate
-that the corresponding path segment should be treated as a parameter. It is an
-error for a parent node to have more than one edge to a child node labelled with
-one of the two special values. A <code>resource-path-segment-name</code>
-specifies a label that is a string. The two special label values come from a
-<code>resource-path-segment-param</code> and a
-<code>resource-path-rest-param</code> respectively. A parameter in a
-<code>resource-path-segment-param</code> will be bound to a value representing a
-single path segment; a parameter in a <code>resource-path-rest-param</code> will
-be bound to a list representing zero or more path segments, with each member
-representing a single path segment. The type of a path segment depends on the
-listener, but the listener must be able to convert it into a string. For
-example, in HTTP a path segment is natively a sequence of bytes, and an HTTP
-listener could convert it into a string by decoding with UTF-8. It also depends
-on the listener which types other than string it is able to convert a path
-segment to.
+A <code>resource-method-defn</code> defines a resource method for one or more
+resources. This is allowed only when an <code>object-network-qual</code> is
+present in the <code>object-constructor-expr</code>. The semantics of
+<code>resource-method-defn</code> extends the semantics of a
+<code>resource-method-decl</code> by associating a function with each declared
+resource method.
 </p>
 <p>
-The return type of a resource method must not allow values belonging to the
-function basic type. A resource method with a name of <code>get</code> that can
-return a service object represents a subservice. It is subject to the following
-restrictions:
+A network interaction object uses <code>resource-method-defn</code>s to provide
+a resource access operation. The inputs to the resource access operation are a
+string giving the resource method name, a list of values for the resource path,
+and a list of values for the argument list. The operation looks up the function
+associated with the resource method name and resource path, and then invokes the
+function with the supplied argument list.
 </p>
-<ul>
-<li>the return type must not allow anything other that service
-objects and errors;</li>
-<li>the resource path must not end with a <code>resource-path-rest-param</code>;</li>
-<li>the method's node must not have any child nodes.</li>
-</ul>
 <p>
-The semantics of hierarchical resources are defined by a lookup function, which
-takes four parameters:
+The list of values supplied for the resource path are used to bind parameters
+specified in the <code>resource-path</code> before the function is invoked.
+These parameters are in scope in the <code>method-defn-body</code>. A parameter
+in a <code>resource-path-segment-param</code> will be bound to the value at the
+corresponding position in the list; a parameter in a
+<code>resource-path-rest-param</code> will be bound to a list of all the values
+from the corresponding position onwards.
 </p>
-<ul>
-<li><var>m</var> is the name of the method;</li>
-<li><var>p</var> is the resource path;</li>
-<li><var>r</var> refers to a node in the resource tree of a service object;</li>
-<li><var>v</var> is the list path segments bound so far.</li>
-</ul>
 <p>
-It returns an error or a tuple [<var>r</var>, <var>v</var>], where
-</p>
-<ul>
-<li><var>r</var> is a node in the resource tree with an m method, which is the
-method to be called;</li>
-<li><var>v</var> is a list of path segments to be bound to the method’s variable
-resource path parameters.</li>
-</ul>
-<p>
-The function lookup(<var>m</var>, <var>p</var>, <var>r</var>, <var>v</var>) is
-defined as follows:
-</p>
-<ol>
-<li>If <var>r</var> has a <code>get</code> method that can return a service
-object, then call the <code>get</code> method of <var>r</var> using <var>v</var>
-to bind the path parameters; if the result is an error, then return that error;
-otherwise, the result must be a service object. Let <var>r</var>' be the root of
-its resource tree. Return lookup(<var>m</var>, <var>p</var>, <var>r</var>',
-[]).</li>
-<li>If <var>p</var> is empty: 
-<ol>
-<li>if <var>r</var> has a method <var>m</var>, then return
-[<var>r</var>,<var>v</var>];</li>
-<li>otherwise, if <var>r</var> has a child labelled as repeated variable path
-segment and that child has a method <var>m</var>, then let <var>r</var>' be
-child with that label and return [<var>r</var>',<var>v</var>];</li>
-<li>otherwise, return an error.</li> 
-</ol>
-</li>
-<li>Let the first segment in <var>p</var> be <var>s</var> and let <var>p</var>'
-be a list of the 2nd and subsequent members of <var>p</var>.</li>
-<li>If <var>r</var> has a child labelled with the string that results from
-converting <var>s</var> to a string, then let <var>r</var>' be the child with
-that label. Return lookup(<var>m</var>, <var>p</var>', <var>r</var>',
-<var>v</var>).</li>
-<li>If <var>r</var> has an edge to a child labelled as a single path segment
-parameter, then let <var>r</var>' be that child and let <var>v</var>' be the
-result of adding <var>s</var> to the end of <var>v</var>. Return
-lookup(<var>m</var>, <var>p</var>', <var>r</var>', <var>v</var>').</li>
-<li>If <var>r</var> has an edge to a child labelled as a rest parameter and that
-child has a method <var>m</var>, then let <var>r</var>' be that child, and let
-<var>v</var>' be the result of concatenating <var>v</var> and <var>p</var>.
-Return [<var>r</var>',<var>v</var>'].</li>
-<li>Otherwise, return an error.</li>
-</ol>
-<p>
-The syntax allows only the last of a resource method's path parameters to be a
-rest parameter. When a list of path segments is bound to the path parameters of
-a resource method, one path segment is bound to each path parameter that is not
-a rest parameter and a list of the remaining path segments is bound to the rest
-parameter, if any.
+The resource access operation of a service object is responsible for
+implementing the delegation semantics of a resource method that returns a
+service object. A <code>resource-path</code> is <em>delegated</em> if it occurs
+in a <code>resource-method-defn</code> with a <code>resource-method-name</code>
+of <code>get</code> and a return value that includes a service object type that
+has one or more resources. If a resource access operation has a resource path
+<var>r</var>, which has a prefix <var>p</var> (which may be the entire path)
+that is delegated, then the <code>get</code> method that provides the delegation
+is first called with no arguments but with resource parameters bound as usual
+resulting in a value <var>v</var>; if <var>v</var> is an error, then the result
+of the resource access operation is <var>v</var>; otherwise a resource access
+operation is performed on the <var>v</var> with the resource path being
+<var>r</var> with <var>p</var> removed.
 </p>
 
 </section>
@@ -5017,7 +5212,7 @@ is not a class or stream type.
 <pre
 class="grammar">variable-reference-expr := variable-reference
 variable-reference := identifier | qualified-identifier | xml-qualified-name
-xml-qualified-name := xml-namespace-prefix <code>:</code> identifier
+xml-qualified-name := xml-namespace-prefix NoSpaceColon identifier
 </pre>
 <p>
 A variable-reference can refer to a variable, a parameter, a constant (defined
@@ -5076,12 +5271,29 @@ that when called will call the method with <code>self</code> bound to
 <var>obj</var>; the isolated bit of the new function value is set if and only if
 the isolated bits of both <var>obj</var> and the method are set; the type
 descriptor of the new function value will have the same annotations as the type
-descriptor of the method. The rest of this subsection applies when T is not a
-subtype of the object basic type.
+descriptor of the method.
 </p>
 <p>
 Let T' be the intersection of T and basic type mapping, let K be the singleton type
 containing just the string field-name, and let M be the member type for K in T'.
+</p>
+<p>
+If the following all apply:
+</p>
+<ul>
+<li>the type descriptor for T is not lax;</li>
+<li>T is a subtype of the mapping basic type (i.e. T' is the same as T);</li>
+<li>K is not a required key type for T;</li>
+<li>the type descriptor for T includes field-name as an
+individual-field-descriptor (or, if the type descriptor is a union, at least one
+member of the union does so);</li>
+<li>M does not include nil;</li>
+</ul>
+<p>
+then the field-access-expr is treated as an optional-field-access-expr.
+Otherwise, the rest of this section applies.
+</p>
+<p>
 The compile-time requirements on the field-access-expr depend on whether the
 type descriptor describing T is lax:
 </p>
@@ -5598,10 +5810,10 @@ specified explicitly as usual with a function-signature. With an
 infer-anonymous-function-expr, the type of the function is inferred.
 </p>
 <p>
-If block-function-body refers to a block-scope variable defined
-outside of the block-function-body, the closure will capture a reference to that
-variable; the captured reference will refer to the same storage as the original
-reference not a copy.
+If a variable-reference-expr within an anonymous-function-expr refers to a local
+variable defined outside of the anonymous-function-expr, the closure will
+capture a reference to that variable; the captured reference will refer to the
+same storage as the original reference rather than to a copy.
 </p>
 
 <pre
@@ -5757,19 +5969,25 @@ static type of <code>expression</code>.
 <section>
 <h3>Unary expression</h3>
 
+<section>
+<h4>Unary numeric expression</h4>
 <pre
-class="grammar">unary-expr :=
+class="grammar">unary-numeric-expr :=
    <code>+</code> expression
    | <code>-</code> expression
    | <code>~</code> expression
-   | <code>!</code> expression
-
 </pre>
 <p>
+The operators occurring in a <code>unary-numeric-expr</code> have both lifted
+form, which is specified in the <a href="#nil_lifting">Nil lifting</a> section,
+and an underlying form, which is specified in this section.
+</p>
+<p>
 The unary <code>-</code> operator performs negation. The static type of the
-operand must be a number; the static type of the result is the same basic type
-as the static type of the operand. The semantics for each basic type are as
-follows:
+operand must be a number; the static type of the result is the basic type of the
+static type of the operand, modified by the usual <a
+href="#singleton_typing">singleton typing</a> rules. The semantics for each
+basic type are as follows:
 </p>
 <ul>
 <li>int: negation for int is the same as subtraction from zero; a panic will
@@ -5780,25 +5998,39 @@ zero);</li>
 </ul>
 <p>
 If the contextually expected type for a <code>-</code> expression is T, then the
-contextualy expected type for the operand expressions is T', where a value v is
+contextually expected type for the operand expressions is T', where a value v is
 in T' if it belongs to int, decimal or float, and T contains a value with the
 same basic type as v.
 </p>
 <p>
-The unary + operator returns the value of its operand expression. The static
+The unary <code>+</code> operator returns the value of its operand expression. The static
 type of the operand must be a number, and the static type of the result is the
-same as the static type of the operand expression.
+same as the static type of the operand expression, modified by the usual <a
+href="#singleton_typing">singleton typing</a> rules.
 </p>
 <p>
-The ~ operator inverts the bits of its operand expression. The static type of
-the operand must be int, and the static type of the result is an int.
+The <code>~</code> operator inverts the bits of its operand expression. The
+static type of the operand must be int, and the static type of the result is
+int, modified by the usual <a href="#singleton_typing">singleton typing</a>
+rules.
 </p>
+</section>
+
+<section>
+<h4>Unary logical expression</h4>
+<pre
+class="grammar">unary-logical-expr := <code>!</code> expression
+</pre>
 <p>
 The <code>!</code> operator performs logical negation. The static type of the
 operand expression must be boolean. The <code>!</code> operator returns true if
-its operand is false and false if its operand is true.
+its operand is false and false if its operand is true. The static type of the
+result is boolean, modified by the usual <a href="#singleton_typing">singleton
+typing</a> rules.
 </p>
 </section>
+</section>
+
 <section>
 <h3>Multiplicative expression</h3>
 
@@ -5810,12 +6042,21 @@ class="grammar">multiplicative-expr :=
 </pre>
 <p>
 The <code>*</code> operator performs multiplication; the <code>/</code> operator
-performs division; the <code>%</code> operator performs remainder.
+performs division; the <code>%</code> operator performs remainder. These
+operators have both lifted form, which is specified in the <a
+href="#nil_lifting">Nil lifting</a> section, and an underlying form, which is
+specified in this section.
 </p>
 <p>
-The static type of both operand expressions is required to be a subtype of the
-same basic type; this basic type will be the static type of the result. The
-following basic types are allowed:
+The static type of each operand must be a subtype of <code>int</code>,
+<code>float</code> or <code>decimal</code>. If the static type of both operands
+is not a subtype of the same basic type, then either the second operand must be
+a subtype of <code>int</code>, or the operator must be <code>*</code> and the
+first operand must be a subtype of <code>int</code>; in either case, the
+<code>int</code> operand is first converted to the type of the other operand.
+</p>
+<p>
+The operation performed depends on the basic type of the operands as follows:
 </p>
 <ul>
 <li>int
@@ -5865,8 +6106,16 @@ of <code><var>x</var></code></li>
 </li>
 </ul>
 <p>
+The static type of the result of a multiplicative-expr is the basic type of its
+subexpressions, after conversion, modified by the usual <a href="#singleton_typing">singleton
+typing</a> rules, except that the result type is always <code>float</code> in
+the case where the operator is <code>/</code> and the right-hand operand is
+singleton float <code>0.0</code>. (This is a consequence of the fact that
+<code>0.0 == -0.0</code>, but <code>1.0/0.0 != 1.0/-0.0</code>.)
+</p>
+<p>
 If the contextually expected type for a multiplicative-expr is T, then the
-contextualy expected type for both operand expressions is T', where a value v is
+contextually expected type for both operand expressions is T', where a value v is
 in T' if it belongs to int, decimal or float, and T contains a value with the
 same basic type as v.
 </p>
@@ -5881,18 +6130,21 @@ class="grammar">additive-expr :=
 </pre>
 <p>
 The <code>+</code> operator is used for both addition and concatenation; the
-<code>-</code> operator is used for subtraction.
+<code>-</code> operator is used for subtraction. These operators have both
+lifted form, which is specified in the <a href="#nil_lifting">Nil lifting</a>
+section, and an underlying form, which is specified in this section.
 </p>
 <p>
-It is required that either
+It is required that either:
 </p>
 <ul>
 <li>the static type of both operand expressions is a subtype of the same basic
-type, in which case this basic type will be the static type of the result,
+type, in which case the static type of the result will be this basic type,
+modified by the usual <a href="#singleton_typing">singleton typing</a> rules;
 or</li>
 <li>the static type of one operand expression must be a subtype of xml and of
 the other operand expression must be a subtype of string, in which case the
-static type of the result is xml</li>
+static type of the result is xml.</li>
 </ul>
 <p>
 The semantics for each basic type is as follows:
@@ -5932,8 +6184,8 @@ as the characters of the string;</li>
 </li>
 </ul>
 <p>
-If the contextually expected type for a multiplicative-expr is T, then the
-contextualy expected type for both operand expressions is T', where a value v is
+If the contextually expected type for an additive-expr is T, then the
+contextually expected type for both operand expressions is T', where a value v is
 in T' if it belongs to int, decimal, float, string or xml and T contains a value
 with the same basic type as v.
 </p>
@@ -5949,11 +6201,15 @@ class="grammar">shift-expr :=
    expression <code>&gt;&gt;&gt;</code> expression
 </pre>
 <p>
-A shift-expr performs a bitwise shift. Both operand expressions must have static
-type that is a subtype of int. The left hand operand is the value to be shifted;
-the right hand value is the shift amount; all except the bottom 6 bits of the
-shift amount are masked out (as if by x &amp; 0x3F). Then a bitwise shift is
-performed depending on the operator:
+A shift-expr performs a bitwise shift. The shift operators have both lifted
+form, which is specified in the <a href="#nil_lifting">Nil lifting</a> section,
+and an underlying form, which is specified in this section.
+</p>
+<p>
+Both operand expressions must have static type that is a subtype of int. The
+left hand operand is the value to be shifted; the right hand value is the shift
+amount; all except the bottom 6 bits of the shift amount are masked out (as if
+by x &amp; 0x3F). Then a bitwise shift is performed depending on the operator:
 </p>
 <ul>
 <li><code>&lt;&lt;</code> performs a left shift, the bits shifted in on the
@@ -5969,7 +6225,8 @@ subtype of <code>int:Unsigned<var>K</var></code> when <code><var>K</var></code>
 is 8, 16 or 32, then the static type of the result is
 <code>int:Unsigned<var>N</var></code> where <code><var>N</var></code> is the
 smallest such <code><var>K</var></code>; otherwise, the static type of the
-result is <code>int</code>.
+result is <code>int</code>. In all cases the static type of the result is
+modified by the usual <a href="#singleton_typing">singleton typing</a> rules.
 </p>
 </section>
 <section>
@@ -6021,7 +6278,8 @@ class="grammar">relational-expr :=
 <p>
 A relational-expr tests the relative order of two values. There must be an <a
 href="#ordering">ordered</a> type to which the static type of both operands
-belong. The static type of the result is boolean.
+belong. The static type of the result is boolean, modified by the usual <a
+href="#singleton_typing">singleton typing</a> rules.
 </p>
 <p>
 A relational-expr is evaluated by first evaluating the two expressions,
@@ -6044,14 +6302,17 @@ and otherwise false.
 <pre
 class="grammar">is-expr :=
    expression <code>is</code> type-descriptor
+   | expression <code>!</code> <code>is</code> type-descriptor   
 </pre>
 <p>
-An is-expr tests where a value belongs to a type.
+An is-expr tests whether a value belongs to a type.
 </p>
 <p>
-An is-expr is evaluated by evaluating the expression yielding a result v. If v
-belongs to the type denoted by type-descriptor, then the result of the is-expr
-is true; otherwise the result of the is-expr is false.
+An is-expr is evaluated by evaluating the expression yielding a result v.
+If the operator is <code>is</code>, then the result of the expression is true if
+v belongs to the type denoted by the type-descriptor, and otherwise false. If
+the operator is <code>!is</code>, then the result of the expression is false if
+v belongs to the type denoted by the type-descriptor, and otherwise true.
 </p>
 </section>
 <section>
@@ -6096,9 +6357,15 @@ v<sub>1</sub> is the same as the storage identity of v<sub>2</sub>.</li>
 </ul>
 <p>
 The == operator tests for deep equality. The != operator results in the negation
-of the result of the == operator. For both == and !=, both operands must have a
+of the result of the == operator. For both == and !=, at least one of the operands must have a
 static type that is a subtype of anydata. Two values v1, v2 are deeply equal if
 DeepEquals(v1, v2) is true.
+</p>
+<p>
+The static type of the result of expression is boolean; in the case of the ==
+and != operators, the static type is modified by the usual <a
+href="#singleton_typing">singleton typing</a> rules; in the case of the === and
+!== operators, the static type is not so modified.
 </p>
 <p>
 Note that === and == are the same for simple values except for floating point types.
@@ -6132,6 +6399,9 @@ bitwise-or-expr := expression <code>|</code> expression
 </pre>
 <p>
 A binary-bitwise-expr does a bitwise AND, XOR, or OR operation on its operands.
+These operators have both lifted form, which is specified in the <a
+href="#nil_lifting">Nil lifting</a> section, and an underlying form, which is
+specified in this section.
 </p>
 <p>
 The static type of both operands must be a subtype of int. The static type of
@@ -6150,6 +6420,10 @@ is 8, 16 or 32, then the static type of the result is
 smallest such <code><var>K</var></code>; otherwise, the static type of the result
 is <code>int</code>.</li>
 </ul>
+<p>
+In all cases, the static type of the result is modified by the usual <a
+href="#singleton_typing">singleton typing</a> rules.
+</p>
 </section>
 
 <section>
@@ -6187,6 +6461,20 @@ evaluated;</li>
 <li>otherwise, the result of the logical-or-expr is the result of evaluating
 the right-hand expression.</li>
 </ol>
+
+<p>
+The static type of the result of a logical-expr is boolean, modified by the
+usual <a href="#singleton_typing">singleton typing</a> rules. Furthermore:
+</p>
+<ul>
+<li>if the expression is a logical-and-expr and the static type of left-hand
+expression is singleton false, then the static type of the result is singleton
+false, regardless of the static type of the right-hand-expression;</li>
+<li>if the expression is a logical-or-expr and the static type of left-hand
+expression is singleton true, then the static type of the result is singleton
+true, regardless of the static type of the right-hand-expression.</li>
+</ul>
+
 </section>
 
 <section>
@@ -6194,18 +6482,55 @@ the right-hand expression.</li>
 
 <pre
 class="grammar">conditional-expr :=
-   expression <code>?</code> expression <code>:</code> expression
-   | expression <code>?:</code> expression
+  ternary-conditional-expr
+  | nil-conditional-expr
+ternary-conditional-expr := expression <code>?</code> expression <code>:</code> expression
+nil-conditional-expr := expression <code>?:</code> expression
 </pre>
 <p>
-L <code>?:</code> R is evaluated as follows:
+A ternary-conditional-expr C <code>?</code> T <code>:</code> F is evaluated as
+follows:
 </p>
 <ol>
-<li>Evaluate L to get a value x</li>
-<li>If x is not nil, then return x.</li>
-<li>Otherwise, return the result of evaluating R.</li>
+<li>evaluate C to get a value boolean value v;</li>
+<li>if v is true, then the result is the result of evaluating T.</li>
+<li>Otherwise, the result is the result of evaluating F.</li>
+</ol>
+<p>
+In a ternary-conditional-expr C <code>?</code> T <code>:</code> F, the static
+type of C must be a subtype of boolean, and the static type of the result is
+determined from ther static types of C, T and F as follows:
+</p>
+<ol>
+<li>if the static type of C is singleton true, then the static
+type of the result is the static type of T;</li>
+<li>if the static type of C is singleton false, then the static
+type of the result is the static type of F;</li>
+<li>otherwise, the static type of the result is the union of the static types of
+T and F.</li>
+</ol>
+<p>
+A nil-conditional-expr L <code>?:</code> R is evaluated as follows:
+</p>
+<ol>
+<li>evaluate L to get a value v;</li>
+<li>if v is not nil, then the result is v;</li>
+<li>otherwise, the result is the result of evaluating R.</li>
+</ol>
+<p>
+The static type of the result of L <code>?:</code> R is determined from the
+static types of L and R as follows:
+</p>
+<ol>
+<li>if the static type of L is nil, then the static type of
+the result is the static type of R;</li>
+<li>if the static type of L does not include nil, then the static type of
+the result is the static type of L;</li>
+<li>otherwise, the static type of the result is the union of the difference of
+the static type of L and (), and the static type of R.</li>
 </ol>
 </section>
+
 <section>
 <h3>Checking expression</h3>
 
@@ -6233,7 +6558,7 @@ or <code>checkpanic <var>Expr</var></code> is T. However, if:
 <li>the static type of <code><var>Expr</var></code> is lax,</li>
 <li>T is a subtype of <code>json</code>, and</li>
 <li>there is a contextually expected type S, where S is a subtype of
-<code>()|int|float|decimal|string</code>,</li>
+<code>()|boolean|int|float|decimal|string</code>,</li>
 </ul>
 <p>
 then instead <code>check <var>Expr</var></code> is treated as <code>check
@@ -6277,7 +6602,8 @@ comprehensions; future versions will provided richer functionality.
 
 <pre class="grammar">query-expr := [query-construct-type] query-pipeline select-clause [on-conflict-clause]
 query-construct-type :=
-  <code>table</code> key-specifier
+  <code>map</code>
+  | <code>table</code> key-specifier
   | <code>stream</code>
 query-pipeline := from-clause intermediate-clause*
 intermediate-clause :=
@@ -6301,16 +6627,27 @@ clause in the pipeline is executed lazily, pulling input from its preceding
 clause. The input to the first clause is a single empty frame.
 </p>
 <p>
-The execution of a clause may complete early with an error value, in which case
-this error value is the result of the query, except when constructing a stream.
-Otherwise, the result of evaluating a query expression is a single value, which
-is constructed from the sequence of values emitted by the last clause. The
-result must be one of the following basic types:
+When a <code>from</code> or <code>join</code> clause is executed, it makes calls
+to the <code>next</code> method of an Iterator object. If any of these calls
+return an error value <var>e</var>, then we say that the clause <em>completes
+early</em> with error value <var>e</var>.
+</p>
+<p>
+A query-expr that does not construct a stream is evaluated as described in this
+paragraph. If a clause completes early with error value <var>e</var>, then the
+result of evaluating the query-expr is <var>e</var>. The normal rules apply if
+the execution of any clause results in the evaluation of an expression
+completing abruptly. Otherwise, the result of evaluating a query expression is a
+single value, which is constructed from the sequence of values emitted by the
+last clause. The result must be one of the following basic types:
 </p>
 <ul>
 <li>list - the constructed list has a member for each emitted value; every
-emitted value must beloing to type T, where T[] is the type of the constructed
+emitted value must belong to type T, where T[] is the type of the constructed
 value</li>
+<li>mapping - the constructed mapping has a member for each emitted value; every
+emitted value must belong to type [string, T], where map&lt;T&gt; is the type
+of the constructed value </li>
 <li>table - the constructed table has a member for each emitted value; every
 emitted value must belong to type T, where table&lt;T&gt; is the type of the
 constructed value</li>
@@ -6336,6 +6673,11 @@ within the query-expr completely abruptly with a panic, then the next operation
 will complete abruptly with a panic.
 </p>
 <p>
+A query-expr that constructs a mapping must start with the <code>map</code> keyword.
+An emitted value <code>[<var>k</var>, <var>v</var>]</code> results in adding a
+field with key <code><var>k</var></code> and value <code><var>v</var></code>.
+</p>
+<p>
 If the query-expr starts with <code>table</code>, then the query-expr will
 construct a table; the key-specifier specifies the key sequence of the
 constructed table in the same way as with a table-constructor-expr. Otherwise,
@@ -6346,7 +6688,15 @@ it is a compile-time error if the static type of this expression is not a
 subtype of one of the basic types that a query expression can construct.
 </p>
 <p>
-When during the construction of a table, an emitted value is added as a new
+When the query-expr is constructing a value of basic type list, mapping, table
+or xml, and the applicable contextually expected type is a subtype of readonly,
+then the query-expr will construct a value with its read-only bit set and the
+static type of the query-expr will be a subtype of readonly. Furthermore, the
+contextually expected type for the expression in the select-clause will also be
+a subtype of readonly.
+</p>
+<p>
+When during the construction of a map or table, an emitted value is added as a new
 member, it replaces any existing member with the same key value; when a new
 member replaces an existing member, it will have the same position in the order
 of members as the existing member. This behavior may be controlled by an
@@ -6624,9 +6974,9 @@ on-conflict-clause := <code>on</code> <code>conflict</code> expression
 </pre>
 <p>
 An <code>on conflict</code> clause is allowed only for a query expression that
-constructs a table with a key sequence. The expression is evaluated when the
+constructs a map or table with a key sequence. The expression is evaluated when the
 <code>select</code> clause emits a value that conflicts with a previous value,
-in the sense that both values have the same key value in the table. The
+in the sense that both values have the same key value in the map or table. The
 expression is evaluated with the same frame in scope as the select clause that
 emitted the value that conflicts with the previous value. The static type of the
 expression must be a subtype of <code>error?</code>. If the result of evaluating
@@ -6660,8 +7010,8 @@ class="grammar">xml-name-pattern := xml-atomic-name-pattern [<code>|</code> xml-
 xml-atomic-name-pattern :=
   <code>*</code>
   | identifier
-  | xml-namespace-prefix <code>:</code> identifier
-  | xml-namespace-prefix <code>:</code> <code>*</code>
+  | xml-namespace-prefix NoSpaceColon identifier
+  | xml-namespace-prefix NoSpaceColon <code>*</code>
 </pre>
 
 <p>
@@ -6793,16 +7143,22 @@ class="grammar">action :=
    | receive-action 
    | flush-action
    | client-remote-method-call-action
+   | client-resource-access-action
    | query-action
-   | type-cast-action
-   | checking-action
-   | trap-action
    | commit-action
-   | <code>(</code> action <code>)</code>
-action-or-expr := action | expression
-type-cast-action := <code>&lt;</code> type-cast-param <code>&gt;</code> action
-checking-action := checking-keyword action
-trap-action := <code>trap</code> action
+
+action-or-expr :=
+   expr-only
+   | action
+   | type-cast-action-or-expr
+   | checking-action-or-expr
+   | trap-action-or-expr
+   | query-action-or-expr
+   | <code>(</code> action-or-expr <code>)</code>
+
+type-cast-action-or-expr := <code>&lt;</code> type-cast-param <code>&gt;</code> action-or-expr
+checking-action-or-expr := checking-keyword action-or-expr
+trap-action-or-expr := <code>trap</code> action-or-expr
 </pre>
 <p>
 Actions are an intermediate syntactic category between expressions and
@@ -6812,19 +7168,44 @@ part of a statement or nested inside other actions. This is because actions are
 shown in the sequence diagram in the graphical syntax.
 </p>
 <p>
-The syntax for actions is defined by the above grammar and precedence rules. The
-precedence rules are that a client-remote-method-call-action has higher
-precedence than a checking-action or a trap-action.
+As with the grammar for expression, the grammar for action-or-expr is ambiguous.
+The precedence for action-or-expr is the same as for expression, with the
+addition that the <code>-&gt;</code> operator used in a
+client-remote-method-call-action has the same precedence as the <code>.</code>
+operator used in a method-call-expr.
 </p>
 <p>
 An action is evaluated in the same way as an expression. Static typing for
 actions is the same as for expressions.
 </p>
 <p>
-A <code>type-cast-action</code>, <code>checking-action</code> or
-<code>trap-action</code> is evaluated in the same way as a
+A <code>type-cast-action-or-expr</code>, <code>checking-action-or-expr</code> or
+<code>trap-action-or-expr</code> is evaluated in the same way as a
 <code>type-cast-expr</code>, <code>checking-expr</code> or
 <code>trap-expr</code> respectively.
+</p>
+
+<pre
+class="grammar">query-action-or-expr :=
+   [query-construct-type] query-action-pipeline select-action-clause [on-conflict-clause]
+query-action-pipeline := from-action-clause intermediate-action-clause*
+intermediate-action-clause :=
+   from-action-clause
+   | let-action-clause
+   | where-clause
+   | join-clause
+   | order-by-clause
+   | limit-clause
+
+from-action-clause := <code>from</code> typed-binding-pattern <code>in</code> action-or-expr
+let-action-clause := <code>let</code> let-action-var-decl [<code>,</code> let-action-var-decl]*
+let-action-var-decl := [annots] typed-binding-pattern <code>=</code> action-or-expr
+select-action-clause := <code>select</code> action-or-expr
+</pre>
+<p>
+A <code>query-action-or-expr</code> is a <code>query-expr</code> in which
+certain subexpressions are allowed to be an <code>action-or-expr</code>. It is
+evaluated in the same way as a <code>query-expr</code>.
 </p>
 
 </section>
@@ -6855,17 +7236,18 @@ to executing another strand. The following actions cause a strand to yield:
 <p>
 In addition, any function with an external-function-body can potentially yield;
 it should only do so if it performs a system call that would block or calls a
-Ballerina function that itself yields. The `sleep` function in
+Ballerina function that itself yields. The <code>sleep</code> function in
 <code>lang.runtime</code> will make the strand yield. Other functions in the
 lang library do not themselves yield, although if they call a function passed as
 an argument, that function may result in yielding.
 </p>
 <p>
 There are two language constructs whose execution causes the creation of new
-strands: named-worker-decl and start-action. These constructs may use
-annotations to indicate that the newly created strand should be in a separate
-thread from the current strand. In the absence of such annotations, the new
-strand must be part of the same thread as the current strand.
+strands: named-worker-decl and start-action. Except in the cases explicitly
+allowed by this specification, the new strand must be part of the same thread as
+the current strand. An implementation may also allow annotations to be used to
+indicate that the newly created strand should be in a separate thread from the
+current strand.
 </p>
 
 </section>
@@ -6935,7 +7317,8 @@ default worker.
 </p>
 <p>
 A function also has zero or more named workers. Each named worker runs on its
-own new strand. The termination of a function is independent of the termination
+own new strand. The strand can run on a separate thread from the default worker if the
+function is isolated. The termination of a function is independent of the termination
 of its named workers. The termination of a named worker does not automatically
 result in the termination of its function. When a function's default worker
 terminates, causing the function to terminate, the function does not
@@ -7065,17 +7448,13 @@ identifier is declared as <code>configurable</code>).</li>
 variable-reference-lvexpr or in a capture-binding-pattern in a
 destructuring-assignment-stmt must not refer to a variable defined by a
 module-var-decl that does not include <code>isolated</code>.</li>
-<li>Captured variables are restricted as follows: if the body is part of an
-anonymous-function-expr, then any captured variable references must refer to
-variables that are both final (either explicitly or implicitly) and have a
-static type that is a subtype of <code>readonly|isolated object {}</code>.</li>
-<li>New workers cannot be started: the following constructs are not allowed
-<ul>
-<li>named-worker-decl</li>
-<li>fork-stmt</li>
-<li>start-action</li>
-</ul>
-</li>
+<li>A variable reference to a captured variable must refer to variables that are
+both final (either explicitly or implicitly) and have a static type that is a
+subtype of <code>readonly|isolated object {}</code>, where a variable reference
+is captured if it occurs within an anonymous-function-expr or named-worker-decl
+and refers to a variable declared within the function but outside of that
+anonymous-function-expr or named-worker-decl.</li>
+<li>A start-action is allowed only if its call-action-or-expression is isolated.</li>
 </ul>
 <p>
 If an isolated function has an <code>external-function-body</code>, then the
@@ -7088,17 +7467,19 @@ is called concurrently on multiple strands.
 </section>
 </section>
 <section>
-<h3>Statement execution</h3>
+<h3>Statements</h3>
 
 <pre
 class="grammar">statement := 
    action-stmt
    | local-var-decl-stmt
    | xmlns-decl-stmt
+   | client-decl-stmt
    | assignment-stmt
    | compound-assignment-stmt
    | destructuring-assignment-stmt
    | call-stmt
+   | checking-stmt
    | if-else-stmt
    | regular-compound-stmt
    | continue-stmt
@@ -7113,28 +7494,6 @@ class="grammar">statement :=
    | return-stmt
    | fork-stmt
 </pre>
-<p>
-The execution of any statement may involve the evaluation of actions and
-expressions, and the execution of substatements. The following sections
-describes how each kind of statement is evaluated, assuming that the evaluation
-of those expressions and actions completes normally, and assuming that the
-execution of any substatements does not cause termination of the current worker.
-Except where explicitly stated to the contrary, statements handle abrupt
-completion of the evaluation of expressions and actions as follows. There are
-two possibilities.
-</p>
-<ul>
-<li>If the abrupt termination is a check-fail with associated value e, then
-control flow is transferred as if by a <code>fail-stmt</code> with an expression
-that evaluates to e.</li>
-<li>If the abrupt termination is a panic with associated value, then the current
-worker is terminated as if by a <code>panic-stmt</code> with an expression that
-evaluates to e.</li>
-</ul>
-<p>
-If the execution of a substatement causes termination of the current worker,
-then the execution of the statement terminates at that point.
-</p>
 
 <pre
 class="grammar">
@@ -7149,14 +7508,81 @@ regular-compound-stmt :=
 A <code>regular-compound-stmt</code> can be combined with an
 <code>on-fail-clause</code> to make a <code>stmt-with-on-fail</code>.
 </p>
+
+<section>
+<h4>Statement execution</h4>
+<p>
+The execution of a statement completes in one of three ways:
+</p>
+<ul>
+<li>it may complete normally;</li>
+<li>it may complete by terminating the current worker; or</li>
+<li>it may complete by transferring control within the same worker.</li>
+</ul>
+<p>
+When the execution of a statement involves the evaluation of an action or an
+expression, and that evaluation completes abruptly, then, except where
+explicitly stated to the contrary, the execution of the statement completes as
+follows.
+</p>
+<ul>
+<li>If the abrupt completion is a check-fail with associated value e, then
+control flow is transferred as if by a <code>fail-stmt</code> with an expression
+that evaluates to e.</li>
+<li>If the abrupt completion is a panic with associated value e, then the
+current worker is terminated as if by a <code>panic-stmt</code> with an
+expression that evaluates to e.</li>
+</ul>
+<p>
+The following sections describe for each kind of statement any other cases in
+which the execution of that kind of statement does not completely normally.
+</p>
+</section>
+
+<section>
+<h4>Statement blocks</h4>
 <pre
 class="grammar">
 statement-block := <code>{</code> statement* <code>}</code>
 </pre>
 <p>
-A <code>statement-block</code> is a syntactic grouping of statements, which are
-executed sequentially.
+A <code>statement-block</code> is executed by executing its
+<code>statement</code>s sequentially. This means that when the execution of one
+<code>statement</code> completes normally, the immediately following
+<code>statement</code> is executed. However, when the executon
+<code>statement</code> does not complete normally, then none of the following
+<code>statement</code>s in the <code>statement-block</code> are executed. The
+execution of the <code>statement-block</code> completes normally if and only if
+the execution of all of its <code>statement</code>s completes normally.
 </p>
+</section>
+
+<section>
+<h4>Unreachability</h4>
+<p>
+A statement is <em>reachable</em> if the analysis described in this section
+determines that there is a possibility that the statement will be executed. It
+is a compile error if a <code>statement</code> other than a
+<code>panic-stmt</code> is not reachable.
+</p>
+<p>
+The analysis proceeds by determining recursively for each statement whether it
+is possible for the statement to complete normally, assuming that the statement
+is reachable. Each <code>statement</code> in a <code>statement-block</code>
+after the first <code>statement</code> is reachable only if it is possible for
+all of the preceding <code>statement</code>s to complete normally.
+</p>
+<p>
+When the execution of a statement or a transfer of control is conditional on the
+result of evaluating an expression, then the analysis assumes that it is
+possible for the statement to be executed or control to be transferred, unless
+the static type of the expression makes it impossible. Similarly, when the
+evaluation of a subexpression is conditional on the result of previously
+evaluating another subexpression, then the analysis assumes that the second
+evaluation is possible unles the static type of the first subexpression makes it
+impossible.
+</p>
+</section>
 
 </section>
 
@@ -7169,7 +7595,8 @@ class="grammar">fork-stmt := <code>fork</code> <code>{</code> named-worker-decl+
 </pre>
 <p>
 The fork statement starts one or more named workers, which run in parallel with
-each other, each in its own new strand.
+each other, each in its own new strand. The strand can run on a separate thread
+from the current worker if the fork-stmt occurs in an isolated function.
 </p>
 <p>
 Variables and parameters in scope for the fork-stmt remain in scope within the
@@ -7189,7 +7616,12 @@ block-function-body.
 <h3>Start action</h3>
 
 <pre
-class="grammar">start-action := [annots] <code>start</code> (function-call-expr|method-call-expr|client-remote-method-call-action)
+class="grammar">start-action := [annots] <code>start</code> call-action-or-expr
+call-action-or-expr :=
+   function-call-expr
+   | method-call-expr
+   | client-remote-method-call-action
+   | client-resource-access-action
 </pre>
 
 <p>
@@ -7201,7 +7633,19 @@ action <code><var>C</var></code> is T, then the static type of <code>start
 <var>C</var></code> is future&lt;T&gt;; it is permitted for T to be
 <code>never</code>.
 </p>
-
+<p>
+A call-action-or-expr is <em>isolated</em> if the function or method it calls
+has a type that is isolated and the expression for every argument is an <a
+href="#isolated_expressions">isolated expression</a>; for this purpose, the
+object whose method is called by the method-call-expr or
+client-remote-method-call-action is treated as an argument. When a start-action
+has a call-action-or-expr that is isolated then
+</p>
+<ul>
+<li>the start-action is allowed in an isolated function, and</li>
+<li>the strand created by the start-action may run in a separate thread from the
+current thread.</li>
+</ul>
 
 </section>
 <section>
@@ -7380,7 +7824,7 @@ send-action starts by evaluating the expression, resulting in a value
 <code><var>v</var></code>; the Clone abstract operation is then applied to
 <code><var>v</var></code> resulting in value <code><var>c</var></code>. This
 value <code><var>c</var></code> is added to the message queue maintained by the
-sending worker for messages to be sent to the sending worker;this queue
+sending worker for messages to be sent to the receiving worker; this queue
 continues to exist even if the receiving worker has already terminated.
 </p>
 <p>
@@ -7638,6 +8082,11 @@ success before it has executed one member from every send set.</li>
 A client object is a stub that allows a worker to send network messages to a
 remote system according to some protocol. A local variable declared with client
 object type will be depicted as a lifeline in the function's sequence diagram.
+</p>
+
+<section>
+<h4>Remote methods</h4>
+<p>
 The remote methods of the client object correspond to distinct network messages
 defined by the protocol for the role played by the client object. The return
 value of a remote method represents the protocol's response. A
@@ -7646,7 +8095,7 @@ worker lifeline to the client object lifeline.
 </p>
 
 <pre
-class="grammar">client-remote-method-call-action := expression <code>-&gt;</code> method-name <code>(</code> arg-list <code>)</code>
+class="grammar">client-remote-method-call-action := expression <code>-&gt;</code> remote-method-name <code>(</code> arg-list <code>)</code>
 </pre>
 <p>
 Calls a remote method of a client object. This works the same as a method call
@@ -7657,9 +8106,75 @@ expression, except that it is used for a client object method with the
 </section>
 
 <section>
+<h4>Resources</h4>
+
+<pre
+class="grammar">client-resource-access-action :=
+   expression <code>-&gt;</code> <code>/</code> [resource-access-path] [<code>.</code> resource-method-name] [<code>(</code> arg-list <code>)</code>]
+
+resource-access-path :=
+   resource-access-path-segments [<code>/</code> resource-access-rest-segment]
+   | resource-access-rest-segment
+
+resource-access-path-segments :=
+   resource-access-path-segment (<code>/</code> resource-access-path-segment )* 
+
+resource-access-path-segment :=
+   resource-path-segment-name
+   | computed-resource-access-path-segment
+
+computed-resource-access-path-segment := <code>[</code> expression <code>]</code>
+
+resource-access-rest-segment := <code>[</code> <code>...</code> expression <code>]</code>
+</pre>
+<p>
+A <code>client-resource-access-action</code> performs a <a
+href="#resources_defn">resource access operation</a> on a client object. An
+omitted <code>resource-method-name</code> defaults to <code>get</code>; if the
+parentheses and the <code>arg-list</code> are omitted, then they default to
+<code>()</code>, with arguments being defaulted as usual.
+</p>
+<p>
+A <code>client-resouce-access-action</code> is evaluated by:
+</p>
+<ul>
+<li>evaluating the code expression preceding the <code>-&gt;</code> resulting in
+a client object <var>c</var>;</li>
+<li>evaluating the <code>resource-access-path</code> to get a list of values
+<var>p</var>
+<ul>
+<li>a <code>resource-access-path</code> that is just <code></code> makes <var>p</var> be
+an empty list</li>
+<li>a <code>resource-path-segment-name</code> appends a string to <var>p</var></li>
+<li>a <code>computed-resource-access-path-segment</code> is evaluated and the
+result is appended to <var>p</var>;</li>
+<li>a <code>resource-access-rest-segment</code> is evaluated and every member
+of the result, which must be a list, is appended to <var>p</var>;</li>
+</ul>
+</li>
+<li>evaluating the <code>arg-list</code> to get an argument list
+<var>a</var>;</li>
+<li>invoking the resource access operation on the <var>c</var> using the
+<code>resource-method-name</code>, <var>p</var> and <var>a</var>, resulting in a value
+<var>v</var>.</li>
+</ul>
+<p>
+The result of the <code>client-resource-access-action</code> is <var>v</var>.
+</p>
+<p>
+The static type of the client object must contain a resource with specified
+method name for every list value that may be constructed by the evaluation of
+the <code>resource-access-path</code>. The argument list and result value are
+typed using the intersection of the function types allowed for the method name
+with any of the resource paths.
+</p>
+
+</section>
+</section>
+<section>
 <h3>Query action</h3>
 <pre
-class="grammar">query-action := query-pipeline do-clause
+class="grammar">query-action := query-action-pipeline do-clause
 do-clause := <code>do</code> statement-block
 </pre>
 <p>
@@ -7738,9 +8253,9 @@ variable will belong to a type that is narrower than the declared type. In these
 cases, references to the variable within particular regions of code will have a
 static type that is narrower that the variable type. One kind of case, which is
 described in this section, is when a variable is used in a boolean expression in
-a conditional context. The other kind of case is when a variable is used in a
-match statement; this is described in the <a href="#match_statement">Match
-statement</a> section.
+a conditional context. This is sometimes called <em>occurrence typing</em>. The
+other kind of case is when a variable is used in a match statement; this is
+described in the <a href="#match_statement">Match statement</a> section.
 </p>
 <p>
 Type narrowing makes use of the <em>read-only difference</em> between two types,
@@ -7763,14 +8278,14 @@ Given an expression E with static type boolean, and a variable x with static
 type Tx, we define how to determine
 </p>
 <ul>
-<li>a narrowed type for x implied by truth of E and</li>
-<li>a narrowed type for x implied by falsity of E</li>
+<li>a narrowed type for x implied by truth of E, and</li>
+<li>a narrowed type for x implied by falsity of E.</li>
 </ul>
 <p>
 based on the syntactic form of E as follows.
 </p>
 <ul>
-<li>If E has the form x is T, then
+<li>If E has the form x <code>is</code> T, then
 <ul>
 <li>the narrowed type for x implied by truth of E is the intersection of Tx and
 T</li>
@@ -7778,52 +8293,60 @@ T</li>
 &#x2212;<sub><em>ro</em></sub> T</li>
 </ul>
 </li>
-<li>If E has the form x == E1 or E1 == x where the static type of E1 is an
-expression whose static type is a singleton simple type T1, then
+<li>If E has the form x <code>==</code> E<sub>1</sub> or E<sub>1</sub>
+<code>==</code> x where the static type of E<sub>1</sub> is an expression whose
+static type is a singleton simple type T<sub>1</sub>, then
 <ul>
 <li>the narrowed type for x implied by truth of E is the intersection of Tx and
-T1</li>
+T<sub>1</sub></li>
 <li>the narrowed type for x implied by falsity of E is Tx
-&#x2212;<sub><em>ro</em></sub> T1</li>
+&#x2212;<sub><em>ro</em></sub> T<sub>1</sub></li>
 </ul>
 </li>
-<li>If E has the form x != E1 or E1 != x where the static type of E1 is an
-expression whose static type is a singleton simple type T1, then
+<li>If E has the form x <code>!=</code> E<sub>1</sub> or E<sub>1</sub>
+<code>!=</code> x where the static type of E<sub>1</sub> is an expression whose
+static type is a singleton simple type T<sub>1</sub>, then
 <ul>
 <li>the narrowed type for x implied by truth of E is Tx
-&#x2212;<sub><em>ro</em></sub> T1</li>
+&#x2212;<sub><em>ro</em></sub> T<sub>1</sub></li>
 <li>the narrowed type for x implied by falsity of E is the intersection of Tx
-and T1</li>
+and T<sub>1</sub></li>
 </ul>
 </li>
-<li>If E has the form !E1, then
+<li>If E has the form <code>!</code>E<sub>1</sub>, then
 <ul>
 <li>the narrowed type for x implied by truth of E is the narrowed type for x
-implied by falsity of E1</li>
+implied by falsity of E<sub>1</sub></li>
 <li>the narrowed type for x implied by falsity of E is the narrowed type for x
-implied by truth of E1</li>
+implied by truth of E<sub>1</sub></li>
 </ul>
 </li>
-<li>If E has the form E1 &amp;&amp; E2
+<li>If E has the form E<sub>1</sub> <code>&amp;&amp;</code> E<sub>2</sub>
 <ul>
-<li>the narrowed type for x implied by truth of E is the intersection of T1 and
-T2, where T1 is the narrowed type for x implied by the truth of T1 and T2 is the
-narrowed type for x implied by the truth of T2</li>
-<li>the narrowed type for x implied by falsity of E is T1|T2, where T1 is the
-narrowed type for x implied by the falsity of E1, and T2 is the intersection of
-T3 and T4, where T3 is the narrowed type for x implied by the truth of E1 and T4
-is the narrowed type for x implied by the falsity of E2</li>
+<li>the narrowed type for x implied by truth of E is the intersection of
+T<sub>1</sub> and T<sub>2</sub>, where T<sub>1</sub> is the narrowed type for x
+implied by the truth of T<sub>1</sub> and T<sub>2</sub> is the narrowed type for
+x implied by the truth of T<sub>2</sub></li>
+<li>the narrowed type for x implied by falsity of E is
+T<sub>1</sub>|T<sub>2</sub>, where T<sub>1</sub> is the narrowed type for x
+implied by the falsity of E<sub>1</sub>, and T<sub>2</sub> is the intersection
+of T<sub>3</sub> and T<sub>4</sub>, where T<sub>3</sub> is the narrowed type for
+x implied by the truth of E<sub>1</sub> and T<sub>4</sub> is the narrowed type
+for x implied by the falsity of E<sub>2</sub></li>
 </ul>
 </li>
-<li>If E has the form E1 || E2, then
+<li>If E has the form E<sub>1</sub> <code>||</code> E<sub>2</sub>, then
 <ul>
-<li> the narrowed type for x implied by truth of E is T1|T2, where T1 is the
-narrowed type for x implied by the truth of E1, and T2 is the intersection of T3
-and T4, where T3 is the narrowed type for x implied by the falsity of E1 and T4
-is the narrowed type for x implied by the truth of E2</li>
-<li>the narrowed type for x implied by falsity of E is the intersection of T1
-and T2, where T1 is narrowed type for x implied by the falsity of E1 and T2 is
-the narrowed type for x implied by the falsity of E2</li>
+<li>the narrowed type for x implied by truth of E is
+T<sub>1</sub>|T<sub>2</sub>, where T<sub>1</sub> is the narrowed type for x
+implied by the truth of E<sub>1</sub>, and T<sub>2</sub> is the intersection of
+T<sub>3</sub> and T<sub>4</sub>, where T<sub>3</sub> is the narrowed type for x
+implied by the falsity of E<sub>1</sub> and T<sub>4</sub> is the narrowed type
+for x implied by the truth of E<sub>2</sub></li>
+<li>the narrowed type for x implied by falsity of E is the intersection of
+T<sub>1</sub> and T<sub>2</sub>, where T<sub>1</sub> is narrowed type for x
+implied by the falsity of E<sub>1</sub> and T<sub>2</sub> is the narrowed type
+for x implied by the falsity of E<sub>2</sub></li>
 </ul>
 </li>
 <li>If E has any other form, then
@@ -7834,24 +8357,78 @@ the narrowed type for x implied by the falsity of E2</li>
 </li>
 </ul>
 <p>
-Narrowed types apply to regions of code as follows:
+Narrowed types implied by the truth or falsity of an expression apply to regions
+of code as follows:
 </p>
 <ul>
-<li>in an expression E1 || E2, the narrowed types implied by the falsity of E1
-apply within E2</li>
-<li>in an expression E1 &amp;&amp; E2, the narrowed types implied by the truth of E1
-apply within E2</li>
-<li>in an expression E1 ? E2 : E3, the narrowed types implied by the truth of E1
-apply within E2 and the narrowed types implied by the falsity of E1 apply within
-E3</li>
-<li>in a statement if E1 { B1 } else { B2 }, the narrowed types implied by the
-truth of E1 apply within B1 and the narrowed types implied by the falsity of E1
-apply within E2</li>
-<li>in a match-clause P if E => { B }, the narrowed types implied by the truth
-of E apply within B</li>
-<li>the narrowed type for a variable x no longer applies as soon as there is a
-possibility of x being assigned to</li>
+<li>in an expression E<sub>1</sub> <code>||</code> E<sub>2</sub>, the narrowed
+types implied by the falsity of E<sub>1</sub> apply within E<sub>2</sub></li>
+<li>in an expression E<sub>1</sub> <code>&amp;&amp;</code> E<sub>2</sub>, the
+narrowed types implied by the truth of E<sub>1</sub> apply within
+E<sub>2</sub></li>
+<li>in an expression E<sub>1</sub> <code>?</code> E<sub>2</sub> <code>:</code>
+E<sub>3</sub>, the narrowed types implied by the truth of E<sub>1</sub> apply
+within E<sub>2</sub> and the narrowed types implied by the falsity of
+E<sub>1</sub> apply within E<sub>3</sub></li>
+<li>in a statement <code>if</code> E<sub>1</sub> B<sub>1</sub> <code>else</code>
+B<sub>2</sub>, the narrowed types implied by the truth of E<sub>1</sub> apply
+within B<sub>1</sub> and the narrowed types implied by the falsity of
+E<sub>1</sub> apply within B<sub>2</sub></li>
+<li>in a statement <code>while</code> E B, the narrowed types implied by the truth of E
+apply with B</li>
+<li>in a match-clause P <code>if</code> E <code>=></code> B, the narrowed types
+implied by the truth of E apply within B</li>
+<li>in a query-expr or query-action, the narrowed types implied by the truth of
+the expression in a where-clause apply within all following clauses in that
+query-expr or query-action</li>
 </ul>
+<p>
+Given a statement or statement-block S, and a variable x that is in-scope for S
+and has static type Tx, we define how to determine a narrowed type for x implied
+by the normal completion of S as follows.
+</p>
+<ul>
+<li>When it is not possible for S to complete normally, then the narrowed type for x implied by the normal completion of S is never (the empty type).</li>
+<li>If S has the form <code>{</code> S<sub>1</sub> S<sub>2</sub> ...
+S<sub>n</sub> <code>}</code>, then the narrowed type for x implied by the normal
+completion of S is the narrowed type for x implied by the normal completion of
+S<sub>n</sub>.</li>
+<li>If S has the form <code>do</code> B, the narrowed type for x implied by the
+normal completion of S is the narrowed type for x implied by the normal
+completion of B.</li>
+<li>If S has the form <code>if</code> E B<sub>1</sub> <code>else</code>
+B<sub>2</sub>, the narrowed type for x implied by the normal completion of S is
+the union of T<sub>1</sub> and T<sub>2</sub>, where T<sub>1</sub> is the
+narrowed type for x implied by the normal completion of B<sub>1</sub> and
+T<sub>2</sub> is the narrowed type for x implied by the normal completion of
+B<sub>2</sub>. (The truth or falsity of E may imply a narrowed type for x that
+applies in B<sub>1</sub> or B<sub>2</sub>, which may affect the narrowed type
+for x implied by the normal completion of B<sub>1</sub> or B<sub>2</sub>.)</li>
+<li>Otherwise, the narrowed type for x implied by the completion of S is Tx.</li>
+</ul>
+<p>
+The narrowed types implied by the normal completion of a statement are applied
+within a statement-block as follows: in a statement-block <code>{</code>
+S<sub>1</sub> S<sub>2</sub> ... Sn <code>}</code>, for each i in 2,..., n, the
+narrowed types implied by the normal completion of S<sub>i - 1</sub> apply to
+S<sub>i</sub>.
+</p>
+<p>
+In the above rules, a if-else-stmt without an <code>else</code> clause is
+treated as if it had an <code>else</code> followed by an empty statement-block,
+and <code>else if</code> clause is treated like a nested if-else-stmt.
+</p>
+<p>
+A narrowed type for a variable x implied by an expression in which x occurs
+ceases to apply in a region of code where there is a possibility at runtime that
+x has been assigned to since the evaluation of the expression. It is an error if
+this results in the type of a variable reference being affected by assignments
+that lexically follow the variable reference. Specifically, when a variable x is
+narrowed outside a while-stmt, foreach-stmt or query-action S, an assignment to
+x within S must not result in the possibility of x having being assigned to when
+the statement-block of S completes normally or when a continue-stmt is executed.
+</p>
+
 </section>
 <section>
 <h3 id="XML_namespace_declaration_statement">XML namespace declaration statement</h3>
@@ -7886,6 +8463,21 @@ The prefix <code>xmlns</code> is predeclared as
 The static type of the <code>simple-const-expr</code> must be a subtype of
 string.
 </p>
+</section>
+<section>
+<h3 id="client_declaration_statement">Client declaration statement</h3>
+
+<pre
+class="grammar">client-decl-stmt := client-decl
+client-decl := <code>client</code> service-uri <code>as</code> module-prefix <code>;</code>
+service-uri := simple-const-expr
+</pre>
+
+<p>
+The static type of the <code>simple-const-expr</code> must be a subtype of
+string.
+</p>
+
 </section>
 <section>
 <h3>Assignment</h3>
@@ -8148,12 +8740,15 @@ is potentially uninitialized.
 </p>
 <p>
 Let T1 be the static type of lvexpr, and let T2 be the static type of
-action-expr. Then let T3 be the static type of an expression E1 BinaryOp E2
-where E1 has type T1 and E2 has type T2. It is a compile error if T3 is not a
+action-expr. Let E be an expression E1 BinaryOperator E2, where E1 has type T1
+and E2 has type T2. E must be valid according to the static typing rules
+applicable to the underlying form of the BinaryOperator (not the lifted form
+described in the <a href="#nil_lifting">Nil lifting</a> section). Let T be the
+static type of E according to those rules. It is a compile error if T is not a
 subtype of T1.
 </p>
 <p>
-It is executed as follows:
+A compound-assignment-stmt is executed as follows:
 </p>
 <ol>
 <li>execute action-or-expr to get a value <var>v2</var>;</li>
@@ -8194,7 +8789,30 @@ of this type.
 A binding pattern within a destructuring assignment must not refer to a variable
 declared by a module-var-decl that includes <code>isolated</code>.
 </p>
-
+<p>
+Note that a destucturing-assignment-stmt with a wildcard-binding-pattern can
+be used to ensure that a a variable has been narrowed as expected.
+</p>
+<pre>
+type T X|Y|Z;
+function foo(T v) {
+   if v is X {
+       handleX(v);
+   }
+   else if v is Y {
+       handleY(v);
+   }
+   else {
+     Z _ = v;
+     handleOther(v);
+   }
+}
+</pre>
+<p>
+If <code>T</code> is subsequently modified to add another possibility in
+addition to <code>X</code>, <code>Y</code> and <code>Z</code>, then
+<code>foo</code> will get a compile error.
+</p>
 </section>
 </section>
 <section>
@@ -8213,15 +8831,25 @@ the static type of an action in an action-stmt is not nil.
 
 <pre
 class="grammar">call-stmt := call-expr <code>;</code>
-call-expr :=
-   function-call-expr
-   | method-call-expr
-   | checking-keyword call-expr
+call-expr := function-call-expr | method-call-expr
 </pre>
 <p>
 A call-stmt is executed by evaluating call-expr as an expression and discarding
-the resulting value, which must be nil. The static type of the call-expr in an
-call-stmt must be a subtype of nil; it is permitted to be <code>never</code>.
+the resulting value, which must be nil. The static type of the call-expr in a
+call-stmt must be either <code>()</code> or <code>never</code>. If it is
+<code>never</code>, then it is possible for the call-stmt to complete normally.
+</p>
+</section>
+<section>
+<h3>Checking statement</h3>
+
+<pre
+class="grammar">checking-stmt := checking-action-or-expr <code>;</code>
+</pre>
+<p>
+A checking-stmt is executed by evaluating checking-action-or-expr as an
+expression and discarding the resulting value, which must be nil. The static
+type of the checking-action-or-expr in a checking-stmt must be <code>()</code>.
 </p>
 </section>
 <section>
@@ -8257,10 +8885,11 @@ A <code>do-stmt</code> is executed by executing its
 <h3 id="match_statement">Match statement</h3>
 
 <pre
-class="grammar">match-stmt := <code>match</code> action-or-expr <code>{</code> match-clause+ <code>}</code>
+class="grammar">match-stmt := <code>match</code> match-target <code>{</code> match-clause+ <code>}</code>
+match-target := action-or-expr
 match-clause :=
   match-pattern-list [match-guard] <code>=></code> statement-block
-match-guard := <code>if</code> expression
+match-guard := <code>if</code> match-guard-expr
 </pre>
 <p>
 A match statement selects a statement block to execute based on which patterns a
@@ -8270,7 +8899,8 @@ value matches.
 A match-stmt is executed as follows:
 </p>
 <ol>
-<li>the expression is evaluated resulting in some value v;</li>
+<li>the match-target is evaluated resulting in some value v, called the
+<em>target value</em>;</li>
 <li>for each match-clause in order:
 <ol>
 <li>a match of match-pattern-list against v is attempted</li>
@@ -8293,6 +8923,25 @@ both the match-guard, if any, and the statement-block in that match-clause. The
 static type of the expression in match-guard must be a subtype of boolean.
 </p>
 
+<pre
+class="grammar">match-guard-expr := expression
+</pre>
+<p>
+A match-guard-expr must not include a <code>function-call-expr</code> or
+<code>method-call-expr</code> unless either
+</p>
+<ul>
+<li>the static type of the <code>action-or-expr</code> following
+<code>match</code> is a subtype of <code>readonly</code>; or</li>
+<li>the function or method being called is <code>isolated</code> and the static
+type of every argument to the function or method is a subtype of
+<code>readonly</code>; in the case of a method-call-expr, the static type of the
+object whose method is being called must also be a subtype of
+<code>readonly</code>.</li>
+</ul>
+
+<section>
+<h4>Match patterns</h4>
 <pre
 class="grammar">match-pattern-list := 
   match-pattern (<code>|</code> match-pattern)*
@@ -8395,39 +9044,63 @@ In particular, for the match of an <code>error-match-pattern</code> with an
 <code>error-type-reference</code> against an error value to succeed, the
 error value must belong to the referenced error type.
 </p>
+</section>
+
+<section>
+<h4>Match clause reachability and narrowing</h4>
 <p>
-A variable is the <em>matched variable</em> of a <code>match-stmt</code> if
-the <code>action-or-expression</code> following <code>match</code> is a
-<code>variable-reference</code> that references this variable. The type of a
-matched variable is subject to narrowing within regions of the
-<code>match-stmt</code> as follows. The matched variable has a narrowed
-type at the start of each match-clause, which is determined by previous
-<code>match-clause</code>s; the type for the first <code>match-clause</code> is
-the normal static type of the variable. Narrowing is applied to each
-<code>match-clause</code> as follows:
+This section uses the <em>read-only intersection</em> between two types, which
+is defined analogously to the read-only difference used for conditional variable
+type narrowing as follows. We use the notation T &amp;<sub>ro</sub> S for the
+read-only intersection of T and S. T &amp;<sub>ro</sub> S is computed separately
+for each uniform type. Let T<sup>U</sup> be the subset of T belonging to uniform
+type U, i.e. the intersection of T and U. For a uniform type U that is
+immutable, T<sup>U</sup> &amp;<sub>ro</sub> S<sup>U</sup> is the same as
+T<sup>U</sup> &amp; S<sup>U</sup>; for a uniform type U that is mutable,
+T<sup>U</sup> &amp;<sub>ro</sub> S<sup>U</sup> is empty if T<sup>U</sup> &amp;
+S<sup>U</sup> is empty, and T<sup>U</sup> otherwise. T &amp;<sub>ro</sub> S is
+the union for every uniform type U of T<sup>U</sup> &amp;<sub>ro</sub>
+S<sup>U</sup>. Note that the read-only intersection operation is not
+commutative.
+</p>
+<p>
+A <code>match-clause</code> is defined to be <em>unguarded</em> if it does not
+have a <code>match-guard</code> or if the static type of the expression in the
+<code>match-guard</code> is singleton true.
+</p>
+<p>
+For each <code>match-clause</code> C, we can compute a type L that the target
+value must <em>look like</em> if the <code>statement-block</code> of C is
+executed. L is computed as the difference of a positive type P and negative type
+N, where
 </p>
 <ul>
-<li>let <var>T</var> be the narrowed type of the matched variable at the start
-of the match-clause;</li>
-<li>let <var>P</var> be the union of the corresponding types of each
-<code>match-pattern</code> in the <code>match-pattern-list</code> of the
-<code>match-clause</code>;</li>
-<li>let <var>N</var> be the intersection of <var>T</var> and
-<var>P</var>;</li>
-<li>let <var>R</var> be the set difference of <var>T</var> and
-<var>P</var>;</li>
-<li>if <var>N</var> is a subtype of <code>readonly</code>, then the narrowed
-type for the <code>match-guard</code>, if any, and <code>statement-block</code>
-of the <code>match-clause</code> is <var>N</var>; otherwise it is
-<var>T</var>;</li>
-<li>if there is a match-guard, then the type narrowing described in <a
-href="#conditional_variable_type_narrowing">Conditional variable type
-narrowing</a> is done in addition to the type narrowing described here;</li>
-<li>if <var>R</var> is a subtype of <code>readonly</code> and there is no
-<code>match-guard</code>, then the narrowed type for the next
-<code>match-clause</code> is <var>R</var>; otherwise, it is <var>T</var>.</li>
+<li>P is the union of the types corresponding to the match patterns in the
+<code>match-pattern-list</code> of C, and</li>
+<li>N is the union of the types corresponding to the match patterns in the
+<code>match-pattern-list</code> of every unguarded <code>match-clause</code>
+that precedes C.</li>
 </ul>
-
+<p>
+Let T be the static type of the <code>match-target</code>. If the intersection
+of T and L is empty, then it is not possible for the
+<code>match-pattern-list</code> of C to match, and accordingly the statements in
+the statement-block of C are not reachable. If the <code>match-target</code> is
+a <code>variable-reference</code>, then the type of the referenced variable is
+narrowed to T &amp;<sub>ro</sub> L within the <code>match-guard</code>, if any,
+and the <code>statement-block</code> of C. If there is a
+<code>match-guard</code>, then the type narrowing described in <a
+href="#conditional_variable_type_narrowing">Conditional variable type
+narrowing</a> is in addition applied to the <code>statement-block</code>
+</p>
+<p>
+A <code>match-stmt</code> is <em>exhaustive</em> if and only if the static type
+of the <code>match-target</code> is a subtype of union of the type corresponding
+to the match patterns of the <code>match-pattern-list</code> of every unguarded
+match clause. A <code>match-stmt</code> that is exhaustive can complete normally
+only if at least one of its <code>statement-block</code>s can complete normally.
+</p>
+</section>
 </section>
 <section>
 <h3>Loops</h3>
@@ -8462,15 +9135,15 @@ result of calling c.iterator()</li>
 </ol>
 </li>
 <li>call i.next() resulting in a value n</li>
-<li>if n is nil, then terminate execution of the foreach statement</li>
+<li>if n is nil, then the execution of the foreach statement completes normally</li>
 <li>match typed-binding-pattern to n.value causing assignments to any variables
 that were created in typed-binding-pattern</li>
 <li>execute statement-block with the variable bindings from step 5 in scope; in the
 course of so doing
 <ol>
-<li>the execution of a break-stmt terminates execution of the foreach statement</li>
-<li>the execution of a continue-stmt causes execution to proceed immediately to
-step 3</li>
+<li>the execution of a break-stmt causes execution of the foreach statement to
+complete normally</li>
+<li>the execution of a continue-stmt causes a transfer of control to step 3</li>
 </ol>
 </li>
 <li>go back to step 3</li>
@@ -8505,9 +9178,9 @@ In more detail, a while statement executes as follows:
 statement;</li>
 <li>execute statement-block; in the course of so doing
 <ol>
-<li>the execution of a break-stmt results in termination of execution of the
-while statement</li>
-<li>the execution of a continue-stmt causes execution to proceed immediately to
+<li>the execution of a break-stmt results in the execution of the
+while statement completing normally</li>
+<li>the execution of a continue-stmt causes a transfer of control to
 step 1</li>
 </ol>
 </li>
@@ -8524,10 +9197,10 @@ The static type of <code>expression</code> must be a subtype of boolean.
 class="grammar">continue-stmt := <code>continue</code> <code>;</code>
 </pre>
 <p>
-A continue statement is only allowed if it is lexically within a
-while-stmt or a foreach-stmt. Executing a continue statement causes execution of
-the nearest enclosing while-stmt or foreach-stmt to jump to the end of the
-outermost statement-block in the while-stmt or foreach-stmt.
+A continue statement is only allowed if it is lexically within a while-stmt or a
+foreach-stmt. Execution a continue statement results in a transfer of control
+that causes the execution of the outermost statement-block in the nearest
+enclosing while-stmt or foreach-stmt to complete normally.
 </p>
 </section>
 <section>
@@ -8536,9 +9209,10 @@ outermost statement-block in the while-stmt or foreach-stmt.
 <pre class="grammar">break-stmt := <code>break</code> <code>;</code>
 </pre>
 <p>
-A break statement is only allowed if it is lexically within a
-while-stmt or a foreach-stmt. Executing a break statement causes the nearest
-enclosing while-stmt or foreach-stmt to terminate.
+A break statement is only allowed if it is lexically within a while-stmt or a
+foreach-stmt. Execution of a break statement results in a transfer of control
+that causes the execution of nearest enclosing while-stmt or foreach-stmt to
+complete normally.
 </p>
 </section>
 </section>
@@ -8656,24 +9330,24 @@ worker.
 <h4>On fail clause</h4>
 <pre
 class="grammar">stmt-with-on-fail := regular-compound-stmt on-fail-clause
-on-fail-clause := <code>on</code> <code>fail</code> typed-binding-pattern statement-block
+on-fail-clause := <code>on</code> <code>fail</code> [typed-binding-pattern] statement-block
 </pre>
 <p>
 A <code>stmt-with-on-fail</code> is executed by executing the
 <code>regular-compound-stmt</code>. A <code>check</code> expression or action,
 or a <code>fail</code> statement may cause control to transfer to the
-<code>on-fail-cause</code>. In this case, the <code>typed-binding-pattern</code>
-is matched to the associated error value, binding the variables occurring within
-the <code>typed-binding-pattern</code>; the <code>statement-block</code> is then
-executed with these bindings in scope. Otherwise, the
-<code>on-fail-clause</code> is not executed.
+<code>on-fail-cause</code>. If so, the <code>statement-block</code> is executed;
+otherwise the <code>statement-block</code> is not executed.
 </p>
 <p>
-The static type of the associated error value is determined from the static type
-of the relevant <code>check</code> expressions and actions, and
-<code>fail</code> statements. It is a compile error unless the match of the
-<code>typed-binding-pattern</code> with the associated error value is guaranteed
-to succeed by the static type of the associated error value.
+If there is a <code>typed-binding-pattern</code>, then it is matched to the
+associated error value, binding the variables occurring within the
+<code>typed-binding-pattern</code>; the <code>statement-block</code> is executed
+with these bindings in scope. The static type of the associated error value is
+determined from the static type of the relevant <code>check</code> expressions
+and actions, and <code>fail</code> statements. It is a compile error unless the
+match of the <code>typed-binding-pattern</code> with the associated error value
+is guaranteed to succeed by the static type of the associated error value.
 </p>
 </section>
 
@@ -8685,7 +9359,7 @@ retry-spec := [type-parameter] [ <code>(</code> arg-list <code>)</code> ]
 </pre>
 <p>
 The type-parameter in a retry-spec specifies a class, which must be a subtype of
-RetryManager&gt;F&lt;, where F is the failure type of the statement-block; this
+RetryManager&lt;F&gt;, where F is the failure type of the statement-block; this
 implies that the parameter type of the class's shouldRetry method must be a
 supertype of F. The arg-list in a retry-spec specifies parameters to be passed
 to the class's <code>init</code> method; as with <code>new</code>, the arg-list
@@ -9049,6 +9723,7 @@ other-decl :=
    | module-const-decl
    | module-enum-decl
    | module-xmlns-decl
+   | module-client-decl
    | annotation-decl
 </pre>
 <section>
@@ -9058,10 +9733,11 @@ other-decl :=
 class="grammar">import-decl := <code>import</code> [org-name <code>/</code>] module-name [<code>as</code> import-prefix] <code>;</code>
 import-prefix := module-prefix | <code>_</code>
 module-prefix := identifier | predeclared-prefix
-org-name := identifier
-module-name := identifier (<code>.</code> identifier)*
+org-name := import-identifier
+module-name := import-identifier (<code>.</code> import-identifier)*
+import-identifier := RestrictedIdentifier
 
-qualified-identifier := module-prefix <code>:</code> identifier
+qualified-identifier := module-prefix NoSpaceColon identifier
 </pre>
 <p>
 If org-name is omitted, it is defaulted from the organization of the importing
@@ -9096,6 +9772,7 @@ class="grammar">predeclared-prefix :=
    | <code>decimal</code>
    | <code>error</code>
    | <code>float</code>
+   | <code>function</code>
    | <code>future</code>
    | <code>int</code>
    | <code>map</code>
@@ -9202,12 +9879,16 @@ unsuccessful, terminates the program execution.
 Service objects support network interaction using remote methods and resource
 methods. Listeners provide the interface between the network and service
 objects. A listener object receives network messages from a remote process
-according to some protocol and translates the received messages into calls on
-the remote and resource methods of service objects that have been attached to
+according to some protocol and translates the received messages into remote
+methods calls or resource accesses of service objects that have been attached to
 the listener object. It is up to the listener object to determine how this
-translation happens; the type of the listener object constrains the type of a
-service that can be attached to the listener. (This constraint cannot yet be
-fully expressed by Ballerina's type system.)
+translation happens. A resource path segment may correspond to something that at
+the protocol level is not a string. For example, in HTTP a path segment is
+natively a sequence of bytes. In this case, the listener should be able to
+convert this native representation into a string, for example, by using UTF-8
+decoding. The type of the listener object constrains the type of a service that
+can be attached to the listener. (This constraint cannot yet be fully expressed
+by Ballerina's type system.)
 </p>
 <p>
 A service object's remote or resource method uses its return value to indicate
@@ -9291,7 +9972,7 @@ static type of the variable.
 <pre
 class="grammar">service-decl :=
    metadata [isolated-qual]
-   <code>service</code> [type-descriptor] [attach-point] <code>on</code> expression-list object-constructor-block
+   <code>service</code> [type-descriptor] [attach-point] <code>on</code> expression-list object-constructor-block [<code>;</code>]
 attach-point := absolute-resource-path | string-literal
 absolute-resource-path :=
    root-resource-path
@@ -9354,6 +10035,7 @@ fails.</li>
 </ol>
 </section>
 
+
 <section>
 <h4>Isolated inference</h4>
 
@@ -9374,7 +10056,10 @@ explicitly specified an <code>isolated</code> qualifier, then they all would
 meet the requirements for <a href="#isolated_functions">isolated functions</a>
 and isolated objects. If so, then the isolated bit of values resulting from them
 is set in the same way as if <code>isolated</code> qualifiers had been
-explicitly specified.
+explicitly specified. The analysis should not infer a function or method to be
+<code>isolated</code> if that would be inconsistent with an annotion supported
+by the implementation that provides control over which thread is used for a strand
+created for named-worker-decl or start-action.
 </p>
 <p>
 This inference is purely an optimization to improve service concurrency and is
@@ -9396,7 +10081,7 @@ class="grammar">function-defn :=
    [<code>public</code>] function-quals
    <code>function</code> identifier function-signature function-defn-body
 function-defn-body :=
-   block-function-body
+   block-function-body [<code>;</code>]
    | expr-function-body <code>;</code>
    | external-function-body <code>;</code>
 </pre>
@@ -9447,7 +10132,7 @@ class="grammar">module-class-defn :=
    metadata
    [<code>public</code>] class-type-quals <code>class</code> identifier <code>{</code>
       class-member*
-  <code>}</code>
+  <code>}</code> [<code>;</code>]
 class-type-quals := (<code>distinct</code> | <code>readonly</code> | isolated-qual | object-network-qual)*
 class-member :=
    object-field
@@ -9632,7 +10317,7 @@ the type-descriptor.
 <pre
 class="grammar">module-enum-decl :=
    metadata
-   [<code>public</code>] <code>enum</code> identifier <code>{</code> enum-member (<code>,</code> enum-member)* <code>}</code>
+   [<code>public</code>] <code>enum</code> identifier <code>{</code> enum-member (<code>,</code> enum-member)* <code>}</code> [<code>;</code>]
 enum-member := metadata identifier [<code>=</code> const-expr]
 </pre>
 <p>
@@ -9690,6 +10375,18 @@ href="#XML_namespace_declaration_statement">XML namespace declaration
 statement</a> section.
 </p>
 
+</section>
+
+<section>
+<h3>Module client declaration</h3>
+<pre
+class="grammar">module-client-decl := client-decl
+</pre>
+
+<p>
+The semantics of client-decl are described in the <a
+href="#client_declaration_statement">Client declaration statement</a> section.
+</p>
 </section>
 
 </section>
@@ -9883,8 +10580,8 @@ The available attachment points are described in the following table.
   </tr>
   <tr>
    <td>field</td>
-   <td>individual-field-descriptor, object-field-descriptor</td>
-   <td>type of mapping or object</td>
+   <td>individual-field-descriptor, member-type-descriptor, object-field-descriptor</td>
+   <td>type of mapping, list or object</td>
   </tr>
   <tr>
    <td>object field</td>
@@ -10114,7 +10811,7 @@ table.
 </tr>
 <tr>
 <td>Signed32</td>
-<td>-2,147,483,648‬ &#x2264; <em>v</em> &#x2264; 2,147,483,6487</td>
+<td>-2,147,483,648 &#x2264; <em>v</em> &#x2264; 2,147,483,647</td>
 </tr>
 <tr>
 <td>string</td>
@@ -10225,6 +10922,15 @@ The lang library consists of the following modules. With the exception of the
 <p>The <code>lang.float</code> module corresponds to basic type float.</p>
 
 <p class="langlib"><a href="./lib/float.bal" type="text/plain">float.bal</a></p>
+
+</section>
+
+<section>
+<h4 id="lang.function"><code>lang.function</code> module</h4>
+
+<p>The <code>lang.function</code> module corresponds to basic type function.</p>
+
+<p class="langlib"><a href="./lib/function.bal" type="text/plain">function.bal</a></p>
 
 </section>
 
@@ -10354,6 +11060,112 @@ more than one basic type..</p>
 </section>
 <section class="appendix">
 <h2 id="changes">B. Changes since previous releases</h2>
+<section>
+<h3>Summary of changes from 2022R3 to 2022R4</h3>
+<ol>
+<li>A <code>byte-array-literal</code> can construct a read-only value.</li>
+<li>An optional semi-colon is now allowed after top-level definitions and
+method definitions that are currentlty terminated by <code>}</code>.</li>
+<li>An <code>int:range</code> langlib function allows convenient iteration 
+over integer sequences with steps other than 1.</li>
+</ol>
+</section>
+<section>
+<h3>Summary of changes from 2022R2 to 2022R3</h3>
+<ol>
+<li>Client objects can declare resource methods, which can be accessed using new
+<code>client-resource-access-action</code> syntax. Resource methods are now part
+of the type of network interaction objects and can be specified in object type
+descriptors.</li>
+<li>The <code>isolated</code> feature can now be used to identify cases where
+a strand created by <code>start</code> or a named worker can be run safely on
+a separate thread.</li>
+<li>The variable declaration in an <code>on fail</code> clause is now
+optional.</li>
+<li>Query expressions producing xml values will now work properly when used as
+interpolated expressions in XML templates.</li>
+<li>Query expressions may be used to construct maps.</li>
+<li>Query expressions can now construct readonly values.</li>
+<li>Annotations are now allowed on members of tuple type descriptors.</li>
+<li>The <code>call</code> function has been added to <code>lang.function</code>
+to allow for dynamically calling a function.</li>
+<li>An <code>onGracefulStop</code> function has been added to
+<code>lang.runtime</code>.</li>
+<li>The grammar now allows an action such as a remote method call to occur
+inside a query.</li>
+<li>A <code>check</code> expression is now allowed as a statement, provided that
+its type is nil.</li>
+</ol>
+</section>
+
+<section>
+<h3>Summary of changes from 2022R1 to 2022R2</h3>
+<ol>
+<li>The <code>*</code>, <code>/</code> and <code>%</code> operators now allow
+operands to mix numeric types in specific cases: <code>*</code> allows the case
+where either operand is an <code>int</code>; <code>/</code> and <code>*</code>
+allow the case where the right operand is an <code>int</code>.</li>
+<li>It is no longer an error for a <code>panic-stmt</code> to be
+unreachable.</li>
+<li>The <code>toExpString</code> and <code>toFixedString</code>
+functions have been added to <code>lang.float</code>.</li>
+<li>The <code>padStart</code>, <code>padEnd</code>, <code>padZero</code>
+functions have been added to <code>lang.string</code>.</li>
+<li>The <code>quantize</code> function has been added to
+<code>lang.decimal</code>.</li>
+<li>The <code>some</code> and <code>every</code> functions have been added to
+<code>lang.array</code>.</li>
+<li>The <code>round</code> function in <code>lang.float</code> and
+<code>lang.decimal</code> now takes an optional argument controlling the number
+of digits after the decimal point.</li>
+<li>The length of an array type is allowed to be <code>*</code> only when it is
+the outermost array and there is an initializer from which it can be
+inferred.</li>
+<li>A list constructor can use <code>...E</code> as in an argument list.</li>
+</ol>
+</section>
+<section>
+<h3>Summary of changes from 2021R1 to 2022R1</h3>
+<ol>
+<li>Maps are required to preserve insertion order.</li>
+<li>The static typing rules for <code>==</code> and <code>!=</code> have been
+relaxed to require only one operand to be <code>anydata</code>.</li>
+<li>The identifiers of organizations and modules refererenced in import
+declarations are restricted to ASCII alpha-numberic characters with underscores
+separating words.</li>
+<li>Floating pointer literals are not allowed to end with a trailing dot.</li>
+<li>No white space is allowed within a qualified name.</li>
+<li>Add the <code>!is</code> operator.</li>
+<li>Allow <code>null</code> as a type descriptor.</li>
+<li>An object type is not allowed to include a class with private members.</li>
+<li>Conditional variable type narrowing from the condition of a while statement
+is applied to the body of a while statement.</li>
+<li>Conditional variable type narrowing is now done for a <code>where</code> clause in a
+query expression or action.</li>
+<li>A function call is only allowed with an expression in a match-guard when
+there is no possibility that it can mutate the value being matched.</li>
+<li>The interpretation of multiple dimensions in an array-type-descriptor has
+been changed to make the order of dimensions in the type-descriptor consistent
+with the order of dimensions in an expression that accesses the array.</li>
+<li>The static type of an expression now has singleton type when all its
+subexpressions have singleton type.</li>
+<li>Unreachable statements are now an error.</li>
+<li>Conditional variable type narrowing is now smarter. In particular, the types
+of variables can be narrowed in statements following an <code>if</code>
+statement that contains <code>return</code>.</li>
+<li>Variable type narrowing in a match statement has been improved to work
+better for types that are partially readonly.</li>
+<li>Many expressions now perform nil lifting.</li>
+<li>The rules for determining the basic type of a numeric literal have been
+revised to work better in the case where the contextually expected type allows
+two of the three possible numeric basic types.</li>
+<li>Restrictions have been introduced on assigning within a loop to a variable
+whose type has been narrowed outside the loop.</li>
+<li>Optional fields can be accessed using the <code>.</code> operator as well as
+the <code>?.</code> operator, when the type of the accessed field does not allow
+nil.</li>
+</ol>
+</section>
 <section>
 <h3>Summary of changes from 2020R1 to 2021R1</h3>
 <ol>

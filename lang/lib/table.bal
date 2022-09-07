@@ -14,6 +14,12 @@
 // specific language governing permissions and limitations
 // under the License.
 
+# A type parameter that is a subtype of `any|error`.
+# Has the special semantic that when used in a declaration
+# all uses in the declaration must refer to same type.
+@typeParam
+type Type any|error;
+
 # A type parameter that is a subtype of `map<any|error>`.
 # Has the special semantic that when used in a declaration
 # all uses in the declaration must refer to same type.
@@ -107,7 +113,7 @@ public isolated function filter(table<MapType> key<KeyType> t, @isolatedParam fu
 # + func - combining function
 # + initial - initial value for the first argument of combining function `func`
 # + return - result of combining the members of `t` using `func`
-public isolated function reduce(table<MapType> t, @isolatedParam function(MapType1 accum, MapType val) returns MapType1 func, MapType1 initial) returns MapType1 = external;
+public isolated function reduce(table<MapType> t, @isolatedParam function(Type accum, MapType val) returns Type func, Type initial) returns Type = external;
 
 # Removes a member of a table.
 #

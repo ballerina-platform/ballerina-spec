@@ -22,7 +22,7 @@ public isolated function sleep(decimal seconds) = external;
 
 # A listener that is dynamically registered with a module.
 public type DynamicListener object {
-   public function 'start() returns error?;
+   public function start() returns error?;
    public function gracefulStop() returns error?;
    public function immediateStop() returns error?;
 };
@@ -54,3 +54,14 @@ public type StackFrame readonly & object {
 # + return - an array representing the current call stack
 # The first member of the array represents the top of the call stack.
 public isolated function getStackTrace() returns StackFrame[] = external;
+
+# Type of the function passed to `onGracefulStop.
+public type StopHandler function() returns error?;
+
+# Registers a function that will be called during graceful shutdown.
+# A call to `onGracefulStop` will result in one call to the handler function
+# that was passed as an argument; the handler functions will be called
+# after calling `gracefulStop` on all registered listeners,
+# in reverse order of the corresponding calls to `onGracefulStop`.
+# + handler - function to be called
+public isolated function onGracefulStop(StopHandler handler) = external;
