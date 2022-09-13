@@ -58,7 +58,8 @@ GitHub repository where this specification is maintained.
 <p><a href="#actions_statements">7. Actions and statements</a></p>
 <p><a href="#module_level">8. Module-level declarations</a></p>
 <p><a href="#metadata">9. Metadata</a></p>
-<p><a href="#lang_library">10. Lang library</a></p>
+<p><a href="#data_tags">10. Data tags</a></p>
+<p><a href="#lang_library">11. Lang library</a></p>
 <p><a href="#references">A. References</a></p>
 <p><a href="#changes">B. Changes since previous versions</a></p>
 <p><a href="#planned_future_functionality">C. Planned future functionality</a></p>
@@ -349,17 +350,18 @@ Values are of four kinds, each corresponding to a kind of basic type:
 <ul>
 <li>simple values, like booleans and floating point numbers, which are not
 constructed from other values;</li>
-<li>structured values, like mappings and lists, which contain other values;</li>
-<li>sequence values, which combine aspects of simple values and structured
-values;</li>
-<li>behavioral values, like functions and objects, which are not just data</li>
+<li>structured values, like mappings and lists, which contain values of arbitrary basic types;</li>
+<li>sequence values, which consists of sequences of values of the same basic type;</li>
+<li>tagged data values, used for well-known data types with their own
+specialized string syntax;</li>
+<li>behavioral values, like functions and objects, which are not just data.</li>
 </ul>
 <p>
 There is a fundamental distinction between values that have a <em>storage
 identity</em> and values that do not. A value that has storage identity has an
 identity that comes from the location where the value is stored. All structural
-and behavioural values have a storage identity, whereas all simple values do
-not. Storage identity for sequence values is more complicated and will be
+and behavioural values have a storage identity, whereas all simple values and tagged data values
+do not. Storage identity for sequence values is more complicated and will be
 explained in the section on sequence values.
 </p>
 <p>
@@ -397,13 +399,15 @@ the shape does not consider representation details that do not affect the
 mathematical value being represented.
 </p>
 <p>
-A value is <em>plain data</em> if it is a simple value, a sequence value or a
+A value is <em>plain data</em> if it is a simple value, a sequence value,
+a tagged data value or a
 structured value that does not contain a behavioral value at any depth.
 More precisely, a value is defined to be <em>plain data</em> if it is
 </p>
 <ul>
 <li>a simple value,</li>
-<li>a sequence value, or</li>
+<li>a sequence value,</li>
+<li>a tagged data value, or</li>
 <li>a structured value, all of whose members are also plain data.</li>
 </ul>
 <p>
@@ -744,6 +748,7 @@ class="grammar">type-descriptor :=
    simple-type-descriptor
    | sequence-type-descriptor
    | structured-type-descriptor
+   | tagged-data-type-descriptor
    | behavioral-type-descriptor
    | other-type-descriptor
 </pre>
@@ -1866,6 +1871,55 @@ table in order and the iteration completion value is always nil.
 </section>
 </section>
 <section>
+<h3>Tagged data values</h3>
+
+<p>
+Tagged data types are used for well-known data types that are not
+application-specific, but are widely supported across multiple protocols and
+programming languages. Each of these data types has its own conventional string
+syntax. The use of tagged data types allows programs to work with these data
+types using their normal string syntax, while distinguishing the values as
+belonging to a specific tagged data type.
+</p>
+<p>
+Data tags are defined either by this specification or the Ballerina platform. For
+each such data tag, there is a basic type. The definition of a data tag
+specifies the set of values belonging to corresponding basic type. A tagged data
+value is a value belonging to one of these basic types. Every tagged data value
+is plain data, immmutable and has no storage identity. It is also atomic, in the
+sense that it contains no references to other values.
+</p>
+<p>
+The definition of a data tag defines:
+</p>
+<ul>
+<li>the tag; this is an unqualified identifier that is used with the
+tagged-data-template-expr to construct</li>
+<li>the set of values that its corresponding basic basic type consists of</li>
+<li>an abstract function mapping from strings to values</li>
+<li>an abstract function mapping from values to strings</li>
+<li>a library module; method call expressions on values of the basic type will
+call functions in this module</li>
+</ul>
+<p>
+Most of the functionality of a tagged data type is provided by the library
+module.
+</p>
+
+<pre
+class="grammar">tagged-data-type-descriptor := qualified-identifier
+</pre>
+<p>
+The qualified-identifier refers to a type that is defined in a module that is
+part of the language library or standard library.
+</p>
+<p>
+In this version of the Ballerina language, only the data tag <code>re</code>
+is defined, with associated lang library module <code>lang.regexp</code>.
+</p>
+
+</section>
+<section>
 <h3>Behavioral values</h3>
 
 <pre
@@ -2896,9 +2950,17 @@ value that is plain data. The <code>anydata</code> type can thus be defined as:
 
 <pre
 >  () | boolean | int | float | decimal
-    | string | xml
+    | string | xml | regexp:RegExp
     | anydata[] | map&lt;anydata&gt; | table&lt;map&lt;anydata&gt;&gt;
 </pre>
+
+<p>
+In the above, <code>regexp</code> refers to the lang library module
+<code>lang.regexp</code>. Since there is only one tagged data type defined in
+this version of Ballerina, all tagged data values belong to
+<code>regexp:RegExp</code>.
+</p>
+
 </section>
 <section>
 <h4>JSON types</h4>
@@ -3519,6 +3581,16 @@ The following table summarizes the result of ToString(v,style) for each basic ty
    </td>
   </tr>
   <tr>
+   <td>tagged data type
+   </td>
+   <td><code>re`xyz`</code>
+   </td>
+   <td><code>`xyz`</code>
+   </td>
+   <td><code>xyz</code>
+   </td>
+  </tr>
+  <tr>
    <td rowspan="2">array
    </td>
    <td colspan="3"><code>[<var>X</var>,<var>Y</var>]</code>
@@ -3940,9 +4012,7 @@ same identifier in the same symbol space also with block-scope.
 <pre
 class="grammar">expr-only := 
    literal
-   | string-template-expr
-   | xml-template-expr
-   | raw-template-expr
+   | template-expr
    | structural-constructor-expr
    | object-constructor-expr
    | new-expr
@@ -4337,8 +4407,7 @@ its subexpressions are isolated (regardless of its static type):
 <li><code>list-constructor-expr</code></li>
 <li><code>table-constructor-expr</code></li>
 <li><code>mapping-constructor-expr</code></li>
-<li><code>xml-template-expr</code></li>
-<li><code>raw-template-expr</code></li>
+<li><code>template-expr</code></li>
 <li><code>type-cast-expr</code></li>
 <li><code>checking-expr</code></li>
 <li><code>trap-expr</code></li>
@@ -4377,9 +4446,7 @@ different types of number; there are no implicit conversions.
 <pre
 class="grammar">const-expr := 
    literal
-   | string-template-expr
-   | xml-template-expr
-   | raw-template-expr
+   | template-expr
    | structural-constructor-expr
    | constant-reference-expr
    | type-cast-expr
@@ -4517,6 +4584,14 @@ BacktickDollarsSafeChar :=  <code>$</code>+ ^ ( <code>{</code> | <code>`</code> 
 Dollar := <code>$</code>
 </pre>
 
+<pre
+class="grammar">template-expr := 
+   string-template-expr
+   | xml-template-expr
+   | tagged-data-template-expr
+   | raw-template-expr
+</pre>
+
 <section>
 <h4>String template expression</h4>
 
@@ -4593,6 +4668,19 @@ An xml-template-expr occurring within a const-expr will construct an xml value
 that has its read-only bit on.
 </p>
 </section>
+
+<section>
+<h4>Tagged data template expression</h4>
+
+<pre
+class="grammar">tagged-data-template-expr := identifier BacktickString
+</pre>
+<p>
+The identifier must defined as a data tag by this specification or the Ballerina
+platform.
+</p>
+</section>
+
 
 <section>
 <h4>Raw template expression</h4>
@@ -10736,8 +10824,123 @@ of the name to which the documentation string is attached.
 
 </section>
 </section>
+
 <section>
-<h2 id="lang_library">10. Lang library</h2>
+<h2 id="data_tags">10. Data tags</h2>
+<section>
+<h3>Regular expressions</h3>
+
+<p>
+The <code>re</code> tag is used for regular expressions. The lang library module
+for the corresponding basic type is <code>lang.regexp</code>.
+</p>
+
+<p>
+The syntax of regular expressions is defined by the production <code>RegExp</code>.
+</p>
+
+<pre
+class="grammar">RegExp := ReDisjunction
+
+ReDisjunction := ReSequence (<code>|</code> ReSequence)*
+ReSequence := ReTerm*
+ReTerm :=
+   ReAtom [ReQuantifier]
+   | ReAssertion
+ReAssertion := <code>^</code> | <code>$</code>
+
+ReQuantifier := ReBaseQuantifier [<code>?</code>]
+
+ReBaseQuantifier :=
+   <code>*</code>
+  | <code>+</code>
+  | <code>?</code>
+  | <code>{</code> Digit+ [<code>,</code> Digit*] <code>}</code>
+
+ReAtom :=
+   ReLiteralChar
+   | ReEscape
+   | <code>.</code>
+   | <code>[</code> [<code>^</code>] [ReCharSet] <code>]</code> 
+   | <code>(</code> [<code>?</code> ReFlagsOnOff <code>:</code>] ReDisjunction <code>)</code>
+
+ReLiteralChar := ^ ReSyntaxChar
+
+ReSyntaxChar :=
+  <code>^</code> | <code>$</code> | <code>\</code> | <code>.</code> | <code>*</code> | <code>+</code> | <code>?</code>
+  | <code>(</code> | <code>)</code> | <code>[</code> | <code>]</code> | <code>{</code> | <code>}</code> | <code>|</code>
+
+ReEscape :=
+   NumericEscape
+   | ControlEscape
+   | ReQuoteEscape
+   | ReUnicodePropertyEscape
+   | ReSimpleCharClassEscape
+
+ReQuoteEscape := <code>\</code> ReSyntaxChar
+ControlEscape := <code>\r</code> | <code>\n</code> | <code>\t</code>
+
+ReSimpleCharClassEscape := <code>\</code> ReSimpleCharClassCode
+
+ReSimpleCharClassCode := <code>d</code> | <code>D</code> | <code>s</code> | <code>S</code> | <code>w</code> | <code>W</code>
+
+ReUnicodePropertyEscape := <code>\</code> (<code>p</code> | <code>P</code>) <code>{</code>ReUnicodeProperty <code>}</code>
+
+ReUnicodeProperty :=  ReUnicodeScript | ReUnicodeGeneralCategory
+
+ReUnicodeScript := <code>sc=</code> ReUnicodePropertyValue
+
+ReUnicodePropertyValue := ReUnicodePropertyValueChar+
+
+ReUnicodePropertyValueChar := AsciiLetter | Digit | <code>_</code>
+
+ReUnicodeGeneralCategory := [<code>gc=</code>] ReUnicodeGeneralCategoryName
+
+ReCharSetAtom :=
+  ReCharSetAtomNoDash
+  | <code>-</code>
+
+ReCharSetAtomNoDash :=
+  ReCharSetLiteralChar
+  | ReEscape
+  | <code>\-</code>
+
+ReCharSetLiteralChar := ^ (<code>\</code> | <code>]</code> | <code>-</code>)
+
+ReCharSet :=
+  ReCharSetAtom
+  | ReCharSetRange [ReCharSet]
+  | ReCharSetAtom ReCharSetNoDash
+
+ReCharSetRange := ReCharSetAtom <code>-</code> ReCharSetAtom
+
+ReCharSetNoDash :=
+  ReCharSetAtom
+  | ReCharSetRangeNoDash [ReCharSet]
+  | ReCharSetAtomNoDash ReCharSetNoDash
+  
+ReCharSetRangeNoDash := ReCharSetAtomNoDash <code>-</code> ReCharSetAtom
+
+ReFlagsOnOff := ReFlags [<code>-</code> ReFlags]
+ReFlags := ReFlag*
+ReFlag :=
+  ReMultilineFlag
+  | ReDotAllFlag
+  | ReIgnoreCaseFlag
+  | ReCommentFlag
+
+ReMultilineFlag := <code>m</code>
+ReDotAllFlag := <code>s</code>
+ReIgnoreCaseFlag := <code>i</code>
+ReCommentFlag := <code>x</code>
+</pre>
+
+</section>
+
+</section>
+
+<section>
+<h2 id="lang_library">11. Lang library</h2>
 
 <p>
 Modules in the <code>ballerina</code> organization with a module name starting
@@ -10967,6 +11170,16 @@ The lang library consists of the following modules. With the exception of the
 <p>The <code>lang.object</code> module corresponds to basic type object.</p>
 
 <p class="langlib"><a href="./lib/object.bal" type="text/plain">object.bal</a></p>
+
+</section>
+
+<section>
+<h4 id="lang.regexp"><code>lang.regexp</code> module</h4>
+
+<p>The <code>lang.regexp</code> module corresponds to tagged data type with tag
+<code>re</code>.</p>
+
+<p class="langlib"><a href="./lib/regexp.bal" type="text/plain">regexp.bal</a></p>
 
 </section>
 
