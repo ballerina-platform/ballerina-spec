@@ -4049,3 +4049,457 @@ Description: Test integer remainder panic at module-level.
 Labels: multiplicative-expr, int:MIN_VALUE, DecimalNumber, unary-minus
 
 int a = 5 % 0; // @panic remainder by zero
+
+Test-Case: output
+Description: Test remainder operation for different float values.
+Labels: multiplicative-expr, float, float:NaN, float:Infinity, FloatTypeSuffix, DecimalFloatingPointNumber, unary-minus
+
+public function init() {
+     float a = float:NaN;
+     float b = 2.5E+17;
+     float c = b % a;
+     io:println(c); // @output NaN
+     io:println(2.5E+17 % float:NaN); // @output NaN
+
+     a = 1.423223E6;
+     b = float:NaN;
+     c = a % b;
+     io:println(c); // @output NaN
+     io:println(1.423223E6 % float:NaN); // @output NaN
+
+     a = float:Infinity;
+     b = 1.423223E6;
+     c = a % b;
+     io:println(c); // @output NaN
+     io:println(float:Infinity % 1.423223E6); // @output NaN
+
+     a = 25.E1742f;
+     b = 0.0f;
+     c = a % b;
+     io:println(c); // @output NaN
+     io:println(25.E1742f % 0.0f); // @output NaN
+
+     a = 25.E17f;
+     b = float:Infinity;
+     c = a % b;
+     io:println(c); // @output 2.5E18
+     io:println(25.E17f % float:Infinity); // @output 2.5E18
+
+     a = 25.E17f;
+     b = 25.E17f;
+     c = a % b;
+     io:println(c); // @output 0
+     io:println(25.E17f % 25.E17f); // @output 0
+
+     a = -25.E17f;
+     b = 25.E17f;
+     c = a % b;
+     io:println(c); // @output -0.0
+     io:println(-25.E17f % 25.E17f); // @output -0.0
+
+     a = 25.E17f;
+     b = -25.E17f;
+     c = a % b;
+     io:println(c); // @output 0.0
+     io:println(25.E17f % -25.E17f); // @output 0.0
+
+     a = 25.78f;
+     b = -5.34f;
+     c = a % b;
+     io:println(c); // @output 4.420000000000002
+     io:println(25.78f % -5.34f); // @output 4.420000000000002
+
+     a = -25.78f;
+     b = 5.34f;
+     c = a % b;
+     io:println(c); // @output -4.420000000000002
+     io:println(-25.78f % 5.34f); // @output -4.420000000000002
+
+     a = 0.0f;
+     b = 0.0f;
+     c = a % b;
+     io:println(c); // @output NaN
+     io:println(0.0f % 0.0f); // @output NaN
+
+     a = -0.0f;
+     b = 0.0f;
+     c = a % b;
+     io:println(c); // @output NaN
+     io:println(-0.0f % 0.0f); // @output NaN
+}
+
+Test-Case: output
+Description: Test remainder operation for different nillable float values.
+Labels: multiplicative-expr, float, float:NaN, float:Infinity, FloatTypeSuffix, DecimalFloatingPointNumber, optional-type, numeric-nil-lifting, nil-literal, value:toBalString, unary-minus
+
+public function init() {
+     float? a = float:NaN;
+     float? b = 2.5E+17;
+     float? c = b % a;
+     io:println(c); // @output NaN
+     var d = b % a;
+     io:println(d); // @output NaN
+
+     a = 1.423223E6;
+     b = float:NaN;
+     c = a % b;
+     io:println(c); // @output NaN
+     var e = a % b;
+     io:println(e); // @output NaN
+
+     a = float:Infinity;
+     b = 1.423223E6;
+     c = a % b;
+     io:println(c); // @output NaN
+     var f = a % b;
+     io:println(f); // @output NaN
+
+     a = 25.E1742f;
+     b = 0.0f;
+     c = a % b;
+     io:println(c); // @output NaN
+     var g = a % b;
+     io:println(g); // @output NaN
+
+     a = 25.E17f;
+     b = float:Infinity;
+     c = a % b;
+     io:println(c); // @output 2.5E18
+     var h = a % b;
+     io:println(h); // @output 2.5E18
+
+     a = 25.E17f;
+     b = 25.E17f;
+     c = a % b;
+     io:println(c); // @output 0
+     var j = a % b;
+     io:println(j); // @output 0
+
+     a = -25.E17f;
+     b = 25.E17f;
+     c = a % b;
+     io:println(c); // @output -0.0
+     var k = a % b;
+     io:println(k); // @output -0.0
+
+     a = 25.E17f;
+     b = -25.E17f;
+     c = a % b;
+     io:println(c); // @output 0.0
+     var i = a % b;
+     io:println(i); // @output 0.0
+
+     a = 25.78f;
+     b = -5.34f;
+     c = a % b;
+     io:println(c); // @output 4.420000000000002
+     var l = a % b;
+     io:println(l); // @output 4.420000000000002
+
+     a = -25.78f;
+     b = 5.34f;
+     c = a % b;
+     io:println(c); // @output -4.420000000000002
+     var m = a % b;
+     io:println(m); // @output -4.420000000000002
+
+     a = 0.0f;
+     b = 0.0f;
+     c = a % b;
+     io:println(c); // @output NaN
+     var n = a % b;
+     io:println(n); // @output NaN
+
+     a = -0.0f;
+     b = 0.0f;
+     c = a % b;
+     io:println(c); // @output NaN
+     var z = a % b;
+     io:println(z); // @output NaN
+
+     a = 25.78f;
+     b = ();
+     c = a % b;
+     io:println(c.toBalString()); // @output ()
+     var y = a % b;
+     io:println(y.toBalString()); // @output ()
+
+     a = ();
+     b = 5.34f;
+     c = a % b;
+     io:println(c.toBalString()); // @output ()
+     var q = a % b;
+     io:println(q.toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test remainder operation for different decimal values.
+Labels: multiplicative-expr, decimal, DecimalTypeSuffix, DecimalFloatingPointNumber, unary-minus
+
+public function init() {
+     decimal a = 25.E1742d;
+     decimal b = 0.0d;
+     decimal c = a % b;
+     io:println(c); // @output NaN
+     io:println(25.E1742d % 0.0d); // @output NaN
+
+     a = 25.E17d;
+     b = 25.E8632d;
+     c = a % b;
+     io:println(c); // @output 2.5E18
+     io:println(25.E17d % 25.E8632d); // @output 2.5E18
+
+     a = 25.E17d;
+     b = 25.E17d;
+     c = a % b;
+     io:println(c); // @output 0
+     io:println(25.E17d % 25.E17d); // @output 0
+
+     a = -25.1E17d;
+     b = 25.1E17d;
+     c = a % b;
+     io:println(c); // @output 0
+     io:println(-25.1E17d % 25.1E17d); // @output 0
+
+     a = 25.E17d;
+     b = -25.E17d;
+     c = a % b;
+     io:println(c); // @output 0.0
+     io:println(25.E17d % -25.E17d); // @output 0.0
+
+     a = 25.78d;
+     b = -5.34d;
+     c = a % b;
+     io:println(c); // @output 4.42
+     io:println(25.78d % -5.34d); // @output 4.42
+
+     a = -25.78d;
+     b = 5.34d;
+     c = a % b;
+     io:println(c); // @output -4.42
+     io:println(-25.78d % 5.34d); // @output -4.42
+
+     a = 0.0d;
+     b = 0.0d;
+     c = a % b;
+     io:println(c); // @output NaN
+     io:println(0.0d % 0.0d); // @output NaN
+
+     a = -0.0d;
+     b = 0.0d;
+     c = a % b;
+     io:println(c); // @output NaN
+     io:println(-0.0d % 0.0d); // @output NaN
+}
+
+Test-Case: output
+Description: Test remainder operation for different nilable decimal values.
+Labels: multiplicative-expr, decimal, DecimalTypeSuffix, DecimalFloatingPointNumber, optional-type, numeric-nil-lifting, nil-literal, value:toBalString, unary-minus
+
+public function init() {
+     decimal? a = 25.E1742d;
+     decimal? b = 0.0d;
+     decimal? c = a % b;
+     io:println(c); // @output NaN
+
+     a = 25.E17d;
+     b = 25.E8632d;
+     c = a % b;
+     io:println(c); // @output 2.5E18
+
+     a = 25.E17d;
+     b = 25.E17d;
+     c = a % b;
+     io:println(c); // @output 0
+
+     a = -25.1E17d;
+     b = 25.1E17d;
+     c = a % b;
+     io:println(c); // @output 0
+
+     a = 25.E17d;
+     b = -25.E17d;
+     c = a % b;
+     io:println(c); // @output 0.0
+
+     a = 25.78d;
+     b = -5.34d;
+     c = a % b;
+     io:println(c); // @output 4.42
+
+     a = -25.78d;
+     b = 5.34d;
+     c = a % b;
+     io:println(c); // @output -4.42
+
+     a = 0.0d;
+     b = 0.0d;
+     c = a % b;
+     io:println(c); // @output NaN
+
+     a = -0.0d;
+     b = 0.0d;
+     c = a % b;
+     io:println(c); // @output NaN
+
+     a = 25.78d;
+     b = ();
+     c = a % b;
+     io:println(c.toBalString()); // @output ()
+
+     a = ();
+     b = 5.34d;
+     c = a % b;
+     io:println(c.toBalString()); // @output ()
+}
+
+
+Test-Case: output
+Description: Test remainder operation for user-defined subtypes of float.
+Labels: multiplicative-expr, float, float-literal, module-type-defn
+
+type Floats -2.0f|-1.0f|0.0f|1.0f|2.0f|-0.0f;
+
+public function init() {
+    Floats a = 1.0;
+    Floats b = 2.0;
+    float c = a % a;
+
+    float d = a % b;
+
+    io:println(c); // @output 0.0
+    io:println(a % a); // @output 0.0
+    io:println(d); //@output 1.0
+    io:println(a % b); // @output 1.0
+
+    io:println(b % a); // @output 0.0
+    io:println(b % b); // @output 0.0
+}
+
+Test-Case: output
+Description: Test remainder operation for user-defined subtypes of decimal.
+Labels: multiplicative-expr, decimal, decimal-literal, module-type-defn
+
+type Decimals -2.0d|-1.0d|0.0d|1.0d|2.0d;
+
+public function init() {
+    Decimals a = 1.0d;
+    Decimals b = 2.0d;
+    decimal c = a % a;
+    decimal d = a % b;
+
+    io:println(a % a); // @output 0.0
+    io:println(c); // @output 0.0
+    io:println(a % b); // @output 1.0
+    io:println(d); // @output 1.0
+
+    io:println(b % a); // @output 0.0
+    io:println(b % b); // @output 0.0
+}
+
+Test-Case: output
+Description: Test remainder operation for union types of user-defined subtypes of float.
+Fail-Issue: ballerina-platform/ballerina-lang#33265
+Labels: multiplicative-expr, float-literal, module-type-defn, module-const-decl, union-type, float, FloatTypeSuffix
+
+const A = 1.0f;
+const B = 2.0f;
+
+type Floats1 -2.0f|-1.0f|0.0f|1.0f|2.0f;
+
+type Floats2 A|B;
+
+type Floats3 Floats1|Floats2;
+
+public function init() {
+    Floats2 a = 1.0;
+    B b = 2.0;
+    Floats1|Floats2 c = 2.0f;
+    float|Floats1 d = 20f;
+
+    io:println(a % b); // @output 1.0
+    io:println(a % c); // @output 1.0
+
+    io:println(b % c); // @output 0
+
+    io:println(a % d); // @output 1.0
+    io:println(d % a); //@output 0
+}
+
+Test-Case: output
+Description: Test remainder operation for union types of user-defined subtypes of decimal.
+Fail-Issue: ballerina-platform/ballerina-lang#33266
+Labels: multiplicative-expr, decimal-literal, module-type-defn, module-const-decl, union-type, decimal, DecimalTypeSuffix
+
+const A = 1.0d;
+const B = 2.0d;
+
+type Decimals1 -2.0d|-1.0d|0.0d|1.0d|2.0d;
+
+type Decimals2 A|B;
+
+type Decimals3 Decimals1|Decimals2;
+
+public function init() {
+    Decimals2 a = 1.0;
+    Decimals2 b = 2.0;
+    Decimals1|Decimals2 c = 2.0d;
+    decimal|Decimals1 d = 20.0d;
+
+    io:println(a % b); // @output 1.0
+    io:println(a % c); // @output 1.0
+
+    io:println(b % c); // @output 0
+
+    io:println(a % d); // @output 1.0
+    io:println(d % a); //@output 0
+}
+
+Test-Case: output
+Description: Test remainder operation for user-defined nilable subtypes of float.
+Fail-Issue: ballerina-platform/ballerina-lang#31701
+Labels: multiplicative-expr, float-literal, module-type-defn, float, FloatTypeSuffix, optional-type
+
+type Floats -2.0f|-1.0f|0.0f|1.0f|2.0f;
+
+public function init() {
+    Floats? a = 1.0;
+    Floats? b = 2.0;
+    float? c = a % a;
+    float? d = a % b;
+
+    io:println(c); // @output 0
+    io:println(a % a); // @output 0
+    io:println(d); //@output 1.0
+    io:println(a % b); // @output 1.0
+
+    io:println(b % a); // @output 0
+    io:println(b % b); // @output 0
+
+    a = -0.0;
+    b = +0.0;
+    Floats? e = 2.0f;
+    io:println(e % a); // @output NaN
+    io:println(e % b); // @output NaN
+}
+
+Test-Case: output
+Description: Test remainder operation for user-defined nilable subtypes of decimal.
+Fail-Issue: ballerina-platform/ballerina-lang#31701
+Labels: multiplicative-expr, decimal-literal, module-type-defn, decimal, DecimalTypeSuffix, optional-type
+
+type Decimals -2.0d|-1.0d|0.0d|1.0d|2.0d;
+
+public function main() {
+    Decimals? a = 1.0d;
+    Decimals? b = 2.0d;
+    decimal? c = a % a;
+    decimal? d = a % b;
+
+    io:println(a % a); // @output 0
+    io:println(c); // @output 0
+    io:println(a % b); // @output 1.0
+
+    io:println(b % a); // @output 0
+    io:println(b % b); // @output 0
+}
