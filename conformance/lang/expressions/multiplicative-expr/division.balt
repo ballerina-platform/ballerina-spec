@@ -4033,3 +4033,859 @@ Description: Test integer division panic at module-level.
 Labels: multiplicative-expr, int:MIN_VALUE, DecimalNumber, unary-minus
 
 int a = int:MIN_VALUE / -1; // @panic integer overflow on division
+
+Test-Case: output
+Description: Test division scenarios for different decimal values.
+Labels: multiplicative-expr, DecimalFloatingPointNumber, decimal, DecimalTypeSuffix, unary-minus
+
+public function init() {
+     decimal a = 2.5E-17d;
+     decimal b = 2.5E+17d;
+     decimal c = b / a;
+     io:println(c); // @output 1E+34
+     io:println(2.5E+17d / 2.5E-17d); // @output 1E+34
+
+     a = 1.423223E6d;
+     b = 2.34413E2d;
+     c = a / b;
+     io:println(c); // @output 6071.433751541083472333019073174269
+     io:println(1.423223E6d / 2.34413E2d); // @output 6071.433751541083472333019073174269
+
+     a = 25.0E1742d;
+     b = 1.0d;
+     c = a / b;
+     io:println(c); // @output 2.5E+1743
+     io:println(25.0E1742d / 1.0d); // @output 2.5E+1743
+
+     a = 25.0E1742d;
+     b = 0.0d;
+     c = a / b;
+     io:println(c); // @output Infinity
+     io:println(25.0E1742d / 0.0d); // @output Infinity
+
+     a = 25.0E17d;
+     b = 0.9E-10d;
+     c = a / b;
+     io:println(c); // @output 27777777777777777777777777777.77778
+     io:println(25.0E17d / 0.9E-10d); // @output 27777777777777777777777777777.77778
+
+     a = -25.0E17d;
+     b = 0.9E-10d;
+     c = a / b;
+     io:println(c); // @output -27777777777777777777777777777.77778
+     io:println(-25.0E17d / 0.9E-10d); // @output -27777777777777777777777777777.77778
+
+     a = 17.0E12d;
+     b = 0.0d;
+     c = a / b;
+     io:println(c); // @output Infinity
+     io:println(17.0E12d / 0.0d); // @output Infinity
+
+     a = -17.0E12d;
+     b = 0.0d;
+     c = a / b;
+     io:println(c); // @output -Infinity
+     io:println(-17.0E12d / 0.0d); // @output -Infinity
+
+     a = 11.0E12d;
+     b = -0.0d;
+     c = a / b;
+     io:println(c); // @output Infinity
+     io:println(11.0E12d / -0.0d); // @output Infinity
+
+     a = 17.0E1290d;
+     b = 13.0E1521d;
+     c = a / b;
+     io:println(c); // @output 1.307692307692307692307692307692308E-231
+     io:println(17.0E1290d / 13.0E1521d); // @output 1.307692307692307692307692307692308E-231
+
+     a = 0.0d;
+     b = 0.0d;
+     c = a / b;
+     io:println(c); // @output NaN
+     io:println(0.0d / 0.0d); // @output NaN
+
+     a = -0.0d;
+     b = 0.0d;
+     c = a / b;
+     io:println(c); // @output NaN
+     io:println(-0.0d / 0.0d); // @output NaN
+}
+
+Test-Case: output
+Description: Test division scenarios for different nillable decimal values.
+Labels: multiplicative-expr, DecimalFloatingPointNumber, decimal, DecimalTypeSuffix, optional-type, numeric-nil-lifting, unary-minus, nil-literal, value:toBalString
+
+public function init() {
+     decimal? a = 2.5E-17d;
+     decimal? b = 2.5E+17d;
+     decimal? c = b / a;
+     io:println(c); // @output 1E+34
+
+     a = 1.423223E6d;
+     b = 2.34413E2d;
+     c = a / b;
+     io:println(c); // @output 6071.433751541083472333019073174269
+
+     a = 25.0E1742d;
+     b = 1.0d;
+     c = a / b;
+     io:println(c); // @output 2.5E+1743
+
+     a = 25.0E1742d;
+     b = 0.0d;
+     c = a / b;
+     io:println(c); // @output Infinity
+
+     a = 25.0E17d;
+     b = 0.9E-10d;
+     c = a / b;
+     io:println(c); // @output 27777777777777777777777777777.77778
+
+     a = -25.0E17d;
+     b = 0.9E-10d;
+     c = a / b;
+     io:println(c); // @output -27777777777777777777777777777.77778
+
+     a = 17.0E12d;
+     b = 0.0d;
+     c = a / b;
+     io:println(c); // @output Infinity
+
+     a = -17.0E12d;
+     b = 0.0d;
+     c = a / b;
+     io:println(c); // @output -Infinity
+
+     a = 11.0E12d;
+     b = -0.0d;
+     c = a / b;
+     io:println(c); // @output Infinity
+
+     a = 17.0E1290d;
+     b = 13.0E1521d;
+     c = a / b;
+     io:println(c); // @output 1.307692307692307692307692307692308E-231
+
+     a = 0.0d;
+     b = 0.0d;
+     c = a / b;
+     io:println(c); // @output NaN
+
+     a = -0.0d;
+     b = 0.0d;
+     c = a / b;
+     io:println(c); // @output NaN
+
+     a = 17.0E1290d;
+     b = ();
+     c = a / b;
+     io:println(c.toBalString()); // @output ()
+
+     a = ();
+     b = 13.0E1521d;
+     c = a / b;
+     io:println(c.toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test division scenarios for different float values.
+Labels: multiplicative-expr, DecimalFloatingPointNumber, float, FloatTypeSuffix, unary-minus
+
+public function init() {
+
+    float a = 2.5E-17;
+    float b = 2.5E+17;
+    float c = b / a;
+    io:println(c); // @output 1.0000000000000001E34
+    io:println(2.5E+17 / 2.5E-17); // @output 1.0000000000000001E34
+
+    a = 1.423223E6;
+    b = 2.34413E2;
+    c = a / b;
+    io:println(c); // @output 6071.433751541083
+    io:println(1.423223E6 / 2.34413E2); // @output 6071.433751541083
+
+    a = 25.0E142f;
+    b = 1.0f;
+    c = a / b;
+    io:println(c); // @output 2.5E143
+    io:println(25.0E142f / 1.0f); // @output 2.5E143
+
+    a = 25.0E142f;
+    b = 0.0f;
+    c = a / b;
+    io:println(c); // @output Infinity
+    io:println(25.0E142f / 0.0f); // @output Infinity
+
+    a = 25.0E17f;
+    b = 0.9E-10f;
+    c = a / b;
+    io:println(c); // @output 2.7777777777777776E28
+    io:println(25.0E17f / 0.9E-10); // @output 2.7777777777777776E28
+
+    a = -25.0E17f;
+    b = 0.9E-10f;
+    c = a / b;
+    io:println(c); // @output -2.7777777777777776E28
+    io:println(-25.0E17f / 0.9E-10); // @output -2.7777777777777776E28
+
+    a = 17.0E12f;
+    b = 0.0f;
+    c = a / b;
+    io:println(c); // @output Infinity
+    io:println(17.0E12f / 0.0f); // @output Infinity
+
+    a = -17.0E12f;
+    b = 0.0f;
+    c = a / b;
+    io:println(c); // @output -Infinity
+    io:println(-17.0E12f / 0.0f); // @output -Infinity
+
+    a = 11.0E12f;
+    b = -0.0f;
+    c = a / b;
+    io:println(c); // @output -Infinity
+    io:println(11.0E12f / -0.0f); // @output -Infinity
+
+    a = float:Infinity;
+    b = float:Infinity;
+    c = a / b;
+    io:println(c); // @output NaN
+    io:println(float:Infinity / float:Infinity); // @output NaN
+
+    a = 0.0f;
+    b = 0.0f;
+    c = a / b;
+    io:println(c); // @output NaN
+    io:println(0.0f / 0.0f); // @output NaN
+
+    a = -0.0f;
+    b = 0.0f;
+    c = a / b;
+    io:println(c); // @output NaN
+    io:println(-0.0f / 0.0f); // @output NaN
+
+    a = float:PI;
+    b = 0.0f;
+    c = a / b;
+    io:println(c); // @output Infinity
+    io:println(float:PI / 0.0f); // @output Infinity
+
+    a = float:PI;
+    b = 0.0f;
+    c = b / a;
+    io:println(c); // @output 0.0
+    io:println(0.0f / float:PI); // @output 0.0
+}
+
+Test-Case: output
+Description: Test division scenarios for different nillable float values.
+Labels: multiplicative-expr, DecimalFloatingPointNumber, float, FloatTypeSuffix, optional-type, numeric-nil-lifting, unary-minus, nil-literal, value:toBalString
+
+public function init() {
+     float? a = 2.5E-17;
+     float? b = 2.5E+17;
+     float? c = b / a;
+     io:println(c); // @output 1.0000000000000001E34
+
+     a = 1.423223E6;
+     b = 2.34413E2;
+     c = a / b;
+     io:println(c); // @output 6071.433751541083
+
+     a = 25.0E17f;
+     b = 0.9E-10f;
+     c = a / b;
+     io:println(c); // @output 2.7777777777777776E28
+
+     a = -25.0E17f;
+     b = 0.9E-10f;
+     c = a / b;
+     io:println(c); // @output -2.7777777777777776E28
+
+     a = 17.0E12f;
+     b = 0.0f;
+     c = a / b;
+     io:println(c); // @output Infinity
+
+     a = -17.0E12f;
+     b = 0.0f;
+     c = a / b;
+     io:println(c); // @output -Infinity
+
+     a = 11.0E12f;
+     b = -0.0f;
+     c = a / b;
+     io:println(c); // @output -Infinity
+
+     a = 0.0f;
+     b = 0.0f;
+     c = a / b;
+     io:println(c); // @output NaN
+
+     a = -0.0f;
+     b = 0.0f;
+     c = a / b;
+     io:println(c); // @output NaN
+
+     a = 11.0E12f;
+     b = ();
+     c = a / b;
+     io:println(c.toBalString()); // @output ()
+
+     a = ();
+     b = 13.0E121f;
+     c = a / b;
+     io:println(c.toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test division by infinity for different float values.
+Labels: multiplicative-expr, DecimalFloatingPointNumber, float, FloatTypeSuffix, unary-minus, float:Infinity, float:NaN
+
+public function init() {
+     float a = float:Infinity;
+     float b = float:Infinity;
+     float c = a / b;
+     io:println(c); // @output NaN
+     io:println(float:Infinity / float:Infinity); // @output NaN
+
+     a = 14.34f;
+     b = float:Infinity;
+     c = a / b;
+     io:println(c); // @output 0.0
+     io:println(14.34f / float:Infinity); // @output 0.0
+
+     a = 14.34f;
+     b = -float:Infinity;
+     c = a / b;
+     io:println(c); // @output -0.0
+     io:println(14.34f / -float:Infinity); // @output -0.0
+
+     a = float:NaN;
+     b = float:Infinity;
+     c = a / b;
+     io:println(c); // @output NaN
+     io:println(float:NaN / float:Infinity); // @output NaN
+
+     a = float:NaN;
+     b = -float:Infinity;
+     c = a / b;
+     io:println(c); // @output NaN
+     io:println(float:NaN / -float:Infinity); // @output NaN
+}
+
+Test-Case: output
+Description: Test division by infinity for different nillable float values.
+Labels: multiplicative-expr, DecimalFloatingPointNumber, float, FloatTypeSuffix, float:Infinity, float:NaN, optional-type, numeric-nil-lifting, unary-minus, nil-literal, value:toBalString
+
+public function init() {
+     float? a = float:Infinity;
+     float? b = float:Infinity;
+     float? c = a / b;
+     io:println(c); // @output NaN
+
+     a = 14.34f;
+     b = float:Infinity;
+     c = a / b;
+     io:println(c); // @output 0.0
+
+     a = 14.34f;
+     b = -float:Infinity;
+     c = a / b;
+     io:println(c); // @output -0.0
+
+     a = float:NaN;
+     b = float:Infinity;
+     c = a / b;
+     io:println(c); // @output NaN
+
+     a = float:NaN;
+     b = -float:Infinity;
+     c = a / b;
+     io:println(c); // @output NaN
+
+     a = ();
+     b = -float:Infinity;
+     c = a / b;
+     io:println(c.toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test division by NaN for different float values.
+Labels: multiplicative-expr, DecimalFloatingPointNumber, float, FloatTypeSuffix, float:Infinity, float:NaN, unary-minus
+
+public function init() {
+     float a = 1321.32f;
+     float b = float:NaN;
+     float c = a / b;
+     io:println(c); // @output NaN
+     io:println(1321.32f / float:NaN); // @output NaN
+     io:println(b / a); // @output NaN
+     io:println(float:NaN / 1321.32f); // @output NaN
+
+     a = float:NaN;
+     b = float:NaN;
+     c = a / b;
+     io:println(c); // @output NaN
+     io:println(a / b); // @output NaN
+
+     a = float:Infinity;
+     b = float:NaN;
+     c = a / b;
+     io:println(c); // @output NaN
+     io:println(a / b); // @output NaN
+
+     a = -float:Infinity;
+     b = float:NaN;
+     c = a / b;
+     io:println(c); // @output NaN
+     io:println(a / b); // @output NaN
+}
+
+Test-Case: output
+Description: Test division by NaN for different nilable float values.
+Labels: multiplicative-expr, DecimalFloatingPointNumber, float, FloatTypeSuffix, float:Infinity, float:NaN, optional-type, numeric-nil-lifting, unary-minus, nil-literal, value:toBalString
+
+public function init() {
+     float? a = 1321.32f;
+     float? b = float:NaN;
+     float? c = a / b;
+     io:println(c); // @output NaN
+
+     a = float:NaN;
+     b = float:NaN;
+     c = a / b;
+     io:println(c); // @output NaN
+
+     a = float:Infinity;
+     b = float:NaN;
+     c = a / b;
+     io:println(c); // @output NaN
+
+     a = -float:Infinity;
+     b = float:NaN;
+     c = a / b;
+     io:println(c); // @output NaN
+
+     a = ();
+     b = float:NaN;
+     c = a / b;
+     io:println(c.toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test float division scenarios for user-defined subtypes of float.
+Labels: multiplicative-expr, float-literal, module-type-defn, float, FloatTypeSuffix, unary-minus, unary-plus
+
+type Floats -2.0f|-1.0f|0.0f|1.0f|2.0f;
+
+public function init() {
+    Floats a = 1.0;
+    Floats b = 2.0;
+    float c = a / a;
+    float d = a / b;
+
+    io:println(c); // @output 1.0
+    io:println(a / a); // @output 1.0
+    io:println(d); //@output 0.5
+    io:println(a / b); // @output 0.5
+
+    io:println(b / a); // @output 2.0
+    io:println(b / b); // @output 1.0
+
+    a = -0.0;
+    b = +0.0;
+    Floats e = 2.0f;
+    io:println(e / a); // @output -Infinity
+    io:println(e / b); // @output Infinity
+}
+
+Test-Case: output
+Description: Test decimal division scenarios for user-defined subtypes of decimal.
+Labels: multiplicative-expr, decimal-literal, module-type-defn, decimal, DecimalTypeSuffix, unary-minus
+
+type Decimals -2.0d|-1.0d|0.0d|1.0d|2.0d;
+
+public function init() {
+    Decimals a = 1.0d;
+    Decimals b = 2.0d;
+    decimal c = a / a;
+    decimal d = a / b;
+
+    io:println(a / a); // @output 1.0
+    io:println(c); // @output 1.0
+    io:println(a / b); // @output 0.5
+    io:println(d); // @output 0.5
+
+    io:println(b / a); // @output 2.0
+    io:println(b / b); // @output 1.0
+}
+
+Test-Case: output
+Description: Test float division scenarios for union types of user-defined subtypes of float.
+Fail-Issue: ballerina-platform/ballerina-lang#33265
+Labels: multiplicative-expr, float-literal, module-type-defn, union-type, float, FloatTypeSuffix
+
+const A = 1.0f;
+const B = 2.0f;
+
+type Floats1 -2.0f|-1.0f|0.0f|1.0f|2.0f;
+
+type Floats2 A|B;
+
+type Floats3 Floats1|Floats2;
+
+public function init() {
+    Floats2 a = 1.0;
+    B b = 2.0;
+    Floats1|Floats2 c = 2.0f;
+    float|Floats1 d = 20f;
+
+    io:println(a / b); // @output 0.5
+    io:println(a / c); // @output 0.5
+
+    io:println(b / c); // @output 1.0
+
+    io:println(a / d); // @output 0.05
+    io:println(d / a); //@output 20.0
+}
+
+Test-Case: output
+Description: Test decimal division scenarios for union types of user-defined subtypes of decimal.
+Fail-Issue: ballerina-platform/ballerina-lang#33266
+Labels: multiplicative-expr, decimal-literal, module-type-defn, union-type, decimal, DecimalTypeSuffix
+
+const A1 = 1.0d;
+const B1 = 2.0d;
+
+type Decimals1 -2.0d|-1.0d|0.0d|1.0d|2.0d;
+
+type Decimals2 A1|B1;
+
+type Decimals3 Decimals1|Decimals2;
+
+public function init() {
+    Decimals2 a = 1.0;
+    Decimals2 b = 2.0;
+    Decimals1|Decimals2 c = 2.0d;
+    decimal|Decimals1 d = 20.0d;
+
+    io:println(a / b); // @output 0.5
+    io:println(a / c); // @output 0.5
+
+    io:println(b / c); // @output 1.0
+
+    io:println(a / d); // @output 0.05
+    io:println(d / a); //@output 20.0
+}
+
+Test-Case: output
+Description: Test float division scenarios for user-defined nilable subtypes of float.
+Fail-Issue: ballerina-platform/ballerina-lang#31701
+Labels: multiplicative-expr, float-literal, module-type-defn, float, FloatTypeSuffix, optional-type
+
+type Floats -2.0f|-1.0f|0.0f|1.0f|2.0f;
+
+public function init() {
+    Floats? a = 1.0;
+    Floats? b = 2.0;
+    float? c = a / a;
+    float? d = a / b;
+
+    io:println(c); // @output 1.0
+    io:println(a / a); // @output 1.0
+    io:println(d); //@output 0.5
+    io:println(a / b); // @output 0.5
+
+    io:println(b / a); // @output 2.0
+    io:println(b / b); // @output 1.0
+
+    a = -0.0;
+    b = +0.0;
+    Floats? e = 2.0f;
+    io:println(e / a); // @output -Infinity
+    io:println(e / b); // @output Infinity
+}
+
+Test-Case: output
+Description: Test decimal division scenarios for user-defined nilable subtypes of decimal.
+Fail-Issue: ballerina-platform/ballerina-lang#31701
+Labels: multiplicative-expr, decimal-literal, module-type-defn, decimal, DecimalTypeSuffix, optional-type
+
+type Decimals -2.0d|-1.0d|0.0d|1.0d|2.0d;
+
+public function init() {
+    Decimals? a = 1.0d;
+    Decimals? b = 2.0d;
+    decimal? c = a / a;
+    decimal? d = a / b;
+
+    io:println(a / a); // @output 1.0
+    io:println(c); // @output 1.0
+    io:println(a / b); // @output 0.5
+    io:println(d); // @output 0.5
+
+    io:println(b / a); // @output 2.0
+    io:println(b / b); // @output 1.0
+}
+
+Test-Case: output
+Description: Test float division scenarios for in the module level.
+Fail-Issue: ballerina-platform/ballerina-lang#31701
+Labels: multiplicative-expr, float-literal, module-type-defn, float, FloatTypeSuffix
+
+type Floats -2.0f|-1.0f|0.0f|1.0f|2.0f;
+Floats a = 1.0;
+Floats b = 2.0;
+float c = a / a;
+float d = a / b;
+
+public function init() {
+
+    io:println(c); // @output 1.0
+    io:println(a / a); // @output 1.0
+    io:println(d); //@output 0.5
+    io:println(a / b); // @output 0.5
+
+    io:println(b / a); // @output 2.0
+    io:println(b / b); // @output 1.0
+}
+
+Test-Case: output
+Description: Test decimal division scenarios for in the module level.
+Fail-Issue: ballerina-platform/ballerina-lang#31701
+Labels: multiplicative-expr, decimal-literal, module-type-defn, decimal, DecimalTypeSuffix
+
+type Decimals -2.0d|-1.0d|0.0d|1.0d|2.0d;
+Decimals? a = 1.0d;
+Decimals? b = 2.0d;
+decimal? c = a / a;
+decimal? d = a / b;
+
+public function init() {
+
+    io:println(a / a); // @output 1.0
+    io:println(c); // @output 1.0
+    io:println(a / b); // @output 0.5
+    io:println(d); // @output 0.5
+
+    io:println(b / a); // @output 2.0
+    io:println(b / b); // @output 1.0
+}
+
+
+Test-Case: output
+Description: Test function and method call as float division operands.
+Labels: multiplicative-expr, float, DecimalNumber, function-call-expr, module-class-defn, implicit-new-expr, method-call-expr
+
+function init() {
+    Class2 f = new;
+    float g = f.getFloat() / getFloat();
+    io:println(g); // @output 12.0
+}
+
+function getFloat() returns float {
+    return 10 / 2;
+}
+
+class Class2 {
+    function getFloat() returns float {
+        return 60;
+    }
+}
+
+Test-Case: output
+Description: Test let expression in float division operands.
+Labels: multiplicative-expr, float, DecimalNumber, let-expr
+
+function init() {
+    float h = (let float h1 = 40 / 4 in h1) / 5;
+    io:println(h); // @output 2.0
+}
+
+Test-Case: output
+Description: Test type cast expression in float division operands.
+Labels: multiplicative-expr, float, DecimalNumber, type-cast-expr
+
+function init() {
+    float i = <float> 16 / 8;
+    io:println(i); // @output 2.0
+}
+
+Test-Case: output
+Description: Test unary expressions in float division operands.
+Labels: multiplicative-expr, float, DecimalNumber, unary-plus, unary-minus, unary-complement
+
+function init() {
+    float k = +42.0 / -3.0;
+    io:println(k); // @output -14.0
+
+    float l = -(-20.0 / 5.0);
+    io:println(l); // @output 4.0
+}
+
+Test-Case: output
+Description: Test 1 for multiplicative expression in float division operands.
+Labels: multiplicative-expr, float, DecimalNumber
+
+function init() {
+    float o = 808 / 404 % 10 * 4;
+    io:println(o); // @output 8.0
+}
+
+Test-Case: output
+Description: Test 2 for multiplicative expression in float division operands.
+Labels: multiplicative-expr, float, DecimalNumber
+
+function init() {
+    float o = 32 / (404 % 10 * 4);
+    io:println(o); // @output 2.0
+}
+
+Test-Case: output
+Description: Test additive expressions as float division operands.
+Labels: multiplicative-expr, float, DecimalNumber, additive-expr
+
+function init() {
+    float p = (1 + 20) / (3 + 4);
+    io:println(p); // @output 3
+}
+
+Test-Case: output
+Description: Test conditional expressions as float division operands.
+Labels: multiplicative-expr, float, DecimalNumber, ternary-conditional-expr, binary-conditional-expr, nil-literal, union-type, error, optional-type, numeric-nil-lifting
+
+function init() {
+    float|error a = 12.0;
+    float? b = ();
+    float c = (a is error ? 2.0 : a) / (b ?: 2.0);
+    io:println(c); // @output 6.0
+}
+
+Test-Case: output
+Description: Test checking expressions as float division operands.
+Labels: multiplicative-expr, float, DecimalNumber, check, checkpanic, union-type, error
+
+function init() returns error? {
+    float|error a = 12;
+    float c = check a / checkpanic a;
+    io:println(c); // @output 1.0
+}
+
+Test-Case: output
+Description: Test function and method call as decimal division operands.
+Labels: multiplicative-expr, decimal, DecimalNumber, function-call-expr, module-class-defn, implicit-new-expr, method-call-expr
+
+function init() {
+    Class1 f = new;
+    decimal g = f.getDecimal() / getDecimal();
+    io:println(g); // @output 12
+}
+
+function getDecimal() returns decimal {
+    return 10 / 2;
+}
+
+class Class1 {
+    function getDecimal() returns decimal {
+        return 60;
+    }
+}
+
+Test-Case: output
+Description: Test let expression in decimal division operands.
+Labels: multiplicative-expr, decimal, DecimalNumber, let-expr
+
+function init() {
+    decimal h = (let decimal h1 = 40 / 4 in h1) / 5;
+    io:println(h); // @output 2
+}
+
+Test-Case: output
+Description: Test type cast expression in decimal division operands.
+Labels: multiplicative-expr, decimal, DecimalNumber, type-cast-expr
+
+function init() {
+    decimal i = <decimal> 16 / 8;
+    io:println(i); // @output 2
+}
+
+Test-Case: output
+Description: Test unary expressions in decimal division operands.
+Labels: multiplicative-expr, decimal, DecimalNumber, unary-plus, unary-minus, unary-complement
+
+function init() {
+    decimal k = +42.0 / -3.0;
+    io:println(k); // @output -14
+
+    decimal l = -(-20.0 / 5.0);
+    io:println(l); // @output 4
+}
+
+Test-Case: output
+Description: Test 1 for multiplicative expression in decimal division operands.
+Labels: multiplicative-expr, decimal, DecimalNumber
+
+function init() {
+    decimal o = 808 / 404 % 10 * 4;
+    io:println(o); // @output 8
+}
+
+Test-Case: output
+Description: Test 2 for multiplicative expression in decimal division operands.
+Labels: multiplicative-expr, decimal, DecimalNumber
+
+function init() {
+    decimal o = 32 / (404 % 10 * 4);
+    io:println(o); // @output 2
+}
+
+Test-Case: output
+Description: Test additive expressions as decimal division operands.
+Labels: multiplicative-expr, decimal, DecimalNumber, additive-expr
+
+function init() {
+    decimal p = (1 + 20) / (3 + 4);
+    io:println(p); // @output 3
+}
+
+Test-Case: output
+Description: Test conditional expressions as decimal division operands.
+Labels: multiplicative-expr, decimal, DecimalNumber, ternary-conditional-expr, binary-conditional-expr, nil-literal, union-type, error, optional-type, numeric-nil-lifting
+
+function init() {
+    decimal|error a = 12;
+    decimal? b = ();
+    decimal c = (a is error ? 2 : a) / (b ?: 2);
+    io:println(c); // @output 6
+}
+
+Test-Case: output
+Description: Test checking expressions as decimal division operands.
+Labels: multiplicative-expr, decimal, DecimalNumber, check, checkpanic, union-type, error
+
+function init() returns error? {
+    decimal|error a = 12;
+    decimal c = check a / checkpanic a;
+    io:println(c); // @output 1
+}
+
+Test-Case: output
+Description: Test type cast expression in float division operands.
+Labels: multiplicative-expr, float, DecimalNumber, type-cast-expr
+
+function init() {
+    float i = <float> 16 / 8;
+    io:println(i); // @output 2.0
+}
+
+Test-Case: output
+Description: Test type cast expression in decimal division operands.
+Labels: multiplicative-expr, decimal, DecimalNumber, type-cast-expr
+
+function init() {
+    decimal i = <decimal> 16 / 8;
+    io:println(i); // @output 2
+}
