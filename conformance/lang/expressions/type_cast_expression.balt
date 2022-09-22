@@ -1959,6 +1959,38 @@ function init() {
 }
 
 Test-Case: output
+Description: Test cast to readonly can be used to cause constructors withing the expression to construct values
+             with the read-only bit on.
+Fail-Issue: ballerina-platform/ballerina-lang#32542
+Labels: array-type, byte, byte-array-literal, readonly-type, type-cast-expr, typeof-expr, var
+        
+function init() {
+    byte[1] f = <readonly>base16 `aa`;
+    io:println(typeof f); // @output typedesc [170]
+
+    var g = <byte[] & readonly>base16 `aa 4b`;
+    io:println(typeof g); // @output typedesc [170,75]
+
+    byte[2] h = <byte[2] & readonly>base16 `ba16`;
+    io:println(typeof h); // @output typedesc [186]
+
+    var i = <int[1] & readonly>base16 `ff`;
+    io:println(typeof i); // @output typedesc [255]
+
+    byte[3] j = <readonly>base64 `AAAB`;
+    io:println(typeof j); // @output typedesc [0,0,1]
+
+    var k = <byte[] & readonly>base64 `AAAB ABB=`;
+    io:println(typeof k); // @output typedesc [0,0,1,0,16]
+
+    byte[] m = <byte[3] & readonly>base64 `pqrs`;
+    io:println(typeof m); // @output typedesc [166,170,236]
+
+    var n = <int[3] & readonly>base64 `+/12`;
+    io:println(typeof n); // @output typedesc [251,253,118]
+}
+
+Test-Case: output
 Description: Test cast to readonly can be used to verify that the value resulting from the evaluation of expression 
              has its read-only bit on. 
 Labels: any, array-type, list-constructor-expr, map-type, mapping-constructor-expr, readonly-type, string, 
