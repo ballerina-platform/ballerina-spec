@@ -3466,3 +3466,1351 @@ Description: Test integer multiplication panic at module-level.
 Labels: multiplicative-expr, int:MIN_VALUE, DecimalNumber, unary-minus
 
 int a = 9223372036854775802 * 2; // @panic integer overflow on multiplication
+
+Test-Case: output
+Description: Test float multiplication with operands of non-zero integers.
+Labels: DecimalNumber, float, int, int:MAX_VALUE, int:MIN_VALUE, multiplicative-expr, float:Infinity, float:NaN
+
+function init() {
+    int a = 2;
+    int b = int:MAX_VALUE;
+    int c = int:MIN_VALUE;
+
+    float d = 4.5;
+    float e = 4.5e-1;
+    float f = -10.5;
+    float g = float:Infinity;
+    float h = float:NaN;
+
+    float v = d * a;
+    io:println(v); // @output 9.0
+
+    v = a * d;
+    io:println(v); // @output 9.0
+
+    v = e * a;
+    io:println(v); // @output 0.9
+
+    v = a * e;
+    io:println(v); // @output 0.9
+
+    v = f * a;
+    io:println(v); // @output -21.0
+
+    v = a * f;
+    io:println(v); // @output -21.0
+
+    v = g * a;
+    io:println(v); // @output Infinity
+
+    v = a * g;
+    io:println(v); // @output Infinity
+
+    v = h * a;
+    io:println(v); // @output NaN
+
+    v = a * h;
+    io:println(v); // @output NaN
+
+    v = d * b;
+    io:println(v); // @output 4.150517416584649E19
+
+    v = b * d;
+    io:println(v); // @output 4.150517416584649E19
+
+    v = e * b;
+    io:println(v); // @output 4.1505174165846492E18
+
+    v = b * e;
+    io:println(v); // @output 4.1505174165846492E18
+
+    v = f * b;
+    io:println(v); // @output -9.684540638697515E19
+
+    v = b * f;
+    io:println(v); // @output -9.684540638697515E19
+
+    v = g * b;
+    io:println(v); // @output Infinity
+
+    v = b * g;
+    io:println(v); // @output Infinity
+
+    v = h * b;
+    io:println(v); // @output NaN
+
+    v = b * h;
+    io:println(v); // @output NaN
+
+    v = d * c;
+    io:println(v); // @output -4.150517416584649E19
+
+    v = c * d;
+    io:println(v); // @output -4.150517416584649E19
+
+    v = e * c;
+    io:println(v); // @output -4.1505174165846492E18
+
+    v = c * e;
+    io:println(v); // @output -4.1505174165846492E18
+
+    v = f * c;
+    io:println(v); // @output9.684540638697515E19
+
+    v = c * f;
+    io:println(v); // @output9.684540638697515E19
+
+    v = g * c;
+    io:println(v); // @output Infinity
+
+    v = c * g;
+    io:println(v); // @output Infinity
+
+    v = h * c;
+    io:println(v); // @output NaN
+
+    v = c * h;
+    io:println(v); // @output NaN
+}
+
+Test-Case: output
+Description: Test float multiplication, where second operands is zero.
+Labels: DecimalNumber, float, float:Infinity, int, int:MAX_VALUE, int:MIN_VALUE, multiplicative-expr, unary-expr
+
+function init() {
+    int a = -0;
+    int b = 0;
+
+    float c = 4.5e-1;
+    float d = 0;
+    float e = float:Infinity;
+    float f = float:NaN;
+
+    float v = c * a;
+    io:println(v); // @output 0.0
+
+    v = a * c;
+    io:println(v); // @output 0.0
+
+    v = d * a;
+    io:println(v); // @output 0.0
+
+    v = a * d;
+    io:println(v); // @output 0.0
+
+    v = e * a;
+    io:println(v); // @output NaN
+
+    v = a * e;
+    io:println(v); // @output NaN
+
+    v = f * a;
+    io:println(v); // @output NaN
+
+    v = a * f;
+    io:println(v); // @output NaN
+
+    v = c * b;
+    io:println(v); // @output 0.0
+
+    v = b * c;
+    io:println(v); // @output 0.0
+
+    v = d * b;
+    io:println(v); // @output 0.0
+
+    v = b * d;
+    io:println(v); // @output 0.0
+
+    v = e * b;
+    io:println(v); // @output NaN
+
+    v = b * e;
+    io:println(v); // @output NaN
+
+    v = f * b;
+    io:println(v); // @output NaN
+
+    v = b * f;
+    io:println(v); // @output NaN
+}
+
+Test-Case: output
+Description: Test float multiplication at module-level.
+Labels: DecimalNumber, float, float:Infinity, float:NaN, int, multiplicative-expr
+
+int a = 2;
+float b = float:Infinity;
+float c = 4.5e-1;
+float d = float:NaN;
+
+float e1 = b * a;
+float e2 = a * b;
+float f1 = c * a;
+float f2 = a * c;
+float g1 = d * a;
+float g2 = a * d;
+
+function init() {
+    io:println(e1); // @output Infinity
+    io:println(e2); // @output Infinity
+    io:println(f1); // @output 0.9
+    io:println(f2); // @output 0.9
+    io:println(g1); // @output NaN
+    io:println(g2); // @output NaN
+}
+
+Test-Case: output
+Description: Test float multiplication with constants. 
+Labels: DecimalNumber, float, float:Infinity, float:NaN, int, multiplicative-expr, module-const-decl, const-expr
+
+const int constInt = 2;
+const float constFloat = 0.45;
+
+const float r1 = constFloat * constInt;
+const float r2 = constInt * constFloat;
+
+function init() {
+    int a = 2;
+    float b = float:Infinity;
+    float c = 4.5e-1;
+    float d = 0;
+    float e = float:NaN;
+    int f = int:MAX_VALUE;
+    int g = int:MIN_VALUE;
+
+    io:println(r1); // @output 0.9
+    io:println(r1); // @output 0.9
+
+    float v = b * constInt;
+    io:println(v); // @output Infinity
+
+    v = constInt * b;
+    io:println(v); // @output Infinity
+
+    v = c * constInt;
+    io:println(v); // @output 0.9
+
+    v = constInt * c;
+    io:println(v); // @output 0.9
+
+    v = d * constInt;
+    io:println(v); // @output 0.0
+
+    v = constInt * d;
+    io:println(v); // @output 0.0
+
+    v = e * constInt;
+    io:println(v); // @output NaN
+
+    v = constInt * e;
+    io:println(v); // @output NaN
+
+    v = constFloat * a;
+    io:println(v); // @output 0.9
+
+    v = a * constFloat;
+    io:println(v); // @output 0.9
+
+    v = constFloat * f;
+    io:println(v); // @output 4.1505174165846492E18
+
+    v = f * constFloat;
+    io:println(v); // @output 4.1505174165846492E18
+
+    v = constFloat * g;
+    io:println(v); // @output -4.1505174165846492E18
+
+    v = g * constFloat;
+    io:println(v); // @output -4.1505174165846492E18
+
+    v = constFloat * constInt;
+    io:println(v); // @output 0.9
+
+    v = constInt * constFloat;
+    io:println(v); // @output 0.9
+}
+
+Test-Case: output
+Description: Test float multiplication with operands of different int subtypes.
+Labels: DecimalNumber, float, int, multiplicative-expr
+
+type Ints -9|9;
+
+function init() {
+    int:Signed8 a = -2;
+    int:Signed16 b = 2;
+    int:Signed32 c = -4;
+    int:Unsigned8 d = 4;
+    int:Unsigned16 e = 5;
+    int:Unsigned32 f = 10;
+    byte g = 25;
+
+    float h = 2.5;
+    Ints i = 9;
+
+    float v = h * a;
+    io:println(v); // @output -5.0
+
+    v = a * h;
+    io:println(v); // @output -5.0
+
+    v = h * b;
+    io:println(v); // @output 5.0
+
+    v = b * h;
+    io:println(v); // @output 5.0
+
+    v = h * c;
+    io:println(v); // @output -10.0
+
+    v = c * h;
+    io:println(v); // @output -10.0
+
+    v = h * d;
+    io:println(v); // @output 10.0
+
+    v = d * h;
+    io:println(v); // @output 10.0
+
+    v = h * e;
+    io:println(v); // @output 12.5
+
+    v = e * h;
+    io:println(v); // @output 12.5
+
+    v = h * f;
+    io:println(v); // @output 25.0
+
+    v = f * h;
+    io:println(v); // @output 25.0
+
+    v = h * g;
+    io:println(v); // @output 62.5
+
+    v = g * h;
+    io:println(v); // @output 62.5
+
+    v = h * i;
+    io:println(v); // @output 22.5
+
+    v = i * h;
+    io:println(v); // @output 22.5
+}
+
+Test-Case: output
+Description: Test float multiplication with optional integers.
+Labels: DecimalNumber, float, flaot:NaN, int, multiplicative-expr, nil-literal, numeric-nil-literal
+
+function init() {
+    int? a = 4;
+    int? b = ();
+    float c = 4.5e-1;
+    float d = float:NaN;
+
+    float? v = c * a;
+    io:println(v); // @output 1.8
+
+    v = a * c;
+    io:println(v); // @output 1.8
+
+    v = c * b;
+    io:println(v); // @output ()
+
+    v = b * c;
+    io:println(v); // @output ()
+
+    v = d * a;
+    io:println(v); // @output NaN
+
+    v = a * d;
+    io:println(v); // @output NaN
+
+    v = d * b;
+    io:println(v); // @output ()
+
+    v = b * d;
+    io:println(v); // @output ()
+}
+
+Test-Case: output
+Description: Test optional float multiplication with optional and non-optional integers.
+Labels: DecimalNumber, float, flaot:NaN, int, multiplicative-expr, nil-literal, numeric-nil-literal
+
+function init() {
+    int a = 2; 
+    int? b = 4;
+    int? c = ();
+    float? d = 4.5e-1;
+    float? e = float:NaN;
+
+    float? v = d * a;
+    io:println(v); // @output 0.9
+
+    v = a * d;
+    io:println(v); // @output 0.9
+
+    v = e * a;
+    io:println(v); // @output NaN
+
+    v = a * e;
+    io:println(v); // @output NaN
+
+    v = d * b;
+    io:println(v); // @output 1.8
+
+    v = b * d;
+    io:println(v); // @output 1.8
+
+    v = e * b;
+    io:println(v); // @output NaN
+
+    v = b * e;
+    io:println(v); // @output NaN
+
+    v = d * c;
+    io:println(v); // @output ()
+
+    v = c * d;
+    io:println(v); // @output ()
+
+    v = e * c;
+    io:println(v); // @output ()
+
+    v = c * e;
+    io:println(v); // @output ()
+}
+
+Test-Case: output
+Description: Test float multiplication with optional subtypes of integers.
+Labels: DecimalNumber, float, int, multiplicative-expr, nil-literal, numeric-nil-literal
+
+type Ints -9|9;
+
+function init() {
+    int:Signed8? a = -2;
+    int:Signed16? b = 2;
+    int:Signed32? c = 3;
+    int:Unsigned8? d = 4;
+    int:Unsigned16? e = 5;
+    int:Unsigned32? f = 10;
+    byte? g = 2;
+    Ints? h = 9;
+
+    float i = 2.5;
+
+    float? v = i * a;
+    io:println(v); // @output -5.0
+
+    v = a * i;
+    io:println(v); // @output -5.0
+
+    v = i * b;
+    io:println(v); // @output 5.0
+
+    v = b * i;
+    io:println(v); // @output 5.0
+
+    v = i * c;
+    io:println(v); // @output 7.5
+
+    v = c * i;
+    io:println(v); // @output 7.5
+
+    v = i * d;
+    io:println(v); // @output 10.0
+
+    v = d * i;
+    io:println(v); // @output 10.0
+
+    v = i * e;
+    io:println(v); // @output 12.5
+
+    v = e * i;
+    io:println(v); // @output 12.5
+
+    v = i * f;
+    io:println(v); // @output 25.0
+
+    v = f * i;
+    io:println(v); // @output 25.0
+
+    v = i * g;
+    io:println(v); // @output 5.0
+
+    v = g * i;
+    io:println(v); // @output 5.0
+
+    v = i * h;
+    io:println(v); // @output 22.5
+
+    v = h * i;
+    io:println(v); // @output 22.5
+}
+
+Test-Case: output
+Description: Test float multiplication with optional subtypes of integers initialized with nil-literal.
+Labels: DecimalNumber, float, int, multiplicative-expr, nil-literal, numeric-nil-literal
+
+function init() {
+    int:Signed8? a = ();
+    int:Signed16? b = ();
+    int:Signed32? c = ();
+    int:Unsigned8? d = ();
+    int:Unsigned16? e = ();
+    int:Unsigned32? f = ();
+    byte? g = ();
+
+    float h = 2.5;
+
+    float? v = h * a;
+    io:println(v); // @output ()
+
+    v = a * h;
+    io:println(v); // @output ()
+
+    v = h * b;
+    io:println(v); // @output ()
+
+    v = b * h;
+    io:println(v); // @output ()
+
+    v = h * c;
+    io:println(v); // @output ()
+
+    v = c * h;
+    io:println(v); // @output ()
+
+    v = h * d;
+    io:println(v); // @output ()
+
+    v = d * h;
+    io:println(v); // @output ()
+
+    v = h * e;
+    io:println(v); // @output ()
+
+    v = e * h;
+    io:println(v); // @output ()
+
+    v = h * f;
+    io:println(v); // @output ()
+
+    v = f * h;
+    io:println(v); // @output ()
+
+    v = h * g;
+    io:println(v); // @output ()
+
+    v = g * h;
+    io:println(v); // @output ()
+}
+
+Test-Case: output
+Description: Test optional float multiplication with optional and non-optional subtypes of integers.
+Labels: DecimalNumber, float, flaot:NaN, int, multiplicative-expr, numeric-nil-literal
+
+function init() {
+    int:Signed8 a = -2;
+    int:Signed16 b = 2;
+    int:Signed32 c = -5;
+    int:Unsigned8 d = 10;
+    int:Unsigned16 e = 5;
+    int:Unsigned32 f = 10;
+    byte g = 4;
+
+    int:Signed8? h = -2;
+    int:Signed16? i = 2;
+    int:Signed32? j = 4;
+    int:Unsigned8? k = 4;
+    int:Unsigned16? m = 5;
+    int:Unsigned32? n = 10;
+    byte? p = 4;
+
+    float? q = 2.5;
+
+    float? v = q * a;
+    io:println(v); // @output -5.0
+
+    v = a * q;
+    io:println(v); // @output -5.0
+
+    v = q * b;
+    io:println(v); // @output 5.0
+
+    v = b * q;
+    io:println(v); // @output 5.0
+
+    v = q * c;
+    io:println(v); // @output -12.5
+
+    v = c * q;
+    io:println(v); // @output -12.5
+
+    v = q * d;
+    io:println(v); // @output 25.0
+
+    v = d * q;
+    io:println(v); // @output 25.0
+
+    v = q * e;
+    io:println(v); // @output 12.5
+
+    v = e * q;
+    io:println(v); // @output 12.5
+
+    v = q * f;
+    io:println(v); // @output 25.0
+
+    v = f * q;
+    io:println(v); // @output 25.0
+
+    v = q * g;
+    io:println(v); // @output 10.0
+
+    v = g * q;
+    io:println(v); // @output 10.0
+
+    v = q * h;
+    io:println(v); // @output -5.0
+
+    v = h * q;
+    io:println(v); // @output -5.0
+
+    v = q * i;
+    io:println(v); // @output 5.0
+
+    v = i * q;
+    io:println(v); // @output 5.0
+
+    v = q * j;
+    io:println(v); // @output 10.0
+
+    v = j * q;
+    io:println(v); // @output 10.0
+
+    v = q * k;
+    io:println(v); // @output 10.0
+
+    v = k * q;
+    io:println(v); // @output 10.0
+
+    v = q * m;
+    io:println(v); // @output 12.5
+
+    v = m * q;
+    io:println(v); // @output 12.5
+
+    v = q * n;
+    io:println(v); // @output 25.0
+
+    v = n * q;
+    io:println(v); // @output 25.0
+
+    v = q * p;
+    io:println(v); // @output 10.0
+
+    v = p * q;
+    io:println(v); // @output 10.0
+}
+
+Test-Case: output
+Description: Test type of float multiplication with integers by infering.
+Labels: DecimalNumber, const-expr, const-module-decl, float, int, multiplicative-expr
+
+const int constInt = 5;
+const float constFloat = 2.5;
+
+function init() {
+    float a = 2.5;
+    int b = 5;
+
+    var c1 = a * b;
+    io:println(c1 is float); // @output true
+
+    var c2 = b * a;
+    io:println(c2 is float); // @output true
+
+    var d1 = a * constInt;
+    io:println(d1 is float); // @output true
+
+    var d2 = constInt * a;
+    io:println(d2 is float); // @output true
+
+    var e1 = constFloat * b;
+    io:println(e1 is float); // @output true
+
+    var e2 = b * constFloat;
+    io:println(e2 is float); // @output true
+
+    var f1 = constFloat * constInt;
+    io:println(f1 is float); // @output true
+
+    var f2 = constInt * constFloat;
+    io:println(f2 is float); // @output true
+}
+
+Test-Case: output
+Description: Test type of optional decimal division with optional and non-optional integers by infering.
+Labels: DecimalNumber, const-expr, const-module-decl, float, int, multiplicative-expr
+
+const int constInt = 5;
+const float constFloat = 2.5;
+
+function init() {
+    float? a = 2.5;
+    int? b = 5;
+
+    var c1 = a * b;
+    io:println(c1 is float); // @output true
+
+    var c2 = b * a;
+    io:println(c2 is float); // @output true
+
+    var d1 = a * constInt;
+    io:println(d1 is float); // @output true
+
+    var d2 = constInt * a;
+    io:println(d2 is float); // @output true
+
+    var e1 = constFloat * b;
+    io:println(e1 is float); // @output true
+
+    var e2 = b * constFloat;
+    io:println(e2 is float); // @output true
+
+    var f1 = constFloat * constInt;
+    io:println(f1 is float); // @output true
+
+    var f2 = constInt * constFloat;
+    io:println(f2 is float); // @output true
+}
+
+Test-Case: output
+Description: Test type of float multiplication with integers results Infinity and NaN.
+Labels: DecimalNumber, const-expr, const-module-decl, float, int, multiplicative-expr
+
+function init() {
+    float a = 8388608333e+298;
+    int b = 20;
+    float c = float:Infinity;
+    float d = float:NaN;
+    int e = 0;
+
+    float v = c * b;
+    io:println(v); // @output Infinity
+
+    v = b * c;
+    io:println(v); // @output Infinity
+
+    v = d * b;
+    io:println(v); // @output NaN
+
+    v = b * d;
+    io:println(v); // @output NaN
+
+    v = a * e;
+    io:println(v); // @output 0.0
+
+    v = e * a;
+    io:println(v); // @output 0.0
+
+    v = c * e;
+    io:println(v); // @output NaN
+
+    v = e * c;
+    io:println(v); // @output NaN
+
+    v = d * e;
+    io:println(v); // @output NaN
+
+    v = e * d;
+    io:println(v); // @output NaN
+}
+
+Test-Case: output
+Description: Test decimal multiplication with operands of non-zero integers.
+Labels: DecimalNumber, decimal, int, int:MAX_VALUE, int:MIN_VALUE, multiplicative-expr
+
+function init() {
+    int a = 2;
+    decimal b = 4.5e-1;
+    int c = int:MAX_VALUE;
+    int d = int:MIN_VALUE;
+
+    decimal v = b * a;
+    io:println(v); // @output 0.900
+
+    v = a * b;
+    io:println(v); // @output 0.900
+
+    v = b * c;
+    io:println(v); // @output 4150517416584649113.150
+
+    v = c * b;
+    io:println(v); // @output 4150517416584649113.150
+
+    v = b * d;
+    io:println(v); // @output -4150517416584649113.600
+
+    v = d * b;
+    io:println(v); // @output -4150517416584649113.600
+}
+
+Test-Case: output
+Description: Test decimal multiplication at module-level.
+Labels: DecimalNumber, decimal, int, multiplicative-expr
+
+int a = 2;
+decimal b = 4.5e-1;
+decimal c = 0.2;
+
+decimal d1 = b * a;
+decimal d2 = b * a;
+decimal e1 = c * a;
+decimal e2 = c * a;
+
+function init() {
+    io:println(d1); // @output 0.900
+    io:println(d2); // @output 0.900
+    io:println(e1); // @output 0.40
+    io:println(e2); // @output 0.40
+}
+
+Test-Case: output
+Description: Test decimal multiplication with constants.
+Labels: DecimalNumber, const-expr, decimal, int, module-const-decl, multiplicative-expr
+
+const int constInt = 2;
+const decimal constDecimal = 0.45;
+
+const decimal r1 = constDecimal * constInt;
+const decimal r2 = constInt * constDecimal;
+
+function init() {
+    int a = 2;
+    decimal b = 4.5e-1;
+    decimal c = 0;
+    int d = int:MAX_VALUE;
+    int e = int:MIN_VALUE;
+
+    io:println(r1); // @output 0.9
+    io:println(r2); // @output 0.9
+
+    decimal v = b * a;
+    io:println(v); // @output 0.900
+
+    v = a * b;
+    io:println(v); // @output 0.900
+
+    v = c * a;
+    io:println(v); // @output 0
+
+    v = a * c;
+    io:println(v); // @output 0
+
+    v = b * d;
+    io:println(v); // @output 4150517416584649113.150
+
+    v = d * b;
+    io:println(v); // @output 4150517416584649113.150
+
+    v = c * d;
+    io:println(v); // @output 0
+
+    v = d * c;
+    io:println(v); // @output 0
+
+    v = b * e;
+    io:println(v); // @output -4150517416584649113.600
+
+    v = e * b;
+    io:println(v); // @output -4150517416584649113.600
+
+    v = c * e;
+    io:println(v); // @output 0
+
+    v = e * c;
+    io:println(v); // @output 0
+}
+
+Test-Case: output
+Description: Test decimal multiplication with operands of different int subtypes.
+Labels: DecimalNumber, decimal, int, multiplicative-expr
+
+type Ints -9|9;
+
+function init() {
+    int:Signed8 a = -2;
+    int:Signed16 b = 2;
+    int:Signed32 c = -4;
+    int:Unsigned8 d = 4;
+    int:Unsigned16 e = 5;
+    int:Unsigned32 f = 10;
+    byte g = 25;
+
+    decimal h = 2.5;
+    Ints i = 9;
+
+    decimal v = h * a;
+    io:println(v); // @output -5.00
+
+    v = a * h;
+    io:println(v); // @output -5.00
+
+    v = h * b;
+    io:println(v); // @output 5.00
+
+    v = b * h;
+    io:println(v); // @output 5.00
+
+    v = h * c;
+    io:println(v); // @output -10.00
+
+    v = c * h;
+    io:println(v); // @output -10.00
+
+    v = h * d;
+    io:println(v); // @output 10.00
+
+    v = d * h;
+    io:println(v); // @output 10.00
+
+    v = h * e;
+    io:println(v); // @output 12.50
+
+    v = e * h;
+    io:println(v); // @output 12.50
+
+    v = h * f;
+    io:println(v); // @output 25.00
+
+    v = f * h;
+    io:println(v); // @output 25.00
+
+    v = h * g;
+    io:println(v); // @output 62.50
+
+    v = g * h;
+    io:println(v); // @output 62.50
+
+    v = h * i;
+    io:println(v); // @output 22.50
+
+    v = i * h;
+    io:println(v); // @output 22.50
+}
+
+Test-Case: output
+Description: Test decimal multiplication with optional integers.
+Labels: DecimalNumber, decimal, int, multiplicative-expr, nil-literal, numeric-nil-lifting
+
+function init() {
+    int? a = 4;
+    int? b = ();
+    decimal c = 4.5e-1;
+
+    decimal? v = c * a;
+    io:println(v); // @output 1.800
+
+    v = a * c;
+    io:println(v); // @output 1.800
+
+    v = c * b;
+    io:println(v); // @output ()
+
+    v = b * c;
+    io:println(v); // @output ()
+}
+
+Test-Case: output
+Description: Test optional decimal multiplication with optional and non-optional integers.
+Labels: DecimalNumber, decimal, int, multiplicative-expr, nil-literal, numeric-nil-lifting
+
+function init() {
+    int a = 2; 
+    int? b = 4;
+    int? c = ();
+    float? d = 4.5e-1;
+
+    float? v = d * a;
+    io:println(v); // @output 0.9
+
+    v = a * d;
+    io:println(v); // @output 0.9
+
+    v = d * b;
+    io:println(v); // @output 1.8
+
+    v = b * d;
+    io:println(v); // @output 1.8
+
+    v = d * c;
+    io:println(v); // @output ()
+
+    v = c * d;
+    io:println(v); // @output ()
+}
+
+Test-Case: output
+Description: Test decimal multiplication with optional subtypes of integers.
+Labels: DecimalNumber, decimal, int, multiplicative-expr, numeric-nil-lifting
+
+type Ints -9|9;
+
+function init() {
+    int:Signed8? a = -2;
+    int:Signed16? b = 2;
+    int:Signed32? c = 3;
+    int:Unsigned8? d = 4;
+    int:Unsigned16? e = 5;
+    int:Unsigned32? f = 10;
+    byte? g = 2;
+    Ints? h = 9;
+
+    decimal i = 2.5;
+
+    decimal? v = i * a;
+    io:println(v); // @output -5.00
+
+    v = a * i;
+    io:println(v); // @output -5.00
+
+    v = i * b;
+    io:println(v); // @output 5.00
+
+    v = b * i;
+    io:println(v); // @output 5.00
+
+    v = i * c;
+    io:println(v); // @output 7.50
+
+    v = c * i;
+    io:println(v); // @output 7.50
+
+    v = i * d;
+    io:println(v); // @output 10.00
+
+    v = d * i;
+    io:println(v); // @output 10.00
+
+    v = i * e;
+    io:println(v); // @output 12.50
+
+    v = e * i;
+    io:println(v); // @output 12.50
+
+    v = i * f;
+    io:println(v); // @output 25.00
+
+    v = f * i;
+    io:println(v); // @output 25.00
+
+    v = i * g;
+    io:println(v); // @output 5.00
+
+    v = g * i;
+    io:println(v); // @output 5.00
+
+    v = i * h;
+    io:println(v); // @output 22.50
+
+    v = h * i;
+    io:println(v); // @output 22.50
+}
+
+Test-Case: output
+Description: Test decimal multiplication with optional subtypes of integers initialized with nil-literal.
+Labels: DecimalNumber, decimal, int, multiplicative-expr, nil-literal, numeric-nil-lifting
+
+function init() {
+    int:Signed8? a = ();
+    int:Signed16? b = ();
+    int:Signed32? c = ();
+    int:Unsigned8? d = ();
+    int:Unsigned16? e = ();
+    int:Unsigned32? f = ();
+    byte? g = ();
+
+    decimal h = 2.5;
+
+    decimal? v = h * a;
+    io:println(v); // @output ()
+
+    v = a * h;
+    io:println(v); // @output ()
+
+    v = h * b;
+    io:println(v); // @output ()
+
+    v = b * h;
+    io:println(v); // @output ()
+
+    v = h * c;
+    io:println(v); // @output ()
+
+    v = c * h;
+    io:println(v); // @output ()
+
+    v = h * d;
+    io:println(v); // @output ()
+
+    v = d * h;
+    io:println(v); // @output ()
+
+    v = h * e;
+    io:println(v); // @output ()
+
+    v = e * h;
+    io:println(v); // @output ()
+
+    v = h * f;
+    io:println(v); // @output ()
+
+    v = f * h;
+    io:println(v); // @output ()
+
+    v = h * g;
+    io:println(v); // @output ()
+
+    v = g * h;
+    io:println(v); // @output ()
+}
+
+Test-Case: output
+Description: Test optional decimal multiplication with optional and non-optional subtypes of integers.
+Labels: DecimalNumber, decimal, int, int:Signed8, int:Signed16, int:Signed32, multiplicative-expr, numeric-nil-lifting
+
+function init() {
+    int:Signed8 a = -2;
+    int:Signed16 b = 2;
+    int:Signed32 c = -5;
+    int:Unsigned8 d = 10;
+    int:Unsigned16 e = 5;
+    int:Unsigned32 f = 10;
+    byte g = 4;
+
+    int:Signed8? h = -2;
+    int:Signed16? i = 2;
+    int:Signed32? j = 4;
+    int:Unsigned8? k = 4;
+    int:Unsigned16? m = 5;
+    int:Unsigned32? n = 10;
+    byte? p = 4;
+
+    decimal? q = 2.5;
+
+    decimal? v = q * a;
+    io:println(v); // @output -5.00
+
+    v = a * q;
+    io:println(v); // @output -5.00
+
+    v = q * b;
+    io:println(v); // @output 5.00
+
+    v = b * q;
+    io:println(v); // @output 5.00
+
+    v = q * c;
+    io:println(v); // @output -12.50
+
+    v = c * q;
+    io:println(v); // @output -12.50
+
+    v = q * d;
+    io:println(v); // @output 25.00
+
+    v = d * q;
+    io:println(v); // @output 25.00
+
+    v = q * e;
+    io:println(v); // @output 12.50
+
+    v = e * q;
+    io:println(v); // @output 12.50
+
+    v = q * f;
+    io:println(v); // @output 25.00
+
+    v = f * q;
+    io:println(v); // @output 25.00
+
+    v = q * g;
+    io:println(v); // @output 10.00
+
+    v = g * q;
+    io:println(v); // @output 10.00
+
+    v = q * h;
+    io:println(v); // @output -5.00
+
+    v = h * q;
+    io:println(v); // @output -5.00
+
+    v = q * i;
+    io:println(v); // @output 5.00
+
+    v = i * q;
+    io:println(v); // @output 5.00
+
+    v = q * j;
+    io:println(v); // @output 10.00
+
+    v = j * q;
+    io:println(v); // @output 10.00
+
+    v = q * k;
+    io:println(v); // @output 10.00
+
+    v = k * q;
+    io:println(v); // @output 10.00
+
+    v = q * m;
+    io:println(v); // @output 12.50
+
+    v = m * q;
+    io:println(v); // @output 12.50
+
+    v = q * n;
+    io:println(v); // @output 25.00
+
+    v = n * q;
+    io:println(v); // @output 25.00
+
+    v = q * p;
+    io:println(v); // @output 10.00
+
+    v = p * q;
+    io:println(v); // @output 10.00
+}
+
+Test-Case: output
+Description: Test optional decimal multiplication with optional and non-optional subtypes of integers initialized with nil-literal.
+Labels: DecimalNumber, decimal, int, int:Signed8, int:Signed16, int:Signed32, multiplicative-expr, numeric-nil-lifting
+
+function init() {
+    int:Signed8? a = ();
+    int:Signed16? b = ();
+    int:Signed32? c = ();
+    int:Unsigned8? d = ();
+    int:Unsigned16? e = ();
+    int:Unsigned32? f = ();
+    byte? g = ();
+
+    decimal? h = 2.5;
+
+    decimal? v = h * a;
+    io:println(v); // @output ()
+
+    v = a * h;
+    io:println(v); // @output ()
+
+    v = h * b;
+    io:println(v); // @output ()
+
+    v = b * h;
+    io:println(v); // @output ()
+
+    v = h * c;
+    io:println(v); // @output ()
+
+    v = c * h;
+    io:println(v); // @output ()
+
+    v = h * d;
+    io:println(v); // @output ()
+
+    v = d * h;
+    io:println(v); // @output ()
+
+    v = h * e;
+    io:println(v); // @output ()
+
+    v = e * h;
+    io:println(v); // @output ()
+
+    v = h * f;
+    io:println(v); // @output ()
+
+    v = f * h;
+    io:println(v); // @output ()
+
+    v = h * g;
+    io:println(v); // @output ()
+
+    v = g * h;
+    io:println(v); // @output ()
+}
+
+Test-Case: output
+Description: Test type of decimal multiplication with integers by infering.
+Labels: DecimalNumber, decimal, int, module-const-decl, multiplicative-expr, numeric-nil-lifting
+
+const int constInt = 5;
+const decimal constDecimal = 2.5;
+
+function init() {
+    decimal a = 2.5;
+    int b = 5;
+
+    var c1 = a * b;
+    io:println(c1 is decimal); // @output true
+
+    var c2 = b * a;
+    io:println(c2 is decimal); // @output true
+
+    var d1 = a * constInt;
+    io:println(d1 is decimal); // @output true
+
+    var d2 = constInt * a;
+    io:println(d2 is decimal); // @output true
+
+    var e1 = constDecimal * b;
+    io:println(e1 is decimal); // @output true
+
+    var e2 = b * constDecimal;
+    io:println(e2 is decimal); // @output true
+
+    var f1 = constDecimal * constInt;
+    io:println(f1 is decimal); // @output true
+
+    var f2 = constInt * constDecimal;
+    io:println(f2 is decimal); // @output true
+}
+
+Test-Case: output
+Description: Test type of optional decimal division with optional and non-optional integers by infering.
+Labels: DecimalNumber, decimal, int, module-const-decl, multiplicative-expr, numeric-nil-lifting
+
+const int constInt = 5;
+const decimal constDecimal = 2.5;
+
+function init() {
+    decimal? a = 2.5;
+    int? b = 5;
+
+    var c1 = a * b;
+    io:println(c1 is decimal); // @output true
+
+    var c2 = b * a;
+    io:println(c2 is decimal); // @output true
+
+    var d1 = a * constInt;
+    io:println(d1 is decimal); // @output true
+
+    var d2 = constInt * a;
+    io:println(d2 is decimal); // @output true
+
+    var e1 = constDecimal * b;
+    io:println(e1 is decimal); // @output true
+
+    var e2 = b * constDecimal;
+    io:println(e2 is decimal); // @output true
+
+    var f1 = constDecimal * constInt;
+    io:println(f1 is decimal); // @output true
+
+    var f2 = constInt * constDecimal;
+    io:println(f2 is decimal); // @output true
+}
