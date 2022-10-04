@@ -371,3 +371,18 @@ Labels: multiplicative-expr, int, DecimalNumber
 string a = 2 * 12; // @error static type of integer multiplication is int
 string b = 2 / 1; // @error static type of integer division is int
 string c = 2 % 1; // @error static type of integer remainder is int
+
+Test-Case: error
+Fail-Issue: ballerina-platform/ballerina-lang#37541
+Description: Test decimal multiplication with integers at module constant declaration.
+Labels: DecimalNumber, decimal, int, module-const-decl, multiplicative-expr, unary-expr
+
+const decimal a = 9.999999999999999999999999999999999e6144;
+const decimal b = -9.999999999999999999999999999999999e6144;
+const int c = 100;
+const int d = -100;
+
+const decimal r1 = a * c; // @error out of range for decimal
+const decimal r2 = a * d; // @error out of range for decimal
+const decimal r3 = b * c; // @error out of range for decimal
+const decimal r4 = b * d; // @error out of range for decimal
