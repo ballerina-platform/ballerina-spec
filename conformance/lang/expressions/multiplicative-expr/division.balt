@@ -4033,3 +4033,922 @@ Description: Test integer division panic at module-level.
 Labels: multiplicative-expr, int:MIN_VALUE, DecimalNumber, unary-minus
 
 int a = int:MIN_VALUE / -1; // @panic integer overflow on division
+
+Test-Case: output
+Description: Test float division with operands of non-zero integers.
+Labels: multiplicative-expr, int, DecimalNumber, float, int:MAX_VALUE, int:MIN_VALUE, float:Infinity
+
+function init() {
+    int a = 2;
+    float b = float:Infinity;
+    float c = 4.5e-1;
+    float d = 0;
+    float e = float:NaN;
+    int f = int:MAX_VALUE;
+    int g = int:MIN_VALUE;
+
+    float v = b / a;
+    io:println(v); // @output Infinity
+
+    v = c / a;
+    io:println(v); // @output 0.225
+
+    v = d / a;
+    io:println(v); // @output 0.0
+
+    v = e / a;
+    io:println(v); // @output NaN
+
+    v = b / f;
+    io:println(v); // @output Infinity
+
+    v = c / f;
+    io:println(v); // @output 4.87890977618477E-20
+
+    v = d / f;
+    io:println(v); // @output 0.0
+
+    v = e / f;
+    io:println(v); // @output NaN
+
+    v = b / g;
+    io:println(v); // @output -Infinity
+
+    v = c / g;
+    io:println(v); // @output -4.87890977618477E-20
+
+    v = d / g;
+    io:println(v); // @output -0.0
+
+    v = e / g;
+    io:println(v); // @output NaN
+}
+
+Test-Case: output
+Description: Test float division, where second operands is zero.
+Labels: DecimalNumber, float, float:Infinity, float:NaN, int, multiplicative-expr
+
+function init() {
+    int a = 0;
+    float b = float:Infinity;
+    float c = 4.5e-1;
+    float d = 0;
+    float e = float:NaN;
+
+    float v = b / a;
+    io:println(v); // @output Infinity
+
+    v = c / a;
+    io:println(v); // @output Infinity
+
+    v = d / a;
+    io:println(v); // @output NaN
+
+    v = e / a;
+    io:println(v); // @output NaN
+}
+
+Test-Case: output
+Description: Test float division at module-level.
+Labels: DecimalNumber, float, float:Infinity, float:NaN, int, multiplicative-expr
+
+int a = 2;
+float b = float:Infinity;
+float c = 4.5e-1;
+float d = float:NaN;
+
+float e = b / a;
+float f = c / a;
+float g = d / a;
+
+function init() {
+    io:println(e); // @output Infinity
+    io:println(f); // @output 0.225
+    io:println(g); // @output NaN
+}
+
+Test-Case: output
+Description: Test float division with constants.
+Labels: DecimalNumber, float, float:Infinity, float:NaN, int, multiplicative-expr, module-const-decl, const-expr
+
+const int constInt = 2;
+const float constFloat = 0.45;
+
+const float r = constFloat / constInt;
+
+function init() {
+    int a = 2;
+    float b = float:Infinity;
+    float c = 4.5e-1;
+    float d = 0;
+    float e = float:NaN;
+    int f = int:MAX_VALUE;
+    int g = int:MIN_VALUE;
+
+    io:println(r); // @output 0.255
+
+    float v = b / constInt;
+    io:println(v); // @output Infinity
+
+    v = c / constInt;
+    io:println(v); // @output 0.255
+
+    v = d / constInt;
+    io:println(v); // @output 0.0
+
+    v = e / constInt;
+    io:println(v); // @output NaN
+
+    v = constFloat / a;
+    io:println(v); // @output 0.255
+
+    v = constFloat / f;
+    io:println(v); // @output 4.87890977618477E-20
+
+    v = constFloat / g;
+    io:println(v); // @output -4.87890977618477E-20
+
+    v = constFloat / constInt;
+    io:println(v); // @output 0.225
+}
+
+Test-Case: output
+Description: Test float division with operands of different int subtypes.
+Labels: multiplicative-expr, int, DecimalNumber, float
+
+type Ints -9|9;
+
+function init() {
+    int:Signed8 a = -2;
+    int:Signed16 b = 2;
+    int:Signed32 c = -4;
+    int:Unsigned8 d = 4;
+    int:Unsigned16 e = 5;
+    int:Unsigned32 f = 10;
+    byte g = 25;
+
+    float h = 2.5;
+    Ints i = 9;
+
+    float v = h / a;
+    io:println(v); // @output -1.25
+
+    v = h / b;
+    io:println(v); // @output 1.25
+
+    v = h / c;
+    io:println(v); // @output -0.625
+
+    v = h / d;
+    io:println(v); // @output 0.625
+
+    v = h / e;
+    io:println(v); // @output 0.5
+
+    v = h / f;
+    io:println(v); // @output 0.25
+
+    v = h / g;
+    io:println(v); // @output 0.1
+
+    v = h / i;
+    io:println(v); // @output 0.2777777777777778
+}
+
+Test-Case: output
+Description: Test float division with optional integers.
+Labels: multiplicative-expr, int, DecimalNumber, float, nil-literal, numeric-nil-lifting, float-NaN
+
+function init() {
+    int? a = 4;
+    int? b = ();
+    float c = 4.5e-1;
+    float d = float:NaN;
+
+    float? v = c / a;
+    io:println(v); // @output 0.1125
+
+    v = c / b;
+    io:println(v); // @output ()
+
+    v = d / a;
+    io:println(v); // @output NaN
+
+    v = d / b;
+    io:println(v); // @output ()
+}
+
+Test-Case: output
+Description: Test optional float division with optional and non-optional integers.
+Labels: multiplicative-expr, int, DecimalNumber, float, nil-literal, numeric-nil-lifting, float-NaN
+
+function init() {
+    int a = 2; 
+    int? b = 4;
+    int? c = ();
+    float? d = 4.5e-1;
+    float? e = float:NaN;
+
+    float? v = d / a;
+    io:println(v); // @output 0.225
+
+    v = e / a;
+    io:println(v); // @output NaN
+
+    v = d / b;
+    io:println(v); // @output 0.1125
+
+    v = e / b;
+    io:println(v); // @output NaN
+
+    v = d / c;
+    io:println(v); // @output ()
+
+    v = e / c;
+    io:println(v); // @output ()
+}
+
+Test-Case: output
+Description: Test float division with optional subtypes of integers.
+Labels: multiplicative-expr, int, DecimalNumber, float, numeric-nil-lifting, float-NaN
+
+type Ints -9|9;
+
+function init() {
+    int:Signed8? a = -2;
+    int:Signed16? b = 2;
+    int:Signed32? c = 3;
+    int:Unsigned8? d = 4;
+    int:Unsigned16? e = 5;
+    int:Unsigned32? f = 10;
+    byte? g = 2;
+    Ints? h = 9;
+
+    float i = 2.5;
+
+    float? v = i / a;
+    io:println(v); // @output -1.25
+
+    v = i / b;
+    io:println(v); // @output 1.25
+
+    v = i / c;
+    io:println(v); // @output 0.8333333333333334
+
+    v = i / d;
+    io:println(v); // @output 0.625
+
+    v = i / e;
+    io:println(v); // @output 0.5
+
+    v = i / f;
+    io:println(v); // @output 0.25
+
+    v = i / g;
+    io:println(v); // @output 1.25
+
+    v = i / h;
+    io:println(v); // @output 0.2777777777777778
+}
+
+Test-Case: output
+Description: Test float division with optional subtypes of integers initialized with nil-literal.
+Labels: multiplicative-expr, int, DecimalNumber, float, nil-literal, numeric-nil-lifting
+
+function init() {
+    int:Signed8? a = ();
+    int:Signed16? b = ();
+    int:Signed32? c = ();
+    int:Unsigned8? d = ();
+    int:Unsigned16? e = ();
+    int:Unsigned32? f = ();
+    byte? g = ();
+
+    float h = 2.5;
+
+    float? v = h / a;
+    io:println(v); // @output ()
+
+    v = h / b;
+    io:println(v); // @output ()
+
+    v = h / c;
+    io:println(v); // @output ()
+
+    v = h / d;
+    io:println(v); // @output ()
+
+    v = h / e;
+    io:println(v); // @output ()
+
+    v = h / f;
+    io:println(v); // @output ()
+
+    v = h / g;
+    io:println(v); // @output ()
+}
+
+Test-Case: output
+Description: Test optional float division with optional and non-optional subtypes of integers.
+Labels: multiplicative-expr, int, DecimalNumber, float, numeric-nil-lifting
+
+function init() {
+    int:Signed8 a = -2;
+    int:Signed16 b = 2;
+    int:Signed32 c = -5;
+    int:Unsigned8 d = 10;
+    int:Unsigned16 e = 5;
+    int:Unsigned32 f = 10;
+    byte g = 4;
+
+    int:Signed8? h = -2;
+    int:Signed16? i = 2;
+    int:Signed32? j = 4;
+    int:Unsigned8? k = 4;
+    int:Unsigned16? m = 5;
+    int:Unsigned32? n = 10;
+    byte? p = 4;
+
+    float? q = 2.5;
+
+    float? v = q / a;
+    io:println(v); // @output -1.25
+
+    v = q / b;
+    io:println(v); // @output 1.25
+
+    v = q / c;
+    io:println(v); // @output -0.5
+
+    v = q / d;
+    io:println(v); // @output 0.25
+
+    v = q / e;
+    io:println(v); // @output 0.5
+
+    v = q / f;
+    io:println(v); // @output 0.25
+
+    v = q / g;
+    io:println(v); // @output 0.625
+
+    v = q / h;
+    io:println(v); // @output -1.25
+
+    v = q / i;
+    io:println(v); // @output 1.25
+
+    v = q / j;
+    io:println(v); // @output 0.625
+
+    v = q / k;
+    io:println(v); // @output 0.625
+
+    v = q / m;
+    io:println(v); // @output 0.5
+
+    v = q / n;
+    io:println(v); // @output 0.25
+
+    v = q / p;
+    io:println(v); // @output 0.625
+}
+
+Test-Case: output
+Description: Test optional float division with optional and non-optional subtypes of integers initialized with nil-literal.
+Labels: multiplicative-expr, int, DecimalNumber, float, nil-literal, numeric-nil-lifting
+
+function init() {
+    int:Signed8? a = ();
+    int:Signed16? b = ();
+    int:Signed32? c = ();
+    int:Unsigned8? d = ();
+    int:Unsigned16? e = ();
+    int:Unsigned32? f = ();
+    byte? g = ();
+
+    float? h = 2.5;
+
+    float? v = h / a;
+    io:println(v); // @output ()
+
+    v = h / b;
+    io:println(v); // @output ()
+
+    v = h / c;
+    io:println(v); // @output ()
+
+    v = h / d;
+    io:println(v); // @output ()
+
+    v = h / e;
+    io:println(v); // @output ()
+
+    v = h / f;
+    io:println(v); // @output ()
+
+    v = h / g;
+    io:println(v); // @output ()
+}
+
+Test-Case: output
+Description: Test type of float division with integers by infering.
+Labels: multiplicative-expr, int, DecimalNumber, float, numeric-nil-lifting
+
+const int constInt = 5;
+const float constFloat = 2.5;
+
+function init() {
+    float a = 2.5;
+    int b = 5;
+
+    var c = a / b;
+    io:println(c is float); // @output true
+
+    var e = a / constInt;
+    io:println(e is float); // @output true
+
+    var g = constFloat / b;
+    io:println(g is float); // @output true
+
+    var i = constFloat / constInt;
+    io:println(i is float); // @output true
+}
+
+Test-Case: output
+Description: Test type of optional float division with optional and non-optional integers by infering.
+Labels: multiplicative-expr, int, DecimalNumber, float, numeric-nil-lifting, module-const-decl
+
+const int constInt = 5;
+const float constFloat = 2.5;
+
+function init() {
+    float? a = 2.5;
+    int? b = 5;
+
+    var c = a / b;
+    io:println(c is float); // @output true
+
+    var e = a / constInt;
+    io:println(e is float); // @output true
+
+    var g = constFloat / b;
+    io:println(g is float); // @output true
+
+    var i = constFloat / constInt;
+    io:println(i is float); // @output true
+}
+
+Test-Case: output
+Description: Test type of float division with integers results Infinity and NaN.
+Labels: multiplicative-expr, int, DecimalNumber, float, float:Infinity, float:NaN
+
+function init() {
+    float a = 8388608333e+298;
+    int b = 20;
+    float c = float:Infinity;
+    float d = float:NaN;
+    int e = 0;
+
+    float v = c / b;
+    io:println(v); // @output Infinity
+
+    v = d / b;
+    io:println(v); // @output NaN
+
+    v = a / e;
+    io:println(v); // @output Infinity
+
+    v = c / e;
+    io:println(v); // @output Infinity
+
+    v = d / e;
+    io:println(v); // @output NaN
+}
+
+Test-Case: output
+Description: Test decimal division with operands of non-zero integers.
+Labels: multiplicative-expr, int, DecimalNumber, decimal, int:MAX_VALUE, int:MIN_VALUE
+
+function init() {
+    int a = 2;
+    decimal b = 4.5e-1;
+    int c = int:MAX_VALUE;
+    int d = int:MIN_VALUE;
+
+    decimal v = b / a;
+    io:println(v); // @output 0.225
+
+    v = b / c;
+    io:println(v); // @output 4.878909776184769953562510061784767E-20
+
+    v = b / d;
+    io:println(v); // @output -4.878909776184769953033537603914738E-20
+}
+
+Test-Case: output
+Description: Test decimal division at module-level.
+Labels: multiplicative-expr, int, decimal, DecimalNumber
+
+int a = 2;
+decimal b = 4.5e-1;
+decimal c = 0.2;
+
+decimal d = b / a;
+decimal e = c / a;
+
+function init() {
+    io:println(d); // @output 0.225
+    io:println(e); // @output 0.1
+}
+
+Test-Case: output
+Description: Test decimal division with constants.
+Labels: multiplicative-expr, int, decimal, DecimalNumber, module-const-decl, const-expr
+
+const int constInt = 2;
+const float constDecimal = 0.45;
+
+const float r = constDecimal / constInt;
+
+function init() {
+    int a = 2;
+    decimal b = 4.5e-1;
+    decimal c = 0;
+    int d = int:MAX_VALUE;
+    int e = int:MIN_VALUE;
+
+    io:println(r); // @output 0.225
+
+    decimal v = b / a;
+    io:println(v); // @output 0.225
+
+    v = c / a;
+    io:println(v); // @output 0
+
+    v = b / d;
+    io:println(v); // @output 4.878909776184769953562510061784767E-20
+
+    v = c / d;
+    io:println(v); // @output 0
+
+    v = b / e;
+    io:println(v); // @output -4.878909776184769953033537603914738E-20
+
+    v = c / e;
+    io:println(v); // @output 0
+}
+
+Test-Case: output
+Description: Test decimal division with operands of different int subtypes.
+Labels: multiplicative-expr, int, DecimalNumber, decimal
+
+type Ints -9|9;
+
+function init() {
+    int:Signed8 a = -2;
+    int:Signed16 b = 2;
+    int:Signed32 c = -4;
+    int:Unsigned8 d = 4;
+    int:Unsigned16 e = 5;
+    int:Unsigned32 f = 10;
+    byte g = 25;
+
+    decimal h = 2.5;
+    Ints i = 9;
+
+    decimal v = h / a;
+    io:println(v); // @output -1.25
+
+    v = h / b;
+    io:println(v); // @output 1.25
+
+    v = h / c;
+    io:println(v); // @output -0.625
+
+    v = h / d;
+    io:println(v); // @output 0.625
+
+    v = h / e;
+    io:println(v); // @output 0.5
+
+    v = h / f;
+    io:println(v); // @output 0.25
+
+    v = h / g;
+    io:println(v); // @output 0.1
+
+    v = h / i;
+    io:println(v); // @output 0.2777777777777777777777777777777778
+}
+
+Test-Case: output
+Description: Test decimal division with optional integers.
+Labels: multiplicative-expr, int, DecimalNumber, decimal, nil-literal, numeric-nil-lifting
+
+function init() {
+    int? a = 4;
+    int? b = ();
+    decimal c = 4.5e-1;
+
+    decimal? v = c / a;
+    io:println(v); // @output 0.1125
+
+    v = c / b;
+    io:println(v); // @output ()
+}
+
+Test-Case: output
+Description: Test optional decimal division with optional and non-optional integers.
+Labels: multiplicative-expr, int, DecimalNumber, decimal, nil-literal, numeric-nil-lifting
+
+function init() {
+    int a = 2; 
+    int? b = 4;
+    int? c = ();
+    float? d = 4.5e-1;
+
+    float? v = d / a;
+    io:println(v); // @output 0.225
+
+    v = d / b;
+    io:println(v); // @output 0.1125
+
+    v = d / c;
+    io:println(v); // @output ()
+}
+
+Test-Case: output
+Description: Test decimal division with optional subtypes of integers.
+Labels: multiplicative-expr, int, DecimalNumber, decimal, numeric-nil-lifting
+
+type Ints -9|9;
+
+function init() {
+    int:Signed8? a = -2;
+    int:Signed16? b = 2;
+    int:Signed32? c = 3;
+    int:Unsigned8? d = 4;
+    int:Unsigned16? e = 5;
+    int:Unsigned32? f = 10;
+    byte? g = 2;
+    Ints? h = 9;
+
+    decimal i = 2.5;
+
+    decimal? v = i / a;
+    io:println(v); // @output -1.25
+
+    v = i / b;
+    io:println(v); // @output 1.25
+
+    v = i / c;
+    io:println(v); // @output 0.8333333333333333333333333333333333
+
+    v = i / d;
+    io:println(v); // @output 0.625
+
+    v = i / e;
+    io:println(v); // @output 0.5
+
+    v = i / f;
+    io:println(v); // @output 0.25
+
+    v = i / g;
+    io:println(v); // @output 1.25
+
+    v = i / h;
+    io:println(v); // @output 0.2777777777777777777777777777777778
+}
+
+Test-Case: output
+Description: Test decimal division with optional subtypes of integers initialized with nil-literal.
+Labels: multiplicative-expr, int, DecimalNumber, decimal, nil-literal, numeric-nil-lifting
+
+function init() {
+    int:Signed8? a = ();
+    int:Signed16? b = ();
+    int:Signed32? c = ();
+    int:Unsigned8? d = ();
+    int:Unsigned16? e = ();
+    int:Unsigned32? f = ();
+    byte? g = ();
+
+    decimal h = 2.5;
+
+    decimal? v = h / a;
+    io:println(v); // @output ()
+
+    v = h / b;
+    io:println(v); // @output ()
+
+    v = h / c;
+    io:println(v); // @output ()
+
+    v = h / d;
+    io:println(v); // @output ()
+
+    v = h / e;
+    io:println(v); // @output ()
+
+    v = h / f;
+    io:println(v); // @output ()
+
+    v = h / g;
+    io:println(v); // @output ()
+}
+
+Test-Case: output
+Description: Test optional decimal division with optional and non-optional subtypes of integers.
+Labels: multiplicative-expr, int, DecimalNumber, decimal, numeric-nil-lifting
+
+function init() {
+    int:Signed8 a = -2;
+    int:Signed16 b = 2;
+    int:Signed32 c = -5;
+    int:Unsigned8 d = 10;
+    int:Unsigned16 e = 5;
+    int:Unsigned32 f = 10;
+    byte g = 4;
+
+    int:Signed8? h = -2;
+    int:Signed16? i = 2;
+    int:Signed32? j = 4;
+    int:Unsigned8? k = 4;
+    int:Unsigned16? m = 5;
+    int:Unsigned32? n = 10;
+    byte? p = 4;
+
+    decimal? q = 2.5;
+
+    decimal? v = q / a;
+    io:println(v); // @output -1.25
+
+    v = q / b;
+    io:println(v); // @output 1.25
+
+    v = q / c;
+    io:println(v); // @output -0.5
+
+    v = q / d;
+    io:println(v); // @output 0.25
+
+    v = q / e;
+    io:println(v); // @output 0.5
+
+    v = q / f;
+    io:println(v); // @output 0.25
+
+    v = q / g;
+    io:println(v); // @output 0.625
+
+    v = q / h;
+    io:println(v); // @output -1.25
+
+    v = q / i;
+    io:println(v); // @output 1.25
+
+    v = q / j;
+    io:println(v); // @output 0.625
+
+    v = q / k;
+    io:println(v); // @output 0.625
+
+    v = q / m;
+    io:println(v); // @output 0.5
+
+    v = q / n;
+    io:println(v); // @output 0.25
+
+    v = q / p;
+    io:println(v); // @output 0.625
+}
+
+Test-Case: output
+Description: Test optional decimal division with optional and non-optional subtypes of integers initialized with nil-literal.
+Labels: multiplicative-expr, int, DecimalNumber, decimal, nil-literal, numeric-nil-lifting
+
+function init() {
+    int:Signed8? a = ();
+    int:Signed16? b = ();
+    int:Signed32? c = ();
+    int:Unsigned8? d = ();
+    int:Unsigned16? e = ();
+    int:Unsigned32? f = ();
+    byte? g = ();
+
+    decimal? h = 2.5;
+
+    decimal? v = h / a;
+    io:println(v); // @output ()
+
+    v = h / b;
+    io:println(v); // @output ()
+
+    v = h / c;
+    io:println(v); // @output ()
+
+    v = h / d;
+    io:println(v); // @output ()
+
+    v = h / e;
+    io:println(v); // @output ()
+
+    v = h / f;
+    io:println(v); // @output ()
+
+    v = h / g;
+    io:println(v); // @output ()
+}
+
+Test-Case: output
+Description: Test type of decimal division with integers by infering.
+Labels: multiplicative-expr, int, DecimalNumber, decimal, numeric-nil-lifting, module-const-decl
+
+const int constInt = 5;
+const decimal constDecimal = 2.5;
+
+function init() {
+    decimal a = 2.5;
+    int b = 5;
+
+    var c = a / b;
+    io:println(c is decimal); // @output true
+
+    var e = a / constInt;
+    io:println(e is decimal); // @output true
+
+    var g = constDecimal / b;
+    io:println(g is decimal); // @output true
+
+    var i = constDecimal / constInt;
+    io:println(i is decimal); // @output true
+}
+
+Test-Case: output
+Description: Test type of optional decimal division with integers by infering.
+Labels: multiplicative-expr, int, DecimalNumber, decimal, numeric-nil-lifting, module-const-decl
+
+const int constInt = 5;
+const decimal constDecimal = 2.5;
+
+function init() {
+    decimal? a = 2.5;
+    int? b = 5;
+
+    var c = a / b;
+    io:println(c is decimal); // @output true
+
+    var e = a / constInt;
+    io:println(e is decimal); // @output true
+
+    var g = constDecimal / b;
+    io:println(g is decimal); // @output true
+
+    var i = constDecimal / constInt;
+    io:println(i is decimal); // @output true
+}
+
+Test-Case: panic
+Description: Test 1 for decimal division panic on unsupported decimal value 'Infinity'.
+Labels: multiplicative-expr, int, DecimalNumber, unary-minus, decimal
+
+function init() {
+    decimal a = 5;
+    int b = -0;
+
+    decimal _ = a / b; // @panic unsupported decimal value 'Infinity'
+}
+
+Test-Case: panic
+Description: Test 2 for decimal division panic on unsupported decimal value 'Infinity'.
+Labels: multiplicative-expr, int, DecimalNumber, unary-minus, decimal
+
+function init() {
+    decimal a = 5;
+    int b = 0;
+
+    decimal _ = a / b; // @panic unsupported decimal value 'Infinity'
+}
+
+Test-Case: panic
+Description: Test 3 for decimal division panic on unsupported decimal value 'NaN'.
+Labels: multiplicative-expr, int, DecimalNumber, unary-minus, decimal
+
+function init() {
+    decimal a = 0;
+    int b = -0;
+
+    decimal _ = a / b; // @panic unsupported decimal value 'NaN'
+}
+
+Test-Case: panic
+Description: Test 4 for decimal division panic on unsupported decimal value 'NaN'.
+Labels: multiplicative-expr, int, DecimalNumber, unary-minus, decimal
+
+function init() {
+    decimal a = -0;
+    int b = 0;
+
+    decimal _ = a / b; // @panic unsupported decimal value 'NaN'
+}
