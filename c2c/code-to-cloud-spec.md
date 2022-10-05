@@ -242,8 +242,8 @@ Contains container image related properties.
 
 |Identifier   	|Description	                            |Default Value   	 |
 |---	        |---	                                    |---	             |
-|name   	    |Name of the container image                |"hello"             |
-|repository   	|Container repository to host the container |"ballerina"   	     |
+|name   	    |Name of the container image                |$USER-$MODULE_NAME            |
+|repository   	|Container repository to host the container |""   	     |
 |tag   	        |Tag of the container   	                |"latest"   	     |
 |base   	    |Base container of the container image   	|"ballerina/jvm-runtime:1.0"|
 |cmd   	    |Instruction, which is executed when the container starts up   	|   - |
@@ -296,7 +296,7 @@ Contains external files required for the code.
 |Identifier |Description                                        |Example Value     |
 |---	    |---	                                            |---	           |
 |file    |Path of the external file            |"resource/file.txt"                |
-|mount_path |Path of the file in the container    |"/home/ballerina/foo/file.conf" |
+|mount_path |Path of the file in the container    |"/home/ballerina/foo/file.txt" |
 
 #### [[cloud.config.files]]
 
@@ -314,7 +314,6 @@ Contains the properties related to the deployment.
 |Identifier            |Description                                              |Default Value     |
 |---	                |---	                                                 |---	            |
 |internal_domain_name   |Name of the internal domain (k8s service name)          |${MODULE_NAME}-svc|
-|external_accessible   |External accessibility of the deployment                 |                  |
 |min_memory            |Minimum memory allocated to the container                |"100Mi"           |
 |max_memory   	        |Maximum memory allocated to the container  	         |"256Mi"   	    |
 |min_cpu   	            |Minimum CPU allocated to the container 	             |"1000m"   	    |
