@@ -29,15 +29,6 @@ function init() {
 }
 
 Test-Case: output
-Description: Test type cast param with a type containing deprecated annotation.
-Labels: annotation, any, deprecated, type-cast-expr
-
-function init() {
-    any a = 5;
-    int _ = <@deprecated int>a;
-}
-
-Test-Case: output
 Description: Test type cast param containing only annotations.
 Labels: annotation, annotation-decl, any, map-type, mapping-constructor-expr, string, type-cast-expr
 
@@ -46,15 +37,6 @@ annotation map<string> MyAnnot on type;
 function init() {
     any a = 5;
     any _ = <@MyAnnot {name: "Ballerina"}>a;
-}
-
-Test-Case: output
-Description: Test type cast param containing only deprecated annotation.
-Labels: annotation, annotation-decl, any, deprecated, type-cast-expr
-
-function init() {
-    any a = 5;
-    any _ = <@deprecated>a;
 }
 
 Test-Case: error
@@ -879,7 +861,7 @@ Labels: byte, decimal, DecimalFloatingPointNumber, float, FloatingPointTypeSuffi
 function init() {
     float a = 1 / 3;
     decimal b = <decimal>a;
-    io:println(b); // @output 0.3333333333333333148296162562473910
+    io:println(b); // @output 0.3333333333333333
 
     float c = 5.5f;
     int d = <int>c;
@@ -1167,7 +1149,7 @@ type MyByte byte;
 function init() {
     float a = 1 / 3;
     MyDecimal b = <MyDecimal>a;
-    io:println(b); // @output 0.3333333333333333148296162562473910
+    io:println(b); // @output 0.3333333333333333
 
     float c = 5.5f;
     MyInt d = <MyInt>c;
@@ -1254,7 +1236,7 @@ type MyRecord record {|
 function init() {
     float|string|MyRecord a = 3.44343;
     decimal b = <decimal>a;
-    io:println(b); // @output 3.443430000000000212878603633726016
+    io:println(b); // @output 3.44343
 
     float|byte|MyRecord c = 5.5f;
     int d = <int>c;
@@ -1306,7 +1288,7 @@ type MyRecord record {|
 function init() {
     float|string|MyRecord a = 3.44343;
     decimal|string b = <decimal|string>a;
-    io:println(b); // @output 3.443430000000000212878603633726016
+    io:println(b); // @output 3.44343
 
     float|byte|MyRecord c = 5.5f;
     int|MyRecord d = <int|MyRecord>c;
@@ -1366,7 +1348,7 @@ type MyUnionContainsFloat float|string;
 function init() {
     MyUnionContainsFloat|MyRecord a = 3.44343;
     MyUnionContainsDecimal b = <MyUnionContainsDecimal>a;
-    io:println(b); // @output 3.443430000000000212878603633726016
+    io:println(b); // @output 3.44343
 
     float|byte|MyRecord c = 5.5f;
     MyUnionContainsInt d = <MyUnionContainsInt>c;
@@ -1961,7 +1943,6 @@ function init() {
 Test-Case: output
 Description: Test cast to readonly can be used to cause constructors withing the expression to construct values
              with the read-only bit on.
-Fail-Issue: ballerina-platform/ballerina-lang#32542
 Labels: array-type, byte, byte-array-literal, readonly-type, type-cast-expr, typeof-expr, var
         
 function init() {
@@ -1972,7 +1953,7 @@ function init() {
     io:println(typeof g); // @output typedesc [170,75]
 
     byte[2] h = <byte[2] & readonly>base16 `ba16`;
-    io:println(typeof h); // @output typedesc [186]
+    io:println(typeof h); // @output typedesc [186,22]
 
     var i = <int[1] & readonly>base16 `ff`;
     io:println(typeof i); // @output typedesc [255]
