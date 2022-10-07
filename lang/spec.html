@@ -1882,27 +1882,38 @@ types using their normal string syntax, while distinguishing the values as
 belonging to a specific tagged data type.
 </p>
 <p>
-Data tags are defined either by this specification or the Ballerina platform. For
-each such data tag, there is a basic type. The definition of a data tag
-specifies the set of values belonging to corresponding basic type. A tagged data
-value is a value belonging to one of these basic types. Every tagged data value
-is plain data, immmutable and has no storage identity. It is also atomic, in the
-sense that it contains no references to other values.
+Data tags are defined either by this specification or the Ballerina platform.
+For each such data tag, there is a corresponding basic type. The definition of a
+data tag specifies the set of values belonging to the corresponding basic type.
+A tagged data value is a value belonging to one of these basic types. Every
+tagged data value is plain data, immutable and has no storage identity. It is
+also atomic, in the sense that it contains no references to other values.
 </p>
 <p>
-The definition of a data tag defines:
+The definition of a data tag with corresponding basic type B specifies:
 </p>
 <ul>
-<li>the tag; this is an unqualified identifier that is used with the
-tagged-data-template-expr to construct</li>
-<li>the set of values that its corresponding basic basic type consists of</li>
-<li>an abstract function mapping from strings to values</li>
-<li>an abstract function mapping from values to strings</li>
-<li>a library module; method call expressions on values of the basic type will
-call functions in this module</li>
+<li>the name of the data tag; this is an unqualified identifier that is used
+with the tagged-data-template-expr to construct a value of type B;</li>
+<li>the set of values that B consists of;</li>
+<li>an abstract parsing function, used at compile-time; a sequence of characters
+into which <var>n</var> values can be interpolated is represented by an array of
+<var>n</var> + 1 strings; the abstract parsing function accordingly takes an
+array of <var>n</var> + 1 strings, with <var>n</var> &#x2065; 0, and returns
+either an error or a function of <var>n</var> arguments that interpolates its
+arguments into the result of the parse; the type of both the arguments and the
+return value of the returned function is B;</li>
+<li>an abstract function mapping from values of type B to strings;</li>
+<li>a library module; method call expressions on values of type B will call
+functions in this module.</li>
 </ul>
 <p>
-Most of the functionality of a tagged data type is provided by the library
+Note that errors cannot happen during interpolation. The abstract parsing
+function must therefore allow interpolations only in places where any valid
+value of type B can be interpolated.
+</p>
+<p>
+Most of the functionality of a tagged data type is provided by its library
 module.
 </p>
 
@@ -1910,8 +1921,8 @@ module.
 class="grammar">tagged-data-type-descriptor := qualified-identifier
 </pre>
 <p>
-The qualified-identifier refers to a type that is defined in a module that is
-part of the language library or standard library.
+The qualified-identifier in a tagged-data-type-descriptor refers to a type that
+is defined in a module that is part of the language library or standard library.
 </p>
 <p>
 In this version of the Ballerina language, only the data tag <code>re</code>
@@ -4673,12 +4684,36 @@ that has its read-only bit on.
 <h4>Tagged data template expression</h4>
 
 <pre
-class="grammar">tagged-data-template-expr := identifier BacktickString
+class="grammar">tagged-data-template-expr := data-tag BacktickString
+data-tag := identifier
 </pre>
 <p>
-The identifier must defined as a data tag by this specification or the Ballerina
-platform.
+A tagged-data-template-expr with data tag <var>t</var> constructs a tagged data
+value of the basic type corresponding to <var>t</var>. The data-tag identifier
+must be the name of a data tag by this specification or the Ballerina platform.
 </p>
+<p>
+The BacktickString is parsed in two stages:
+</p>
+<ol>
+<li>the BacktickString is parsed resulting in a sequence of literal characters
+and interpolations, represented as an array of <var>n</var> expressions, one for
+each interpolation, and an array of <var>n</var> + 1 strings, where the
+interpolations occur between the strings;</li>
+<li>the array of strings is parsed using the abstract parsing function defined
+for the data tag; it is a compile-time error if the abstract parsing function
+returns an error.</li>
+</ol>
+<p>
+The static type of the expression in an interpolation must be the data tag's
+basic type. When the tagged-data-template-expr is evaluated, each expression in
+an interpolation is evaluated in order. The result of evaluating the
+tagged-data-template-expr is the result of applying the function that was
+created by the abstract parsing function at compile-time to the values resulting
+from the evaluation of these expressions. Note that the result of evaluating a
+tagged-data-template-expr cannot be an error.
+</p>
+
 </section>
 
 
@@ -10837,8 +10872,8 @@ of the name to which the documentation string is attached.
 <h3>Regular expressions</h3>
 
 <p>
-The <code>re</code> tag is used for regular expressions. The lang library module
-for the corresponding basic type is <code>lang.regexp</code>.
+The <code>re</code> data tag is used for regular expressions. The lang library
+module for the corresponding basic type is <code>lang.regexp</code>.
 </p>
 <p>
 The syntax and semantics of Ballerina regular expressions are based on Perl.
@@ -10960,7 +10995,7 @@ string.
 </p>
 <p>
 The most rigorous specification of the semantics of Perl-style regular
-expressions in the the ECMAScript language specification. For this reason, the
+expressions is in the ECMAScript language specification. For this reason, the
 semantics of Ballerina regular expressions are defined by reference to the
 ECMAScript language specification, specifically ECMAScript 2022. The syntax of
 Ballerina regular expressions has been chosen to be a subset of ECMAScript
@@ -11011,8 +11046,8 @@ effect, any character in the regular expression that matches to the
 
 <p>
 ECMAScript specifies how to compile a regular expression in the above syntax
-into an abstract function that takes as arguments input string and an index into
-the input string, and returns a value saying whether the regular expression
+into an abstract function that takes as arguments an input string and an index
+into the input string, and returns a value saying whether the regular expression
 matches the input string starting at the index, and, if it does, the index where
 the match ended, and for each capturing group, the start and end index, if any,
 within the input string where the capturing group matched. This abstract
