@@ -144,8 +144,8 @@ public isolated function fromHexString(string s) returns int|error = external;
 #    a decreasing sequence
 # + return - an iterable object
 public isolated function range(int rangeStart, int rangeEnd, int step) returns object {
-    public isolated function iterable() returns object {
-        *object:Iterable;
+    *object:Iterable;
+    public isolated function iterator() returns object {
         public isolated function next() returns record {|
             int value;
        |}?;
