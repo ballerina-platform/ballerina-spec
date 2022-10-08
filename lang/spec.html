@@ -349,18 +349,16 @@ Values are of four kinds, each corresponding to a kind of basic type:
 </p>
 <ul>
 <li>simple values, like booleans and floating point numbers, which are not
-constructed from other values;</li>
+composed from other values;</li>
 <li>structured values, like mappings and lists, which contain values of arbitrary basic types;</li>
 <li>sequence values, which consists of sequences of values of the same basic type;</li>
-<li>tagged data values, used for well-known data types with their own
-specialized string syntax;</li>
 <li>behavioral values, like functions and objects, which are not just data.</li>
 </ul>
 <p>
 There is a fundamental distinction between values that have a <em>storage
 identity</em> and values that do not. A value that has storage identity has an
 identity that comes from the location where the value is stored. All structural
-and behavioural values have a storage identity, whereas all simple values and tagged data values
+and behavioural values have a storage identity, whereas all simple values
 do not. Storage identity for sequence values is more complicated and will be
 explained in the section on sequence values.
 </p>
@@ -399,15 +397,13 @@ the shape does not consider representation details that do not affect the
 mathematical value being represented.
 </p>
 <p>
-A value is <em>plain data</em> if it is a simple value, a sequence value,
-a tagged data value or a
+A value is <em>plain data</em> if it is a simple value, a sequence value, or a
 structured value that does not contain a behavioral value at any depth.
 More precisely, a value is defined to be <em>plain data</em> if it is
 </p>
 <ul>
 <li>a simple value,</li>
 <li>a sequence value,</li>
-<li>a tagged data value, or</li>
 <li>a structured value, all of whose members are also plain data.</li>
 </ul>
 <p>
@@ -748,7 +744,6 @@ class="grammar">type-descriptor :=
    simple-type-descriptor
    | sequence-type-descriptor
    | structured-type-descriptor
-   | tagged-data-type-descriptor
    | behavioral-type-descriptor
    | other-type-descriptor
 </pre>
@@ -930,7 +925,7 @@ The following tables summarizes the iterable basic types.
 <section>
 <h3>Simple values</h3>
 <p>
-A simple value belongs to exactly one of the following basic types:
+The basic type of a simple value is either one of the following
 </p>
 <ul>
 <li>nil</li>
@@ -940,8 +935,7 @@ A simple value belongs to exactly one of the following basic types:
 <li>decimal</li>
 </ul>
 <p>
-The type descriptor for each simple basic type contains all the values of the
-basic type.
+or is a tagged data type.
 </p>
 <p>
 All simple basic types are inherently immutable.
@@ -953,7 +947,12 @@ class="grammar">simple-type-descriptor :=
    | boolean-type-descriptor
    | int-type-descriptor
    | floating-point-type-descriptor
+   | tagged-data-type-descriptor
 </pre>
+<p>
+The type descriptor for each simple basic type contains all the values of the
+basic type.
+</p>
 <section>
 <h4>Nil</h4>
 
@@ -1112,6 +1111,67 @@ do so using different exponents.
 </p>
 </section>
 </section>
+<section>
+<h4>Tagged data values</h4>
+
+<p>
+Tagged data types are used for well-known data types that are not
+application-specific, but are widely supported across multiple protocols and
+programming languages. Each of these data types has its own conventional string
+syntax. The use of tagged data types allows programs to work with these data
+types using their normal string syntax, while distinguishing the values as
+belonging to a specific tagged data type.
+</p>
+<p>
+Data tags are defined either by this specification or the Ballerina platform.
+For each such data tag, there is a corresponding basic type. The definition of a
+data tag specifies the set of values belonging to the corresponding basic type.
+A tagged data value is a value belonging to one of these basic types. Every
+tagged data value is plain data, immutable and has no storage identity. The
+shape of a tagged data value is the value.
+</p>
+<p>
+The definition of a data tag with corresponding basic type B specifies:
+</p>
+<ul>
+<li>the name of the data tag; this is an unqualified identifier that is used
+with the tagged-data-template-expr to construct a value of type B;</li>
+<li>the set of values that B consists of;</li>
+<li>an abstract parsing function, used at compile-time; a sequence of characters
+into which <var>n</var> values can be interpolated is represented by an array of
+<var>n</var> + 1 strings; the abstract parsing function accordingly takes an
+array of <var>n</var> + 1 strings, with <var>n</var> &#x2065; 0, and returns
+either an error or a function of <var>n</var> arguments that interpolates its
+arguments into the result of the parse; the type of both the arguments and the
+return value of the returned function is B;</li>
+<li>an abstract function mapping from values of type B to strings;</li>
+<li>a library module; method call expressions on values of type B will call
+functions in this module.</li>
+</ul>
+<p>
+Note that errors cannot happen during interpolation. The abstract parsing
+function must therefore allow interpolations only in places where any valid
+value of type B can be interpolated.
+</p>
+<p>
+Most of the functionality of a tagged data type is provided by its library
+module.
+</p>
+
+<pre
+class="grammar">tagged-data-type-descriptor := qualified-identifier
+</pre>
+<p>
+The qualified-identifier in a tagged-data-type-descriptor refers to a type that
+is defined in a module that is part of the language library or standard library.
+</p>
+<p>
+In this version of the Ballerina language, only the data tag <code>re</code>
+is defined, with associated lang library module <code>lang.regexp</code>.
+</p>
+
+</section>
+
 </section>
 <section>
 <h3>Sequence values</h3>
@@ -1869,66 +1929,6 @@ table in order and the iteration completion value is always nil.
 </p>
 
 </section>
-</section>
-<section>
-<h3>Tagged data values</h3>
-
-<p>
-Tagged data types are used for well-known data types that are not
-application-specific, but are widely supported across multiple protocols and
-programming languages. Each of these data types has its own conventional string
-syntax. The use of tagged data types allows programs to work with these data
-types using their normal string syntax, while distinguishing the values as
-belonging to a specific tagged data type.
-</p>
-<p>
-Data tags are defined either by this specification or the Ballerina platform.
-For each such data tag, there is a corresponding basic type. The definition of a
-data tag specifies the set of values belonging to the corresponding basic type.
-A tagged data value is a value belonging to one of these basic types. Every
-tagged data value is plain data, immutable and has no storage identity. It is
-also atomic, in the sense that it contains no references to other values.
-</p>
-<p>
-The definition of a data tag with corresponding basic type B specifies:
-</p>
-<ul>
-<li>the name of the data tag; this is an unqualified identifier that is used
-with the tagged-data-template-expr to construct a value of type B;</li>
-<li>the set of values that B consists of;</li>
-<li>an abstract parsing function, used at compile-time; a sequence of characters
-into which <var>n</var> values can be interpolated is represented by an array of
-<var>n</var> + 1 strings; the abstract parsing function accordingly takes an
-array of <var>n</var> + 1 strings, with <var>n</var> &#x2065; 0, and returns
-either an error or a function of <var>n</var> arguments that interpolates its
-arguments into the result of the parse; the type of both the arguments and the
-return value of the returned function is B;</li>
-<li>an abstract function mapping from values of type B to strings;</li>
-<li>a library module; method call expressions on values of type B will call
-functions in this module.</li>
-</ul>
-<p>
-Note that errors cannot happen during interpolation. The abstract parsing
-function must therefore allow interpolations only in places where any valid
-value of type B can be interpolated.
-</p>
-<p>
-Most of the functionality of a tagged data type is provided by its library
-module.
-</p>
-
-<pre
-class="grammar">tagged-data-type-descriptor := qualified-identifier
-</pre>
-<p>
-The qualified-identifier in a tagged-data-type-descriptor refers to a type that
-is defined in a module that is part of the language library or standard library.
-</p>
-<p>
-In this version of the Ballerina language, only the data tag <code>re</code>
-is defined, with associated lang library module <code>lang.regexp</code>.
-</p>
-
 </section>
 <section>
 <h3>Behavioral values</h3>
