@@ -4034,11 +4034,71 @@ Labels: multiplicative-expr, int:MIN_VALUE, DecimalNumber, unary-minus
 
 int a = int:MIN_VALUE / -1; // @panic integer overflow on division
 
+Test-Case: panic
+Description: Test 1 for decimal division panic on division by zero.
+Labels: multiplicative-expr, DecimalNumber, unary-minus, DecimalFloatingPointNumber, decimal, DecimalTypeSuffix
+
+function init() {
+    decimal a = 25.0E1742d;
+    decimal b = 0.0d;
+    decimal c = a / b; // @panic decimal operation resulting in unsupported decimal value 'Infinity'
+}
+
+Test-Case: panic
+Description: Test 2 for decimal division panic on division by zero.
+Labels: multiplicative-expr, DecimalNumber, unary-minus, DecimalFloatingPointNumber, decimal, DecimalTypeSuffix
+
+function init() {
+    decimal a = -25.0E1742d;
+    decimal b = 0.0d;
+    decimal c = a / b; // @panic decimal operation resulting in unsupported decimal value '-Infinity'
+}
+
+Test-Case: panic
+Description: Test 3 for decimal division panic on division by zero.
+Labels: multiplicative-expr, DecimalNumber, unary-minus, DecimalFloatingPointNumber, decimal, DecimalTypeSuffix
+
+function init() {
+    decimal a = 25.0E1742d;
+    decimal b = -0.0d;
+    decimal c = a / b; // @panic decimal operation resulting in unsupported decimal value '-Infinity'
+}
+
+Test-Case: panic
+Description: Test 4 for decimal division panic on division by zero.
+Labels: multiplicative-expr, DecimalNumber, unary-minus, DecimalFloatingPointNumber, decimal, DecimalTypeSuffix
+
+function init() {
+    decimal a = -25.0E1742d;
+    decimal b = -0.0d;
+    decimal c = a / b; // @panic decimal operation resulting in unsupported decimal value 'Infinity'
+}
+
+Test-Case: panic
+Description: Test 1 for decimal division panic on division of zero by zero.
+Labels: multiplicative-expr, DecimalNumber, unary-minus, DecimalFloatingPointNumber, decimal, DecimalTypeSuffix
+
+function init() {
+    decimal a = 0.0d;
+    decimal b = 0.0d;
+    decimal c = a / b; // @panic decimal operation resulting in unsupported decimal value 'NaN'
+}
+
+Test-Case: panic
+Description: Test 2 for decimal division panic on division of zero by zero.
+Labels: multiplicative-expr, DecimalNumber, unary-minus, DecimalFloatingPointNumber, decimal, DecimalTypeSuffix
+
+function init() {
+    decimal a = -0.0d;
+    decimal b = 0.0d;
+    decimal c = a / b; // @panic decimal operation resulting in unsupported decimal value 'NaN'
+}
+
 Test-Case: output
 Description: Test division scenarios for different decimal values.
 Labels: multiplicative-expr, DecimalFloatingPointNumber, decimal, DecimalTypeSuffix, unary-minus
 
-public function init() {
+function init() {
      decimal a = 2.5E-17d;
      decimal b = 2.5E+17d;
      decimal c = b / a;
@@ -4057,12 +4117,6 @@ public function init() {
      io:println(c); // @output 2.5E+1743
      io:println(25.0E1742d / 1.0d); // @output 2.5E+1743
 
-     a = 25.0E1742d;
-     b = 0.0d;
-     c = a / b;
-     io:println(c); // @output Infinity
-     io:println(25.0E1742d / 0.0d); // @output Infinity
-
      a = 25.0E17d;
      b = 0.9E-10d;
      c = a / b;
@@ -4075,48 +4129,18 @@ public function init() {
      io:println(c); // @output -27777777777777777777777777777.77778
      io:println(-25.0E17d / 0.9E-10d); // @output -27777777777777777777777777777.77778
 
-     a = 17.0E12d;
-     b = 0.0d;
-     c = a / b;
-     io:println(c); // @output Infinity
-     io:println(17.0E12d / 0.0d); // @output Infinity
-
-     a = -17.0E12d;
-     b = 0.0d;
-     c = a / b;
-     io:println(c); // @output -Infinity
-     io:println(-17.0E12d / 0.0d); // @output -Infinity
-
-     a = 11.0E12d;
-     b = -0.0d;
-     c = a / b;
-     io:println(c); // @output Infinity
-     io:println(11.0E12d / -0.0d); // @output Infinity
-
      a = 17.0E1290d;
      b = 13.0E1521d;
      c = a / b;
      io:println(c); // @output 1.307692307692307692307692307692308E-231
      io:println(17.0E1290d / 13.0E1521d); // @output 1.307692307692307692307692307692308E-231
-
-     a = 0.0d;
-     b = 0.0d;
-     c = a / b;
-     io:println(c); // @output NaN
-     io:println(0.0d / 0.0d); // @output NaN
-
-     a = -0.0d;
-     b = 0.0d;
-     c = a / b;
-     io:println(c); // @output NaN
-     io:println(-0.0d / 0.0d); // @output NaN
 }
 
 Test-Case: output
 Description: Test division scenarios for different nillable decimal values.
 Labels: multiplicative-expr, DecimalFloatingPointNumber, decimal, DecimalTypeSuffix, optional-type, numeric-nil-lifting, unary-minus, nil-literal, value:toBalString
 
-public function init() {
+function init() {
      decimal? a = 2.5E-17d;
      decimal? b = 2.5E+17d;
      decimal? c = b / a;
@@ -4132,11 +4156,6 @@ public function init() {
      c = a / b;
      io:println(c); // @output 2.5E+1743
 
-     a = 25.0E1742d;
-     b = 0.0d;
-     c = a / b;
-     io:println(c); // @output Infinity
-
      a = 25.0E17d;
      b = 0.9E-10d;
      c = a / b;
@@ -4147,35 +4166,10 @@ public function init() {
      c = a / b;
      io:println(c); // @output -27777777777777777777777777777.77778
 
-     a = 17.0E12d;
-     b = 0.0d;
-     c = a / b;
-     io:println(c); // @output Infinity
-
-     a = -17.0E12d;
-     b = 0.0d;
-     c = a / b;
-     io:println(c); // @output -Infinity
-
-     a = 11.0E12d;
-     b = -0.0d;
-     c = a / b;
-     io:println(c); // @output Infinity
-
      a = 17.0E1290d;
      b = 13.0E1521d;
      c = a / b;
      io:println(c); // @output 1.307692307692307692307692307692308E-231
-
-     a = 0.0d;
-     b = 0.0d;
-     c = a / b;
-     io:println(c); // @output NaN
-
-     a = -0.0d;
-     b = 0.0d;
-     c = a / b;
-     io:println(c); // @output NaN
 
      a = 17.0E1290d;
      b = ();
@@ -4192,7 +4186,7 @@ Test-Case: output
 Description: Test division scenarios for different float values.
 Labels: multiplicative-expr, DecimalFloatingPointNumber, float, FloatTypeSuffix, unary-minus
 
-public function init() {
+function init() {
 
     float a = 2.5E-17;
     float b = 2.5E+17;
@@ -4283,7 +4277,7 @@ Test-Case: output
 Description: Test division scenarios for different nillable float values.
 Labels: multiplicative-expr, DecimalFloatingPointNumber, float, FloatTypeSuffix, optional-type, numeric-nil-lifting, unary-minus, nil-literal, value:toBalString
 
-public function init() {
+function init() {
      float? a = 2.5E-17;
      float? b = 2.5E+17;
      float? c = b / a;
@@ -4344,7 +4338,7 @@ Test-Case: output
 Description: Test division by infinity for different float values.
 Labels: multiplicative-expr, DecimalFloatingPointNumber, float, FloatTypeSuffix, unary-minus, float:Infinity, float:NaN
 
-public function init() {
+function init() {
      float a = float:Infinity;
      float b = float:Infinity;
      float c = a / b;
@@ -4380,7 +4374,7 @@ Test-Case: output
 Description: Test division by infinity for different nillable float values.
 Labels: multiplicative-expr, DecimalFloatingPointNumber, float, FloatTypeSuffix, float:Infinity, float:NaN, optional-type, numeric-nil-lifting, unary-minus, nil-literal, value:toBalString
 
-public function init() {
+function init() {
      float? a = float:Infinity;
      float? b = float:Infinity;
      float? c = a / b;
@@ -4416,7 +4410,7 @@ Test-Case: output
 Description: Test division by NaN for different float values.
 Labels: multiplicative-expr, DecimalFloatingPointNumber, float, FloatTypeSuffix, float:Infinity, float:NaN, unary-minus
 
-public function init() {
+function init() {
      float a = 1321.32f;
      float b = float:NaN;
      float c = a / b;
@@ -4448,7 +4442,7 @@ Test-Case: output
 Description: Test division by NaN for different nilable float values.
 Labels: multiplicative-expr, DecimalFloatingPointNumber, float, FloatTypeSuffix, float:Infinity, float:NaN, optional-type, numeric-nil-lifting, unary-minus, nil-literal, value:toBalString
 
-public function init() {
+function init() {
      float? a = 1321.32f;
      float? b = float:NaN;
      float? c = a / b;
@@ -4481,7 +4475,7 @@ Labels: multiplicative-expr, float-literal, module-type-defn, float, FloatTypeSu
 
 type Floats -2.0f|-1.0f|0.0f|1.0f|2.0f;
 
-public function init() {
+function init() {
     Floats a = 1.0;
     Floats b = 2.0;
     float c = a / a;
@@ -4508,19 +4502,19 @@ Labels: multiplicative-expr, decimal-literal, module-type-defn, decimal, Decimal
 
 type Decimals -2.0d|-1.0d|0.0d|1.0d|2.0d;
 
-public function init() {
+function init() {
     Decimals a = 1.0d;
     Decimals b = 2.0d;
     decimal c = a / a;
     decimal d = a / b;
 
-    io:println(a / a); // @output 1.0
-    io:println(c); // @output 1.0
+    io:println(a / a); // @output 1
+    io:println(c); // @output 1
     io:println(a / b); // @output 0.5
     io:println(d); // @output 0.5
 
-    io:println(b / a); // @output 2.0
-    io:println(b / b); // @output 1.0
+    io:println(b / a); // @output 2
+    io:println(b / b); // @output 1
 }
 
 Test-Case: output
@@ -4537,7 +4531,7 @@ type Floats2 A|B;
 
 type Floats3 Floats1|Floats2;
 
-public function init() {
+function init() {
     Floats2 a = 1.0;
     B b = 2.0;
     Floats1|Floats2 c = 2.0f;
@@ -4566,7 +4560,7 @@ type Decimals2 A1|B1;
 
 type Decimals3 Decimals1|Decimals2;
 
-public function init() {
+function init() {
     Decimals2 a = 1.0;
     Decimals2 b = 2.0;
     Decimals1|Decimals2 c = 2.0d;
@@ -4588,7 +4582,7 @@ Labels: multiplicative-expr, float-literal, module-type-defn, float, FloatTypeSu
 
 type Floats -2.0f|-1.0f|0.0f|1.0f|2.0f;
 
-public function init() {
+function init() {
     Floats? a = 1.0;
     Floats? b = 2.0;
     float? c = a / a;
@@ -4616,7 +4610,7 @@ Labels: multiplicative-expr, decimal-literal, module-type-defn, decimal, Decimal
 
 type Decimals -2.0d|-1.0d|0.0d|1.0d|2.0d;
 
-public function init() {
+function init() {
     Decimals? a = 1.0d;
     Decimals? b = 2.0d;
     decimal? c = a / a;
@@ -4642,7 +4636,7 @@ Floats b = 2.0;
 float c = a / a;
 float d = a / b;
 
-public function init() {
+function init() {
 
     io:println(c); // @output 1.0
     io:println(a / a); // @output 1.0
@@ -4664,7 +4658,7 @@ Decimals? b = 2.0d;
 decimal? c = a / a;
 decimal? d = a / b;
 
-public function init() {
+function init() {
 
     io:println(a / a); // @output 1.0
     io:println(c); // @output 1.0
@@ -4750,7 +4744,7 @@ Labels: multiplicative-expr, float, DecimalNumber, additive-expr
 
 function init() {
     float p = (1 + 20) / (3 + 4);
-    io:println(p); // @output 3
+    io:println(p); // @output 3.0
 }
 
 Test-Case: output
