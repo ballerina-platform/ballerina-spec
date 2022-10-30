@@ -1,0 +1,1240 @@
+Test-Case: parser-error
+Description: Test missing key expression in member access expression.
+Labels: member-access-expr, xml, xml-template-expr
+
+function errorFunction() {
+    xml e = xml `<name>Enid Blyton</name><name>Dan Brown</name>`;
+    _ = e[]; // @error missing key expression
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a builtin subtype of int as the key expression when the static
+             type of the container expression is an xml.
+Labels: byte, int, int:Signed16, int:Signed32, int:Signed8, int:Unsigned32, int:Unsigned8, member-access-expr, xml,
+        xml-template-expr
+
+function init() {
+    xml authors = xml `<name>Sherlock Holmes</name><name>Enid Blyton</name><name>Dan Brown</name><name>Nicholas Sparks</name>`;
+
+    int i0 = 0;
+    io:println(authors[i0]); // @output <name>Sherlock Holmes</name>
+
+    int:Signed8 i1 = 1;
+    io:println(authors[i1]); // @output <name>Enid Blyton</name>
+
+    int:Signed16 i2 = 2;
+    io:println(authors[i2]); // @output <name>Dan Brown</name>
+
+    int:Signed32 i3 = 3;
+    io:println(authors[i3]); // @output <name>Nicholas Sparks</name>
+
+    int:Unsigned8 i4 = 0;
+    io:println(authors[i4]); // @output <name>Sherlock Holmes</name>
+
+    int:Unsigned16 i5 = 1;
+    io:println(authors[i5]); // @output <name>Enid Blyton</name>
+
+    int:Unsigned32 i6 = 2;
+    io:println(authors[i6]); // @output <name>Dan Brown</name>
+
+    byte i7 = 3;
+    io:println(authors[i7]); // @output <name>Nicholas Sparks</name>
+
+    io:println(authors[0]); // @output <name>Sherlock Holmes</name>
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a subtype of int as the key expression when the static type of the
+             container expression is an xml.
+Labels: member-access-expr, module-const-decl, module-type-defn, union-type, xml, xml-template-expr
+
+const i1 = 0;
+const i2 = 1;
+
+type IntType1 i1|i2;
+
+function init() {
+    xml authors = xml `<name>Sherlock Holmes</name><name>Enid Blyton</name><name>Dan Brown</name><name>Nicholas Sparks</name>`;
+
+    io:println(authors[i1]); // @output <name>Sherlock Holmes</name>
+
+    IntType1 i3 = 1;
+    io:println(authors[i3]); // @output <name>Enid Blyton</name>
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a subtype of int as the key expression when the static type of the
+             container expression is an xml.
+Labels: byte, int:Signed16, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8, member-access-expr,
+        module-type-defn, union-type, xml, xml-template-expr
+
+type IntType1 int:Signed8|int:Signed16;
+
+function init() {
+    xml authors = xml `<name>Sherlock Holmes</name><name>Enid Blyton</name><name>Dan Brown</name><name>Nicholas Sparks</name>`;
+
+    IntType1 i1 = 1;
+    io:println(authors[i1]); // @output <name>Enid Blyton</name>
+
+    int:Unsigned8|int:Unsigned32 i2 = 2;
+    io:println(authors[i2]); // @output <name>Dan Brown</name>
+
+    int:Unsigned16|byte i3 = 1;
+    io:println(authors[i3]); // @output <name>Enid Blyton</name>
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a subtype of int as the key expression when the static type of the
+             container expression is an xml.
+Labels: member-access-expr, module-type-defn, singleton-type, union-type, xml, xml-template-expr
+
+type IntType1 1|2;
+
+function init() {
+    xml authors = xml `<name>Sherlock Holmes</name><name>Enid Blyton</name><name>Dan Brown</name><name>Nicholas Sparks</name>`;
+
+    IntType1 i1 = 1;
+    io:println(authors[i1]); // @output <name>Enid Blyton</name>
+
+    1|2 i2 = 2;
+    io:println(authors[i2]); // @output <name>Dan Brown</name>
+
+    1 i3 = 1;
+    io:println(authors[i3]); // @output <name>Enid Blyton</name>
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a builtin subtype of int as the key expression when the static
+             type of the container expression is an xml:Element.
+Labels: byte, int, int:Signed16, int:Signed32, int:Signed8, int:Unsigned32, int:Unsigned8, member-access-expr,
+        xml:Element, xml-template-expr
+
+function init() {
+    xml:Element author = xml `<name>Sherlock Holmes</name>`;
+
+    int i0 = 0;
+    io:println(author[i0]); // @output <name>Sherlock Holmes</name>
+
+    int:Signed8 i1 = 0;
+    io:println(author[i1]); // @output <name>Sherlock Holmes</name>
+
+    int:Signed16 i2 = 0;
+    io:println(author[i2]); // @output <name>Sherlock Holmes</name>
+
+    int:Signed32 i3 = 0;
+    io:println(author[i3]); // @output <name>Sherlock Holmes</name>
+
+    int:Unsigned8 i4 = 0;
+    io:println(author[i4]); // @output <name>Sherlock Holmes</name>
+
+    int:Unsigned16 i5 = 0;
+    io:println(author[i5]); // @output <name>Sherlock Holmes</name>
+
+    int:Unsigned32 i6 = 0;
+    io:println(author[i6]); // @output <name>Sherlock Holmes</name>
+
+    byte i7 = 0;
+    io:println(author[i7]); // @output <name>Sherlock Holmes</name>
+
+    io:println(author[0]); // @output <name>Sherlock Holmes</name>
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a subtype of int as the key expression when the static type of the
+             container expression is an xml:Element.
+Labels: member-access-expr, module-const-decl, module-type-defn, union-type, xml:Element, xml-template-expr
+
+const i1 = 0;
+const i2 = 1;
+
+type IntType1 i1|i2;
+
+function init() {
+    xml:Element author = xml `<name>Sherlock Holmes</name>`;
+
+    io:println(author[i1]); // @output <name>Sherlock Holmes</name>
+
+    IntType1 i3 = 0;
+    io:println(author[i3]); // @output <name>Sherlock Holmes</name>
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a subtype of int as the key expression when the static type of the
+             container expression is an xml:Element.
+Labels: byte, int:Signed16, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8, member-access-expr,
+        module-type-defn, union-type, xml:Element, xml-template-expr
+
+type IntType1 int:Signed8|int:Signed16;
+
+function init() {
+    xml:Element author = xml `<name>Sherlock Holmes</name>`;
+
+    IntType1 i1 = 0;
+    io:println(author[i1]); // @output <name>Sherlock Holmes</name>
+
+    int:Unsigned8|int:Unsigned32 i2 = 0;
+    io:println(author[i2]); // @output <name>Sherlock Holmes</name>
+
+    int:Unsigned16|byte i3 = 0;
+    io:println(author[i3]); // @output <name>Sherlock Holmes</name>
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a subtype of int as the key expression when the static type of the
+             container expression is an xml:Element.
+Labels: member-access-expr, module-type-defn, singleton-type, union-type, xml:Element, xml-template-expr
+
+type IntType1 1|0;
+
+function init() {
+    xml:Element author = xml `<name>Sherlock Holmes</name>`;
+
+    IntType1 i1 = 0;
+    io:println(author[i1]); // @output <name>Sherlock Holmes</name>
+
+    0|2 i2 = 0;
+    io:println(author[i2]); // @output <name>Sherlock Holmes</name>
+
+    0 i3 = 0;
+    io:println(author[i3]); // @output <name>Sherlock Holmes</name>
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a builtin subtype of int as the key expression when the static
+             type of the container expression is an xml:ProcessingInstruction.
+Labels: byte, int, int:Signed16, int:Signed32, int:Signed8, int:Unsigned32, int:Unsigned8, member-access-expr,
+        xml:ProcessingInstruction, xml-template-expr
+
+function init() {
+    xml:ProcessingInstruction style = xml `<?xml-stylesheet type="text/xsl" href="style.xsl"?>`;
+
+    int i0 = 0;
+    io:println(style[i0]); // @output <?xml-stylesheet type="text/xsl" href="style.xsl"?>
+
+    int:Signed8 i1 = 0;
+    io:println(style[i1]); // @output <?xml-stylesheet type="text/xsl" href="style.xsl"?>
+
+    int:Signed16 i2 = 0;
+    io:println(style[i2]); // @output <?xml-stylesheet type="text/xsl" href="style.xsl"?>
+
+    int:Signed32 i3 = 0;
+    io:println(style[i3]); // @output <?xml-stylesheet type="text/xsl" href="style.xsl"?>
+
+    int:Unsigned8 i4 = 0;
+    io:println(style[i4]); // @output <?xml-stylesheet type="text/xsl" href="style.xsl"?>
+
+    int:Unsigned16 i5 = 0;
+    io:println(style[i5]); // @output <?xml-stylesheet type="text/xsl" href="style.xsl"?>
+
+    int:Unsigned32 i6 = 0;
+    io:println(style[i6]); // @output <?xml-stylesheet type="text/xsl" href="style.xsl"?>
+
+    byte i7 = 0;
+    io:println(style[i7]); // @output <?xml-stylesheet type="text/xsl" href="style.xsl"?>
+
+    io:println(style[0]); // @output <?xml-stylesheet type="text/xsl" href="style.xsl"?>
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a subtype of int as the key expression when the static type of the
+             container expression is an xml:ProcessingInstruction.
+Labels: member-access-expr, module-const-decl, module-type-defn, union-type, xml:ProcessingInstruction, xml-template-expr
+
+const i1 = 0;
+const i2 = 1;
+
+type IntType1 i1|i2;
+
+function init() {
+    xml:ProcessingInstruction style = xml `<?xml-stylesheet type="text/xsl" href="style.xsl"?>`;
+
+    io:println(style[i1]); // @output <?xml-stylesheet type="text/xsl" href="style.xsl"?>
+
+    IntType1 i3 = 0;
+    io:println(style[i3]); // @output <?xml-stylesheet type="text/xsl" href="style.xsl"?>
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a subtype of int as the key expression when the static type of the
+             container expression is an xml:ProcessingInstruction.
+Labels: byte, int:Signed16, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8, member-access-expr,
+        module-type-defn, union-type, xml:ProcessingInstruction, xml-template-expr
+
+type IntType1 int:Signed8|int:Signed16;
+
+function init() {
+    xml:ProcessingInstruction style = xml `<?xml-stylesheet type="text/xsl" href="style.xsl"?>`;
+
+    IntType1 i1 = 0;
+    io:println(style[i1]); // @output <?xml-stylesheet type="text/xsl" href="style.xsl"?>
+
+    int:Unsigned8|int:Unsigned32 i2 = 0;
+    io:println(style[i2]); // @output <?xml-stylesheet type="text/xsl" href="style.xsl"?>
+
+    int:Unsigned16|byte i3 = 0;
+    io:println(style[i3]); // @output <?xml-stylesheet type="text/xsl" href="style.xsl"?>
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a subtype of int as the key expression when the static type of the
+             container expression is an xml:ProcessingInstruction.
+Labels: member-access-expr, module-type-defn, singleton-type, union-type, xml:ProcessingInstruction, xml-template-expr
+
+type IntType1 1|0;
+
+function init() {
+    xml:ProcessingInstruction style = xml `<?xml-stylesheet type="text/xsl" href="style.xsl"?>`;
+
+    IntType1 i1 = 0;
+    io:println(style[i1]); // @output <?xml-stylesheet type="text/xsl" href="style.xsl"?>
+
+    0|2 i2 = 0;
+    io:println(style[i2]); // @output <?xml-stylesheet type="text/xsl" href="style.xsl"?>
+
+    0 i3 = 0;
+    io:println(style[i3]); // @output <?xml-stylesheet type="text/xsl" href="style.xsl"?>
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a builtin subtype of int as the key expression when the static
+             type of the container expression is an xml:Comment.
+Labels: byte, int, int:Signed16, int:Signed32, int:Signed8, int:Unsigned32, int:Unsigned8, member-access-expr,
+        xml:Comment, xml-template-expr
+
+function init() {
+    xml:Comment comment = xml `<!--Comment-->`;
+
+    int i0 = 0;
+    io:println(comment[i0]); // @output <!--Comment-->
+
+    int:Signed8 i1 = 0;
+    io:println(comment[i1]); // @output <!--Comment-->
+
+    int:Signed16 i2 = 0;
+    io:println(comment[i2]); // @output <!--Comment-->
+
+    int:Signed32 i3 = 0;
+    io:println(comment[i3]); // @output <!--Comment-->
+
+    int:Unsigned8 i4 = 0;
+    io:println(comment[i4]); // @output <!--Comment-->
+
+    int:Unsigned16 i5 = 0;
+    io:println(comment[i5]); // @output <!--Comment-->
+
+    int:Unsigned32 i6 = 0;
+    io:println(comment[i6]); // @output <!--Comment-->
+
+    byte i7 = 0;
+    io:println(comment[i7]); // @output <!--Comment-->
+
+    io:println(comment[0]); // @output <!--Comment-->
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a subtype of int as the key expression when the static type of the
+             container expression is an xml:Comment.
+Labels: member-access-expr, module-const-decl, module-type-defn, union-type, xml:Comment, xml-template-expr
+
+const i1 = 0;
+const i2 = 1;
+
+type IntType1 i1|i2;
+
+function init() {
+    xml:Comment comment = xml `<!--Comment-->`;
+
+    io:println(comment[i1]); // @output <!--Comment-->
+
+    IntType1 i3 = 0;
+    io:println(comment[i3]); // @output <!--Comment-->
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a subtype of int as the key expression when the static type of the
+             container expression is an xml:Comment.
+Labels: byte, int:Signed16, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8, member-access-expr,
+        module-type-defn, union-type, xml:Comment, xml-template-expr
+
+type IntType1 int:Signed8|int:Signed16;
+
+function init() {
+    xml:Comment comment = xml `<!--Comment-->`;
+
+    IntType1 i1 = 0;
+    io:println(comment[i1]); // @output <!--Comment-->
+
+    int:Unsigned8|int:Unsigned32 i2 = 0;
+    io:println(comment[i2]); // @output <!--Comment-->
+
+    int:Unsigned16|byte i3 = 0;
+    io:println(comment[i3]); // @output <!--Comment-->
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a subtype of int as the key expression when the static type of the
+             container expression is an xml:Comment.
+Labels: member-access-expr, module-type-defn, singleton-type, union-type, xml:Comment, xml-template-expr
+
+type IntType1 1|0;
+
+function init() {
+    xml:Comment comment = xml `<!--Comment-->`;
+
+    IntType1 i1 = 0;
+    io:println(comment[i1]); // @output <!--Comment-->
+
+    0|2 i2 = 0;
+    io:println(comment[i2]); // @output <!--Comment-->
+
+    0 i3 = 0;
+    io:println(comment[i3]); // @output <!--Comment-->
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a builtin subtype of int as the key expression when the static
+             type of the container expression is an xml:Text.
+Labels: byte, int, int:Signed16, int:Signed32, int:Signed8, int:Unsigned32, int:Unsigned8, member-access-expr, xml:Text,
+        xml-template-expr
+
+function init() {
+    xml:Text text = xml `text1 text2`;
+
+    int i0 = 0;
+    io:println(text[i0]); // @output text1 text2
+
+    int:Signed8 i1 = 0;
+    io:println(text[i1]); // @output text1 text2
+
+    int:Signed16 i2 = 0;
+    io:println(text[i2]); // @output text1 text2
+
+    int:Signed32 i3 = 0;
+    io:println(text[i3]); // @output text1 text2
+
+    int:Unsigned8 i4 = 0;
+    io:println(text[i4]); // @output text1 text2
+
+    int:Unsigned16 i5 = 0;
+    io:println(text[i5]); // @output text1 text2
+
+    int:Unsigned32 i6 = 0;
+    io:println(text[i6]); // @output text1 text2
+
+    byte i7 = 0;
+    io:println(text[i7]); // @output text1 text2
+
+    io:println(text[0]); // @output text1 text2
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a subtype of int as the key expression when the static type of the
+             container expression is an xml:Text.
+Labels: member-access-expr, module-const-decl, module-type-defn, union-type, xml:Text, xml-template-expr
+
+const i1 = 0;
+const i2 = 1;
+
+type IntType1 i1|i2;
+
+function init() {
+    xml:Text text = xml `text1 text2`;
+
+    io:println(text[i1]); // @output text1 text2
+
+    IntType1 i3 = 0;
+    io:println(text[i3]); // @output text1 text2
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a subtype of int as the key expression when the static type of the
+             container expression is an xml:Text.
+Labels: byte, int:Signed16, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8, member-access-expr,
+        module-type-defn, union-type, xml:Text, xml-template-expr
+
+type IntType1 int:Signed8|int:Signed16;
+
+function init() {
+    xml:Text text = xml `text1 text2`;
+
+    IntType1 i1 = 0;
+    io:println(text[i1]); // @output text1 text2
+
+    int:Unsigned8|int:Unsigned32 i2 = 0;
+    io:println(text[i2]); // @output text1 text2
+
+    int:Unsigned16|byte i3 = 0;
+    io:println(text[i3]); // @output text1 text2
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a subtype of int as the key expression when the static type of the
+             container expression is an xml:Text.
+Labels: member-access-expr, module-type-defn, singleton-type, union-type, xml:Text, xml-template-expr
+
+type IntType1 1|0;
+
+function init() {
+    xml:Text text = xml `text1 text2`;
+
+    IntType1 i1 = 0;
+    io:println(text[i1]); // @output text1 text2
+
+    0|2 i2 = 0;
+    io:println(text[i2]); // @output text1 text2
+
+    0 i3 = 0;
+    io:println(text[i3]); // @output text1 text2
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a subtype of int as the key expression when the static type of the
+             container expression is a user defined subtype of xml.
+Fail-Issue: ballerina-platform/ballerina-lang#35008
+Labels: byte, int, int:Signed16, int:Signed8, int:Unsigned32, int:Unsigned8, member-access-expr, module-const-decl,
+        module-type-defn, union-type, xml, xml:Comment, xml:Element, xml:ProcessingInstruction, xml:Text,
+        xml-template-expr, xml-type-parameter
+
+const i8 = 0;
+
+type IntType1 int:Signed8|int:Signed16;
+
+type IntType2 i8|3;
+
+type XmlType1 xml:Text|xml:Comment;
+
+type XmlType2 xml<xml:Element|xml:ProcessingInstruction>;
+
+type XmlType3 XmlType1|XmlType2;
+
+function init() {
+    XmlType1 txt = xml `Hello!`;
+
+    io:println(txt[0]); // @output Hello!
+
+    io:println(txt[i8]); // @output Hello!
+
+    IntType1 i9 = 0;
+    io:println(txt[i9]); // @output Hello!
+
+    XmlType2 ele = xml `<name>Sherlock Holmes</name>`;
+    IntType2 i10 = 0;
+    io:println(ele[i10]); // @output <name>Sherlock Holmes</name>
+
+    XmlType3 ele2 = xml `<name>Sherlock Holmes</name>`;
+    io:println(ele2[i10]); // @output <name>Sherlock Holmes</name>
+
+    xml:Text|xml:ProcessingInstruction txt2 = xml `World`;
+    0|2 i11 = 0;
+    io:println(txt2[i11]); // @output World
+
+    xml|xml<xml:Text> authors = xml `<name>Sherlock Holmes</name><name>Enid Blyton</name><name>Dan Brown</name><name>Nicholas Sparks</name>`;
+    int:Unsigned8|int:Unsigned32 i12 = 2;
+    io:println(authors[i12]); // @output name>Dan Brown</name>
+
+    xml<xml:Text|xml:Comment>|xml<xml:ProcessingInstruction|xml:Element> ele3 = xml `<name>Dan Brown</name>`;
+    int:Unsigned16|byte i13 = 0;
+    io:println(ele3[i13]); // @output <name>Dan Brown</name>
+
+    xml<xml:Element|xml:ProcessingInstruction> ele4 = xml `<name>Enid Blyton</name>`;
+    io:println(ele4[0]); // @output <name>Enid Blyton</name>
+}
+
+Test-Case: error
+Description: Test key expression with invalid static type.
+Labels: any, DecimalFloatingPointNumber, float, int, member-access-expr, union-type, xml, xml-template-expr
+
+function errorFunction() {
+    xml e = xml `<name>Enid Blyton</name><name>Dan Brown</name>`;
+    _ = e["0"]; // @error expected a value of subtype int as key
+
+    any a = 1;
+    _ = e[a]; // @error expected a value of subtype int as key
+
+    int|float b = 2;
+    _ = e[b]; // @error expected a value of subtype int as key
+
+    _ = e[2.0]; // @error expected a value of subtype int as key
+}
+
+
+Test-Case: output
+Description: Test the result of evaluating a member access expression when basic type of the evaluated value of the
+             container expression is an xml.
+Labels: is-expr, member-access-expr, method-call-expr, xml, xml:length, xml-template-expr
+
+function init() {
+    xml seq = xml `<?xml-stylesheet type="text/xsl" href="style.xsl"?><name>Sherlock Holmes</name><!--Comment--><name>Enid Blyton</name>Some Text<name>Dan Brown</name>`;
+    io:println(seq.length()); // @output 6
+
+    io:println(seq[0]); // @output <?xml-stylesheet type="text/xsl" href="style.xsl"?>
+    io:println(seq[0] is xml); // @output true
+    io:println(seq[0].length()); // @output 1
+
+    io:println(seq[1]); // @output <name>Sherlock Holmes</name>
+    io:println(seq[1] is xml); // @output true
+    io:println(seq[1].length()); // @output 1
+
+    io:println(seq[2]); // @output <!--Comment-->
+    io:println(seq[2] is xml); // @output true
+    io:println(seq[2].length()); // @output 1
+
+    io:println(seq[3]); // @output <name>Enid Blyton</name>
+    io:println(seq[3] is xml); // @output true
+    io:println(seq[3].length()); // @output 1
+
+    io:println(seq[4]); // @output Some Text
+    io:println(seq[4] is xml); // @output true
+    io:println(seq[4].length()); // @output 1
+
+    io:println(seq[5]); // @output <name>Dan Brown</name>
+    io:println(seq[5] is xml); // @output true
+    io:println(seq[5].length()); // @output 1
+}
+
+Test-Case: panic
+Description: Test the result of evaluating a member access expression when the evaluated value(k) of the
+             key expression is less than 0 with container expression whose basic type is xml (k < 0).
+Fail-Issue: ballerina-platform/ballerina-lang#35980
+Labels: member-access-expr, unary-minus, xml, xml-template-expr
+
+function init() {
+    xml txt = xml `This is an xml`;
+    _ = txt[-1]; // @panic index out of range
+}
+
+Test-Case: output
+Description: Test the result of evaluating a member access expression when basic type of the evaluated value (c) of the
+             container expression is an xml and evaluated value (k) of the key expression is greater than or equal to
+             its length (k >= length(c)).
+Labels: member-access-expr, method-call-expr, value:toBalString, xml, xml-template-expr
+
+function init() {
+    xml seq = xml `<?xml-stylesheet type="text/xsl" href="style.xsl"?><name>Sherlock Holmes</name><!--Comment--><name>Enid Blyton</name>Some Text<name>Dan Brown</name>`;
+
+    // k == length(c)
+    io:println(seq[6].toBalString()); // @output xml``
+
+    // k > length(c)
+    io:println(seq[10].toBalString()); // @output xml``
+}
+
+Test-Case: output
+Description: Test the result of evaluating a member access expression when basic type of the evaluated value of the
+             container expression is a builtin subtype of xml.
+Labels: is-expr, member-access-expr, method-call-expr, xml, xml:Comment, xml:Element, xml:length,
+        xml:ProcessingInstruction, xml:Text, xml-template-expr
+
+function init() {
+    xml:ProcessingInstruction ins = xml `<?xml-stylesheet type="text/xsl" href="style.xsl"?>`;
+    io:println(ins[0] is xml); // @output true
+    io:println(ins[0].length()); // @output 1
+
+    xml:Element ele = xml `<name>Sherlock Holmes</name>`;
+    io:println(ele[0] is xml); // @output true
+    io:println(ele[0].length()); // @output 1
+
+    xml:Comment comment = xml `<!--Comment-->`;
+    io:println(comment[0] is xml); // @output true
+    io:println(comment[0].length()); // @output 1
+
+    xml:Text text = xml `Some Text`;
+    io:println(text[0] is xml); // @output true
+    io:println(text[0].length()); // @output 1
+}
+
+Test-Case: output
+Description: Test the result of evaluating a member access expression when basic type of the evaluated value (c) of the
+             container expression is a builtin subtype of xml and evaluated value (k) of the key expression is greater
+             than or equal to its length (k >= length(c)).
+Labels: member-access-expr, method-call-expr, value:toBalString, xml:Comment, xml:Element, xml:ProcessingInstruction,
+        xml:Text, xml-template-expr
+
+function init() {
+    xml:ProcessingInstruction ins = xml `<?xml-stylesheet type="text/xsl" href="style.xsl"?>`;
+    // k == length(c)
+    io:println(ins[1].toBalString()); // @output xml``
+    // k > length(c)
+    io:println(ins[4].toBalString()); // @output xml``
+
+    xml:Element ele = xml `<name>Sherlock Holmes</name>`;
+    // k == length(c)
+    io:println(ele[1].toBalString()); // @output xml``
+    // k > length(c)
+    io:println(ele[4].toBalString()); // @output xml``
+
+    xml:Comment comment = xml `<!--Comment-->`;
+    // k == length(c)
+    io:println(comment[1].toBalString()); // @output xml``
+    // k > length(c)
+    io:println(comment[4].toBalString()); // @output xml``
+
+    xml:Text text = xml `Some Text`;
+    // k == length(c)
+    io:println(text[1].toBalString()); // @output xml``
+    // k > length(c)
+    io:println(text[4].toBalString()); // @output xml``
+}
+
+Test-Case: output
+Description: Test the result of evaluating a member access expression when basic type of the evaluated value of the
+             container expression is a user defined subtype of xml.
+Labels: is-expr, member-access-expr, method-call-expr, module-type-defn, union-type, xml, xml:Comment,
+        xml:Element, xml:length, xml:ProcessingInstruction, xml-template-expr, xml-type-parameter
+
+type XmlType1 xml<xml:Element|xml:ProcessingInstruction>;
+
+type XmlType2 xml:Comment;
+
+function init() {
+    xml<xml:Element|xml:ProcessingInstruction> ins = xml `<?xml-stylesheet type="text/xsl" href="style.xsl"?>`;
+    io:println(ins[0] is xml); // @output true
+    io:println(ins[0].length()); // @output 1
+
+    XmlType1 ele = xml `<name>Sherlock Holmes</name>`;
+    io:println(ele[0] is xml); // @output true
+    io:println(ele[0].length()); // @output 1
+
+    XmlType2 comment = xml `<!--Comment-->`;
+    io:println(comment[0] is xml); // @output true
+    io:println(comment[0].length()); // @output 1
+}
+
+Test-Case: output
+Description: Test the result of evaluating a member access expression when basic type of the evaluated value (c) of the
+             container expression is a builtin subtype of xml and evaluated value (k) of the key expression is greater
+             than or equal to its length (k >= length(c)).
+Labels: member-access-expr, method-call-expr, module-type-defn, union-type, value:toBalString, xml:Comment, xml:Element,
+        xml:ProcessingInstruction, xml-template-expr, xml-type-parameter
+
+type XmlType1 xml<xml:Element|xml:ProcessingInstruction>;
+
+type XmlType2 xml:Comment;
+
+function init() {
+    xml<xml:Element|xml:ProcessingInstruction> ins = xml `<?xml-stylesheet type="text/xsl" href="style.xsl"?>`;
+    // k == length(c)
+    io:println(ins[1].toBalString()); // @output xml``
+    // k > length(c)
+    io:println(ins[4].toBalString()); // @output xml``
+
+    XmlType1 ele = xml `<name>Sherlock Holmes</name>`;
+    // k == length(c)
+    io:println(ele[1].toBalString()); // @output xml``
+    // k > length(c)
+    io:println(ele[4].toBalString()); // @output xml``
+
+    XmlType2 comment = xml `<!--Comment-->`;
+    // k == length(c)
+    io:println(comment[1].toBalString()); // @output xml``
+    // k > length(c)
+    io:println(comment[4].toBalString()); // @output xml``
+}
+
+Test-Case: output
+Description: Test the static type of member access expression when static type of the container expression is
+             a subtype of xml<M>.
+Labels: is-expr, member-access-expr, union-type, xml, xml:Comment, xml:Element, xml:ProcessingInstruction, xml:Text,
+        xml-template-expr, xml-type-parameter
+
+type XmlType2 xml:Comment;
+
+function init() {
+    xml seq = xml `<?xml-stylesheet type="text/xsl" href="style.xsl"?><name>Sherlock Holmes</name><!--Comment--><name>Enid Blyton</name>Some Text<name>Dan Brown</name>`;
+
+    xml:Element|xml:Comment|xml:ProcessingInstruction|xml:Text ins = seq[0];
+    io:println(ins); // @output <?xml-stylesheet type="text/xsl" href="style.xsl"?>
+    io:println(seq[0] is xml:ProcessingInstruction); // @output true
+
+    xml:Element|xml:Comment|xml:ProcessingInstruction|xml:Text ele = seq[3];
+    io:println(ele); // @output <name>Enid Blyton</name>
+    io:println(seq[3] is xml:Element); // @output true
+
+    xml:Comment comment = xml `<!--Comment-->`;
+    xml:Comment commentMem = comment[0];
+    io:println(commentMem); // @output <!--Comment-->
+    io:println(comment[0] is xml:Comment); // @output true
+
+    xml<xml:Text> ele2 = xml `Text`;
+    xml:Text eleMem = ele2[0];
+    io:println(eleMem); // @output Text
+    io:println(ele2[0] is xml:Text); // @output true
+
+    XmlType2 com = xml `<!--Comment1-->`;
+    xml:Comment comMem = com[0];
+    io:println(comMem); // @output <!--Comment1-->
+    io:println(com[0] is xml:Comment); // @output true
+}
+
+Test-Case: output
+Description: Test the static type of member access expression when static type of the container expression is
+             a subtype of xml<M>.
+Fail-Issue: ballerina-platform/ballerina-lang#35019
+Labels: is-expr, member-access-expr, module-type-defn, union-type, xml, xml:Comment, xml:Element,
+        xml:ProcessingInstruction, xml:Text, xml-template-expr, xml-type-parameter
+
+type XmlType1 xml<xml:Element|xml:ProcessingInstruction>;
+
+function init() {
+    xml<xml:Comment> xml1 = xml `<!--Comment1--><!--Comment2-->`;
+    xml:Comment mem1 = xml1[1];
+
+    xml<xml:ProcessingInstruction> xml2 = xml `<?xml-stylesheet type="text/xsl" href="style.xsl"?>`;
+    xml:ProcessingInstruction mem2 = xml2[0];
+
+    xml<xml:Element> xml3 = xml `<name>Sherlock Holmes</name><name>Enid Blyton</name>`;
+    xml:Element mem3 = xml3[1];
+
+    XmlType1 xml4 = xml `<name>Enid Blyton</name><name>Dan Brown</name>`;
+    xml:Element|xml:ProcessingInstruction mem4 = xml4[1];
+
+    xml<xml:Element|xml:Comment|xml:Text> xml5 = xml `<name>Enid Blyton</name><name>Dan Brown</name>`;
+    xml:Element|xml:Comment|xml:Text mem5 = xml5[0];
+}
+
+Test-Case: error
+Description: Test assigning result of member access expression to an invalid type.
+Labels: member-access-expr, string, xml, xml-template-expr
+
+function errorFunction() {
+    xml e = xml `<name>Enid Blyton</name><name>Dan Brown</name>`;
+    string _ = e[1]; // @error @error expected string, found xml
+}
+
+Test-Case: output
+Description: Test assigning the result of evaluating a member access expression to var when basic type of the evaluated
+             value of the container expression is an xml.
+Labels: is-expr, member-access-expr, method-call-expr, var, xml, xml:Comment, xml:Element, xml:length,
+        xml:ProcessingInstruction, xml:Text, xml-template-expr
+
+function init() {
+    xml val = xml `<name>Sherlock Holmes</name><name>Enid Blyton</name>`;
+    var mem = val[1];
+    io:println(mem); // @output <name>Enid Blyton</name>
+    xml:Element|xml:Comment|xml:ProcessingInstruction|xml:Text _ = mem;
+
+    xml:Text val2 = xml `This is a text`;
+    var mem2 = val2[0];
+    io:println(mem2); // @output This is a text
+    xml:Text _ = mem2;
+}
+
+Test-Case: output
+Description: Test xml template expression as container expression whose static type is xml.
+Labels: member-access-expr, xml-template-expr
+
+function init() {
+    io:println(xml `<name>Sherlock Holmes</name><name>Enid Blyton</name>`[1]); // @output <name>Enid Blyton</name>
+}
+
+Test-Case: output
+Description: Test variable reference expression as container expression whose static type is xml.
+Labels: member-access-expr, variable-reference-expr, xml, xml-template-expr
+
+function init() {
+    xml authors = xml `<name>Enid Blyton</name><name>Dan Brown</name>`;
+    io:println(authors[1]); // @output <name>Dan Brown</name>
+}
+
+Test-Case: output
+Description: Test field access expression as container expression whose static type is xml.
+Labels: field-access-expr, mapping-constructor-expr, member-access-expr, record-type, xml, xml-template-expr
+
+type Record record {|
+    xml authors;
+|};
+
+function init() {
+    Record rec = {authors: xml `<name>Enid Blyton</name><name>Dan Brown</name>`};
+    io:println(rec.authors[0]); // @output <name>Enid Blyton</name>
+}
+
+Test-Case: output
+Description: Test function call expression as container expression whose static type is xml.
+Labels: function-call-expr, member-access-expr, xml, xml-template-expr
+
+function init() {
+    io:println(getXml()[1]); // @output <name>Dan Brown</name>
+}
+
+function getXml() returns xml {
+    return xml `<name>Enid Blyton</name><name>Dan Brown</name>`;
+}
+
+Test-Case: output
+Description: Test method call expression as container expression whose static type is xml.
+Labels: explicit-new-expr, member-access-expr, method-call-expr, module-class-defn, xml, xml-template-expr
+
+class Book {
+    function geAuthors(xml author1) returns xml {
+        return author1 + xml `<name>Dan Brown</name>`;
+    }
+}
+
+function init() {
+    Book book = new Book();
+    io:println(book.geAuthors(xml `<name>Enid Blyton</name>`)[1]); // @output <name>Dan Brown</name>
+}
+
+Test-Case: output
+Description: Test let expression as container expression whose static type is xml.
+Labels: let-expr, member-access-expr, xml, xml-template-expr
+
+function init() {
+    io:println((let xml b = xml `<name>Enid Blyton</name><name>Dan Brown</name>` in b)[1]); // @output <name>Dan Brown</name>
+}
+
+Test-Case: output
+Description: Test type cast expression as container expression whose static type is xml.
+Labels: member-access-expr, optional-type, type-cast-expr, xml, xml-template-expr
+
+function init() {
+    xml? value = xml `<name>Enid Blyton</name>`;
+    io:println((<xml>value)[0]); // @output <name>Enid Blyton</name>
+}
+
+Test-Case: output
+Description: Test additive expression as container expression whose static type is xml.
+Labels: additive-expr, member-access-expr, string, xml, xml-template-expr
+
+function init() {
+    io:println((xml `<name>Enid Blyton</name>` + xml `<name>Dan Brown</name>`)[1]); // @output <name>Dan Brown</name>
+    io:println((xml `Text1` + "Text2")[0]); // @output Text1Text2
+}
+
+Test-Case: output
+Description: Test conditional expression as container expression whose static type is xml.
+Labels: ternary-conditional-expr, is-expr, member-access-expr, nil-literal, optional-type, xml, xml-template-expr
+
+function init() {
+    xml? msg = ();
+    io:println((msg is xml ? xml `<name>Enid Blyton</name>` : xml `<name>Dan Brown</name>`)[0]); // @output <name>Dan Brown</name>
+}
+
+Test-Case: output
+Description: Test checking expression as container expression whose static type is xml.
+Labels: check, checkpanic, error-type, member-access-expr, union-type, xml, xml-template-expr
+
+function init() returns error? {
+    xml|error val = xml `<name>Enid Blyton</name>`;
+    io:println((check val)[0]); // @output <name>Enid Blyton</name>
+    io:println((checkpanic val)[0]); // @output <name>Enid Blyton</name>
+}
+
+Test-Case: output
+Description: Test query expression as container expression whose static type is xml.
+Labels: array-type, list-constructor-expr, member-access-expr, query-expr, var, xml, xml-template-expr
+
+function init() {
+    xml books = xml `<book>
+                           <name>Sherlock Holmes</name>
+                           <author>Sir Arthur Conan Doyle</author>
+                     </book>
+                     <book>
+                           <name>The Da Vinci Code</name>
+                           <author>Dan Brown</author>
+                     </book>`;
+
+    io:println((from var x in books/<name> select x)[1]); // @output <name>The Da Vinci Code</name>
+}
+
+Test-Case: output
+Description: Test int literal as key expression with container expression whose static type is xml.
+Labels: DecimalNumber, member-access-expr, xml, xml-template-expr
+
+function init() {
+    xml val = xml `<!--Some Comment--><name>Enid Blyton</name>Some Text<name>Dan Brown</name>`;
+    io:println(val[2]); // @output Some Text
+}
+
+Test-Case: output
+Description: Test variable reference as key expression with container expression whose static type is xml.
+Labels: int, member-access-expr, variable-reference-expr, xml, xml-template-expr
+
+function init() {
+    xml val = xml `<!--Some Comment--><name>Enid Blyton</name>Some Text<name>Dan Brown</name>`;
+    int i = 1;
+    io:println(val[i]); // @output <name>Enid Blyton</name>
+}
+
+Test-Case: output
+Description: Test field access expression as key expression with container expression whose static type is xml.
+Labels: field-access-expr, int, mapping-constructor-expr, member-access-expr, record-type, xml, xml-template-expr
+
+type Record record {|
+    int index;
+|};
+
+function init() {
+    xml val = xml `<!--Some Comment--><name>Enid Blyton</name>Some Text<name>Dan Brown</name>`;
+    Record rec = {index: 1};
+    io:println(val[rec.index]); // @output <name>Enid Blyton</name>
+}
+
+Test-Case: output
+Description: Test member access expression as key expression with container expression whose static type is xml.
+Labels: array-type, int, list-constructor-expr, member-access-expr, xml, xml-template-expr
+
+function init() {
+    xml val = xml `<!--Some Comment--><name>Enid Blyton</name>Some Text<name>Dan Brown</name>`;
+    int[] indices = [3, 1, 2];
+    io:println(val[indices[0]]); // @output <name>Dan Brown</name>
+}
+
+Test-Case: output
+Description: Test functional call as key expression with container expression whose static type is xml.
+Labels: function-call-expr, int, member-access-expr, xml, xml-template-expr
+
+function init() {
+    xml val = xml `<!--Some Comment--><name>Enid Blyton</name>Some Text<name>Dan Brown</name>`;
+    io:println(val[getPosition()]); // @output Some Text
+}
+
+function getPosition() returns int {
+    return 2;
+}
+
+Test-Case: output
+Description: Test method call as key expression with container expression whose static type is xml.
+Labels: additive-expr, explicit-new-expr, int, member-access-expr, method-call-expr, module-class-defn,
+        unary-minus, xml, xml-template-expr
+
+class Position {
+    function getPosition(int pos) returns int {
+        return pos + 1;
+    }
+}
+
+function init() {
+    xml val = xml `<!--Some Comment--><name>Enid Blyton</name>Some Text<name>Dan Brown</name>`;
+    Position pos = new Position();
+    io:println(val[pos.getPosition(-1)]); // @output <!--Some Comment-->
+}
+
+Test-Case: output
+Description: Test let expression as key expression with container expression whose static type is xml.
+Labels: int, let-expr, member-access-expr, xml, xml-template-expr
+
+function init() {
+    xml val = xml `<!--Some Comment--><name>Enid Blyton</name>Some Text<name>Dan Brown</name>`;
+    io:println(val[let int i = 1 + 2 in i]); // @output <name>Dan Brown</name>
+}
+
+Test-Case: output
+Description: Test type cast expression as key expression with container expression whose static type is xml.
+Labels: int, member-access-expr, type-cast-expr, xml, xml-template-expr
+
+function init() {
+    xml val = xml `<!--Some Comment--><name>Enid Blyton</name>Some Text<name>Dan Brown</name>`;
+    io:println(val[<int> 3]); // @output <name>Dan Brown</name>
+}
+
+Test-Case: output
+Description: Test unary numeric expression as key expression with container expression whose static type is xml.
+Labels: DecimalNumber, member-access-expr, unary-complement, unary-minus, unary-plus, xml, xml-template-expr
+
+function init() {
+    xml val = xml `<!--Some Comment--><name>Enid Blyton</name>Some Text<name>Dan Brown</name>`;
+    io:println(val[+2]); // @output Some Text
+    io:println(val[-(-2)]); // @output Some Text
+    io:println(val[~(-2)]); // @output <name>Enid Blyton</name>
+}
+
+Test-Case: output
+Description: Test additive expression as key expression with container expression whose static type is xml.
+Labels: additive-expr, DecimalNumber, member-access-expr, xml, xml-template-expr
+
+function init() {
+    xml val = xml `<!--Some Comment--><name>Enid Blyton</name>Some Text<name>Dan Brown</name>`;
+    io:println(val[0 + 1]); // @output <name>Enid Blyton</name>
+    io:println(val[3 - 2]); // @output <name>Enid Blyton</name>
+}
+
+Test-Case: output
+Description: Test multiplicative expression as key expression with container expression whose static type is xml.
+Labels: DecimalNumber, member-access-expr, multiplicative-expr, xml, xml-template-expr
+
+function init() {
+    xml val = xml `<!--Some Comment--><name>Enid Blyton</name>Some Text<name>Dan Brown</name>`;
+    io:println(val[1 * 2]); // @output Some Text
+    io:println(val[4 / 2]); // @output Some Text
+    io:println(val[5 % 2]); // @output <name>Enid Blyton</name>
+}
+
+Test-Case: output
+Description: Test shift expression as key expression with container expression whose static type is xml.
+Labels: DecimalNumber, member-access-expr, shift-expr, xml, xml-template-expr
+
+function init() {
+    xml val = xml `<!--Some Comment--><name>Enid Blyton</name>Some Text<name>Dan Brown</name>`;
+    io:println(val[1 << 1]); // @output Some Text
+    io:println(val[4 >> 2]); // @output <name>Enid Blyton</name>
+}
+
+Test-Case: output
+Description: Test binary bitwise expression as key expression with container expression whose static type is xml.
+Labels: binary-bitwise-expr, DecimalNumber, member-access-expr, xml, xml-template-expr
+
+function init() {
+    xml val = xml `<!--Some Comment--><name>Enid Blyton</name>Some Text<name>Dan Brown</name>`;
+    io:println(val[2 & 6]); // @output Some Text
+    io:println(val[1 ^ 1]); // @output <!--Some Comment-->
+}
+
+Test-Case: output
+Description: Test checking expression as key expression with container expression whose static type is xml.
+Labels: check, checkpanic, error-type, int, member-access-expr, optional-type, union-type, xml, xml-template-expr
+
+function init() returns error? {
+    xml val = xml `<!--Some Comment--><name>Enid Blyton</name>Some Text<name>Dan Brown</name>`;
+    int|error pos = 3;
+
+    io:println(val[check pos]); // @output <name>Dan Brown</name>
+    io:println(val[checkpanic pos]); // @output <name>Dan Brown</name>
+}
+
+Test-Case: output
+Description: Test conditional expression as key expression with container expression whose static type is xml.
+Labels: ternary-conditional-expr, int, is-expr, member-access-expr, optional-type, xml, xml-template-expr
+
+function init() {
+    xml val = xml `<!--Some Comment--><name>Enid Blyton</name>Some Text<name>Dan Brown</name>`;
+    int? pos = 1;
+    io:println(val[pos is int ? pos : 0]); // @output <name>Enid Blyton</name>
+}
+
+Test-Case: output
+Description: Test member access expression at module level.
+Labels: member-access-expr, module-init-var-decl, xml
+
+xml val = xml `<!--Some Comment--><name>Enid Blyton</name>Some Text<name>Dan Brown</name>`;
+
+xml mem = val[3];
+
+function init() {
+    io:println(mem); // @output <name>Dan Brown</name>
+}
+
+Test-Case: output
+Description: Test member access expression when the basic type of the container expression is inferred as xml.
+Labels: is-expr, member-access-expr, var, xml, xml-template-expr
+
+function init() {
+    var val = xml `<!--Some Comment--><name>Enid Blyton</name>Some Text<name>Dan Brown</name>`;
+    io:println(val is xml); // @output true
+    io:println(val[3]); // @output <name>Dan Brown</name>
+}
+
+Test-Case: output
+Description: Test member access expression with container expression of basic type xml as array member.
+Labels: array-type, list-constructor-expr, member-access-expr, xml, xml-template-expr
+
+function init() {
+    xml val = xml `<!--Some Comment--><name>Enid Blyton</name>Some Text<name>Dan Brown</name>`;
+
+    xml[] mem = [val[1], val[3], val[0]];
+    io:println(mem[1]); // @output <name>Dan Brown</name>
+}
+
+Test-Case: output
+Description: Test member access expression with container expression of basic type xml as default expression
+             for a field.
+Labels: intersection-type, mapping-constructor-expr, member-access-expr, module-init-var-decl, module-type-defn,
+        readonly-type, record-type, xml
+
+final xml & readonly val = xml `<!--Some Comment--><name>Enid Blyton</name>Some Text<name>Dan Brown</name>`;
+
+type Record record {|
+    xml member = val[0];
+|};
+
+function init() {
+    Record rec = {};
+    io:println(rec.member); // @output <!--Some Comment-->
+}
+
+Test-Case: output
+Description: Test member access expression with container expression of basic type xml as defaultable
+             function parameter.
+Labels: defaultable-param, function-call-expr, intersection-type, member-access-expr, module-init-var-decl,
+        readonly-type, xml, xml-template-expr
+
+final xml & readonly val = xml `<!--Some Comment--><name>Enid Blyton</name>Some Text<name>Dan Brown</name>`;
+
+function init() {
+    io:println(getMember()); // @output Some Text
+}
+
+function getMember(xml member = val[2]) returns xml {
+    return member;
+}
+
+Test-Case: output
+Description: Test member access expression with container expression of basic type xml as expression in
+             return statement.
+Labels: function-call-expr, member-access-expr, return-stmt, xml, xml-template-expr
+
+function init() {
+    io:println(getMember(xml `<name>Enid Blyton</name><name>Dan Brown</name>`)); // @output <name>Dan Brown</name>
+}
+
+function getMember(xml member) returns xml {
+    return member[1];
+}
+
+Test-Case: output
+Description: Test accessing members of a member access expression.
+Labels: array-type, member-access-expr, module-type-defn, record-type, tuple-rest-descriptor, tuple-type, xml,
+        xml-template-expr
+
+type Record record {
+    xml[][] a;
+};
+
+function init() {
+    xml x = xml `<name>Enid Blyton</name><name>Dan Brown</name>`;
+    io:println(x[1][0][0][0][0]); // @output <name>Dan Brown</name>
+
+    xml[][] arr1 = [[xml `<name>Enid Blyton</name><name>Dan Brown</name>`, xml `Some Text`], [xml `<name>Enid Blyton</name><name>Dan Brown</name>`, xml `<!--Comment-->`], [xml `<name>Dan Brown</name>`]];
+    io:println(arr1[1][1][0][0][0]); // @output <!--Comment-->
+
+    [int, [xml...]] t1 = [1, [xml `<name>Enid Blyton</name><name>Dan Brown</name>`, xml `Some Text`, xml `<!--Comment-->`]];
+    io:println(t1[1][0][1][0][0]); // @output <name>Dan Brown</name>
+
+    Record rec = {a: [[xml `<name>Enid Blyton</name><name>Dan Brown</name>`, xml `Some Text`], [xml `<name>Enid Blyton</name><name>Dan Brown</name>`, xml `<!--Comment-->`], [xml `<name>Dan Brown</name>`]]};
+    io:println(rec["a"][1][0][1][0][0]); // @output <name>Dan Brown</name>
+}
+
+Test-Case: error
+Description: Test assigning a value to member access expression.
+Labels: member-access-lvexpr, union-type, xml, xml:Comment, xml:Element, xml:Text, xml-template-expr
+
+function errorFunction() {
+    xml e = xml `<name>Enid Blyton</name><name>Dan Brown</name>`;
+    e[1] = xml `<name>Nicholas Sparks</name>`; // @error cannot update an xml sequence
+
+    xml:Element e2 = xml `<name>Enid Blyton</name>`;
+    e[0] = xml `<name>Nicholas Sparks</name>`; // @error cannot update an xml sequence
+
+    xml:Text|xml:Comment e3 = xml `Text`;
+    e[0] = xml `Another Text`; // @error cannot update an xml sequence
+}
+
+Test-Case: error
+Description: Test accessing members of an invalid structure.
+Fail-Issue: ballerina-platform/ballerina-lang#32957
+Labels: member-access-expr, optional-type, xml, xml-template-expr
+
+function errorFunction() {
+    xml? e = xml `<name>Enid Blyton</name><name>Dan Brown</name>`;
+    _ = e[1]; // @error type 'xml?' does not support member access
+}
+
+Test-Case: error
+Description: Test invalid member access using multi key expression.
+Labels: member-access-expr, xml, xml-template-expr
+
+function errorFunction() {
+    xml e = xml `<name>Enid Blyton</name><name>Dan Brown</name>`;
+    _ = e[1, 2]; // @error member access with multi-key expression is not allowed with xml
+}

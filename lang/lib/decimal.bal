@@ -40,19 +40,31 @@ public isolated function min(decimal x, decimal... xs) returns decimal = externa
 # + return - absolute value of `x`
 public isolated function abs(decimal x) returns decimal = external;
 
-# Round a decimal to the closest integral value.
-# Returns the decimal value that is a mathematical integer and closest to `x`.
-# If there are two such values, choose the one that is even
+# Round a decimal to a specified number of digits.
+# Returns the decimal value that has an exponent of `-fractionDigits`
+# and is closest to `x`.
+# If there are two such values, returns the one whose final digit is even
 # (this is the round-to-nearest rounding mode, which is the default for IEEE
 # and for Ballerina).
-# Same as Java Math.rint method
-# Same as .NET Math.Round method
-# IEEE 754 roundToIntegralTiesToEven operation
-# Note that `<int>x` is the same as `<int>x.round()`
+# A value of `fractionDigits` greater than 0 thus corresponds to the number of digits after the decimal
+# point being `fractionDigits`; a value of 0 for `fractionDigits` rounds to an integer.
+# Note that IEEE 754 roundToIntegralTiesToEven operation differs from `round` with `fractionDigits` as 0,
+# in that roundToIntegralTiesToEven will return a value with a positive exponent when the operand has a positive exponent.
+# Note that `<int>x` is the same as `<int>x.round(0)`.
 #
 # + x - decimal value to operate on
-# + return - closest decimal value to `x` that is a mathematical integer
-public isolated function round(decimal x) returns decimal = external;
+# + fractionDigits - the number of digits after the decimal point
+# + return - closest decimal value to `x` that is an integral multiple of 10 raised to the power of `-fractionDigits`
+public isolated function round(decimal x, int fractionDigits = 0) returns decimal = external;
+
+# Return a decimal with a specified value and exponent.
+# Return a decimal value that has the same value (except for rounding) as the first
+# argument, and the same exponent as the second argument.
+# This is the IEEE quantize operation.
+# + x - decimal value to operate on
+# + y - decimal value from which to get the quantum
+# + return - `x` with the quantum of `y`
+public isolated function quantize(decimal x, decimal y) returns decimal = external;
 
 # Rounds a decimal down to the closest integral value.
 #

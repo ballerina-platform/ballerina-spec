@@ -18,7 +18,7 @@
 # Type for value that can be cloned.
 # This is the same as in lang.value, but is copied here to avoid a dependency.
 
-type Cloneable readonly|xml|Cloneable[]|map<Cloneable>|table<map<Cloneable>>;
+public type Cloneable readonly|xml|Cloneable[]|map<Cloneable>|table<map<Cloneable>>;
 
 # The type to which error detail records must belong.
 public type Detail record {|
@@ -56,7 +56,7 @@ public type StackFrame readonly & object {
    # Returns a string representing this StackFrame.
    # This must not contain any newline characters.
    # + return - a string
-   public function toString() returns string;
+   public isolated function toString() returns string;
 };
 
 # Returns an array representing an error's stack trace.

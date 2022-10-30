@@ -3,7 +3,7 @@ name: Sync draft spec with ballerina.io
 on:
   push:
     tags:    
-      - '*'
+      - 'v*-*-*'
   workflow_dispatch:
 
 jobs:
@@ -17,10 +17,10 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Clone ballerina-dev-website
-        run: git clone https://ballerina-bot:$GITHUB_TOKEN@github.com/ballerina-platform/ballerina-dev-website.git
+        run: git clone -b gh-pages --single-branch https://ballerina-bot:$GITHUB_TOKEN@github.com/ballerina-platform/ballerina-dev-website.git
 
       - name: Clone ballerina-prod-website
-        run: git clone https://ballerina-bot:$GITHUB_TOKEN@github.com/ballerina-platform/ballerina-platform.github.io.git
+        run: git clone -b gh-pages --single-branch https://ballerina-bot:$GITHUB_TOKEN@github.com/ballerina-platform/ballerina-platform.github.io.git
 
       - name: Make new folder location in ballerina-dev-website
         run: |
@@ -28,12 +28,14 @@ jobs:
           array=($(echo $GITHUB_REF | tr "/" "\n"))
           len=${#array[@]}
           echo "${array[len-1]}"
+          if [ -d "${array[len-1]}" ]; then rm -Rf "${array[len-1]}"; fi
           mkdir "${array[len-1]}"
           echo "NEW_FOLDER=${array[len-1]}" >> $GITHUB_ENV
 
       - name: Make new folder location in ballerina-prod-website
         run: |
           cd ballerina-platform.github.io/spec/lang/draft
+          if [ -d "${NEW_FOLDER}" ]; then rm -Rf "${NEW_FOLDER}"; fi
           mkdir "${NEW_FOLDER}"
 
       - name: Update the latest to new url in ballerina-dev-website
@@ -54,18 +56,13 @@ jobs:
           git checkout $GITHUB_REF -b tmp
           cd lang
           make all
+          mv build/spec.html build/index.html
           
       - name: Copy new spec to ballerina-dev-website
-        run: |
-          cp -r lang/build/lib/ ballerina-dev-website/spec/lang/draft/$NEW_FOLDER
-          cp -r lang/build/style/ ballerina-dev-website/spec/lang/draft/$NEW_FOLDER
-          cp -r lang/build/spec.html ballerina-dev-website/spec/lang/draft/$NEW_FOLDER/index.html
+        run: cp -r lang/build/* ballerina-dev-website/spec/lang/draft/$NEW_FOLDER
 
       - name: Copy new spec to ballerina-prod-website
-        run: |
-          cp -r lang/build/lib/ ballerina-platform.github.io/spec/lang/draft/$NEW_FOLDER
-          cp -r lang/build/style/ ballerina-platform.github.io/spec/lang/draft/$NEW_FOLDER
-          cp -r lang/build/spec.html ballerina-platform.github.io/spec/lang/draft/$NEW_FOLDER/index.html
+        run: cp -r lang/build/* ballerina-platform.github.io/spec/lang/draft/$NEW_FOLDER
 
       - name: Update the list of draft specs in ballerina-dev-website
         run: python3 .github/scripts/append.py ballerina-dev-website/_data/draft_spec.json $NEW_FOLDER
@@ -76,7 +73,7 @@ jobs:
       - name: Sync ballerina-spec with ballerina-dev-website
         run: |
           cd ballerina-dev-website
-          git pull origin master
+          git pull origin gh-pages
 
           git config --global user.email "ballerina-bot@ballerina.org"
           git config --global user.name "ballerina-bot"
@@ -88,7 +85,7 @@ jobs:
       - name: Sync ballerina-spec with ballerina-prod-website
         run: |
           cd ballerina-platform.github.io
-          git pull origin master
+          git pull origin gh-pages
 
           git config --global user.email "ballerina-bot@ballerina.org"
           git config --global user.name "ballerina-bot"
@@ -105,7 +102,7 @@ jobs:
           bin/hub push
         env:
           GITHUB_TOKEN: ${{ secrets.BAL_BOT_PAT }}
-          
+
       - name: Push new changes to ballerina-prod-website
         shell: bash
         run: |

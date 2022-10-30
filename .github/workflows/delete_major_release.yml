@@ -1,0 +1,67 @@
+name: Delete major spec release in ballerina.io
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version of the spec release (directory name)'
+        required: true
+        default: ''
+
+jobs:
+  delete_release_spec:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.BAL_BOT_PAT }}
+
+    steps:
+      - name: Checkout ballerina-spec
+        uses: actions/checkout@v2
+
+      - name: Clone ballerina-dev-website
+        run: git clone -b gh-pages --single-branch https://ballerina-bot:$GITHUB_TOKEN@github.com/ballerina-platform/ballerina-dev-website.git
+
+      - name: Clone ballerina-prod-website
+        run: git clone -b gh-pages --single-branch https://ballerina-bot:$GITHUB_TOKEN@github.com/ballerina-platform/ballerina-platform.github.io.git
+
+      - name: Delete spec directory from ballerina-dev-website
+        run: |
+          cd ballerina-dev-website
+          git pull origin gh-pages
+
+          git config --global user.email "ballerina-bot@ballerina.org"
+          git config --global user.name "ballerina-bot"
+
+          if [ -d "spec/lang/${{ github.event.inputs.version }}" ]; then rm -Rf "spec/lang/${{ github.event.inputs.version }}"; else echo "${{ github.event.inputs.version }} directory not found"; fi
+          git add spec/lang
+          git commit --allow-empty -m "[Automated] Delete major release in master"
+
+      - name: Delete spec directory from ballerina-prod-website
+        run: |
+          cd ballerina-platform.github.io
+          git pull origin gh-pages
+
+          git config --global user.email "ballerina-bot@ballerina.org"
+          git config --global user.name "ballerina-bot"
+
+          if [ -d "spec/lang/${{ github.event.inputs.version }}" ]; then rm -Rf "spec/lang/${{ github.event.inputs.version }}"; else echo "${{ github.event.inputs.version }} directory not found"; fi
+          git add spec/lang
+          git commit --allow-empty -m "[Automated] Delete major release in master"
+
+      - name: Push new changes to ballerina-dev-website
+        shell: bash
+        run: |
+          cd ballerina-dev-website
+          curl -fsSL https://github.com/github/hub/raw/master/script/get | bash -s 2.14.1
+          bin/hub push
+        env:
+          GITHUB_TOKEN: ${{ secrets.BAL_BOT_PAT }}
+
+      - name: Push new changes to ballerina-prod-website
+        shell: bash
+        run: |
+          cd ballerina-platform.github.io
+          curl -fsSL https://github.com/github/hub/raw/master/script/get | bash -s 2.14.1
+          bin/hub push
+        env:
+          GITHUB_TOKEN: ${{ secrets.BAL_BOT_PAT }}
