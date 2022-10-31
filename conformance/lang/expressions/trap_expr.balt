@@ -64,52 +64,52 @@ function init() {
 }
 
 Test-Case: output
-Description: Test trap expression when the expression is a nil-literal and it does not panic.
+Description: Test trap expression when the expression is a nil literal and it does not panic.
 Labels: error-type, is-expr, nil-literal, nil-type, null, optional-type, trap-expr, union-type
 
-function init() {
-    ()|error t1 = trap ();
-    io:println(t1 is ()); // @output true
+function foo(boolean nilLiteral) returns () {
+    if nilLiteral {
+        return null;
+    } else {
+        panic error("Don't return boolean");
+    }
+}
 
-    error? t2 = trap null;
-    io:println(t2 is ()); // @output true
+function init() {
+    ()|error t = trap foo(true);
+    io:println(t is ()); // @output true
+    t = trap foo(false);
+    io:println(t); // @output error("Don't return boolean")
 }
 
 Test-Case: output
-Description: Test trap expression when the expression is a boolean-literal and it does not panic.
-Labels: boolean, boolean-literal, error-type, trap-expr, union-type
+Description: Test trap expression when the expression is a function call which returns int or panic.
+Labels: decimal, error-type, float, function-call-expr, int, trap-expr, union-type
+
+function foo(string str) returns int {
+    return checkpanic int:fromString(str);
+}
 
 function init() {
-    boolean|error t = trap false;
-    io:println(t); // @output false
+    int|error a = trap foo("1");
+    io:println(a); // @output 1
+    a = trap foo("a");
+    io:println(a); // @output error("{ballerina/lang.int}NumberParsingError",message="'string' value 'a' cannot be converted to 'int'")
 }
 
 Test-Case: output
-Description: Test trap expression when the expression is a numeric-literal and it does not panic.
-Labels: decimal, error-type, float, int, trap-expr, union-type
-
-function init() {
-    int|error t1 = trap 2;
-    io:println(t1); // @output 2
-    float|error t2 = trap 2e3f;
-    io:println(t2); // @output 2000.0
-    decimal|error t3 = trap 2e355d;
-    io:println(t3); // @output 2E+355
-}
-
-Test-Case: output
-Description: Test trap expression when the expression is a string-literal and it does not panic.
+Description: Test trap expression when the expression is a function call which returns string or panic.
 Labels: string, trap-expr, union-type
 
 function init() {
-    string|error t1 = trap "Hello";
-    io:println(t1); // @output Hello
-    t1 = trap "Hello\tWorld";
-    io:println(t1); // @output Hello	World
+    string|error e = trap string:fromCodePointInt(100);
+    io:println(e); // @output d
+    e = trap string:fromCodePointInt(1000000000000000);
+    io:println(e); // @output error("Invalid codepoint: 1000000000000000")
 }
 
 Test-Case: output
-Description: Test trap expression when the expression is a byte-array-literal and it does not panic.
+Description: Test trap expression when the expression is a byte array literal and it does not panic.
 Labels: byte, byte-array-literal, error-type, trap-expr, union-type
 
 function init() {
@@ -120,7 +120,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test trap expression when the expression is a string-template-expr and it does not panic.
+Description: Test trap expression when the expression is a string template expr and it does not panic.
 Labels: error-type, string-template-expr, trap-expr, union-type
 
 function init() {
@@ -132,7 +132,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test trap expression when the expression is a xml-template-expr and it does not panic.
+Description: Test trap expression when the expression is a xml template expr and it does not panic.
 Labels: error-type, trap-expr, union-type, xml-template-expr
 
 function init() {
@@ -292,36 +292,62 @@ function init() {
 }
 
 Test-Case: output
-Description: Test trap expression when the expression is a character and it does not panic.
-Labels: boolean, error-type, string:Char, trap-expr, union-type
+Description: Test trap expression when the expression is a function call which returns char or panic.
+Labels: boolean, error-type, function-call-expr, string:Char, trap-expr, union-type
+
+function foo(boolean character) returns string:Char {
+    if character {
+        return "c";
+    } else {
+        panic error("Don't return char");
+    }
+}
 
 function init() {
     string:Char c = "c";
-    string:Char|error e1 = trap c;
-    io:println(e1); // @output c
+    string:Char|error e = trap foo(true);
+    io:println(e); // @output c
+    e = trap foo(false);
+    io:println(e); // @output error("Don't return char")
 }
 
 Test-Case: output
-Description: Test trap expression when the expression is a byte value and it does not panic.
-Labels: boolean, byte, error-type, trap-expr, union-type
+Description: Test trap expression when the expression is a function call which returns byte or panic.
+Labels: boolean, byte, error-type, function-call-expr, trap-expr, union-type
+
+function foo(boolean byteValue) returns byte {
+    if byteValue {
+        return 0;
+    } else {
+        panic error("Don't return byte");
+    }
+}
 
 function init() {
     byte b = 0;
-    byte|error e = trap b;
+    byte|error e = trap foo(true);
     io:println(e); // @output 0
+    e = trap foo(false);
+    io:println(e); // @output error("Don't return byte")
 }
 
 Test-Case: output
-Description: Test trap expression when the expression is a byte value and it does not panic.
-Labels: boolean, error-type, int:Signed32, int:Unsigned32, trap-expr, union-type
+Description: Test trap expression when the expression is a function call which returns subtype of int or panic.
+Labels: boolean, error-type, function-call-expr, int:Signed32, int:Unsigned32, trap-expr, union-type
+
+function foo(boolean signedInt) returns int:Signed32 {
+    if signedInt {
+        return -12;
+    } else {
+        panic error("Don't return signed int");
+    }
+}
 
 function init() {
-    int:Signed32 i1 = -12;
-    int:Signed32|error e1 = trap i1;
+    int:Signed32|error e1 = trap foo(true);
     io:println(e1); // @output -12
-    int:Unsigned32 i2 = 1234;
-    int:Unsigned32|error e2 = trap i2;
-    io:println(e2); // @output 1234
+    e1 = trap foo(false);
+    io:println(e1); // @output error("Don't return signed int")
 }
 
 Test-Case: output
