@@ -143,6 +143,18 @@ public isolated function replace(RegExp re, string str, @isolatedParam Replaceme
 # + return - `str` with every match replaced by the string specified by `replacement`
 public isolated function replaceAll(RegExp re, string str, @isolatedParam Replacement replacement, int startIndex = 0) returns string = external;
 
+
+# Splits a string into substrings separated by matches of a regular expression.
+# This finds the the non-overlapping matches of a regular expression and
+# returns a list of substrings of `str` that occur before the first match,
+# between matches, or after the last match.  If there are no matches, then
+# `[str]` will be returned.
+# 
+# + re - the regular expression that specifies the separator
+# + str - the string to be split
+# + return - a list of substrings of `str` separated by matches of `re` 
+public isolated function split(RegExp re, string str) returns string[] = external;
+
 # Constructs a regular expression from a string.
 # The syntax of the regular expression is the same as accepted by the `re` tagged data template expression.
 #
