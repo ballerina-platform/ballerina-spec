@@ -7522,7 +7522,7 @@ return <var>E</var >}</code>.
 </section>
 
 <section>
-<h4>External functions</h4>
+<h4>Functions with external bodies</h4>
 
 <pre
 class="grammar">external-function-body := <code>=</code> [annots] <code>external</code> 
@@ -7596,8 +7596,8 @@ is called concurrently on multiple strands.
 class="grammar">statement := 
    action-stmt
    | local-var-decl-stmt
-   | xmlns-decl-stmt
    | client-decl-stmt
+   | xmlns-decl-stmt
    | assignment-stmt
    | compound-assignment-stmt
    | destructuring-assignment-stmt
@@ -8554,6 +8554,23 @@ the statement-block of S completes normally or when a continue-stmt is executed.
 
 </section>
 <section>
+<h3>External client declaration statement</h3>
+
+<pre
+class="grammar">client-decl-stmt := client-decl
+</pre>
+
+<p>
+The semantics of a <code>client-decl</code> are described in the <a
+href="#module_external_client_declaration">Module external client declaration</a> section.
+</p>
+<p>
+A <code>module-prefix</code> declared by a <code>client-decl</code> in a
+<code>client-decl-stmt</code> has block-scope.
+</p>
+
+</section>
+<section>
 <h3 id="XML_namespace_declaration_statement">XML namespace declaration statement</h3>
 
 <pre
@@ -8586,16 +8603,6 @@ The prefix <code>xmlns</code> is predeclared as
 The static type of the <code>simple-const-expr</code> must be a subtype of
 string.
 </p>
-</section>
-<section>
-<h3 id="client_declaration_statement">Client declaration statement</h3>
-
-<pre
-class="grammar">client-decl-stmt := client-decl
-client-decl := [annots] <code>client</code> service-uri <code>as</code> module-prefix <code>;</code>
-service-uri := string-literal
-</pre>
-
 </section>
 <section>
 <h3>Assignment</h3>
@@ -9840,8 +9847,8 @@ other-decl :=
    | module-var-decl
    | module-const-decl
    | module-enum-decl
-   | module-xmlns-decl
    | module-client-decl
+   | module-xmlns-decl
    | annotation-decl
 </pre>
 <section>
@@ -9855,7 +9862,7 @@ org-name := import-identifier
 module-name := import-identifier (<code>.</code> import-identifier)*
 import-identifier := RestrictedIdentifier
 
-qualified-identifier := module-prefix NoSpaceColon identifier
+qualified-identifier := module-prefix NoSpaceColon (identifier | "client")
 </pre>
 <p>
 If org-name is omitted, it is defaulted from the organization of the importing
@@ -10477,6 +10484,32 @@ public type Color RED|GREEN|BLUE;
 </section>
 
 <section>
+<h3 id="module_external_client_declaration">Module external client declaration</h3>
+<pre
+class="grammar">module-client-decl := client-decl
+client-decl := [annots] <code>client</code> service-uri <code>as</code> module-prefix <code>;</code>
+service-uri := string-literal
+</pre>
+
+<p>
+A <code>client-decl</code> constructs a module that contains a client class that
+can be used to access a service described by a web resource. The
+<code>service-uri</code> specifies the URI of this resource. The format of the
+description is not constrained by this specification, but implementations are
+expected to support OpenAPI documents as described by the OpenAPI specification.
+The constructed module can also contain declarations of types and constants used
+by the client class. The <code>client-decl</code> also declares a
+<code>module-prefix</code>, which can be used to refer to the constructed
+module.
+</p>
+<p>
+The scope of a <code>module-prefix</code> declared in the
+<code>module-client-decl</code> is the source part in which the
+<code>module-client-decl</code> occurs.
+</p>
+
+</section>
+<section>
 <h3>Module XML namespace declaration</h3>
 <pre
 class="grammar">module-xmlns-decl := xmlns-decl
@@ -10495,17 +10528,6 @@ statement</a> section.
 
 </section>
 
-<section>
-<h3>Module client declaration</h3>
-<pre
-class="grammar">module-client-decl := client-decl
-</pre>
-
-<p>
-The semantics of client-decl are described in the <a
-href="#client_declaration_statement">Client declaration statement</a> section.
-</p>
-</section>
 
 </section>
 <section>
