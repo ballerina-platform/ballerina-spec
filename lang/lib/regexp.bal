@@ -95,22 +95,22 @@ public isolated function matchAt(RegExp re, string str, int startIndex = 0) retu
 #   first `Span` in the list will always be equal to the `startIndex` of the first member of the list
 public isolated function matchGroupsAt(RegExp re, string str, int startIndex = 0) returns Groups? = external;
 
-# Tests whether there is a match of the regular expression that matches the entire string.
-# A match of the regular expression matches the entire string if it
-# starts at index 0 and ends index `n` where `n` is the length of the string.
+# Tests whether there is full match of regular expression with a string.
+# A match of a regular expression in a string is a full match if it
+# starts at index 0 and ends at index `n`, where `n` is the length of the string.
 #
 # + re - the regular expression  
 # + str - the string
-# + return - true if the regular expression matches the entire string, and false otherwise
+# + return - true if there is full match of `re` with `str`, and false otherwise
 public isolated function isFullMatch(RegExp re, string str) returns boolean = external;
 
-# Returns the `Groups` of the match of a regular expression that matches the entire string.
-# A match of the regular expression matches the entire string if it
-# starts at index 0 and ends index `n` where `n` is the length of the string.
+# Returns the `Groups` of the match of a regular expression that is a full match of a string.
+# A match of the regular expression in a string is a full match if it
+# starts at index 0 and ends at index `n`, where `n` is the length of the string.
 # 
 # + re - the regular expression  
 # + str - the string in which to look for a match of `re` 
-# + return - a `Groups` list describing the match, or nil if `re` does not match the entire string; the 
+# + return - a `Groups` list describing the match, or nil if there is not a full match; the 
 #   first `Span` in the list will be all of `str`
 public isolated function fullMatchGroups(RegExp re, string str) returns Groups? = external;
 
@@ -142,7 +142,6 @@ public isolated function replace(RegExp re, string str, @isolatedParam Replaceme
 # + startIndex - the index within `str` at which to start looking for matches; defaults to zero
 # + return - `str` with every match replaced by the string specified by `replacement`
 public isolated function replaceAll(RegExp re, string str, @isolatedParam Replacement replacement, int startIndex = 0) returns string = external;
-
 
 # Splits a string into substrings separated by matches of a regular expression.
 # This finds the the non-overlapping matches of a regular expression and
