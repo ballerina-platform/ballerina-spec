@@ -116,7 +116,7 @@ public isolated function fullMatchGroups(RegExp re, string str) returns Groups? 
 
 # A function that constructs the replacement for the match of a regular expression.
 # The `groups` parameter describes the match for which the replacement is to be constructed.
-public type ReplacerFunction function(Groups groups) returns string;
+public type ReplacerFunction isolated function(Groups groups) returns string;
 
 # The replacement for the match of a regular expression found within a string.
 # A string value specifies that the replacement is a fixed string.
@@ -130,7 +130,7 @@ public type Replacement ReplacerFunction|string;
 # + replacement - a `Replacement` that gives the replacement for the match  
 # + startIndex - the index within `str` at which to start looking for a match; defaults to zero
 # + return - `str` with the first match, if any, replaced by the string specified by `replacement`
-public isolated function replace(RegExp re, string str, @isolatedParam Replacement replacement, int startIndex = 0) returns string = external;
+public isolated function replace(RegExp re, string str, Replacement replacement, int startIndex = 0) returns string = external;
 
 # Replaces all matches of a regular expression.
 # After one match is found, it looks for the next match starting where the previous
@@ -141,7 +141,7 @@ public isolated function replace(RegExp re, string str, @isolatedParam Replaceme
 # + replacement - a `Replacement` that gives the replacement for each match  
 # + startIndex - the index within `str` at which to start looking for matches; defaults to zero
 # + return - `str` with every match replaced by the string specified by `replacement`
-public isolated function replaceAll(RegExp re, string str, @isolatedParam Replacement replacement, int startIndex = 0) returns string = external;
+public isolated function replaceAll(RegExp re, string str, Replacement replacement, int startIndex = 0) returns string = external;
 
 # Splits a string into substrings separated by matches of a regular expression.
 # This finds the the non-overlapping matches of a regular expression and
