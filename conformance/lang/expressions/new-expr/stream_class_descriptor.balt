@@ -10,7 +10,7 @@ Test-Case: error
 Description: Test new-expression to create a stream with incompatible stream type parameters.
 Labels: explicit-new-expr, stream-type-parameters, string
 
-function init() {
+function errorFunction() {
     stream<int> _ = new stream<string>(); // @error incompatible types: expected 'stream<int>', found 'stream<string>'
 }
 
@@ -25,7 +25,7 @@ function init() {
 
 Test-Case: output
 Description: Test new-expression to create a empty streams.
-Labels: error-type, explicit-new-expr, is-expr, method-call-expr, module-type-defn, nil-type, optional-type, 
+Labels: error-type, explicit-new-expr, is-expr, method-call-expr, module-type-defn, nil-type, optional-type,
         record-type, stream-type-parameters, union-type
 
 type IntRecord record {|
@@ -54,7 +54,7 @@ function init() {
 
 Test-Case: error
 Description: Test new-expr to create a stream with stream extra parameters.
-Labels: error-type, explicit-new-expr, implicit-new-expr, isolated-method, member-access-expr, module-class-defn, 
+Labels: error-type, explicit-new-expr, implicit-new-expr, isolated-method, member-access-expr, module-class-defn,
         optional-type, stream-type-parameters, string
 
 class NumbersGenerator {
@@ -72,7 +72,7 @@ function errorFunction() {
 
 Test-Case: error
 Description: Test new-expr to create a stream with stream implementor with next method with incompatible return type.
-Labels: error-type, explicit-new-expr, implicit-new-expr, isolated-method, member-access-expr, module-class-defn, 
+Labels: error-type, explicit-new-expr, implicit-new-expr, isolated-method, member-access-expr, module-class-defn,
         optional-type, stream-type-parameters
 
 class NumbersGenerator {
@@ -83,7 +83,7 @@ class NumbersGenerator {
     }
 }
 
-function init() {
+function errorFunction() {
     NumbersGenerator numbersGenerator = new;
     stream<int, error?> numberStream = new stream<int, error?>(numbersGenerator); // @error incompatible types: expected '(IntRecord|ErrorB)?', found '(record {| int value; |}|ErrorA)?'
 }
@@ -104,8 +104,8 @@ function errorFunction() {
 
 Test-Case: output
 Description: Test new-expression with int stream created via a stream with parameters and implementor.
-Labels: error-type, explicit-new-expr, field-access-expr, if-else-stmt, implicit-new-expr, is-expr, isolated-method, 
-        member-access-expr, method-call-expr, module-class-defn, module-type-defn, optional-type, record-type, 
+Labels: error-type, explicit-new-expr, field-access-expr, if-else-stmt, implicit-new-expr, is-expr, isolated-method,
+        member-access-expr, method-call-expr, module-class-defn, module-type-defn, optional-type, record-type,
         stream-type-parameters, union-type
 
 type IntRecord record {|
@@ -144,8 +144,8 @@ function init() {
 
 Test-Case: output
 Description: Test close method return type of stream created with stream implementor not implementing close.
-Labels: error-type, explicit-new-expr, field-access-expr, if-else-stmt, implicit-new-expr, is-expr, isolated-method, 
-        member-access-expr, method-call-expr, module-class-defn, module-type-defn, nil-type, optional-type, record-type, 
+Labels: error-type, explicit-new-expr, field-access-expr, if-else-stmt, implicit-new-expr, is-expr, isolated-method,
+        member-access-expr, method-call-expr, module-class-defn, module-type-defn, nil-type, optional-type, record-type,
         stream-type-parameters, union-type
 
 type IntRecord record {|
@@ -192,9 +192,9 @@ function init() {
 
 Test-Case: panic
 Description: Test auto closing of stream after completion type.
-// Fail-Issue: ballerina-platform/ballerina-lang/issues/34934
-Labels: explicit-new-expr, field-access-expr, if-else-stmt, implicit-new-expr, is-expr, isolated-method, 
-        member-access-expr, method-call-expr, module-class-defn, module-type-defn, nil-literal, nil-type, optional-type, 
+Fail-Issue: ballerina-platform/ballerina-lang/issues/34934
+Labels: explicit-new-expr, field-access-expr, if-else-stmt, implicit-new-expr, is-expr, isolated-method,
+        member-access-expr, method-call-expr, module-class-defn, module-type-defn, nil-literal, nil-type, optional-type,
         record-type, stream-type-parameters
 
 type IntRecord record {|
@@ -231,9 +231,9 @@ function init() {
 
 Test-Case: panic
 Description: Test closed stream next when stream implementor does not have close method.
-// Fail-Issue: ballerina-platform/ballerina-lang/issues/34934
-Labels: error-type, explicit-new-expr, implicit-new-expr, is-expr, isolated-method, member-access-expr, 
-        method-call-expr, module-class-defn, module-type-defn, nil-type, optional-type, record-type, 
+Fail-Issue: ballerina-platform/ballerina-lang/issues/34934
+Labels: error-type, explicit-new-expr, implicit-new-expr, is-expr, isolated-method, member-access-expr,
+        method-call-expr, module-class-defn, module-type-defn, nil-type, optional-type, record-type,
         stream-type-parameters, union-type
 
 type IntRecord record {|
@@ -257,8 +257,8 @@ function init() {
 
 Test-Case: output
 Description: Test closed stream next with stream implementor with close method.
-Labels: error-type, explicit-new-expr, field-access-expr, if-else-stmt, implicit-new-expr, is-expr, isolated-method, 
-        member-access-expr, method-call-expr, module-class-defn, module-type-defn, nil-type, optional-type, record-type, 
+Labels: error-type, explicit-new-expr, field-access-expr, if-else-stmt, implicit-new-expr, is-expr, isolated-method,
+        member-access-expr, method-call-expr, module-class-defn, module-type-defn, nil-type, optional-type, record-type,
         stream-type-parameters, union-type
 
 type IntRecord record {|
@@ -292,7 +292,7 @@ function init() {
     io:println(closed is ()); // @output true
     int|error? a = getRecordValue(numberStream.next());
     io:println(a); // @output 1
-    error? closed = numberStream.close();
+    closed = numberStream.close();
     io:println(closed is ()); // @output true
 }
 
