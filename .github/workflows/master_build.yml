@@ -19,10 +19,10 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Clone ballerina-dev-website
-        run: git clone -b master --single-branch https://ballerina-bot:$GITHUB_TOKEN@github.com/ballerina-platform/ballerina-dev-website.git
+        run: git clone -b gh-pages --single-branch https://ballerina-bot:$GITHUB_TOKEN@github.com/ballerina-platform/ballerina-dev-website.git
 
       - name: Clone ballerina-prod-website
-        run: git clone https://ballerina-bot:$GITHUB_TOKEN@github.com/ballerina-platform/ballerina-platform.github.io.git
+        run: git clone  -b gh-pages --single-branch https://ballerina-bot:$GITHUB_TOKEN@github.com/ballerina-platform/ballerina-platform.github.io.git
 
       - name: Install xsltproc
         run: sudo apt-get install -y xsltproc
@@ -36,20 +36,20 @@ jobs:
       - name: Sync spec in master with ballerina-dev-website
         run: |
           cd ballerina-dev-website
-          git pull origin master
+          git pull origin gh-pages
 
           git config --global user.email "ballerina-bot@ballerina.org"
           git config --global user.name "ballerina-bot"
 
-          git rm -r public/spec/lang/master/
-          cp -r ../lang/build/ public/spec/lang/master/
-          git add public/spec/lang/master/
+          git rm -r spec/lang/master/
+          cp -r ../lang/build/ spec/lang/master/
+          git add spec/lang/master/
           git commit --allow-empty -m "[Automated] Update spec in master"
 
       - name: Sync spec in master with ballerina-prod-website
         run: |
           cd ballerina-platform.github.io
-          git pull origin master
+          git pull origin gh-pages
 
           git config --global user.email "ballerina-bot@ballerina.org"
           git config --global user.name "ballerina-bot"

@@ -349,18 +349,16 @@ Values are of four kinds, each corresponding to a kind of basic type:
 </p>
 <ul>
 <li>simple values, like booleans and floating point numbers, which are not
-constructed from other values;</li>
+composed from other values;</li>
 <li>structured values, like mappings and lists, which contain values of arbitrary basic types;</li>
 <li>sequence values, which consists of sequences of values of the same basic type;</li>
-<li>tagged data values, used for well-known data types with their own
-specialized string syntax;</li>
 <li>behavioral values, like functions and objects, which are not just data.</li>
 </ul>
 <p>
 There is a fundamental distinction between values that have a <em>storage
 identity</em> and values that do not. A value that has storage identity has an
 identity that comes from the location where the value is stored. All structural
-and behavioural values have a storage identity, whereas all simple values and tagged data values
+and behavioural values have a storage identity, whereas all simple values
 do not. Storage identity for sequence values is more complicated and will be
 explained in the section on sequence values.
 </p>
@@ -399,15 +397,13 @@ the shape does not consider representation details that do not affect the
 mathematical value being represented.
 </p>
 <p>
-A value is <em>plain data</em> if it is a simple value, a sequence value,
-a tagged data value or a
+A value is <em>plain data</em> if it is a simple value, a sequence value, or a
 structured value that does not contain a behavioral value at any depth.
 More precisely, a value is defined to be <em>plain data</em> if it is
 </p>
 <ul>
 <li>a simple value,</li>
 <li>a sequence value,</li>
-<li>a tagged data value, or</li>
 <li>a structured value, all of whose members are also plain data.</li>
 </ul>
 <p>
@@ -748,7 +744,6 @@ class="grammar">type-descriptor :=
    simple-type-descriptor
    | sequence-type-descriptor
    | structured-type-descriptor
-   | tagged-data-type-descriptor
    | behavioral-type-descriptor
    | other-type-descriptor
 </pre>
@@ -930,7 +925,7 @@ The following tables summarizes the iterable basic types.
 <section>
 <h3>Simple values</h3>
 <p>
-A simple value belongs to exactly one of the following basic types:
+The basic type of a simple value is either one of the following
 </p>
 <ul>
 <li>nil</li>
@@ -940,8 +935,7 @@ A simple value belongs to exactly one of the following basic types:
 <li>decimal</li>
 </ul>
 <p>
-The type descriptor for each simple basic type contains all the values of the
-basic type.
+or is a tagged data type.
 </p>
 <p>
 All simple basic types are inherently immutable.
@@ -953,7 +947,12 @@ class="grammar">simple-type-descriptor :=
    | boolean-type-descriptor
    | int-type-descriptor
    | floating-point-type-descriptor
+   | tagged-data-type-descriptor
 </pre>
+<p>
+The type descriptor for each simple basic type contains all the values of the
+basic type.
+</p>
 <section>
 <h4>Nil</h4>
 
@@ -1112,6 +1111,67 @@ do so using different exponents.
 </p>
 </section>
 </section>
+<section>
+<h4>Tagged data values</h4>
+
+<p>
+Tagged data types are used for well-known data types that are not
+application-specific, but are widely supported across multiple protocols and
+programming languages. Each of these data types has its own conventional string
+syntax. The use of tagged data types allows programs to work with these data
+types using their normal string syntax, while distinguishing the values as
+belonging to a specific tagged data type.
+</p>
+<p>
+Data tags are defined either by this specification or the Ballerina platform.
+For each such data tag, there is a corresponding basic type. The definition of a
+data tag specifies the set of values belonging to the corresponding basic type.
+A tagged data value is a value belonging to one of these basic types. Every
+tagged data value is plain data, immutable and has no storage identity. The
+shape of a tagged data value is the value.
+</p>
+<p>
+The definition of a data tag with corresponding basic type B specifies:
+</p>
+<ul>
+<li>the name of the data tag; this is an unqualified identifier that is used
+with the tagged-data-template-expr to construct a value of type B;</li>
+<li>the set of values that B consists of;</li>
+<li>an abstract parsing function, used at compile-time; a sequence of characters
+into which <var>n</var> values can be interpolated is represented by an array of
+<var>n</var> + 1 strings; the abstract parsing function accordingly takes an
+array of <var>n</var> + 1 strings, with <var>n</var> &#x2065; 0, and returns
+either an error or a function of <var>n</var> arguments that interpolates its
+arguments into the result of the parse; the type of both the arguments and the
+return value of the returned function is B;</li>
+<li>an abstract function mapping from values of type B to strings;</li>
+<li>a library module; method call expressions on values of type B will call
+functions in this module.</li>
+</ul>
+<p>
+Note that errors cannot happen during interpolation. The abstract parsing
+function must therefore allow interpolations only in places where any valid
+value of type B can be interpolated.
+</p>
+<p>
+Most of the functionality of a tagged data type is provided by its library
+module.
+</p>
+
+<pre
+class="grammar">tagged-data-type-descriptor := qualified-identifier
+</pre>
+<p>
+The qualified-identifier in a tagged-data-type-descriptor refers to a type that
+is defined in a module that is part of the language library or standard library.
+</p>
+<p>
+In this version of the Ballerina language, only the data tag <code>re</code>
+is defined, with associated lang library module <code>lang.regexp</code>.
+</p>
+
+</section>
+
 </section>
 <section>
 <h3>Sequence values</h3>
@@ -1869,55 +1929,6 @@ table in order and the iteration completion value is always nil.
 </p>
 
 </section>
-</section>
-<section>
-<h3>Tagged data values</h3>
-
-<p>
-Tagged data types are used for well-known data types that are not
-application-specific, but are widely supported across multiple protocols and
-programming languages. Each of these data types has its own conventional string
-syntax. The use of tagged data types allows programs to work with these data
-types using their normal string syntax, while distinguishing the values as
-belonging to a specific tagged data type.
-</p>
-<p>
-Data tags are defined either by this specification or the Ballerina platform. For
-each such data tag, there is a basic type. The definition of a data tag
-specifies the set of values belonging to corresponding basic type. A tagged data
-value is a value belonging to one of these basic types. Every tagged data value
-is plain data, immmutable and has no storage identity. It is also atomic, in the
-sense that it contains no references to other values.
-</p>
-<p>
-The definition of a data tag defines:
-</p>
-<ul>
-<li>the tag; this is an unqualified identifier that is used with the
-tagged-data-template-expr to construct</li>
-<li>the set of values that its corresponding basic basic type consists of</li>
-<li>an abstract function mapping from strings to values</li>
-<li>an abstract function mapping from values to strings</li>
-<li>a library module; method call expressions on values of the basic type will
-call functions in this module</li>
-</ul>
-<p>
-Most of the functionality of a tagged data type is provided by the library
-module.
-</p>
-
-<pre
-class="grammar">tagged-data-type-descriptor := qualified-identifier
-</pre>
-<p>
-The qualified-identifier refers to a type that is defined in a module that is
-part of the language library or standard library.
-</p>
-<p>
-In this version of the Ballerina language, only the data tag <code>re</code>
-is defined, with associated lang library module <code>lang.regexp</code>.
-</p>
-
 </section>
 <section>
 <h3>Behavioral values</h3>
@@ -4673,12 +4684,36 @@ that has its read-only bit on.
 <h4>Tagged data template expression</h4>
 
 <pre
-class="grammar">tagged-data-template-expr := identifier BacktickString
+class="grammar">tagged-data-template-expr := data-tag BacktickString
+data-tag := identifier
 </pre>
 <p>
-The identifier must defined as a data tag by this specification or the Ballerina
-platform.
+A tagged-data-template-expr with data tag <var>t</var> constructs a tagged data
+value of the basic type corresponding to <var>t</var>. The data-tag identifier
+must be the name of a data tag by this specification or the Ballerina platform.
 </p>
+<p>
+The BacktickString is parsed in two stages:
+</p>
+<ol>
+<li>the BacktickString is parsed resulting in a sequence of literal characters
+and interpolations, represented as an array of <var>n</var> expressions, one for
+each interpolation, and an array of <var>n</var> + 1 strings, where the
+interpolations occur between the strings;</li>
+<li>the array of strings is parsed using the abstract parsing function defined
+for the data tag; it is a compile-time error if the abstract parsing function
+returns an error.</li>
+</ol>
+<p>
+The static type of the expression in an interpolation must be the data tag's
+basic type. When the tagged-data-template-expr is evaluated, each expression in
+an interpolation is evaluated in order. The result of evaluating the
+tagged-data-template-expr is the result of applying the function that was
+created by the abstract parsing function at compile-time to the values resulting
+from the evaluation of these expressions. Note that the result of evaluating a
+tagged-data-template-expr cannot be an error.
+</p>
+
 </section>
 
 
@@ -5823,11 +5858,11 @@ where m is an automatically created module prefix for a module lang.M of the lan
 library, where M is selected as follows.
 </p>
 <ul>
-<li>If the static type of <code>expression</code> is a subtype of some basic
-type with identifier B, and the module lang.B contains a function
-<code>method-name</code> then M is B. The identifier for a basic type is the
-reserved identifier used in type descriptors for subtypes of that basic type, as
-listed in the <a href="#lang_library">Lang library</a> section.</li>
+<li>If the static type of <code>expression</code> is a subtype of basic type
+with corresponding langlib module lang.B and the module lang.B contains a
+function <code>method-name</code> then M is B. The module corresponding to each
+basic type is listed in the <a href="#lang_library_modules">Lang library
+modules</a> section.</li>
 <li>Otherwise, M is <code>value</code>.</li>
 </ul>
 <p>
@@ -7487,7 +7522,7 @@ return <var>E</var >}</code>.
 </section>
 
 <section>
-<h4>External functions</h4>
+<h4>Functions with external bodies</h4>
 
 <pre
 class="grammar">external-function-body := <code>=</code> [annots] <code>external</code> 
@@ -7562,7 +7597,6 @@ class="grammar">statement :=
    action-stmt
    | local-var-decl-stmt
    | xmlns-decl-stmt
-   | client-decl-stmt
    | assignment-stmt
    | compound-assignment-stmt
    | destructuring-assignment-stmt
@@ -8551,21 +8585,6 @@ The prefix <code>xmlns</code> is predeclared as
 The static type of the <code>simple-const-expr</code> must be a subtype of
 string.
 </p>
-</section>
-<section>
-<h3 id="client_declaration_statement">Client declaration statement</h3>
-
-<pre
-class="grammar">client-decl-stmt := client-decl
-client-decl := <code>client</code> service-uri <code>as</code> module-prefix <code>;</code>
-service-uri := simple-const-expr
-</pre>
-
-<p>
-The static type of the <code>simple-const-expr</code> must be a subtype of
-string.
-</p>
-
 </section>
 <section>
 <h3>Assignment</h3>
@@ -9810,8 +9829,8 @@ other-decl :=
    | module-var-decl
    | module-const-decl
    | module-enum-decl
-   | module-xmlns-decl
    | module-client-decl
+   | module-xmlns-decl
    | annotation-decl
 </pre>
 <section>
@@ -9825,7 +9844,7 @@ org-name := import-identifier
 module-name := import-identifier (<code>.</code> import-identifier)*
 import-identifier := RestrictedIdentifier
 
-qualified-identifier := module-prefix NoSpaceColon identifier
+qualified-identifier := module-prefix NoSpaceColon (identifier | "client")
 </pre>
 <p>
 If org-name is omitted, it is defaulted from the organization of the importing
@@ -10447,6 +10466,31 @@ public type Color RED|GREEN|BLUE;
 </section>
 
 <section>
+<h3 id="module_external_client_declaration">Module external client declaration</h3>
+<pre
+class="grammar">module-client-decl := := [annots] <code>client</code> service-uri <code>as</code> module-prefix <code>;</code>
+service-uri := string-literal
+</pre>
+
+<p>
+A <code>module-client-decl</code> constructs a module that contains a client class that
+can be used to access a service described by a web resource. The
+<code>service-uri</code> specifies the URI of this resource. The format of the
+description is not constrained by this specification, but implementations are
+expected to support OpenAPI documents as described by the OpenAPI specification.
+The constructed module can also contain declarations of types and constants used
+by the client class. The <code>module-client-decl</code> also declares a
+<code>module-prefix</code>, which can be used to refer to the constructed
+module.
+</p>
+<p>
+The scope of a <code>module-prefix</code> declared in the
+<code>module-client-decl</code> is the source part in which the
+<code>module-client-decl</code> occurs.
+</p>
+
+</section>
+<section>
 <h3>Module XML namespace declaration</h3>
 <pre
 class="grammar">module-xmlns-decl := xmlns-decl
@@ -10465,17 +10509,6 @@ statement</a> section.
 
 </section>
 
-<section>
-<h3>Module client declaration</h3>
-<pre
-class="grammar">module-client-decl := client-decl
-</pre>
-
-<p>
-The semantics of client-decl are described in the <a
-href="#client_declaration_statement">Client declaration statement</a> section.
-</p>
-</section>
 
 </section>
 <section>
@@ -10599,6 +10632,7 @@ source-only-attach-point-ident :=
    | <code>var</code>
    | <code>const</code>
    | <code>listener</code>
+   | <code>client</code>
    | <code>worker</code>
 </pre>
 <p>
@@ -10684,6 +10718,11 @@ The available attachment points are described in the following table.
   <tr>
    <td>listener</td>
    <td>listener-decl</td>
+   <td>none</td>
+  </tr>
+  <tr>
+   <td>client</td>
+   <td>client-decl</td>
    <td>none</td>
   </tr>
   <tr>
@@ -10831,63 +10870,16 @@ of the name to which the documentation string is attached.
 <h3>Regular expressions</h3>
 
 <p>
-The <code>re</code> tag is used for regular expressions. The lang library module
-for the corresponding basic type is <code>lang.regexp</code>.
+The <code>re</code> data tag is used for regular expressions. The lang library
+module for the corresponding basic type is <code>lang.regexp</code>.
 </p>
 <p>
 The syntax and semantics of Ballerina regular expressions are based on Perl.
 Ballerina supports a subset of Perl regular expressions that includes the most
 commonly used features and is interoperable across multiple regular expression
 engines. The supported syntax is defined by the <code>RegExp</code> grammar
-given below. The most rigourous specification of the semantics of Perl-style
-regular expressions in the the ECMAScript language specification. For this
-reason, the semantics of Ballerina regular expressions are defined by reference
-to the ECMAScript language specification, specifically ECMAScript 2022. The
-syntax of Ballerina regular expressions has been chosen to be a subset of
-ECMAScript regular expression syntax with one exception: regular expression
-flags, which in ECMAScript are specified in the regular expression literal
-following the closing <code>/</code>, are in Ballerina specified in the regular
-expression itself (using the same syntax as Perl).
+given below.
 </p>
-<p>
-The semantics of a Ballerina regular expression is as specified by ECMAScript
-subject to the following points:
-</p>
-<ul>
-<li>the version of ECMAScript used in ECMAScript 2022 (ECMA-262 13th edition);</li>
-<li>Ballerina uses the semantics with Unicode mode in effect (as set by the
-<code>u</code> flags (ECMAScript regular expressions work differently depending
-on whether Unicode mode is in effect);</li>
-<li>the semantics of <code>\p</code> and <code>\P</code>, and of the
-<code>i</code> flag depend on the version of Unicode being used; this version of
-Ballerina used Unicode version 10;</li>
-<li>regular expression constructs that depend on the definition of a line
-terminator or whitespace use the Ballerina definitions of those rather than the
-ECMAScript definitions; specifically
-<ul>
-<li><code>.</code> matches any character other than 0xA or 0xD;</li>
-<li><code>\s</code> matches any character allowed by the
-<code>WhiteSpaceChar</code> production; as in ECMAScript, <code>\S</code>
-matches any character not matched by <code>\s</code>;</li>
-</ul>
-</li>
-<li>the semantics of <code>ReFlagsOnOff</code> (which is not allowed by ECMAScript) is as follows:
-<ul>
-<li>the flags are modified within the parenthesized group containing the
-<code>ReFlagsOnOff</code>; those in <code>ReFlagsOn</code> are turned on;
-those in <code>ReFlagsOff</code> are turned off;</li>
-<li>it is an error for any flag to be specified more than once within
-<code>ReFlagsOnOff</code>;</li>
-<li>the meaning of the <code>m</code>, <code>s</code> and <code>i</code> are as
-in ECMAScript;</li>
-<li>the meaning of <code>x</code> flag is as in Perl: when this flag is in
-effect, any character in the regular expression that belongs to the
-<code>WhiteSpaceChar</code> production, but is not within an
-<code>ReCharSet</code> is ignored; further comments starting with <code>#</code>
-and continuing to the end of the line are also ignored.</li>
-</ul>
-</li>
-</ul>
 
 <pre
 class="grammar">RegExp := ReDisjunction
@@ -10934,7 +10926,7 @@ ReSimpleCharClassEscape := <code>\</code> ReSimpleCharClassCode
 
 ReSimpleCharClassCode := <code>d</code> | <code>D</code> | <code>s</code> | <code>S</code> | <code>w</code> | <code>W</code>
 
-ReUnicodePropertyEscape := <code>\</code> (<code>p</code> | <code>P</code>) <code>{</code>ReUnicodeProperty <code>}</code>
+ReUnicodePropertyEscape := <code>\</code> (<code>p</code> | <code>P</code>) <code>{</code> ReUnicodeProperty <code>}</code>
 
 ReUnicodeProperty :=  ReUnicodeScript | ReUnicodeGeneralCategory
 
@@ -10944,7 +10936,16 @@ ReUnicodePropertyValue := ReUnicodePropertyValueChar+
 
 ReUnicodePropertyValueChar := AsciiLetter | Digit | <code>_</code>
 
-ReUnicodeGeneralCategory := [<code>gc=</code>] ReUnicodeGeneralCategoryName
+ReUnicodeGeneralCategory := [<code>gc=</code>] ReUnicodeGeneralCategoryAbbr
+
+ReUnicodeGeneralCategoryAbbr :=
+  <code>L</code> [ <code>u</code> | <code>l</code> | <code>t</code> | <code>m</code> | <code>o</code> ]
+  | <code>M</code> [ <code>n</code> | <code>c</code> | <code>e</code> ]
+  | <code>N</code> [ <code>d</code> | <code>l</code> | <code>o</code> ]
+  | <code>S</code> [ <code>m</code> | <code>c</code> | <code>k</code> | <code>o</code> ]
+  | <code>P</code> [ <code>c</code> | <code>d</code> | <code>s</code> | <code>e</code> | <code>i</code> | <code>f</code> | <code>o</code> ]
+  | <code>Z</code> [ <code>s</code> | <code>l</code> | <code>p</code> ]
+  | <code>C</code> [ <code>c</code> | <code>f</code> | <code>o</code> | <code>n</code> ]
 
 ReCharSetAtom :=
   ReCharSetAtomNoDash
@@ -10985,6 +10986,93 @@ ReDotAllFlag := <code>s</code>
 ReIgnoreCaseFlag := <code>i</code>
 ReCommentFlag := <code>x</code>
 </pre>
+<p>
+Note that <code>ReUnicodeGeneralCategoryAbbr</code> omits <code>Cs</code>, which
+is used for surrogate code points, since these cannot occur in a Ballerina
+string.
+</p>
+<p>
+The abstract parsing function that is part of the data tag definition behaves as
+follows. The argument string values are concatenated into a single string with a
+distinct token inserted between them to represent the interpolation point. The
+resulting string is parsed against the above <code>RegExp</code> grammar with
+the interpolation point token being an additional possibility allowed for
+<code>ReAtom</code>. The abstract parsing function returns a function that will
+behave equivalently to parsing the original string with
+<code>(?:<var>r<sub>i</sub></var>)</code> inserted at interpolation point
+<code><var>i</var></code>, where <code><var>r</var><sub>i</sub></code> is the
+string representation of the interpolated regular expression.
+</p>
+<p>
+The most rigorous specification of the semantics of Perl-style regular
+expressions is in the ECMAScript language specification. For this reason, the
+semantics of Ballerina regular expressions are defined by reference to the
+ECMAScript language specification, specifically ECMAScript 2022. The syntax of
+Ballerina regular expressions has been chosen to be a subset of ECMAScript
+regular expression syntax with one exception: regular expression flags, which in
+ECMAScript are specified in the regular expression literal following the closing
+<code>/</code>, are in Ballerina specified in the regular expression itself
+(using the same syntax as Perl).
+</p>
+<p>
+The semantics of a Ballerina regular expression are as specified by ECMAScript
+subject to the following points:
+</p>
+<ul>
+<li>the version of ECMAScript used is ECMAScript 2022 (ECMA-262, 13th edition);</li>
+<li>Ballerina uses the semantics defined by ECMAScript for when Unicode mode, as set by the
+<code>u</code> flag, is in effect (ECMAScript regular expressions work differently depending
+on whether Unicode mode is in effect or not);</li>
+<li>the semantics of <code>\p</code> and <code>\P</code>, and of the
+<code>i</code> flag depend on the version of Unicode being used; this version of
+Ballerina uses Unicode version 10;</li>
+<li>regular expression constructs that depend on the definition of a line
+terminator or whitespace use the Ballerina definitions of those rather than the
+ECMAScript definitions; specifically
+<ul>
+<li><code>.</code> matches any character other than 0xA or 0xD;</li>
+<li><code>\s</code> matches any character allowed by the
+<code>WhiteSpaceChar</code> production; as in ECMAScript, <code>\S</code>
+matches any character not matched by <code>\s</code>;</li>
+</ul>
+</li>
+<li>the semantics of <code>ReFlagsOnOff</code> (which is not supported in ECMAScript) are as follows:
+<ul>
+<li>the flags are modified within the parenthesized group containing the
+<code>ReFlagsOnOff</code>, with those in <code>ReFlagsOn</code> being turned on,
+and those in <code>ReFlagsOff</code> being turned off;</li>
+<li>it is an error for any flag to be specified more than once within
+<code>ReFlagsOnOff</code>;</li>
+<li>the meaning of the <code>m</code>, <code>s</code> and <code>i</code> flags are as
+in ECMAScript;</li>
+<li>the meaning of the <code>x</code> flag is as in Perl: when this flag is in
+effect, any character in the regular expression that matches to the
+<code>WhiteSpaceChar</code> production, but is not within an
+<code>ReCharSet</code> is ignored; in addition, comments starting with
+<code>#</code> and continuing to the end of the line are ignored.</li>
+</ul>
+</li>
+</ul>
+
+<p>
+ECMAScript specifies how to compile a regular expression in the above syntax
+into an abstract function that takes as arguments an input string and an index
+into the input string, and returns a value saying whether the regular expression
+matches the input string starting at the index, and, if it does, the index where
+the match ended, and for each capturing group, the start and end index, if any,
+within the input string where the capturing group matched. This abstract
+function corresponds directly to the <code>matchGroupsAt</code> function in the
+<code>lang.regexp</code> module. The <code>matchAt</code>, <code>find</code>,
+<code>findGroups</code>, <code>findAll</code> and <code>findAllGroups</code>
+functions can be defined straightforwardly in terms of the
+<code>matchGroupsAt</code> function. The <code>fullMatchGroup</code> function
+can be implemented by first appending `$` to the regular expression so as to
+anchor any match to the end of the input string (the multiline flag is initially
+off, so `$` matches only at the end of input), and then using the ECMAScript
+abstract function with a start index of 0. The <code>isFullMatch</code> function
+can be implemented straightforwardly in terms of the <code>fullMatchGroup</code>
+function.
+</p>
 
 </section>
 
@@ -11127,7 +11215,7 @@ The <code>int:Unsigned8</code> type is equivalent to the predefined
 </section>
 
 <section>
-<h3>Lang library modules</h3>
+<h3 id="lang_library_modules">Lang library modules</h3>
 <p>
 The lang library consists of the following modules. With the exception of the
 <code>lang.value</code>, <code>lang.transaction</code> and
@@ -11227,8 +11315,8 @@ The lang library consists of the following modules. With the exception of the
 <section>
 <h4 id="lang.regexp"><code>lang.regexp</code> module</h4>
 
-<p>The <code>lang.regexp</code> module corresponds to tagged data type with tag
-<code>re</code>.</p>
+<p>The <code>lang.regexp</code> module corresponds to the basic type for the
+tagged data type with tag <code>re</code>.</p>
 
 <p class="langlib"><a href="./lib/regexp.bal" type="text/plain">regexp.bal</a></p>
 
@@ -11328,6 +11416,7 @@ more than one basic type..</p>
 <section>
 <h3>Summary of changes from 2022R3 to 2022R4</h3>
 <ol>
+<li>Regular expressions have been added as a new data type.</li>
 <li>A <code>byte-array-literal</code> can construct a read-only value.</li>
 <li>An optional semi-colon is now allowed after top-level definitions and
 method definitions that are currentlty terminated by <code>}</code>.</li>

@@ -14,6 +14,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
+import ballerina/lang.regexp;
+
 # Built-in subtype of string containing strings of length 1.
 @builtinSubtype
 type Char string;
@@ -221,3 +223,24 @@ public isolated function padEnd(string str, int len, Char padChar = " ") returns
 # + zeroChar - the character to use for the zero; defaults to ASCII zero `0`
 # + return - `str` padded with zeros 
 public isolated function padZero(string str, int len, Char zeroChar = "0") returns string = external;
+
+# Refers to the `RegExp` type defined by lang.regexp module.
+public type RegExp regexp:RegExp;
+
+# Tests whether there is a full match of a regular expression with a string.
+# A match of a regular expression in a string is a full match if it
+# starts at index 0 and ends at index `n`, where `n` is the length of the string.
+# This is equivalent to `regex:isFullMatch(re, str)`.
+#
+# + str - the string
+# + re - the regular expression
+# + return - true if there is full match of `re` with `str`, and false otherwise
+public function matches(string str, RegExp re) returns boolean = external;
+
+# Tests whether there is a match of a regular expression somewhere within a string.
+# This is equivalent to `regexp:find(re, str, startIndex) != ()`.
+# 
+# + str - the string to be matched
+# + re - the regular expression
+# + return - true if the is a match of `re` somewhere within `str`, otherwise false
+public function includesMatch(string str, RegExp re, int startIndex = 0) returns boolean = external;

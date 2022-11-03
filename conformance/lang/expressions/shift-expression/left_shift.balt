@@ -1,0 +1,3934 @@
+Test-Case: parser-error
+Description: Test invalid left shift expression.
+Labels: DecimalNumber, int, shift-expr
+
+function errorFunction() {
+    int _ = 12 <<< 2; // @error undefined operator '<<<'
+    int _ = 32 < < 1; // @error undefined operator '< <'
+    int _ = 32 <<; // @error missing right operand
+    int _ = << 1; // @error missing left operand
+}
+
+Test-Case: output
+Description: Test left shift expression with zero and positive 'int' DecimalNumbers as operands.
+Labels: DecimalNumber, shift-expr
+
+function init() {
+    io:println(9223372036854775804 << 21); // @output -8388608
+    io:println(9223372036854775804 << 0); // @output 9223372036854775804
+    io:println(0 << 21); // @output 0
+    io:println(0 << 0); // @output 0
+}
+
+Test-Case: output
+Description: Test left shift expression with zero and positive 'int' HexIntLiteral as operands.
+Labels: HexIntLiteral, shift-expr
+
+function init() {
+    io:println(0x75 << 0x15); // @output 245366784
+    io:println(0x75 << 0x0); // @output 117
+    io:println(0x0 << 0x15); // @output 0
+    io:println(0x0 << 0x0); // @output 0
+}
+
+Test-Case: output
+Description: Test left shift expression with zero and positive IntLiterals as operands.
+Labels: DecimalNumber, HexIntLiteral, shift-expr
+
+function init() {
+    io:println(9223372036854775804 << 0x15); // @output -8388608
+    io:println(0x7ffffffffffffffd << 21); // @output -6291456
+    io:println(0x0 << 0); // @output 0
+    io:println(0 << 0x0); // @output 0
+}
+
+Test-Case: output
+Description: Test left shift expression with zero and negative 'int' DecimalNumbers as operands.
+Labels: DecimalNumber, shift-expr, unary-minus
+
+function init() {
+    io:println(-9223372036854775802 << -9223372036854775805); // @output 48
+    io:println(-9223372036854775802 << 0); // @output -9223372036854775802
+    io:println(0 << -9223372036854775805); // @output 0
+    io:println(0 << 0); // @output 0
+}
+
+Test-Case: output
+Description: Test left shift expression with zero and negative 'int' HexIntLiteral as operands.
+Labels: HexIntLiteral, shift-expr, unary-minus
+
+function init() {
+    io:println(-0x7ffffffffffffffa << -0x7ffffffffffffff8); // @output 1536
+    io:println(-0x7ffffffffffffffa << 0x0); // @output -9223372036854775802
+    io:println(0x0 << -0x7ffffffffffffff8); // @output 0
+    io:println(0x0 << 0x0); // @output 0
+}
+
+Test-Case: output
+Description: Test left shift expression with zero and negative IntLiterals as operands.
+Labels: DecimalNumber, HexIntLiteral, shift-expr, unary-minus
+
+function init() {
+    io:println(-9223372036854775798 << -0x15); // @output 87960930222080
+    io:println(-0x7ffffffffffffff6 << -21); // @output 87960930222080
+    io:println(0x0 << 0); // @output 0
+    io:println(0 << 0x0); // @output 0
+}
+
+Test-Case: output
+Description: Test left shift expression for positive and negative 'int' DecimalNumbers as operands.
+Labels: DecimalNumber, shift-expr, unary-minus
+
+function init() {
+    io:println(-111 << 2); // @output -444
+    io:println(1 << -92); // @output 68719476736
+}
+
+Test-Case: output
+Description: Test left shift expression for positive and negative 'int' HexIntLiteral as operands.
+Labels: HexIntLiteral, shift-expr, unary-minus
+
+function init() {
+    io:println(-0x1f << 0x1a); // @output -2080374784
+    io:println(0x1f << -0x7ffffffffffffff5); // @output 63488
+}
+
+Test-Case: output
+Description: Test left shift expression for positive and negative IntLiterals as operands.
+Labels: DecimalNumber, HexIntLiteral, shift-expr, unary-minus
+
+function init() {
+    io:println(-111 << 2); // @output -444
+    io:println(1 << -92); // @output 68719476736
+
+    io:println(-0x1f << 0x1f); // @output -66571993088
+    io:println(0x1f << -0x7fffffffffffffff); // @output 62
+
+    io:println(-111 << 0x1a); // @output -7449083904
+    io:println(0x1f << -92); // @output 2130303778816
+}
+
+Test-Case: output
+Description: Test left shift expression with 'int' as the LHS operand and builtin subtypes of integer as the RHS operand.
+Labels: int, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8, shift-expr,
+        unary-minus
+
+function init() {
+    int a = 128;
+    int:Signed8 b = 7;
+    int:Signed8 c = -120;
+    int:Unsigned8 d = 5;
+    int:Signed16 e = 8;
+    int:Signed16 f = -32750;
+    int:Unsigned16 g = 3;
+    int:Signed32 h = 9;
+    int:Signed32 i = -2147483641;
+    int:Unsigned32 j = 17;
+
+    io:println(a << b); // @output 16384
+    io:println(a << c); // @output 32768
+
+    io:println(a << d); // @output 4096
+
+    io:println(a << e); // @output 32768
+    io:println(a << f); // @output 33554432
+
+    io:println(a << g); // @output 1024
+
+    io:println(a << h); // @output 65536
+    io:println(a << i); // @output 16384
+
+    io:println(a << j); // @output 16777216
+
+    io:println(11 << b); // @output 1408
+}
+
+Test-Case: output
+Description: Test left shift expression for optional zero and positive 'int' operands.
+Labels: int, nil-literal, optional-type, shift-expr, value:toBalString
+
+function init() {
+    int? a = 256;
+    int? b = 5;
+    int? c = 0;
+    int? d = ();
+    int e = 133;
+    int f = 7;
+
+    int? x1 = a << b;
+    io:println(x1); // @output 8192
+    int? x2 = f << b;
+    io:println(x2); // @output 224
+    int? x3 = a << f;
+    io:println(x3); // @output 32768
+    int? x4 = e << b;
+    io:println(x4); // @output 4256
+
+    int? x5 = a << d;
+    io:println(x5.toBalString()); // @output ()
+    int? x6 = d << b;
+    io:println(x6.toBalString()); // @output ()
+    int? x7 = d << b;
+    io:println(x7.toBalString()); // @output ()
+
+    io:println(a << b); // @output 8192
+    io:println(a << c); // @output 256
+
+    io:println(a << f); // @output 32768
+    io:println(e << b); // @output 4256
+
+    io:println((a << d).toBalString()); // @output ()
+    io:println((d << b).toBalString()); // @output ()
+    io:println((d << d).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test left shift expression for optional zero and negative 'int' operands.
+Labels: int, nil-literal, optional-type, shift-expr, unary-minus, value:toBalString
+
+function init() {
+    int? a = -256;
+    int? b = -9223372036854775794;
+    int? c = 0;
+    int? d = ();
+    int e = -133;
+    int f = -9223372036854775799;
+
+    int? x1 = a << b;
+    io:println(x1); // @output -4194304
+    int? x2 = f << b;
+    io:println(x2); // @output 147456
+    int? x3 = a << f;
+    io:println(x3); // @output -131072
+    int? x4 = e << b;
+    io:println(x4); // @output -2179072
+
+    int? x5 = a << d;
+    io:println(x5.toBalString()); // @output ()
+    int? x6 = d << b;
+    io:println(x6.toBalString()); // @output ()
+
+    io:println(a << b); // @output -4194304
+    io:println(a << c); // @output -256
+
+    io:println(a << f); // @output -131072
+    io:println(e << b); // @output -2179072
+
+    io:println((a << d).toBalString()); // @output ()
+    io:println((d << b).toBalString()); // @output ()
+    io:println((d << d).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test left shift expression for optional positive and negative 'int' operands.
+Labels: int, optional-type, shift-expr, unary-minus
+
+function init() {
+    int? a = 256;
+    int? b = 5;
+    int? c = -256;
+    int? d = -9223372036854775799;
+    int e = 133;
+    int f = 7;
+    int g = -133;
+    int h = -9223372036854775801;
+
+    io:println(a << d); // @output 131072
+    io:println(c << b); // @output -8192
+
+    io:println(a << h); // @output 32768
+    io:println(c << f); // @output -32768
+
+    io:println(e << d); // @output 68096
+    io:println(g << b); // @output -4256
+}
+
+Test-Case: output
+Description: Test 0x3F mask of 'int' RHS operand in left shift expression.
+Labels: int, shift-expr, unary-minus
+
+function init() {
+    int a = -1;
+    int b = 63;
+    int c = 64;
+    int d = 122;
+    int e = -65;
+    int f = -64;
+
+    io:println(a << b); // @output -9223372036854775808
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation : 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00111111, In decimal: 63
+    //                After applying mask, In binary: 111111, In decimal: 63
+    // Result = In binary: 10000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-9223372036854775808)
+
+    io:println(a << c); // @output -1
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation : 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 01000000, In decimal: 64
+    //                After applying mask, In binary: 000000, In decimal: 0
+    // Result = In binary: 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    //        = In decimal: (-1)
+
+    io:println(a << d); // @output -288230376151711744
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation : 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 01111010, In decimal: 122
+    //                After applying mask, In binary: 111010, In decimal: 58
+    // Result = In binary: 11111100 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-288230376151711744)
+
+    io:println(b << b); // @output -9223372036854775808
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation : 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00111111
+    // Shift amount = Before applying mask, In binary: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00111111, In decimal: 63
+    //                After applying mask, In binary: 111111, In decimal: 63
+    // Result = In binary: 10000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-9223372036854775808)
+
+    io:println(b << c); // @output 63
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation : 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00111111
+    // Shift amount = Before applying mask, In binary: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 01000000, In decimal: 64
+    //                After applying mask, In binary: 000000, In decimal: 0
+    // Result = In binary: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00111111
+    //        = In decimal: (63)
+
+    io:println(a << e); // @output -9223372036854775808
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation : 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 11111111 11111111 11111111 11111111 11111111 11111111 11111111 10111111, In decimal: -65
+    //                After applying mask, In binary: 111111, In decimal: 63
+    // Result = In binary: 10000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-9223372036854775808)
+
+    io:println(a << f); // @output -1
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation : 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11000000, In decimal: -64
+    //                After applying mask, In binary: 000000, In decimal: 0
+    // Result = In binary: 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    //        = In decimal: (-1)
+
+    io:println(a << a); // @output -9223372036854775808
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation : 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111, In decimal: -1
+    //                After applying mask, In binary: 111111, In decimal: 63
+    // Result = In binary: 10000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-9223372036854775808)
+
+    io:println(e << c); // @output -65
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation : 11111111 11111111 11111111 11111111 11111111 11111111 11111111 10111111
+    // Shift amount = Before applying mask, In binary: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 01000000, In decimal: 64
+    //                After applying mask, In binary: 000000, In decimal: 0
+    // Result = In binary: 11111111 11111111 11111111 11111111 11111111 11111111 11111111 10111111
+    //        = In decimal: (-65)
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int` with 'int' operands via invalid assignments.
+Labels: decimal, DecimalNumber, float, int, shift-expr, unary-minus
+
+function errorFunction(int a, int b) {
+    decimal _ = a << b; // @error expected 'decimal' but found 'int'
+    float _ = b << a; // @error expected 'float' but found 'int'
+    decimal _ = a << a; // @error expected 'decimal' but found 'int'
+
+    float _ = 511 << 8; // @error expected 'float' but found 'int'
+    float _ = -197 << -9223372036854775807; // @error expected 'float' but found 'int'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int` with 'int' as the LHS operand and builtin
+             subtypes of integer as the RHS operand via invalid assignments.
+Labels: decimal, float, int, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        shift-expr
+
+function errorFunction(int a, int:Signed8 b, int:Unsigned8 c, int:Signed16 d, int:Unsigned16 e, int:Signed32 f,
+                        int:Unsigned32 g) {
+    int:Signed8 _ = a << b; // @error expected 'int:Signed8' but found 'int'
+    float _ = a << c; // @error expected 'float' but found 'int'
+    int:Unsigned8 _ = a << d; // @error expected 'int:Unsigned8' but found 'int'
+    int:Signed16 _ = a << e; // @error expected 'int:Signed16' but found 'int'
+    decimal _ = a << f; // @error expected 'decimal' but found 'int'
+    int:Unsigned16 _ = a << g; // @error expected 'int:Unsigned16' but found 'int'
+    float _ = 11 << b; // @error expected 'float' but found 'int'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int` with 'int' as the LHS operand and byte as the
+             RHS operand via invalid assignments.
+Labels: byte, decimal, DecimalNumber, float, int, shift-expr
+
+function errorFunction(int a, byte b) {
+    float _ = a << b; // @error expected 'float' but found 'int'
+    decimal _ = 100 << b; // @error expected 'decimal' but found 'int'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int` with 'int' as the LHS operand and user-defined
+             subtype of integer as the RHS operand via invalid assignments.
+Labels: decimal, DecimalNumber, float, int, int:MAX_VALUE, int:MIN_VALUE, module-type-defn, shift-expr, unary-minus,
+        union-type
+
+type Ints -1|2|int:MIN_VALUE;
+
+function errorFunction(int a, Ints b) {
+    decimal _ = a << b; // @error expected 'decimal' but found 'int'
+    float _ = int:MAX_VALUE << b; // @error expected 'float' but found 'int'
+    Ints _ = int:MIN_VALUE << b; // @error expected 'Ints' but found 'int'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int?` with 'int' and `int?' as the operands via
+             invalid assignments.
+Labels: decimal, float, int, int:MAX_VALUE, int:MIN_VALUE, nil-literal, optional-type, shift-expr, unary-minus, var
+
+function errorFunction(int a, int? b) {
+    var x1 = a << b;
+    int _ = x1; // @error expected 'int' but found 'int?'
+    var x2 = -1 << b;
+    decimal _ = x2; // @error expected 'decimal' but found 'int?'
+    var x3 = 0 << b;
+    float _ = x3; // @error expected 'float' but found 'int?'
+    var x4 = int:MAX_VALUE << b;
+    float _ = x4; // @error expected 'float' but found 'int?'
+    var x5 = int:MIN_VALUE << b;
+    float _ = x5; // @error expected 'float' but found 'int?'
+    var x6 = b << int:MAX_VALUE;
+    int _ = x6; // @error expected 'int' but found 'int?'
+    var x7 = b << int:MIN_VALUE;
+    int _ = x7; // @error expected 'int' but found 'int?'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int` with 'int' as the LHS operand and optional
+             builtin subtypes of integer as the RHS operand via invalid assignments.
+Labels: decimal, float, int, int:MAX_VALUE, int:MIN_VALUE, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16,
+        int:Unsigned32, int:Unsigned8, optional-type, shift-expr
+
+function errorFunction(int a, int:Signed8? b, int:Unsigned8? c, int:Signed16? d, int:Unsigned16? e, int:Signed32? f,
+                        int:Unsigned32? g) {
+    int _ = a << b; // @error expected 'int' but found 'int?'
+    decimal _ = a << c; // @error expected 'decimal' but found 'int?'
+    float _ = a << d; // @error expected 'float' but found 'int?'
+    int _ = a << e; // @error expected 'int' but found 'int?'
+    int _ = a << f; // @error expected 'int' but found 'int?'
+    int _ = a << g; // @error expected 'int' but found 'int?'
+
+    int _ = 123 << b; // @error expected 'int' but found 'int?'
+    int _ = -123 << c; // @error expected 'int' but found 'int?'
+    int _ = 0 << d; // @error expected 'int' but found 'int?'
+    int _ = int:MAX_VALUE << e; // @error expected 'int' but found 'int?'
+    int _ = int:MIN_VALUE << f; // @error expected 'int' but found 'int?'
+    float _ = 11 << g; // @error expected 'float' but found 'int?'
+}
+
+Test-Case: output
+Description: Test left shift expression with 'int' operands in function call and method call.
+Labels: function-call-expr, function-defn, int, method-call-expr, shift-expr, unary-minus, value:toBalString,
+        value:toString
+
+function init() {
+    int a = -1137;
+    int b = -9223372036854775797;
+    int c = 128;
+    int d = 2;
+
+    leftShiftExpr(a << b); // @output -2328576
+    leftShiftExpr(a << d); // @output -4548
+    leftShiftExpr(c << d); // @output 512
+    leftShiftExpr(c << b); // @output 262144
+
+    io:println((a << b).toString()); // @output -2328576
+    io:println((a << d).toString()); // @output -4548
+    io:println((c << d).toString()); // @output 512
+    io:println((c << b).toString()); // @output 262144
+
+    io:println((a << b).toBalString()); // @output -2328576
+    io:println((a << d).toBalString()); // @output -4548
+    io:println((c << d).toBalString()); // @output 512
+    io:println((c << b).toBalString()); // @output 262144
+}
+
+function leftShiftExpr(int x) {
+    io:println(x);
+}
+
+Test-Case: output
+Description: Test left shift expression with 'int' operands as a return statement.
+Labels: function-call-expr, function-defn, int, return-stmt, shift-expr, unary-minus
+
+function init() {
+    int a = -1137;
+    int b = -9223372036854775797;
+    int c = 128;
+    int d = 2;
+
+    io:println(leftShiftExpr(a, b)); // @output -2328576
+    io:println(leftShiftExpr(a, d)); // @output -4548
+    io:println(leftShiftExpr(c, d)); // @output 512
+    io:println(leftShiftExpr(c, b)); // @output 262144
+}
+
+function leftShiftExpr(int x, int y) returns int {
+    return x << y;
+}
+
+Test-Case: output
+Description: Test left shift expression with zero and positive 'int:Signed8' DecimalNumbers as operands.
+Labels: int:Signed8, shift-expr
+
+function init() {
+    int:Signed8 a = 125;
+    int:Signed8 b = 21;
+    int:Signed8 c = 0;
+
+    io:println(a << b); // @output 262144000
+    io:println(a << c); // @output 125
+    io:println(c << b); // @output 0
+    io:println(c << c); // @output 0
+}
+
+Test-Case: output
+Description: Test left shift expression with zero and negative 'int:Signed8' DecimalNumbers as operands.
+Labels: int:Signed8, shift-expr, unary-minus
+
+function init() {
+    int:Signed8 a = -122;
+    int:Signed8 b = -118;
+    int:Signed8 c = 0;
+
+    io:println(a << b); // @output -124928
+    io:println(a << c); // @output -122
+    io:println(c << b); // @output 0
+    io:println(c << c); // @output 0
+}
+
+Test-Case: output
+Description: Test left shift expression for positive and negative 'int:Signed8' DecimalNumbers as operands.
+Labels: int:Signed8, shift-expr, unary-minus
+
+function init() {
+    int:Signed8 a = -111;
+    int:Signed8 b = -92;
+    int:Signed8 c = 1;
+    int:Signed8 d = 2;
+
+    io:println(a << d); // @output -444
+    io:println(c << b); // @output 68719476736
+}
+
+Test-Case: output
+Description: Test left shift expression with 'int:Signed8' as the LHS operand and 'int' as the RHS operand.
+Labels: DecimalNumber, int, int:Signed8, shift-expr, unary-minus
+
+function init() {
+    int:Signed8 x = 117;
+    int:Signed8 y = -127;
+    int a = 10;
+    int b = -9223372036854775800;
+
+    io:println(x << a); // @output 119808
+    io:println(x << b); // @output 29952
+
+    io:println(y << a); // @output -130048
+    io:println(y << -9223372036854775800); // @output -32512
+}
+
+Test-Case: output
+Description: Test left shift expression with 'int:Signed8' as the LHS operand and builtin subtypes of integer as the RHS
+             operand.
+Labels: int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8, shift-expr, unary-minus
+
+function init() {
+    int:Signed8 x = 122;
+    int:Signed8 y = -121;
+    int:Signed8 a = 127;
+    int:Signed8 b = -126;
+    int:Unsigned8 c = 5;
+    int:Signed16 d = 32750;
+    int:Signed16 e = -32752;
+    int:Unsigned16 f = 3;
+    int:Signed32 g = 9;
+    int:Signed32 h = -2147483641;
+    int:Unsigned32 i = 17;
+
+    io:println(x << a); // @output 0
+    io:println(x << b); // @output 488
+    io:println(y << a); // @output -9223372036854775808
+    io:println(y << b); // @output -484
+
+    io:println(x << c); // @output 3904
+    io:println(y << c); // @output -3872
+
+    io:println(x << d); // @output 8584986789675008
+    io:println(x << e); // @output 7995392
+    io:println(y << d); // @output -8514618045497344
+    io:println(y << e); // @output -7929856
+
+    io:println(x << f); // @output 976
+    io:println(y << f); // @output -968
+
+    io:println(x << g); // @output 62464
+    io:println(x << h); // @output 15616
+    io:println(y << g); // @output -61952
+    io:println(y << h); // @output -15488
+
+    io:println(x << i); // @output 15990784
+    io:println(y << i); // @output -15859712
+}
+
+Test-Case: output
+Description: Test left shift expression for optional zero and positive 'int:Signed8' operands.
+Labels: int, int:Signed8, nil-literal, optional-type, shift-expr, value:toBalString
+
+function init() {
+    int:Signed8? a = 10;
+    int:Signed8? b = 5;
+    int:Signed8? c = 0;
+    int:Signed8? d = ();
+    int:Signed8 e = 50;
+    int:Signed8 f = 7;
+
+    int? x1 = a << b;
+    io:println(x1); // @output 320
+    int? x2 = f << b;
+    io:println(x2); // @output 224
+    int? x3 = a << f;
+    io:println(x3); // @output 1280
+    int? x4 = e << b;
+    io:println(x4); // @output 1600
+
+    int? x5 = a << d;
+    io:println(x5.toBalString()); // @output ()
+    int? x6 = d << b;
+    io:println(x6.toBalString()); // @output ()
+    int? x7 = d << b;
+    io:println(x7.toBalString()); // @output ()
+
+    io:println(a << b); // @output 320
+    io:println(a << c); // @output 10
+
+    io:println(a << f); // @output 1280
+    io:println(e << b); // @output 1600
+
+    io:println((a << d).toBalString()); // @output ()
+    io:println((d << b).toBalString()); // @output ()
+    io:println((d << d).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test left shift expression for optional zero and negative 'int:Signed8' operands.
+Labels: int, int:Signed8, nil-literal, optional-type, shift-expr, unary-minus, value:toBalString
+
+function init() {
+    int:Signed8? a = -120;
+    int:Signed8? b = -119;
+    int:Signed8? c = 0;
+    int:Signed8? d = ();
+    int:Signed8 e = -33;
+    int:Signed8 f = -122;
+
+    int? x1 = a << b;
+    io:println(x1); // @output -61440
+    int? x2 = f << b;
+    io:println(x2); // @output -62464
+    int? x3 = a << f;
+    io:println(x3); // @output -7680
+    int? x4 = e << b;
+    io:println(x4); // @output -16896
+
+    int? x5 = a << d;
+    io:println(x5.toBalString()); // @output ()
+    int? x6 = d << b;
+    io:println(x6.toBalString()); // @output ()
+
+    io:println(a << b); // @output -61440
+    io:println(a << c); // @output -120
+
+    io:println(a << f); // @output -7680
+    io:println(e << b); // @output -16896
+
+    io:println((a << d).toBalString()); // @output ()
+    io:println((d << b).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test left shift expression for optional positive and negative 'int:Signed8'.
+Labels: int:Signed8, optional-type, shift-expr, unary-minus
+
+function init() {
+    int:Signed8? a = 8;
+    int:Signed8? b = 5;
+    int:Signed8? c = -2;
+    int:Signed8? d = -127;
+    int:Signed8 e = 100;
+    int:Signed8 f = 7;
+    int:Signed8 g = -23;
+    int:Signed8 h = -126;
+
+    io:println(a << d); // @output 16
+    io:println(c << b); // @output -64
+
+    io:println(a << h); // @output 32
+    io:println(c << f); // @output -256
+
+    io:println(e << d); // @output 200
+    io:println(g << b); // @output -736
+}
+
+Test-Case: output
+Description: Test 0x3F mask of 'int:Signed8' RHS operand in left shift expression.
+Labels: int:Signed8, shift-expr, unary-minus
+
+function init() {
+    int:Signed8 a = -1;
+    int:Signed8 b = 63;
+    int:Signed8 c = 64;
+    int:Signed8 d = 122;
+    int:Signed8 e = -65;
+    int:Signed8 f = -64;
+
+    io:println(a << b); // @output -9223372036854775808
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Signed8): 11111111
+    //                     = Equivalent binary representation (basic type): 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 00111111, In decimal: 63
+    //                After applying mask, In binary: 111111, In decimal: 63
+    // Result = In binary: 10000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-9223372036854775808)
+
+    io:println(a << c); // @output -1
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Signed8): 11111111
+    //                     = Equivalent binary representation (basic type): 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 01000000, In decimal: 64
+    //                After applying mask, In binary: 000000, In decimal: 0
+    // Result = In binary: 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    //        = In decimal: (-1)
+
+    io:println(a << d); // @output -288230376151711744
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Signed8): 11111111
+    //                     = Equivalent binary representation (basic type): 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 01111010, In decimal: 122
+    //                After applying mask, In binary: 111010, In decimal: 58
+    // Result = In binary: 11111100 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-288230376151711744)
+
+    io:println(b << b); // @output -9223372036854775808
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Signed8): 00111111
+    //                     = Equivalent binary representation (basic type): 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00111111
+    // Shift amount = Before applying mask, In binary: 00111111, In decimal: 63
+    //                After applying mask, In binary: 111111, In decimal: 63
+    // Result = In binary: 10000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-9223372036854775808)
+
+    io:println(b << c); // @output 63
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Signed8): 00111111
+    //                     = Equivalent binary representation (basic type): 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00111111
+    // Shift amount = Before applying mask, In binary: 01000000, In decimal: 64
+    //                After applying mask, In binary: 000000, In decimal: 0
+    // Result = In binary: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00111111
+    //        = In decimal: (63)
+
+    io:println(a << e); // @output -9223372036854775808
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Signed8): 11111111
+    //                     = Equivalent binary representation (basic type): 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 10111111, In decimal: -65
+    //                After applying mask, In binary: 111111, In decimal: 63
+    // Result = In binary: 10000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-9223372036854775808)
+
+    io:println(a << f); // @output -1
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Signed8): 11111111
+    //                     = Equivalent binary representation (basic type): 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 11000000, In decimal: -64
+    //                After applying mask, In binary: 000000, In decimal: 0
+    // Result = In binary: 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    //        = In decimal: (-1)
+
+    io:println(a << a); // @output -9223372036854775808
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Signed8): 11111111
+    //                     = Equivalent binary representation (basic type): 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 11111111, In decimal: -1
+    //                After applying mask, In binary: 111111, In decimal: 63
+    // Result = In binary: 10000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-9223372036854775808)
+
+    io:println(e << c); // @output -65
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Signed8): 10111111
+    //                     = Equivalent binary representation (basic type): 11111111 11111111 11111111 11111111 11111111 11111111 11111111 10111111
+    // Shift amount = Before applying mask, In binary: 01000000, In decimal: 64
+    //                After applying mask, In binary: 000000, In decimal: 0
+    // Result = In binary: 11111111 11111111 11111111 11111111 11111111 11111111 11111111 10111111
+    //        = In decimal: (-65)
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int` with 'int:Signed8' as the LHS operand and
+             'int' as the RHS operand via invalid assignments.
+Labels: decimal, DecimalNumber, int, int:Signed8, shift-expr, unary-minus
+
+function errorFunction(int:Signed8 x, int a) {
+    int:Signed8 _ = x << a; // @error expected 'int:Signed8' but found 'int'
+    decimal _ = x << -100; // @error expected 'decimal' but found 'int'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int` with 'int:Signed8' as the LHS operand and
+             builtin subtypes of integer as the RHS operand via invalid assignments.
+Labels: decimal, float, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        shift-expr
+
+function errorFunction(int:Signed8 x, int:Signed8 a, int:Unsigned8 b, int:Signed16 c, int:Unsigned16 d, int:Signed32 e,
+                        int:Unsigned32 f) {
+    int:Signed8 _ = x << a; // @error expected 'int:Signed8' but found 'int'
+    decimal _ = x << b; // @error expected 'decimal' but found 'int'
+    int:Unsigned16 _ = x << c; // @error expected 'int:Unsigned16' but found 'int'
+    int:Signed16 _ = x << d; // @error expected 'int:Signed16' but found 'int'
+    float _ = x << e; // @error expected 'float' but found 'int'
+    int:Unsigned16 _ = x << f; // @error expected 'int:Unsigned16' but found 'int'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int` with 'int:Signed8' as the LHS operand and byte
+             as the RHS operand via invalid assignments.
+Labels: byte, int:Signed8, shift-expr
+
+function errorFunction(int:Signed8 x, int:Signed8 y, byte a) {
+    int:Signed8 _ = x << a; // @error expected 'int:Signed8' but found 'int'
+    byte _ = y << a; // @error expected 'byte' but found 'int'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression with 'int:Signed8' as the LHS operand and user-defined subtype
+             of integer as the RHS operand.
+Labels: DecimalNumber, int:Signed8, module-type-defn, shift-expr, unary-minus, union-type
+
+type Ints -1|2|-128;
+
+function errorFunction(int:Signed8 x, Ints a) {
+    int:Signed8 _ = x << a; // @error expected 'int:Signed8' but found 'int'
+    Ints _ = x << a; // @error expected 'Ints' but found 'int'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int?` with 'int:Signed8' as the LHS operand and
+             optional 'int' as the RHS operand via invalid assignments.
+Labels: int, int:Signed8, optional-type, shift-expr
+
+function errorFunction(int:Signed8 x, int? a) {
+    int:Signed8? _ = x << a; // @error  expected 'int:Signed8?' but found 'int?'
+    int _ = x << a; // @error expected 'int' but found 'int?'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int?` with 'int:Signed8' as the LHS operand and
+             optional builtin subtypes of integer as the RHS operand via invalid assignments.
+Labels: decimal, float, int, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        optional-type, shift-expr
+
+function errorFunction(int:Signed8 a, int:Signed8? b, int:Unsigned8? c, int:Signed16? d, int:Unsigned16? e,
+                        int:Signed32? f, int:Unsigned32? g) {
+    int:Signed16 _ = a << b; // @error expected 'int:Signed16' but found 'int?'
+    float _ = a << c; // @error expected 'float' but found 'int?'
+    int:Unsigned16 _ = a << d; // @error expected 'int:Unsigned16' but found 'int?'
+    int:Signed16 _ = a << e; // @error expected 'int:Signed16' but found 'int?'
+    decimal _ = a << f; // @error expected 'decimal' but found 'int?'
+    int:Unsigned16 _ = a << g; // @error expected 'int:Unsigned16' but found 'int?'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int?` with 'int:Signed8' as the LHS operand and
+             optional byte as the RHS operand via invalid assignments.
+Labels: byte, int, int:Signed8, optional-type, shift-expr
+
+function errorFunction(int:Signed8 x, byte? a) {
+    int:Signed8 _ = x << a; // @error  expected 'int:Signed8' but found 'int?'
+    int _ = x << a; // @error expected 'int' but found 'int?'
+    byte _ = x << a; // @error expected 'byte' but found 'int?'
+}
+
+Test-Case: output
+Description: Test left shift expression with 'int:Signed8' operands in function call and method call.
+Labels: function-call-expr, function-defn, int:Signed8, method-call-expr, shift-expr, unary-minus, value:toBalString,
+        value:toString
+
+function init() {
+    int:Signed8 a = -112;
+    int:Signed8 b = -113;
+    int:Signed8 c = 12;
+    int:Signed8 d = 2;
+
+    leftShiftExpr(a << b); // @output -3670016
+    leftShiftExpr(a << d); // @output -448
+    leftShiftExpr(c << d); // @output 48
+    leftShiftExpr(c << b); // @output 393216
+
+    io:println((a << b).toString()); // @output -3670016
+    io:println((a << d).toString()); // @output -448
+    io:println((c << d).toString()); // @output 48
+    io:println((c << b).toString()); // @output 393216
+
+    io:println((a << b).toBalString()); // @output -3670016
+    io:println((a << d).toBalString()); // @output -448
+    io:println((c << d).toBalString()); // @output 48
+    io:println((c << b).toBalString()); // @output 393216
+}
+
+function leftShiftExpr(int x) {
+    io:println(x);
+}
+
+Test-Case: output
+Description: Test left shift expression with 'int:Signed8' operands as a return statement.
+Labels: function-call-expr, function-defn, int, int:Signed8, return-stmt, shift-expr, unary-minus
+
+function init() {
+    int:Signed8 a = -112;
+    int:Signed8 b = -113;
+    int:Signed8 c = 12;
+    int:Signed8 d = 2;
+
+    io:println(leftShiftExpr(a, b)); // @output -3670016
+    io:println(leftShiftExpr(a, d)); // @output -448
+    io:println(leftShiftExpr(c, d)); // @output 48
+    io:println(leftShiftExpr(c, b)); // @output 393216
+}
+
+function leftShiftExpr(int:Signed8 x, int:Signed8 y) returns int {
+    return x << y;
+}
+
+Test-Case: output
+Description: Test left shift expression with 'int:Unsigned8' DecimalNumbers as operands.
+Labels: int:Unsigned8, shift-expr
+
+function init() {
+    int:Unsigned8 a = 253;
+    int:Unsigned8 b = 21;
+    int:Unsigned8 c = 0;
+
+    io:println(a << b); // @output 530579456
+    io:println(a << c); // @output 253
+    io:println(c << b); // @output 0
+    io:println(c << c); // @output 0
+}
+
+Test-Case: output
+Description: Test left shift expression with 'int:Unsigned8' as the LHS operand and 'int' as the RHS operand.
+Labels: int, int:Unsigned8, shift-expr, unary-minus
+
+function init() {
+    int:Unsigned8 x = 247;
+    int a = 10;
+    int b = -9223372036854775800;
+
+    io:println(x << a); // @output 252928
+    io:println(x << b); // @output 63232
+}
+
+Test-Case: output
+Description: Test left shift expression with 'int:Unsigned8' as the LHS operand and builtin subtypes of integer as the RHS
+             operand.
+Labels: int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8, shift-expr, unary-minus
+
+function init() {
+    int:Unsigned8 x = 245;
+    int:Signed8 a = 127;
+    int:Signed8 b = -128;
+    int:Unsigned8 c = 5;
+    int:Signed16 d = 32750;
+    int:Signed16 e = -32752;
+    int:Unsigned16 f = 3;
+    int:Signed32 g = 9;
+    int:Signed32 h = -2147483641;
+    int:Unsigned32 i = 17;
+
+    io:println(x << a); // @output -9223372036854775808
+    io:println(x << b); // @output 245
+
+    io:println(x << c); // @output 7840
+
+    io:println(x << d); // @output 17240342323527680
+    io:println(x << e); // @output 16056320
+
+    io:println(x << f); // @output 1960
+
+    io:println(x << g); // @output 125440
+    io:println(x << h); // @output 31360
+
+    io:println(x << i); // @output 32112640
+}
+
+Test-Case: output
+Description: Test left shift expression for optional 'int:Unsigned8' operands.
+Labels: int, int:Unsigned8, nil-literal, optional-type, shift-expr, value:toBalString
+
+function init() {
+    int:Unsigned8? a = 10;
+    int:Unsigned8? b = 5;
+    int:Unsigned8? c = 0;
+    int:Unsigned8? d = ();
+    int:Unsigned8 e = 50;
+    int:Unsigned8 f = 7;
+
+    int? x1 = a << b;
+    io:println(x1); // @output 320
+    int? x2 = f << b;
+    io:println(x2); // @output 224
+    int? x3 = a << f;
+    io:println(x3); // @output 1280
+    int? x4 = e << b;
+    io:println(x4); // @output 1600
+
+    int? x5 = a << d;
+    io:println(x5.toBalString()); // @output ()
+    int? x6 = d << b;
+    io:println(x6.toBalString()); // @output ()
+    int? x7 = d << b;
+    io:println(x7.toBalString()); // @output ()
+
+    io:println(a << b); // @output 320
+    io:println(a << c); // @output 10
+
+    io:println(a << f); // @output 1280
+    io:println(e << b); // @output 1600
+
+    io:println((a << d).toBalString()); // @output ()
+    io:println((d << b).toBalString()); // @output ()
+    io:println((d << d).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test 0x3F mask of 'int:Unsigned8' RHS operand in left shift expression.
+Labels: int:Unsigned8, shift-expr
+
+function init() {
+    int:Unsigned8 a = 255;
+    int:Unsigned8 b = 63;
+    int:Unsigned8 c = 64;
+    int:Unsigned8 d = 122;
+
+    io:println(a << b); // @output -9223372036854775808
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Unsigned8): 11111111
+    //                     = Equivalent binary representation (basic type): 00000000 00000000 00000000 00000000 00000000 00000000 00000000 11111111
+    // Shift amount = Before applying mask, In binary: 00111111, In decimal: 63
+    //                After applying mask, In binary: 111111, In decimal: 63
+    // Result = In binary: 10000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-9223372036854775808)
+
+    io:println(a << c); // @output 255
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Unsigned8): 11111111
+    //                     = Equivalent binary representation (basic type): 00000000 00000000 00000000 00000000 00000000 00000000 00000000 11111111
+    // Shift amount = Before applying mask, In binary: 01000000, In decimal: 64
+    //                After applying mask, In binary: 000000, In decimal: 0
+    // Result = In binary: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 11111111
+    //        = In decimal: (255)
+
+    io:println(a << d); // @output -288230376151711744
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Unsigned8): 11111111
+    //                     = Equivalent binary representation (basic type): 00000000 00000000 00000000 00000000 00000000 00000000 00000000 11111111
+    // Shift amount = Before applying mask, In binary: 01111010, In decimal: 122
+    //                After applying mask, In binary: 111010, In decimal: 58
+    // Result = In binary: 11111100 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-288230376151711744)
+
+    io:println(b << b); // @output -9223372036854775808
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Unsigned8): 00111111
+    //                     = Equivalent binary representation (basic type): 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00111111
+    // Shift amount = Before applying mask, In binary: 00111111, In decimal: 63
+    //                After applying mask, In binary: 111111, In decimal: 63
+    // Result = In binary: 10000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-9223372036854775808)
+
+    io:println(b << c); // @output 63
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Unsigned8): 00111111
+    //                     = Equivalent binary representation (basic type): 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00111111
+    // Shift amount = Before applying mask, In binary: 01000000, In decimal: 64
+    //                After applying mask, In binary: 000000, In decimal: 0
+    // Result = In binary: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00111111
+    //        = In decimal: (63)
+
+    io:println(a << a); // @output -9223372036854775808
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Unsigned8): 11111111
+    //                     = Equivalent binary representation (basic type): 00000000 00000000 00000000 00000000 00000000 00000000 00000000 11111111
+    // Shift amount = Before applying mask, In binary: 11111111, In decimal: 255
+    //                After applying mask, In binary: 111111, In decimal: 63
+    // Result = In binary: 10000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-9223372036854775808)
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int` with 'int:Unsigned8' as the LHS operand and
+             'int' as the RHS operand via invalid assignments.
+Labels: DecimalNumber, float, int, int:Unsigned8, shift-expr, unary-minus
+
+function errorFunction(int:Unsigned8 x, int a) {
+    int:Unsigned8 _ = x << a; // @error expected 'int:Unsigned8' but found 'int'
+    float _ = x << -123; // @error expected 'float' but found 'int'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int` with 'int:Unsigned8' as the LHS operand and
+             builtin subtypes of integer as the RHS operand via invalid assignments.
+Labels: decimal, float, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        shift-expr
+
+function errorFunction(int:Unsigned8 x, int:Signed8 a, int:Unsigned8 b, int:Signed16 c, int:Unsigned16 d,
+                        int:Signed32 e, int:Unsigned32 f) {
+    int:Signed16 _ = x << a; // @error expected 'int:Signed16' but found 'int'
+    decimal _ = x << b; // @error expected 'decimal' but found 'int'
+    int:Unsigned8 _ = x << c; // @error expected 'int:Unsigned8' but found 'int'
+    int:Signed16 _ = x << d; // @error expected 'int:Signed16' but found 'int'
+    float _ = x << e; // @error expected 'float' but found 'int'
+    int:Unsigned16 _ = x << f; // @error expected 'int:Unsigned16' but found 'int'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int` with 'int:Unsigned8' as the LHS operand and
+             byte as the RHS operand via invalid assignments.
+Labels: byte, int:Unsigned8, shift-expr, var
+
+function errorFunction(int:Unsigned8 x, byte a) {
+    var x1 = x << a;
+    int:Unsigned8 _ = x1; // @error expected 'int:Unsigned8' but found 'int'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int` with 'int:Unsigned8' as the LHS operand and
+             user-defined subtype of integer as the RHS operand via invalid assignments.
+Labels: DecimalNumber, int:Unsigned8, module-type-defn, shift-expr, unary-minus, union-type
+
+type Ints -1|2|-128;
+
+function errorFunction(int:Unsigned8 x, Ints a) {
+    int:Unsigned8 _ = x << a; // @error expected 'int:Unsigned8' but found 'int'
+    Ints _ = x << a; // @error expected 'Ints' but found 'int'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int?` with 'int:Unsigned8' as the LHS operand and
+             optional 'int' as the RHS operand via invalid assignments.
+Labels: int, int:Unsigned8, optional-type, shift-expr, var
+
+function errorFunction(int:Unsigned8 x, int? a) {
+    var x1 = x << a;
+    int:Unsigned8 _ = x1; // @error  expected 'int:Unsigned8' but found 'int?'
+    var x2 = x << a;
+    int _ = x2; // @error expected 'int' but found 'int?'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int?` with 'int:Unsigned8' as the LHS operand and
+             optional builtin subtypes of integer as the RHS operand via invalid assignments.
+Labels: decimal, float, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        optional-type, shift-expr
+
+function errorFunction(int:Unsigned8 a, int:Signed8? b, int:Unsigned8? c, int:Signed16? d, int:Unsigned16? e,
+                        int:Signed32? f, int:Unsigned32? g) {
+    int:Unsigned8 _ = a << b; // @error expected 'int:Unsigned8' but found 'int?'
+    float _ = a << c; // @error expected 'float' but found 'int?'
+    int:Unsigned8 _ = a << d; // @error expected 'int:Unsigned8' but found 'int?'
+    int:Signed16 _ = -a << e; // @error expected 'int:Signed16' but found 'int?'
+    decimal _ = a << f; // @error expected 'decimal' but found 'int?'
+    int:Unsigned16 _ = a << -g; // @error expected 'int:Unsigned16' but found 'int?'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int?` with 'int:Unsigned8' as the LHS operand and
+             optional byte as the RHS operand via invalid assignments.
+Labels: byte, int, int:Unsigned8, optional-type, shift-expr
+
+function errorFunction(int:Unsigned8 x, byte? a) {
+    int:Unsigned8 _ = x << a; // @error  expected 'int:Unsigned8' but found 'int?'
+    int _ = x << a; // @error expected 'int' but found 'int?'
+}
+
+Test-Case: output
+Description: Test left shift expression with 'int:Unsigned8' operands in function call and method call.
+Labels: function-call-expr, function-defn, int, int:Unsigned8, method-call-expr, shift-expr, unary-minus,
+        value:toBalString, value:toString
+
+function init() {
+    int:Unsigned8 a = 112;
+    int:Unsigned8 b = 113;
+    int:Unsigned8 c = 12;
+    int:Unsigned8 d = 2;
+
+    leftShiftExpr(a << b); // @output 63050394783186944
+    leftShiftExpr(a << d); // @output 448
+    leftShiftExpr(c << d); // @output 48
+    leftShiftExpr(c << b); // @output 6755399441055744
+
+    io:println((a << b).toString()); // @output 63050394783186944
+    io:println((a << d).toString()); // @output 448
+    io:println((c << d).toString()); // @output 48
+    io:println((c << b).toString()); // @output 6755399441055744
+
+    io:println((a << b).toBalString()); // @output 63050394783186944
+    io:println((a << d).toBalString()); // @output 448
+    io:println((c << d).toBalString()); // @output 48
+    io:println((c << b).toBalString()); // @output 6755399441055744
+}
+
+function leftShiftExpr(int x) {
+    io:println(x);
+}
+
+Test-Case: output
+Description: Test left shift expression with 'int:Unsigned8' operands as a return statement.
+Labels: function-call-expr, function-defn, int, int:Unsigned8, return-stmt, shift-expr
+
+function init() {
+    int:Unsigned8 a = 112;
+    int:Unsigned8 b = 113;
+    int:Unsigned8 c = 12;
+    int:Unsigned8 d = 2;
+
+    io:println(leftShiftExpr(a, b)); // @output 63050394783186944
+    io:println(leftShiftExpr(a, d)); // @output 448
+    io:println(leftShiftExpr(c, d)); // @output 48
+    io:println(leftShiftExpr(c, b)); // @output 6755399441055744
+}
+
+function leftShiftExpr(int:Unsigned8 x, int:Unsigned8 y) returns int {
+    return x << y;
+}
+
+Test-Case: output
+Description: Test left shift expression with zero and positive 'int:Signed16' DecimalNumbers as operands.
+Labels: int:Signed16, shift-expr
+
+function init() {
+    int:Signed16 a = 32765;
+    int:Signed16 b = 21;
+    int:Signed16 c = 0;
+
+    io:println(a << b); // @output 68713185280
+    io:println(a << c); // @output 32765
+    io:println(c << b); // @output 0
+    io:println(c << c); // @output 0
+}
+
+Test-Case: output
+Description: Test left shift expression with zero and negative 'int:Signed16' DecimalNumbers as operands.
+Labels: int:Signed16, shift-expr, unary-minus
+
+function init() {
+    int:Signed16 a = -32764;
+    int:Signed16 b = -32764;
+    int:Signed16 c = -0;
+
+    io:println(a << b); // @output -524224
+    io:println(a << c); // @output -32764
+    io:println(c << b); // @output 0
+    io:println(c << c); // @output 0
+}
+
+Test-Case: output
+Description: Test left shift expression for positive and negative 'int:Signed16' DecimalNumbers as operands.
+Labels: int:Signed16, shift-expr, unary-minus
+
+function init() {
+    int:Signed16 a = -111;
+    int:Signed16 b = -92;
+    int:Signed16 c = 1;
+    int:Signed16 d = 2;
+
+    io:println(a << d); // @output -444
+    io:println(c << b); // @output 68719476736
+}
+
+Test-Case: output
+Description: Test left shift expression with 'int:Signed16' as the LHS operand and 'int' as the RHS operand.
+Labels: int, int:Signed16, shift-expr, unary-minus
+
+function init() {
+    int:Signed16 x = 117;
+    int:Signed16 y = -32767;
+    int a = 10;
+    int b = -9223372036854775800;
+
+    io:println(x << a); // @output 119808
+    io:println(x << b); // @output 29952
+
+    io:println(y << a); // @output -33553408
+    io:println(y << b); // @output -8388352
+}
+
+Test-Case: output
+Description: Test left shift expression with 'int:Signed16' as the LHS operand and builtin subtypes of integer as the RHS
+             operand.
+Labels: int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8, shift-expr, unary-minus
+
+function init() {
+    int:Signed16 x = 32759;
+    int:Signed16 y = -126;
+    int:Signed8 a = 2;
+    int:Signed8 b = -125;
+    int:Unsigned8 c = 5;
+    int:Signed16 d = 32750;
+    int:Signed16 e = -32752;
+    int:Unsigned16 f = 3;
+    int:Signed32 g = 9;
+    int:Signed32 h = -2147483641;
+    int:Unsigned32 i = 17;
+
+    io:println(x << a); // @output 131036
+    io:println(x << b); // @output 262072
+    io:println(y << a); // @output -504
+    io:println(y << b); // @output -1008
+
+    io:println(x << c); // @output 1048288
+    io:println(y << c); // @output -4032
+
+    io:println(x << d); // @output 2305209690516094976
+    io:println(x << e); // @output 2146893824
+    io:println(y << d); // @output -8866461766385664
+    io:println(y << e); // @output -8257536
+
+    io:println(x << f); // @output 262072
+    io:println(y << f); // @output -1008
+
+    io:println(x << g); // @output 16772608
+    io:println(x << h); // @output 4193152
+    io:println(y << g); // @output -64512
+    io:println(y << h); // @output -16128
+
+    io:println(x << i); // @output 4293787648
+    io:println(y << i); // @output -16515072
+}
+
+Test-Case: output
+Description: Test left shift expression for optional zero and positive 'int:Signed16' operands.
+Labels: int, int:Signed16, nil-literal, optional-type, shift-expr, value:toBalString
+
+function init() {
+    int:Signed16? a = 10;
+    int:Signed16? b = 5;
+    int:Signed16? c = 0;
+    int:Signed16? d = ();
+    int:Signed16 e = 50;
+    int:Signed16 f = 7;
+
+    int? x1 = a << b;
+    io:println(x1); // @output 320
+    int? x2 = f << b;
+    io:println(x2); // @output 224
+    int? x3 = a << f;
+    io:println(x3); // @output 1280
+    int? x4 = e << b;
+    io:println(x4); // @output 1600
+
+    int? x5 = a << d;
+    io:println(x5.toBalString()); // @output ()
+    int? x6 = d << b;
+    io:println(x6.toBalString()); // @output ()
+    int? x7 = d << b;
+    io:println(x7.toBalString()); // @output ()
+
+    io:println(a << b); // @output 320
+    io:println(a << c); // @output 10
+
+    io:println(a << f); // @output 1280
+    io:println(e << b); // @output 1600
+
+    io:println((a << d).toBalString()); // @output ()
+    io:println((d << b).toBalString()); // @output ()
+    io:println((d << d).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test left shift expression for optional zero and negative 'int:Signed16' operands.
+Labels: int, int:Signed16, nil-literal, optional-type, shift-expr, unary-minus, value:toBalString
+
+function init() {
+    int:Signed16? a = -32757;
+    int:Signed16? b = -32767;
+    int:Signed16? c = 0;
+    int:Signed16? d = ();
+    int:Signed16 e = -33;
+    int:Signed16 f = -32757;
+
+    int? x1 = a << b;
+    io:println(x1); // @output -65514
+    int? x2 = f << b;
+    io:println(x2); // @output -65514
+    int? x3 = a << f;
+    io:println(x3); // @output -67086336
+    int? x4 = e << b;
+    io:println(x4); // @output -66
+
+    int? x5 = a << d;
+    io:println(x5.toBalString()); // @output ()
+    int? x6 = d << b;
+    io:println(x6.toBalString()); // @output ()
+
+    io:println(a << b); // @output -65514
+    io:println(a << c); // @output -32757
+
+    io:println(a << f); // @output -67086336
+    io:println(e << b); // @output -66
+
+    io:println((a << d).toBalString()); // @output ()
+    io:println((d << b).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test left shift expression for optional positive and negative 'int:Signed16'.
+Labels: int:Signed16, optional-type, shift-expr, unary-minus
+
+function init() {
+    int:Signed16? a = 8;
+    int:Signed16? b = 5;
+    int:Signed16? c = -2;
+    int:Signed16? d = -32758;
+    int:Signed16 e = 100;
+    int:Signed16 f = 7;
+    int:Signed16 g = -23;
+    int:Signed16 h = -32762;
+
+    io:println(a << d); // @output 8192
+    io:println(c << b); // @output -64
+
+    io:println(a << h); // @output 512
+    io:println(c << f); // @output -256
+
+    io:println(e << d); // @output 102400
+    io:println(g << b); // @output -736
+}
+
+Test-Case: output
+Description: Test 0x3F mask of 'int:Signed16' RHS operand in left shift expression.
+Labels: DecimalNumber, int:Signed16, shift-expr, unary-minus
+
+function init() {
+    int:Signed16 a = -1;
+    int:Signed16 b = 63;
+    int:Signed16 c = 64;
+    int:Signed16 d = 122;
+    int:Signed16 e = -65;
+    int:Signed16 f = -64;
+
+    io:println(a << b); // @output -9223372036854775808
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Signed16): 11111111 11111111
+    //                     = Equivalent binary representation (basic type): 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 00000000 00111111, In decimal: 63
+    //                After applying mask, In binary: 111111, In decimal: 63
+    // Result = In binary: 10000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-9223372036854775808)
+
+    io:println(a << c); // @output -1
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Signed16): 11111111 11111111
+    //                     = Equivalent binary representation (basic type): 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 00000000 01000000, In decimal: 64
+    //                After applying mask, In binary: 000000, In decimal: 0
+    // Result = In binary: 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    //        = In decimal: (-1)
+
+    io:println(a << d); // @output -288230376151711744
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Signed16): 11111111 11111111
+    //                     = Equivalent binary representation (basic type): 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 00000000 01111010, In decimal: 122
+    //                After applying mask, In binary: 111010, In decimal: 58
+    // Result = In binary: 11111100 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-288230376151711744)
+
+    io:println(b << b); // @output -9223372036854775808
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Signed16): 00000000 00111111
+    //                     = Equivalent binary representation (basic type): 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00111111
+    // Shift amount = Before applying mask, In binary: 00000000 00111111, In decimal: 63
+    //                After applying mask, In binary: 111111, In decimal: 63
+    // Result = In binary: 10000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-9223372036854775808)
+
+    io:println(b << c); // @output 63
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Signed16): 00000000 00111111
+    //                     = Equivalent binary representation (basic type): 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00111111
+    // Shift amount = Before applying mask, In binary: 00000000 01000000, In decimal: 64
+    //                After applying mask, In binary: 000000, In decimal: 0
+    // Result = In binary: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00111111
+    //        = In decimal: (63)
+
+    io:println(a << e); // @output -9223372036854775808
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Signed16): 11111111 11111111
+    //                     = Equivalent binary representation (basic type): 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 11111111 10111111, In decimal: -65
+    //                After applying mask, In binary: 111111, In decimal: 63
+    // Result = In binary: 10000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-9223372036854775808)
+
+    io:println(a << f); // @output -1
+    // Shift amount (After apply mask): In binary - 111111, In decimal - 63
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Signed16): 11111111 11111111
+    //                     = Equivalent binary representation (basic type): 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 11111111 11000000, In decimal: -64
+    //                After applying mask, In binary: 000000, In decimal: 0
+    // Result = In binary: 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    //        = In decimal: (-1)
+
+    io:println(a << a); // @output -9223372036854775808
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Signed16): 11111111 11111111
+    //                     = Equivalent binary representation (basic type): 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 11111111 11111111, In decimal: -1
+    //                After applying mask, In binary: 111111, In decimal: 63
+    // Result = In binary: 10000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-9223372036854775808)
+
+    io:println(e << c); // @output -65
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Signed16): 11111111 10111111
+    //                     = Equivalent binary representation (basic type): 11111111 11111111 11111111 11111111 11111111 11111111 11111111 10111111
+    // Shift amount = Before applying mask, In binary: 00000000 01000000, In decimal: 64
+    //                After applying mask, In binary: 000000, In decimal: 0
+    // Result = In binary: 11111111 11111111 11111111 11111111 11111111 11111111 11111111 10111111
+    //        = In decimal: (-65)
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int` with 'int:Signed16' as the LHS operand and
+             'int' as the RHS operand via invalid assignments.
+Labels: float, int, int:Signed16, shift-expr, var
+
+function errorFunction(int:Signed16 x, int a) {
+    var x1 = x << a;
+    int:Signed16 _ = x1; // @error expected 'int:Signed16' but found 'int'
+    var x2 = x << -a;
+    float _ = x2; // @error expected 'float' but found 'int'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int` with 'int:Signed16' as the LHS operand and
+             builtin subtypes of integer as the RHS operand via invalid assignments.
+Labels: decimal, float, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        shift-expr
+
+function errorFunction(int:Signed16 x, int:Signed8 a, int:Unsigned8 b, int:Signed16 c, int:Unsigned16 d, int:Signed32 e,
+                        int:Unsigned32 f) {
+    int:Signed16 _ = x << a; // @error expected 'int:Signed16' but found 'int'
+    decimal _ = x << b; // @error expected 'decimal' but found 'int'
+    int:Unsigned16 _ = x << c; // @error expected 'int:Unsigned16' but found 'int'
+    int:Signed16 _ = x << d; // @error expected 'int:Signed16' but found 'int'
+    float _ = x << e; // @error expected 'float' but found 'int'
+    int:Unsigned16 _ = x << f; // @error expected 'int:Unsigned16' but found 'int'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int` with 'int:Signed16' as the LHS operand and
+             byte as the RHS operand via invalid assignments.
+Labels: byte, int:Signed16, shift-expr
+
+function errorFunction(int:Signed16 x, byte s) {
+    int:Signed16 _ = x << a; // @error expected 'int:Signed16' but found 'int'
+    byte _ = y << a; // @error expected 'byte' but found 'int'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int` with 'int:Signed16' as the LHS operand and
+             user-defined subtype of integer as the RHS operand via invalid assignments.
+Labels: DecimalNumber, int:Signed16, module-type-defn, shift-expr, unary-minus, union-type, var
+
+type Ints -1|2|-128;
+
+function errorFunction(int:Signed16 x, Ints a) {
+    var x1 = x << a;
+    int:Signed16 _ = x1; // @error expected 'int:Signed16' but found 'int'
+    Ints _ = x << a; // @error expected '-1|2|-128' but found 'int'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int?` with 'int:Signed16' as the LHS operand and
+             optional 'int' as the RHS operand via invalid assignments.
+Labels: int, int:Signed16, optional-type, shift-expr
+
+function errorFunction(int:Signed16 x, int? a) {
+    int:Signed16 _ = x << a; // @error  expected 'int:Signed16' but found 'int?'
+    int _ = x << b; // @error expected 'int' but found 'int?'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int?` with 'int:Signed16' as the LHS operand and
+             optional builtin subtypes of integer as the RHS operand via invalid assignments.
+Labels: decimal, float, int, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        optional-type, shift-expr
+
+function errorFunction(int:Signed16 a, int:Signed8? b, int:Unsigned8? c, int:Signed16? d, int:Unsigned16? e,
+                        int:Signed32? f, int:Unsigned32? g) {
+    int:Signed16 _ = a << b; // @error expected 'int:Signed16' but found 'int?'
+    float _ = a << c; // @error expected 'float' but found 'int?'
+    int:Unsigned16 _ = a << d; // @error expected 'int:Unsigned16' but found 'int?'
+    int:Signed16 _ = a << e; // @error expected 'int:Signed16' but found 'int?'
+    decimal _ = a << f; // @error expected 'decimal' but found 'int?'
+    int:Unsigned16 _ = a << g; // @error expected 'int:Unsigned16' but found 'int?'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int?` with 'int:Signed16' as the LHS operand and
+             optional byte as the RHS operand via invalid assignments.
+Labels: byte, int, int:Signed16, optional-type, shift-expr
+
+function errorFunction(int:Signed16 x, byte? a) {
+    int:Signed16 _ = x << a; // @error  expected 'int:Signed16' but found 'int?'
+    int _ = x << a; // @error expected 'int' but found 'int?'
+}
+
+Test-Case: output
+Description: Test left shift expression with 'int:Signed16' operands in function call and method call.
+Labels: function-call-expr, function-defn, int:Signed16, method-call-expr, shift-expr, unary-minus, value:toBalString,
+        value:toString
+
+function init() {
+    int:Signed16 a = -112;
+    int:Signed16 b = -113;
+    int:Signed16 c = 12;
+    int:Signed16 d = 2;
+
+    leftShiftExpr(a << b); // @output -3670016
+    leftShiftExpr(a << d); // @output -448
+    leftShiftExpr(c << d); // @output 48
+    leftShiftExpr(c << b); // @output 393216
+
+    io:println((a << b).toString()); // @output -3670016
+    io:println((a << d).toString()); // @output -448
+    io:println((c << d).toString()); // @output 48
+    io:println((c << b).toString()); // @output 393216
+
+    io:println((a << b).toBalString()); // @output -3670016
+    io:println((a << d).toBalString()); // @output -448
+    io:println((c << d).toBalString()); // @output 48
+    io:println((c << b).toBalString()); // @output 393216
+}
+
+function leftShiftExpr(int x) {
+    io:println(x);
+}
+
+Test-Case: output
+Description: Test left shift expression with 'int:Signed16' operands as a return statement.
+Labels: function-call-expr, function-defn, int, int:Signed16, return-stmt, shift-expr, unary-minus
+
+function init() {
+    int:Signed16 a = -112;
+    int:Signed16 b = -113;
+    int:Signed16 c = 12;
+    int:Signed16 d = 2;
+
+    io:println(leftShiftExpr(a, b)); // @output -3670016
+    io:println(leftShiftExpr(a, d)); // @output -448
+    io:println(leftShiftExpr(c, d)); // @output 48
+    io:println(leftShiftExpr(c, b)); // @output 393216
+}
+
+function leftShiftExpr(int:Signed16 x, int:Signed16 y) returns int {
+    return x << y;
+}
+
+Test-Case: output
+Description: Test left shift expression with 'int:Unsigned16' DecimalNumbers as operands.
+Labels: int:Unsigned16, shift-expr
+
+function init() {
+    int:Unsigned16 a = 65531;
+    int:Unsigned16 b = 21;
+    int:Unsigned16 c = 0;
+
+    io:println(a << b); // @output 137428467712
+    io:println(a << c); // @output 65531
+    io:println(c << b); // @output 0
+    io:println(c << c); // @output 0
+}
+
+Test-Case: output
+Description: Test left shift expression with 'int:Unsigned16' as the LHS operand and 'int' as the RHS operand.
+Labels: int, int:Unsigned16, shift-expr, unary-minus
+
+function init() {
+    int:Unsigned16 x = 65533;
+    int a = 10;
+    int b = -9223372036854775800;
+
+    io:println(x << a); // @output 67105792
+
+    io:println(x << b); // @output 16776448
+}
+
+Test-Case: output
+Description: Test left shift expression with 'int:Unsigned16' as the LHS operand and builtin subtypes of integer as the RHS
+             operand.
+Labels: int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8, shift-expr, unary-minus
+
+function init() {
+    int:Unsigned16 x = 245;
+    int:Signed8 a = 127;
+    int:Signed8 b = -128;
+    int:Unsigned8 c = 5;
+    int:Signed16 d = 32750;
+    int:Signed16 e = -32752;
+    int:Unsigned16 f = 3;
+    int:Signed32 g = 9;
+    int:Signed32 h = -2147483641;
+    int:Unsigned32 i = 17;
+
+    io:println(x << a); // @output -9223372036854775808
+    io:println(x << b); // @output 245
+
+    io:println(x << c); // @output 7840
+
+    io:println(x << d); // @output 17240342323527680
+    io:println(x << e); // @output 16056320
+
+    io:println(x << f); // @output 1960
+
+    io:println(x << g); // @output 125440
+    io:println(x << h); // @output 31360
+
+    io:println(x << i); // @output 32112640
+}
+
+Test-Case: output
+Description: Test left shift expression for optional 'int:Unsigned16' operands.
+Labels: int, int:Unsigned16, nil-literal, optional-type, shift-expr, value:toBalString
+
+function init() {
+    int:Unsigned16? a = 10;
+    int:Unsigned16? b = 5;
+    int:Unsigned16? c = 0;
+    int:Unsigned16? d = ();
+    int:Unsigned16 e = 50;
+    int:Unsigned16 f = 7;
+
+    int? x1 = a << b;
+    io:println(x1); // @output 320
+    int? x2 = f << b;
+    io:println(x2); // @output 224
+    int? x3 = a << f;
+    io:println(x3); // @output 1280
+    int? x4 = e << b;
+    io:println(x4); // @output 1600
+
+    int? x5 = a << d;
+    io:println(x5.toBalString()); // @output ()
+    int? x6 = d << b;
+    io:println(x6.toBalString()); // @output ()
+    int? x7 = d << b;
+    io:println(x7.toBalString()); // @output ()
+
+    io:println(a << b); // @output 320
+    io:println(a << c); // @output 10
+
+    io:println(a << f); // @output 1280
+    io:println(e << b); // @output 1600
+
+    io:println((a << d).toBalString()); // @output ()
+    io:println((d << b).toBalString()); // @output ()
+    io:println((d << d).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test 0x3F mask of 'int:Unsigned16' RHS operand in left shift expression.
+Labels: int:Unsigned16, shift-expr
+
+function init() {
+    int:Unsigned16 a = 65535;
+    int:Unsigned16 b = 63;
+    int:Unsigned16 c = 64;
+    int:Unsigned16 d = 122;
+
+    io:println(a << b); // @output -9223372036854775808
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Unsigned16): 11111111 11111111
+    //                     = Equivalent binary representation (basic type): 00000000 00000000 00000000 00000000 00000000 00000000 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 00000000 00111111, In decimal: 63
+    //                After applying mask, In binary: 111111, In decimal: 63
+    // Result = In binary: 10000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-9223372036854775808)
+
+    io:println(a << c); // @output 65535
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Unsigned16): 11111111 11111111
+    //                     = Equivalent binary representation (basic type): 00000000 00000000 00000000 00000000 00000000 00000000 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 00000000 01000000, In decimal: 64
+    //                After applying mask, In binary: 000000, In decimal: 0
+    // Result = In binary: 00000000 00000000 00000000 00000000 00000000 00000000 11111111 11111111
+    //        = In decimal: (65535)
+
+    io:println(a << d); // @output -288230376151711744
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Unsigned16): 11111111 11111111
+    //                     = Equivalent binary representation (basic type): 00000000 00000000 00000000 00000000 00000000 00000000 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 00000000 01111010, In decimal: 122
+    //                After applying mask, In binary: 111010, In decimal: 58
+    // Result = In binary: 11111100 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-288230376151711744)
+
+    io:println(b << b); // @output -9223372036854775808
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Unsigned16): 00000000 00111111
+    //                     = Equivalent binary representation (basic type): 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00111111
+    // Shift amount = Before applying mask, In binary: 00000000 00111111, In decimal: 63
+    //                After applying mask, In binary: 111111, In decimal: 63
+    // Result = In binary: 10000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-9223372036854775808)
+
+    io:println(b << c); // @output 63
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Unsigned16): 00000000 00111111
+    //                     = Equivalent binary representation (basic type): 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00111111
+    // Shift amount = Before applying mask, In binary: 00000000 01000000, In decimal: 64
+    //                After applying mask, In binary: 000000, In decimal: 0
+    // Result = In binary: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00111111
+    //        = In decimal: (63)
+
+    io:println(a << a); // @output -9223372036854775808
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Unsigned16): 11111111 11111111
+    //                     = Equivalent binary representation (basic type): 00000000 00000000 00000000 00000000 00000000 00000000 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 11111111 11111111, In decimal: 65535
+    //                After applying mask, In binary: 111111, In decimal: 63
+    // Result = In binary: 10000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-9223372036854775808)
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int` with 'int:Unsigned16' as the LHS operand and
+             'int' as the RHS operand via invalid assignments.
+Labels: float, int, int:Unsigned16, shift-expr
+
+function errorFunction(int:Unsigned16 x, int a) {
+    int:Unsigned16 _ = x << a; // @error expected 'int:Unsigned16' but found 'int'
+    float _ = x << a; // @error expected 'float' but found 'int'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int` with 'int:Unsigned16' as the LHS operand and
+             builtin subtypes of integer as the RHS operand via invalid assignments.
+Labels: decimal, float, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        shift-expr
+
+function errorFunction(int:Unsigned16 x, int:Signed8 a, int:Unsigned8 b, int:Signed16 c, int:Unsigned16 d,
+                        int:Signed32 e, int:Unsigned32 f) {
+    int:Signed16 _ = x << a; // @error expected 'int:Signed16' but found 'int'
+    decimal _ = x << b; // @error expected 'decimal' but found 'int'
+    int:Unsigned8 _ = x << c; // @error expected 'int:Unsigned8' but found 'int'
+    int:Signed16 _ = x << d; // @error expected 'int:Signed16' but found 'int'
+    float _ = x << e; // @error expected 'float' but found 'int'
+    int:Unsigned16 _ = x << f; // @error expected 'int:Unsigned16' but found 'int'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int` with'int:Unsigned16' as the LHS operand and
+             byte as the RHS operand via invalid assignments.
+Labels: byte, int:Unsigned16, shift-expr, var
+
+function errorFunction(int:Unsigned16 x, byte a) {
+    var x1 = x << a;
+    int:Unsigned16 _ = x1; // @error expected 'int:Unsigned16' but found 'int'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int` with 'int:Unsigned16' as the LHS operand and
+             user-defined subtype of integer as the RHS operand via invalid assignments.
+Labels: int:Unsigned16, module-type-defn, shift-expr, unary-minus, union-type
+
+type Ints -1|2|-128;
+
+function errorFunction(int:Unsigned16 x, Ints a) {
+    int:Unsigned16 _ = x << a; // @error expected 'int:Unsigned16' but found 'int'
+    Ints _ = x << a; // @error expected 'Ints' but found 'int'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int?` with 'int:Unsigned16' as the LHS operand and
+             optional 'int' as the RHS operand via invalid assignments.
+Labels: int, int:Unsigned16, optional-type, shift-expr
+
+function errorFunction(int:Unsigned16 x, int? a) {
+    int:Unsigned16 _ = x << a; // @error  expected 'int:Unsigned16' but found 'int?'
+    int _ = x << a; // @error expected 'int' but found 'int?'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int?` with 'int:Unsigned16' as the LHS operand and
+             optional builtin subtypes of integer as the RHS operand via invalid assignments.
+Labels: decimal, float, int, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        optional-type, shift-expr
+
+function errorFunction(int:Unsigned16 a, int:Signed8? b, int:Unsigned8? c, int:Signed16? d, int:Unsigned16? e,
+                        int:Signed32? f, int:Unsigned32? g) {
+    int:Unsigned8 _ = a << b; // @error expected 'int:Unsigned8' but found 'int?'
+    float _ = a << c; // @error expected 'float' but found 'int?'
+    int:Unsigned16 _ = a << d; // @error expected 'int:Unsigned16' but found 'int?'
+    int:Signed16 _ = a << e; // @error expected 'int:Signed16' but found 'int?'
+    decimal _ = a << f; // @error expected 'decimal' but found 'int?'
+    int:Unsigned16 _ = a << g; // @error expected 'int:Unsigned16' but found 'int?'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int?` with 'int:Unsigned16' as the LHS operand and
+             optional byte as the RHS operand via invalid assignments.
+Labels: byte, int, int:Unsigned16, optional-type, shift-expr
+
+function errorFunction(int:Unsigned16 x, byte? a) {
+    int:Unsigned16 _ = x << a; // @error  expected 'int:Unsigned16' but found 'int?'
+    int _ = x << a; // @error expected 'int' but found 'int?'
+}
+
+Test-Case: output
+Description: Test left shift expression with 'int:Unsigned16' operands in function call and method call.
+Labels: function-call-expr, function-defn, int, int:Unsigned16, method-call-expr, shift-expr, value:toBalString,
+        value:toString
+
+function init() {
+    int:Unsigned16 a = 112;
+    int:Unsigned16 b = 113;
+    int:Unsigned16 c = 12;
+    int:Unsigned16 d = 2;
+
+    leftShiftExpr(a << b); // @output 63050394783186944
+    leftShiftExpr(a << d); // @output 448
+    leftShiftExpr(c << d); // @output 48
+    leftShiftExpr(c << b); // @output 6755399441055744
+
+    io:println((a << b).toString()); // @output 63050394783186944
+    io:println((a << d).toString()); // @output 448
+    io:println((c << d).toString()); // @output 48
+    io:println((c << b).toString()); // @output 6755399441055744
+
+    io:println((a << b).toBalString()); // @output 63050394783186944
+    io:println((a << d).toBalString()); // @output 448
+    io:println((c << d).toBalString()); // @output 48
+    io:println((c << b).toBalString()); // @output 6755399441055744
+}
+
+function leftShiftExpr(int x) {
+    io:println(x);
+}
+
+Test-Case: output
+Description: Test left shift expression with 'int:Unsigned16' operands as a return statement.
+Labels: function-call-expr, function-defn, int, int:Unsigned16, return-stmt, shift-expr
+
+function init() {
+    int:Unsigned16 a = 112;
+    int:Unsigned16 b = 113;
+    int:Unsigned16 c = 12;
+    int:Unsigned16 d = 2;
+
+    io:println(leftShiftExpr(a, b)); // @output 63050394783186944
+    io:println(leftShiftExpr(a, d)); // @output 448
+    io:println(leftShiftExpr(c, d)); // @output 48
+    io:println(leftShiftExpr(c, b)); // @output 6755399441055744
+}
+
+function leftShiftExpr(int x, int y) returns int {
+    return x << y;
+}
+
+Test-Case: output
+Description: Test left shift expression with zero and positive 'int:Signed32' DecimalNumbers as operands.
+Labels: int:Signed32, shift-expr
+
+function init() {
+    int:Signed32 a = 2147483644;
+    int:Signed32 b = 21;
+    int:Signed32 c = 0;
+
+    io:println(a << b); // @output 4503599618981888
+    io:println(a << c); // @output 2147483644
+    io:println(c << b); // @output 0
+    io:println(c << c); // @output 0
+}
+
+Test-Case: output
+Description: Test left shift expression with zero and negative 'int:Signed32' DecimalNumbers as operands.
+Labels: int:Signed32, shift-expr, unary-minus
+
+function init() {
+    int:Signed32 a = -2147483640;
+    int:Signed32 b = -2147483641;
+    int:Signed32 c = -0;
+
+    io:println(a << b); // @output -274877905920
+    io:println(a << c); // @output -2147483640
+    io:println(c << b); // @output 0
+    io:println(c << c); // @output 0
+}
+
+Test-Case: output
+Description: Test left shift expression for positive and negative 'int:Signed32' DecimalNumbers as operands.
+Labels: int:Signed32, shift-expr, unary-minus
+
+function init() {
+    int:Signed32 a = -111;
+    int:Signed32 b = -92;
+    int:Signed32 c = 1;
+    int:Signed32 d = 2;
+
+    io:println(a << d); // @output -444
+    io:println(c << b); // @output 68719476736
+}
+
+Test-Case: output
+Description: Test left shift expression with 'int:Signed32' as the LHS operand and 'int' as the RHS operand.
+Labels: int, int:Signed32, shift-expr, unary-minus
+
+function init() {
+    int:Signed32 x = 117;
+    int:Signed32 y = -2147483639;
+    int a = 10;
+    int b = -9223372036854775800;
+
+    io:println(x << a); // @output 119808
+    io:println(x << b); // @output 29952
+
+    io:println(y << a); // @output -2199023246336
+    io:println(y << b); // @output -549755811584
+}
+
+Test-Case: output
+Description: Test left shift expression with 'int:Signed32' as the LHS operand and builtin subtypes of integer as the RHS
+             operand.
+Labels: int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8, shift-expr, unary-minus
+
+function init() {
+    int:Signed32 x = 2147483642;
+    int:Signed32 y = -2147483646;
+    int:Signed8 a = 3;
+    int:Signed8 b = -125;
+    int:Unsigned8 c = 5;
+    int:Signed16 d = 32750;
+    int:Signed16 e = -32752;
+    int:Unsigned16 f = 3;
+    int:Signed32 g = 9;
+    int:Signed32 h = -2147483641;
+    int:Unsigned32 i = 17;
+
+    io:println(x << a); // @output 17179869136
+    io:println(x << b); // @output 17179869136
+    io:println(y << a); // @output -17179869168
+    io:println(y << b); // @output -17179869168
+
+    io:println(x << c); // @output 68719476544
+    io:println(y << c); // @output -68719476672
+
+    io:println(x << d); // @output -422212465065984
+    io:println(x << e); // @output 140737487962112
+    io:println(y << d); // @output 140737488355328
+    io:println(y << e); // @output -140737488224256
+
+    io:println(x << f); // @output 17179869136
+    io:println(y << f); // @output -17179869168
+
+    io:println(x << g); // @output 1099511624704
+    io:println(x << h); // @output 274877906176
+    io:println(y << g); // @output -1099511626752
+    io:println(y << h); // @output -274877906688
+
+    io:println(x << i); // @output 281474975924224
+    io:println(y << i); // @output -281474976448512
+}
+
+Test-Case: output
+Description: Test left shift expression for optional zero and positive 'int:Signed32' operands.
+Labels: int, int:Signed32, nil-literal, optional-type, shift-expr, value:toBalString
+
+function init() {
+    int:Signed32? a = 10;
+    int:Signed32? b = 5;
+    int:Signed32? c = 0;
+    int:Signed32? d = ();
+    int:Signed32 e = 50;
+    int:Signed32 f = 7;
+
+    int? x1 = a << b;
+    io:println(x1); // @output 320
+    int? x2 = f << b;
+    io:println(x2); // @output 224
+    int? x3 = a << f;
+    io:println(x3); // @output 1280
+    int? x4 = e << b;
+    io:println(x4); // @output 1600
+
+    int? x5 = a << d;
+    io:println(x5.toBalString()); // @output ()
+    int? x6 = d << b;
+    io:println(x6.toBalString()); // @output ()
+    int? x7 = d << b;
+    io:println(x7.toBalString()); // @output ()
+
+    io:println(a << b); // @output 320
+    io:println(a << c); // @output 10
+
+    io:println(a << f); // @output 1280
+    io:println(e << b); // @output 1600
+
+    io:println((a << d).toBalString()); // @output ()
+    io:println((d << b).toBalString()); // @output ()
+    io:println((d << d).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test left shift expression for optional zero and negative 'int:Signed32' operands.
+Labels: int, int:Signed32, nil-literal, optional-type, shift-expr, unary-minus, value:toBalString
+
+function init() {
+    int:Signed32? a = -32757;
+    int:Signed32? b = -2147483647;
+    int:Signed32? c = 0;
+    int:Signed32? d = ();
+    int:Signed32 e = -33;
+    int:Signed32 f = -32757;
+
+    int? x1 = a << b;
+    io:println(x1); // @output -65514
+    int? x2 = f << b;
+    io:println(x2); // @output -65514
+    int? x3 = a << f;
+    io:println(x3); // @output -67086336
+    int? x4 = e << b;
+    io:println(x4); // @output -66
+
+    int? x5 = a << d;
+    io:println(x5.toBalString()); // @output ()
+    int? x6 = d << b;
+    io:println(x6.toBalString()); // @output ()
+
+    io:println(a << b); // @output -65514
+    io:println(a << c); // @output -32757
+
+    io:println(a << f); // @output -67086336
+    io:println(e << b); // @output -66
+
+    io:println((a << d).toBalString()); // @output ()
+    io:println((d << b).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test left shift expression for optional positive and negative 'int:Signed32'.
+Labels: int:Signed32, optional-type, shift-expr, unary-minus
+
+function init() {
+    int:Signed32? a = 8;
+    int:Signed32? b = 5;
+    int:Signed32? c = -2;
+    int:Signed32? d = -2147483644;
+    int:Signed32 e = 100;
+    int:Signed32 f = 7;
+    int:Signed32 g = -23;
+    int:Signed32 h = -2147483637;
+
+    io:println(a << d); // @output 128
+    io:println(c << b); // @output -64
+
+    io:println(a << h); // @output 16384
+    io:println(c << f); // @output -256
+
+    io:println(e << d); // @output 1600
+    io:println(g << b); // @output -736
+}
+
+Test-Case: output
+Description: Test 0x3F mask of 'int:Signed32' RHS operand in left shift expression.
+Labels: int:Signed32, shift-expr, unary-minus
+
+function init() {
+    int:Signed32 a = -1;
+    int:Signed32 b = 63;
+    int:Signed32 c = 64;
+    int:Signed32 d = 122;
+    int:Signed32 e = -65;
+    int:Signed32 f = -64;
+
+    io:println(a << b); // @output -9223372036854775808
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Signed32): 11111111 11111111 11111111 11111111
+    //                     = Equivalent binary representation (basic type): 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 00000000 00000000 00000000 00111111, In decimal: 63
+    //                After applying mask, In binary: 111111, In decimal: 63
+    // Result = In binary: 10000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-9223372036854775808)
+
+    io:println(a << c); // @output -1
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Signed32): 11111111 11111111 11111111 11111111
+    //                     = Equivalent binary representation (basic type): 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 00000000 00000000 00000000 01000000, In decimal: 64
+    //                After applying mask, In binary: 000000, In decimal: 0
+    // Result = In binary: 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    //        = In decimal: (-1)
+
+    io:println(a << d); // @output -288230376151711744
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Signed32): 11111111 11111111 11111111 11111111
+    //                     = Equivalent binary representation (basic type): 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 00000000 00000000 00000000 01111010, In decimal: 122
+    //                After applying mask, In binary: 111010, In decimal: 58
+    // Result = In binary: 11111100 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-288230376151711744)
+
+    io:println(b << b); // @output -9223372036854775808
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Signed32): 00000000 00000000 00000000 00111111
+    //                     = Equivalent binary representation (basic type): 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00111111
+    // Shift amount = Before applying mask, In binary: 00000000 00000000 00000000 00111111, In decimal: 63
+    //                After applying mask, In binary: 111111, In decimal: 63
+    // Result = In binary: 10000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-9223372036854775808)
+
+    io:println(b << c); // @output 63
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Signed32): 00000000 00000000 00000000 00111111
+    //                     = Equivalent binary representation (basic type): 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00111111
+    // Shift amount = Before applying mask, In binary: 00000000 00000000 00000000 01000000, In decimal: 64
+    //                After applying mask, In binary: 000000, In decimal: 0
+    // Result = In binary: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00111111
+    //        = In decimal: (63)
+
+    io:println(a << e); // @output -9223372036854775808
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Signed32): 11111111 11111111 11111111 11111111
+    //                     = Equivalent binary representation (basic type): 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 11111111 11111111 11111111 10111111, In decimal: -65
+    //                After applying mask, In binary: 111111, In decimal: 63
+    // Result = In binary: 10000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-9223372036854775808)
+
+    io:println(a << f); // @output -1
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Signed32): 11111111 11111111 11111111 11111111
+    //                     = Equivalent binary representation (basic type): 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 11111111 11111111 11111111 11000000, In decimal: -64
+    //                After applying mask, In binary: 000000, In decimal: 0
+    // Result = In binary: 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    //        = In decimal: (-1)
+
+    io:println(a << a); // @output -9223372036854775808
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Signed32): 11111111 11111111 11111111 11111111
+    //                     = Equivalent binary representation (basic type): 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 11111111 11111111 11111111 11111111, In decimal: -1
+    //                After applying mask, In binary: 111111, In decimal: 63
+    // Result = In binary: 10000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-9223372036854775808)
+
+    io:println(e << c); // @output -65
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Signed32): 11111111 11111111 11111111 10111111
+    //                     = Equivalent binary representation (basic type): 11111111 11111111 11111111 11111111 11111111 11111111 11111111 10111111
+    // Shift amount = Before applying mask, In binary: 00000000 00000000 00000000 01000000, In decimal: 64
+    //                After applying mask, In binary: 000000, In decimal: 0
+    // Result = In binary: 11111111 11111111 11111111 11111111 11111111 11111111 11111111 10111111
+    //        = In decimal: (-65)
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int` with 'int:Signed32' as the LHS operand and
+             'int' as the RHS operand via invalid assignments.
+Labels: decimal, float, int, int:MAX_VALUE, int:MIN_VALUE, int:Signed32, shift-expr
+
+function errorFunction(int:Signed32 x, int a) {
+    int:Signed32 _ = x << a; // @error expected 'int:Signed32' but found 'int'
+    float _ = x << int:MAX_VALUE; // @error expected 'float' but found 'int'
+    decimal _ = y << -1; // @error expected 'decimal' but found 'int'
+    float _ =  y << int:MIN_VALUE; // @error expected 'float' but found 'int'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int` with 'int:Signed32' as the LHS operand and
+             builtin subtypes of integer as the RHS operand via invalid assignments.
+Labels: decimal, float, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        shift-expr
+
+function errorFunction(int:Signed32 x, int:Signed8 a, int:Unsigned8 b, int:Signed16 c, int:Unsigned16 d, int:Signed32 e,
+                        int:Unsigned32 f) {
+    int:Signed32 _ = x << a; // @error expected 'int:Signed32' but found 'int'
+    decimal _ = x << b; // @error expected 'decimal' but found 'int'
+    int:Unsigned16 _ = x << c; // @error expected 'int:Unsigned16' but found 'int'
+    int:Signed16 _ = x << d; // @error expected 'int:Signed16' but found 'int'
+    float _ = x << e; // @error expected 'float' but found 'int'
+    int:Unsigned16 _ = x << f; // @error expected 'int:Unsigned16' but found 'int'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int` with 'int:Signed32' as the LHS operand and
+             byte as the RHS operand via invalid assignments.
+Labels: byte, int:Signed32, shift-expr
+
+function errorFunction(int:Signed32 x, byte a) {
+    int:Signed32 _ = x << a; // @error expected 'int:Signed32' but found 'int'
+    byte _ = x << a; // @error expected 'byte' but found 'int'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int` with 'int:Signed32' as the LHS operand and
+             user-defined subtype of integer as the RHS operand via invalid assignments.
+Labels: int:Signed32, module-type-defn, shift-expr, unary-minus, union-type
+
+type Ints -1|2|-128;
+
+function errorFunction(int:Signed32 x, Ints a) {
+    int:Signed32 _ = x << a; // @error expected 'int:Signed32' but found 'int'
+    Ints _ = x << a; // @error expected 'Ints' but found 'int'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int?` with 'int:Signed32' as the LHS operand and
+             optional 'int' as the RHS operand via invalid assignments.
+Labels: int, int:Signed32, optional-type, shift-expr
+
+function errorFunction(int:Signed32 x, int? a) {
+    int:Signed32 _ = x << a; // @error  expected 'int:Signed32' but found 'int?'
+    int _ = x << a; // @error expected 'int' but found 'int?'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int?` with 'int:Signed32' as the LHS operand and
+             optional builtin subtypes of integer as the RHS operand via invalid assignments.
+Labels: decimal, float, int, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        optional-type, shift-expr
+
+function errorFunction(int:Signed32 a, int:Signed8? b, int:Unsigned8? c, int:Signed16? d, int:Unsigned16? e,
+                        int:Signed32? f, int:Unsigned32? g) {
+    int:Signed16 _ = a << b; // @error expected 'int:Signed16' but found 'int?'
+    float _ = a << c; // @error expected 'float' but found 'int?'
+    int:Unsigned16 _ = a << d; // @error expected 'int:Unsigned16' but found 'int?'
+    int:Signed16 _ = a << e; // @error expected 'int:Signed16' but found 'int?'
+    decimal _ = a << f; // @error expected 'decimal' but found 'int?'
+    int:Unsigned16 _ = a << g; // @error expected 'int:Unsigned16' but found 'int?'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int?` with 'int:Signed32' as the LHS operand and
+             optional byte as the RHS operand via invalid assignments.
+Labels: byte, int, int:Signed32, optional-type, shift-expr, var
+
+function errorFunction(int:Signed32 x, byte? a) {
+    var x1 = x << a;
+    int:Signed32 _ = x1; // @error  expected 'int:Signed32' but found 'int?'
+    var x2 = x << a;
+    int _ = x2; // @error expected 'int' but found 'int?'
+}
+
+Test-Case: output
+Description: Test left shift expression with 'int:Signed32' operands in function call and method call.
+Labels: function-call-expr, function-defn, int:Signed32, method-call-expr, shift-expr, unary-minus, value:toBalString,
+        value:toString
+
+function init() {
+    int:Signed32 a = -112;
+    int:Signed32 b = -113;
+    int:Signed32 c = 12;
+    int:Signed32 d = 2;
+
+    leftShiftExpr(a << b); // @output -3670016
+    leftShiftExpr(a << d); // @output -448
+    leftShiftExpr(c << d); // @output 48
+    leftShiftExpr(c << b); // @output 393216
+
+    io:println((a << b).toString()); // @output -3670016
+    io:println((a << d).toString()); // @output -448
+    io:println((c << d).toString()); // @output 48
+    io:println((c << b).toString()); // @output 393216
+
+    io:println((a << b).toBalString()); // @output -3670016
+    io:println((a << d).toBalString()); // @output -448
+    io:println((c << d).toBalString()); // @output 48
+    io:println((c << b).toBalString()); // @output 393216
+}
+
+function leftShiftExpr(int x) {
+    io:println(x);
+}
+
+Test-Case: output
+Description: Test left shift expression with 'int:Signed32' operands as a return statement.
+Labels: function-call-expr, function-defn, int, int:Signed32, return-stmt, shift-expr, unary-minus
+
+function init() {
+    int:Signed32 a = -112;
+    int:Signed32 b = -113;
+    int:Signed32 c = 12;
+    int:Signed32 d = 2;
+
+    io:println(leftShiftExpr(a, b)); // @output -3670016
+    io:println(leftShiftExpr(a, d)); // @output -448
+    io:println(leftShiftExpr(c, d)); // @output 48
+    io:println(leftShiftExpr(c, b)); // @output 393216
+}
+
+function leftShiftExpr(int:Signed32 x, int:Signed32 y) returns int {
+    return x << y;
+}
+
+Test-Case: output
+Description: Test left shift expression with 'int:Unsigned32' DecimalNumbers as operands.
+Labels: int:Unsigned32, shift-expr
+
+function init() {
+    int:Unsigned32 a = 4294967290;
+    int:Unsigned32 b = 21;
+    int:Unsigned32 c = 0;
+
+    io:println(a << b); // @output 9007199242158080
+    io:println(a << c); // @output 4294967290
+    io:println(c << b); // @output 0
+    io:println(c << c); // @output 0
+}
+
+Test-Case: output
+Description: Test left shift expression with 'int:Unsigned32' as the LHS operand and 'int' as the RHS operand.
+Labels: int, int:Unsigned32, shift-expr, unary-minus
+
+function init() {
+    int:Unsigned32 x = 4294967287;
+    int a = 10;
+    int b = -9223372036854775800;
+
+    io:println(x << a); // @output 4398046501888
+
+    io:println(x << b); // @output 1099511625472
+}
+
+Test-Case: output
+Description: Test left shift expression with 'int:Unsigned32' as the LHS operand and builtin subtypes of integer as the RHS
+             operand.
+Labels: int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8, shift-expr, unary-minus
+
+function init() {
+    int:Unsigned32 x = 245;
+    int:Signed8 a = 127;
+    int:Signed8 b = -128;
+    int:Unsigned8 c = 5;
+    int:Signed16 d = 32750;
+    int:Signed16 e = -32752;
+    int:Unsigned16 f = 3;
+    int:Signed32 g = 9;
+    int:Signed32 h = -2147483641;
+    int:Unsigned32 i = 17;
+
+    io:println(x << a); // @output -9223372036854775808
+    io:println(x << b); // @output 245
+
+    io:println(x << c); // @output 7840
+
+    io:println(x << d); // @output 17240342323527680
+    io:println(x << e); // @output 16056320
+
+    io:println(x << f); // @output 1960
+
+    io:println(x << g); // @output 125440
+    io:println(x << h); // @output 31360
+
+    io:println(x << i); // @output 32112640
+}
+
+Test-Case: output
+Description: Test left shift expression for optional 'int:Unsigned32' operands.
+Labels: int, int:Unsigned32, nil-literal, optional-type, shift-expr, value:toBalString
+
+function init() {
+    int:Unsigned32? a = 10;
+    int:Unsigned32? b = 5;
+    int:Unsigned32? c = 0;
+    int:Unsigned32? d = ();
+    int:Unsigned32 e = 50;
+    int:Unsigned32 f = 7;
+
+    int? x1 = a << b;
+    io:println(x1); // @output 320
+    int? x2 = f << b;
+    io:println(x2); // @output 224
+    int? x3 = a << f;
+    io:println(x3); // @output 1280
+    int? x4 = e << b;
+    io:println(x4); // @output 1600
+
+    int? x5 = a << d;
+    io:println(x5.toBalString()); // @output ()
+    int? x6 = d << b;
+    io:println(x6.toBalString()); // @output ()
+    int? x7 = d << b;
+    io:println(x7.toBalString()); // @output ()
+
+    io:println(a << b); // @output 320
+    io:println(a << c); // @output 10
+
+    io:println(a << f); // @output 1280
+    io:println(e << b); // @output 1600
+
+    io:println((a << d).toBalString()); // @output ()
+    io:println((d << b).toBalString()); // @output ()
+    io:println((d << d).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test 0x3F mask of 'int:Unsigned32' RHS operand in left shift expression.
+Labels: int:Unsigned32, shift-expr
+
+function init() {
+    int:Unsigned32 a = 4294967295;
+    int:Unsigned32 b = 63;
+    int:Unsigned32 c = 64;
+    int:Unsigned32 d = 122;
+
+    io:println(a << b); // @output -9223372036854775808
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Unsigned32): 11111111 11111111 11111111 11111111
+    //                     = Equivalent binary representation (basic type): 00000000 00000000 00000000 00000000 11111111 11111111 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 00000000 00000000 00000000 00111111, In decimal: 63
+    //                After applying mask, In binary: 111111, In decimal: 63
+    // Result = In binary: 10000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-9223372036854775808)
+
+    io:println(a << c); // @output 4294967295
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Unsigned32): 11111111 11111111 11111111 11111111
+    //                     = Equivalent binary representation (basic type): 00000000 00000000 00000000 00000000 11111111 11111111 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 00000000 00000000 00000000 01000000, In decimal: 64
+    //                After applying mask, In binary: 000000, In decimal: 0
+    // Result = In binary: 00000000 00000000 00000000 00000000 11111111 11111111 11111111 11111111
+    //        = In decimal: (4294967295)
+
+    io:println(a << d); // @output -288230376151711744
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Unsigned32): 11111111 11111111 11111111 11111111
+    //                     = Equivalent binary representation (basic type): 00000000 00000000 00000000 00000000 11111111 11111111 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 00000000 00000000 00000000 01111010, In decimal: 122
+    //                After applying mask, In binary: 111010, In decimal: 58
+    // Result = In binary: 11111100 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-288230376151711744)
+
+    io:println(b << b); // @output -9223372036854775808
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Unsigned32): 00000000 00000000 00000000 00111111
+    //                     = Equivalent binary representation (basic type): 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00111111
+    // Shift amount = Before applying mask, In binary: 00000000 00000000 00000000 00111111, In decimal: 63
+    //                After applying mask, In binary: 111111, In decimal: 63
+    // Result = In binary: 10000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-9223372036854775808)
+
+    io:println(b << c); // @output 63
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Unsigned32): 00000000 00000000 00000000 00111111
+    //                     = Equivalent binary representation (basic type): 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00111111
+    // Shift amount = Before applying mask, In binary: 00000000 00000000 00000000 01000000, In decimal: 64
+    //                After applying mask, In binary: 000000, In decimal: 0
+    // Result = In binary: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00111111
+    //        = In decimal: (63)
+
+    io:println(a << a); // @output -9223372036854775808
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (int:Unsigned32): 11111111 11111111 11111111 11111111
+    //                     = Equivalent binary representation (basic type): 00000000 00000000 00000000 00000000 11111111 11111111 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 11111111 11111111 11111111 11111111, In decimal: 4294967295
+    //                After applying mask, In binary: 111111, In decimal: 63
+    // Result = In binary: 10000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-9223372036854775808)
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int` with 'int:Unsigned32' as the LHS operand and
+             'int' as the RHS operand via invalid assignments.
+Labels: float, int, int:Unsigned32, shift-expr
+
+function errorFunction(int:Unsigned32 x, int a) {
+    int:Unsigned32 _ = x << a; // @error expected 'int:Unsigned32' but found 'int'
+    float _ = x << 100; // @error expected 'float' but found 'int'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int` with 'int:Unsigned32' as the LHS operand and
+             builtin subtypes of integer as the RHS operand via invalid assignments.
+Labels: decimal, float, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        shift-expr
+
+function errorFunction(int:Unsigned32 x, int:Signed8 a, int:Unsigned8 b, int:Signed16 c, int:Unsigned16 d,
+                        int:Signed32 e, int:Unsigned32 f) {
+    int:Signed16 _ = x << a; // @error expected 'int:Signed16' but found 'int'
+    decimal _ = x << b; // @error expected 'decimal' but found 'int'
+    int:Unsigned8 _ = x << c; // @error expected 'int:Unsigned8' but found 'int'
+    int:Signed16 _ = x << d; // @error expected 'int:Signed16' but found 'int'
+    float _ = x << e; // @error expected 'float' but found 'int'
+    int:Unsigned16 _ = x << f; // @error expected 'int:Unsigned16' but found 'int'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int` with 'int:Unsigned32' as the LHS operand and
+             byte as the RHS operand via invalid assignments.
+Labels: byte, int:Unsigned32, shift-expr, var
+
+function errorFunction(int:Unsigned32 x, byte a) {
+    var x1 = x << a;
+    int:Unsigned32 _ = x1; // @error expected 'int:Unsigned32' but found 'int'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int` with 'int:Unsigned32' as the LHS operand and
+             user-defined subtype of integer as the RHS operand via invalid assignments.
+Labels: DecimalNumber, int:Unsigned32, module-type-defn, shift-expr, unary-minus, union-type, var
+
+type Ints -1|2|-128;
+
+function errorFunction(int:Unsigned32 x, Ints a) {
+    var x1 = x << a;
+    int:Unsigned32 _ = x1; // @error expected 'int:Unsigned32' but found 'int'
+    var x2 = x << a;
+    Ints _ = x2; // @error expected 'Ints' but found 'int'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int?` with 'int:Unsigned32' as the LHS operand and
+             optional 'int' as the RHS operand via invalid assignments.
+Labels: int, int:Unsigned32, optional-type, shift-expr
+
+function errorFunction(int:Unsigned32 x, int? a) {
+    int:Unsigned32 _ = x << a; // @error  expected 'int:Unsigned32' but found 'int?'
+    int _ = x << a; // @error expected 'int' but found 'int?'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int?` with 'int:Unsigned32' as the LHS operand and
+             optional builtin subtypes of integer as the RHS operand via invalid assignments.
+Labels: decimal, float, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        optional-type, shift-expr
+
+function errorFunction(int:Unsigned32 a, int:Signed8? b, int:Signed16? c, int:Unsigned16? d, int:Signed32? e,
+                        int:Unsigned32? f) {
+    int:Unsigned8 _ = a << b; // @error expected 'int:Unsigned8' but found 'int?'
+    float _ = a << c; // @error expected 'float' but found 'int?'
+    int:Unsigned32 _ = a << d; // @error expected 'int:Unsigned32' but found 'int?'
+    int:Signed16 _ = a << e; // @error expected 'int:Signed16' but found 'int?'
+    decimal _ = a << f; // @error expected 'decimal' but found 'int?'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int?` with 'int:Unsigned32' as the LHS operand and
+             optional byte as the RHS operand via invalid assignments.
+Labels: byte, int, int:Unsigned32, optional-type, shift-expr
+
+function errorFunction(int:Unsigned32 x, byte? a) {
+    int:Unsigned32 _ = x << a; // @error  expected 'int:Unsigned32' but found 'int?'
+    int _ = x << a; // @error expected 'int' but found 'int?'
+}
+
+Test-Case: output
+Description: Test left shift expression with 'int:Unsigned32' operands in function call and method call.
+Labels: function-call-expr, function-defn, int, int:Unsigned32, method-call-expr, shift-expr, unary-minus,
+        value:toBalString, value:toString
+
+function init() {
+    int:Unsigned32 a = 112;
+    int:Unsigned32 b = 113;
+    int:Unsigned32 c = 12;
+    int:Unsigned32 d = 2;
+
+    leftShiftExpr(a << b); // @output 63050394783186944
+    leftShiftExpr(a << d); // @output 448
+    leftShiftExpr(c << d); // @output 48
+    leftShiftExpr(c << b); // @output 6755399441055744
+
+    io:println((a << b).toString()); // @output 63050394783186944
+    io:println((a << d).toString()); // @output 448
+    io:println((c << d).toString()); // @output 48
+    io:println((c << b).toString()); // @output 6755399441055744
+
+    io:println((a << b).toBalString()); // @output 63050394783186944
+    io:println((a << d).toBalString()); // @output 448
+    io:println((c << d).toBalString()); // @output 48
+    io:println((c << b).toBalString()); // @output 6755399441055744
+}
+
+function leftShiftExpr(int x) {
+    io:println(x);
+}
+
+Test-Case: output
+Description: Test left shift expression with 'int:Unsigned32' operands as a return statement.
+Labels: function-call-expr, function-defn, int, int:Unsigned32, return-stmt, shift-expr
+
+function init() {
+    int:Unsigned32 a = 112;
+    int:Unsigned32 b = 113;
+    int:Unsigned32 c = 12;
+    int:Unsigned32 d = 2;
+
+    io:println(leftShiftExpr(a, b)); // @output 63050394783186944
+    io:println(leftShiftExpr(a, d)); // @output 448
+    io:println(leftShiftExpr(c, d)); // @output 48
+    io:println(leftShiftExpr(c, b)); // @output 6755399441055744
+}
+
+function leftShiftExpr(int x, int y) returns int {
+    return x << y;
+}
+
+Test-Case: output
+Description: Test left shift expression with 'byte' DecimalNumbers as operands.
+Labels: byte, shift-expr
+
+function init() {
+    byte a = 253;
+    byte b = 21;
+    byte c = 0;
+
+    io:println(a << b); // @output 530579456
+    io:println(a << c); // @output 253
+    io:println(c << b); // @output 0
+    io:println(c << c); // @output 0
+}
+
+Test-Case: output
+Description: Test left shift expression with 'byte' as the LHS operand and 'int' as the RHS operand.
+Labels: byte, int, shift-expr, unary-minus
+
+function init() {
+    byte x = 247;
+    int a = 10;
+    int b = -9223372036854775800;
+
+    io:println(x << a); // @output 252928
+
+    io:println(x << b); // @output 63232
+}
+
+Test-Case: output
+Description: Test left shift expression with 'byte' as the LHS operand and builtin subtypes of integer as the RHS
+             operand.
+Labels: byte, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8, shift-expr,
+        unary-minus
+
+function init() {
+    byte x = 245;
+    int:Signed8 a = 127;
+    int:Signed8 b = -128;
+    int:Unsigned8 c = 5;
+    int:Signed16 d = 32750;
+    int:Signed16 e = -32752;
+    int:Unsigned16 f = 3;
+    int:Signed32 g = 9;
+    int:Signed32 h = -2147483641;
+    int:Unsigned32 i = 17;
+
+    io:println(x << a); // @output -9223372036854775808
+    io:println(x << b); // @output 245
+
+    io:println(x << c); // @output 7840
+
+    io:println(x << d); // @output 17240342323527680
+    io:println(x << e); // @output 16056320
+
+    io:println(x << f); // @output 1960
+
+    io:println(x << g); // @output 125440
+    io:println(x << h); // @output 31360
+
+    io:println(x << i); // @output 32112640
+}
+
+Test-Case: output
+Description: Test left shift expression for optional 'byte' operands.
+Labels: byte, int, nil-literal, optional-type, shift-expr, value:toBalString
+
+function init() {
+    byte? a = 10;
+    byte? b = 5;
+    byte? c = 0;
+    byte? d = ();
+    byte e = 50;
+    byte f = 7;
+
+    int? x1 = a << b;
+    io:println(x1); // @output 320
+    int? x2 = f << b;
+    io:println(x2); // @output 224
+    int? x3 = a << f;
+    io:println(x3); // @output 1280
+    int? x4 = e << b;
+    io:println(x4); // @output 1600
+
+    int? x5 = a << d;
+    io:println(x5.toBalString()); // @output ()
+    int? x6 = d << b;
+    io:println(x6.toBalString()); // @output ()
+    int? x7 = d << b;
+    io:println(x7.toBalString()); // @output ()
+
+    io:println(a << b); // @output 320
+    io:println(a << c); // @output 10
+
+    io:println(a << f); // @output 1280
+    io:println(e << b); // @output 1600
+
+    io:println((a << d).toBalString()); // @output ()
+    io:println((d << b).toBalString()); // @output ()
+    io:println((d << d).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test 0x3F mask of 'byte' RHS operand in left shift expression.
+Labels: byte, shift-expr
+
+function init() {
+    byte a = 255;
+    byte b = 63;
+    byte c = 64;
+    byte d = 122;
+
+    io:println(a << b); // @output -9223372036854775808
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (byte): 11111111
+    //                     = Equivalent binary representation (basic type): 00000000 00000000 00000000 00000000 00000000 00000000 00000000 11111111
+    // Shift amount = Before applying mask, In binary: 00111111, In decimal: 63
+    //                After applying mask, In binary: 111111, In decimal: 63
+    // Result = In binary: 10000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-9223372036854775808)
+
+    io:println(a << c); // @output 255
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (byte): 11111111
+    //                     = Equivalent binary representation (basic type): 00000000 00000000 00000000 00000000 00000000 00000000 00000000 11111111
+    // Shift amount = Before applying mask, In binary: 01000000, In decimal: 64
+    //                After applying mask, In binary: 000000, In decimal: 0
+    // Result = In binary: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 11111111
+    //        = In decimal: (255)
+
+    io:println(a << d); // @output -288230376151711744
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (byte): 11111111
+    //                     = Equivalent binary representation (basic type): 00000000 00000000 00000000 00000000 00000000 00000000 00000000 11111111
+    // Shift amount = Before applying mask, In binary: 01111010, In decimal: 122
+    //                After applying mask, In binary: 111010, In decimal: 58
+    // Result = In binary: 11111100 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-288230376151711744)
+
+    io:println(b << b); // @output -9223372036854775808
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (byte): 00111111
+    //                     = Equivalent binary representation (basic type): 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00111111
+    // Shift amount = Before applying mask, In binary: 00111111, In decimal: 63
+    //                After applying mask, In binary: 111111, In decimal: 63
+    // Result = In binary: 10000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-9223372036854775808)
+
+    io:println(b << c); // @output 63
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (byte): 00111111
+    //                     = Equivalent binary representation (basic type): 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00111111
+    // Shift amount = Before applying mask, In binary: 01000000, In decimal: 64
+    //                After applying mask, In binary: 000000, In decimal: 0
+    // Result = In binary: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00111111
+    //        = In decimal: (63)
+
+    io:println(a << a); // @output -9223372036854775808
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation (byte): 11111111
+    //                     = Equivalent binary representation (basic type): 00000000 00000000 00000000 00000000 00000000 00000000 00000000 11111111
+    // Shift amount = Before applying mask, In binary: 11111111, In decimal: 255
+    //                After applying mask, In binary: 111111, In decimal: 63
+    // Result = In binary: 10000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-9223372036854775808)
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int` with 'byte' as the LHS operand and 'int' as
+             the RHS operand via invalid assignments.
+Labels: byte, float, int, shift-expr
+
+function errorFunction(byte x, int a) {
+    byte _ = x << a; // @error expected 'byte' but found 'int'
+    float _ = x << 123; // @error expected 'float' but found 'int'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int` with 'byte' as the LHS operand and builtin
+             subtypes of integer as the RHS operand via invalid assignments.
+Labels: byte, decimal, float, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        shift-expr
+
+function errorFunction(byte x, int:Signed8 a, int:Unsigned8 b, int:Signed16 c, int:Unsigned16 d, int:Signed32 e,
+                        int:Unsigned32 f) {
+    int:Signed16 _ = x << a; // @error expected 'int:Signed16' but found 'int'
+    decimal _ = x << b; // @error expected 'decimal' but found 'int'
+    byte _ = x << c; // @error expected 'byte' but found 'int'
+    int:Signed16 _ = x << d; // @error expected 'int:Signed16' but found 'int'
+    float _ = x << e; // @error expected 'float' but found 'int'
+    int:Unsigned16 _ = x << f; // @error expected 'int:Unsigned16' but found 'int'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int` with 'byte' as the operands via invalid
+             assignments.
+Labels: byte, shift-expr, var
+
+function errorFunction(byte x, byte a) {
+    var x1 = x << a;
+    byte _ = x1; // @error expected 'byte' but found 'int'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int` with 'byte' as the LHS operand and
+             user-defined subtype of integer as the RHS operand via invalid assignments.
+Labels: byte, DecimalNumber, module-type-defn, shift-expr, unary-minus, union-type
+
+type Ints -1|2|-128;
+
+function errorFunction(byte x, Ints a) {
+    var x1 = x << a;
+    byte _ = x1; // @error expected 'byte' but found 'int'
+    var x2 = x << a;
+    Ints _ = x2; // @error expected 'Ints' but found 'int'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int?` with 'byte' as the LHS operand and optional
+             'int' as the RHS operand via invalid assignments.
+Labels: byte, int, optional-type, shift-expr
+
+function errorFunction(byte x, int? a) {
+    byte _ = x << a; // @error  expected 'byte' but found 'int?'
+    int _ = x << a; // @error expected 'int' but found 'int?'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int?` with 'byte' as the LHS operand and optional
+             builtin subtypes of integer as the RHS operand via invalid assignments.
+Labels: byte, decimal, float, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        optional-type, shift-expr
+
+function errorFunction(byte a, int:Signed8? b, int:Unsigned8? c, int:Signed16? d, int:Unsigned16? e, int:Signed32? f,
+                        int:Unsigned32? g) {
+    byte _ = a << b; // @error expected 'byte' but found 'int?'
+    float _ = a << c; // @error expected 'float' but found 'int?'
+    int:Unsigned8 _ = a << d; // @error expected 'int:Unsigned8' but found 'int?'
+    int:Signed16 _ = a << e; // @error expected 'int:Signed16' but found 'int?'
+    decimal _ = a << f; // @error expected 'decimal' but found 'int?'
+    int:Unsigned16 _ = a << g; // @error expected 'int:Unsigned16' but found 'int?'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression being `int?` with 'byte' as the LHS operand and optional
+             byte as the RHS operand via invalid assignments.
+Labels: byte, int, optional-type, shift-expr
+
+function errorFunction(byte x, byte? a) {
+    byte _ = x << a; // @error  expected 'byte' but found 'int?'
+    int _ = x << a; // @error expected 'int' but found 'int?'
+}
+
+Test-Case: output
+Description: Test left shift expression with 'byte' operands in function call and method call.
+Labels: byte, function-call-expr, function-defn, int, method-call-expr, shift-expr, value:toBalString, value:toString
+
+function init() {
+    byte a = 112;
+    byte b = 113;
+    byte c = 12;
+    byte d = 2;
+
+    leftShiftExpr(a << b); // @output 63050394783186944
+    leftShiftExpr(a << d); // @output 448
+    leftShiftExpr(c << d); // @output 48
+    leftShiftExpr(c << b); // @output 6755399441055744
+
+    io:println((a << b).toString()); // @output 63050394783186944
+    io:println((a << d).toString()); // @output 448
+    io:println((c << d).toString()); // @output 48
+    io:println((c << b).toString()); // @output 6755399441055744
+
+    io:println((a << b).toBalString()); // @output 63050394783186944
+    io:println((a << d).toBalString()); // @output 448
+    io:println((c << d).toBalString()); // @output 48
+    io:println((c << b).toBalString()); // @output 6755399441055744
+}
+
+function leftShiftExpr(int x) {
+    io:println(x);
+}
+
+Test-Case: output
+Description: Test left shift expression with 'byte' operands as a return statement.
+Labels: byte, function-call-expr, function-defn, int, return-stmt, shift-expr
+
+function init() {
+    byte a = 112;
+    byte b = 113;
+    byte c = 12;
+    byte d = 2;
+
+    io:println(leftShiftExpr(a, b)); // @output 63050394783186944
+    io:println(leftShiftExpr(a, d)); // @output 448
+    io:println(leftShiftExpr(c, d)); // @output 48
+    io:println(leftShiftExpr(c, b)); // @output 6755399441055744
+}
+
+function leftShiftExpr(byte x, byte y) returns int {
+    return x << y;
+}
+
+Test-Case: output
+Description: Test left shift expression with zero and positive user-defined subtypes of integer DecimalNumbers as operands.
+Labels: DecimalNumber, module-type-defn, shift-expr, union-type
+
+type Ints1 32765|21;
+type Ints2 0;
+
+function init() {
+    Ints1 a = 32765;
+    Ints1 b = 21;
+    Ints2 c = 0;
+
+    io:println(a << b); // @output 68713185280
+    io:println(a << c); // @output 32765
+    io:println(c << b); // @output 0
+    io:println(c << c); // @output 0
+}
+
+Test-Case: output
+Description: Test left shift expression with zero and negative user-defined DecimalNumbers as operands.
+Labels: DecimalNumber, module-type-defn, shift-expr, unary-minus, union-type
+
+type Ints1 -32764;
+type Ints2 -32764|0;
+
+function init() {
+    Ints1 a = -32764;
+    Ints2 b = -32764;
+    Ints2 c = 0;
+
+    io:println(a << b); // @output -524224
+    io:println(a << c); // @output -32764
+    io:println(c << b); // @output 0
+    io:println(c << c); // @output 0
+}
+
+Test-Case: output
+Description: Test left shift expression for positive and negative user-defined DecimalNumbers as operands.
+Labels: DecimalNumber, int, module-type-defn, shift-expr, unary-minus
+
+type Ints int;
+
+function init() {
+    Ints a = -111;
+    Ints b = -92;
+    Ints c = 1;
+    Ints d = 2;
+
+    io:println(a << d); // @output -444
+    io:println(c << b); // @output 68719476736
+}
+
+Test-Case: output
+Description: Test left shift expression with user-defined subtypes of integer as the LHS operand and 'int' as the RHS
+             operand.
+Labels: DecimalNumber, int, module-type-defn, shift-expr, unary-minus, union-type
+
+type Ints 117|-32767;
+
+function init() {
+    Ints x = 117;
+    Ints y = -32767;
+    int a = 10;
+    int b = -9223372036854775800;
+
+    io:println(x << a); // @output 119808
+    io:println(x << b); // @output 29952
+
+    io:println(y << a); // @output -33553408
+    io:println(y << b); // @output -8388352
+}
+
+Test-Case: output
+Description: Test left shift expression with user-defined subtypes of integer as the LHS operand and builtin subtypes of
+             integer as the RHS operand.
+Labels: DecimalNumber, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        module-type-defn, shift-expr, unary-minus, union-type
+
+type Ints 32759|-32767;
+
+function init() {
+    Ints x = 32759;
+    Ints y = -32767;
+    int:Signed8 a = 2;
+    int:Signed8 b = -126;
+    int:Unsigned8 c = 5;
+    int:Signed16 d = 32750;
+    int:Signed16 e = -32752;
+    int:Unsigned16 f = 3;
+    int:Signed32 g = 9;
+    int:Signed32 h = -2147483641;
+    int:Unsigned32 i = 17;
+
+    io:println(x << a); // @output 131036
+    io:println(x << b); // @output 131036
+    io:println(y << a); // @output -131068
+    io:println(y << b); // @output -131068
+
+    io:println(x << c); // @output 1048288
+    io:println(y << c); // @output -1048544
+
+    io:println(x << d); // @output 2305209690516094976
+    io:println(x << e); // @output 2146893824
+    io:println(y << d); // @output -2305772640469516288
+    io:println(y << e); // @output -2147418112
+
+    io:println(x << f); // @output 262072
+    io:println(y << f); // @output -262136
+
+    io:println(x << g); // @output 16772608
+    io:println(x << h); // @output 4193152
+    io:println(y << g); // @output -16776704
+    io:println(y << h); // @output -4194176
+
+    io:println(x << i); // @output 4293787648
+    io:println(y << i); // @output -4294836224
+}
+
+Test-Case: output
+Description: Test left shift expression for optional zero and positive user-defined subtypes of integer operands.
+Labels: DecimalNumber, int, module-type-defn, nil-literal, optional-type, shift-expr, value:toBalString
+
+type Ints int;
+
+function init() {
+    Ints? a = 10;
+    Ints? b = 5;
+    Ints? c = 0;
+    Ints? d = ();
+    Ints e = 50;
+    Ints f = 7;
+
+    int? x1 = a << b;
+    io:println(x1); // @output 320
+    int? x2 = f << b;
+    io:println(x2); // @output 224
+    int? x3 = a << f;
+    io:println(x3); // @output 1280
+    int? x4 = e << b;
+    io:println(x4); // @output 1600
+
+    int? x5 = a << d;
+    io:println(x5.toBalString()); // @output ()
+    int? x6 = d << b;
+    io:println(x6.toBalString()); // @output ()
+    int? x7 = d << b;
+    io:println(x7.toBalString()); // @output ()
+
+    io:println(a << b); // @output 320
+    io:println(a << c); // @output 10
+
+    io:println(a << f); // @output 1280
+    io:println(e << b); // @output 1600
+
+    io:println((a << d).toBalString()); // @output ()
+    io:println((d << b).toBalString()); // @output ()
+    io:println((d << d).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test left shift expression for optional zero and negative user-defined subtypes of integer operands.
+Labels: DecimalNumber, int, module-type-defn, nil-literal, optional-type, shift-expr, unary-minus, value:toBalString
+
+type Ints int;
+
+function init() {
+    Ints? a = -32757;
+    Ints? b = -32767;
+    Ints? c = 0;
+    Ints? d = ();
+    Ints e = -33;
+    Ints f = -32757;
+
+    int? x1 = a << b;
+    io:println(x1); // @output -65514
+    int? x2 = f << b;
+    io:println(x2); // @output -65514
+    int? x3 = a << f;
+    io:println(x3); // @output -67086336
+    int? x4 = e << b;
+    io:println(x4); // @output -66
+
+    int? x5 = a << d;
+    io:println(x5.toBalString()); // @output ()
+    int? x6 = d << b;
+    io:println(x6.toBalString()); // @output ()
+
+    io:println(a << b); // @output -65514
+    io:println(a << c); // @output -32757
+
+    io:println(a << f); // @output -67086336
+    io:println(e << b); // @output -66
+
+    io:println((a << d).toBalString()); // @output ()
+    io:println((d << b).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test left shift expression for optional positive and negative user-defined subtypes of integer.
+Labels: DecimalNumber, int, module-type-defn, optional-type, shift-expr, unary-minus
+
+type Ints int;
+
+function init() {
+    Ints? a = 8;
+    Ints? b = 5;
+    Ints? c = -2;
+    Ints? d = -32758;
+    Ints e = 100;
+    Ints f = 7;
+    Ints g = -23;
+    Ints h = -32762;
+
+    io:println(a << d); // @output 8192
+    io:println(c << b); // @output -64
+
+    io:println(a << h); // @output 512
+    io:println(c << f); // @output -256
+
+    io:println(e << d); // @output 102400
+    io:println(g << b); // @output -736
+}
+
+Test-Case: output
+Description: Test 0x3F mask of user-defined subtypes of integer RHS operand in left shift expression.
+Labels: DecimalNumber, module-type-defn, shift-expr, unary-minus
+
+type Ints int;
+
+function init() {
+    Ints a = -1;
+    Ints b = 63;
+    Ints c = 64;
+    Ints d = 122;
+    Ints e = -65;
+    Ints f = -64;
+
+    io:println(a << b); // @output -9223372036854775808
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation : 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00111111, In decimal: 63
+    //                After applying mask, In binary: 111111, In decimal: 63
+    // Result = In binary: 10000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-9223372036854775808)
+
+    io:println(a << c); // @output -1
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation : 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 01000000, In decimal: 64
+    //                After applying mask, In binary: 000000, In decimal: 0
+    // Result = In binary: 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    //        = In decimal: (-1)
+
+    io:println(a << d); // @output -288230376151711744
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation : 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 01111010, In decimal: 122
+    //                After applying mask, In binary: 111010, In decimal: 58
+    // Result = In binary: 11111100 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-288230376151711744)
+
+    io:println(b << b); // @output -9223372036854775808
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation : 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00111111
+    // Shift amount = Before applying mask, In binary: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00111111, In decimal: 63
+    //                After applying mask, In binary: 111111, In decimal: 63
+    // Result = In binary: 10000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-9223372036854775808)
+
+    io:println(b << c); // @output 63
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation : 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00111111
+    // Shift amount = Before applying mask, In binary: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 01000000, In decimal: 64
+    //                After applying mask, In binary: 000000, In decimal: 0
+    // Result = In binary: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00111111
+    //        = In decimal: (63)
+
+    io:println(a << e); // @output -9223372036854775808
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation : 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 11111111 11111111 11111111 11111111 11111111 11111111 11111111 10111111, In decimal: -65
+    //                After applying mask, In binary: 111111, In decimal: 63
+    // Result = In binary: 10000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-9223372036854775808)
+
+    io:println(a << f); // @output -1
+    // Shift amount (After apply mask): In binary - 111111, In decimal - 63
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation : 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11000000, In decimal: -64
+    //                After applying mask, In binary: 000000, In decimal: 0
+    // Result = In binary: 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    //        = In decimal: (-1)
+
+    io:println(a << a); // @output -9223372036854775808
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation : 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111
+    // Shift amount = Before applying mask, In binary: 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111, In decimal: -1
+    //                After applying mask, In binary: 111111, In decimal: 63
+    // Result = In binary: 10000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    //        = In decimal: (-9223372036854775808)
+
+    io:println(e << c); // @output -65
+    // Explanation:
+    // Value to be shifted = Equivalent binary representation : 11111111 11111111 11111111 11111111 11111111 11111111 11111111 10111111
+    // Shift amount = Before applying mask, In binary: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 01000000, In decimal: 64
+    //                After applying mask, In binary: 000000, In decimal: 0
+    // Result = In binary: 11111111 11111111 11111111 11111111 11111111 11111111 11111111 10111111
+    //        = In decimal: (-65)
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression with user-defined subtypes of integer as the LHS operand and
+             'int' as the RHS operand.
+Labels: DecimalNumber, float, int:Signed16, module-type-defn, shift-expr, unary-minus, union-type
+
+type Ints 12|-32762;
+
+function errorFunction(Ints x, Ints y) {
+    int:Signed16 _ = x << a; // @error expected 'int:Signed16' but found 'int'
+    float _ = x << a; // @error expected 'float' but found 'int'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression with integer as the LHS operand and builtin subtypes of integer
+             as the RHS operand.
+Labels: decimal, float, int, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8,
+        module-type-defn, shift-expr
+
+type Ints int;
+
+function errorFunction(Ints x, int:Signed8 a, int:Unsigned8 b, int:Signed16 c, int:Unsigned16 d, int:Signed32 e,
+                        int:Unsigned32 f) {
+    int:Signed16 _ = x << a; // @error expected int:Signed16 but found 'int'
+    decimal _ = x << b; // @error expected 'decimal' but found 'int'
+    int:Unsigned16 _ = x << c; // @error expected 'int:Unsigned16' but found 'int'
+    int:Signed16 _ = x << d; // @error expected int:Signed16 but found 'int'
+    float _ = x << e; // @error expected 'float' but found 'int'
+    int:Unsigned16 _ = x << f; // @error expected 'int:Unsigned16' but found 'int'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression with user-defined subtypes of integer as the LHS operand and
+             byte as the RHS operand.
+Labels: byte, int, int:Signed16, module-type-defn, shift-expr
+
+type Ints int;
+
+function errorFunction(Ints x, byte a) {
+    int:Signed16 _ = x << a; // @error expected 'int:Signed16' but found 'int'
+    byte _ = x << a; // @error expected 'byte' but found 'int'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression with user-defined subtypes of integer as the LHS operand and
+             user-defined subtype of integer as the RHS operand.
+Labels: DecimalNumber, int, module-type-defn, shift-expr, unary-minus, union-type
+
+type Ints1 1|2;
+type Ints2 -1|2|-128;
+
+function errorFunction(Ints1 x, Ints2 a) {
+    Ints1 _ = x << a; // @error expected 'Ints1' but found 'int'
+    Ints2 _ = x << a; // @error expected 'Ints2' but found 'int'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression with user-defined subtypes of integer as the LHS operand and
+             optional integer as the RHS operand.
+Labels: DecimalNumber, int, int:Signed16, module-type-defn, optional-type, shift-expr, unary-minus, union-type
+
+type Ints 12|-12;
+
+function errorFunction(Ints x, int? a) {
+    int:Signed16 _ = x << a; // @error  expected 'int:Signed16' but found 'int?'
+    int _ = x << a; // @error expected 'int' but found 'int?'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression with integer as the LHS operand and optional builtin subtypes of
+             integer as the RHS operand.
+Labels: decimal, DecimalNumber, float, int, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32,
+        int:Unsigned8, module-type-defn, optional-type, shift-expr
+
+type Ints int;
+
+function errorFunction(Ints a, int:Signed8? b, int:Unsigned8? c, int:Signed16? d, int:Unsigned16? e, int:Signed32? f,
+                        int:Unsigned32? g) {
+    int:Signed16 _ = a << b; // @error 'int:Signed16' but found 'int?'
+    float _ = a << c; // @error expected 'float' but found 'int?'
+    int:Unsigned16 _ = a << d; // @error expected 'int:Unsigned16' but found 'int?'
+    int:Signed16 _ = a << e; // @error expected 'int:Signed16' but found 'int?'
+    decimal _ = a << f; // @error expected 'decimal' but found 'int?'
+    int:Unsigned16 _ = a << g; // @error expected 'int:Unsigned16' but found 'int?'
+}
+
+Test-Case: error
+Description: Test resultant type of the left shift expression with user-defined subtypes of integer as the LHS operand and
+             optional byte as the RHS operand.
+Labels: byte, DecimalNumber, int, int:Signed16, module-type-defn, optional-type, shift-expr, unary-minus, union-type
+
+type Ints 12|-22;
+
+function errorFunction(Ints x, byte? a) {
+    int:Signed16 _ = x << a; // @error  'int:Signed16' but found 'int?'
+    int _ = x << a; // @error expected 'int' but found 'int?'
+}
+
+Test-Case: output
+Description: Test left shift expression with user-defined subtypes of integer operands in function call and method call.
+Labels: DecimalNumber, function-call-expr, function-defn, int, method-call-expr, module-type-defn, shift-expr,
+        unary-minus, union-type, value:toBalString, value:toString
+
+type Ints1 -112|-113;
+type Ints2 12|0|2;
+
+function init() {
+    Ints1 a = -112;
+    Ints1 b = -113;
+    Ints2 c = 12;
+    Ints2 d = 2;
+
+    leftShiftExpr(a << b); // @output -3670016
+    leftShiftExpr(a << d); // @output -448
+    leftShiftExpr(c << d); // @output 48
+    leftShiftExpr(c << b); // @output 393216
+
+    io:println((a << b).toString()); // @output -3670016
+    io:println((a << d).toString()); // @output -448
+    io:println((c << d).toString()); // @output 48
+    io:println((c << b).toString()); // @output 393216
+
+    io:println((a << b).toBalString()); // @output -3670016
+    io:println((a << d).toBalString()); // @output -448
+    io:println((c << d).toBalString()); // @output 48
+    io:println((c << b).toBalString()); // @output 393216
+}
+
+function leftShiftExpr(int x) {
+    io:println(x);
+}
+
+Test-Case: output
+Description: Test left shift expression with user-defined subtypes of integer operands as a return statement.
+Labels: DecimalNumber, function-call-expr, function-defn, int, module-type-defn, return-stmt, shift-expr, unary-minus,
+        union-type
+
+type Ints1 -112|-113;
+type Ints2 12|0|2;
+
+function init() {
+    Ints1 a = -112;
+    Ints1 b = -113;
+    Ints2 c = 12;
+    Ints2 d = 2;
+
+    io:println(leftShiftExpr(a, b)); // @output -3670016
+    io:println(leftShiftExpr(a, d)); // @output -448
+    io:println(leftShiftExpr(c, d)); // @output 48
+    io:println(leftShiftExpr(c, b)); // @output 393216
+}
+
+function leftShiftExpr(int x, int y) returns int {
+    return x << y;
+}
+
+Test-Case: output
+Description: Test the left shift expression with module level basic types as the operands.
+Labels: byte, int, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8, shift-expr,
+        unary-minus
+
+int i1 = 1221112;
+int i2 = -1212321321;
+int i3 = 3;
+int i4 = -9223372036854775807;
+
+int:Signed8 s1 = 7;
+int:Signed8 s2 = -120;
+int:Unsigned8 s3 = 5;
+int:Signed16 s4 = 8;
+int:Signed16 s5 = -32750;
+int:Unsigned16 s6 = 3;
+int:Signed32 s7 = 9;
+int:Signed32 s8 = -2147483641;
+int:Unsigned32 s9 = 17;
+
+byte b1 = 255;
+byte b2 = 4;
+
+function init() {
+    io:println(i1 << i4); // @output 2442224
+    io:println(i2 << i3); // @output -9698570568
+    io:println(i1 << i1); // @output -576460752303423488
+    io:println(i2 << i4); // @output -2424642642
+
+    io:println(s1 << s3); // @output 224
+    io:println(s2 << s3); // @output -3840
+
+    io:println(s4 << s6); // @output 64
+    io:println(s5 << s6); // @output -262000
+
+    io:println(s7 << s9); // @output 1179648
+    io:println(s8 << s9); // @output -281474975793152
+
+    io:println(s1 << s6); // @output 56
+    io:println(s5 << s3); // @output -1048000
+    io:println(s2 << s9); // @output -15728640
+    io:println(s8 << s3); // @output -68719476512
+
+    io:println(s4 << s7); // @output 4096
+    io:println(s8 << s6); // @output -17179869128
+
+    io:println(b1 << b2); // @output 4080
+    io:println(s2 << s3); // @output -3840
+
+    io:println(s2 << b2); // @output -1920
+    io:println(s5 << b2); // @output -524000
+    io:println(s8 << b2); // @output -34359738256
+    io:println(b1 << s3); // @output 8160
+    io:println(b1 << s6); // @output 2040
+    io:println(b1 << s9); // @output 33423360
+    io:println(i1 << b2); // @output 19537792
+    io:println(b1 << i3); // @output 2040
+
+    io:println(s1 << i3); // @output 56
+    io:println(i2 << s3); // @output -38794282272
+    io:println(s4 << i3); // @output 64
+    io:println(i2 << s6); // @output -9698570568
+    io:println(s7 << i3); // @output 72
+    io:println(i2 << s9); // @output -158901380186112
+}
+
+Test-Case: output
+Description: Test the left shift expression with module level optional basic types as the operands.
+Labels: byte, int, int:Signed32, int:Signed8, int:Unsigned8, nil-literal, optional-type, shift-expr, unary-minus,
+        value:toBalString
+
+int i1 = -1;
+int? i2 = 7;
+int? i3 = ();
+
+int:Unsigned8 s1 = 255;
+int:Signed16? s2 = 2;
+int:Unsigned32? s3 = ();
+
+byte? b1 = 2;
+byte? b2 = ();
+
+function init() {
+    io:println(i2 << i1); // @output -9223372036854775808
+    io:println(s1 << i2); // @output 32640
+    io:println(i2 << s2); // @output 28
+    io:println(s2 << b1); // @output 8
+    io:println(b1 << i2); // @output 256
+
+    io:println((i3 << s1).toBalString()); // @output ()
+    io:println((s2 << s3).toBalString()); // @output ()
+    io:println((b2 << i2).toBalString()); // @output ()
+    io:println((s3 << i3).toBalString()); // @output ()
+    io:println((i3 << b2).toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test the left shift expression at module level.
+Labels: byte, int, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8, shift-expr,
+        unary-minus
+
+int i1 = 1221112;
+int i2 = 3;
+
+int:Signed8 s1 = 123;
+int:Unsigned8 s2 = 5;
+int:Signed16 s3 = -8;
+int:Unsigned16 s4 = 3;
+int:Signed32 s5 = -9;
+int:Unsigned32 s6 = 17;
+
+byte b1 = 255;
+byte b2 = 4;
+
+int r1 = i1 << i2;
+
+int r2 = s1 << s2;
+int r3 = s3 << s4;
+int r4 = s5 << s6;
+int r5 = i1 << s1;
+int r6 = s6 << i2;
+
+int r7 = b1 << b2;
+int r8 = b1 << i2;
+int r9 = i1 << b2;
+int r10 = s1 << b2;
+int r11 = b1 << s4;
+
+int r12 = 12331321 << 3;
+
+function init() {
+    io:println(r1); // @output 9768896
+    io:println(r2); // @output 3936
+    io:println(r3); // @output -64
+    io:println(r4); // @output -1179648
+    io:println(r5); // @output -4611686018427387904
+    io:println(r6); // @output 136
+    io:println(r7); // @output 4080
+    io:println(r8); // @output 2040
+    io:println(r9); // @output 19537792
+    io:println(r10); // @output 1968
+    io:println(r11); // @output 2040
+    io:println(r12); // @output 98650568
+}
+
+Test-Case: output
+Description: Test left shift expression with singleton types and constants.
+Labels: module-const-decl, module-type-defn, shift-expr, unary-minus
+
+type T1 922337203685477580;
+type T2 -9223372036854775798;
+
+const Int1 = 9223372036854775804;
+const Int2 = -9223372036854775802;
+const Zero = 0;
+
+function init() {
+    T1 a = 922337203685477580;
+    T2 b = -9223372036854775798;
+    Int2 c = -9223372036854775802;
+    Int1 d = 9223372036854775804;
+
+    int y1 = a << b;
+    io:println(y1); // @output 3689348814741909504
+    int y2 = b << a;
+    io:println(y2); // @output 40960
+    int y3 = d << c;
+    io:println(y3); // @output -256
+    int y4 = c << d;
+    io:println(y4); // @output 6917529027641081856
+    int y5 = Int1 << Int2;
+    io:println(y5); // @output -256
+    int y6 = Int2 << Int1;
+    io:println(y6); // @output 6917529027641081856
+    int y7 = Zero << Int2;
+    io:println(y7); // @output 0
+    int y8 = Zero << Int1;
+    io:println(y8); // @output 0
+    int y9 = a << Int2;
+    io:println(y9); // @output 3689348814741910272
+    int y10 = b << Int1;
+    io:println(y10); // @output -6917529027641081856
+    int y11 = Int1 << a;
+    io:println(y11); // @output -16384
+    int y12 = Int2 << b;
+    io:println(y12); // @output 6144
+    int y13 = Int1 << Zero;
+    io:println(y13); // @output 9223372036854775804
+    int y14 = Int2 << Zero;
+    io:println(y14); // @output -9223372036854775802
+}
+
+Test-Case: error
+Description: Test left shift expression with invalid singleton types and constants.
+Labels: DecimalFloatingPointNumber, FloatingPointTypeSuffix, module-const-decl, module-type-defn, shift-expr,
+        string-literal, unary-minus
+
+type T1 922337203685477580.0;
+type T2 -9223372036854775798d;
+
+const Float = 9223372036854775804f;
+const Decimal = -9223372036854775802d;
+const String = "0";
+
+function errorFunction(T1 a, T2 b, Float c, Decimal d) {
+    int _ = a << b; // @error operator left shift not defined for 'T1' and 'T2'
+    int _ = b << a; // @error operator left shift not defined for 'T2' and 'T1'
+    int _ = d << c; // @error operator left shift not defined for 'Decimal' and 'Float'
+    int _ = c << d; // @error operator left shift not defined for 'Float' and 'Decimal'
+    int _ = Float << Decimal; // @error ooperator left shift not defined for 'Float' and 'Decimal'
+    int _ = Decimal << Float; // @error perator left shift not defined for 'Decimal' and 'Float'
+    int _ = String << Decimal; // @error perator left shift not defined for 'String' and 'Decimal'
+    int _ = String << Float; // @error perator left shift not defined for 'String' and 'Float'
+    int _ = a << Decimal; // @error operator left shift not defined for 'T1' and 'Decimal'
+    int _ = b << Float; // @error operator left shift not defined for 'T2' and 'Float'
+    int _ = Float << a; // @error operator left shift not defined for 'Float' and 'T1'
+    int _ = Decimal << b; // @error operator left shift not defined for 'Decimal' and 'T2'
+    int _ = Float << String; // @error operator left shift not defined for 'Float' and 'String'
+    int _ = Decimal << String; // @error operator left shift not defined for 'Decimal' and 'String'
+}
+
+Test-Case: output
+Description: Test left shift expression with field access as operands.
+Labels: DecimalNumber, field-access-expr, int, mapping-constructor-expr, module-type-defn, record-type, shift-expr
+
+function init() {
+    Record a = {x: 10};
+
+    int c = a.x << 3;
+    io:println(c); // @output 80
+    int d = 40 << a.x;
+    io:println(d); // @output 40960
+}
+
+type Record record {
+    int x;
+};
+
+Test-Case: output
+Description: Test left shift expression with member access as operands.
+Labels: array-type, DecimalNumber, int, list-constructor-expr, member-access-expr, shift-expr
+
+function init() {
+    int[] b = [3, 40];
+
+    int c = 10 << b[0];
+    io:println(c); // @output 80
+    int d = b[1] << 10;
+    io:println(d); // @output 40960
+}
+
+Test-Case: output
+Description: Test left shift expression with function call as operands.
+Labels: DecimalNumber, function-call-expr, function-defn, int, shift-expr
+
+function init() {
+    int b = 10 << getInt();
+    io:println(b); // @output 40
+    int c = getInt() << 10;
+    io:println(c); // @output 2048
+}
+
+function getInt() returns int {
+    return 2;
+}
+
+Test-Case: output
+Description: Test left shift expression with method call as operands.
+Labels: DecimalNumber, explicit-new-expr, int, method-call-expr, module-class-defn, shift-expr
+
+function init() {
+    Class a = new Class();
+
+    int b = a.getInt() << 2;
+    io:println(b); // @output 40
+    int c = 2 << a.getInt();
+    io:println(c); // @output 2048
+}
+
+class Class {
+    function getInt() returns int {
+        return 10;
+    }
+}
+
+Test-Case: output
+Description: Test left shift expression with let expressions as operands.
+Labels: int, let-expr, shift-expr
+
+function init() {
+    int a = (let int h1 = 3 << 2 in h1) << 5;
+    io:println(a); // @output 384
+    int b = 5 << (let int h1 = 3 << 2 in h1);
+    io:println(b); // @output 20480
+}
+
+Test-Case: output
+Description: Test left shift expression with type cast expressions as operands.
+Labels: byte, DecimalFloatingPointNumber, FloatingPointTypeSuffix, int, int:Signed16, int:Signed32, int:Signed8,
+        int:Unsigned16, int:Unsigned32, int:Unsigned8, shift-expr, type-cast-expr, unary-minus
+
+function init() {
+    int a = <int> 6.0 << <int> 7d;
+    io:println(a); // @output 768
+
+    int b = <int:Signed8> 127.0 << <int:Signed8> -7.1;
+    io:println(b); // @output -144115188075855872
+
+    int c = <int:Signed16> 32767 << <int:Signed16> 7.4d;
+    io:println(c); // @output 4194176
+
+    int d = <int:Signed32> 2147483647.3 << <int:Signed32> -7;
+    io:println(d); // @output -144115188075855872
+
+    int e = <int:Unsigned8> 255.0 << <int:Unsigned8> 7d;
+    io:println(e); // @output 32640
+
+    int f = <int:Unsigned16> 65535.3 << <int:Unsigned16> 7d;
+    io:println(f); // @output 8388480
+
+    int g = <int:Unsigned32> 4294967295 << <int:Unsigned32> 7d;
+    io:println(g); // @output 549755813760
+
+    int h = <int:Signed32> 6.0 << <int:Unsigned16> 7d;
+    io:println(h); // @output 768
+
+    int i = <int:Unsigned16> 6.0 << <int:Unsigned32> 7d;
+    io:println(i); // @output 768
+
+    int j = <byte> 255 << <byte> 7d;
+    io:println(j); // @output 32640
+
+    int k = <int:Signed32> 6.0 << <byte> -0;
+    io:println(k); // @output 6
+
+    int l = <byte> 6.0 << <int:Unsigned32> 7d;
+    io:println(l); // @output 768
+}
+
+Test-Case: output
+Description: Test left shift expression with unary expressions as operands.
+Labels: DecimalNumber, int, shift-expr, unary-complement, unary-minus, unary-plus
+
+function init() {
+    int a = +4 << -3;
+    io:println(a); // @output -9223372036854775808
+
+    int b = +4 << +3;
+    io:println(b); // @output 32
+
+    int c = -(-2 << 5);
+    io:println(c); // @output 64
+
+    int d = ~(2 << 5);
+    io:println(d); // @output -65
+
+    int e = ~2 << 5;
+    io:println(e); // @output -96
+}
+
+Test-Case: output
+Description: Test left shift expression with multiplicative expressions operands.
+Labels: DecimalNumber, int, multiplicative-expr, shift-expr
+
+function init() {
+    int a = 2 * 2 << 404 % 10 / 4;
+    io:println(a); // @output 8
+}
+
+Test-Case: output
+Description: Test left shift expression additive expressions as operands.
+Labels: additive-expr, DecimalNumber, int, shift-expr
+
+function init() {
+    int a = (1 + 2) << (3 + 4);
+    io:println(a); // @output 384
+}
+
+Test-Case: output
+Description: Test left shift expression with shift expressions as operands.
+Labels: DecimalNumber, int, shift-expr
+
+function init() {
+    int a = (1 << 2) << (100 >> 4);
+    io:println(a); // @output 256
+}
+
+Test-Case: output
+Description: Test left shift expression with binary bitwise expressions as operands.
+Labels: binary-bitwise-expr, DecimalNumber, int, shift-expr
+
+function init() {
+    int a = (2 & 6) << (2 ^ 6);
+    io:println(a); // @output 32
+}
+
+Test-Case: output
+Description: Test left shift expression with conditional expressions as operands.
+Labels: conditional-expr, DecimalNumber, error, int, nil-literal, optional-type, shift-expr, union-type
+
+function init() {
+    int|error a = 12;
+    int? b = ();
+    int c = (a is error ? 2 : a) << (b ?: 13);
+    io:println(c); // @output 98304
+    int d = (b ?: 13) << (a is error ? 2 : a);
+    io:println(d); // @output 53248
+}
+
+Test-Case: output
+Description: Test left shift expression with checking expressions as operands.
+Labels: checking-expr, DecimalNumber, error-type, int, shift-expr, union-type
+
+function init() returns error? {
+    int|error a = 12;
+    int b = check a << checkpanic a;
+    io:println(b); // @output 49152
+
+    int c = checkpanic a << check a;
+    io:println(c); // @output 49152
+}
+
+Test-Case: output
+Description: Test valid left shift expression.
+Labels: DecimalNumber, int, shift-expr, unary-minus
+
+function init() {
+    int a = 12<<2;
+    io:println(a); // @output 48
+    int b = -12<<-2;
+    io:println(b); // @output 0
+    int c = 12  <<  2;
+    io:println(c); // @output 48
+    int d = 32 <<
+    1;
+    io:println(d); // @output 64
+    int e = 32
+    << 2;
+    io:println(e); // @output 128
+}
+
+Test-Case: error
+Description: Test left shift expression with invalid operands.
+Labels: decimal, DecimalNumber, FloatingPointTypeSuffix, HexIntLiteral, int, list-constructor-expr, record-type,
+        record-type-readonly-field, shift-expr, string-literal, table-type, table-type-key-specifier, unary-minus
+
+type Rec record {|
+    readonly int id;
+    decimal salary;
+|};
+
+function errorFunction(Rec r1, Rec r2, table<Rec> tbl1, table<Rec> key(id) tbl2) {
+    int _ = 12 << -2.0; // @error operator left shift not defined for 'int' and 'float'
+    int _ = 32 << 1d; // @error operator left shift not defined for 'int' and 'decimal'
+    int _ = 32 << 1f; // @error operator left shift not defined for 'int' and 'float'
+    int _ = 32.0 << 11; // @error operator left shift not defined for 'float' and 'int'
+    int _ = 32f << 11f; // @error operator left shift not defined for 'float' and 'float'
+    int _ = 32d << 11; // @error operator left shift not defined for 'decimal' and 'float'
+
+    int _ = 12 << "1"; // @error operator left shift not defined for 'int' and 'string'
+    int _ = "12" << "1"; // @error operator left shift not defined for 'string' and 'string'
+    int _ = "3" << 3; // @error operator left shift not defined for 'string' and 'int'
+    int _ = [3] << [5]; // @error operator left shift not defined for '[int]' and '[int]'
+
+    int _ = 1219223372036854775807 << 212; // @error '1219223372036854775807' is too large
+    int _ = 21 << 121922337203685477580712312321321; // @error '121922337203685477580712312321321' is too large
+
+    int _ = 0xaaba112abffea12123897891a << 212; // @error '0xaaba112abffea12123897891a' is too large
+    int _ = 2312321 << 0xaaba112abf99fea121231a789; // @error '0xaaba112abf99fea121231a789' is too large
+
+    int _ = r1 << r2; // @error operator left shift not defined for 'Rec' and 'Rec'
+    int _ = tbl1 << tbl2; // @error operator left shift not defined for 'table<Rec>' and 'table<Rec> key(id)'
+    int _ = r1 << tbl1; // @error operator left shift not defined for 'Rec' and 'table<Rec>'
+    int _ = tbl2 << r2; // @error operator left shift not defined for 'table<Rec> key(id)' and 'Rec'
+}
