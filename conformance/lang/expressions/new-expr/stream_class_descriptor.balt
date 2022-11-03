@@ -1,0 +1,317 @@
+Test-Case: error
+Description: Test new-expression to create a stream without stream type parameters.
+Labels: explicit-new-expr, stream, var
+
+function errorFunction() {
+    var _ = new stream<>(); // @error missing type parameters
+}
+
+Test-Case: error
+Description: Test new-expression to create a stream with incompatible stream type parameters.
+Labels: explicit-new-expr, stream-type-parameters, string
+
+function errorFunction() {
+    stream<int> _ = new stream<string>(); // @error incompatible types: expected 'stream<int>', found 'stream<string>'
+}
+
+Test-Case: output
+Description: Test new-expression to create a stream with incompatible type-descriptor.
+Labels: error-type, explicit-new-expr, optional-type, stream, stream-type-parameters, string
+
+function init() {
+    stream s = new stream<string, error?>();
+    io:println(s); // @output stream <stream<string,error?>>
+}
+
+Test-Case: output
+Description: Test new-expression to create a empty streams.
+Labels: error-type, explicit-new-expr, is-expr, method-call-expr, module-type-defn, nil-type, optional-type,
+        record-type, stream-type-parameters, union-type
+
+type IntRecord record {|
+    int value;
+|};
+
+function init() {
+    stream<int, error?> emptyStream = new stream<int, error?>();
+    IntRecord|error? d = emptyStream.next();
+    io:println(d is ()); // @output true
+}
+
+Test-Case: output
+Description: Test new-expr to create a stream without completion type.
+Labels: explicit-new-expr, is-expr, method-call-expr, nil-type, optional-type, record-type, stream-type-parameters
+
+type IntRecord record {|
+    int value;
+|};
+
+function init() {
+    stream<int> emptyStream = new stream<int>();
+    IntRecord? d = emptyStream.next();
+    io:println(d is ()); // @output true
+}
+
+Test-Case: error
+Description: Test new-expr to create a stream with stream extra parameters.
+Labels: error-type, explicit-new-expr, implicit-new-expr, isolated-method, member-access-expr, module-class-defn,
+        optional-type, stream-type-parameters, string
+
+class NumbersGenerator {
+    int i = 0;
+    public isolated function next() returns string|error? {
+        self.i += 1;
+        return self.i.toBalString();
+    }
+}
+
+function errorFunction() {
+    NumbersGenerator numbersGenerator = new;
+    stream<string, error?> numberStream = new stream<string, error?>(numbersGenerator, string); // @error 'new(numbersGenerator, null)' is not a valid constructor for streams type
+}
+
+Test-Case: error
+Description: Test new-expr to create a stream with stream implementor with next method with incompatible return type.
+Labels: error-type, explicit-new-expr, implicit-new-expr, isolated-method, member-access-expr, module-class-defn,
+        optional-type, stream-type-parameters
+
+class NumbersGenerator {
+    int i = 0;
+    public isolated function next() returns string|error? {
+        self.i += 1;
+        return self.i.toBalString();
+    }
+}
+
+function errorFunction() {
+    NumbersGenerator numbersGenerator = new;
+    stream<int, error?> numberStream = new stream<int, error?>(numbersGenerator); // @error incompatible types: expected '(IntRecord|ErrorB)?', found '(record {| int value; |}|ErrorA)?'
+}
+
+Test-Case: error
+Description: Test new-expr to create a stream with invalid stream implementor.
+Labels: error-type, explicit-new-expr, implicit-new-expr, module-class-defn, optional-type, stream-type-parameters
+
+class NumbersGenerator {
+    int i = 0;
+}
+
+function errorFunction() {
+    NumbersGenerator numbersGenerator = new;
+    stream<int, error?> numberStream = new stream<int, error?>(numbersGenerator); // @error invalid stream constructor. expected a subtype of 'object { public isolated function next() returns (record {| int value; |}|error)?; }', but found 'NumbersGenerator'
+    stream<int, error?> numberStreamI = new (numbersGenerator); // @error invalid stream constructor. expected a subtype of 'object { public isolated function next() returns (record {| int value; |}|error)?; }', but found 'NumbersGenerator'
+}
+
+Test-Case: output
+Description: Test new-expression with int stream created via a stream with parameters and implementor.
+Labels: error-type, explicit-new-expr, field-access-expr, if-else-stmt, implicit-new-expr, is-expr, isolated-method,
+        member-access-expr, method-call-expr, module-class-defn, module-type-defn, optional-type, record-type,
+        stream-type-parameters, union-type
+
+type IntRecord record {|
+    int value;
+|};
+
+function getRecordValue(IntRecord|error? returnedVal) returns int|error? {
+    if returnedVal is IntRecord {
+        return returnedVal.value;
+    } else {
+        return returnedVal;
+    }
+}
+
+class NumbersGenerator {
+    int i = 0;
+    public isolated function next() returns IntRecord|error? {
+        self.i += 1;
+        return { value: self.i };
+    }
+}
+
+function init() {
+    NumbersGenerator numbersGenerator = new;
+    stream<int, error?> numberStream = new stream<int, error?>(numbersGenerator);
+    int|error? a = getRecordValue(numberStream.next());
+    io:println(a); // @output 1
+    int|error? b = getRecordValue(numberStream.next());
+    io:println(b); // @output 2
+    stream<int, error?> numberStreamI = new (numbersGenerator);
+    int|error? ai = getRecordValue(numberStreamI.next());
+    io:println(ai); // @output 3
+    int|error? bi = getRecordValue(numberStreamI.next());
+    io:println(bi); // @output 4
+}
+
+Test-Case: output
+Description: Test close method return type of stream created with stream implementor not implementing close.
+Labels: error-type, explicit-new-expr, field-access-expr, if-else-stmt, implicit-new-expr, is-expr, isolated-method,
+        member-access-expr, method-call-expr, module-class-defn, module-type-defn, nil-type, optional-type, record-type,
+        stream-type-parameters, union-type
+
+type IntRecord record {|
+    int value;
+|};
+
+function getRecordValue(IntRecord|error? returnedVal) returns int|error? {
+    if returnedVal is IntRecord {
+        return returnedVal.value;
+    } else {
+        return returnedVal;
+    }
+}
+
+class NumbersGenerator {
+    int i = 0;
+    public isolated function next() returns IntRecord|error? {
+        self.i += 1;
+        return { value: self.i };
+    }
+}
+
+function init() {
+    NumbersGenerator numbersGenerator = new;
+    stream<int, error?> numberStream = new stream<int, error?>(numbersGenerator);
+    int|error? a = getRecordValue(numberStream.next());
+    io:println(a); // @output 1
+    int|error? b = getRecordValue(numberStream.next());
+    io:println(b); // @output 2
+    error? closed = numberStream.close();
+    io:println(closed is ()); // @output true
+}
+
+Test-Case: panic
+Description: Test closed stream next.
+// Fail-Issue: ballerina-platform/ballerina-lang/issues/34934
+Labels: error-type, explicit-new-expr, method-call-expr, optional-type, stream-type-parameters, var
+
+function init() {
+    stream<int, error?> newStream = new stream<int, error?>();
+    error? closed = newStream.close();
+    var _ = newStream.next(); // @panic
+}
+
+Test-Case: panic
+Description: Test auto closing of stream after completion type.
+Fail-Issue: ballerina-platform/ballerina-lang/issues/34934
+Labels: explicit-new-expr, field-access-expr, if-else-stmt, implicit-new-expr, is-expr, isolated-method,
+        member-access-expr, method-call-expr, module-class-defn, module-type-defn, nil-literal, nil-type, optional-type,
+        record-type, stream-type-parameters
+
+type IntRecord record {|
+    int value;
+|};
+
+function getRecordValue(IntRecord? returnedVal) returns int? {
+    if returnedVal is IntRecord {
+        return returnedVal.value;
+    } else {
+        return returnedVal;
+    }
+}
+
+class NumbersGenerator {
+    int i = 0;
+    public isolated function next() returns IntRecord? {
+        self.i += 1;
+        if (self.i > 1) {
+            self.i = 0;
+            return ();
+        }
+        return {value: self.i};
+    }
+}
+
+function init() {
+    NumbersGenerator numbersGenerator = new;
+    stream<int> newStream = new stream<int>(numbersGenerator);
+    var value = getRecordValue(newStream.next());
+    value = getRecordValue(newStream.next());
+    IntRecord? panicVar = newStream.next(); // @panic
+}
+
+Test-Case: panic
+Description: Test closed stream next when stream implementor does not have close method.
+Fail-Issue: ballerina-platform/ballerina-lang/issues/34934
+Labels: error-type, explicit-new-expr, implicit-new-expr, is-expr, isolated-method, member-access-expr,
+        method-call-expr, module-class-defn, module-type-defn, nil-type, optional-type, record-type,
+        stream-type-parameters, union-type
+
+type IntRecord record {|
+    int value;
+|};
+
+class NumbersGenerator {
+    int i = 0;
+    public isolated function next() returns IntRecord|error? {
+        self.i += 1;
+        return { value: self.i };
+    }
+}
+
+function init() {
+    NumbersGenerator numbersGenerator = new;
+    stream<int, error?> newStream = new stream<int, error?>(numbersGenerator);
+    error? closed = newStream.close();
+    IntRecord|error? panicVar = newStream.next(); // @panic
+}
+
+Test-Case: output
+Description: Test closed stream next with stream implementor with close method.
+Labels: error-type, explicit-new-expr, field-access-expr, if-else-stmt, implicit-new-expr, is-expr, isolated-method,
+        member-access-expr, method-call-expr, module-class-defn, module-type-defn, nil-type, optional-type, record-type,
+        stream-type-parameters, union-type
+
+type IntRecord record {|
+    int value;
+|};
+
+function getRecordValue(IntRecord|error? returnedVal) returns int|error? {
+    if returnedVal is IntRecord {
+        return returnedVal.value;
+    } else {
+        return returnedVal;
+    }
+}
+
+class NumbersGenerator {
+    int i = 0;
+    public isolated function next() returns IntRecord|error? {
+        self.i += 1;
+        return { value: self.i };
+    }
+
+    public isolated function close() returns error? {
+        self.i = 0;
+    }
+}
+
+function init() {
+    NumbersGenerator numbersGenerator = new;
+    stream<int, error?> numberStream = new stream<int, error?>(numbersGenerator);
+    error? closed = numberStream.close();
+    io:println(closed is ()); // @output true
+    int|error? a = getRecordValue(numberStream.next());
+    io:println(a); // @output 1
+    closed = numberStream.close();
+    io:println(closed is ()); // @output true
+}
+
+Test-Case: error
+Description: Test completion type with distinct error.
+Labels: distinct, error-type, explicit-new-expr, method-call-expr, module-type-defn, optional-type, record-type, 
+        stream-type-parameters, union-type
+
+type ErrorA distinct error;
+
+type ErrorB distinct error;
+
+type IntRecord record {|
+    int value;
+|};
+
+function errorFunction() {
+    stream<int, ErrorA?> numberStream = new stream<int, ErrorA?>();
+    IntRecord|ErrorA? b = numberStream.next();
+    IntRecord|ErrorB? a = numberStream.next(); // @error incompatible types: expected '(IntRecord|ErrorB)?', found '(record {| int value; |}|ErrorA)?'
+    ErrorB? closed = numberStream.close(); // @error incompatible types: expected 'ErrorB?', found 'ErrorA?'
+}

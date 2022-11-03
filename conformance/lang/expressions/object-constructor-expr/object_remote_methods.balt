@@ -1,0 +1,377 @@
+Test-Case: error
+Description: Test defining a remote method of an object when object-network-qual is not present in the
+             object-constructor-expr.
+Labels: client-remote-method-call-action, field-access-expr, int, remote-method, object-constructor-expr
+
+function errorFunction() {
+    var _ = object {
+        remote function f1() { // @error remote qualifier only allowed in client and service objects
+        }
+    };
+}
+
+Test-Case: output
+Description: Test defining a remote method of a network interaction object.
+Labels: client-remote-method-call-action, field-access-expr, int, remote-method, object-constructor-expr
+
+function init() {
+    var obj = client object {
+        int val;
+
+        function init() {
+            self.val = 10;
+        }
+
+        remote function func1() returns int {
+            return self.val;
+        }
+    };
+
+    int res = obj->func1();
+    io:println(res); // @output 10
+}
+
+Test-Case: error
+Description: Test defining mismatching remote method of an object at the object constructor.
+Labels: int, method-call-expr, remote-method, module-type-defn, object-constructor-expr, object-type, string
+
+type ObjectType client object {
+    remote function func1() returns int;
+};
+
+function errorFunction() {
+    ObjectType obj = client object { // @error expected 'ObjectType', found 'isolated object { public function func1 () returns (string); }'
+        remote function func1() returns string {
+            return "A";
+        }
+    };
+}
+
+Test-Case: output
+Description: Test defining methods of an object with meta data.
+Fail-Issue: ballerina-platform/ballerina-lang#36034
+Labels: annotation-decl, annotation, field-access-expr, remote-method, module-type-defn, object-constructor-expr,
+        record-type, string, type-cast-expr, typeof-expr, var
+
+type Annot record {
+    string a;
+};
+
+annotation Annot v1 on object function;
+
+function init() {
+    var obj = client object {
+        # This is a document.
+        # It is for an object function.
+        @v1 {
+            a: "v1"
+        }
+        remote function f1() {
+        }
+    };
+
+    Annot annot = <Annot>(typeof obj.f1).@v1;
+    io:println(annot.a); // @output v1
+}
+
+Test-Case: error
+Description: Test defining remote methods of a network interaction object with visibility qualifiers.
+Labels: field-access-expr, int, remote-method, object-constructor-expr
+
+function errorFunction() {
+    var _ = client object {
+        int val;
+
+        function init() {
+            self.val = 10;
+        }
+
+        private remote function func1() returns int { // @error remote remote method has a visibility qualifier
+            return self.val;
+        }
+
+        public remote function func2() returns string { // @error remote remote method has a visibility qualifier
+            return "ABC";
+        }
+    };
+}
+
+Test-Case: output
+Description: Test defining remote methods of a network interaction object with remote method qualifiers.
+Labels: client-remote-method-call-action, field-access-expr, int, member-access-expr, remote-method,
+        object-constructor-expr, string, var
+
+function init() {
+    var obj = client object {
+        int val;
+
+        function init() {
+            self.val = 1;
+        }
+
+        remote transactional function func1() returns int {
+            return self.val;
+        }
+
+        remote isolated function func2() returns string {
+            return "ABC";
+        }
+    };
+
+    string res = obj->func2();
+    io:println(res); // @output ABC
+}
+
+Test-Case: output
+Description: Test invoking object remote method with transactional qualifier in a transactional context.
+Labels: commit-action, client-remote-method-call-action, int, remote-method, object-constructor-expr,
+        transaction-stmt, var
+
+function init() returns error? {
+    var obj = client object {
+        transactional remote function func1() returns int {
+            return 1;
+        }
+    };
+    transaction {
+        int a = obj->func1();
+        io:println(a); // @output 1
+        check commit;
+    }
+}
+
+Test-Case: error
+Description: Test invoking object remote method with transactional qualifier in a non-transactional context.
+Labels: commit-action, client-remote-method-call-action, int, remote-method, object-constructor-expr, var
+
+function errorFunction() {
+    var obj =  client object {
+        transactional remote function func1() returns int {
+            return 1;
+        }
+    };
+    _ = obj->func1(); // @error invoking transactional function outside transactional scope is prohibited
+}
+
+Test-Case: output
+Description: Test accessing fields and remote methods of a network interaction object within the method-defn-body using
+             self variable.
+Labels: additive-expr, array-type, client-remote-method-call-action, field-access-expr, int, list-constructor-expr,
+        member-access-expr, remote-method, object-constructor-expr, var
+
+function init() {
+    var obj = client object {
+        int[] val;
+
+        function init() {
+            self.val = [1, 2];
+        }
+
+        function func1() returns int {
+            return self.val[0];
+        }
+
+        remote function func2() returns int {
+            return self.val[1] + self.func1();
+        }
+    };
+
+    io:println(obj.func1()); // @output 1
+
+    int res = obj->func2();
+    io:println(res); // @output 3
+}
+
+Test-Case: error
+Description: Test accessing fields and remote methods of a network interaction object within the method-defn-body
+             without using self variable.
+Labels: field-access-expr, function-call-expr, int, remote-method, object-constructor-expr, var
+
+function errorFunction() {
+    var obj = client object {
+        int val = 10;
+
+        remote function func1() returns int {
+            return val; // @error undefined symbol
+        }
+
+        function func2() returns int {
+            return 10;
+        }
+
+        remote function func3() returns int {
+            return func2(); // @error undefined function
+        }
+    };
+}
+
+Test-Case: output
+Description: Test accessing the self variable only within the scope of a lock statement, except when
+             self is part of a field-access-expr of the form self.f, where f is the name of an isolated field, if
+             object-constructor-expr is explicitly isolated.
+Labels: additive-expr, array-type, client-remote-method-call-action, field-access-expr, int, intersection-type,
+        isolated-object, list-constructor-expr, lock-stmt, member-access-expr, remote-method, object-constructor-expr,
+        readonly-type, var
+
+function init() {
+    var obj = isolated client object {
+        private int[] val = [1, 2];
+        final readonly & int[] val2 = [3, 4];
+
+        remote function func1() returns int {
+            int sum = self.val2[1];
+            lock {
+                return sum + self.val[0];
+            }
+        }
+    };
+
+    int res = obj->func1();
+    io:println(res); // @output 5
+}
+
+Test-Case: error
+Description: Test accessing the self variable without using a lock statement when a client object-constructor-expr is
+             explicitly isolated and self is part of a field-access-expr of the form self.f, where f is the name of a
+             non-isolated field.
+Labels: array-type, field-access-expr, int, isolated-object, list-constructor-expr, member-access-expr, remote-method,
+        object-constructor-expr, var
+
+function errorFunction() {
+    var _ = isolated client object {
+        private int[] val = [1, 2];
+
+        remote function func1() returns int {
+            return self.val[0]; // @error invalid access of a mutable field of an isolated object outside a lock statement
+        }
+    };
+}
+
+Test-Case: output
+Description: Test whether an isolated remote method containing isolated-qual can call only isolated functions.
+Labels: additive-expr, array-type, client-remote-method-call-action, field-access-expr, int, intersection-type,
+        isolated-function, list-constructor-expr, member-access-expr, remote-method, object-constructor-expr,
+        readonly-type, var
+
+function init() {
+    var obj = client object {
+        final readonly & int[] val = [1, 2];
+
+        isolated function func1() returns int {
+            return self.val[0];
+        }
+
+        remote isolated function func2() returns int {
+            return self.val[1] + self.func1();
+        }
+    };
+
+    int res = obj->func2();
+    io:println(res); // @output 3
+}
+
+Test-Case: error
+Description: Test whether an isolated remote method containing isolated-qual can call only isolated functions.
+Labels: additive-expr, array-type, field-access-expr, int, intersection-type, isolated-function, list-constructor-expr,
+        member-access-expr, method-call-expr, remote-method, object-constructor-expr, readonly-type, var
+
+function errorFunction() {
+    var _ = client object {
+        final readonly & int[] val = [1, 2];
+
+        function func1() returns int {
+            return self.val[0];
+        }
+
+        remote isolated function func2() returns int {
+            return self.val[1] + self.func1(); // @error invalid invocation of a non-isolated function in an 'isolated' function
+        }
+    };
+}
+
+Test-Case: output
+Description: Test whether an isolated remote method containing isolated-qual can only read an non-isolated module-level
+             state if the variable is final or configurable and static type of the variable is a subtype of readonly or
+             isolated object {}.
+Labels: additive-expr, array-type, client-remote-method-call-action, field-access-expr, int, intersection-type,
+        isolated-function, list-constructor-expr, member-access-expr, method-call-expr, remote-method,
+        module-init-var-decl, object-constructor-expr, readonly-type, var
+
+final int[] & readonly arr = [3, 4];
+
+function init() {
+    var obj = client object {
+        final readonly & int[] val = [1, 2];
+
+        isolated function func1() returns int {
+            return self.val[0];
+        }
+
+        remote isolated function func2() returns int {
+            return self.val[1] + arr[1] + self.func1();
+        }
+    };
+
+    int res = obj->func2();
+    io:println(res); // @output 7
+}
+
+Test-Case: error
+Description: Test whether an isolated remote method containing isolated-qual cannot mutate non-isolated module-level state.
+Labels: additive-expr, array-type, field-access-expr, int, intersection-type, list-constructor-expr, member-access-expr,
+        method-call-expr, remote-method, module-init-var-decl, object-constructor-expr, readonly-type, var
+
+int[] & readonly arr = [3, 4];
+
+function errorFunction() {
+    var _ = client object {
+        remote isolated function func1() returns int {
+            return arr[1]; // @error invalid access of mutable storage in an isolated function
+        }
+    };
+}
+
+Test-Case: error
+Description: Test whether an isolated remote method containing isolated-qual cannot mutate non-isolated module-level state.
+Labels: int, isolated-function, remote-method, module-init-var-decl, object-constructor-expr, var
+
+int intVal = 10;
+
+function errorFunction() {
+    var _ = client object {
+        remote isolated function func1() {
+            lock {
+                intVal = 5; // @error invalid access of mutable storage in an isolated function
+            }
+        }
+    };
+}
+
+Test-Case: output
+Description: Test whether an isolated remote method containing isolated-qual can only refer captured variables if they are
+             final and have a static type that is a subtype of readonly|isolated object {}.
+Labels: client-remote-method-call-action, explicit-anonymous-function-expr, int, method-call-expr, remote-method,
+        object-constructor-expr, var
+
+function init() {
+    final int val = 10;
+    var obj = client object {
+        remote isolated function func1() returns int => val;
+    };
+
+    int res = obj->func1();
+    io:println(res); // @output 10
+}
+
+Test-Case: error
+Description: Test whether an isolated remote method containing isolated-qual can only refer captured variables if they are
+             final and have a static type that is a subtype of readonly|isolated object {}.
+Labels: explicit-anonymous-function-expr, int, intersection-type, isolated-function, method-call-expr, remote-method,
+        object-constructor-expr, readonly-type, var
+
+function errorFunction() {
+    int & readonly val = 10;
+    var _ = client object {
+        remote isolated function func1() returns int => val; // @error invalid access of mutable storage in an isolated function
+    };
+}

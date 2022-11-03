@@ -130,3 +130,24 @@ public isolated function toHexString(int n) returns string = external;
 # + s - hexadecimal string representation of int value
 # + return - int value or error
 public isolated function fromHexString(string s) returns int|error = external;
+
+# Returns an iterable object that iterates over a range of integers.
+# The integers returned by the iterator belong to the set S,
+# where S is `{ rangeStart + step*i such that i >= 0 }`.
+# When `step > 0`, the members of S that are `< rangeEnd` are returned in increasing order.
+# When `step < 0`, the members of S that are `> rangeEnd` are returned in decreasing order.
+# When `step = 0`, the function panics.
+# + rangeStart - the first integer to be returned by the iterator
+# + rangeEnd - the exclusive limit on the integers returned by the iterator
+# + step - the difference between successive integers returned by the iterator;
+#    a positive value gives an increasing sequence; a negative value gives
+#    a decreasing sequence
+# + return - an iterable object
+public isolated function range(int rangeStart, int rangeEnd, int step) returns object {
+    public isolated function iterable() returns object {
+        *object:Iterable;
+        public isolated function next() returns record {|
+            int value;
+       |}?;
+    };
+} = external;
