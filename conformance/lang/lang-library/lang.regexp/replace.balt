@@ -1,0 +1,117 @@
+Test-Case: output
+Description: Test `replace` function with replacement string.
+
+function init() {
+    string str1 = "ReplaceThisThisTextThis";
+    var regExpr1 = re `This`;
+    string replacement1 = " ";
+    string result1 = regExpr1.replace(str1, replacement1);
+    io:println(result1); // @output "Replace ThisTextThis"
+
+    string result11 = regExpr1.replace(str1, replacement1, 0);
+    io:println(result11); // @output "Replace ThisTextThis"
+
+    string result12 = regExpr1.replace(str1, replacement1, 1);
+    io:println(result12); // @output "ReplaceThis TextThis"
+
+    string result2 = re `This`.replace("ReplaceThisThisTextThis", "# ");
+    io:println(result2); // @output "Replace# ThisTextThis"
+
+    string str3 = "10010011";
+    var regExpr3 = re `0+`;
+    string replacement3 = "*";
+    string result3 = regExpr3.replace(str3, replacement3);
+    io:println(result3); // @output "1*10011"
+
+    string str4 = "100100011";
+    var regExpr4 = re `0+`;
+    string replacement4 = "*";
+    string result4 = regExpr4.replace(str4, replacement4); // @output "1*100011"
+
+    string str5 = "WillNotBeMatched";
+    var regExpr5 = re `This`;
+    string replacement5 = "That";
+    string result5 = regExpr5.replace(str5, replacement5);
+    io:println(result5); // @output "WillNotBeMatched"
+}
+
+Test-Case: output
+Description: Test `replace` function with replacement function.
+
+function init() {
+    string str1 = "100000100011";
+    var regExpr = re `0+`;
+    string result1 = regExpr.replace(str1, replacementFunctionForReplace);
+    io:println(result1); // @output "16100011"
+
+    string str2 = "100100011";
+    string result2 = regExpr.replace(str2, replacementFunctionForReplace, 4);
+    io:println(result6); // @output "1001711"
+}
+
+isolated function replacementFunctionForReplace(regexp:Groups groups) returns string {
+    return groups[0].endIndex.toString();
+}
+
+Test-Case: output
+Description: Test assignability of `replace` function result.
+
+function init() {
+    string str1 = "ReplaceThisThisTextThis";
+    var regExpr1 = re `This`;
+    any result1 = regExpr1.replace(str1, "1");
+    io:println(result1 is string); // @output true
+    io:println(result1); // @output "Replace1ThisTextThis"
+
+    string str1 = "ReplaceThisThisTextThis";
+    var regExpr1 = re `This`;
+    var result2 = regExpr1.replace(str1, "2");
+    io:println(result2 is string); // @output true
+    io:println(result2); // @output "Replace2ThisTextThis"
+}
+
+Test-Case: error
+Description: Test assigning the result of `replace` method to an incompatible type.
+
+function errorFunction() {
+    string str = "ReplaceThisThisTextThis";
+    var regExpr = re `This`;
+
+    int _ = regExpr1.replace(str, "a"); // @error expects a int, but replace() returns string
+
+    string:Char _ = regExpr1.replace(str, "a"); // @error expects a string:Char, but replace() returns string
+}
+
+
+Test-Case: error
+Description: Test missing required parameters for `replace` method.
+
+function errorFunction() {
+    string str = "ReplaceThisThisTextThis";
+    var regExpr = re `This`;
+
+    string _ = regExpr1.replace(str); // @error missing Replacement argument
+
+    string _ = regExpr1.replace(); // @error missing string argument
+
+}
+
+Test-Case: error
+Description: Test passing invalid parameters to `replace` method.
+
+function errorFunction(string|int si) {
+    string _ = regExpr1.replace("ReplaceThisThisTextThis", 12); // @error int is not a subtype of Replacment
+
+    string _ = regExpr1.replace(121314, "12"); // @error int is not a subtype of string
+
+    string _ = regExpr1.replace(si, "12"); // @error (string|int) is not a subtype of string
+
+    string _ = regExpr1.replace("ReplaceThisThisTextThis", "This", "1); // @error string is not a subtype of int
+}
+
+Test-Case: error
+Description: Test passing too many parameters to `replace` method.
+
+function errorFunction(string|int si) {
+    string _ = regExpr1.replace("ReplaceThisThisTextThis", "This", 1, 2); // @error too many arguments
+}

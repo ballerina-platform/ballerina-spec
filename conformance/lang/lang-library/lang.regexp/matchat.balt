@@ -1,0 +1,85 @@
+Test-Case: output
+Description: Test `matchAt` function.
+
+function init() {
+    var regExpr1 = re `Here`;
+    string str1 = "MatchHere";
+    regexp:Span? res1 = regExpr1.matchAt(str1);
+    io:println(res1 is ()); // @output true
+
+    regexp:Span? res2 = regExpr1.matchAt(str1, 0);
+    io:println(res2 is ()); // @output true
+
+    regexp:Span? res3 = regExpr1.matchAt(str1, 5);
+    io:println(res3 is regexp:Span); // @output true
+    regexp:Span res3span = <regexp:Span> res3;
+    io:println(res3span.startIndex); // @output 5
+    io:println(res3span.endIndex); // @output 9
+    io:println(res3span.substring()); // @output "Here"
+}
+
+Test-Case: output
+Description: Test `matchAt` function with negative range.
+
+function init() {
+    var regExpr1 = re `Here`;
+    string str1 = "MatchHere";
+
+    regexp:Span? _ = regExpr1.matchAt(str1, -5); // @error index out of bound
+}
+
+Test-Case: output
+Description: Test assignability of `matchAt` function result.
+
+function init() {
+    var regExpr1 = re `Here`;
+    string str1 = "MatchHere";
+    any result1 = regExpr1.matchAt(str1);
+    io:println(result1 is ()); // @output true
+
+    var result2 = regExpr1.matchAt(str1, 5);
+    io:println(result2 is regexp:Span); // @output true
+}
+
+Test-Case: error
+Description: Test assigning the result of `matchAt` function to an incompatible type.
+
+function errorFunction() {
+    var regExpr1 = re `MatchHere`;
+    string str1 = "Here";
+
+    regexp:Span _ = regExpr1.matchAt(str1, 5); // @error expects a regexp:Span, but isFullMatch returns regexp:Span?
+
+    int _ = regExpr1.matchAt(str1); // @error expects a int, but matchAt returns regexp:Span?
+}
+
+
+Test-Case: error
+Description: Test missing required parameters for `matchAt` method.
+
+function errorFunction() {
+    var regExpr1 = re `regexp`;
+
+    regexp:Span? _ = regExpr1.matchAt(); // @error missing string argument
+
+}
+
+Test-Case: error
+Description: Test passing invalid parameters to `isFullMatch()` method.
+
+function errorFunction(string|int si) {
+    var regExpr1 = re `Here`;
+
+    regexp:Span? _ = regExpr1.matchAt(12); // @error int is not a subtype of string
+
+    regexp:Span? _ = regExpr1.matchAt("MatchHere", "5"); // @error string is not a subtype of int
+}
+
+Test-Case: error
+Description: Test passing too many parameters to `isFullMatch()` method.
+
+function errorFunction(string|int si) {
+    var regExpr1 = re `Here`;
+
+    regexp:Span? _ = regExpr1.isFullMatch("MatchHere", 5, 1); // @error too many arguments
+}

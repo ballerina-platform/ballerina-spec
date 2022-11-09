@@ -1,0 +1,64 @@
+Test-Case: output
+Description: Test `fromString` function.
+
+function init() {
+    string:RegExp|error x = regexp:fromString("A\\p{Lu}??B+\\W\\(+?C*D{1,4}?");
+    io:println(x is string:RegExp); // @output true
+    io:println(re `A\p{Lu}??B+\W\(+?C*D{1,4}?` == <string:RegExp> x); // @output true
+}
+
+Test-Case: output
+Description: Test `fromString` function with error result.
+
+function init() {
+    string:RegExp|error x = regexp:fromString("AB+^*");
+    io:println(x is error); // @output true
+
+    string:RegExp|error x = regexp:fromString("(abc");
+    io:println(x is error); // @output true
+}
+
+Test-Case: output
+Description: Test assignability of `regexp:fromString` function result.
+
+function init() {
+    any|error result1 = regexp:fromString("regexp");
+    io:println(result1 is string:RegExp); // @output true
+    io:println(re `regexp` == result1); // @output true
+
+    var result2 = regexp:fromString("regexp");
+    io:println(result2 is string:RegExp); // @output true
+    io:println(re `regexp` == result2); // @output true
+}
+
+Test-Case: error
+Description: Test assigning the result of `regexp:fromString` function to an incompatible type.
+
+function errorFunction() {
+    int _ = regexp:fromString("regexp"); // @error expects a int, but regexp:fromString() returns string|error
+
+    string:Char _ = regexp:fromString("regexp"); // @error expects a string:Char, but regexp:fromString() returns string|error
+}
+
+
+Test-Case: error
+Description: Test missing required parameters for `regexp:fromString` method.
+
+function errorFunction() {
+    string _ = regexp:fromString(); // @error missing string argument
+
+}
+
+Test-Case: error
+Description: Test passing invalid parameters to `regexp:fromString` method.
+
+function errorFunction(string|int si) {
+    string _ = regexp:fromString(1213); // @error int is not a subtype of string
+}
+
+Test-Case: error
+Description: Test passing too many parameters to `regexp:fromString` method.
+
+function errorFunction(string|int si) {
+    string _ = regexp:fromString("this", "that); // @error too many arguments
+}

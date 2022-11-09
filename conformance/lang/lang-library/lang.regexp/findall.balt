@@ -1,0 +1,94 @@
+Test-Case: output
+Description: Test `findAll` function.
+
+function init() {
+    var regExpr1 = re `Here`;
+    string str1 = "MatchHereAndHere";
+    regexp:Span[]? res1 = regExpr1.findAll("NotMatching");
+    io:println(res1 is ()); // @output true
+
+    regexp:Span[]? res2 = regExpr1.findAll(str1);
+    io:println(res2 is regexp:Span[]); // @output true
+    regexp:Span[] res2SpanArr = <regexp:Span[]>res2;
+    io:println(res2SpanArr.length());  // @output 2
+    regexp:Span res2SpanArr_1 = res2SpanArr[0];
+    regexp:Span res2SpanArr_2 = res2SpanArr[1];
+    io:println(res2SpanArr_1.startIndex); // @output 5
+    io:println(res2SpanArr_1.endIndex);  // @output 9
+    io:println(res2SpanArr_2.startIndex); // @output 12
+    io:println(res2SpanArr_2.endIndex);  // @output 16
+
+    regexp:Span? res3 = regExpr1.findAll(str1, 10);
+    regexp:Span[] res3SpanArr = <regexp:Span[]>res3;
+    io:println(res3SpanArr.length());  // @output 1
+    regexp:Span res2SpanArr_1 = res2SpanArr[0];
+    io:println(res2SpanArr_1.startIndex); // @output 12
+    io:println(res2SpanArr_1.endIndex);  // @output 16
+}
+
+Test-Case: output
+Description: Test `findAll` function with negative range.
+
+function init() {
+    var regExpr1 = re `Here`;
+    string str1 = "MatchHereAndHere";
+
+    regexp:Span[]? _ = regExpr1.findAll(str1, -5); // @error index out of bound
+}
+
+Test-Case: output
+Description: Test assignability of `findAll` function result.
+
+function init() {
+    var regExpr1 = re `Here`;
+    string str1 = "MatchHereAndHere";
+    any result1 = regExpr1.findAll(str1);
+    io:println(result1 is regexp:Span[]); // @output true
+
+    var result2 = regExpr1.findAll(str1, 7);
+    io:println(result2 is regexp:Span[]); // @output true
+}
+
+Test-Case: error
+Description: Test assigning the result of `findAll` function to an incompatible type.
+
+function errorFunction() {
+    var regExpr1 = re `MatchHereAndHere`;
+    string str1 = "Here";
+
+    regexp:Span[] _ = regExpr1.findAll(str1, 5); // @error expects a regexp:Span[], but findAll() returns regexp:Span[]?
+
+    regexp:Span? _ = regExpr1.findAll(str1, 5); // @error expects a regexp:Span?, but findAll() returns regexp:Span[]?
+
+    int _ = regExpr1.findAll(str1); // @error expects a int, but findAll() returns regexp:Span[]?
+}
+
+Test-Case: error
+Description: Test missing required parameters for `findAll` method.
+
+function errorFunction() {
+    var regExpr1 = re `regexp`;
+
+    regexp:Span[]? _ = findAll.findAll(); // @error missing string argument
+
+}
+
+Test-Case: error
+Description: Test passing invalid parameters to `findAll()` method.
+
+function errorFunction(string|int si) {
+    var regExpr1 = re `Here`;
+
+    regexp:Span[]? _ = regExpr1.findAll(12); // @error int is not a subtype of string
+
+    regexp:Span[]? _ = regExpr1.findAll("MatchHereAndHere", "5"); // @error string is not a subtype of int
+}
+
+Test-Case: error
+Description: Test passing too many parameters to `findAll()` method.
+
+function errorFunction(string|int si) {
+    var regExpr1 = re `Here`;
+
+    regexp:Span[]? _ = regExpr1.isFullMatch("MatchHereAndHere", 5, 1); // @error too many arguments
+}

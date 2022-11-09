@@ -1,0 +1,72 @@
+Test-Case: output
+Description: Test `isFullMatch` function.
+
+function init() {
+    var regExpr1 = re `(?i:[a-z]+)`;
+    string str1 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    boolean isFullMatch1 = regExpr1.isFullMatch(str1);
+    io:println(isFullMatch1); // @output true
+
+    var regExpr2 = re `\\d\\d\\d`;
+    string str2 = "a123";
+    boolean isFullMatch2 = regExpr2.isFullMatch(str2);
+    io:println(isFullMatch2); // @output false
+}
+
+Test-Case: output
+Description: Test assignability of `isFullMatch` function result.
+
+function init() {
+    var regExpr1 = re `regexp`;
+    string str1 = "regexp1";
+    any|error result1 = regExpr1.isFullMatch(str1);
+    io:println(result1 is boolean); // @output true
+    io:println(result1); // @output false
+
+    var result2 = regExpr1.isFullMatch(str1);
+    io:println(result2 is boolean); // @output true
+    io:println(result2); // @output false
+}
+
+Test-Case: error
+Description: Test assigning the result of `isFullMatch` function to an incompatible type.
+
+type False false;
+
+function errorFunction() {
+    var regExpr1 = re `regexp`;
+    string str1 = "regexp1";
+
+    int _ = regExpr1.isFullMatch(str1); // @error expects a int, but isFullMatch returns boolean
+
+    False _ = regExpr1.isFullMatch(str1); // @error expects a False, but isFullMatch returns boolean
+}
+
+
+Test-Case: error
+Description: Test missing required parameters for `isFullMatch()` method.
+
+function errorFunction() {
+    var regExpr1 = re `regexp`;
+
+    boolean _ = regExpr1.isFullMatch(); // @error missing string argument
+
+}
+
+Test-Case: error
+Description: Test passing invalid parameters to `isFullMatch()` method.
+
+function errorFunction(string|int si) {
+    var regExpr1 = re `regexp`;
+
+    boolean _ = regExpr1.isFullMatch(1234); // @error int is not a subtype of string
+}
+
+Test-Case: error
+Description: Test passing too many parameters to `isFullMatch()` method.
+
+function errorFunction(string|int si) {
+    var regExpr1 = re `regexp`;
+
+    boolean _ = regExpr1.isFullMatch("regexp", "regexp1"); // @error too many arguments
+}

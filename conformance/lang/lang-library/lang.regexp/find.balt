@@ -1,0 +1,92 @@
+Test-Case: output
+Description: Test `find` function.
+
+function init() {
+    var regExpr1 = re `Here`;
+    string str1 = "MatchHereAndHere";
+    regexp:Span? res1 = regExpr1.find("NotMatching");
+    io:println(res1 is ()); // @output true
+
+    regexp:Span? res2 = regExpr1.find(str1);
+    io:println(res2 is regexp:Span); // @output true
+    regexp:Span res2span = <regexp:Span> res2;
+    io:println(res2span.startIndex); // @output 5
+    io:println(res2span.endIndex);  // @output 9
+
+    regexp:Span? res3 = regExpr1.find(str1, 10);
+    io:println(res3 is regexp:Span); // @output true
+    regexp:Span res3span = <regexp:Span> res3;
+    io:println(res3span.startIndex); // @output 12
+    io:println(res3span.endIndex); // @output 16
+
+    regexp:Span? res4 = regExpr1.find(str1, 7);
+    io:println(res4 is regexp:Span); // @output true
+    regexp:Span res4span = <regexp:Span> res4;
+    io:println(res4span.startIndex); // @output 12
+    io:println(res4span.endIndex); // @output 16
+}
+
+Test-Case: output
+Description: Test `find` function with negative range.
+
+function init() {
+    var regExpr1 = re `Here`;
+    string str1 = "MatchHereAndHere";
+
+    regexp:Span? _ = regExpr1.find(str1, -5); // @error index out of bound
+}
+
+Test-Case: output
+Description: Test assignability of `find` function result.
+
+function init() {
+    var regExpr1 = re `Here`;
+    string str1 = "MatchHereAndHere";
+    any result1 = regExpr1.find(str1);
+    io:println(result1 is regexp:Span); // @output true
+
+    var result2 = regExpr1.find(str1, 7);
+    io:println(result2 is regexp:Span); // @output true
+}
+
+Test-Case: error
+Description: Test assigning the result of `find` function to an incompatible type.
+
+function errorFunction() {
+    var regExpr1 = re `MatchHereAndHere`;
+    string str1 = "Here";
+
+    regexp:Span _ = regExpr1.find(str1, 5); // @error expects a regexp:Span, but find() returns regexp:Span?
+
+    int _ = regExpr1.find(str1); // @error expects a int, but find() returns regexp:Span?
+}
+
+Test-Case: error
+Description: Test missing required parameters for `find` method.
+
+function errorFunction() {
+    var regExpr1 = re `regexp`;
+
+    regexp:Span? _ = find.find(); // @error missing string argument
+
+}
+
+Test-Case: error
+Description: Test passing invalid parameters to `find()` method.
+
+function errorFunction(string|int si) {
+    var regExpr1 = re `Here`;
+
+    regexp:Span? _ = regExpr1.find(12); // @error int is not a subtype of string
+
+    regexp:Span? _ = regExpr1.find("MatchHereAndHere", "5"); // @error string is not a subtype of int
+}
+
+Test-Case: error
+Description: Test passing too many parameters to `find()` method.
+
+function errorFunction(string|int si) {
+    var regExpr1 = re `Here`;
+
+    regexp:Span? _ = regExpr1.isFullMatch("MatchHereAndHere", 5, 1); // @error too many arguments
+}
