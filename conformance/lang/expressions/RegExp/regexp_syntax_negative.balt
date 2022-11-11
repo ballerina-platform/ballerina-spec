@@ -3,17 +3,16 @@ Description: Test regular expression with invalid single ReLiteralChar.
 Labels: ReLiteralChar, ReSequence, RegExp
 
 function errorFunction() {
-    _ = re `\`;
-    _ = re `*`;
-    _ = re `+`;
-    _ = re `?`;
-    _ = re `(`;
-    _ = re `)`;
-    _ = re `[`;
-    _ = re `]`;
-    _ = re `{`;
-    _ = re `}`;
-    _ = re `|`;
+    _ = re `\`; // @error missing syntax char after backslash.
+    _ = re `*`; // @error missing back slash.
+    _ = re `+`; // @error missing back slash.
+    _ = re `?`; // @error missing back slash.
+    _ = re `(`; // @error missing close parenthesis token.
+    _ = re `)`; // @error missing back slash.
+    _ = re `[`; // @error missing close bracket token.
+    _ = re `]`; // @error missing back slash.
+    _ = re `{`; // @error missing back slash.
+    _ = re `}`; // @error missing back slash.
 }
 
 Test-Case: error
@@ -56,7 +55,7 @@ function errorFunction() {
 
 Test-Case: error
 Description: Test regular expression containing invalid white spaces for matching unicode script.
-Labels: ReEscape, ReSimpleCharClassEscape, RegExp
+Labels: ReEscape, ReUnicodePropertyEscape, RegExp
 
 function errorFunction() {
     _ = re `\p {sc=_}`; // @error invalid regular expression.
@@ -66,7 +65,7 @@ function errorFunction() {
 
 Test-Case: error
 Description: Test regular expression without paranthesis for matching unicode script.
-Labels: ReEscape, ReSimpleCharClassEscape, RegExp
+Labels: ReEscape, ReUnicodePropertyEscape, RegExp
 
 function errorFunction() {
     _ = re `\psc= 123Abc`; // @error invalid unicode property escape in regular expression.
@@ -75,7 +74,7 @@ function errorFunction() {
 
 Test-Case: error
 Description: Test 1 for regular expression containing invalid member for matching unicode script.
-Labels: ReEscape, ReSimpleCharClassEscape, RegExp
+Labels: ReEscape, ReUnicodePropertyEscape, RegExp
 
 function errorFunction() {
     _ = re `\p{sc=~}`; // @error invalid unicode property escape in regular expression.
@@ -137,12 +136,13 @@ function errorFunction() {
     _ = re `\P{sc=.}`; // @error invalid unicode property escape in regular expression.
     _ = re `\P{sc=?}`; // @error invalid unicode property escape in regular expression.
     _ = re `\P{sc=/}`; // @error invalid unicode property escape in regular expression.
+    _ = re `\P{s=a}`; // @error invalid token in regular expression.
 }
 
 Test-Case: error
-Fail-Issue: 
+Fail-Issue: https://github.com/ballerina-platform/ballerina-lang/issues/38630
 Description: Test 2 for regular expression containing invalid member for matching unicode script.
-Labels: ReEscape, ReSimpleCharClassEscape, RegExp
+Labels: ReEscape, ReUnicodePropertyEscape, RegExp
 
 function errorFunction() {
     _ = re `\p{sc=}`;
@@ -151,7 +151,7 @@ function errorFunction() {
 
 Test-Case: error
 Description: Test invalid cases for regular expression matching unicode general category.
-Labels: ReEscape, ReSimpleCharClassEscape, RegExp
+Labels: ReEscape, ReUnicodePropertyEscape, RegExp
 
 function errorFunction() {
     _ = re `\p{Cs}`; // @error invalid token in regular expression.
@@ -163,6 +163,20 @@ function errorFunction() {
     _ = re `\p{Su}`; // @error invalid token in regular expression.
     _ = re `\p{gc=pc}`; // @error invalid token in regular expression.
     _ = re `\p{zs}`; // @error invalid token in regular expression.
+    _ = re `\p{gc=}`; // @error missing unicode property value.
+    _ = re `\p{g=a}`; // @error invalid token in regular expression.
+}
+
+Test-Case: error
+Description: Test regular expression with invalid unicode property value char.
+Labels: ReEscape, ReUnicodePropertyEscape, RegExp
+
+function errorFunction() {
+    _ = re `\q`; // @error missing syntax char after backslash.
+    _ = re `\e`; // @error missing syntax char after backslash.
+    _ = re `ab\y`; // @error missing syntax char after backslash.
+    _ = re `\u{`; // @error invalid string numeric escape sequence.
+    _ = re `\!`; // @error missing syntax char after backslash.
 }
 
 Test-Case: error
@@ -182,6 +196,8 @@ function errorFunction() {
     _ = re `[z-a]`; // @error start char code is greater than end char code.
     _ = re `[%-!]`; // @error start char code is greater than end char code.
     _ = re `[9-0]`; // @error start char code is greater than end char code.
+    _ = re `[a--z]`; // @error start char code is greater than end char code.
+    _ = re `[{-z]`; // @error start char code is greater than end char code.
 }
 
 Test-Case: error
@@ -213,11 +229,17 @@ function errorFunction() {
     _ = re `A**`; // @error missing back slash.
     _ = re `B++`; // @error missing back slash.
     _ = re `B+*`; // @error missing back slash.
+    _ = re `++A`; // @error missing back slash.
+    _ = re `??A`; // @error missing back slash.
     _ = re `AB???`; // @error missing back slash.
     _ = re `AB*??`; // @error missing back slash.
     _ = re `A{2`; // @error missing close brace token.
     _ = re `A{}`; // @error missing digit in quantifier.
     _ = re `A{5,2}`; // @error quantifier minimum is greater than maximum.
+    _ = re `x{1,2}{1}`; // @error missing back slash.
+    _ = re `x{1,2}{1,2}`; // @error missing back slash.
+    _ = re `x{1,2}{1,}`; // @error missing back slash.
+    _ = re `??`; // @error missing back slash.
 }
 
 Test-Case: error
@@ -230,4 +252,21 @@ function errorFunction() {
     _ = re `[[a-z]|[b-d]]`; // @error missing back slash
 }
 
+Test-Case: error
+Description: Test regular expression with invalid capturing groups.
+Labels: ReDisjunction, ReFlagsOnOf, RegExp
 
+function errorFunction() {
+    _ = re `(?i:ab|FG`; // @error missing close parenthesis token.
+    _ = re `(?:A`; // @error missing close parenthesis token.
+    _ = re `(?ia)`; // @error invalid token in regular expression
+    _ = re `(?ab)`; // @error invalid token in regular expression
+}
+
+Test-Case: output
+Description: Test regular expression with invalid use of slash.
+Labels: ReSequence, RegExp, string
+
+function errorFunction() {
+    _ = re / `ABC`; // @error undefined symbol 're'.
+}

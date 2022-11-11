@@ -21,6 +21,17 @@ function init() {
     _ = re `^the`;
     _ = re `(the$|^is)`;
     _ = re `^$`;
+    _ = re `[^e]$`;
+    _ = re `^p[a-z]`;
+    _ = re `^[^p]`;
+    _ = re `^..^e`;
+    _ = re `^\\^`;
+    _ = re `^\\d+`;
+    _ = re `^^^^^^^ABC$$$$`;
+    _ = re `^.*?$`;
+    _ = re `^.*?`;
+    _ = re `^.*?(:|$)`;
+    _ = re `^.*(:|$)`;
 }
 
 Test-Case: output
@@ -81,7 +92,38 @@ function init(){
 }
 
 Test-Case: output
-Description: Test regular expression matching unicode script.
+Description: Test regular expression with valid ReSimpleCharClassEscape and ReQuantifier.
+Labels: ReEscape, ReSimpleCharClassEscape, RegExp
+
+function init(){
+    _ = re `\d*`;
+    _ = re `\D*`;
+    _ = re `\s*`;
+    _ = re `\S*`;
+    _ = re `\w*`;
+    _ = re `\W*`;
+    _ = re `\d+`;
+    _ = re `\D+`;
+    _ = re `\s+`;
+    _ = re `\S+`;
+    _ = re `\w+`;
+    _ = re `\W+`;
+    _ = re `\d?`;
+    _ = re `\D?`;
+    _ = re `\s?`;
+    _ = re `\S?`;
+    _ = re `\w?`;
+    _ = re `\W?`;
+    _ = re `\d{1}`;
+    _ = re `\D{1,}`;
+    _ = re `\s{1,4}`;
+    _ = re `\S{4}`;
+    _ = re `\w{5,}`;
+    _ = re `\W{6,8}`;
+}
+
+Test-Case: output
+Description: Test regular expression with property escape script.
 Labels: ReEscape, ReUnicodePropertyEscape, ReUnicodePropertyValue, RegExp
 
 function init(){
@@ -93,6 +135,13 @@ function init(){
     _ = re `\P{sc=_1}`;
     _ = re `\P{sc=123Abc}`;
     _ = re `\P{sc=abcd12}`;
+
+    _ = re `^\P{sc=Bassa_Vah}+$`;
+    _ = re `^\P{sc=Bass}+$`;
+    _ = re `^\p{sc=Bhaiksuki}+$`;
+    _ = re `^\p{sc=Bhks}+$`;
+    _ = re `\P{sc=Cyrillic}+$`;
+    _ = re `\P{sc=Cyrl}+$`;
 }
 
 Test-Case: output
@@ -136,7 +185,7 @@ function init() {
 }
 
 Test-Case: output
-Fail-Issue: 
+Fail-Issue: https://github.com/ballerina-platform/ballerina-lang/issues/38630
 Description: Test 2 for regular expression matching unicode general category.
 Labels: ReEscape, ReUnicodeGeneralCategory, ReUnicodePropertyEscape, RegExp
 
@@ -192,7 +241,7 @@ function init() {
 }
 
 Test-Case: output
-Fail-Issue: 
+Fail-Issue: https://github.com/ballerina-platform/ballerina-lang/issues/38630
 Description: Test 4 for regular expression matching unicode general category.
 Labels: ReEscape, ReUnicodeGeneralCategory, ReUnicodePropertyEscape, RegExp
 
@@ -205,6 +254,38 @@ function init() {
     _ = re `\p{gc=Pi}`;
     _ = re `\p{gc=Pf}`;
     _ = re `\p{gc=Po}`;
+
+    _ = re `^\P{gc=P}*$`;
+    _ = re `^\P{gc=Pc}+$`;
+    _ = re `^\P{gc=Pd}?$`;
+    _ = re `^\P{gc=Ps}??$`;
+    _ = re `^[\P{gc=Pe}]{0}$`;
+    _ = re `^\P{gc=Pi}{1,}$`;
+    _ = re `^\P{gc=Pf}{1,4}$`;
+    _ = re `^[\P{gc=Po}]+$`;
+}
+
+Test-Case: output
+Description: Test 5 for regular expression matching unicode general category.
+Labels: ReEscape, ReUnicodeGeneralCategory, ReUnicodePropertyEscape, RegExp
+
+function init() {
+    _ = re `^\p{Mn}+$`;
+    _ = re `^\P{Mc}+$`;
+    _ = re `^\p{Sm}+$`;
+    _ = re `^\P{Zs}+$`;
+    _ = re `^\P{gc=Lu}+$`;
+    _ = re `^\P{gc=Sc}+$`;
+    _ = re `\P{Sc}+$`;
+    _ = re `^\P{gc=Sk}+$`;
+    _ = re `^\P{gc=L}+$`;
+    _ = re `^\P{Lt}+$`;
+    _ = re `^\P{L}+$`;
+    _ = re `^\P{Mc}?$`;
+    _ = re `^\P{Lu}??$`;
+    _ = re `^[\P{gc=No}]{0}$`;
+    _ = re `^\P{gc=Cc}{1,}$`;
+    _ = re `^\P{Zs}{1,4}$`;
 }
 
 Test-Case: output
@@ -329,7 +410,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test regular expression with valid groups contain flags.
+Description: Test regular expression with valid capturing groups contain flags.
 Labels: ReDisjunction, ReFlagsOnOf, RegExp
 
 function init() {
@@ -345,6 +426,8 @@ Labels: ReDisjunction, ReFlagsOnOf, RegExp
 function init() {
     _ = re `(?s:^.$)`;
     _ = re `(?sm:^.$)`;
+    _ = re `(?sm:^.$){1,2}`;
+    _ = re `(?sm:^.$){1,2}?`;
 }
 
 Test-Case: output
@@ -355,6 +438,8 @@ function init() {
     _ = re `(^.$)`;
     _ = re `(?:^.$)`;
     _ = re `(?m:^.$)`;
+    _ = re `(^.$){1,2}`;
+    _ = re `(?:^.$){1,2}?`;
 }
 
 Test-Case: output
@@ -369,7 +454,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test regular expression with groups.
+Description: Test regular expression with capturing groups.
 Labels: ReDisjunction, ReFlagsOnOf, RegExp
 
 function init() {
@@ -377,6 +462,15 @@ function init() {
     _ = re `(ABC)(?m-six:[A-Z0-8]+?)`;
     _ = re `([A-Z]+)(0|1)E`;
     _ = re `(?m:[ABC](?i:))(0|1|2)([a-z]*)`;
+    _ = re `.(A).`;
+    _ = re `.(A)(.)`;
+    _ = re `.(\w\w)`;
+    _ = re `(\w\w\w)`;
+    _ = re `(\w\w)(\w)`;
+    _ = re `(\w\w)(\W)?`;
+    _ = re `B(C)?`;
+    _ = re `((a)|(ab))((c)|(bc))`;
+    _ = re `((((((((((A))))))))))`;
 }
 
 Test-Case: output
@@ -390,6 +484,9 @@ function init() {
     _ = re `A{2}`;
     _ = re `A{2,}`;
     _ = re `a{1,3}`;
+    _ = re `(aa|aabaac|ba|b|c)*`;
+    _ = re `(z)((a+)?(b+)?(c))*`;
+    _ = re `(a*)b\\1+`;
     
     _ = re `A*?`;
     _ = re `B+?`;
@@ -397,6 +494,9 @@ function init() {
     _ = re `A{2}?`;
     _ = re `A{2,}?`;
     _ = re `a{1,3}?`;
+    _ = re `(aa|aabaac|ba|b|c)*?`;
+    _ = re `(z)((a+)?(b+)?(c))*?`;
+    _ = re `(a*)b\\1+?`;
 }
 
 Test-Case: output
@@ -539,4 +639,169 @@ function init() {
     _ = re `([\-d-hM-N\tQ-T])`;
     _ = re `([\-])`;
     _ = re `(x|y|z*)`;
+}
+
+Test-Case: output
+Description: Test regular expression with ReAtom with ReFlagsOnOff.
+Labels: ReAtom, ReCharSet, ReFlagsOnOff, RegExp
+
+function init() {
+    _ = re `(?m:AAD*)`;
+    _ = re `(?i:[^\-d-hM-N\tQ-T])`;
+    _ = re `(?ms:a{1,3})`;
+    _ = re `(?msix:A.*?)`;
+    _ = re `(?ms-ix:[^ABC]{1245,3212})`;
+    _ = re `(?m-i:[\u{1234}])`;
+    _ = re `(?si-m:[\t])`;
+    _ = re `(?x-sm:[\-d-hM-N\tQ-T])`;
+    _ = re `(?mix:[\-])`;
+    _ = re `(?ms-i:x*|y|z+)`;
+}
+
+Test-Case: output
+Description: Test complex regular expression.
+Labels: ReAtom, ReCharSet, ReFlagsOnOff, RegExp
+
+function init() {
+    int a = 3;
+    int b = 2;
+    _ = re `^ab${b}cd*e$`;
+    _ = re `$[^a-b\tx-z]+(?i:ab^c[d-f]){12,}`;
+    _ = re `(x|y)|z|[cde-j]*|(?ms:[^])`;
+    _ = re `[^ab-cdk-l]*${b}+|(?:pqr{1,}${a}*)`;
+    _ = re `a\td-*ab[^c-f]+(?m:xj(?i:x|y))`;
+}
+
+Test-Case: output
+Description: Test parser back-tick in regular expression using interpolation.
+Labels: ReAtom, ReCharSet, ReFlagsOnOff, RegExp
+
+function init() {
+    string a = "`";
+    _ = re `${a}`;
+}
+
+Test-Case: output
+Description: Test character class ReCharSets.
+Labels: ReCharSet, ReCharSetRange, RegExp
+
+function init() {
+    _ = re `[a]`;
+    _ = re `[ab]`;
+    _ = re `[abc]`;
+    _ = re `[abc-iabc-ia]`;
+    _ = re `[abc-]`;
+    _ = re `[ab-cef]`;
+    _ = re `[ab-cefg-hijx-lm]`;
+    _ = re `[ab-c-]`;
+    _ = re `[ab-c-d]`;
+    _ = re `[ab-c--]`;
+    _ = re `[ab\-c--]`;
+    _ = re `[ab-c-\-]`;
+    _ = re `[ab-c---]`;
+    _ = re `[ab-c---\-]`;
+    _ = re `[ab-c--defg-h]`;
+}
+
+Test-Case: output
+Description: Test regular expression with braced quantifier.
+Labels: ReAtom, ReBaseQuantifier, RegExp
+
+function init() {
+    _ = re `a{2}`;
+    _ = re `a{2,}`;
+    _ = re `a{555,567}`;
+    _ = re `a{555,555}`;
+    _ = re `\\d{3}|[a-z]{4}`;
+}
+
+Test-Case: output
+Description: Test regular expression with braced quantifier and non greedy char.
+Labels: ReAtom, ReBaseQuantifier, RegExp
+
+function init() {
+    _ = re `a{2}?`;
+    _ = re `a{2,}?`;
+    _ = re `a{555,567}?`;
+    _ = re `a{555,555}?`;
+    _ = re `\\d{3}?|[a-z]{4}?`;
+}
+
+Test-Case: output
+Description: Test regular expression with ReDisjunction.
+Labels: ReDisjunction, RegExp
+
+function init() {
+    _ = re `ab|cd|ef`;
+    _ = re `(?:ab|cd)+|ef`;
+    _ = re `11111|111`;
+    _ = re `XYZ|...`;
+    _ = re `(.)..|ABC`;
+    _ = re `(AAA)|(BBB)|(CCC)|(DDDD)`;
+    _ = re `()|`;
+    _ = re `|()`;
+    _ = re `|`;
+}
+
+Test-Case: output
+Description: Test regular expression with ReTerm.
+Labels: ReTerm, RegExp
+
+function init() {
+    _ = re `\\w{3}\\d?`;
+    _ = re `\\s+bal\\s+`;
+    _ = re `[a-z]+(\\d+)`;
+    _ = re `(B*)(D+)(E+)`;
+    _ = re `(\\d*)\\d(\\d+)`;
+    _ = re `[\\d]*[\\s]*bc.`;
+    _ = re `bc..[\\d]*[\\s]*`;
+    _ = re `.?.?.?.?.?.?.?`;
+    _ = re `x{1,2}x{1,}`;
+    _ = re `\\??\\??\\??\\??\\??`;
+    _ = re `[xyz]*1`;
+    _ = re `^(([a-z]+)*[a-z]\\.)+[a-z]{2,}$`;
+    _ = re `(.*?)a(\?!(a+)b\\2c)\\2(.*)`;
+    _ = re `([A-H]{2})?\)\\1`;
+    _ = re `(a*)b\\1+`;
+}
+
+Test-Case: output
+Description: Test regular expression with contextually expected type.
+Labels: ReSequence, RegExp, string
+
+function init() {
+    string:RegExp res1 = re `ABC`;
+    string:RegExp res2 = re `$[^a-b\tx-z]+(?i:ab^c[d-f]){12,}`;
+    string:RegExp res3 = re `[^\u{41}-d\u{55}-\u{58}]`;
+}
+
+Test-Case: output
+Description: Test regular expression with comment and whitespace.
+Labels: ReSequence, RegExp, string
+
+function init() {
+    _ = re  // some ------------- comment -----------------  string
+    `ABC`;
+    _ = re   `ABC`;
+    _ = re              `ABC`;
+}
+
+Test-Case: output
+Description: Test `re` keyword as function name.
+Labels: function, returns
+
+function re() returns int {
+    return 1;
+}
+
+function init() {
+    _ = re();
+}
+
+Test-Case: output
+Description: Test `re` keyword as variable name.
+Labels: variable
+
+function init() {
+    int re = 5;
 }
