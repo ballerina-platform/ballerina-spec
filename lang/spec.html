@@ -4016,19 +4016,14 @@ same identifier in the same symbol space also with block-scope.
 </p>
 
 <pre
-class="grammar">qualified-identifier := module-prefix NoSpaceColon (identifier | <code>client</code>)
+class="grammar">qualified-identifier := module-prefix NoSpaceColon identifier
 module-prefix := identifier | predeclared-prefix
 </pre>
 <p>
 A <code>module-prefix</code> is a name that is used locally within the source of
 a module to refer to another module. A <code>module-prefix</code> in a
 qualified-identifier must refer to a <code>module-prefix</code> specified in an
-import declaration or external client declaration in the same source part.
-</p>
-<p>
-A qualified-identifier <code><var>m</var>:client</code> refers to the client
-class constructed by the module external client declaration that declares
-<code><var>m</var></code>.
+import declaration in the same source part.
 </p>
 
 </section>
@@ -9846,7 +9841,6 @@ other-decl :=
    | module-var-decl
    | module-const-decl
    | module-enum-decl
-   | module-client-decl
    | module-xmlns-decl
    | annotation-decl
 </pre>
@@ -10476,31 +10470,6 @@ public type Color RED|GREEN|BLUE;
 </section>
 
 <section>
-<h3 id="module_external_client_declaration">Module external client declaration</h3>
-<pre
-class="grammar">module-client-decl := := [annots] <code>client</code> service-uri <code>as</code> module-prefix <code>;</code>
-service-uri := string-literal
-</pre>
-
-<p>
-A <code>module-client-decl</code> constructs a module that contains a client class that
-can be used to access a service described by a web resource. The
-<code>service-uri</code> specifies the URI of this resource. The format of the
-description is not constrained by this specification, but implementations are
-expected to support OpenAPI documents as described by the OpenAPI specification.
-The constructed module can also contain declarations of types and constants used
-by the client class. The <code>module-client-decl</code> also declares a
-<code>module-prefix</code>, which can be used to refer to the constructed
-module.
-</p>
-<p>
-The scope of a <code>module-prefix</code> declared in the
-<code>module-client-decl</code> is the source part in which the
-<code>module-client-decl</code> occurs.
-</p>
-
-</section>
-<section>
 <h3>Module XML namespace declaration</h3>
 <pre
 class="grammar">module-xmlns-decl := xmlns-decl
@@ -10728,11 +10697,6 @@ The available attachment points are described in the following table.
   <tr>
    <td>listener</td>
    <td>listener-decl</td>
-   <td>none</td>
-  </tr>
-  <tr>
-   <td>client</td>
-   <td>client-decl</td>
    <td>none</td>
   </tr>
   <tr>
@@ -11427,8 +11391,6 @@ more than one basic type..</p>
 <h3>Summary of changes from 2022R3 to 2022R4</h3>
 <ol>
 <li>Regular expressions have been added as a new data type.</li>
-<li>An external client declaration makes it convenient to declare a client class
-for accessing a service defined in a format such as OpenAPI.</li>
 <li>A <code>byte-array-literal</code> can construct a read-only value.</li>
 <li>An optional semi-colon is now allowed after top-level definitions and
 method definitions that are currentlty terminated by <code>}</code>.</li>
