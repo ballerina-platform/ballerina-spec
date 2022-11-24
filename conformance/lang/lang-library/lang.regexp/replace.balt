@@ -1,52 +1,55 @@
 Test-Case: output
 Description: Test `replace` function with replacement string.
+Labels: function-call-expr, regexp, replace, method-call-expr
 
 function init() {
-    string str1 = "ReplaceThisThisTextThis";
-    var regExpr1 = re `This`;
+    string str1 = "ReplaceThisThusTextThis";
+    var regExpr1 = re `Th.s`;
     string replacement1 = " ";
     string result1 = regExpr1.replace(str1, replacement1);
-    io:println(result1); // @output "Replace ThisTextThis"
+    io:println(result1); // @output Replace ThusTextThis
 
     string result11 = regExpr1.replace(str1, replacement1, 0);
-    io:println(result11); // @output "Replace ThisTextThis"
+    io:println(result11); // @output Replace ThusTextThis
 
-    string result12 = regExpr1.replace(str1, replacement1, 1);
-    io:println(result12); // @output "ReplaceThis TextThis"
+    string result12 = regExpr1.replace(str1, replacement1, 11);
+    io:println(result12); // @output ReplaceThis TextThis
 
     string result2 = re `This`.replace("ReplaceThisThisTextThis", "# ");
-    io:println(result2); // @output "Replace# ThisTextThis"
+    io:println(result2); // @output Replace# ThisTextThis
 
     string str3 = "10010011";
     var regExpr3 = re `0+`;
     string replacement3 = "*";
     string result3 = regExpr3.replace(str3, replacement3);
-    io:println(result3); // @output "1*10011"
+    io:println(result3); // @output 1*10011
 
     string str4 = "100100011";
     var regExpr4 = re `0+`;
     string replacement4 = "*";
-    string result4 = regExpr4.replace(str4, replacement4); // @output "1*100011"
+    string result4 = regExpr4.replace(str4, replacement4);
+    io:println(result4); // @output 1*100011
 
     string str5 = "WillNotBeMatched";
     var regExpr5 = re `This`;
     string replacement5 = "That";
     string result5 = regExpr5.replace(str5, replacement5);
-    io:println(result5); // @output "WillNotBeMatched"
+    io:println(result5); // @output WillNotBeMatched
 }
 
 Test-Case: output
 Description: Test `replace` function with replacement function.
+Labels: function-call-expr, regexp, replace, method-call-expr
 
 function init() {
     string str1 = "100000100011";
     var regExpr = re `0+`;
     string result1 = regExpr.replace(str1, replacementFunctionForReplace);
-    io:println(result1); // @output "16100011"
+    io:println(result1); // @output 16100011
 
     string str2 = "100100011";
     string result2 = regExpr.replace(str2, replacementFunctionForReplace, 4);
-    io:println(result6); // @output "1001711"
+    io:println(result6); // @output 1001711
 }
 
 isolated function replacementFunctionForReplace(regexp:Groups groups) returns string {
@@ -55,23 +58,25 @@ isolated function replacementFunctionForReplace(regexp:Groups groups) returns st
 
 Test-Case: output
 Description: Test assignability of `replace` function result.
+Labels: function-call-expr, regexp, replace, method-call-expr
 
 function init() {
     string str1 = "ReplaceThisThisTextThis";
     var regExpr1 = re `This`;
     any result1 = regExpr1.replace(str1, "1");
     io:println(result1 is string); // @output true
-    io:println(result1); // @output "Replace1ThisTextThis"
+    io:println(result1); // @output Replace1ThisTextThis
 
-    string str1 = "ReplaceThisThisTextThis";
-    var regExpr1 = re `This`;
-    var result2 = regExpr1.replace(str1, "2");
+    string str2 = "ReplaceThisThisTextThis";
+    var regExpr2 = re `This`;
+    var result2 = regExpr2.replace(str2, "2");
     io:println(result2 is string); // @output true
-    io:println(result2); // @output "Replace2ThisTextThis"
+    io:println(result2); // @output Replace2ThisTextThis
 }
 
 Test-Case: error
 Description: Test assigning the result of `replace` method to an incompatible type.
+Labels: function-call-expr, regexp, replace, method-call-expr
 
 function errorFunction() {
     string str = "ReplaceThisThisTextThis";
@@ -85,6 +90,7 @@ function errorFunction() {
 
 Test-Case: error
 Description: Test missing required parameters for `replace` method.
+Labels: function-call-expr, regexp, replace, method-call-expr
 
 function errorFunction() {
     string str = "ReplaceThisThisTextThis";
@@ -98,6 +104,7 @@ function errorFunction() {
 
 Test-Case: error
 Description: Test passing invalid parameters to `replace` method.
+Labels: function-call-expr, regexp, replace, method-call-expr
 
 function errorFunction(string|int si) {
     string _ = regExpr1.replace("ReplaceThisThisTextThis", 12); // @error int is not a subtype of Replacment
@@ -111,6 +118,7 @@ function errorFunction(string|int si) {
 
 Test-Case: error
 Description: Test passing too many parameters to `replace` method.
+Labels: function-call-expr, regexp, replace, method-call-expr
 
 function errorFunction(string|int si) {
     string _ = regExpr1.replace("ReplaceThisThisTextThis", "This", 1, 2); // @error too many arguments

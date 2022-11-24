@@ -1,35 +1,63 @@
 Test-Case: output
 Description: Test `find` function.
+Labels: function-call-expr, regexp, find, method-call-expr
+
+import ballerina/lang.regexp;
 
 function init() {
-    var regExpr1 = re `Here`;
-    string str1 = "MatchHereAndHere";
+    var regExpr1 = re `here(1|\s)`;
+    string str1 = "notherematchhere andthere1";
     regexp:Span? res1 = regExpr1.find("NotMatching");
     io:println(res1 is ()); // @output true
 
     regexp:Span? res2 = regExpr1.find(str1);
     io:println(res2 is regexp:Span); // @output true
     regexp:Span res2span = <regexp:Span> res2;
-    io:println(res2span.startIndex); // @output 5
-    io:println(res2span.endIndex);  // @output 9
+    io:println(res2span.startIndex); // @output 12
+    io:println(res2span.endIndex);  // @output 17
 
-    regexp:Span? res3 = regExpr1.find(str1, 10);
+    regexp:Span? res3 = regexp:find(re `here(1|\s)`, str1, 20);
     io:println(res3 is regexp:Span); // @output true
     regexp:Span res3span = <regexp:Span> res3;
-    io:println(res3span.startIndex); // @output 12
-    io:println(res3span.endIndex); // @output 16
+    io:println(res3span.startIndex); // @output 21
+    io:println(res3span.endIndex); // @output 26
 
-    regexp:Span? res4 = regExpr1.find(str1, 7);
+    regexp:Span? res4 = regExpr1.find(str1, 15);
     io:println(res4 is regexp:Span); // @output true
     regexp:Span res4span = <regexp:Span> res4;
-    io:println(res4span.startIndex); // @output 12
-    io:println(res4span.endIndex); // @output 16
+    io:println(res4span.startIndex); // @output 21
+    io:println(res4span.endIndex); // @output 26
+
+    regexp:Span? res5 = re `here(1|\s)`.find("notherematchhere andthere1", 21);
+    io:println(res5 is regexp:Span); // @output true
+    regexp:Span res5span = <regexp:Span> res5;
+    io:println(res5span.startIndex); // @output 21
+    io:println(res5span.endIndex); // @output 26
 }
 
 Test-Case: output
-Description: Test `find` function with negative range.
+Description: Test `find` function at module level.
+Labels: function-call-expr, regexp, find, method-call-expr
+
+import ballerina/lang.regexp;
+
+var regExpr = re `[0-2][0-4]:([0-5][0-9]|60)`;
+regexp:Span? res = regExpr.find("does not match 34:23 but match 24:59");
 
 function init() {
+    io:println(res is regexp:Span); // @output true
+    regexp:Span resspan = <regexp:Span> res;
+    io:println(resspan.startIndex); // @output 31
+    io:println(resspan.endIndex);  // @output 36
+}
+
+Test-Case: error
+Description: Test `find` function with negative range.
+Labels: function-call-expr, regexp, find, method-call-expr
+
+import ballerina/lang.regexp;
+
+function errorFunction() {
     var regExpr1 = re `Here`;
     string str1 = "MatchHereAndHere";
 
@@ -38,6 +66,9 @@ function init() {
 
 Test-Case: output
 Description: Test assignability of `find` function result.
+Labels: function-call-expr, regexp, find, method-call-expr
+
+import ballerina/lang.regexp;
 
 function init() {
     var regExpr1 = re `Here`;
@@ -51,6 +82,9 @@ function init() {
 
 Test-Case: error
 Description: Test assigning the result of `find` function to an incompatible type.
+Labels: function-call-expr, regexp, find, method-call-expr
+
+import ballerina/lang.regexp;
 
 function errorFunction() {
     var regExpr1 = re `MatchHereAndHere`;
@@ -63,16 +97,22 @@ function errorFunction() {
 
 Test-Case: error
 Description: Test missing required parameters for `find` method.
+Labels: function-call-expr, regexp, find, method-call-expr
+
+import ballerina/lang.regexp;
 
 function errorFunction() {
     var regExpr1 = re `regexp`;
 
-    regexp:Span? _ = find.find(); // @error missing string argument
+    regexp:Span? _ = regExpr1.find(); // @error missing string argument
 
 }
 
 Test-Case: error
 Description: Test passing invalid parameters to `find()` method.
+Labels: function-call-expr, regexp, find, method-call-expr
+
+import ballerina/lang.regexp;
 
 function errorFunction(string|int si) {
     var regExpr1 = re `Here`;
@@ -84,6 +124,9 @@ function errorFunction(string|int si) {
 
 Test-Case: error
 Description: Test passing too many parameters to `find()` method.
+Labels: function-call-expr, regexp, find, method-call-expr
+
+import ballerina/lang.regexp;
 
 function errorFunction(string|int si) {
     var regExpr1 = re `Here`;

@@ -1,5 +1,8 @@
 Test-Case: output
 Description: Test `findAll` function.
+Labels: function-call-expr, regexp, findAll, method-call-expr
+
+import ballerina/lang.regexp;
 
 function init() {
     var regExpr1 = re `Here`;
@@ -18,16 +21,68 @@ function init() {
     io:println(res2SpanArr_2.startIndex); // @output 12
     io:println(res2SpanArr_2.endIndex);  // @output 16
 
-    regexp:Span? res3 = regExpr1.findAll(str1, 10);
+    regexp:Span[]? res3 = regexp:findAll(re `Here`, str1, 10);
     regexp:Span[] res3SpanArr = <regexp:Span[]>res3;
     io:println(res3SpanArr.length());  // @output 1
-    regexp:Span res2SpanArr_1 = res2SpanArr[0];
-    io:println(res2SpanArr_1.startIndex); // @output 12
-    io:println(res2SpanArr_1.endIndex);  // @output 16
+    regexp:Span res3SpanArr_1 = res3SpanArr[0];
+    io:println(res3SpanArr_1.startIndex); // @output 12
+    io:println(res3SpanArr_1.endIndex);  // @output 16
+
+    var regExpr4 =  re `w{3}\.[a-z0-9]+\.[a-z]{2,6}`;
+    string str4 = "math the websites www.google.com and www.a1bz09.org but not www.google.a and end of www.google.abcdefgh";
+
+    regexp:Span[]? res4 = regExpr4.findAll(str4);
+    io:println(res4 is regexp:Span[]); // @output true
+    regexp:Span[] res4spans = <regexp:Span[]> res4;
+    io:println(res4spans.length());  // @output 3
+
+    regexp:Span res4span1 = <regexp:Span> res4spans[0];
+    io:println(res4span1.startIndex); // @output 18
+    io:println(res4span1.endIndex);  // @output 32
+    io:println(str4.substring(res4span1.startIndex, res4span1.endIndex)); // @output www.google.com
+
+    regexp:Span res4span2 = <regexp:Span> res4spans[1];
+    io:println(res4span2.startIndex); // @output 37
+    io:println(res4span2.endIndex);  // @output 51
+    io:println(str4.substring(res4span2.startIndex, res4span2.endIndex)); // @output www.a1bz09.org
+
+    regexp:Span res4span3 = <regexp:Span> res4spans[2];
+    io:println(res4span3.startIndex); // @output 84
+    io:println(res4span3.endIndex);  // @output 101
+    io:println(str4.substring(res4span3.startIndex, res4span3.endIndex)); // @output www.google.abcdef
+}
+
+Test-Case: output
+Description: Test `findAll` function.
+Labels: function-call-expr, regexp, findAll, method-call-expr
+
+import ballerina/lang.regexp;
+
+var regExpr =  re `[a-z0-9]+@[a-z0-9]+\.[a-z]{2,6}`;
+string str = "match the emails user1@google.com and 4us3r@a1bz09.com";
+regexp:Span[]? res = regExpr.findAll(str);
+
+function init() {
+    io:println(res is regexp:Span[]); // @output true
+    regexp:Span[] resspans = <regexp:Span[]> res;
+    io:println(resspans.length());  // @output 2
+
+    regexp:Span resspan1 = <regexp:Span> resspans[0];
+    io:println(resspan1.startIndex); // @output 17
+    io:println(resspan1.endIndex);  // @output 33
+    io:println(str.substring(resspan1.startIndex, resspan1.endIndex)); // @output user1@google.com
+
+    regexp:Span resspan2 = <regexp:Span> resspans[1];
+    io:println(resspan2.startIndex); // @output 38
+    io:println(resspan2.endIndex);  // @output 54
+    io:println(str.substring(resspan2.startIndex, resspan2.endIndex)); // @output 4us3r.a1bz09.co
 }
 
 Test-Case: output
 Description: Test `findAll` function with negative range.
+Labels: function-call-expr, regexp, findAll, method-call-expr
+
+import ballerina/lang.regexp;
 
 function init() {
     var regExpr1 = re `Here`;
@@ -38,6 +93,8 @@ function init() {
 
 Test-Case: output
 Description: Test assignability of `findAll` function result.
+
+import ballerina/lang.regexp;
 
 function init() {
     var regExpr1 = re `Here`;
@@ -51,6 +108,9 @@ function init() {
 
 Test-Case: error
 Description: Test assigning the result of `findAll` function to an incompatible type.
+Labels: function-call-expr, regexp, findAll, method-call-expr
+
+import ballerina/lang.regexp;
 
 function errorFunction() {
     var regExpr1 = re `MatchHereAndHere`;
@@ -65,16 +125,21 @@ function errorFunction() {
 
 Test-Case: error
 Description: Test missing required parameters for `findAll` method.
+Labels: function-call-expr, regexp, findAll, method-call-expr
+
+import ballerina/lang.regexp;
 
 function errorFunction() {
     var regExpr1 = re `regexp`;
-
     regexp:Span[]? _ = findAll.findAll(); // @error missing string argument
 
 }
 
 Test-Case: error
 Description: Test passing invalid parameters to `findAll()` method.
+Labels: function-call-expr, regexp, findAll, method-call-expr
+
+import ballerina/lang.regexp;
 
 function errorFunction(string|int si) {
     var regExpr1 = re `Here`;
@@ -86,6 +151,9 @@ function errorFunction(string|int si) {
 
 Test-Case: error
 Description: Test passing too many parameters to `findAll()` method.
+Labels: function-call-expr, regexp, findAll, method-call-expr
+
+import ballerina/lang.regexp;
 
 function errorFunction(string|int si) {
     var regExpr1 = re `Here`;
