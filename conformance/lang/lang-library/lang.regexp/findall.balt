@@ -7,8 +7,8 @@ import ballerina/lang.regexp;
 function init() {
     var regExpr1 = re `Here`;
     string str1 = "MatchHereAndHere";
-    regexp:Span[]? res1 = regExpr1.findAll("NotMatching");
-    io:println(res1 is ()); // @output true
+    regexp:Span[] res1 = regExpr1.findAll("NotMatching");
+    io:println(res1.length() == 0); // @output true
 
     regexp:Span[]? res2 = regExpr1.findAll(str1);
     io:println(res2 is regexp:Span[]); // @output true
@@ -75,16 +75,16 @@ function init() {
     regexp:Span resspan2 = <regexp:Span> resspans[1];
     io:println(resspan2.startIndex); // @output 38
     io:println(resspan2.endIndex);  // @output 54
-    io:println(str.substring(resspan2.startIndex, resspan2.endIndex)); // @output 4us3r.a1bz09.co
+    io:println(str.substring(resspan2.startIndex, resspan2.endIndex)); // @output 4us3r@a1bz09.com
 }
 
-Test-Case: output
+Test-Case: error
 Description: Test `findAll` function with negative range.
 Labels: function-call-expr, regexp, findAll, method-call-expr
 
 import ballerina/lang.regexp;
 
-function init() {
+function errorFunction() {
     var regExpr1 = re `Here`;
     string str1 = "MatchHereAndHere";
 
@@ -141,7 +141,7 @@ Labels: function-call-expr, regexp, findAll, method-call-expr
 
 import ballerina/lang.regexp;
 
-function errorFunction(string|int si) {
+function errorFunction() {
     var regExpr1 = re `Here`;
 
     regexp:Span[]? _ = regExpr1.findAll(12); // @error int is not a subtype of string
@@ -155,7 +155,7 @@ Labels: function-call-expr, regexp, findAll, method-call-expr
 
 import ballerina/lang.regexp;
 
-function errorFunction(string|int si) {
+function errorFunction() {
     var regExpr1 = re `Here`;
 
     regexp:Span[]? _ = regExpr1.isFullMatch("MatchHereAndHere", 5, 1); // @error too many arguments

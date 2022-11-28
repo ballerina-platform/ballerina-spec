@@ -7,7 +7,7 @@ import ballerina/lang.regexp;
 function init() {
     string:RegExp|error x = regexp:fromString("A\\p{Lu}??B+\\W\\(+?C*D{1,4}?");
     io:println(x is string:RegExp); // @output true
-    io:println(re `A\p{Lu}??B+\W\(+?C*D{1,4}?` == <string:RegExp> x); // @output true
+    io:println(x is string:RegExp && re `A\p{Lu}??B+\W\(+?C*D{1,4}?` == x); // @output true
 }
 
 Test-Case: output
@@ -20,7 +20,7 @@ string:RegExp|error x = regexp:fromString("A\\p{Lu}??B+\\W\\(+?C*D{1,4}?");
 
 function init() {
     io:println(x is string:RegExp); // @output true
-    io:println(re `A\p{Lu}??B+\W\(+?C*D{1,4}?` == <string:RegExp> x); // @output true
+    io:println(x is string:RegExp && re `A\p{Lu}??B+\W\(+?C*D{1,4}?` == x); // @output true
 }
 
 Test-Case: output
@@ -33,8 +33,8 @@ function init() {
     string:RegExp|error x = regexp:fromString("AB+^*");
     io:println(x is error); // @output true
 
-    string:RegExp|error x = regexp:fromString("(abc");
-    io:println(x is error); // @output true
+    string:RegExp|error x1 = regexp:fromString("(abc");
+    io:println(x1 is error); // @output true
 }
 
 Test-Case: output
@@ -82,7 +82,7 @@ Labels: function-call-expr, regexp, regexp:fromString, string
 
 import ballerina/lang.regexp;
 
-function errorFunction(string|int si) {
+function errorFunction() {
     string _ = regexp:fromString(1213); // @error int is not a subtype of string
 }
 
@@ -92,6 +92,6 @@ Labels: function-call-expr, regexp, regexp:fromString, string
 
 import ballerina/lang.regexp;
 
-function errorFunction(string|int si) {
-    string _ = regexp:fromString("this", "that); // @error too many arguments
+function errorFunction() {
+    string _ = regexp:fromString("this", "that"); // @error too many arguments
 }
