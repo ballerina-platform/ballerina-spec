@@ -47,10 +47,10 @@ public isolated function cloneReadOnly(CloneableType v) returns CloneableType & 
 # + return - a new value that belongs to type `t`, or an error if this cannot be done
 # 
 # When `v` is a structural value, the inherent type of the value to be constructed
-# comes from `t`. When `t` is a union, it must be possible to determine which
-# member of the union to use for the inherent type by following the same rules
-# that are used by list constructor expressions and mapping constructor expressions
-# with the contextually expected type. If not, then an error is returned.
+# comes from `t`. When `t` is a union that includes more than one type descriptor
+# that can be used as the inherent type of values with `v`'s basic type, then
+# the inherent type used will be the first (leftmost) such type descriptor such that a value
+# belonging to that type can be constructed from `v`.
 # The `cloneWithType` operation is recursively applied to each member of `v` using
 # the type descriptor that the inherent type requires for that member.
 # 
