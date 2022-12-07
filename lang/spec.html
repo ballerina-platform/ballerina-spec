@@ -8676,7 +8676,7 @@ the compiler determines for each lvexpr whether it is potentially undefined and
 whether it is potentially uninitialized.
 </p>
 <p>
-An lvalue supports three operations: store, read and filling-read.
+An lvalue supports four operations: store, remove, read and filling-read.
 </p>
 <p>
 The fundamental operation on an lvalue is to store a value in the storage
@@ -8719,6 +8719,17 @@ referring to a member k of a list value and the length of the list is n and k is
 using the FillMember abstract operation. The FillMember abstract operation may
 fail; in particular it will fail if the list is a fixed-length array. If the
 FillMember operation fails, then the attempt to store will panic.
+</p>
+<p>
+An lvalue that refers to a member of a mapping value supports a remove
+operation, which removes any member with the specific key referred to by the
+lvalue. The removal may be impermissible because it the inherent type of the
+mapping value requires a member with this key or because the mapping value is
+immutable. As with a store operation, a remove operation must be verified at
+runtime to ensure that it is not impermissible; an attempt to perform an
+impermissible remove operation will result in a panic at runtime. Performing the
+remove operation on a member that is not present has no effect, but is not an
+error.
 </p>
 <p>
 An lvalue also allows a read operation, which is used by the compound assignment
@@ -8833,18 +8844,28 @@ key type for T.
 class="grammar">assignment-stmt := lvexpr <code>=</code> action-or-expr <code>;</code>
 </pre>
 <p>
-The static type of action-or-expr must be a subtype of the static type of
-lvexpr. The static type of lvexpr provides the contextually expected type for
-action-or-expr. It is not an error for lvexpr to be potentially undefined or
-potentially uninitialized.
+An assignment-stmt stores the value that results from evaluating action-or-expr
+in the storage location referred to by lvexpr. When lvexpr is potentially
+undefined and has a static type that does not include nil, then a value of nil
+means to remove the member referred to by the lvexpr.
 </p>
 <p>
-It is executed at as follows:
+The static type of action-or-expr must be a subtype of the union of nil and the
+static type of lvexpr. If the static type of action-or-expr allows nil, but the
+static type of lvexpr does not allow nil, then lvexpr must refer to a member of
+a mapping value and must be be potentially undefined. The static type of lvexpr
+provides the contextually expected type for action-or-expr. It is not an error
+for lvexpr to be potentially undefined or potentially uninitialized.
+</p>
+<p>
+An assignment-stmt is executed at as follows:
 </p>
 <ol>
 <li>execute action-or-expr to get a value <var>v</var>;</li>
 <li>evaluate lvexpr to get an lvalue <var>lv</var>;</li>
-<li>perform the store operation of <var>lv</var> with value <var>v</var>.</li>
+<li>if <var>v</var> is nil but the static type of lvexpr does not allow nil,
+then perform the remove operation on <var>lv</var>; otherwise, perform the store
+operation on <var>lv</var> with value <var>v</var>.</li>
 </ol>
 
 </section>
