@@ -83,7 +83,7 @@ public isolated function abs(float x) returns float = external;
 # (this is the round-to-nearest rounding mode, which is the default for IEEE and for Ballerina).
 # A value of `fractionDigits` greater than 0 thus corresponds to the number of digits after the decimal
 # point being `fractionDigits`; a value of 0 for `fractionDigits` rounds to an integer.
-# If `x` is NaN, +0, -0, +∞ or -∞, then the result is `x``.
+# If `x` is NaN, +0, -0, +∞ or -∞, then the result is `x`.
 # When `fractionDigits` is 0, this is
 # the same as Java Math.rint method, .NET Math.Round method and
 # IEEE roundToIntegralTiesToEven operation
@@ -275,8 +275,8 @@ public isolated function fromBitsInt(int x) returns float = external;
 # The returned string will be in the same format used by `value:toString`,
 # except that it will not include an exponent.
 # If `x` is NaN or infinite, the result will be the same as `value:toString`.
-# This will panic if `fractionDigits`` is less than 0.
-# If `fractionDigits`` is zero, there will be no decimal point.
+# This will panic if `fractionDigits` is less than 0.
+# If `fractionDigits` is zero, there will be no decimal point.
 # Any necessary rounding will use the roundTiesToEven rounding direction.
 # 
 # + x - float value
