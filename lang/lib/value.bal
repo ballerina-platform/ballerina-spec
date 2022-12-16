@@ -132,7 +132,7 @@ public isolated function toJson(anydata v) returns json = external;
 # + return - string representation of `v` converted to `json`
 public isolated function toJsonString(anydata v) returns string = external;
 
-# Parses a string in JSON format and returns the the value that it represents.
+# Parses a string in JSON format and returns the value that it represents.
 # Numbers in the JSON string are converted into Ballerina values of type
 # decimal except in the following two cases:
 # if the JSON number starts with `-` and is numerically equal to zero, then it is
