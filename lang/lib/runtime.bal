@@ -55,7 +55,7 @@ public type StackFrame readonly & object {
 # The first member of the array represents the top of the call stack.
 public isolated function getStackTrace() returns StackFrame[] = external;
 
-# Type of the function passed to `onGracefulStop.
+# Type of the function passed to `onGracefulStop`.
 public type StopHandler function() returns error?;
 
 # Registers a function that will be called during graceful shutdown.
