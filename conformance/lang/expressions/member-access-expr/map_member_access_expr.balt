@@ -1,0 +1,505 @@
+Test-Case: parser-error
+Description: Test missing key expression in member access expression.
+Labels: int, map-type, mapping-constructor-expr, member-access-expr, string, union-type
+
+function errorFunction() {
+    map<int|string> p1 = {id: 1, name: "Mike"};
+    _ = p1[]; // @error missing key expression
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a subtype of string as the key expression when the basic type
+             of the container expression is a map.
+Labels: int, map-type, mapping-constructor-expr, member-access-expr, module-const-decl, module-type-defn, string,
+        union-type
+
+const idf = "id";
+
+type StringType1 "id"|"name";
+
+function init() {
+    map<int|string> p1 = {id: 1, name: "John", age: 23};
+
+    io:println(p1["id"]); // @output 1
+
+    io:println(p1[idf]); // @output 1
+
+    string idf1 = "name";
+    io:println(p1[idf1]); // @output John
+
+    StringType1 idf2 = "name";
+    io:println(p1[idf2]); // @output John
+}
+
+Test-Case: error
+Description: Test key expression with invalid static type.
+Labels: any, int, map-type, mapping-constructor-expr, member-access-expr, string, union-type
+
+function errorFunction() {
+    map<int|string> p1 = {id: 1, name: "Mike"};
+
+    _ = p1[1]; // @error expected a key of type string, found int
+
+    int a = 1;
+    _ = p1[a]; // @error expected a key of type string, found int
+
+    int|string b = "id";
+    _ = p1[b]; // @error expected a key of type string, found (int|string)
+
+    any c = "id";
+    _ = p1[c]; // @error expected a key of type string, found any
+}
+
+Test-Case: output
+Description: Test using a value of a static type that is a subtype of string as the key expression when the basic type
+             of the container expression is a union of map and nil.
+Labels: int, map-type, mapping-constructor-expr, member-access-expr, module-const-decl, module-type-defn, optional-type,
+        string, union-type
+
+const idf = "id";
+
+type StringType1 "id"|"name";
+
+function init() {
+    map<int|string>? p1 = {id: 1, name: "John", age: 23};
+
+    io:println(p1["id"]); // @output 1
+
+    io:println(p1[idf]); // @output 1
+
+    string idf1 = "name";
+    io:println(p1[idf1]); // @output John
+
+    StringType1 idf2 = "name";
+    io:println(p1[idf2]); // @output John
+}
+
+Test-Case: output
+Description: Test the result of evaluating a member access expression when basic type of the evaluated value of the
+             container expression is a map.
+Labels: int, map-type, mapping-constructor-expr, member-access-expr, method-call-expr, string, union-type,
+        value:toBalString
+
+function init() {
+    map<int|string> p1 = {id: 1, name: "John", age: 23};
+
+    io:println(p1["id"]); // @output 1
+
+    io:println(p1["name"]); // @output John
+
+    io:println(p1["age"]); // @output 23
+
+    io:println(p1["address"].toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test the result of evaluating a member access expression when basic type of the evaluated value of the
+             container expression is a union of nil and map.
+Labels: is-expr, map-type, member-access-expr, method-call-expr, nil-literal, optional-type, string, value:toBalString
+
+function init() {
+    map<string>? p = ();
+
+    io:println(p is ()); // @output true
+    io:println(p["id"].toBalString()); // @output ()
+
+    map<string>? p2 = {a: "A", b: "B"};
+    io:println(p2["a"]); // @output A
+}
+
+Test-Case: output
+Description: Test the static type of member access expression when the container expression is of map type.
+Labels: int, map-type, mapping-constructor-expr, member-access-expr, method-call-expr, optional-type, string, union-type,
+        value:toBalString
+
+function init() {
+    map<int|string> p1 = {id: 1, name: "John", age: 23};
+
+    int|string? id = p1["id"];
+    io:println(id); // @output 1
+
+    int|string? nm = p1["name"];
+    io:println(nm); // @output John
+
+    int|string? age = p1["age"];
+    io:println(age); // @output 23
+
+    int|string? addr = p1["addr"];
+    io:println(addr.toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test the static type of member access expression when the static type of the container expression
+             contains nil.
+Labels: int, map-type, mapping-constructor-expr, member-access-expr, method-call-expr, optional-type, string, union-type,
+        value:toBalString
+
+function init() {
+    map<int|string>? p1 = {id: 1, name: "John", age: 23};
+
+    int|string? id = p1["id"];
+    io:println(id); // @output 1
+
+    int|string? nm = p1["name"];
+    io:println(nm); // @output John
+
+    int|string? age = p1["age"];
+    io:println(age); // @output 23
+
+    int|string? addr = p1["addr"];
+    io:println(addr.toBalString()); // @output ()
+}
+
+Test-Case: error
+Description: Test assigning result of accessing members of a map type to an invalid type.
+Labels: int, map-type, mapping-constructor-expr, member-access-expr, string, union-type
+
+function errorFunction() {
+    map<int|string> p1 = {id: 1, name: "Mike"};
+
+    int|string _ = p1["name"]; // @error expected a `int|string`, but the static type of the accessed value is `int|string?`
+}
+
+Test-Case: error
+Description: Test assigning result of accessing members of a union of map and nil type to an invalid type.
+Labels: int, map-type, mapping-constructor-expr, member-access-expr, string, union-type
+
+function errorFunction() {
+    map<int|string>? p1 = {id: 1, name: "Mike"};
+
+    int|string _ = p1["name"]; // @error expected a `int|string`, but the static type of the accessed value is `int|string?`
+}
+
+Test-Case: output
+Description: Test field access expression as container expression of type map.
+Labels: field-access-expr, int, map-type, mapping-constructor-expr, member-access-expr, module-type-defn, record-type,
+        string, union-type
+
+type Record record {|
+    map<int|string> p;
+|};
+
+function init() {
+    Record rec = {p: {id: 1, name: "John", age: 23}};
+
+    io:println(rec.p["id"]); // @output 1
+}
+
+Test-Case: output
+Description: Test member access expression as container expression of type map.
+Labels: int, map-type, mapping-constructor-expr, member-access-expr, module-type-defn, record-type, string, union-type
+
+type Record record {|
+    map<int|string> p;
+|};
+
+function init() {
+    Record rec = {p: {id: 1, name: "John", age: 23}};
+
+    io:println(rec["p"]["id"]); // @output 1
+}
+
+Test-Case: output
+Description: Test function call expression as container expression of type map.
+Labels: function-call-expr, int, map-type, mapping-constructor-expr, member-access-expr, string, union-type
+
+function init() {
+    io:println(getMap()["id"]); // @output 1
+}
+
+function getMap() returns map<int|string> {
+    return {id: 1, name: "John", age: 23};
+}
+
+Test-Case: output
+Description: Test method call expression as container expression of type map.
+Labels: implicit-new-expr, int, map-type, mapping-constructor-expr, member-access-expr, method-call-expr,
+        module-class-defn, string, union-type
+
+class Map {
+    function getMap() returns map<int|string> {
+        return {id: 1, name: "John", age: 23};
+    }
+}
+
+function init() {
+    Map m = new;
+    io:println(m.getMap()["name"]); // @output John
+}
+
+Test-Case: output
+Description: Test let expression as container expression of type map.
+Labels: int, let-expr, map-type, mapping-constructor-expr, member-access-expr, string, union-type
+
+function init() {
+    io:println((let map<int|string> p = {id: 1, name: "John"} in p)["name"]); // @output John
+}
+
+Test-Case: output
+Description: Test type cast expression as container expression of type map.
+Labels: int, map-type, mapping-constructor-expr, member-access-expr, optional-type, string, type-cast-expr, union-type
+
+function init() {
+    map<int|string>? p = {id: 1, name: "John"};
+    io:println((<map<int|string>> p)["name"]); // @output John
+}
+
+Test-Case: output
+Description: Test conditional expression as container expression of type map.
+Labels: ternary-conditional-expr, int, map-type, mapping-constructor-expr, member-access-expr, relational-expr, string,
+        union-type
+
+function init() {
+    int c = 4;
+    map<int|string> p1 = {id: 1, name: "John"};
+    map<int|string> p2 = {id: 3, name: "Mike"};
+
+    io:println((c <= 2 ? p1 : p2)["name"]); // @output Mike
+}
+
+Test-Case: output
+Description: Test checking expression as container expression of type map.
+Labels: check, checkpanic, error-type, int, map-type, mapping-constructor-expr, member-access-expr, optional-type,
+        string, union-type
+
+function init() returns error? {
+    map<int|string>|error p = {id: 3, name: "Mike"};
+
+    io:println((check p)["name"]); // @output Mike
+    io:println((checkpanic p)["name"]); // @output Mike
+}
+
+Test-Case: output
+Description: Test field access expression as key expression with container expression of type map.
+Labels: field-access-expr, int, map-type, mapping-constructor-expr, member-access-expr, module-type-defn, record-type,
+        string, union-type
+
+type Record record {|
+    string f1;
+|};
+
+function init() {
+    map<int|string> p = {id: 3, name: "Mike"};
+    Record r = {f1: "name"};
+
+    io:println(p[r.f1]); // @output Mike
+}
+
+Test-Case: output
+Description: Test member access expression as key expression with container expression of type map.
+Labels: field-access-expr, int, map-type, mapping-constructor-expr, member-access-expr, module-type-defn, record-type,
+        string, union-type
+
+type Record record {|
+    string f1;
+|};
+
+function init() {
+    map<int|string> p = {id: 3, name: "Mike"};
+    Record r = {f1: "name"};
+
+    io:println(p[r["f1"]]); // @output Mike
+}
+
+Test-Case: output
+Description: Test functional call as key expression with container expression of type map.
+Labels: function-call-expr, int, map-type, mapping-constructor-expr, member-access-expr, string, union-type
+
+function init() {
+    map<int|string> p = {id: 3, name: "Mike"};
+
+    io:println(p[getField()]); // @output Mike
+}
+
+function getField() returns string {
+    return "name";
+}
+
+Test-Case: output
+Description: Test method call as key expression with container expression of type map.
+Labels: explicit-new-expr, int, map-type, mapping-constructor-expr, member-access-expr, method-call-expr,
+        module-class-defn, string, union-type
+
+class Field {
+    function getField() returns string {
+        return "name";
+    }
+}
+
+function init() {
+    map<int|string> p = {id: 3, name: "Mike"};
+    Field f = new;
+
+    io:println(p[f.getField()]); // @output Mike
+}
+
+Test-Case: output
+Description: Test let expression as key expression with container expression of type map.
+Labels: int, let-expr, map-type, mapping-constructor-expr, member-access-expr, string, union-type
+
+function init() {
+    map<int|string> p = {id: 3, name: "Mike"};
+
+    io:println(p[let string i = "id" in i]); // @output 3
+}
+
+Test-Case: output
+Description: Test type cast expression as key expression with container expression of type map.
+Labels: int, map-type, mapping-constructor-expr, member-access-expr, string, type-cast-expr, union-type
+
+function init() {
+    map<int|string> p = {id: 3, name: "Mike"};
+
+    io:println(p[<string> "id"]); // @output 3
+}
+
+Test-Case: output
+Description: Test additive expression as key expression with container expression of type map.
+Labels: additive-expr, int, map-type, mapping-constructor-expr, member-access-expr, string, union-type
+
+function init() {
+    map<int|string> p = {id: 3, name: "Mike"};
+
+    io:println(p["na" + "me"]); // @output Mike
+}
+
+Test-Case: output
+Description: Test checking expression as key expression with container expression of type map.
+Labels: check, checkpanic, error-type, int, map-type, mapping-constructor-expr, member-access-expr, optional-type,
+        string, union-type
+
+function init() returns error? {
+    map<int|string> p = {id: 3, name: "Mike"};
+    string|error nm = "name";
+
+    io:println(p[check nm]); // @output Mike
+    io:println(p[checkpanic nm]); // @output Mike
+}
+
+Test-Case: output
+Description: Test conditional expression as key expression with container expression of type map.
+Labels: ternary-conditional-expr, int, map-type, mapping-constructor-expr, member-access-expr, optional-type, string, union-type
+
+function init() {
+    map<int|string> p = {id: 3, name: "Mike"};
+    string? nm = "name";
+
+    io:println(p[nm is string ? "name" : ""]); // @output Mike
+}
+
+Test-Case: output
+Description: Test member access expression at module level.
+Labels: int, map-type, mapping-constructor-expr, member-access-expr, module-init-var-decl, optional-type, string,
+        union-type
+
+map<int|string> p = {id: 3, name: "Mike"};
+
+int|string? nm = p["name"];
+
+function init() {
+    io:println(nm); // @output Mike
+}
+
+Test-Case: output
+Description: Test member access expression with container expression of type map as array member.
+Labels: array-type, int, list-constructor-expr, map-type, mapping-constructor-expr, member-access-expr, optional-type,
+        string, union-type
+
+function init() {
+    map<int|string> p1 = {id: 1, name: "Mike"};
+    map<int|string> p2 = {id: 3, name: "John"};
+
+    (int|string?)[] arr = [p1["name"], p2["name"]];
+
+    io:println(arr[0]); // @output Mike
+}
+
+Test-Case: output
+Description: Test member access expression with container expression of type map as default expression
+             for a field.
+Labels: field-access-expr, int, intersection-type, map-type, mapping-constructor-expr, member-access-expr, module-init-var-decl,
+        module-type-defn, optional-type, readonly-type, record-type, string, union-type
+
+final map<int|string> & readonly p1 = {id: 1, name: "Mike"};
+
+type Record record {|
+    int|string? a = p1["name"];
+|};
+
+function init() {
+    Record r = {};
+    io:println(r.a); // @output Mike
+}
+
+Test-Case: output
+Description: Test member access expression with container expression of type map as defaultable
+             function parameter.
+Labels: defaultable-param, function-call-expr, int, intersection-type, map-type, mapping-constructor-expr, member-access-expr,
+        module-init-var-decl, module-type-defn, optional-type, record-type, string, union-type
+
+final map<int|string> & readonly p1 = {id: 1, name: "Mike"};
+
+function init() {
+    io:println(getRecord()); // @output 1
+}
+
+function getRecord(int|string? id = p1["id"]) returns int|string? {
+    return id;
+}
+
+Test-Case: output
+Description: Test member access expression with container expression of type map as expression in
+             return statement.
+Labels: function-call-expr, int, map-type, mapping-constructor-expr, member-access-expr, optional-type, return-stmt,
+        string, union-type
+
+function init() {
+    io:println(getRecordId()); // @output 1
+}
+
+function getRecordId() returns int|string? {
+    map<int|string> p1 = {id: 1, name: "Mike"};
+    return p1["id"];
+}
+
+Test-Case: output
+Description: Test assigning a value to member access expression.
+Labels: int, map-type, mapping-constructor-expr, member-access-lvexpr, string, union-type
+
+function init() {
+    map<int|string> p1 = {id: 1, name: "Mike"};
+
+    p1["name"] = "Michael";
+
+    io:println(p1["name"]); // @output Michael
+}
+
+Test-Case: error
+Description: Test accessing members of an invalid structure.
+Labels: error-type, int, map-type, mapping-constructor-expr, member-access-expr, string, union-type
+
+function errorFunction() {
+    map<int|string>|error p1 = {id: 1, name: "Mike"};
+
+    _ = p1["name"]; // @error type (map<int|string>|error) does not support member access
+}
+
+Test-Case: error
+Description: Test assigning an invalid value to member access expression.
+Labels: int, map-type, mapping-constructor-expr, member-access-expr, string, union-type
+
+function errorFunction() {
+    map<int|string> p1 = {id: 1, name: "Mike"};
+
+    p1["name"] = 10.5; // @error expected (int|string), found float
+}
+
+Test-Case: error
+Description: Test invalid member access using multi key expression.
+Labels: int, map-type, mapping-constructor-expr, member-access-expr, string, union-type
+
+function errorFunction() {
+    map<int|string> p1 = {id: 1, name: "Mike"};
+
+    _ = p1["id", "name"]; // @error member access with multi-key expression is not allowed with map
+}

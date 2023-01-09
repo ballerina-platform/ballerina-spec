@@ -1,0 +1,89 @@
+Test-Case: output
+Description: Test order of precedence in shift operators.
+Labels: int, shift-expr, unary-minus
+
+function init() {
+    int a = 128;
+    int b = -9223372036854775806;
+    int c = 1;
+    int d = 4;
+
+    int x1 = a >> b << c >> c;
+    io:println(x1); // @output 32
+    int x2 = ((a >> b) << c) >> c;
+    io:println(x2); // @output 32
+
+    int x3 = a << d >> c >>> b;
+    io:println(x3); // @output 256
+    int x4 = ((a << d) >> c) >>> b;
+    io:println(x4); // @output 256
+
+    int x5 = a >>> d >> c << b << a;
+    io:println(x5); // @output 16
+    int x6 = (((a >>> d) >> c) << b) << a;
+    io:println(x6); // @output 16
+
+    io:println(128 >>> 1 << -9223372036854775797 >>> 2 << 2 >> 5); // @output 4096
+    io:println(((((128 >>> 1) << -9223372036854775797) >>> 2) << 2) >> 5); // @output 4096
+}
+
+Test-Case: output
+Description: Test order of precedence in operators including shift operator.
+Labels: array-type, int, list-constructor-expr, member-access-expr, shift-expr, unary-minus
+
+function init() {
+    int a = 128;
+    int b = -9223372036854775806;
+    int c = 1;
+    int d = 4;
+    int e = -1;
+    int f = 0;
+    int g = 9223372036854775806;
+
+    int[] l = [12, 6];
+
+    io:println(a << l[0] >> l[0]); // @output 128
+
+    io:println(-c << +a >> -g); // @output -1
+    io:println(~c << ~b >>> -g); // @output 3458764513820540928
+
+    io:println(e << a * d >> d * e / a); // @output -1
+    io:println(c << getInt() % d); // @output 4
+}
+
+function getInt() returns int {
+    return 9223372036854775806;
+}
+
+Test-Case: output
+Description: Test the order of precedence in shift expressions at module level.
+Labels: int, shift-expr, unary-minus
+
+int a = 128;
+int b = -9223372036854775806;
+int c = 1;
+int d = 4;
+
+int x1 = a >> b << c >> c;
+int x2 = ((a >> b) << c) >> c;
+
+int x3 = a << d >> c >>> b;
+int x4 = ((a << d) >> c) >>> b;
+
+
+int x5 = a >>> d >> c << b << a;
+int x6 = (((a >>> d) >> c) << b) << a;
+
+int x7 = (128 >>> 1 << -9223372036854775797 >>> 2 << 2 >> 5);
+int x8 = (((((128 >>> 1) << -9223372036854775797) >>> 2) << 2) >> 5);
+
+function init() {
+    io:println(x1); // @output 32
+    io:println(x2); // @output 32
+    io:println(x3); // @output 256
+    io:println(x4); // @output 256
+    io:println(x5); // @output 16
+    io:println(x6); // @output 16
+    io:println(x7); // @output 4096
+    io:println(x8); // @output 4096
+}
