@@ -129,18 +129,8 @@ function errorFunction() {
 }
 
 Test-Case: error
-Description: Test static type of expression in logical expression via invalid types using object constructor expression.
-Labels: logical-expr, object-constructor-expr
-
-function errorFunction() {
-    boolean _ = true && object Person {int a = 20; public function init() {self.a = 24;}; // @error static type of each expression must be a subtype of boolean
-    boolean _ = object Person {int a = 20; public function init() {self.a = 24;} && true; // @error static type of each expression must be a subtype of boolean
-    boolean _ = object Person {int a = 20; public function init() {self.a = 24;} && object Person {int a = 30; public function init() {self.a = 34;}; // @error static type of each expression must be a subtype of boolean
-}
-
-Test-Case: error
 Description: Test static type of expression in logical expression via invalid types using new expression.
-Labels: logical-expr, new-expr, moduleclass-defn
+Labels: logical-expr, new-expr, module-class-defn
 
 class Person {
     int a = 0;
@@ -248,7 +238,7 @@ Test-Case: error
 Description: Test static type of expression in logical expression via invalid types using member access expression.
 Labels: logical-expr, member-access-expr, list-constructor-expr, array-type
 
-functionerrorFunction() {
+function errorFunction() {
     int[] x = [1, 2, 3];
     boolean _ = true && x[0]; // @error static type of each expression must be a subtype of boolean
     boolean _ = x[0] && true; // @error static type of each expression must be a subtype of boolean
@@ -723,7 +713,18 @@ function init() {
 
 Test-Case: output
 Description: Test static type of expressions in logical-expr using subtypes of boolean expression.
-Labels: logical-expr, is-expr, module-type-defn, union-type
+Labels: logical-expr, is-expr
+
+function init() {
+    boolean & readonly a = true;
+    boolean d = a && true;
+    io:println(a is boolean); // @output true
+}
+
+Test-Case: error
+Description: Test static type of expression in logical expression using subtypes of boolean expression.
+Fail-Issue: ballerina-platform/ballerina-lang#35693
+Labels: logical-expr, module-type-defn, union-type
 
 type boolean_false false;
 
@@ -731,39 +732,16 @@ type boolean_true true;
 
 type boolean_sub true|int;
 
-function init() {
-    boolean & readonly a = true;
-    boolean d = a && true;
-    io:println(a is boolean); // @output true
-
-    boolean_false b = false;
-    d = b && false;
-    io:println(b is boolean); // @output true
-
-    boolean_true e = true;
-    d = e && false;
-    io:println(e is boolean); // @output true
-
-    boolean_sub c = true;
-    d = c && true;
-    io:println(c is boolean); // @output true
-}
-
-Test-Case: error
-Description: Test static type of expression in logical expression via invalid types using conditional expression.
-Fail-Issue: ballerina-platform/ballerina-lang#35693
-Labels: logical-expr, module-type-defn
-
-type boolean_false false;
-
-type boolean_true true;
-
 function errorFunction() {
     boolean_true a = true;
     boolean_false b = false;
-    io:println(a is boolean); // @output true
-    io:println(b is boolean); // @output true
+    boolean_sub z = true;
     boolean c = a && b; // @error since static type of each expression is boolean this is a valid logical expression
+    boolean d = b && false; // @error since static type of each expression is boolean this is a valid logical expression
+    boolean e = a && false; // @error since static type of each expression is boolean this is a valid logical expression
+    boolean f = a && true; // @error since static type of each expression is boolean this is a valid logical expression
+    boolean g = b && true; // @error since static type of each expression is boolean this is a valid logical expression
+    boolean h = z && true; // @error since static type of each expression is boolean this is a valid logical expression
 }
 
 Test-Case: output
