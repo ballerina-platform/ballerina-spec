@@ -166,25 +166,25 @@ function init() {
     xml e = a + a;
     io:println(e); // @output foofoo
     io:println(a + b); // @output foo<!--bar-->
-    io:println(a + c); // @output foo<baz></baz>
+    io:println(a + c); // @output foo<baz/>
     io:println(a + d); // @output foo<?qux ?>
 
     e = b + a;
     io:println(e); // @output <!--bar-->foo
     io:println(b + b); // @output <!--bar--><!--bar-->
-    io:println(b + c); // @output <!--bar--><baz></baz>
+    io:println(b + c); // @output <!--bar--><baz/>
     io:println(b + d); // @output <!--bar--><?qux ?>
 
     e = c + a;
-    io:println(e); // @output <baz></baz>foo
-    io:println(c + b); // @output <baz></baz><!--bar-->
-    io:println(c + c); // @output <baz></baz><baz></baz>
-    io:println(c + d); // @output <baz></baz><?qux ?>
+    io:println(e); // @output <baz/>foo
+    io:println(c + b); // @output <baz/><!--bar-->
+    io:println(c + c); // @output <baz/><baz/>
+    io:println(c + d); // @output <baz/><?qux ?>
 
     e = d + a;
     io:println(e); // @output <?qux ?>foo
     io:println(d + b); // @output <?qux ?><!--bar-->
-    io:println(d + c); // @output <?qux ?><baz></baz>
+    io:println(d + c); // @output <?qux ?><baz/>
     io:println(d + d); // @output <?qux ?><?qux ?>
 }
 
@@ -200,24 +200,24 @@ function init() {
     xml e = a + a;
     io:println(e); // @output foofoo
     io:println(a + b); // @output foobar<!--bar-->
-    io:println(a + c); // @output foo<baz></baz><?qux ?>
+    io:println(a + c); // @output foo<baz/><?qux ?>
 
     e = b + a;
     io:println(e); // @output bar<!--bar-->foo
     io:println(b + b); // @output bar<!--bar-->bar<!--bar-->
-    io:println(b + c); // @output bar<!--bar--><baz></baz><?qux ?>
+    io:println(b + c); // @output bar<!--bar--><baz/><?qux ?>
 
     e = c + a;
-    io:println(e); // @output <baz></baz><?qux ?>foo
-    io:println(c + b); // @output <baz></baz><?qux ?>bar<!--bar-->
-    io:println(c + c); // @output <baz></baz><?qux ?><baz></baz><?qux ?>
+    io:println(e); // @output <baz/><?qux ?>foo
+    io:println(c + b); // @output <baz/><?qux ?>bar<!--bar-->
+    io:println(c + c); // @output <baz/><?qux ?><baz/><?qux ?>
 
     xml<xml:Element|xml:ProcessingInstruction> f = c + c;
-    io:println(f); // @output <baz></baz><?qux ?><baz></baz><?qux ?>
+    io:println(f); // @output <baz/><?qux ?><baz/><?qux ?>
 
     e = a + b + c;
-    io:println(e); // @output foobar<!--bar--><baz></baz><?qux ?>
-    io:println(c + e); // @output <baz></baz><?qux ?>foobar<!--bar--><baz></baz><?qux ?>
+    io:println(e); // @output foobar<!--bar--><baz/><?qux ?>
+    io:println(c + e); // @output <baz/><?qux ?>foobar<!--bar--><baz/><?qux ?>
 }
 
 Test-Case: output
@@ -519,13 +519,13 @@ function init() {
     io:println(g.get(3) === d); // @output true
 
     g = d + e;
-    io:println(g); // @output <?qux val?><elem></elem> text <!--comment-->
+    io:println(g); // @output <?qux val?><elem/> text <!--comment-->
     io:println(g.get(0) === d); // @output true
     io:println(g.get(1) === e.get(0)); // @output true
     io:println(g.get(3) === e.get(2)); // @output true
 
     g = e + f;
-    io:println(g); // @output <elem></elem> text <!--comment--><e2></e2><?p2 val2?>
+    io:println(g); // @output <elem/> text <!--comment--><e2/><?p2 val2?>
     io:println(g.get(0) === e.get(0)); // @output true
     io:println(g.get(2) === e.get(2)); // @output true
     io:println(g.get(3) === f.get(0)); // @output true
@@ -597,7 +597,7 @@ Labels: additive-expr, xml, field-access-expr, explicit-new-expr, module-class-d
 
 function init() {
     Bar b = {comment: xml `<!--this is a comment-->`};
-    io:println(b.comment + (new Foo()).id); // @output <!--this is a comment--><id>1234</id><default></default>
+    io:println(b.comment + (new Foo()).id); // @output <!--this is a comment--><id>1234</id><default/>
 }
 
 class Foo {
@@ -636,7 +636,7 @@ Labels: additive-expr, xml, let-expr, xml:Element
 
 function init() {
     xml s = (let xml a = xml `abc`, xml:Element b = xml `<def/>` in a + xml ` ` + b ) + let xml a = xml `<a> a val </a><!--b-->` in a;
-    io:println(s); // @output abc <def></def><a> a val </a><!--b-->
+    io:println(s); // @output abc <def/><a> a val </a><!--b-->
 }
 
 Test-Case: output
@@ -646,7 +646,7 @@ Labels: additive-expr, xml, type-cast-expr, optional-type, xml:Element
 function init() {
     xml s = xml `<elem/>`;
     xml? t = xml `foo`;
-    io:println(<xml> t + <xml:Element> s); // @output foo<elem></elem>
+    io:println(<xml> t + <xml:Element> s); // @output foo<elem/>
 }
 
 Test-Case: output
@@ -661,13 +661,13 @@ function init() {
     xml w = xml `<foo></foo>1234<bar>1234</bar>`;
 
     xml x = (s + t + u) + v + w;
-    io:println(x); // @output <elem>1234</elem>Hello World<?pi 1?><!--comment 1--><foo></foo>1234<bar>1234</bar>
+    io:println(x); // @output <elem>1234</elem>Hello World<?pi 1?><!--comment 1--><foo/>1234<bar>1234</bar>
 
     xml y = s + t + u + v + w;
-    io:println(y); // @output <elem>1234</elem>Hello World<?pi 1?><!--comment 1--><foo></foo>1234<bar>1234</bar>
+    io:println(y); // @output <elem>1234</elem>Hello World<?pi 1?><!--comment 1--><foo/>1234<bar>1234</bar>
 
     xml z = (s + t) + u + v + w;
-    io:println(z); // @output <elem>1234</elem>Hello World<?pi 1?><!--comment 1--><foo></foo>1234<bar>1234</bar>
+    io:println(z); // @output <elem>1234</elem>Hello World<?pi 1?><!--comment 1--><foo/>1234<bar>1234</bar>
 }
 
 Test-Case: output
@@ -692,8 +692,8 @@ function init() returns error? {
     xml|error t = r;
 
     xml u = check s + checkpanic t;
-    io:println(u); // @output helloworld<done></done>
-    io:println(check t + checkpanic s); // @output world<done></done>hello
+    io:println(u); // @output helloworld<done/>
+    io:println(check t + checkpanic s); // @output world<done/>hello
 }
 
 Test-Case: output

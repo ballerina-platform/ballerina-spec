@@ -232,8 +232,8 @@ function init() {
     io:println(b + e); // @output <!--bar-->
 
     f = c + e;
-    io:println(f); // @output <baz></baz>
-    io:println(e + c + e); // @output <baz></baz>
+    io:println(f); // @output <baz/>
+    io:println(e + c + e); // @output <baz/>
 
     f = d + e;
     io:println(f); // @output <?qux ?>
@@ -288,16 +288,16 @@ function init() {
     io:println(e); // @output bar<!--bar-->
 
     e = c + d;
-    io:println(e); // @output <baz></baz><?qux ?>
+    io:println(e); // @output <baz/><?qux ?>
 
     e = c + d + c;
-    io:println(e); // @output <baz></baz><?qux ?><baz></baz><?qux ?>
+    io:println(e); // @output <baz/><?qux ?><baz/><?qux ?>
 
     e = a + d + b + d;
     io:println(e); // @output foobar<!--bar-->
 
     e = a + d + b + d + c;
-    io:println(e); // @output foobar<!--bar--><baz></baz><?qux ?>
+    io:println(e); // @output foobar<!--bar--><baz/><?qux ?>
 }
 
 Test-Case: output
@@ -480,8 +480,8 @@ function init() {
     io:println((b + e).toBalString()); // @output xml`<!--bar-->string value`
 
     f = c + e;
-    io:println(f.toBalString()); // @output xml`<baz></baz>string value`
-    io:println(e + c + e); // @output string value<baz></baz>string value
+    io:println(f.toBalString()); // @output xml`<baz/>string value`
+    io:println(e + c + e); // @output string value<baz/>string value
 
     f = d + e;
     io:println(f.toBalString()); // @output xml`<?qux ?>string value`
@@ -503,18 +503,18 @@ function init() {
     io:println(e); // @output bar<!--bar-->str
 
     e = c + d;
-    io:println(e); // @output <baz></baz><?qux ?>str
-    io:println((d + c).toBalString()); // @output xml`str<baz></baz><?qux ?>`
+    io:println(e); // @output <baz/><?qux ?>str
+    io:println((d + c).toBalString()); // @output xml`str<baz/><?qux ?>`
 
     e = c + d + c;
-    io:println(e); // @output <baz></baz><?qux ?>str<baz></baz><?qux ?>
-    io:println(e.toBalString()); // @output xml`<baz></baz><?qux ?>str<baz></baz><?qux ?>`
+    io:println(e); // @output <baz/><?qux ?>str<baz/><?qux ?>
+    io:println(e.toBalString()); // @output xml`<baz/><?qux ?>str<baz/><?qux ?>`
 
     e = a + d + b + d;
     io:println(e.toBalString()); // @output xml`foostrbar<!--bar-->str`
 
     e = a + d + b + d + c;
-    io:println(e); // @output foostrbar<!--bar-->str<baz></baz><?qux ?>
+    io:println(e); // @output foostrbar<!--bar-->str<baz/><?qux ?>
 }
 
 Test-Case: output
@@ -770,7 +770,7 @@ Labels: additive-expr, xml, field-access-expr, explicit-new-expr, module-class-d
 
 function init() {
     Bar b = {str: "value"};
-    io:println(b.str + (new Foo()).id); // @output value<id>1234</id><default></default>
+    io:println(b.str + (new Foo()).id); // @output value<id>1234</id><default/>
 }
 
 class Foo {
@@ -809,7 +809,7 @@ Labels: additive-expr, xml, string:Char, let-expr, xml:Element
 
 function init() {
     xml s = (let string:Char c = "c", xml:Element b = xml `<def/>` in c + xml ` ` + b) + let string:Char v = "v" in v;
-    io:println(s); // @output c <def></def>v
+    io:println(s); // @output c <def/>v
 }
 
 Test-Case: output
@@ -821,7 +821,7 @@ type Foo "foo";
 function init() {
     xml? s = xml `<elem/>`;
     Foo? t = "foo";
-    io:println(<Foo> t + <xml> s); // @output foo<elem></elem>
+    io:println(<Foo> t + <xml> s); // @output foo<elem/>
 }
 
 Test-Case: output
@@ -837,13 +837,13 @@ function init() {
     xml w = xml `<foo/>1234<bar>1234</bar>`;
 
     xml x = (s + t + u + r) + v + r + w;
-    io:println(x); // @output <elem>1234</elem>Hello World<?pi 1?>str<!--comment 1-->str<foo></foo>1234<bar>1234</bar>
+    io:println(x); // @output <elem>1234</elem>Hello World<?pi 1?>str<!--comment 1-->str<foo/>1234<bar>1234</bar>
 
     xml y = s + t + u + r + v + r + w;
-    io:println(y); // @output <elem>1234</elem>Hello World<?pi 1?>str<!--comment 1-->str<foo></foo>1234<bar>1234</bar>
+    io:println(y); // @output <elem>1234</elem>Hello World<?pi 1?>str<!--comment 1-->str<foo/>1234<bar>1234</bar>
 
     xml z = (s + t) + u + r + v + r + w;
-    io:println(z); // @output <elem>1234</elem>Hello World<?pi 1?>str<!--comment 1-->str<foo></foo>1234<bar>1234</bar>
+    io:println(z); // @output <elem>1234</elem>Hello World<?pi 1?>str<!--comment 1-->str<foo/>1234<bar>1234</bar>
 }
 
 Test-Case: output
