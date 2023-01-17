@@ -204,7 +204,7 @@ function errorFunction() {
 }
 
 Test-Case: error
-Description: Test static type of expression in logical expression via invalid types using annotation access expr expression.
+Description: Test static type of expression in logical expression via invalid types using annotation access expression.
 Labels: logical-expr, annot-access-expr, record-type, annotation-decl, string, any, typeof-expr
 
     public annotation Annot v1
@@ -471,17 +471,40 @@ Labels: logical-expr, is-expr, var, equality, function-call-expr
 
 function init() {
     var a = true && false;
+    boolean _ = a;
     io:println(a is boolean); // @output true
     var b = a && true;
+    boolean _ = b;
     io:println(b is boolean); // @output true
-    var c = getExpr(true) && b;
+    var c = getExpr() && b;
+    boolean _ = c;
     io:println(c is boolean); // @output true
     var d = false && 4 != 5;
+    boolean _ = d;
     io:println(d is boolean); // @output true
 }
 
-function getExpr(boolean a) returns boolean {
-    return a is boolean;
+function getExpr() returns boolean {
+    return true;
+}
+
+Test-Case: error
+Description: Test static type of the result of a logical-expr by assigning it to an invalid type.
+Labels: logical-expr, is-expr, var, equality, function-call-expr
+
+function errorFunction() {
+    var a = true && false;
+    int _ = a; // @error static type of logical-expr is boolean which is incompatible with an integer
+    var b = a && true;
+    int _ = b; // @error static type of logical-expr is boolean which is incompatible with an integer
+    var c = getExpr() && b;
+    int _ = c; // @error static type of logical-expr is boolean which is incompatible with an integer
+    var d = false && 4 != 5;
+    int _ = d; // @error static type of logical-expr is boolean which is incompatible with an integer
+}
+
+function getExpr() returns boolean {
+    return true;
 }
 
 Test-Case: output
@@ -667,7 +690,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Test evaluation order of expressions in the logical expression in relation to whether if it evaluates to true or false.
+Description: Expression evaluation order when lhs expression evaluates to false and rhs expression evaluates to true in a logical and expression.
 Labels: logical-expr, function-call-expr, additive-expr, is-expr
 
 int falseEval = 0;
@@ -683,30 +706,79 @@ function returnFalseVal() returns boolean {
     return false;
 }
 
-function resetEvalIndicators() {
-    falseEval = 0;
-    trueEval = 0;
-}
-
 function init() {
     boolean a = returnFalseVal() && returnTrueVal();
     io:println(falseEval); // @output 1
     io:println(trueEval); // @output 0
     io:println(a is false); // @output true
+}
 
-    resetEvalIndicators();
-    a = returnTrueVal() && returnFalseVal();
+Test-Case: output
+Description: Expression evaluation order when lhs expression evaluates to true and rhs expression evaluates to false in a logical and expression.
+Labels: logical-expr, function-call-expr, additive-expr, is-expr
+
+int falseEval = 0;
+int trueEval = 0;
+
+function returnTrueVal() returns boolean {
+    trueEval = trueEval + 1;
+    return true;
+}
+
+function returnFalseVal() returns boolean {
+    falseEval = falseEval + 1;
+    return false;
+}
+
+function init() {
+    boolean a = returnTrueVal() && returnFalseVal();
     io:println(falseEval); // @output 1
     io:println(trueEval); // @output 1
     io:println(a is false); // @output true
+}
 
-    resetEvalIndicators();
-    a = returnTrueVal() && returnTrueVal();
+Test-Case: output
+Description: Expression evaluation order when both lhs and rhs expressions evaluate to true in a logical and expression.
+Labels: logical-expr, function-call-expr, additive-expr, is-expr
+
+int falseEval = 0;
+int trueEval = 0;
+
+function returnTrueVal() returns boolean {
+    trueEval = trueEval + 1;
+    return true;
+}
+
+function returnFalseVal() returns boolean {
+    falseEval = falseEval + 1;
+    return false;
+}
+
+function init() {
+    boolean a = returnTrueVal() && returnTrueVal();
     io:println(trueEval); // @output 2
     io:println(a is true); // @output true
+}
 
-    resetEvalIndicators();
-    a = returnFalseVal() && returnFalseVal();
+Test-Case: output
+Description: Expression evaluation order when both lhs and rhs expressions evaluate to false in a logical and expression.
+Labels: logical-expr, function-call-expr, additive-expr, is-expr
+
+int falseEval = 0;
+int trueEval = 0;
+
+function returnTrueVal() returns boolean {
+    trueEval = trueEval + 1;
+    return true;
+}
+
+function returnFalseVal() returns boolean {
+    falseEval = falseEval + 1;
+    return false;
+}
+
+function init() {
+    boolean a = returnFalseVal() && returnFalseVal();
     io:println(falseEval); // @output 1
     io:println(a is false); // @output true
 }
