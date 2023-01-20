@@ -1,0 +1,155 @@
+Test-Case: output
+Description: Test Signed8 built-in subtype of int.
+Labels: DecimalNumber, int:Signed8, unary-minus
+
+function init() {
+    int:Signed8 a1 = -128;
+    int:Signed8 a2 = 0;
+    int:Signed8 a3 = 127;
+
+    testSigned8Int(a1); // @output -128
+    testSigned8Int(a2); // @output 0
+    testSigned8Int(a3); // @output 127
+}
+
+function testSigned8Int(int:Signed8 i) {
+    io:println(i);
+}
+
+Test-Case: output
+Description: Test assignability with type Signed8.
+Labels: DecimalNumber, int, int:Signed16, int:Signed32, int:Signed8, is-expr, optional-type, unary-minus
+
+function init() {
+    int:Signed8 a1 = -128;
+    int:Signed8 a2 = 0;
+    int:Signed8 a3 = 127;
+
+    int:Signed16 b1 = a2;
+    io:println(b1 is int:Signed8); // @output true
+
+    int:Signed32 b2 = a3;
+    io:println(b2 is int:Signed8); // @output true
+
+    int b3 = a2;
+    io:println(b3 is int:Signed8); // @output true
+
+    int? b4 = a2;
+    io:println(b4 is int:Signed8); // @output true
+}
+
+Test-Case: output
+Description: Test assignability with type Signed8.
+Labels: any, DecimalNumber, if-else-stmt, int, int:Signed8, optional-type, string, unary-minus
+
+function init() {
+    int:Signed8 a1 = -128;
+    int:Signed8 a2 = 0;
+    int:Signed8 a3 = 127;
+
+    testIntOrNil(a1); // @output -128
+    testIntOrNil(a2); // @output 0
+    testIntOrNil(a3); // @output 127
+
+    testAny(a1); // @output -128
+    testAny(a2); // @output 0
+    testAny(a3); // @output 127
+}
+
+function testIntOrNil(int? i) {
+    if i is int {
+        io:println(i);
+    } else {
+        io:println("nil");
+    }
+}
+
+function testAny(any i) {
+    io:println(i);
+}
+
+Test-Case: output
+Description: Test type Signed8 value belonging to a type.
+Labels: int, int:Signed16, int:Signed32, int:Signed8, is-expr
+
+function init() {
+    int:Signed8 a1 = 100;
+
+    io:println(100 is int:Signed8); // @output true
+    io:println(a1 is int:Signed32); // @output true
+    io:println(a1 is int:Signed16); // @output true
+    io:println(a1 is int); // @output true
+}
+
+Test-Case: output
+Description: Test equality of type Signed8 values.
+Labels: DecimalNumber, equality, int, int:Signed16, int:Signed32, int:Signed8
+
+function init() {
+    int:Signed8 a1 = 125;
+    int:Signed8 a2 = 125;
+
+    io:println(a1 == a2); // @output true
+
+    int:Signed16 b1 = 125;
+    io:println(a1 == b1); // @output true
+
+    int:Signed32 b2 = 125;
+    io:println(a1 == b2); // @output true
+
+    int b3 = 125;
+    io:println(a2 == b3); // @output true
+
+    int:Signed8 a3 = -125;
+
+    io:println(a3 == -125); // @output true
+
+    io:println(a1 != a3); // @output true
+}
+
+Test-Case: error
+Description: Test type Signed8 value assignability with incompatible types.
+Labels: DecimalNumber, int:Signed8, int:Unsigned32, int:Unsigned8, string, unary-minus
+
+function errorFunction() {
+    int:Signed8 _ = 256; // @error int is not a subtype of int:Signed8
+
+    int:Signed8 _ = -279; // @error int is not a subtype of int:Signed8
+
+    int:Signed8 a = 100;
+    testUnsigned32Int(a); // @error int:Signed8 is not a subtype of int:Unsigned32
+
+    int:Unsigned8 _ = "A"; // @error string is not a subtype of int:Signed8
+
+    string _ = a3; // @error int:Signed8 is not a subtype of string
+}
+
+function testUnsigned32Int(int:Unsigned32 i) {
+}
+
+Test-Case: error
+Description: Test assigning an incompatible int value to type Signed8.
+Labels: DecimalNumber, int:Signed8, unary-minus
+
+function errorFunction() {
+    int:Signed8 _ = -9223372036854775681; // @error int is not a subtype of int:Signed8
+    int:Signed8 _ = 9223372036854775807; // @error int is not a subtype of int:Signed8
+}
+
+Test-Case: error
+Description: Test assigning too large value to a Signed8 type variable.
+Fail-Issue: ballerina-platform/ballerina-lang#32574
+Labels: DecimalNumber, int:Signed8
+
+function errorFunction() {
+    int:Signed8 _ = 9223372036854775808; // @error too large value
+}
+
+Test-Case: error
+Description: Test assigning too small value to a Signed8 type variable.
+Fail-Issue: ballerina-platform/ballerina-lang#32574
+Labels: DecimalNumber, int:Signed8, unary-minus
+
+function errorFunction() {
+    int:Signed8 _ = -9223372036854775809; // @error too small value
+}

@@ -1,0 +1,377 @@
+Test-Case: output
+Description: Test `fromString` function.
+Labels: error, function-call-expr, if-else-stmt, int, int:fromString, is-expr, string, union-type
+
+function init() {
+    string a1 = "-9223372036854775808";
+    string a2 = "-3546372";
+    string a3 = "3546372";
+    string a4 = "+3546372";
+    string a5 = "9223372036854775807";
+
+    int|error b1 = int:fromString(a1);
+    io:println(b1); // @output -9223372036854775808
+
+    io:println(int:fromString(a2)); // @output -3546372
+
+    b1 = int:fromString(a3);
+    io:println(b1); // @output 3546372
+
+    io:println(int:fromString(a4)); // @output 3546372
+
+    b1 = int:fromString(a5);
+    io:println(b1); // @output 9223372036854775807
+}
+
+Test-Case: output
+Description: Test `fromString` function with string literals.
+Labels: error, function-call-expr, if-else-stmt, int, int:fromString, is-expr, string, union-type
+
+function init() {
+    int|error b1 = int:fromString("-9223372036854775808");
+    io:println(b1); // @output -9223372036854775808
+
+    io:println(int:fromString("-3546372")); // @output -3546372
+
+    b1 = int:fromString("3546372");
+    io:println(b1); // @output 3546372
+
+    io:println(int:fromString("+3546372")); // @output 3546372
+
+    b1 = int:fromString("9223372036854775807");
+    io:println(b1); // @output 9223372036854775807
+}
+
+Test-Case: output
+Description: Test `fromString` function with string template expression.
+Labels: error, function-call-expr, if-else-stmt, int, int:fromString, is-expr, string, string-template-expr, union-type
+
+function init() {
+    string a1 = string `-3546372`;
+    string a2 = string `3546372`;
+    string a3 = string `9223372036854775807`;
+
+    int|error b1 = int:fromString(string `-9223372036854775808`);
+    io:println(b1); // @output -9223372036854775808
+
+    io:println(int:fromString(a1)); // @output -3546372
+
+    b1 = int:fromString(a2);
+    io:println(b1); // @output 3546372
+
+    io:println(int:fromString(string `+3546372`)); // @output 3546372
+
+    b1 = int:fromString(a3);
+    io:println(b1); // @output 9223372036854775807
+}
+
+Test-Case: output
+Description: Test `fromString` function with string template with interpolation.
+Labels: error, function-call-expr, if-else-stmt, int, int:fromString, is-expr, string, string-template-expr, union-type
+
+function init() {
+    string a1 = string `3546372`;
+    string a2 = "3546372";
+    int a3 = 3546372;
+
+    int|error b1 = int:fromString(string `-3546372${a1}`);
+    io:println(b1); // @output -35463723546372
+
+    io:println(int:fromString(string `-3546372${a2}`)); // @output -35463723546372
+
+    b1 = int:fromString(string `-3546372${a3}`);
+    io:println(b1); // @output -35463723546372
+
+    b1 = int:fromString(string `${a1}${a2}`);
+    io:println(b1); // @output 35463723546372
+
+    io:println(int:fromString(string `${a1}${a3}`)); // @output 35463723546372
+
+    io:println(int:fromString(string `123${a2}${a3}`)); // @output 12335463723546372
+}
+
+Test-Case: output
+Description: Test `fromString` function with string subtypes.
+Labels: error, function-call-expr, if-else-stmt, int, int:fromString, is-expr, module-const-decl, module-type-defn,
+        string, union-type
+
+const A = "2536";
+const B = "35463";
+
+type StringType1 "10"|"20"|"30";
+
+type StringType2 string:Char;
+
+type StringType3 A|B;
+
+function init() {
+    string:Char a1 = "9";
+    string|string:Char a2 = "1234535";
+    StringType1 a3 = "10";
+    StringType2 a4 = "8";
+    StringType3 a5 = "35463";
+
+    int|error b1 = int:fromString(a1);
+    io:println(b1); // @output 9
+
+    io:println(int:fromString(a2)); // @output 1234535
+
+    b1 = int:fromString(a3);
+    io:println(b1); // @output 10
+
+    io:println(int:fromString(A)); // @output 2536
+
+    io:println(int:fromString(a4)); // @output 8
+
+    io:println(int:fromString(a5)); // @output 35463
+}
+
+Test-Case: output
+Description: Test `fromString` function with string values from various expressions.
+Labels: additive-expr, error, function-call-expr, if-else-stmt, int, int:fromString, is-expr, string, union-type
+
+function init() {
+    int a1 = 3546372;
+    int a2 = 5;
+    string a3 = "10";
+
+    int|error b1 = int:fromString(a1.toString());
+    io:println(b1); // @output 3546372
+
+    io:println(int:fromString(3546372.toString())); // @output 3546372
+
+    b1 = int:fromString(getString() + a1.toString() + string `${a2}` + "2" + a3);
+    io:println(b1); // @output 1253635463725210
+}
+
+function getString() returns string {
+    return "12536";
+}
+
+Test-Case: output
+Description: Test assignability of `fromString` function result.
+Labels: any, error, function-call-expr, if-else-stmt, int, int:fromString, is-expr, string, union-type, var
+
+type Type int|error;
+
+function init() {
+    string a1 = "12343";
+
+    any|error b1 = int:fromString(a1);
+    io:println(b1 is any); // @output true
+    io:println(b1 is int); // @output true
+    io:println(b1); // @output 12343
+
+
+    Type b2 = int:fromString(a1);
+    io:println(b2 is int); // @output true
+    io:println(b2); // @output 12343
+
+    var b3 = int:fromString(a1);
+    io:println(b3 is int); // @output true
+    io:println(b3); // @output 12343
+}
+
+Test-Case: output
+Description: Test assignability of `fromString` function result with var.
+Labels: function-call-expr, int:fromString, is-expr, var
+
+function init() {
+    var a = int:fromString("234");
+
+    io:println(a); // @output 234
+    io:println(a is int); // @output true
+}
+
+Test-Case: output
+Description: Test `fromString` function with invalid strings.
+Labels: error, float, function-call-expr, if-else-stmt, int, int:fromString, is-expr, member-access-expr, string,
+        string-template-expr, union-type
+
+function init() {
+    string a1 = "10ABC";
+    float a2 = 10;
+
+    int|error b1 = int:fromString(a1);
+    testResult(b1); // @output true
+                    // @output 'string' value '10ABC' cannot be converted to 'int'
+
+    b1 = int:fromString("20ABC");
+    testResult(b1); // @output true
+                    // @output 'string' value '20ABC' cannot be converted to 'int'
+
+    testResult(int:fromString(string `30ABC`)); // @output true
+                                                // @output 'string' value '30ABC' cannot be converted to 'int'
+
+    testResult(int:fromString(getString())); // @output true
+                                             // @output 'string' value '12536.26' cannot be converted to 'int'
+
+    b1 = int:fromString(string `${a2}`);
+    testResult(b1); // @output true
+                    // @output 'string' value '10.0' cannot be converted to 'int'
+
+    int|error b2 = int:fromString("9223372036854775808");
+    testResult(b2); // @output true
+                    // @output 'string' value '9223372036854775808' cannot be converted to 'int'
+
+    b2 = int:fromString("-9223372036854775809");
+    testResult(b2); // @output true
+                    // @output 'string' value '-9223372036854775809' cannot be converted to 'int'
+
+    testResult(int:fromString("0xf")); // @output true
+                                       // @output 'string' value '0xf' cannot be converted to 'int'
+}
+
+function getString() returns string {
+    return "12536.26";
+}
+
+function testResult(int|error i) {
+    if i is int {
+        io:println(i);
+    } else {
+        io:println(i is error);
+        io:println(i.detail()["message"]);
+    }
+}
+
+Test-Case: output
+Description: Test `fromString` function result belonging to a type.
+Labels: function-call-expr, int:fromString, is-expr, string, var
+
+function init() {
+    string a1 = "-736453762";
+    string a2 = "123AB";
+
+    io:println(int:fromString(a1) is int); // @output true
+
+    var b1 = int:fromString(a1);
+    io:println(b1 is int); // @output true
+
+    io:println(int:fromString(a2) is error); // @output true
+}
+
+Test-Case: output
+Description: Test equality with `fromString` function result.
+Labels: error, function-call-expr, if-else-stmt, int, int:fromString, is-expr, logical-expr, string, union-type,
+        value:toString
+
+function init() {
+    string a1 = "736453762";
+    int a2 = 736453762;
+
+    int|error b1 = int:fromString(a1);
+    int|error b2 = int:fromString("736453762");
+
+    testEquality(b1, b2); // @output a1 is int && a2 is int
+                          // @output true
+
+    testEquality(int:fromString(a1), int:fromString("736453762")); // @output a1 is int && a2 is int
+                                                                   // @output true
+
+    testEquality(int:fromString(a1), int:fromString("4352")); // @output a1 is int && a2 is int
+                                                              // @output false
+
+    testEquality(int:fromString(a2.toString()), a2); // @output a1 is int && a2 is int
+                                                     // @output true
+}
+
+function testEquality(int|error a1, int|error a2) {
+    if a1 is int && a2 is int {
+        io:println("a1 is int && a2 is int");
+        io:println(a1 == a2);
+    } else if a1 is int && a2 is error {
+        io:println("a1 is int && a2 is error");
+    } else if a1 is error && a2 is int {
+        io:println("a1 is error && a2 is int");
+    } else {
+        io:println("a1 is error && a2 is error");
+    }
+}
+
+Test-Case: output
+Description: Test `fromString` method call as expression in return statement.
+Labels: error, function-call-expr, int, int:fromString, string, union-type
+
+function init() {
+    io:println(getInt("-1234")); // @output -1234
+}
+
+function getInt(string s) returns int|error {
+    return int:fromString(s);
+}
+
+Test-Case: output
+Description: Test `fromString` method call as expression in list constructor.
+Labels: array-type, error, function-call-expr, int, int:fromString, list-constructor-expr, string, union-type
+
+function init() {
+    (int|error)[] arr = [int:fromString("24"), int:fromString("-10"), int:fromString("10")];
+    io:println(arr); // @output [24,-10,10]
+}
+
+Test-Case: output
+Description: Test `fromString` method call as expression in map constructor.
+Labels: error, function-call-expr, int, int:fromString, map-type, mapping-constructor-expr, string, union-type
+
+function init() {
+    map<int|error> a = {"One": int:fromString("23"), "Two": int:fromString("30")};
+    io:println(a); // @output {"One":23,"Two":30}
+}
+
+Test-Case: output
+Description: Test `fromString` method call as expression in typeof expression.
+Labels: function-call-expr, int:fromString, string, typedesc-type, typeof-expr
+
+function init() {
+    typedesc j = typeof int:fromString("123");
+    io:println(j); // @output typedesc 123
+}
+
+Test-Case: error
+Description: Test assigning the result of `fromString` function to an incompatible type.
+Labels: error, function-call-expr, int, int:fromString, int:Signed32, string, union-type
+
+function errorFunction() {
+    int _ = int:fromString("100"); // @error expects an int, but fromString() returns (int|error)
+
+    int:Signed32|error _ = int:fromString("100"); // @error expects a (int:Signed32|error), but fromString() returns (int|error)
+}
+
+Test-Case: error
+Description: Test incorrect `fromString` function call.
+Labels: any, error, function-call-expr, int, int:fromString, string, union-type
+
+function errorFunction(string a, any b) {
+    int|error _ = a.fromString(); // @error fromString() is not defined for string
+
+    int|error _ = b.fromString(); // @error fromString() is not defined for any
+}
+
+Test-Case: error
+Description: Test missing required parameter in `fromString` function call.
+Labels: error, function-call-expr, int, int:fromString, union-type
+
+function errorFunction() {
+    int|error _ = int:fromString(); // @error missing string argument
+}
+
+Test-Case: error
+Description: Test passing too many arguments to `fromString`.
+Labels: error, function-call-expr, int, int:fromString, string, union-type
+
+function errorFunction(string a) {
+    int|error _ = int:fromString(a, a); // @error too many arguments
+}
+
+Test-Case: error
+Description: Test passing invalid value to `fromString` function.
+Labels: error, float, function-call-expr, int, int:fromString, string, union-type
+
+function errorFunction(float a, string|int b) {
+    int|error b1 = int:fromString(a); // @error float is not a subtype of string
+
+    b1 = int:fromString(b); // @error (string|int) is not a subtype of string
+
+    b1 = int:fromString(12d); // @error decimal is not a subtype of string
+}

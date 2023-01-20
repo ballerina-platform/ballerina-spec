@@ -1,0 +1,286 @@
+Test-Case: output
+Description: Test boolean literals with boolean type descriptor.
+Labels: boolean
+
+public function main() {
+    boolean x = true;
+    io:println(x); // @output true
+
+    x = false;
+    io:println(x); // @output false
+}
+
+Test-Case: output
+Description: Test boolean literals with toString().
+Labels: boolean-literal, value:toString
+
+public function main() {
+    io:println(true.toString()); // @output true
+
+    io:println(false.toString()); // @output false
+}
+
+Test-Case: output
+Description: Test boolean literals with toBalString().
+Labels: boolean-literal, value:toBalString
+
+public function main() {
+    io:println(true.toBalString()); // @output true
+
+    io:println(false.toBalString()); // @output false
+}
+
+Test-Case: output
+Description: Test boolean literals with function calls.
+Labels: boolean, function-call-expr
+
+public function main() {
+    testBoolean(true); // @output true
+
+    testBoolean(false); // @output false
+}
+
+function testBoolean(boolean x) {
+    io:println(x);
+}
+
+Test-Case: output
+Description: Test boolean literals with return statement.
+Labels: boolean, return-stmt
+
+public function main() {
+    io:println(testTrue()); // @output true
+
+    io:println(testFalse()); // @output false
+}
+
+function testTrue() returns boolean {
+    return true;
+}
+
+function testFalse() returns boolean {
+    return false;
+}
+
+Test-Case: output
+Description: Test negation of boolean literals.
+Labels: boolean-literal, unary-not
+
+public function main() {
+    io:println(!true); // @output false
+
+    io:println(!false); // @output true
+}
+
+Test-Case: output
+Description: Test boolean literals with logical-expr.
+Labels: boolean-literal, logical-expr
+
+public function main() {
+    io:println(true && true); // @output true
+
+    io:println(false && false); // @output false
+
+    io:println(true && false); // @output false
+
+    io:println(true || true); // @output true
+
+    io:println(false || false); // @output false
+
+    io:println(true || false); // @output true
+}
+
+Test-Case: output
+Description: Equality check of boolean literals.
+Labels: boolean-literal, equality
+
+public function main() {
+    io:println(true == true); // @output true
+
+    io:println(true != true); // @output false
+
+    io:println(false == false); // @output true
+
+    io:println(false != false); // @output false
+}
+
+Test-Case: error
+Description: Equality check of different boolean literals must fail due to singleton typing.
+Fail-Issue: ballerina-platform/ballerina-lang#35450
+Labels: boolean-literal, equality
+
+public function main() {
+    io:println(true == false); // @error intersection of operands of operator '==' is empty
+    io:println(true != false); // @error intersection of operands of operator '!=' is empty
+}
+
+Test-Case: output
+Description: Equality check of boolean literals with variable references.
+Labels: boolean, equality
+
+public function main() {
+    boolean x = true;
+    boolean y = false;
+
+    io:println(x == true); // @output true
+    io:println(x == false); // @output false
+    io:println(y == true); // @output false
+    io:println(y == false); // @output true
+}
+
+Test-Case: output
+Description: Exact-equality check of boolean literals.
+Labels: boolean-literal, exact-equality
+
+public function main() {
+    io:println(true === true); // @output true
+
+    io:println(true !== true); // @output false
+
+    io:println(false === false); // @output true
+
+    io:println(false !== false); // @output false
+}
+
+Test-Case: error
+Description: Exact-equality check of different boolean literals must fail due to singleton typing.
+Fail-Issue: ballerina-platform/ballerina-lang#35450
+Labels: boolean-literal, exact-equality
+
+public function main() {
+    io:println(true === false); // @error intersection of operands of operator '===' is empty
+    io:println(true !== false); // @error intersection of operands of operator '!==' is empty
+}
+
+Test-Case: output
+Description: Exact-equality check of boolean literals with variable references.
+Labels: boolean, exact-equality
+
+public function main() {
+    boolean x = true;
+    boolean y = false;
+
+    io:println(x === true); // @output true
+    io:println(x === false); // @output false
+    io:println(y === true); // @output false
+    io:println(y === false); // @output true
+}
+
+Test-Case: output
+Description: Test boolean literals with if-else block.
+Labels: boolean
+
+public function main() {
+    boolean x = false;
+    if true {
+        x = true;
+    } else {
+
+    }
+    io:println(x); // @output true
+
+    x = true;
+    if false {
+
+    } else {
+        x = false;
+    }
+    io:println(x); // @output false
+}
+
+Test-Case: output
+Description: Test boolean literals with while-stmt.
+Labels: boolean, while-stmt
+
+public function main() {
+    boolean x = false;
+    while true {
+        x = true;
+        break;
+    }
+    io:println(x); // @output true
+}
+
+Test-Case: output
+Description: Test boolean literals with is-expr.
+Labels: boolean, is-expr
+
+public function main() {
+    io:println(true is boolean); // @output true
+
+    io:println(false is boolean); // @output true
+}
+
+Test-Case: output
+Description: Test boolean literals with valid type-cast-expr.
+Labels: boolean, type-cast-expr
+
+public function main() {
+    io:println(<boolean> true); // @output true
+
+    io:println(<boolean> false); // @output false
+}
+
+Test-Case: error
+Description: Test boolean literals with invalid type-cast-expr.
+Labels: any, boolean-literal, decimal, float, int, nil-type, string, type-cast-expr
+
+public function main() {
+    any x = <decimal> true; // @error 'boolean' cannot be cast to 'decimal'
+
+    x = <decimal> false; // @error 'boolean' cannot be cast to 'decimal'
+
+    x = <float> true; // @error 'boolean' cannot be cast to 'float'
+
+    x = <float> false; // @error 'boolean' cannot be cast to 'float'
+
+    x = <int> true; // @error 'boolean' cannot be cast to 'int'
+
+    x = <int> false; // @error 'boolean' cannot be cast to 'int'
+
+    x = <()> true; // @error 'boolean' cannot be cast to '()'
+
+    x = <()> false; // @error 'boolean' cannot be cast to '()'
+
+    x = <string> true; // @error 'boolean' cannot be cast to 'string'
+
+    x = <string> false; // @error 'boolean' cannot be cast to 'string'
+}
+
+Test-Case: output
+Description: Test boolean literals with interpolation in template expressions.
+Labels: boolean-literal, raw-template-expr
+
+public function main() {
+    io:println(`${true}`); // @output true
+
+    io:println(`${false}`); // @output false
+}
+
+Test-Case: output
+Description: Test boolean literals as members of structural constructors.
+Labels: boolean-literal, list-constructor-expr, mapping-constructor-expr, string
+
+public function main() {
+    io:println([true, false]); // @output [true,false]
+
+    io:println({"c" : true, "b" : false}); // @output {"c":true,"b":false}
+}
+
+Test-Case: error
+Description: Test invalid boolean literals.
+Labels: boolean, DecimalNumber
+
+public function main() {
+    boolean a = True; // @error expected a 'boolean', but found an undefined symbol 'True'
+
+    boolean b = False; // @error expected a 'boolean', but found an undefined symbol 'False'
+
+    boolean c = TRUE; // @error expected a 'boolean', but found an undefined symbol 'TRUE'
+
+    boolean d = FALSE; // @error expected a 'boolean', but found an undefined symbol 'FALSE'
+
+    boolean e = 1; // @error expected a 'boolean', but found a 'int'
+
+    boolean f = 0; // @error expected a 'boolean', but found a 'int'
+}

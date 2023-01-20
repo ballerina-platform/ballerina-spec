@@ -1,0 +1,326 @@
+Test-Case: output
+Description: Test DecimalNumbers with int-type-descriptor.
+Labels: int
+
+function init() {
+    int x = 101;
+    io:println(x); // @output 101
+
+    x = 0;
+    io:println(x); // @output 0
+
+    x = 3;
+    io:println(x); // @output 3
+
+    x = 9223372036854775807;
+    io:println(x); // @output 9223372036854775807
+}
+
+Test-Case: output
+Description: Test DecimalNumbers with function call.
+Labels: function-call-expr, int
+
+function init() {
+    printInt(101); // @output 101
+
+    printInt(0); // @output 0
+
+    printInt(3); // @output 3
+
+    printInt(9223372036854775807); // @output 9223372036854775807
+}
+
+function printInt(int x) {
+    io:println(x);
+}
+
+Test-Case: parser-error
+Description: Test DecimalNumbers with leading zeros.
+Labels: int
+
+function errorFunction() {
+    int _ = 00; // @error invalid DecimalNumber with leading '0'
+
+    int _ = 012345; // @error invalid DecimalNumber with leading '0'
+}
+
+Test-Case: output
+Description: Test HexIntLiterals with int-type-descriptor.
+Labels: function-call-expr, HexIntLiteral, int
+
+function init() {
+    int x = 0x1;
+    printInt(x); // @output 1
+
+    x = 0xa;
+    printInt(x); // @output 10
+
+    x = 0xA;
+    printInt(x); // @output 10
+
+    x = 0x000000a;
+    printInt(x); // @output 10
+
+    x = 0x1fed12cba7;
+    printInt(x); // @output 137121418151
+
+    x = 0xABCDEF81;
+    printInt(x); // @output 2882400129
+
+    x = 0x192AAce;
+    printInt(x); // @output 26389198
+
+    x = 0X1;
+    printInt(x); // @output 1
+
+    x = 0Xa;
+    printInt(x); // @output 10
+
+    x = 0XA;
+    printInt(x); // @output 10
+
+    x = 0XABCDEF81;
+    printInt(x); // @output 2882400129
+
+    printInt(0X1fedcba7); // @output 535677863
+
+    printInt(0X192AAc5); // @output 26389189
+}
+
+function printInt(int x) {
+    io:println(x);
+}
+
+Test-Case: parser-error
+Description: Test invalid HexIntLiteral.
+Fail-Issue: ballerina-platform/ballerina-lang#32559
+Labels: int
+
+function errorFunction() {
+    int _ = 0x; // @error invalid HexIntLiteral due to absence of HexDigits
+
+    int _ = 0X; // @error invalid HexIntLiteral due to absence of HexDigits
+}
+
+Test-Case: parser-error
+Description: Test invalid HexIntLiteral.
+Labels: int
+
+function errorFunction() {
+    int _ = 0x123g; // @error invalid HexIntLiteral due to incorrect HexDigits
+
+    int _ = 0X123G; // @error invalid HexIntLiteral due to incorrect HexDigits
+
+    int _ = 123ab; // @error undefined symbol 'ab'
+}
+
+Test-Case: output
+Description: Test DecimalNumbers with toString().
+Labels: DecimalNumber, value:toString
+
+function init() {
+    io:println((101).toString()); // @output 101
+
+    io:println(0.toString()); // @output 0
+
+    io:println(9223372036854775807.toString()); // @output 9223372036854775807
+}
+
+Test-Case: output
+Description: Test HexIntLiteral with toString().
+Fail-Issue: ballerina-platform/ballerina-lang#32769
+Labels: HexIntLiteral, value:toString
+
+function init() {
+    io:println(0x12ab.toString()); // @output 4779
+}
+
+Test-Case: output
+Description: Test DecimalNumbers with toBalString().
+Labels: DecimalNumber, value:toBalString
+
+function init() {
+    io:println((101).toBalString()); // @output 101
+
+    io:println(0.toBalString()); // @output 0
+
+    io:println(9223372036854775807.toBalString()); // @output 9223372036854775807
+}
+
+Test-Case: output
+Description: Test HexIntLiteral with toBalString().
+Fail-Issue: ballerina-platform/ballerina-lang#32769
+Labels: HexIntLiteral, value:toBalString
+
+function init() {
+    io:println(0x12ab.toBalString()); // @output 4779
+}
+
+Test-Case: output
+Description: Test DecimalNumbers with return statement.
+Labels: int, return-stmt
+
+function init() {
+    io:println(printDecimalNumber()); // @output 5674
+}
+
+function printDecimalNumber() returns int {
+    return 5674;
+}
+
+Test-Case: output
+Description: Test HexIntLiteral with return statement.
+Labels: HexIntLiteral, int, return-stmt
+
+function init() {
+    io:println(printHexIntLiteral()); // @output 77739
+}
+
+function printHexIntLiteral() returns int {
+    return 0x12fab;
+}
+
+Test-Case: parser-error
+Description: Test possible invalid int-literal scenarios.
+Labels: int
+
+function errorFunction() {
+    int _ = 0b10111; // @error expected a 'int', but found an undefined symbol '0b10111'
+
+    int _ = 123 456 789; // @error invalid expression
+
+    int _ = 1,123,456,789; // @error invalid expression
+
+    int _ = 0x 12fa; // @error invalid HexIntLiteral
+
+    int _ = 0h123ca; // @error expected a 'int', but found an undefined symbol '0h123ca'
+
+    int _ = Ox456fa; // @error expected a 'int', but found an undefined symbol 'Ox456fa'
+}
+
+Test-Case: error
+Description: Test numeric value greater than upper bound for decimal.
+Fail-Issue: ballerina-platform/ballerina-lang#37541
+Labels: DecimalNumber, decimal
+
+function errorFunction() {
+    decimal _ = 10092233720368547758081009223372036854775; // @error number '10092233720368547758081009223372036854775' is too large
+}
+
+Test-Case: output
+Description: Test equality for DecimalNumbers.
+Labels: DecimalNumber, equality
+
+function init() {
+    io:println(10 == 10); // @output true
+
+    io:println(10 != 10); // @output false
+}
+
+Test-Case: output
+Description: Test equality for HexIntLiteral.
+Labels: equality, HexIntLiteral
+
+function init() {
+    io:println(0x1a == 0x1a); // @output true
+
+    io:println(0x1a != 0x1a); // @output false
+}
+
+Test-Case: output
+Description: Test equality for DecimalNumbers and HexIntLiteral.
+Labels: DecimalNumber, equality, HexIntLiteral
+
+function init() {
+    io:println(0x1234abdef1 == 78193090289); // @output true
+
+    io:println(9223372036854775807 != 0x7FFFFFFFFFFFFFFF); // @output false
+}
+
+Test-Case: error
+Description: Test equality for different DecimalNumbers and HexIntLiterals should fail due to singleton typing.
+Fail-Issue: ballerina-platform/ballerina-lang#35450
+Labels: DecimalNumber, equality, HexIntLiteral
+
+function init() {
+    io:println(7819309028 == 0x4abde31); // @error intersection of operands of operator '==' is empty
+
+    io:println(0x1234abdef1 != 7819309028); // @error intersection of operands of operator '==' is empty
+}
+
+Test-Case: output
+Description: Test int literals with valid type casts.
+Labels: DecimalNumber, decimal, float, HexIntLiteral, int, type-cast-expr
+
+function init() {
+    io:println(<int> 13245); // @output 13245
+
+    io:println(<int> 0xabde12a); // @output 180216106
+
+    io:println(<decimal> 13245); // @output 13245
+
+    io:println(<float> 13245); // @output 13245.0
+}
+
+Test-Case: output
+Description: Test large int literals with valid type casts.
+Fail-Issue: ballerina-platform/ballerina-spec#1046
+Labels: DecimalNumber, decimal, float, HexIntLiteral, int, type-cast-expr
+
+function init() {
+    io:println(<float> 0xabde12a); // @output 180216106.0
+}
+
+Test-Case: output
+Description: Test hex int literals with valid type cast to decimal.
+Fail-Issue: ballerina-platform/ballerina-lang#34976
+Labels: decimal, HexIntLiteral, int, type-cast-expr
+
+function init() {
+    io:println(<decimal> 0xabde12a); // @output 180216106.0
+}
+
+Test-Case: error
+Description: Test int-literal with invalid type casts.
+Fail-Issue: ballerina-platform/ballerina-lang#32716
+Labels: any, boolean, DecimalNumber, HexIntLiteral, type-cast-expr
+
+function errorFunction() {
+    any _ = <boolean> 0; // @error 'int' cannot be cast to 'boolean'
+
+    any _ = <boolean> 0x0; // @error 'int' cannot be cast to 'boolean'
+}
+
+Test-Case: error
+Description: Test int-literal with invalid type casts.
+Labels: any, DecimalNumber, HexIntLiteral, nil-type, string, type-cast-expr
+
+function errorFunction() {
+    any _ = <()> 123; // @error 'int' cannot be cast to '()'
+
+    any _ = <()> 0X42af; // @error 'int' cannot be cast to '()'
+
+    any _ = <string> 456; // @error 'int' cannot be cast to 'string'
+
+    any _ = <string> 0xa21bd; // @error 'int' cannot be cast to 'string'
+}
+
+Test-Case: output
+Description: Test int literals with interpolation in template expressions.
+Labels: DecimalNumber, HexIntLiteral, raw-template-expr
+
+function init() {
+    io:println(`${124}`); // @output 124
+
+    io:println(`${0x7ab1}`); // @output 31409
+}
+
+Test-Case: output
+Description: Test int literals as members of structural constructors.
+Labels: DecimalNumber, HexIntLiteral, list-constructor-expr, mapping-constructor-expr, string
+
+function init() {
+    io:println([123, 0x12a3]); // @output [123,4771]
+
+    io:println({"c" : 987, "b" : 0X92c1}); // @output {"c":987,"b":37569}
+}

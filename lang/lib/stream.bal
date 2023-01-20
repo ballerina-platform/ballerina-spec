@@ -61,7 +61,7 @@ public isolated function next(stream<Type,CompletionType> stm) returns record {|
 
 # Closes a stream.
 # This releases any system resources being used by the stream.
-# Closing a stream that has already been closed has no efffect and returns `()`.
+# Closing a stream that has already been closed has no effect and returns `()`.
 #
 # + stm - the stream to close
 # + return - () if the close completed successfully, otherwise an error

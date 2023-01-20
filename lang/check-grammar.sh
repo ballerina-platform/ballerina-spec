@@ -24,7 +24,7 @@ sed -e 's/<abbr>/\n<abbr>/g' $b/grammar.xml \
 join -a 2 -v 2 $b/defs.txt $b/used.txt >$b/undef.txt
 test -s $b/undef.txt && echo Undefined references found: `cat $b/undef.txt` 1>&2
 join -a 1 -v 1 $b/defs.txt $b/used.txt \
-     | grep -v '^TokenWhiteSpace\|module-part$' >$b/unused.txt
+     | grep -v '^TokenWhiteSpace\|module-part\|RegExp$' >$b/unused.txt
 test -s $b/unused.txt && echo Unused definitions found: `cat $b/unused.txt` 1>&2
 exit 0
 
