@@ -355,3 +355,4 @@ Contains the settings related to artifacts generation.
 |---	         |---	                                             |---	        |
 |singleYAML   	 |Generate a single YAML file with all the artifacts |true  	    |
 |buildImage      |Build Docker image  	                             |true      	|
+|thinJar         |Uses thin jars instead of fat jar in the container |true      	|
