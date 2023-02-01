@@ -242,10 +242,11 @@ Contains container image related properties.
 
 |Identifier   	|Description	                            |Default Value   	 |
 |---	        |---	                                    |---	             |
-|name   	    |Name of the container image                |$USER-$MODULE_NAME  |
-|repository   	|Container repository to host the container |""   	             |
+|name   	    |Name of the container image                |$USER-$MODULE_NAME            |
+|repository   	|Container repository to host the container |""   	     |
 |tag   	        |Tag of the container   	                |"latest"   	     |
-|base   	    |Base container of the container image   	|"ballerina/jre11:v1"|
+|base   	    |Base container of the container image   	|"ballerina/jvm-runtime:1.0"|
+|cmd   	    |Instruction, which is executed when the container starts up   	|   - |
 
     
 
@@ -256,6 +257,17 @@ Container image user account related properties
 |Identifier   	|Description	                |Default Value   	|
 |---	        |---	                        |---	            |
 |run_as   	    |Name of the container image   	|"ballerina"   	    |
+
+
+#### [[container.copy.files]]
+
+Copy the files to the container image
+
+|Identifier   	|Description	                |Default Value   	|
+|---	        |---	                        |---	            |
+|sourceFile  	|Path to the external file   	|"./data/data.txt"  |
+|target  	    |Path of the file within the container |"/home/ballerina/data/data.txt"  |
+
 
 #### [[cloud.config.envs]]
 
@@ -281,27 +293,28 @@ Contains the secrets required for the application.
 
 Contains external files required for the code.
 
-|Identifier |Description                                        |Example Value                      |
-|---	    |---	                                            |---	                              |
-|file    |Path of the external file            |"resource/file.txt"          |
+|Identifier |Description                                        |Example Value     |
+|---	    |---	                                            |---	           |
+|file    |Path of the external file            |"resource/file.txt"                |
 |mount_path |Path of the file in the container    |"/home/ballerina/foo/file.txt" |
 
 #### [[cloud.config.files]]
 
 Contains config toml files required for the code.
 
-|Identifier |Description                                        |Example Value                      |
-|---	    |---	                                            |---	                              |
-|file    |Path of the external file            |"conf/Config.toml"          |
+|Identifier |Description                                        |Example Value   |
+|---	    |---	                                            |---	         |
+|file    |Path of the external file            |"conf/Config.toml"               |
+|name    |Name field for the configmap            |"sample5-config-map"          |
 
 #### [cloud.deployment]
 
 Contains the properties related to the deployment.
 
-|Identifier            |Description                                             |Default Value    |
+|Identifier            |Description                                              |Default Value     |
 |---	                |---	                                                 |---	            |
-|internal_domain_name   |Name of the internal domain (k8s service name)         |${MODULE_NAME}-svc|
-|min_memory            |Minimum memory allocated to the container             |"100Mi"        |
+|internal_domain_name   |Name of the internal domain (k8s service name)          |${MODULE_NAME}-svc|
+|min_memory            |Minimum memory allocated to the container                |"100Mi"           |
 |max_memory   	        |Maximum memory allocated to the container  	         |"256Mi"   	    |
 |min_cpu   	            |Minimum CPU allocated to the container 	             |"1000m"   	    |
 |max_cpu   	            |Maximum CPU allocated to the container  	             |"1500m"   	    |
@@ -347,6 +360,26 @@ Contains the volume definitions of the application. No default volumes will be g
 |name   	 |Name of the volume  	     |"volume1"  	|
 |local_path  |Path of the volume   	     |"files"   	|
 |size   	 |Maximum size of the Volume |"2Gi"   	    |
+
+
+#### [[cloud.secret.envs]]
+
+Properties to mount environment variables as secrets
+
+|Identifier  |Description	             |Example Value |
+|---	     |---	                     |---	        |
+|key_ref   	 |Name of the secret component in the cluster	     |"b7a-password" 	|
+|name        |Name of the environment variable   	             |"b7a-password" 	|
+|secret_name |Name of the key in the secret component            |"B7A_PASSWORD"	|
+
+#### [[cloud.secret.files]]
+
+Properties to mount files as secret volumes
+
+|Identifier  |Description	             |Example Value |
+|---	     |---	                     |---	        |
+|file   	 |External file path to mount as a secret volume	     |"./conf/data.txt"	|
+|mount_path  |Path of the file within the container 	     |"/home/ballerina/data" 	|
 
 #### [[settings]]
 Contains the settings related to artifacts generation.
