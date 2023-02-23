@@ -29,7 +29,7 @@ function errorFunction() {
 }
 
 Test-Case: error
-Description: Test static type of expression in logical expression via invalid types using literal unions.
+Description: Test static type of expression in logical expression via invalid references of union types.
 Labels: logical-expr, union-type, nil-type, anydata
 
 function errorFunction() {
@@ -147,7 +147,7 @@ function errorFunction() {
 }
 
 Test-Case: error
-Description: Test static type of expression in logical expression via invalid types using variable reference expression.
+Description: Test static type of expression in logical expression via invalid types using variable reference of simple basic type.
 Labels: logical-expr, variable-reference-expr
 
 function errorFunction() {
@@ -218,7 +218,6 @@ type Annot record {
     foo: "text",
     bar: 1
 }
-
 public type A1 record {
     string name;
 };
@@ -305,13 +304,6 @@ function errorFunction() {
     boolean _ = true || typeof 12; // @error static type of each expression must be a subtype of boolean
     boolean _ = typeof 12 || true; // @error static type of each expression must be a subtype of boolean
     boolean _ = typeof 12 || typeof 12; // @error static type of each expression must be a subtype of boolean
-}
-
-Test-Case: error
-Description: Test static type of expression in logical expression via invalid types using typeof expression.
-Labels: logical-expr, typeof-expr
-
-function errorFunction() {
     boolean _ = true || typeof true; // @error static type of each expression must be a subtype of boolean
     boolean _ = typeof true || true; // @error static type of each expression must be a subtype of boolean
     boolean _ = typeof false || typeof true; // @error static type of each expression must be a subtype of boolean
@@ -362,9 +354,9 @@ Description: Test static type of expression in logical expression via invalid ty
 Labels: logical-expr, range-expr
 
 function errorFunction() {
-    boolean _ = true || (1 ..< 5).iterator().next(); // @error static type of each expression must be a subtype of boolean
-    boolean _ = (1 ... 5).iterator().next() || true; // @error static type of each expression must be a subtype of boolean
-    boolean _ = (1 ..< 5).iterator().next() || (1 ... 5).iterator().next(); // @error static type of each expression must be a subtype of boolean
+    boolean _ = true || (1 ..< 5); // @error static type of each expression must be a subtype of boolean
+    boolean _ = (1 ... 5) || true; // @error static type of each expression must be a subtype of boolean
+    boolean _ = (1 ..< 5) || (1 ... 5); // @error static type of each expression must be a subtype of boolean
 }
 
 Test-Case: error
@@ -643,10 +635,15 @@ function init() {
     io:println(false || true || false); // @output true
     io:println(true || false || false); // @output true
     io:println(true || false || true || false); // @output true
+    io:println(true && true || false); // @output true
+    io:println(true || false && true); // @output true
+    io:println(false || true && false); // @output false
+    io:println(true || false && false); // @output true
+    io:println(true && false || true && false); // @output false
 }
 
 Test-Case: output
-Description: Expression evaluation order when lhs expression evaluates to false and rhs expression evaluates to true in a logical or expression.
+Description: Test Expression evaluation order when lhs expression evaluates to false and rhs expression evaluates to true, where if, the lhs expression is evaluated as false, then the result of the logical or expr is the result of evaluating the rhs expression.
 Labels: logical-expr, function-call-expr, additive-expr, is-expr
 
 int falseEval = 0;
@@ -670,7 +667,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Expression evaluation order when lhs expression evaluates to true and rhs expression evaluates to false in a logical or expression.
+Description: Test Expression evaluation order when lhs expression evaluates to true and rhs expression evaluates to false, where if, the lhs expression is evaluated as true, then the result of the logical or expr is true, and the rhs expression is not evaluated.
 Labels: logical-expr, function-call-expr, additive-expr, is-expr
 
 int falseEval = 0;
@@ -694,7 +691,7 @@ function init() {
 }
 
 Test-Case: output
-Description: Expression evaluation order when both lhs and rhs expressions evaluate to true in a logical or expression.
+Description: Test Expression evaluation order when both lhs and rhs expressions evaluate to true, where if, the lhs expression is evaluated as true, then the result of the logical or expr is true, and the rhs expression is not evaluated.
 Labels: logical-expr, function-call-expr, additive-expr, is-expr
 
 int falseEval = 0;
@@ -703,11 +700,6 @@ int trueEval = 0;
 function returnTrueVal() returns boolean {
     trueEval = trueEval + 1;
     return true;
-}
-
-function returnFalseVal() returns boolean {
-    falseEval = falseEval + 1;
-    return false;
 }
 
 function init() {
@@ -717,16 +709,11 @@ function init() {
 }
 
 Test-Case: output
-Description: Expression evaluation order when both lhs and rhs expressions evaluate to false in a logical or expression.
+Description: Test Expression evaluation order when both lhs and rhs expressions evaluate to false, where if, the lhs expression is evaluated as false, then the result of the logical or expr is the result of evaluating the rhs expression.
 Labels: logical-expr, function-call-expr, additive-expr, is-expr
 
 int falseEval = 0;
 int trueEval = 0;
-
-function returnTrueVal() returns boolean {
-    trueEval = trueEval + 1;
-    return true;
-}
 
 function returnFalseVal() returns boolean {
     falseEval = falseEval + 1;
@@ -821,7 +808,7 @@ function errorFunction() {
 }
 
 Test-Case: output
-Description: Test if static type of result of a logical-expr is boolean in relation to expression evaluation in rhs and lhs expression.
+Description: Test if static type of the result where, if the static type of lhs expression is singleton true, then the static type of the result is singleton true, regardless of the static type of the rhs expression.
 Labels: logical-expr, is-expr
 
 function init() {
