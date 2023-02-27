@@ -1,0 +1,236 @@
+Test-Case: output
+Description: Test `findGroups` function.
+Labels: function-call-expr, regexp, findGroups, method-call-expr
+
+import ballerina/lang.regexp;
+
+function init() {
+    string str1 = " 01/02/2001 and 11/12/2011 are dates. 2020/01/ is not a date";
+    var dateRegex = re `(\d{2})/(\d{2})/(\d{4})`;
+    string:RegExp spaceRegex = re `(\s)`;
+
+    regexp:Groups? res0 = spaceRegex.findGroups("NoSpaces");
+    io:println(res0 is ()); // @output true
+
+    regexp:Groups? res1 = dateRegex.findGroups(str1);
+    io:println(res1 is regexp:Groups); // @output true
+    regexp:Groups resultGroups1 = <regexp:Groups>res1;
+    io:println(resultGroups1.length()); // @output 4
+    io:println((<regexp:Span>resultGroups1[0]).substring()); // @output 01/02/2001
+    regexp:Span resultSpan1 = <regexp:Span>resultGroups1[1];
+    io:println(resultSpan1.startIndex); // @output 1
+    io:println(resultSpan1.endIndex); // @output 3
+    io:println(resultSpan1.substring()); // @output 01
+    regexp:Span resultSpan2 = <regexp:Span>resultGroups1[2];
+    io:println(resultSpan2.startIndex); // @output 4
+    io:println(resultSpan2.endIndex); // @output 6
+    io:println(resultSpan2.substring()); // @output 02
+    regexp:Span resultSpan3 = <regexp:Span>resultGroups1[3];
+    io:println(resultSpan3.startIndex); // @output 7
+    io:println(resultSpan3.endIndex); // @output 11
+    io:println(resultSpan3.substring()); // @output 2001
+
+    regexp:Groups? res2 = re `(\+?[0-9]{10,14})`.findGroups("Call me +94111111111, +941212121212 or +942222222222", 17);
+    io:println(res2 is regexp:Groups); // @output true
+    regexp:Groups resultGroups2 = <regexp:Groups>res2;
+    io:println(resultGroups2.length()); // @output 2
+    regexp:Span resultSpan20 = <regexp:Span>resultGroups2[0];
+    io:println(resultSpan20.startIndex); // @output 22
+    io:println(resultSpan20.endIndex); // @output 35
+    io:println(resultSpan20.substring()); // @output +941212121212
+    regexp:Span resultSpan21 = <regexp:Span>resultGroups2[1];
+    io:println(resultSpan21.startIndex); // @output 22
+    io:println(resultSpan21.endIndex); // @output 35
+    io:println(resultSpan21.substring()); // @output +941212121212
+
+    regexp:Groups? res3 = regexp:findGroups(re = dateRegex, str = str1, startIndex = 16);
+    io:println(res3 is regexp:Groups); // @output true
+    regexp:Groups resultGroups3 = <regexp:Groups>res3;
+    io:println(resultGroups3.length()); // @output 4
+    io:println((<regexp:Span>resultGroups3[0]).substring()); // @output 11/12/2011
+    regexp:Span resultSpan30 = <regexp:Span>resultGroups3[1];
+    io:println(resultSpan30.startIndex); // @output 16
+    io:println(resultSpan30.endIndex); // @output 18
+    io:println(resultSpan30.substring()); // @output 11
+    regexp:Span resultSpan31 = <regexp:Span>resultGroups3[2];
+    io:println(resultSpan31.startIndex); // @output 19
+    io:println(resultSpan31.endIndex); // @output 21
+    io:println(resultSpan31.substring()); // @output 12
+    regexp:Span resultSpan32 = <regexp:Span>resultGroups3[3];
+    io:println(resultSpan32.startIndex); // @output 22
+    io:println(resultSpan32.endIndex); // @output 26
+    io:println(resultSpan32.substring()); // @output 2011
+}
+
+Test-Case: output
+Description: Test `findGroups` function at module level.
+Labels: function-call-expr, regexp, findGroups, method-call-expr
+
+import ballerina/lang.regexp;
+
+string str1 = " 01/02/2001 and 11/12/2011 are dates. 2020/01/ is not a date";
+var dateRegex = re `(\d{2})/(\d{2})/(\d{4})`;
+string:RegExp spaceRegex = re `(\s)`;
+
+regexp:Groups? res0 = spaceRegex.findGroups("NoSpaces");
+regexp:Groups? res1 = dateRegex.findGroups(str1);
+regexp:Groups? res2 = re `(\+?[0-9]{10,14})`.findGroups("Call me +94111111111, +941212121212 or +942222222222", 17);
+regexp:Groups? res3 = regexp:findGroups(re = dateRegex, str = str1, startIndex = 16);
+
+function init() {
+    io:println(res0 is ()); // @output true
+
+    io:println(res1 is regexp:Groups); // @output true
+    regexp:Groups resultGroups1 = <regexp:Groups>res1;
+    io:println(resultGroups1.length()); // @output 4
+    io:println((<regexp:Span>resultGroups1[0]).substring()); // @output 01/02/2001
+    regexp:Span resultSpan1 = <regexp:Span>resultGroups1[1];
+    io:println(resultSpan1.startIndex); // @output 1
+    io:println(resultSpan1.endIndex); // @output 3
+    io:println(resultSpan1.substring()); // @output 01
+    regexp:Span resultSpan2 = <regexp:Span>resultGroups1[2];
+    io:println(resultSpan2.startIndex); // @output 4
+    io:println(resultSpan2.endIndex); // @output 6
+    io:println(resultSpan2.substring()); // @output 02
+    regexp:Span resultSpan3 = <regexp:Span>resultGroups1[3];
+    io:println(resultSpan3.startIndex); // @output 7
+    io:println(resultSpan3.endIndex); // @output 11
+    io:println(resultSpan3.substring()); // @output 2001
+
+    io:println(res2 is regexp:Groups); // @output true
+    regexp:Groups resultGroups2 = <regexp:Groups>res2;
+    io:println(resultGroups2.length()); // @output 2
+    regexp:Span resultSpan20 = <regexp:Span>resultGroups2[0];
+    io:println(resultSpan20.startIndex); // @output 22
+    io:println(resultSpan20.endIndex); // @output 35
+    io:println(resultSpan20.substring()); // @output +941212121212
+    regexp:Span resultSpan21 = <regexp:Span>resultGroups2[1];
+    io:println(resultSpan21.startIndex); // @output 22
+    io:println(resultSpan21.endIndex); // @output 35
+    io:println(resultSpan21.substring()); // @output +941212121212
+
+    io:println(res3 is regexp:Groups); // @output true
+    regexp:Groups resultGroups3 = <regexp:Groups>res3;
+    io:println(resultGroups3.length()); // @output 4
+    io:println((<regexp:Span>resultGroups3[0]).substring()); // @output 11/12/2011
+    regexp:Span resultSpan30 = <regexp:Span>resultGroups3[1];
+    io:println(resultSpan30.startIndex); // @output 16
+    io:println(resultSpan30.endIndex); // @output 18
+    io:println(resultSpan30.substring()); // @output 11
+    regexp:Span resultSpan31 = <regexp:Span>resultGroups3[2];
+    io:println(resultSpan31.startIndex); // @output 19
+    io:println(resultSpan31.endIndex); // @output 21
+    io:println(resultSpan31.substring()); // @output 12
+    regexp:Span resultSpan32 = <regexp:Span>resultGroups3[3];
+    io:println(resultSpan32.startIndex); // @output 22
+    io:println(resultSpan32.endIndex); // @output 26
+    io:println(resultSpan32.substring()); // @output 2011
+}
+
+Test-Case: output
+Description: Test `findGroups` function with negative range.
+Labels: function-call-expr, regexp, findGroups, method-call-expr
+
+import ballerina/lang.regexp;
+
+function errorFunction() {
+    var emailRegex = re `(^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$)`;
+    string str1 = "abc@gmail.com and def@gmail.com are emails, but ut@.com is not an email";
+    regexp:Groups|error? err = trap emailRegex.findGroups(str1, -5);
+    io:println(err is error); // @output true
+    io:println((<error> err).detail().get("message").ensureType()); // @output start index cannot be less than 0
+}
+
+Test-Case: error
+Description: Test `findGroups` function with large integer values.
+Labels: function-call-expr, regexp, findGroups, method-call-expr
+
+import ballerina/lang.regexp;
+
+function errorFunction() {
+    var emailRegex = re `(^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$)`;
+    string str1 = "abc@gmail.com and def@gmail.com are emails, but ut@.com is not an email";
+
+    regexp:Groups? _ = emailRegex.findGroups(str1, 1000000000000000000000); // @error out of range
+}
+
+Test-Case: output
+Description: Test assignability of `findGroups` function result.
+Labels: function-call-expr, regexp, findGroups, method-call-expr
+
+import ballerina/lang.regexp;
+
+function init() {
+    var emailRegex = re `(^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$)`;
+    string str1 = "abc@gmail.com and def@gmail.com are emails, but ut@.com is not an email";
+
+    any result1 = emailRegex.findGroups(str1);
+    io:println(result1 is regexp:Groups?); // @output true
+
+    var result2 = re `cd`.findGroups(str1, 1);
+    io:println(result2 is regexp:Groups?); // @output true
+
+    int|regexp:Groups? result3 = regexp:findGroups(re = emailRegex, str = str1, startIndex = 23);
+    io:println(result3 is regexp:Groups?); // @output true
+
+    var result4 = emailRegex.findGroups(str1, 16);
+    io:println(result4 is ()); // @output true
+}
+
+Test-Case: error
+Description: Test assigning the result of `findGroups` function to an incompatible type.
+Labels: function-call-expr, regexp, findGroups, method-call-expr
+
+import ballerina/lang.regexp;
+
+function errorFunction() {
+    var emailRegex = re `(^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$)`;
+    string str1 = "abc@gmail.com and def@gmail.com are emails, but ut@.com is not an email";
+
+    regexp:Groups _ = emailRegex.findGroups(str1, 5); // @error expects a regexp:Groups, but findGroups() returns regexp:Groups?
+    regexp:Groups[] _ = emailRegex.findGroups(str1, 5); // @error expects a regexp:Groups[], but findGroups() returns regexp:Groups?
+    int _ = emailRegex.findGroups(str1); // @error expects a int, but findGroups() returns regexp:Groups?
+}
+
+Test-Case: error
+Description: Test missing required parameters for `findGroups` method.
+Labels: function-call-expr, regexp, findGroups, method-call-expr
+
+import ballerina/lang.regexp;
+
+function errorFunction() {
+    var emailRegex = re `(^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$)`;
+    string str1 = "abc@gmail.com and def@gmail.com are emails, but ut@.com is not an email";
+
+    regexp:Groups? _ = emailRegex.findGroups(); // @error missing string argument
+    regexp:Groups? _ = regexp:findGroups(emailRegex); // @error missing string argument
+    regexp:Groups? _ = regexp:findGroups(str = ""); // @error missing required parameter 're' in call to 'findGroups()'
+    regexp:Groups? _ = re `abc`.findGroups(); // @error missing string argument
+}
+
+Test-Case: error
+Description: Test passing invalid parameters to `findGroups()` method.
+Labels: function-call-expr, regexp, findGroups, method-call-expr
+
+import ballerina/lang.regexp;
+
+function errorFunction() {
+    var emailRegex = re `(^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$)`;
+    string str1 = "abcde@gmail.com";
+
+    regexp:Groups? _ = emailRegex.findGroups(12); // @error expected 'string', found 'int'
+    regexp:Groups? _ = emailRegex.findGroups("MatchHereAndHere", "5"); // @error expected 'int', found 'string'
+    regexp:Groups? _ = regexp:findGroups(re = "abc", str = "MatchHereAndHere",  startIndex = 2); // @error expected 'regexp:RegExp', found 'string'
+}
+
+Test-Case: error
+Description: Test passing too many parameters to `findGroups()` method.
+Labels: function-call-expr, regexp, find, method-call-expr
+
+import ballerina/lang.regexp;
+
+function errorFunction() {
+    var regExpr1 = re `(Here)`;
+
+    regexp:Groups? _ = regExpr1.findGroups("MatchHereAndHere", 5, 1); // @error too many arguments
+}

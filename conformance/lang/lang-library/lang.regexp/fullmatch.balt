@@ -1,0 +1,116 @@
+Test-Case: output
+Description: Test `isFullMatch` function.
+Labels: function-call-expr, regexp, isFullMatch, method-call-expr
+
+import ballerina/lang.regexp;
+
+function init() {
+    var emailRegex = re `[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}`;
+    string str1 = "abc@gmail.com";
+    string str2 = "1AB<> C\\d";
+    string str3 = "+94111111111a";
+
+    boolean isFullMatch1 = emailRegex.isFullMatch(str1);
+    io:println(isFullMatch1); // @output true
+
+    boolean isFullMatch2 = regexp:isFullMatch(re `(?im-sx:H*ere?!?)`, "matchhere andthere1");
+    io:println(isFullMatch2); // @output false
+
+    boolean isFullMatch3 = emailRegex.isFullMatch(str3);
+    io:println(isFullMatch3); // @output false
+
+    boolean isFullMatch4 = re `\d\D*\w\W\W\s\S\\d`.isFullMatch(str2);
+    io:println(isFullMatch4); // @output true
+}
+
+Test-Case: output
+Description: Test `isFullMatch` function at module level.
+Labels: function-call-expr, regexp, isFullMatch, method-call-expr
+
+import ballerina/lang.regexp;
+
+var emailRegex = re `[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}`;
+string str1 = "abc@gmail.com";
+string str2 = "1AB<> C\\d";
+string str3 = "+94111111111a";
+
+boolean isFullMatch1 = emailRegex.isFullMatch(str1);
+boolean isFullMatch2 = regexp:isFullMatch(re `(?im-sx:H*ere?!?)`, "matchhere andthere1");
+boolean isFullMatch3 = emailRegex.isFullMatch(str3);
+boolean isFullMatch4 = re `\d\D*\w\W\W\s\S\\d`.isFullMatch(str2);
+
+function init() {
+    io:println(isFullMatch1); // @output true
+    io:println(isFullMatch2); // @output false
+    io:println(isFullMatch3); // @output false
+    io:println(isFullMatch4); // @output true
+}
+
+Test-Case: output
+Description: Test assignability of `isFullMatch` function result.
+Labels: function-call-expr, regexp, isFullMatch, method-call-expr
+
+function init() {
+    var emailRegex = re `[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}`;
+    string str1 = "abc@gmail.com";
+
+    any|error result1 = emailRegex.isFullMatch(str1);
+    io:println(result1 is boolean); // @output true
+    io:println(result1); // @output true
+
+    var result2 = re `[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}`.isFullMatch(str1);
+    io:println(result2 is boolean); // @output true
+    io:println(result2); // @output true
+}
+
+Test-Case: error
+Description: Test assigning the result of `isFullMatch` function to an incompatible type.
+Labels: function-call-expr, regexp, isFullMatch, method-call-expr
+
+type False false;
+
+function errorFunction() {
+    var emailRegex = re `[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}`;
+    string str1 = "abc@gmail.com";
+
+    int _ = emailRegex.isFullMatch(str1); // @error expects a int, but isFullMatch returns boolean
+    False _ = emailRegex.isFullMatch(str1); // @error expects a False, but isFullMatch returns boolean
+}
+
+Test-Case: error
+Description: Test missing required parameters for `isFullMatch()` method.
+Labels: function-call-expr, regexp, isFullMatch, method-call-expr
+
+import ballerina/lang.regexp;
+
+function errorFunction() {
+    var emailRegex = re `[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}`;
+    string str1 = "abc@gmail.com";
+
+    boolean _ = emailRegex.isFullMatch(); // @error missing string argument
+    boolean _ = regexp:isFullMatch(str = str1); // @error missing RegExp argument
+}
+
+Test-Case: error
+Description: Test passing invalid parameters to `isFullMatch()` method.
+Labels: function-call-expr, regexp, isFullMatch, method-call-expr
+
+import ballerina/lang.regexp;
+
+function errorFunction(string|int si) {
+    var emailRegex = re `[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}`;
+    string str1 = "abc@gmail.com";
+
+    boolean _ = emailRegex.isFullMatch(1234); // @error expected 'string', found 'int'
+    boolean _ = regexp:isFullMatch(re = 123, str = str1); // @error expected 'regexp:RegExp', found 'int'
+}
+
+Test-Case: error
+Description: Test passing too many parameters to `isFullMatch()` method.
+Labels: function-call-expr, regexp, isFullMatch, method-call-expr
+
+function errorFunction(string|int si) {
+    var emailRegex = re `[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}`;
+
+    boolean _ = emailRegex.isFullMatch("regexp", "regexp1"); // @error too many arguments
+}

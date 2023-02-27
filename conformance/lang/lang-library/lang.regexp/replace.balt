@@ -1,0 +1,233 @@
+Test-Case: output
+Description: Test `replace` function with replacement string.
+Labels: function-call-expr, regexp, replace, method-call-expr
+
+import ballerina/lang.regexp;
+
+function init() {
+    string str1 = "abc@gmail.com, def@gmail.com are emails, but ut@.com is not an email";
+    var emailRegex = re `[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}`;
+    string replacement1 = " ";
+    string result1 = emailRegex.replace(str1, replacement1);
+    io:println(result1); // @output  , def@gmail.com are emails, but ut@.com is not an email
+
+    string result11 = emailRegex.replace(str1, replacement1, 0);
+    io:println(result11); // @output  , def@gmail.com are emails, but ut@.com is not an email
+
+    string result12 = regexp:replace(emailRegex, str1, replacement1, 11);
+    io:println(result12); // @output abc@gmail.com,   are emails, but ut@.com is not an email
+
+    string result2 = re `\+?[0-9]{10,14}`.replace("2341233334567890", "# ");
+    io:println(result2); // @output # 90
+
+    string str3 = "10010011";
+    var regExpr3 = re `.+`;
+    string replacement3 = "*";
+    string result3 = regExpr3.replace(str3, replacement3);
+    io:println(result3); // @output *
+
+    string str4 = "100100011";
+    var regExpr4 = re `0+`;
+    string replacement4 = "*";
+    string result4 = regExpr4.replace(str = str4, replacement = replacement4, startIndex = 4);
+    io:println(result4); // @output 1001*11
+
+    string str5 = "WillNotBeMatched";
+    var regExpr5 = re `This`;
+    string replacement5 = "That";
+    string result5 = regExpr5.replace(str5, replacement5);
+    io:println(result5); // @output WillNotBeMatched
+}
+
+Test-Case: output
+Description: Test `replace` function with replacement function.
+Labels: function-call-expr, regexp, replace, method-call-expr
+
+import ballerina/lang.regexp;
+
+function init() {
+    string str1 = "100000100011";
+    var regExpr = re `0+`;
+    string result1 = regExpr.replace(str1, replacementFunctionForReplace);
+    io:println(result1); // @output 16100011
+
+    string str2 = "100100011";
+    string result2 = regExpr.replace(str2, replacementFunctionForReplace, 4);
+    io:println(result2); // @output 1001711
+
+    string str3 = "11111111";
+    string result3 = re `0+`.replace(str3, replacementFunctionForReplace, 4);
+    io:println(result3); // @output 11111111
+}
+
+isolated function replacementFunctionForReplace(regexp:Groups groups) returns string {
+    return groups[0].endIndex.toString();
+}
+
+Test-Case: output
+Description: Test `replace` function at module level.
+Labels: function-call-expr, regexp, find, method-call-expr
+
+import ballerina/lang.regexp;
+
+string str1 = "abc@gmail.com, def@gmail.com are emails, but ut@.com is not an email";
+var emailRegex = re `[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}`;
+string replacement1 = " ";   
+
+string result1 = emailRegex.replace(str1, replacement1);
+string result11 = emailRegex.replace(str1, replacement1, 0);
+string result12 = regexp:replace(emailRegex, str1, replacement1, 11);
+
+string result2 = re `\+?[0-9]{10,14}`.replace("2341233334567890", "# ");
+
+string str3 = "10010011";
+var regExpr = re `.+`;
+string replacement3 = "*";
+
+string result3 = regExpr.replace(str3, replacement3);
+
+string str4 = "100100011";
+var regExpr2 = re `0+`;
+string replacement4 = "*";
+
+string result4 = regExpr2.replace(str = str4, replacement = replacement4, startIndex = 4);
+
+string str5 = "WillNotBeMatched";
+var regExpr3 = re `This`;
+string replacement5 = "That";
+
+string result5 = regExpr3.replace(str5, replacement5);
+
+function init() {
+    io:println(result1); // @output  , def@gmail.com are emails, but ut@.com is not an email
+    io:println(result11); // @output  , def@gmail.com are emails, but ut@.com is not an email
+    io:println(result12); // @output abc@gmail.com,   are emails, but ut@.com is not an email
+    io:println(result2); // @output # 90
+    io:println(result3); // @output *
+    io:println(result4); // @output 1001*11
+    io:println(result5); // @output WillNotBeMatched
+}
+
+Test-Case: output
+Description: Test `replaceAll` function with replacement function in module level.
+Labels: function-call-expr, regexp, replaceAll, method-call-expr
+
+import ballerina/lang.regexp;
+
+string str1 = "100000100011";
+var regExpr = re `0+`;
+string result1 = regExpr.replace(str1, replacementFunctionForReplace2);
+string str2 = "100100011";
+string result2 = regExpr.replace(str2, replacementFunctionForReplace2, 4);
+string str3 = "11111111";
+string result3 = re `0+`.replace(str3, replacementFunctionForReplace2, 4);
+
+function init() {
+    io:println(result1); // @output 16100011
+    io:println(result2); // @output 1001711
+    io:println(result3); // @output 11111111
+}
+
+isolated function replacementFunctionForReplace2(regexp:Groups groups) returns string {
+    return groups[0].endIndex.toString();
+}
+
+Test-Case: output
+Description: Test `replace` function with negative range.
+Labels: function-call-expr, regexp, replace, method-call-expr
+
+function errorFunction() {
+    var emailRegex = re `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`;
+    string str1 = "abc@gmail.com";
+    string|error? err = trap emailRegex.replace(str1, " ", -5);
+    io:println(err is error); // @output true
+    io:println((<error> err).detail().get("message").ensureType()); // @output start index cannot be less than 0
+}
+
+Test-Case: error
+Description: Test `replace` function with large integer values.
+Labels: function-call-expr, regexp, replace, method-call-expr
+
+import ballerina/lang.regexp;
+
+function errorFunction() {
+    var emailRegex = re `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`;
+    string str1 = "abc@gmail.com";
+
+    string _ = emailRegex.replace(str1, " ", 1000000000000000000000); // @error out of range
+}
+
+Test-Case: output
+Description: Test assignability of `replace` function result.
+Labels: function-call-expr, regexp, replace, method-call-expr
+
+import ballerina/lang.regexp;
+
+function init() {
+    string str1 = "abc@gmail.com, def@gmail.com are emails, but ut@.com is not an email";
+    var emailRegex = re `[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}`;
+    any result1 = emailRegex.replace(str1, "");
+    io:println(result1 is string); // @output true
+    io:println(result1); // @output , def@gmail.com are emails, but ut@.com is not an email
+
+    var result2 = regexp:replace(emailRegex, str1, "", 10);
+    io:println(result2 is string); // @output true
+    io:println(result2); // @output abc@gmail.com,  are emails, but ut@.com is not an email
+
+    string result3 = re `.*`.replace(str1, "*");
+    io:println(result3); // @output *
+}
+
+Test-Case: error
+Description: Test assigning the result of `replace` method to an incompatible type.
+Labels: function-call-expr, regexp, replace, method-call-expr
+
+function errorFunction() {
+    string str = "+941122334455";
+    string:RegExp phoneRegex = re `\+?[0-9]{10,14}`;
+
+    int _ = phoneRegex.replace(str, "a"); // @error expects a int, but replace() returns string
+    string:Char _ = phoneRegex.replace(str, "a"); // @error expects a string:Char, but replace() returns string
+}
+
+Test-Case: error
+Description: Test missing required parameters for `replace` method.
+Labels: function-call-expr, regexp, replace, method-call-expr
+
+import ballerina/lang.regexp;
+
+function errorFunction() {
+    string str = "+941122334455";
+    string:RegExp phoneRegex = re `\+?[0-9]{10,14}`;
+
+    string _ = phoneRegex.replace(str); // @error missing Replacement argument
+    string _ = regexp:replace(re = phoneRegex, replacement = ""); // @error missing string argument
+    string _ = regexp:replace(str = str, replacement = ""); // @error missing RegExp argument
+    string _ = regexp:replace(re = re `test`, replacement = "", startIndex = 0); // @error missing string argument
+}
+
+Test-Case: error
+Description: Test passing invalid parameters to `replace` method.
+Labels: function-call-expr, regexp, replace, method-call-expr
+
+import ballerina/lang.regexp;
+
+function errorFunction(string|int si) {
+    string str = "+941122334455";
+    string:RegExp phoneRegex = re `\+?[0-9]{10,14}`;
+
+    string _ = phoneRegex.replace("ReplaceThisThisTextThis", 12); // @error expected 'ballerina/lang.regexp:0.0.0:Replacement', found 'int'
+    string _ = phoneRegex.replace(121314, "12"); // @error expected 'string', found 'int'
+    string _ = phoneRegex.replace(str, 12); // @error expected 'ballerina/lang.regexp:0.0.0:Replacement', found 'int'
+    string _ = regexp:replace(re = 1, replacement = "ReplaceThisThisTextThis", str = "This", startIndex = 1); // @error expected 'regexp:RegExp', found 'int'
+}
+
+Test-Case: error
+Description: Test passing too many parameters to `replace` method.
+Labels: function-call-expr, regexp, replace, method-call-expr
+
+function errorFunction(string|int si) {
+    var regExpr = re `This`;
+    
+    string _ = regExpr.replace("ReplaceThisThisTextThis", "This", 1, 2); // @error too many arguments
+}
