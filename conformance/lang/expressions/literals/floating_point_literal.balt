@@ -443,19 +443,22 @@ function init() {
 }
 
 Test-Case: output
-Description: Test decimal floating point number with floating point type descriptor.
-Labels: float, decimal, FloatingPointTypeSuffix, union-type
+Description: Test decimal floating point number with union of float and decimal.
+Labels: decimal, float, FloatingPointTypeSuffix, union-type
 
 function init() {
-
     decimal|float g = 1;
     io:println(g); // @output 1.0
+    io:println(g is float); // @output true
+    io:println(g is decimal); // @output false
 
     g = 9;
     io:println(g); // @output 9.0
 
     g = 4564347876560;
     io:println(g); // @output 4.56434787656E12
+    io:println(g is float); // @output true
+    io:println(g is decimal); // @output false
 
     g = 0d;
     io:println(g); // @output 0
@@ -477,6 +480,8 @@ function init() {
 
     g = 56763457D;
     io:println(g); // @output 56763457
+    io:println(g is float); // @output false
+    io:println(g is decimal); // @output true
 
     g = 56763457F;
     io:println(g); // @output 5.6763457E7
@@ -755,359 +760,44 @@ function init() {
     io:println(g); // @output 2.5E-173
 }
 
-Test-Case: output
-Description: Test hex floating point literal with floating point type descriptor.
-Labels: float, decimal, HexFloatingPointLiteral, union-type
-
-function init() {
-    float|decimal c = 0x240aDfBcEe;
-    io:println(c); // @output 1.5480125771E11
-
-    c = 0x240aDfBcEep4;
-    io:println(c); // @output 2.47682012336E12
-
-    c = 0x240aDfBcEeP4;
-    io:println(c); // @output 2.47682012336E12
-
-    c = 0x240aDfBcEep+4;
-    io:println(c); // @output 2.47682012336E12
-
-    c = 0x240aDfBcEeP-4;
-    io:println(c); // @output 9.675078606875E9
-
-    c = 0x240aDfBcEep-0;
-    io:println(c); // @output 1.5480125771E11
-
-    c = 0x240aDfBcEeP+0;
-    io:println(c); // @output 1.5480125771E11
-
-    c = 0x240aDfBcEep-324;
-    io:println(c); // @output 4.529558674359502E-87
-
-    c = 0x240aDfBcEeP+205;
-    io:println(c); // @output 7.960192970026859E72
-
-    c = 0X0.0;
-    io:println(c); // @output 0.0
-
-    c = 0X9.9;
-    io:println(c); // @output 9.5625
-
-    c = 0X206.50743;
-    io:println(c); // @output 518.3142728805542
-
-    c = 0Xa.a;
-    io:println(c); // @output 10.625
-
-    c = 0XA.A;
-    io:println(c); // @output 10.625
-
-    c = 0XA.a;
-    io:println(c); // @output 10.625
-
-    c = 0Xa.A;
-    io:println(c); // @output 10.625
-
-    c = 0XaEbcD.0EaD;
-    io:println(c); // @output 715725.0573272705
-
-    c = 0XaE04bcD.0E91aD;
-    io:println(c); // @output 1.8247162905691034E8
-
-    c = 0X.0;
-    io:println(c); // @output 0.0
-
-    c = 0X.1;
-    io:println(c); // @output 0.0625
-
-    c = 0X.2345;
-    io:println(c); // @output 0.1377716064453125
-
-    c = 0X.A;
-    io:println(c); // @output 0.625
-
-    c = 0X.a;
-    io:println(c); // @output 0.625
-
-    c = 0x.aBdECFF;
-    io:println(c); // @output 0.671368595212698
-
-    c = 0x.aBd0E12C9FF4;
-    io:println(c); // @output 0.6711559995600993
-
-    c = 0X.2p+0;
-    io:println(c); // @output 0.125
-
-    c = 0X.AP-0;
-    io:println(c); // @output 0.625
-
-    c = 0X.ap-0;
-    io:println(c); // @output 0.625
-
-    c = 0x.263567p+46;
-    io:println(c); // @output 1.0502700793856E13
-
-    c = 0X.AEDP-46;
-    io:println(c); // @output 9.704043124614259E-15
-
-    c = 0X.aedp-46;
-    io:println(c); // @output 9.704043124614259E-15
-
-    c = 0x.1BeAP+948;
-    io:println(c); // @output 2.594292682612851E284
-
-    c = 0X.0EfCap-456;
-    io:println(c); // @output 3.1462367457512917E-139
-
-    c = 0x0.0p-0;
-    io:println(c); // @output 0.0
-
-    c = 0x0.0P+0;
-    io:println(c); // @output 0.0
-
-    c = 0x9.4p-1;
-    io:println(c); // @output 4.625
-
-    c = 0x9546.4748p+126;
-    io:println(c); // @output 3.250911279637454E42
-
-    c = 0xa.aP-1;
-    io:println(c); // @output 5.3125
-
-    c = 0Xa.ap+1;
-    io:println(c); // @output 21.25
-
-    c = 0xA.aP-12;
-    io:println(c); // @output 0.002593994140625
-
-    c = 0XA.ap+12;
-    io:println(c); // @output 43520.0
-
-    c = 0xaeb.acdfP-302;
-    io:println(c); // @output 3.431057809225094E-88
-
-    c = 0xABC.CEEFFp+302;
-    io:println(c); // @output 2.2397685993041007E94
-
-    c = 0xAbC.0eEfFp-453;
-    io:println(c); // @output 1.1815113934486016E-133
-
-    c = 0xAb12C.0e9E1f0FP+45;
-    io:println(c); // @output 2.465425448163409E19
-
-    c = 0x3e3.0;
-    io:println(c); // @output 995.0
-
-    c = 0x3e3.0p23;
-    io:println(c); // @output 8.34666496E9
-
-    c = 0x3e3.0P23;
-    io:println(c); // @output 8.34666496E9
-
-    c = 0x3e3.0p+23;
-    io:println(c); // @output 8.34666496E9
-
-    c = 0x3e3.0p-23;
-    io:println(c); // @output 1.1861324310302734E-4
-
-    c = 0x3e3.0P+23;
-    io:println(c); // @output 8.34666496E9
-
-    c = 0x3e3.0P-23;
-    io:println(c); // @output 1.1861324310302734E-4
-}
-
 Test-Case: error
-Description: Test hex indicator with float type descriptor.
+Description: Test out of range floating point literal with float type descriptor.
 Labels: float, HexFloatingPointLiteral
 
 function errorFunction() {
-    float _ = 0xFFFFFFFFFFFFFFFF; // @error value is out of range for 'float'
-    float _ = 0xabc435de769FEAB0; // @error value is out of range for 'float'
-    float _ = 0xaaaaaaaaaaaaaaa0; // @error value is out of range for 'float'
-    float _ = 0xAAAAAAAAAAAAAAA0; // @error value is out of range for 'float'
+    float _ = 9.99E+6111; // @error '0x1.0fffffffffffffp+1024' is out of range for 'float'
+
+    float _ = 1.00E-610; // @error '0x1p-1075' is out of range for 'float'
+
+    float _ = 0x1.0fffffffffffffp+1024; // @error '9.99E+6111' is out of range for 'float'
+
+    float _ = 0x1p-1075; // @error '1.00E-610' is out of range for 'float'
 }
 
 Test-Case: output
-Description: Test hex floating point literal with float type descriptor.
-Labels: float, HexFloatingPointLiteral
+Description: Test out of range decimal floating point literal with decimal type descriptor.
+Labels: decimal
 
 function init() {
+    decimal a = 9.99E+6111;
+    io:println(a); // @output 9.99E+6111
 
-    float c = 0x0;
-    io:println(c); // @output 0.0
-
-    c = 0X9;
-    io:println(c); // @output 9.0
-
-    c = 0X2409;
-    io:println(c); // @output 9225.0
-
-    c = 0X240af;
-    io:println(c); // @output 147631.0
-
-    c = 0X240AF;
-    io:println(c); // @output 147631.0
-
-    c = 0x240aDfBcEe;
-    io:println(c); // @output 1.5480125771E11
-
-    c = 0x240aDfBcEep4;
-    io:println(c); // @output 2.47682012336E12
-
-    c = 0x240aDfBcEeP4;
-    io:println(c); // @output 2.47682012336E12
-
-    c = 0x240aDfBcEep+4;
-    io:println(c); // @output 2.47682012336E12
-
-    c = 0x240aDfBcEeP-4;
-    io:println(c); // @output 9.675078606875E9
-
-    c = 0x240aDfBcEep-0;
-    io:println(c); // @output 1.5480125771E11
-
-    c = 0x240aDfBcEeP+0;
-    io:println(c); // @output 1.5480125771E11
-
-    c = 0x240aDfBcEep-324;
-    io:println(c); // @output 4.529558674359502E-87
-
-    c = 0x240aDfBcEeP+205;
-    io:println(c); // @output 7.960192970026859E72
-
-    c = 0X0.0;
-    io:println(c); // @output 0.0
-
-    c = 0X9.9;
-    io:println(c); // @output 9.5625
-
-    c = 0X206.50743;
-    io:println(c); // @output 518.3142728805542
-
-    c = 0Xa.a;
-    io:println(c); // @output 10.625
-
-    c = 0XA.A;
-    io:println(c); // @output 10.625
-
-    c = 0XA.a;
-    io:println(c); // @output 10.625
-
-    c = 0Xa.A;
-    io:println(c); // @output 10.625
-
-    c = 0XaEbcD.0EaD;
-    io:println(c); // @output 715725.0573272705
-
-    c = 0XaE04bcD.0E91aD;
-    io:println(c); // @output 1.8247162905691034E8
-
-    c = 0X.0;
-    io:println(c); // @output 0.0
-
-    c = 0X.1;
-    io:println(c); // @output 0.0625
-
-    c = 0X.2345;
-    io:println(c); // @output 0.1377716064453125
-
-    c = 0X.A;
-    io:println(c); // @output 0.625
-
-    c = 0X.a;
-    io:println(c); // @output 0.625
-
-    c = 0x.aBdECFF;
-    io:println(c); // @output 0.671368595212698
-
-    c = 0x.aBd0E12C9FF4;
-    io:println(c); // @output 0.6711559995600993
-
-    c = 0X.2p+0;
-    io:println(c); // @output 0.125
-
-    c = 0X.AP-0;
-    io:println(c); // @output 0.625
-
-    c = 0X.ap-0;
-    io:println(c); // @output 0.625
-
-    c = 0x.263567p+46;
-    io:println(c); // @output 1.0502700793856E13
-
-    c = 0X.AEDP-46;
-    io:println(c); // @output 9.704043124614259E-15
-
-    c = 0X.aedp-46;
-    io:println(c); // @output 9.704043124614259E-15
-
-    c = 0x.1BeAP+948;
-    io:println(c); // @output 2.594292682612851E284
-
-    c = 0X.0EfCap-456;
-    io:println(c); // @output 3.1462367457512917E-139
-
-    c = 0x0.0p-0;
-    io:println(c); // @output 0.0
-
-    c = 0x0.0P+0;
-    io:println(c); // @output 0.0
-
-    c = 0x9.4p-1;
-    io:println(c); // @output 4.625
-
-    c = 0x9546.4748p+126;
-    io:println(c); // @output 3.250911279637454E42
-
-    c = 0xa.aP-1;
-    io:println(c); // @output 5.3125
-
-    c = 0Xa.ap+1;
-    io:println(c); // @output 21.25
-
-    c = 0xA.aP-12;
-    io:println(c); // @output 0.002593994140625
-
-    c = 0XA.ap+12;
-    io:println(c); // @output 43520.0
-
-    c = 0xaeb.acdfP-302;
-    io:println(c); // @output 3.431057809225094E-88
-
-    c = 0xABC.CEEFFp+302;
-    io:println(c); // @output 2.2397685993041007E94
-
-    c = 0xAbC.0eEfFp-453;
-    io:println(c); // @output 1.1815113934486016E-133
-
-    c = 0xAb12C.0e9E1f0FP+45;
-    io:println(c); // @output 2.465425448163409E19
+    a = 1.00E-610;
+    io:println(a); // @output 1.00E-610
 }
 
-Test-Case: output
-Description: Test floating point literal max and min with float type descriptor.
-Labels: float, HexFloatingPointLiteral
+Test-Case: error
+Description: Test out of range floating point literal with floating point type descriptor.
+Labels: decimal, float, HexFloatingPointLiteral, union-type
 
-function init() {
+function errorFunction() {
+    float|decimal _ = 9.99E+6111; // @error '9.99E+6111' is out of range for 'float'
 
-    float d = 1.7976931348623157E+308;
-    io:println(d); // @output 1.7976931348623157E308
+    float|decimal _ = 1.00E-610; // @error '1.00E-610' is out of range for 'float'
 
-    d = 4.94065645841246544E-324;
-    io:println(d); // @output 4.9E-324
+    float|decimal _ = 0x1.0fffffffffffffp+1024; // @error '0x1.0fffffffffffffp+1024' is out of range for 'float'
 
-    d = 0x1.0fffffffffffffp+1023;
-    io:println(d); // @output 9.550244778956053E307
-
-    d = 0x1p-1074;
-    io:println(d); // @output 4.9E-324
-
-    d = 0x0p-1074;
-    io:println(d); // @output 0.0
-
-    d = 0x0p-1075;
-    io:println(d); // @output 0.0
+    float|decimal _ = 0x1p-1075; // @error '0x1p-1075' is out of range for 'float'
 }
 
 Test-Case: output
@@ -1120,11 +810,20 @@ function init() {
 
     e = 9.99E+6111;
     io:println(e); // @output 9.99E+6111
+
+    e = 9.999999999999999999999999999999999E6144;
+    io:println(e); // @output 9.999999999999999999999999999999999E+6144
+
+    e = -9.999999999999999999999999999999999E6144;
+    io:println(e); // @output -9.999999999999999999999999999999999E+6144
+
+    e = 1.000000000000000000000000000000000E-6143;
+    io:println(e); // @output 1.000000000000000000000000000000000E-6143
 }
 
 Test-Case: output
 Description: Test floating point literal max and min with floating point type descriptor.
-Labels: decimal, float, HexFloatingPointLiteral, FloatingPointTypeSuffix, union-type
+Labels: decimal, float, FloatingPointTypeSuffix, HexFloatingPointLiteral, union-type
 
 function init() {
     float|decimal f = 1.7976931348623157E+308;
@@ -1221,7 +920,7 @@ function errorFunction() {
 }
 
 Test-Case: parser-error
-Description: Test invalid decimal floating point numbers.
+Description: Test invalid decimal floating point literals.
 Labels: decimal, float, FloatingPointTypeSuffix, union-type
 
 function errorFunction() {
@@ -1339,135 +1038,38 @@ function errorFunction() {
     a = 25.BC2?F+17VF?42; // @error invalid DecimalFloatingPointNumber due to incorrect Exponent
 
     a = 25.67p+20; // @error invalid DecimalFloatingPointNumber due to incorrect ExponentIndicator
-}
 
-Test-Case: parser-error
-Description: Test invalid decimal floating point numbers.
-Labels: decimal, float, union-type
+    a = .99+1742; // @error invalid DecimalFloatingPointNumber due to missing ExponentIndicator
 
-function errorFunction() {
-    float|decimal a = .99+1742; // @error invalid DecimalFloatingPointNumber due to missing ExponentIndicator
     a = e+174; // @error invalid DecimalFloatingPointNumber due to the absence of DecimalNumber or DottedDecimalNumber
+
     a = e174; // @error invalid DecimalFloatingPointNumber due to the absence of DecimalNumber or DottedDecimalNumber
+
     a = 25.0E;1742; // @error invalid DecimalFloatingPointNumber due to invalid expression statement
+
     a = 25.0E=1742; // @error invalid DecimalFloatingPointNumber due to invalid expression statement
+
     a = 25.0E:1742; // @error invalid DecimalFloatingPointNumber due to invalid expression statement
+
     a = 25.0E,1742; // @error invalid DecimalFloatingPointNumber due to invalid expression statement
+
     a = .99E-; // @error invalid DecimalFloatingPointNumber due to invalid expression statement
+
     a = .99E+; // @error invalid DecimalFloatingPointNumber due to invalid expression statement
+
     a = .99E; // @error invalid DecimalFloatingPointNumber due to missing digit after exponent indicator
 }
 
-Test-Case: parser-error
-Description: Test invalid hex floating point literal
-Labels: decimal, float, HexFloatingPointLiteral, union-type
-
-function errorFunction() {
-    float|decimal a = 3eA3p34; // @error invalid HexFloatingPointLiteral due to missing HexIndicator
-
-    a = 345eA; // @error invalid HexFloatingPointLiteral due to missing HexIndicator
-
-    a = 0x3 eA3p34; // @error invalid HexFloatingPointLiteral due to unnecessary space
-
-    a = 0X3eA3 p34; // @error invalid HexFloatingPointLiteral due to unnecessary space
-
-    a = 0X3eA3p 34; // @error invalid HexFloatingPointLiteral due to unnecessary space
-
-    a = 0X3eA3E34; // @error invalid HexFloatingPointLiteral due to invalid HexExponentIndicator
-
-    a = 0X3eA3pAf; // @error invalid HexFloatingPointLiteral due to invalid HexExponent
-
-    a = 0aBV6p34; // @error invalid HexFloatingPointLiteral due to invalid HexNumber
-
-    a = 0XVVzp34; // @error invalid HexFloatingPointLiteral due to invalid HexNumber
-
-    a = 0X3eApVB; // @error invalid HexFloatingPointLiteral due to invalid HexExponent
-
-    a = 0x3eA3p++34; // @error invalid HexFloatingPointLiteral due to invalid HexExponent
-
-    a = 0x3eA3p+3dS4; // @error invalid HexFloatingPointLiteral due to invalid HexExponent
-
-    a = 0x3eA3p--34; // @error invalid HexFloatingPointLiteral due to invalid HexExponent
-
-    a = 0x3eA3p-+34; // @error invalid HexFloatingPointLiteral due to invalid HexExponent
-
-    a = 0x3eA3p.34; // @error invalid HexFloatingPointLiteral due to invalid sign in HexExponent
-
-    a = 0x3eA3p+ 34; // @error invalid HexFloatingPointLiteral due to unnecessary space
-
-    a = 0x3eA3p+34f; // @error invalid HexFloatingPointLiteral due to unnecessary suffix
-
-    a = 0x3eA3p+34F; // @error invalid HexFloatingPointLiteral due to unnecessary suffix
-
-    a = 0x3eA3p+34D; // @error invalid HexFloatingPointLiteral due to unnecessary suffix
-
-    a = 0x3eA3p+34d; // @error invalid HexFloatingPointLiteral due to unnecessary suffix
-
-    a = 0x3eA3H-34; // @error invalid HexFloatingPointLiteral
-
-    a = 8x3eA3p67; // @error invalid HexFloatingPointLiteral due to invalid HexIndicator
-
-    a = 0Z3eA3p67; // @error invalid HexFloatingPointLiteral due to invalid HexIndicator
-
-    a = 0x3eA3. 4Eb2; // @error invalid HexFloatingPointLiteral due to unnecessary space
-
-    a = 0x3e3=4Eb2p45; // @error invalid HexFloatingPointLiteral
-
-    a = 0x4E,b2P-45; // @error invalid HexFloatingPointLiteral
-
-    a = 0x4E:b2P-45; // @error invalid HexFloatingPointLiteral
-
-    a = .0x3e3; // @error invalid HexFloatingPointLiteral
-
-    a = 0x3e3 .0p23; // @error invalid HexFloatingPointLiteral due to unnecessary space
-
-    a = 0x3e3. p23; // @error invalid HexFloatingPointLiteral due to unnecessary space
-
-    a = 0x 3eA3p34; // @error invalid DecimalFloatingPointNumber due to missing hex number after hex indicator
-
-    a = 0x; // @error invalid DecimalFloatingPointNumber due to missing hex number after hex indicator
-
-    a = 0X; // @error invalid DecimalFloatingPointNumber due to missing hex number after hex indicator
-
-    a = 0Xp34; // @error invalid DecimalFloatingPointNumber due to missing hex number after hex indicator
-
-    a = 0x3eA3p-; // @error invalid DecimalFloatingPointNumber due to missing digit after exponent indicator
-
-    a = 0x3eA3p+; // @error invalid DecimalFloatingPointNumber due to missing digit after exponent indicator
-
-    a = 0x3eA3p; // @error invalid DecimalFloatingPointNumber due to missing digit after exponent indicator
-
-    a = 0X3eAp; // @error invalid DecimalFloatingPointNumber
-
-    a = 0x3eA3p=34; // @error invalid DecimalFloatingPointNumber
-
-    a = 0x3eA3p:34; // @error invalid DecimalFloatingPointNumber
-
-    a = 0x3eA3p,34; // @error invalid DecimalFloatingPointNumber
-}
-
 Test-Case: error
-Description: Test invalid hex floating point literal
-Labels: decimal, float, HexFloatingPointLiteral, union-type
+Description: Test invalid decimal floating point literals.
+Labels: decimal, float, union-type
 
 function errorFunction() {
     float|decimal _ = .99+1742; // @error invalid DecimalFloatingPointNumber due to missing ExponentIndicator
+
     float|decimal _ = e+174; // @error invalid DecimalFloatingPointNumber due to the absence of DecimalNumber or DottedDecimalNumber
+
     float|decimal _ = e174; // @error invalid DecimalFloatingPointNumber due to the absence of DecimalNumber or DottedDecimalNumber
-}
-
-Test-Case: error
-Description: Test invalid hex floating point literal
-Fail-Issue: ballerina-platform/ballerina-lang#39557
-Labels: decimal, float, HexFloatingPointLiteral, union-type
-
-function errorFunction() {
-    float|decimal _ = 0x 3eA3.4Eb2p+45;
-    float|decimal _ = 0x=4Eb2P-45;
-    float|decimal _ = 0x:4Eb2P-45;
-    float|decimal _ = 0x,4Eb2P-45;
-    float|decimal _ = 0x 3eA3 .4Eb2 p45;
-    float|decimal _ = 0x3eA3 .4Eb2;
 }
 
 Test-Case: output
@@ -1694,143 +1296,6 @@ function init() {
 
 function printFloatingPoint(float|decimal x) {
     io:println(x);
-}
-
-Test-Case: output
-Description: Test HexFloatingPointLiteral with function call.
-Labels: decimal, float, HexFloatingPointLiteral, function-call-expr
-
-function init() {
-    printFloatingPoint(0x3eA3); // @output 16035.0
-
-    printFloatingPoint(0x3eA3p34); // @output 2.7547920236544E14
-
-    printFloatingPoint(0x3eA3P34); // @output 2.7547920236544E14
-
-    printFloatingPoint(0X3eA3p34); // @output 2.7547920236544E14
-
-    printFloatingPoint(0X3eA3P34); // @output 2.7547920236544E14
-
-    printFloatingPoint(0x3eA3p+34); // @output 2.7547920236544E14
-
-    printFloatingPoint(0x3eA3P-34); // @output 9.333598427474499E-7
-
-    printFloatingPoint(0X3eA3p+34); // @output 2.7547920236544E14
-
-    printFloatingPoint(0X3eA3P-34); // @output 9.333598427474499E-7
-
-
-    printFloatingPoint(0x3eA3.4Eb2); // @output 16035.307403564453
-
-    printFloatingPoint(0x.4Eb2); // @output 0.307403564453125
-
-    printFloatingPoint(0X3eA3.4Eb2); // @output 16035.307403564453
-
-    printFloatingPoint(0X.4Eb2); // @output 0.307403564453125
-
-
-    printFloatingPoint(0x3eA3.4Eb2p45); // @output 5.6419222224581427E17
-
-    printFloatingPoint(0x3eA3.4Eb2P45); // @output 5.6419222224581427E17
-
-    printFloatingPoint(0x.4Eb2p45); // @output 1.0815801393152E13
-
-    printFloatingPoint(0x.4Eb2P45); // @output 1.0815801393152E13
-
-    printFloatingPoint(0X3eA3.4Eb2p45); // @output 5.6419222224581427E17
-
-    printFloatingPoint(0X3eA3.4Eb2P45); // @output 5.6419222224581427E17
-
-    printFloatingPoint(0X.4Eb2p45); // @output 1.0815801393152E13
-
-    printFloatingPoint(0X.4Eb2P45); // @output 1.0815801393152E13
-
-
-    printFloatingPoint(0x3eA3.4Eb2p+45); // @output 5.6419222224581427E17
-
-    printFloatingPoint(0x3eA3.4Eb2P-45); // @output 4.55750847651315E-10
-
-    printFloatingPoint(0x.4Eb2p+45); // @output 1.0815801393152E13
-
-    printFloatingPoint(0x.4Eb2P-45); // @output 8.736934786757189E-15
-
-    printFloatingPoint(0X3eA3.4Eb2p+45); // @output 5.6419222224581427E17
-
-    printFloatingPoint(0X3eA3.4Eb2P-45); // @output 4.55750847651315E-10
-
-    printFloatingPoint(0X.4Eb2p+45); // @output 1.0815801393152E13
-
-    printFloatingPoint(0X.4Eb2P-45); // @output 8.736934786757189E-15
-}
-
-function printFloatingPoint(float|decimal x) {
-    io:println(x);
-}
-
-Test-Case: output
-Description: Test HexFloatingPointLiteral with toString().
-Labels: HexFloatingPointLiteral, value:toString
-
-function init() {
-
-    io:println((0x3eA3p34).toString()); // @output 2.7547920236544E14
-
-    io:println((0x3eA3P34).toString()); // @output 2.7547920236544E14
-
-    io:println((0X3eA3p34).toString()); // @output 2.7547920236544E14
-
-    io:println((0X3eA3P34).toString()); // @output 2.7547920236544E14
-
-    io:println((0x3eA3p+34).toString()); // @output 2.7547920236544E14
-
-    io:println((0x3eA3P-34).toString()); // @output 9.333598427474499E-7
-
-    io:println((0X3eA3p+34).toString()); // @output 2.7547920236544E14
-
-    io:println((0X3eA3P-34).toString()); // @output 9.333598427474499E-7
-
-
-    io:println((0x3eA3.4Eb2).toString()); // @output 16035.307403564453
-
-    io:println((0x.4Eb2).toString()); // @output 0.307403564453125
-
-    io:println((0X3eA3.4Eb2).toString()); // @output 16035.307403564453
-
-    io:println((0X.4Eb2).toString()); // @output 0.307403564453125
-
-
-    io:println((0x3eA3.4Eb2p45).toString()); // @output 5.6419222224581427E17
-
-    io:println((0x3eA3.4Eb2P45).toString()); // @output 5.6419222224581427E17
-
-    io:println((0x.4Eb2p45).toString()); // @output 1.0815801393152E13
-
-    io:println((0x.4Eb2P45).toString()); // @output 1.0815801393152E13
-
-    io:println((0X3eA3.4Eb2p45).toString()); // @output 5.6419222224581427E17
-
-    io:println((0X3eA3.4Eb2P45).toString()); // @output 5.6419222224581427E17
-
-    io:println((0X.4Eb2p45).toString()); // @output 1.0815801393152E13
-
-    io:println((0X.4Eb2P45).toString()); // @output 1.0815801393152E13
-
-
-    io:println((0x3eA3.4Eb2p+45).toString()); // @output 5.6419222224581427E17
-
-    io:println((0x3eA3.4Eb2P-45).toString()); // @output 4.55750847651315E-10
-
-    io:println((0x.4Eb2p+45).toString()); // @output 1.0815801393152E13
-
-    io:println((0x.4Eb2P-45).toString()); // @output 8.736934786757189E-15
-
-    io:println((0X3eA3.4Eb2p+45).toString()); // @output 5.6419222224581427E17
-
-    io:println((0X3eA3.4Eb2P-45).toString()); // @output 4.55750847651315E-10
-
-    io:println((0X.4Eb2p+45).toString()); // @output 1.0815801393152E13
-
-    io:println((0X.4Eb2P-45).toString()); // @output 8.736934786757189E-15
 }
 
 Test-Case: output
@@ -2318,12 +1783,9 @@ function init() {
     io:println(25E-174D.toBalString()); // @output 2.5E-173d
 
 
-
-
     io:println(245.32.toBalString()); // @output 245.32
 
     io:println(.99.toBalString()); // @output 0.99
-
 
 
     io:println(25.0e174.toBalString()); // @output 2.5E175
@@ -2478,229 +1940,6 @@ function init() {
     io:println(25D.toBalString()); // @output 25d
 
     io:println(25.toBalString()); // @output 25
-}
-
-Test-Case: output
-Description: Test HexFloatingPointLiteral with toBalString().
-Labels: HexFloatingPointLiteral, value:toBalString
-
-function init() {
-    io:println((0x3eA3).toBalString()); // @output 16035
-
-    io:println((0x3eA3p34).toBalString()); // @output 2.7547920236544E14
-
-    io:println((0x3eA3P34).toBalString()); // @output 2.7547920236544E14
-
-    io:println((0X3eA3p34).toBalString()); // @output 2.7547920236544E14
-
-    io:println((0X3eA3P34).toBalString()); // @output 2.7547920236544E14
-
-    io:println((0x3eA3p+34).toBalString()); // @output 2.7547920236544E14
-
-    io:println((0x3eA3P-34).toBalString()); // @output 9.333598427474499E-7
-
-    io:println((0X3eA3p+34).toBalString()); // @output 2.7547920236544E14
-
-    io:println((0X3eA3P-34).toBalString()); // @output 9.333598427474499E-7
-
-
-    io:println((0x3eA3.4Eb2).toBalString()); // @output 16035.307403564453
-
-    io:println((0x.4Eb2).toBalString()); // @output 0.307403564453125
-
-    io:println((0X3eA3.4Eb2).toBalString()); // @output 16035.307403564453
-
-    io:println((0X.4Eb2).toBalString()); // @output 0.307403564453125
-
-
-    io:println((0x3eA3.4Eb2p45).toBalString()); // @output 5.6419222224581427E17
-
-    io:println((0x3eA3.4Eb2P45).toBalString()); // @output 5.6419222224581427E17
-
-    io:println((0x.4Eb2p45).toBalString()); // @output 1.0815801393152E13
-
-    io:println((0x.4Eb2P45).toBalString()); // @output 1.0815801393152E13
-
-    io:println((0X3eA3.4Eb2p45).toBalString()); // @output 5.6419222224581427E17
-
-    io:println((0X3eA3.4Eb2P45).toBalString()); // @output 5.6419222224581427E17
-
-    io:println((0X.4Eb2p45).toBalString()); // @output 1.0815801393152E13
-
-    io:println((0X.4Eb2P45).toBalString()); // @output 1.0815801393152E13
-
-
-    io:println((0x3eA3.4Eb2p+45).toBalString()); // @output 5.6419222224581427E17
-
-    io:println((0x3eA3.4Eb2P-45).toBalString()); // @output 4.55750847651315E-10
-
-    io:println((0x.4Eb2p+45).toBalString()); // @output 1.0815801393152E13
-
-    io:println((0x.4Eb2P-45).toBalString()); // @output 8.736934786757189E-15
-
-    io:println((0X3eA3.4Eb2p+45).toBalString()); // @output 5.6419222224581427E17
-
-    io:println((0X3eA3.4Eb2P-45).toBalString()); // @output 4.55750847651315E-10
-
-    io:println((0X.4Eb2p+45).toBalString()); // @output 1.0815801393152E13
-
-    io:println((0X.4Eb2P-45).toBalString()); // @output 8.736934786757189E-15
-}
-
-Test-Case: output
-Description: Test HexFloatingPointLiteral with return statement using variable reference.
-Labels: HexFloatingPointLiteral, return-stmt, union-type
-
-function init() {
-    io:println(printFloatingPoint(0x3eA3)); // @output 16035.0
-
-    io:println(printFloatingPoint(0x3eA3p34)); // @output 2.7547920236544E14
-
-    io:println(printFloatingPoint(0x3eA3P34)); // @output 2.7547920236544E14
-
-    io:println(printFloatingPoint(0X3eA3p34)); // @output 2.7547920236544E14
-
-    io:println(printFloatingPoint(0X3eA3P34)); // @output 2.7547920236544E14
-
-    io:println(printFloatingPoint(0x3eA3p+34)); // @output 2.7547920236544E14
-
-    io:println(printFloatingPoint(0x3eA3P-34)); // @output 9.333598427474499E-7
-
-    io:println(printFloatingPoint(0X3eA3p+34)); // @output 2.7547920236544E14
-
-    io:println(printFloatingPoint(0X3eA3P-34)); // @output 9.333598427474499E-7
-
-
-    io:println(printFloatingPoint(0x3eA3.4Eb2)); // @output 16035.307403564453
-
-    io:println(printFloatingPoint(0x.4Eb2)); // @output 0.307403564453125
-
-    io:println(printFloatingPoint(0X3eA3.4Eb2)); // @output 16035.307403564453
-
-    io:println(printFloatingPoint(0X.4Eb2)); // @output 0.307403564453125
-
-
-    io:println(printFloatingPoint(0x3eA3.4Eb2p45)); // @output 5.6419222224581427E17
-
-    io:println(printFloatingPoint(0x3eA3.4Eb2P45)); // @output 5.6419222224581427E17
-
-    io:println(printFloatingPoint(0x.4Eb2p45)); // @output 1.0815801393152E13
-
-    io:println(printFloatingPoint(0x.4Eb2P45)); // @output 1.0815801393152E13
-
-    io:println(printFloatingPoint(0X3eA3.4Eb2p45)); // @output 5.6419222224581427E17
-
-    io:println(printFloatingPoint(0X3eA3.4Eb2P45)); // @output 5.6419222224581427E17
-
-    io:println(printFloatingPoint(0X.4Eb2p45)); // @output 1.0815801393152E13
-
-    io:println(printFloatingPoint(0X.4Eb2P45)); // @output 1.0815801393152E13
-
-
-    io:println(printFloatingPoint(0x3eA3.4Eb2p+45)); // @output 5.6419222224581427E17
-
-    io:println(printFloatingPoint(0x3eA3.4Eb2P-45)); // @output 4.55750847651315E-10
-
-    io:println(printFloatingPoint(0x.4Eb2p+45)); // @output 1.0815801393152E13
-
-    io:println(printFloatingPoint(0x.4Eb2P-45)); // @output 8.736934786757189E-15
-
-    io:println(printFloatingPoint(0X3eA3.4Eb2p+45)); // @output 5.6419222224581427E17
-
-    io:println(printFloatingPoint(0X3eA3.4Eb2P-45)); // @output 4.55750847651315E-10
-
-    io:println(printFloatingPoint(0X.4Eb2p+45)); // @output 1.0815801393152E13
-
-    io:println(printFloatingPoint(0X.4Eb2P-45)); // @output 8.736934786757189E-15
-}
-
-
-function printFloatingPoint(float|decimal x) returns float|decimal {
-    return x;
-}
-
-Test-Case: output
-Description: Test HexFloatingPointLiteral with return statement.
-Labels: HexFloatingPointLiteral, return-stmt, union-type
-
-function init() {
-    io:println(printHexFloatingPoint13()); // @output 16035.0
-
-    io:println(printHexFloatingPoint1()); // @output 2.7547920236544E14
-
-    io:println(printHexFloatingPoint2()); // @output 2.7547920236544E14
-
-    io:println(printHexFloatingPoint3()); // @output 9.333598427474499E-7
-
-    io:println(printHexFloatingPoint4()); // @output 16035.307403564453
-
-    io:println(printHexFloatingPoint5()); // @output 0.307403564453125
-
-    io:println(printHexFloatingPoint6()); // @output 20146.0
-
-    io:println(printHexFloatingPoint7()); // @output 1.0815801393152E13
-
-    io:println(printHexFloatingPoint8()); // @output 5.6419222224581427E17
-
-    io:println(printHexFloatingPoint9()); // @output 5.6418140644442112E17
-
-    io:println(printHexFloatingPoint10()); // @output 5.6419222224581427E17
-
-    io:println(printHexFloatingPoint11()); // @output 8.736934786757189E-15
-
-    io:println(printHexFloatingPoint12()); // @output 4.5574211071652826E-10
-}
-
-function printHexFloatingPoint13() returns float|decimal {
-    return 0x3eA3;
-}
-
-function printHexFloatingPoint1() returns float|decimal {
-    return 0x3eA3p34;
-}
-
-function printHexFloatingPoint2() returns float|decimal {
-    return 0x3eA3p+34;
-}
-
-function printHexFloatingPoint3() returns float|decimal {
-    return 0X3eA3p-34;
-}
-
-function printHexFloatingPoint4() returns float|decimal {
-    return 0x3eA3.4Eb2;
-}
-
-function printHexFloatingPoint5() returns float|decimal {
-    return 0X.4Eb2;
-}
-
-function printHexFloatingPoint6() returns float|decimal {
-    return 0X4Eb2.0;
-}
-
-function printHexFloatingPoint7() returns float|decimal {
-    return 0x.4Eb2P45;
-}
-
-function printHexFloatingPoint8() returns float|decimal {
-    return 0X3eA3.4Eb2p45;
-}
-
-function printHexFloatingPoint9() returns float|decimal {
-    return 0X3eA3.0p45;
-}
-
-function printHexFloatingPoint10() returns float|decimal {
-    return 0x3eA3.4Eb2p+45;
-}
-
-function printHexFloatingPoint11() returns float|decimal {
-    return 0x.4Eb2P-45;
-}
-
-function printHexFloatingPoint12() returns float|decimal {
-    return 0X3eA3.0p-45;
 }
 
 Test-Case: output
@@ -3152,246 +2391,284 @@ function printDecimalFloatingPoint36() returns float|decimal {
 
 Test-Case: output
 Description: Test DecimalFloatingPointNumber with equality.
-Labels: FloatingPointTypeSuffix, equality, union-type, tuple-type
+Labels: equality, FloatingPointTypeSuffix, union-type
 
 function init() {
-    io:println(returnEquality(+0, -0));  // @output [true,false]
+    returnEquality(+0, -0);  // @output true
+                             // @output false
 
-    io:println(returnEquality(+0.0, -0.0));  // @output [true,false]
+    returnEquality(+0.0, -0.0);  // @output true
+                                 // @output false
 
-    io:println(returnEquality(+0d, -0d));  // @output [true,false]
+    returnEquality(+0d, -0d);  // @output true
+                               // @output false
 
-    io:println(returnEquality(+0f, -0F));  // @output [true,false]
+    returnEquality(+0f, -0F);  // @output true
+                               // @output false
 
-    io:println(returnEquality(1.24e3, 12.40e2));  // @output [true,false]
+    returnEquality(1.24e3, 12.40e2);  // @output true
+                                      // @output false
 
-    io:println(returnEquality(1.24e3d, 12.40e2d));// @output [true,false]
+    returnEquality(1.24e3d, 12.40e2d); // @output true
+                                       // @output false
 
-    io:println(returnEquality(25e174, 25E174));  // @output [true,false]
+    returnEquality(25e174, 25E174);  // @output true
+                                     // @output false
 
-    io:println(returnEquality(25e+174, 25E-174));  // @output [false,true]
+    returnEquality(25e+174, 25E-174);  // @output false
+                                       // @output true
 
-    io:println(returnEquality(25e+174, 25E+174));  // @output [true,false]
+    returnEquality(25e+174, 25E+174);  // @output true
+                                       // @output false
 
-    io:println(returnEquality(25e174f, 25e174F));  // @output [true,false]
+    returnEquality(25e174f, 25e174F);  // @output true
+                                       // @output false
 
-    io:println(returnEquality(25e174d, 25e174D));  // @output [true,false]
+    returnEquality(25e174d, 25e174D);  // @output true
+                                       // @output false
 
-    io:println(returnEquality(25E174f, 25E174F));  // @output [true,false]
+    returnEquality(25E174f, 25E174F);  // @output true
+                                       // @output false
 
-    io:println(returnEquality(25E174d, 25E174D));  // @output [true,false]
+    returnEquality(25E174d, 25E174D);  // @output true
+                                       // @output false
 
-    io:println(returnEquality(25e174d, 25e174f));  // @output [false,true]
+    returnEquality(25e174d, 25e174f);  // @output false
+                                       // @output true
 
-    io:println(returnEquality(25E174D, 25E174F));  // @output [false,true]
+    returnEquality(25E174D, 25E174F);  // @output false
+                                       // @output true
 
-    io:println(returnEquality(25e+174f, 25e-174F));  // @output [false,true]
+    returnEquality(25e+174f, 25e-174F);  // @output false
+                                         // @output true
 
-    io:println(returnEquality(25e-174f, 25e-174F));  // @output [true,false]
+    returnEquality(25e-174f, 25e-174F);  // @output true
+                                         // @output false
 
-    io:println(returnEquality(25e+174d, 25e-174D));  // @output [false,true]
+    returnEquality(25e+174d, 25e-174D);  // @output false
+                                         // @output true
 
-    io:println(returnEquality(25e+174f, 25e+174D));  // @output [false,true]
+    returnEquality(25e+174f, 25e+174D);  // @output false
+                                         // @output true
 
-    io:println(returnEquality(25e+174F, 25e+174d));  // @output [false,true]
+    returnEquality(25e+174F, 25e+174d);  // @output false
+                                         // @output true
 
-    io:println(returnEquality(25E+174f, 25E-174F));  // @output [false,true]
+    returnEquality(25E+174f, 25E-174F);  // @output false
+                                         // @output true
 
-    io:println(returnEquality(25E+174d, 25E-174D));  // @output [false,true]
+    returnEquality(25E+174d, 25E-174D);  // @output false
+                                         // @output true
 
-    io:println(returnEquality(25E-174D, 25E-174F));  // @output [false,true]
+    returnEquality(25E-174D, 25E-174F);  // @output false
+                                         // @output true
 
-    io:println(returnEquality(.99, 0.99));  // @output [true,false]
+    returnEquality(.99, 0.99);  // @output true
+                                // @output false
 
-    io:println(returnEquality(25.0e174, 25.0E174));  // @output [true,false]
+    returnEquality(25.0e174, 25.0E174);  // @output true
+                                         // @output false
 
-    io:println(returnEquality(243.32e174, 245.32E174));  // @output [false,true]
+    returnEquality(243.32e174, 245.32E174);  // @output false
+                                             // @output true
 
-    io:println(returnEquality(99e174, .99E174));  // @output [false,true]
+    returnEquality(99e174, .99E174);  // @output false
+                                      // @output true
 
-    io:println(returnEquality(25.0e+174, 25.0E-174));  // @output [false,true]
+    returnEquality(25.0e+174, 25.0E-174);  // @output false
+                                           // @output true
 
-    io:println(returnEquality(243.32e+174, 245.32E-174));  // @output [false,true]
+    returnEquality(243.32e+174, 245.32E-174);  // @output false
+                                               // @output true
 
-    io:println(returnEquality(.99e+174, .99E-174));  // @output [false,true]
+    returnEquality(.99e+174, .99E-174);  // @output false
+                                         // @output true
 
-    io:println(returnEquality(25.0f, 25.0F));  // @output [true,false]
+    returnEquality(25.0f, 25.0F);  // @output true
+                                   // @output false
 
-    io:println(returnEquality(25.0d, 25.0D));  // @output [true,false]
+    returnEquality(25.0d, 25.0D);  // @output true
+                                   // @output false
 
-    io:println(returnEquality(245.32f, 245.32F));  // @output [true,false]
+    returnEquality(245.32f, 245.32F);  // @output true
+                                       // @output false
 
-    io:println(returnEquality(245.32d, 245.32D));  // @output [true,false]
+    returnEquality(245.32d, 245.32D);  // @output true
+                                       // @output false
 
-    io:println(returnEquality(.99f, .99F));  // @output [true,false]
+    returnEquality(.99f, .99F);  // @output true
+                                 // @output false
 
-    io:println(returnEquality(.99d, .99D));  // @output [true,false]
+    returnEquality(.99d, .99D);  // @output true
+                                 // @output false
 
-    io:println(returnEquality(.99d, .99F));  // @output [false,true]
+    returnEquality(.99d, .99F);  // @output false
+                                 // @output true
 
-    io:println(returnEquality(25.0e174f, 25.0e174F));  // @output [true,false]
+    returnEquality(25.0e174f, 25.0e174F);  // @output true
+                                           // @output false
 
-    io:println(returnEquality(25.0e1742d, 25.0e1742D));  // @output [true,false]
+    returnEquality(25.0e1742d, 25.0e1742D);  // @output true
+                                             // @output false
 
-    io:println(returnEquality(25.0E174f, 25.0E174F));  // @output [true,false]
+    returnEquality(25.0E174f, 25.0E174F);  // @output true
+                                           // @output false
 
-    io:println(returnEquality(25.0E1742d, 25.0E1742D));  // @output [true,false]
+    returnEquality(25.0E1742d, 25.0E1742D);  // @output true
+                                             // @output false
 
-    io:println(returnEquality(245.32e174f, 245.32e174F));  // @output [true,false]
+    returnEquality(245.32e174f, 245.32e174F);  // @output true
+                                               // @output false
 
-    io:println(returnEquality(245.32e1742d, 245.32e1742D));  // @output [true,false]
+    returnEquality(245.32e1742d, 245.32e1742D);  // @output true
+                                                 // @output false
 
-    io:println(returnEquality(245.32E174f, 245.32E174F));  // @output [true,false]
+    returnEquality(245.32E174f, 245.32E174F);  // @output true
+                                               // @output false
 
-    io:println(returnEquality(245.32E1742d, 245.32E1742D));  // @output [true,false]
+    returnEquality(245.32E1742d, 245.32E1742D);  // @output true
+                                                 // @output false
 
-    io:println(returnEquality(.99e174f, .99e174F));  // @output [true,false]
+    returnEquality(.99e174f, .99e174F);  // @output true
+                                         // @output false
 
-    io:println(returnEquality(.99e1742d, .99e1742D));  // @output [true,false]
+    returnEquality(.99e1742d, .99e1742D);  // @output true
+                                           // @output false
 
-    io:println(returnEquality(.99E174f, .99E174F));  // @output [true,false]
+    returnEquality(.99E174f, .99E174F);  // @output true
+                                         // @output false
 
-    io:println(returnEquality(.99E1742d, .99E1742D));  // @output [true,false]
+    returnEquality(.99E1742d, .99E1742D);  // @output true
+                                           // @output false
 
-    io:println(returnEquality(.99E174f, .99E174D));  // @output [false,true]
+    returnEquality(.99E174f, .99E174D);  // @output false
+                                         // @output true
 
-    io:println(returnEquality(245.32E174d, 245.32E174F));  // @output [false,true]
+    returnEquality(245.32E174d, 245.32E174F);  // @output false
+                                               // @output true
 
-    io:println(returnEquality(25.0e174d, 25.0e174f));  // @output [false,true]
+    returnEquality(25.0e174d, 25.0e174f);  // @output false
+                                           // @output true
 
-    io:println(returnEquality(25.0e+174f, 25.0e-174F));  // @output [false,true]
+    returnEquality(25.0e+174f, 25.0e-174F);  // @output false
+                                             // @output true
 
-    io:println(returnEquality(25.0e+1742d, 25.0e-1742D));  // @output [false,true]
+    returnEquality(25.0e+1742d, 25.0e-1742D);  // @output false
+                                               // @output true
 
-    io:println(returnEquality(25.0E+174f, 25.0E-174F));  // @output [false,true]
+    returnEquality(25.0E+174f, 25.0E-174F);  // @output false
+                                             // @output true
 
-    io:println(returnEquality(25.0E+1742d, 25.0E-1742D));  // @output [false,true]
+    returnEquality(25.0E+1742d, 25.0E-1742D);  // @output false
+                                               // @output true
 
-    io:println(returnEquality(245.32e+174f, 245.32e-174F));  // @output [false,true]
+    returnEquality(245.32e+174f, 245.32e-174F);  // @output false
+                                                 // @output true
 
-    io:println(returnEquality(245.32e+1742d, 245.32e-1742D));  // @output [false,true]
+    returnEquality(245.32e+1742d, 245.32e-1742D);  // @output false
+                                                   // @output true
 
-    io:println(returnEquality(245.32E+174f, 245.32E-174F));  // @output [false,true]
+    returnEquality(245.32E+174f, 245.32E-174F);  // @output false
+                                                 // @output true
 
-    io:println(returnEquality(245.32E+1742d, 245.32E-1742D));  // @output [false,true]
+    returnEquality(245.32E+1742d, 245.32E-1742D);  // @output false
+                                                   // @output true
 
-    io:println(returnEquality(.99e+174f, .99e-174F));  // @output [false,true]
+    returnEquality(.99e+174f, .99e-174F);  // @output false
+                                           // @output true
 
-    io:println(returnEquality(.99e+1742d, .99e-1742D));  // @output [false,true]
+    returnEquality(.99e+1742d, .99e-1742D);  // @output false
+                                             // @output true
 
-    io:println(returnEquality(.99E+174f, .99E-174F));  // @output [false,true]
+    returnEquality(.99E+174f, .99E-174F);  // @output false
+                                           // @output true
 
-    io:println(returnEquality(.99E+1742d, .99E-1742D));  // @output [false,true]
+    returnEquality(.99E+1742d, .99E-1742D);  // @output false
+                                             // @output true
 
-    io:println(returnEquality(.99E-1742D, .99e-1742d));  // @output [true,false]
+    returnEquality(.99E-1742D, .99e-1742d);  // @output true
+                                             // @output false
 
-    io:println(returnEquality(245.32e+174F, 245.32E+174f));  // @output [true,false]
+    returnEquality(245.32e+174F, 245.32E+174f);  // @output true
+                                                 // @output false
 
-    io:println(returnEquality(25.0e-174F, 25.0E-174f));  // @output [true,false]
+    returnEquality(25.0e-174F, 25.0E-174f);  // @output true
+                                             // @output false
 
-    io:println(returnEquality(25f, 25F));  // @output [true,false]
+    returnEquality(25f, 25F);  // @output true
+                               // @output false
 
-    io:println(returnEquality(25d, 25D));  // @output [true,false]
+    returnEquality(25d, 25D);  // @output true
+                               // @output false
 
-    io:println(returnEquality(25D, 25f));  // @output [false,true]
+    returnEquality(25D, 25f);  // @output false
+                               // @output true
 }
 
-function returnEquality(float|decimal x, float|decimal y) returns [boolean, boolean] {
-    return [x == y, x != y];
-}
-
-Test-Case: output
-Description: Test HexFloatingPointLiteral with equality.
-Labels: HexFloatingPointLiteral, equality, union-type, tuple-type
-
-function init() {
-
-    io:println(returnEquality(0x3eA3p34, 0x3eA3P34));  // @output [true,false]
-
-    io:println(returnEquality(0X3eA3p34, 0X3eA3P34));  // @output [true,false]
-
-    io:println(returnEquality(0x3eA3p+34, 0x3eA3P-34));  // @output [false,true]
-
-    io:println(returnEquality(0X3eA3p+34, 0X3eA3P-34));  // @output [false,true]
-
-    io:println(returnEquality(0X3eA3P-34, 0X3eA3p-34));  // @output [true,false]
-
-    io:println(returnEquality(0X3EA3p34, 0X3eA3P34));  // @output [true,false]
-
-    io:println(returnEquality(0x.4Eb2, 0x0.4Eb2));  // @output [true,false]
-
-    io:println(returnEquality(0x.4Eb2, 0X.4Eb2));  // @output [true,false]
-
-    io:println(returnEquality(0X3eA3.4Eb2, 0x3eA3.4Eb2));  // @output [true,false]
-
-    io:println(returnEquality(0x3eA3.4Eb2p45, 0x3eA3.4Eb2P45));  // @output [true,false]
-
-    io:println(returnEquality(0x.4Eb2p45, 0x.4Eb2P45));  // @output [true,false]
-
-    io:println(returnEquality(0X3eA3.4Eb2p45, 0X3eA3.4Eb2P45));  // @output [true,false]
-
-    io:println(returnEquality(0X.4Eb2p45, 0X.4Eb2P45));  // @output [true,false]
-
-    io:println(returnEquality(0x3eA3.4Eb2p+45, 0x3eA3.4Eb2P-45));  // @output [false,true]
-
-    io:println(returnEquality(0x.4Eb2p+45, 0x.4Eb2P-45));  // @output [false,true]
-
-    io:println(returnEquality(0X3eA3.4Eb2p+45, 0X3eA3.4Eb2P-45));  // @output [false,true]
-
-    io:println(returnEquality(0X.4Eb2p+45, 0X.4Eb2P-45));  // @output [false,true]
-
-    io:println(returnEquality(0X.4Eb2p+45, 0x.4eb2P+45));  // @output [true,false]
-
-    io:println(returnEquality(0X3eA3.4Eb2p-45, 0x3eA3.4Eb2P-45));  // @output [true,false]
-}
-
-function returnEquality(float|decimal x, float|decimal y) returns [boolean, boolean] {
-    return [x == y, x != y];
+function returnEquality(float|decimal x, float|decimal y) {
+    io:println(x == y);
+    io:println(x != y);
 }
 
 Test-Case: output
 Description: Test HexFloatingPointLiteral and DecimalFloatingPointNumber with equality.
-Labels: HexFloatingPointLiteral, FloatingPointTypeSuffix, equality, union-type, tuple-type
+Labels: equality, FloatingPointTypeSuffix, HexFloatingPointLiteral, union-type
 
 function init() {
-    io:println(returnEquality(0x3eA3p34, 2.7547920236544E14));  // @output [true,false]
+    returnEquality(0x3eA3p34, 2.7547920236544E14);  // @output true
+                                                    // @output false
 
-    io:println(returnEquality(0X3eA3p34, 2.7547920236544E17));  // @output [false,true]
+    returnEquality(0X3eA3p34, 2.7547920236544E17);  // @output false
+                                                    // @output true
 
-    io:println(returnEquality(2.7547920236544E14, 0x3eA3p+34));  // @output [true,false]
+    returnEquality(2.7547920236544E14, 0x3eA3p+34);  // @output true
+                                                      // @output false
 
-    io:println(returnEquality(2.7547920236544E14D, 0x3eA3p+34));  // @output [false,true]
+    returnEquality(2.7547920236544E14D, 0x3eA3p+34);  // @output false
+                                                      // @output true
 
-    io:println(returnEquality(16035.307403564453, 0x3eA3.4Eb2));  // @output [true,false]
+    returnEquality(16035.307403564453, 0x3eA3.4Eb2);  // @output true
+                                                      // @output false
 
-    io:println(returnEquality(0X.4Eb2, 0.307403564453125));  // @output [true,false]
+    returnEquality(0X.4Eb2, 0.307403564453125);  // @output true
+                                                 // @output false
 
-    io:println(returnEquality(0X.4Eb2, 0.307403564453125d));  // @output [false,true]
+    returnEquality(0X.4Eb2, 0.307403564453125d);  // @output false
+                                                  // @output true
 
-    io:println(returnEquality(5.6419222224581427E17, 0x3eA3.4Eb2p45));  // @output [true,false]
+    returnEquality(5.6419222224581427E17, 0x3eA3.4Eb2p45);  // @output true
+                                                            // @output false
 
-    io:println(returnEquality(0X.4Eb2p45, 1.0815801393152E13));  // @output [true,false]
+    returnEquality(0X.4Eb2p45, 1.0815801393152E13);  // @output true
+                                                     // @output false
 
-    io:println(returnEquality(5.6419222224581427E17, 0x3eA3.4Eb2p+45));  // @output [true,false]
+    returnEquality(5.6419222224581427E17, 0x3eA3.4Eb2p+45);  // @output true
+                                                             // @output false
 
-    io:println(returnEquality(5.6419222224581427E17F, 0x3eA3.4Eb2p+45));  // @output [true,false]
+    returnEquality(5.6419222224581427E17F, 0x3eA3.4Eb2p+45);  // @output true
+                                                              // @output false
 
-    io:println(returnEquality(0X.4Eb2p+45, 1.0815801393152E13));  // @output [true,false]
+    returnEquality(0X.4Eb2p+45, 1.0815801393152E13);  // @output true
+                                                      // @output false
 
-    io:println(returnEquality(25.0E+15, 0x58d15e17628000));  // @output [true,false]
+    returnEquality(25.0E+15, 0x58d15e17628000);  // @output true
+                                                 // @output false
 
-    io:println(returnEquality(245.32e+17f, 0x1.54732c061de2p+16));  // @output [false,true]
+    returnEquality(245.32e+17f, 0x1.54732c061de2p+16);  // @output false
+                                                        // @output true
 
-    io:println(returnEquality(.99e-17D, 0x0.00000000000000b69f6e));  // @output [false,true]
+    returnEquality(.99e-17D, 0x0.00000000000000b69f6e);  // @output false
+                                                         // @output true
 }
 
-function returnEquality(float|decimal x, float|decimal y) returns [boolean, boolean] {
-    return [x == y, x != y];
+function returnEquality(float|decimal x, float|decimal y) {
+    io:println(x == y);
+    io:println(x != y);
 }
 
 Test-Case: error
 Description: Test too large int-literal with floating point type descriptor.
-Labels: DecimalNumber, decimal, float, HexIntLiteral, union-type, int
+Labels: decimal, DecimalNumber, float, HexIntLiteral, int, union-type
 
 function errorFunction() {
     float|decimal _ = 0x154732c061de20000; //  @error out of range for 'float'
@@ -3400,132 +2677,205 @@ function errorFunction() {
 
 Test-Case: output
 Description: Test the basic type of DecimalFloatingPointNumber.
-Labels: any, decimal, FloatingPointTypeSuffix, float, int, is-expr, union-type, tuple-type
+Labels: any, decimal, float, FloatingPointTypeSuffix, int, is-expr, union-type
 
 function init() {
-    io:println(isCheck(25e174)); // @output [false,true,false,true]
+    isCheck(25e174); // @output false
+                     // @output true
+                     // @output false
+                     // @output true
 
-    io:println(isCheck(25e+174)); // @output [false,true,false,true]
+    isCheck(25e+174); // @output false
+                      // @output true
+                      // @output false
+                      // @output true
 
-    io:println(isCheck(0.0f)); // @output [false,true,false,true]
+    isCheck(0.0f); // @output false
+                   // @output true
+                   // @output false
+                   // @output true
 
-    io:println(isCheck(6f)); // @output [false,true,false,true]
+    isCheck(6f); // @output false
+                 // @output true
+                 // @output false
+                 // @output true
 
-    io:println(isCheck(6d)); // @output [false,false,true,true]
+    isCheck(6d); // @output false
+                 // @output false
+                 // @output true
+                 // @output true
 
-    io:println(isCheck(25e174F)); // @output [false,true,false,true]
+    isCheck(25e174F); // @output false
+                      // @output true
+                      // @output false
+                      // @output true
 
-    io:println(isCheck(25e1742d)); // @output [false,false,true,true]
+    isCheck(25e1742d); // @output false
+                       // @output false
+                       // @output true
+                       // @output true
 
-    io:println(isCheck(25e+174f)); // @output [false,true,false,true]
+    isCheck(25e+174f); // @output false
+                       // @output true
+                       // @output false
+                       // @output true
 
-    io:println(isCheck(25E-1742D)); // @output [false,false,true,true]
+    isCheck(25E-1742D); // @output false
+                        // @output false
+                        // @output true
+                        // @output true
 
-    io:println(isCheck(25.0)); // @output [false,true,false,true]
+    isCheck(25.0); // @output false
+                   // @output true
+                   // @output false
+                   // @output true
 
-    io:println(isCheck(245.32)); // @output [false,true,false,true]
+    isCheck(245.32); // @output false
+                     // @output true
+                     // @output false
+                     // @output true
 
-    io:println(isCheck(.99)); // @output [false,true,false,true]
+    isCheck(.99); // @output false
+                  // @output true
+                  // @output false
+                  // @output true
 
-    io:println(isCheck(25.0e174)); // @output [false,true,false,true]
+    isCheck(25.0e174); // @output false
+                       // @output true
+                       // @output false
+                       // @output true
 
-    io:println(isCheck(245.32E174)); // @output [false,true,false,true]
+    isCheck(245.32E174); // @output false
+                         // @output true
+                         // @output false
+                         // @output true
 
-    io:println(isCheck(.99E174)); // @output [false,true,false,true]
+    isCheck(.99E174); // @output false
+                      // @output true
+                      // @output false
+                      // @output true
 
-    io:println(isCheck(25.0E-174)); // @output [false,true,false,true]
+    isCheck(25.0E-174); // @output false
+                        // @output true
+                        // @output false
+                        // @output true
 
-    io:println(isCheck(243.32e+174)); // @output [false,true,false,true]
+    isCheck(243.32e+174); // @output false
+                          // @output true
+                          // @output false
+                          // @output true
 
-    io:println(isCheck(.99E-174)); // @output [false,true,false,true]
+    isCheck(.99E-174); // @output false
+                       // @output true
+                       // @output false
+                       // @output true
 
-    io:println(isCheck(25.0f)); // @output [false,true,false,true]
+    isCheck(25.0f); // @output false
+                    // @output true
+                    // @output false
+                    // @output true
 
-    io:println(isCheck(25.0D)); // @output [false,false,true,true]
+    isCheck(25.0D); // @output false
+                    // @output false
+                    // @output true
+                    // @output true
 
-    io:println(isCheck(245.32F)); // @output [false,true,false,true]
+    isCheck(245.32F); // @output false
+                      // @output true
+                      // @output false
+                      // @output true
 
-    io:println(isCheck(245.32d)); // @output [false,false,true,true]
+    isCheck(245.32d); // @output false
+                      // @output false
+                      // @output true
+                      // @output true
 
-    io:println(isCheck(.99f)); // @output [false,true,false,true]
+    isCheck(.99f); // @output false
+                   // @output true
+                   // @output false
+                   // @output true
 
-    io:println(isCheck(.99D)); // @output [false,false,true,true]
+    isCheck(.99D); // @output false
+                   // @output false
+                   // @output true
+                   // @output true
 
-    io:println(isCheck(25.0e174f)); // @output [false,true,false,true]
+    isCheck(25.0e174f); // @output false
+                        // @output true
+                        // @output false
+                        // @output true
 
-    io:println(isCheck(25.0E1742D)); // @output [false,false,true,true]
+    isCheck(25.0E1742D); // @output false
+                         // @output false
+                         // @output true
+                         // @output true
 
-    io:println(isCheck(245.32E174F)); // @output [false,true,false,true]
+    isCheck(245.32E174F); // @output false
+                          // @output true
+                          // @output false
+                          // @output true
 
-    io:println(isCheck(245.32e1742d)); // @output [false,false,true,true]
+    isCheck(245.32e1742d); // @output false
+                           // @output false
+                           // @output true
+                           // @output true
 
-    io:println(isCheck(.99e174F)); // @output [false,true,false,true]
+    isCheck(.99e174F); // @output false
+                       // @output true
+                       // @output false
+                       // @output true
 
-    io:println(isCheck(.99e1742D)); // @output [false,false,true,true]
+    isCheck(.99e1742D); // @output false
+                        // @output false
+                        // @output true
+                        // @output true
 
-    io:println(isCheck(25.0e+174f)); // @output [false,true,false,true]
+    isCheck(25.0e+174f); // @output false
+                         // @output true
+                         // @output false
+                         // @output true
 
-    io:println(isCheck(25.0e-1742D)); // @output [false,false,true,true]
+    isCheck(25.0e-1742D); // @output false
+                          // @output false
+                          // @output true
+                          // @output true
 
-    io:println(isCheck(245.32E-174F)); // @output [false,true,false,true]
+    isCheck(245.32E-174F); // @output false
+                           // @output true
+                           // @output false
+                           // @output true
 
-    io:println(isCheck(245.32E+1742d)); // @output [false,false,true,true]
+    isCheck(245.32E+1742d); // @output false
+                            // @output false
+                            // @output true
+                            // @output true
 
-    io:println(isCheck(.99e+174f)); // @output [false,true,false,true]
+    isCheck(.99e+174f); // @output false
+                        // @output true
+                        // @output false
+                        // @output true
 
-    io:println(isCheck(.99E-1742D)); // @output [false,false,true,true]
+    isCheck(.99E-1742D); // @output false
+                         // @output false
+                         // @output true
+                         // @output true
 
-    io:println(isCheck(1E-6176d)); // @output [false,false,true,true]
+    isCheck(1E-6176d); // @output false
+                       // @output false
+                       // @output true
+                       // @output true
 
-    io:println(isCheck(9.99E+6111D)); // @output [false,false,true,true]
+    isCheck(9.99E+6111D); // @output false
+                          // @output false
+                          // @output true
+                          // @output true
 }
 
-function isCheck(any x) returns [boolean,boolean,boolean,boolean] {
-    return [x is int, x is float, x is decimal, x is decimal|float];
-}
-
-Test-Case: output
-Description: Test the basic type of HexFloatingPointLiteral.
-Labels: any, decimal, float, int, HexFloatingPointLiteral, is-expr, union-type, tuple-type
-
-function init() {
-     io:println(isCheck(0x3eA3p34)); // @output [false,true,false,true]
-
-     io:println(isCheck(0X3eA3p34)); // @output [false,true,false,true]
-
-     io:println(isCheck(0X3eA3P34)); // @output [false,true,false,true]
-
-     io:println(isCheck(0x3eA3P34)); // @output [false,true,false,true]
-
-     io:println(isCheck(0x3eA3p+34)); // @output [false,true,false,true]
-
-     io:println(isCheck(0x3eA3P-34)); // @output [false,true,false,true]
-
-     io:println(isCheck(0X3eA3p+34)); // @output [false,true,false,true]
-
-     io:println(isCheck(0X3eA3P-34)); // @output [false,true,false,true]
-
-     io:println(isCheck(0x3eA3.4Eb2)); // @output [false,true,false,true]
-
-     io:println(isCheck(0X.4Eb2)); // @output [false,true,false,true]
-
-     io:println(isCheck(0x3eA3.0)); // @output [false,true,false,true]
-
-     io:println(isCheck(0x3eA3.4Eb2p45)); // @output [false,true,false,true]
-
-     io:println(isCheck(0x.4Eb2P45)); // @output [false,true,false,true]
-
-     io:println(isCheck(0x3eA3.0p12)); // @output [false,true,false,true]
-
-     io:println(isCheck(0x3eA3.4Eb2p+45)); // @output [false,true,false,true]
-
-     io:println(isCheck(0x.4Eb2P-45)); // @output [false,true,false,true]
-
-     io:println(isCheck(0x3eA3.0p-12)); // @output [false,true,false,true]
-}
-
-function isCheck(any x) returns [boolean,boolean,boolean,boolean] {
-    return [x is int, x is float, x is decimal, x is decimal|float];
+function isCheck(any x) {
+    io:println(x is int);
+    io:println(x is float);
+    io:println(x is decimal);
+    io:println(x is decimal|float);
 }
 
 Test-Case: error
@@ -3550,7 +2900,7 @@ function errorFunction() {
 
 Test-Case: error
 Description: Test the basic type when the floating point literal includes a DecimalTypeSuffix.
-Labels: FloatingPointTypeSuffix, float, int
+Labels: float, FloatingPointTypeSuffix, int
 
 function errorFunction() {
     int _ = 25d; // @error expected an 'int' but found a 'decimal'
@@ -3566,24 +2916,6 @@ function errorFunction() {
     float _ = 25.0d; // @error expected a 'float' but found a 'decimal'
     float _ = 25E-1742D; // @error expected a 'float' but found a 'decimal'
     float _ = 25E1742d; // @error expected a 'float' but found a 'decimal'
-}
-
-Test-Case: error
-Description: Test the basic type when the floating point literal is a HexFloatingPointLiteral
-Labels: decimal, HexFloatingPointLiteral, int
-
-function errorFunction() {
-    decimal _ = 0x3eA3p34; // @error expected 'decimal', found 'float'
-    decimal _ = 0x3eA3p+34; // @error expected 'decimal', found 'float'
-    decimal _ = 0X3eA3P-34; // @error expected 'decimal', found 'float'
-    decimal _ = 0x3eA3.4Eb2; // @error expected 'decimal', found 'float'
-    decimal _ = 0x.4Eb2; // @error expected 'decimal', found 'float'
-    decimal _ = 0x4Eb2.; // @error expected 'decimal', found 'float'
-    decimal _ = 0x3eA3.4Eb2p45; // @error expected 'decimal', found 'float'
-    decimal _ = 0x.4Eb2p45; // @error expected 'decimal', found 'float'
-    decimal _ = 0x3eA3.4Eb2p+45; // @error expected 'decimal', found 'float'
-    decimal _ = 0x.4Eb2p-45; // @error expected 'decimal', found 'float'
-    int _ = 0x3eA3p34; // @error expected 'int', found 'float'
 }
 
 Test-Case: output
@@ -3604,7 +2936,7 @@ function init() {
 
 Test-Case: output
 Description: Test DecimalFloatingPointNumber with valid type cast to integer type.
-Labels: type-cast-expr, FloatingPointTypeSuffix, int
+Labels: FloatingPointTypeSuffix, int, type-cast-expr
 
 function init() {
 
@@ -3822,7 +3154,7 @@ function init() {
 
 Test-Case: output
 Description: Test DecimalFloatingPointNumber with valid type cast to float type.
-Labels: type-cast-expr, FloatingPointTypeSuffix, float
+Labels: float, FloatingPointTypeSuffix, type-cast-expr
 
 function init() {
     io:println(<float> 25e174); // @output 2.5E175
@@ -4043,7 +3375,7 @@ function init() {
 
 Test-Case: output
 Description: Test DecimalFloatingPointNumber with valid type cast to decimal type.
-Labels: type-cast-expr, FloatingPointTypeSuffix, decimal
+Labels: decimal, FloatingPointTypeSuffix, type-cast-expr
 
 function init() {
     io:println(<decimal> 25e174); // @output 2.5E+175
@@ -4268,7 +3600,7 @@ function init() {
 
 Test-Case: output
 Description: Test DecimalFloatingPointNumber with valid type cast to floating point type.
-Labels: type-cast-expr, FloatingPointTypeSuffix, union-type, float, decimal
+Labels: decimal, float, FloatingPointTypeSuffix, type-cast-expr, union-type
 
 function init() {
     io:println(<decimal|float> 25e174); // @output 2.5E175
@@ -4488,275 +3820,15 @@ function init() {
 
 Test-Case: error
 Description: Test out of range DecimalFloatingPointNumber with type cast to decimal type.
-Labels: type-cast-expr, FloatingPointTypeSuffix, decimal
+Labels: decimal, FloatingPointTypeSuffix, type-cast-expr
 
 function errorFunction() {
     io:println(<decimal> 9.99E+6111f); // @error out of range for 'float'
 }
 
-Test-Case: output
-Description: Test HexFloatingPointLiteral with valid type cast to integer type.
-Labels: type-cast-expr, HexFloatingPointLiteral, int
-
-function init() {
-    io:println(<int> 0x3eA3p34); // @output 275479202365440
-
-    io:println(<int> 0x3eA3P34); // @output 275479202365440
-
-    io:println(<int> 0X3eA3p34); // @output 275479202365440
-
-    io:println(<int> 0X3eA3P34); // @output 275479202365440
-
-    io:println(<int> 0x3eA3p+34); // @output 275479202365440
-
-    io:println(<int> 0x3eA3P-34); // @output 0
-
-    io:println(<int> 0X3eA3p+34); // @output 275479202365440
-
-    io:println(<int> 0X3eA3P-34); // @output 0
-
-
-    io:println(<int> 0x3eA3.4Eb2); // @output 16035
-
-    io:println(<int> 0x.4Eb2); // @output 0
-
-    io:println(<int> 0X3eA3.4Eb2); // @output 16035
-
-    io:println(<int> 0X.4Eb2); // @output 0
-
-
-    io:println(<int> 0x3eA3.4Eb2p45); // @output 564192222245814272
-
-    io:println(<int> 0x3eA3.4Eb2P45); // @output 564192222245814272
-
-    io:println(<int> 0x.4Eb2p45); // @output 10815801393152
-
-    io:println(<int> 0x.4Eb2P45); // @output 10815801393152
-
-    io:println(<int> 0X3eA3.4Eb2p45); // @output 564192222245814272
-
-    io:println(<int> 0X3eA3.4Eb2P45); // @output 564192222245814272
-
-    io:println(<int> 0X.4Eb2p45); // @output 10815801393152
-
-    io:println(<int> 0X.4Eb2P45); // @output 10815801393152
-
-
-    io:println(<int> 0x3eA3.4Eb2p+45); // @output 564192222245814272
-
-    io:println(<int> 0x3eA3.4Eb2P-45); // @output 0
-
-    io:println(<int> 0x.4Eb2p+45); // @output 10815801393152
-
-    io:println(<int> 0x.4Eb2P-45); // @output 0
-
-    io:println(<int> 0X3eA3.4Eb2p+45); // @output 564192222245814272
-
-    io:println(<int> 0X3eA3.4Eb2P-45); // @output 0
-
-    io:println(<int> 0X.4Eb2p+45); // @output 10815801393152
-
-    io:println(<int> 0X.4Eb2P-45); // @output 0
-}
-
-Test-Case: output
-Description: Test HexFloatingPointLiteral with valid type cast to float type.
-Labels: type-cast-expr, HexFloatingPointLiteral, float
-
-function init() {
-    io:println(<float>  0x3eA3p34); // @output 2.7547920236544E14
-
-    io:println(<float>  0x3eA3P34); // @output 2.7547920236544E14
-
-    io:println(<float>  0X3eA3p34); // @output 2.7547920236544E14
-
-    io:println(<float>  0X3eA3P34); // @output 2.7547920236544E14
-
-    io:println(<float>  0x3eA3p+34); // @output 2.7547920236544E14
-
-    io:println(<float>  0x3eA3P-34); // @output 9.333598427474499E-7
-
-    io:println(<float>  0X3eA3p+34); // @output 2.7547920236544E14
-
-    io:println(<float>  0X3eA3P-34); // @output 9.333598427474499E-7
-
-
-    io:println(<float>  0x3eA3.4Eb2); // @output 16035.307403564453
-
-    io:println(<float>  0x.4Eb2); // @output 0.307403564453125
-
-    io:println(<float>  0X3eA3.4Eb2); // @output 16035.307403564453
-
-    io:println(<float>  0X.4Eb2); // @output 0.307403564453125
-
-
-    io:println(<float>  0x3eA3.4Eb2p45); // @output 5.6419222224581427E17
-
-    io:println(<float>  0x3eA3.4Eb2P45); // @output 5.6419222224581427E17
-
-    io:println(<float>  0x.4Eb2p45); // @output 1.0815801393152E13
-
-    io:println(<float>  0x.4Eb2P45); // @output 1.0815801393152E13
-
-    io:println(<float>  0X3eA3.4Eb2p45); // @output 5.6419222224581427E17
-
-    io:println(<float>  0X3eA3.4Eb2P45); // @output 5.6419222224581427E17
-
-    io:println(<float>  0X.4Eb2p45); // @output 1.0815801393152E13
-
-    io:println(<float>  0X.4Eb2P45); // @output 1.0815801393152E13
-
-
-    io:println(<float>  0x3eA3.4Eb2p+45); // @output 5.6419222224581427E17
-
-    io:println(<float>  0x3eA3.4Eb2P-45); // @output 4.55750847651315E-10
-
-    io:println(<float>  0x.4Eb2p+45); // @output 1.0815801393152E13
-
-    io:println(<float>  0x.4Eb2P-45); // @output 8.736934786757189E-15
-
-    io:println(<float>  0X3eA3.4Eb2p+45); // @output 5.6419222224581427E17
-
-    io:println(<float>  0X3eA3.4Eb2P-45); // @output 4.55750847651315E-10
-
-    io:println(<float>  0X.4Eb2p+45); // @output 1.0815801393152E13
-
-    io:println(<float>  0X.4Eb2P-45); // @output 8.736934786757189E-15
-}
-
-Test-Case: output
-Description: Test HexFloatingPointLiteral with valid type cast to decimal type.
-Labels: type-cast-expr, HexFloatingPointLiteral, decimal
-
-function init() {
-    io:println(<decimal>  0x3eA3p34); // @output 2.7547920236544E+14
-
-    io:println(<decimal>  0x3eA3P34); // @output 2.7547920236544E+14
-
-    io:println(<decimal>  0X3eA3p34); // @output 2.7547920236544E+14
-
-    io:println(<decimal>  0X3eA3P34); // @output 2.7547920236544E+14
-
-    io:println(<decimal>  0x3eA3p+34); // @output 2.7547920236544E+14
-
-    io:println(<decimal>  0x3eA3P-34); // @output 9.333598427474499E-7
-
-    io:println(<decimal>  0X3eA3p+34); // @output 2.7547920236544E+14
-
-    io:println(<decimal>  0X3eA3P-34); // @output 9.333598427474499E-7
-
-
-    io:println(<decimal>  0x3eA3.4Eb2); // @output 16035.307403564453
-
-    io:println(<decimal>  0x.4Eb2); // @output 0.307403564453125
-
-    io:println(<decimal>  0X3eA3.4Eb2); // @output 16035.307403564453
-
-    io:println(<decimal>  0X.4Eb2); // @output 0.307403564453125
-
-
-    io:println(<decimal>  0x3eA3.4Eb2p45); // @output 5.6419222224581427E+17
-
-    io:println(<decimal>  0x3eA3.4Eb2P45); // @output 5.6419222224581427E+17
-
-    io:println(<decimal>  0x.4Eb2p45); // @output 10815801393152
-
-    io:println(<decimal>  0x.4Eb2P45); // @output 10815801393152
-
-    io:println(<decimal>  0X3eA3.4Eb2p45); // @output 5.6419222224581427E+17
-
-    io:println(<decimal>  0X3eA3.4Eb2P45); // @output 5.6419222224581427E+17
-
-    io:println(<decimal>  0X.4Eb2p45); // @output 10815801393152
-
-    io:println(<decimal>  0X.4Eb2P45); // @output 10815801393152
-
-
-    io:println(<decimal>  0x3eA3.4Eb2p+45); // @output 5.6419222224581427E+17
-
-    io:println(<decimal>  0x3eA3.4Eb2P-45); // @output 4.55750847651315E-10
-
-    io:println(<decimal>  0x.4Eb2p+45); // @output 10815801393152
-
-    io:println(<decimal>  0x.4Eb2P-45); // @output 8.736934786757189E-15
-
-    io:println(<decimal>  0X3eA3.4Eb2p+45); // @output 5.6419222224581427E+17
-
-    io:println(<decimal>  0X3eA3.4Eb2P-45); // @output 4.55750847651315E-10
-
-    io:println(<decimal>  0X.4Eb2p+45); // @output 10815801393152
-
-    io:println(<decimal>  0X.4Eb2P-45); // @output 8.736934786757189E-15
-}
-
-Test-Case: output
-Description: Test HexFloatingPointLiteral with valid type cast to floating point type.
-Labels: type-cast-expr, HexFloatingPointLiteral, union-type, decimal, float
-
-function init() {
-    io:println(<decimal|float> 0x3eA3p34); // @output 2.7547920236544E14
-
-    io:println(<decimal|float> 0x3eA3P34); // @output 2.7547920236544E14
-
-    io:println(<decimal|float> 0X3eA3p34); // @output 2.7547920236544E14
-
-    io:println(<decimal|float> 0X3eA3P34); // @output 2.7547920236544E14
-
-    io:println(<decimal|float> 0x3eA3p+34); // @output 2.7547920236544E14
-
-    io:println(<decimal|float> 0x3eA3P-34); // @output 9.333598427474499E-7
-
-    io:println(<decimal|float> 0X3eA3p+34); // @output 2.7547920236544E14
-
-    io:println(<decimal|float> 0X3eA3P-34); // @output 9.333598427474499E-7
-
-
-    io:println(<decimal|float> 0x3eA3.4Eb2); // @output 16035.307403564453
-
-    io:println(<decimal|float> 0x.4Eb2); // @output 0.307403564453125
-
-    io:println(<decimal|float> 0X3eA3.4Eb2); // @output 16035.307403564453
-
-    io:println(<decimal|float> 0X.4Eb2); // @output 0.307403564453125
-
-
-    io:println(<decimal|float> 0x3eA3.4Eb2p45); // @output 5.6419222224581427E17
-
-    io:println(<decimal|float> 0x3eA3.4Eb2P45); // @output 5.6419222224581427E17
-
-    io:println(<decimal|float> 0x.4Eb2p45); // @output 1.0815801393152E13
-
-    io:println(<decimal|float> 0x.4Eb2P45); // @output 1.0815801393152E13
-
-    io:println(<decimal|float> 0X3eA3.4Eb2p45); // @output 5.6419222224581427E17
-
-    io:println(<decimal|float> 0X3eA3.4Eb2P45); // @output 5.6419222224581427E17
-
-    io:println(<decimal|float> 0X.4Eb2p45); // @output 1.0815801393152E13
-
-    io:println(<decimal|float> 0X.4Eb2P45); // @output 1.0815801393152E13
-
-
-    io:println(<decimal|float> 0x3eA3.4Eb2p+45); // @output 5.6419222224581427E17
-
-    io:println(<decimal|float> 0x3eA3.4Eb2P-45); // @output 4.55750847651315E-10
-
-    io:println(<decimal|float> 0x.4Eb2p+45); // @output 1.0815801393152E13
-
-    io:println(<decimal|float> 0x.4Eb2P-45); // @output 8.736934786757189E-15
-
-    io:println(<decimal|float> 0X3eA3.4Eb2p+45); // @output 5.6419222224581427E17
-
-    io:println(<decimal|float> 0X3eA3.4Eb2P-45); // @output 4.55750847651315E-10
-
-    io:println(<decimal|float> 0X.4Eb2p+45); // @output 1.0815801393152E13
-
-    io:println(<decimal|float> 0X.4Eb2P-45); // @output 8.736934786757189E-15
-}
-
 Test-Case: panic
 Description: Test invalid DecimalFloatingPointNumber type cast.
-Labels: type-cast-expr, FloatingPointTypeSuffix, int
+Labels: FloatingPointTypeSuffix, int, type-cast-expr
 
 function init() {
     io:println(<int>  245.32e84f); // @panic 'float' value  cannot be converted to 'int`
@@ -4764,7 +3836,7 @@ function init() {
 
 Test-Case: panic
 Description: Test invalid DecimalFloatingPointNumber type cast.
-Labels: type-cast-expr, FloatingPointTypeSuffix, int
+Labels: FloatingPointTypeSuffix, int, type-cast-expr
 
 function init() {
     io:println(<int>  245.32e84D); // @panic 'decimal' value  cannot be converted to 'int`
@@ -4772,7 +3844,7 @@ function init() {
 
 Test-Case: panic
 Description: Test invalid DecimalFloatingPointNumber type cast.
-Labels: type-cast-expr, FloatingPointTypeSuffix, int
+Labels: FloatingPointTypeSuffix, int, type-cast-expr
 
 function init() {
     io:println(<int>  9.99E+6111d); // @panic 'decimal' value  cannot be converted to 'int`
@@ -4780,7 +3852,7 @@ function init() {
 
 Test-Case: panic
 Description: Test invalid DecimalFloatingPointNumber type cast.
-Labels: type-cast-expr, FloatingPointTypeSuffix, int
+Labels: FloatingPointTypeSuffix, int, type-cast-expr
 
 function init() {
     io:println(<int>  1E-6176d); // @panic 'decimal' value  cannot be converted to 'int`
@@ -4788,7 +3860,7 @@ function init() {
 
 Test-Case: panic
 Description: Test invalid DecimalFloatingPointNumber type cast.
-Labels: type-cast-expr, FloatingPointTypeSuffix, int
+Labels: FloatingPointTypeSuffix, int, type-cast-expr
 
 function init() {
     io:println(<int>  9.99E+6111); // @panic 'float' value  cannot be converted to 'int`
@@ -4796,7 +3868,7 @@ function init() {
 
 Test-Case: panic
 Description: Test invalid DecimalFloatingPointNumber type cast.
-Labels: type-cast-expr, int
+Labels: int, type-cast-expr
 
 function init() {
     io:println(<int>  1E-6176); // @panic 'float' value  cannot be converted to 'int`
@@ -4804,7 +3876,7 @@ function init() {
 
 Test-Case: panic
 Description: Test invalid DecimalFloatingPointNumber type cast.
-Labels: type-cast-expr, HexFloatingPointLiteral, int
+Labels: HexFloatingPointLiteral, int, type-cast-expr
 
 function init() {
     io:println(<int>  0x1.0fffffffffffffp+1024); // @panic 'float' value  cannot be converted to 'int`
@@ -4812,7 +3884,7 @@ function init() {
 
 Test-Case: error
 Description: Test invalid DecimalFloatingPointNumber type cast.
-Labels: type-cast-expr, FloatingPointTypeSuffix, string, boolean, nil-type, any
+Labels: any, boolean, FloatingPointTypeSuffix, nil-type, string, type-cast-expr
 
 function errorFunction() {
     any _ = <()> 25e1742; // @error 'float' cannot be cast to '()'
@@ -4911,60 +3983,9 @@ function errorFunction() {
     any _ = <boolean> 1E-6176f; // @error 'float' cannot be cast to 'boolean'
 }
 
-Test-Case: error
-Description: Test invalid HexFloatingPointLiteral type cast.
-Labels: type-cast-expr, HexFloatingPointLiteral, string, boolean, nil-type, any
-
-function errorFunction() {
-    any _ = <()> 0x3eA3p34; // @error 'float' cannot be cast to '()'
-    any _ = <()> 0X3eA3p34; // @error 'float' cannot be cast to '()'
-    any _ = <()> 0x3eA3p+34; // @error 'float' cannot be cast to '()'
-    any _ = <()> 0X3eA3P-34; // @error 'float' cannot be cast to '()'
-    any _ = <()> 0x3eA3.4Eb2; // @error 'float' cannot be cast to '()'
-    any _ = <()> 0x.4Eb2; // @error 'float' cannot be cast to '()'
-    any _ = <()> 0x4Eb2.; // @error 'float' cannot be cast to '()'
-    any _ = <()> 0x3eA3.4Eb2p45; // @error 'float' cannot be cast to '()'
-    any _ = <()> 0X.4Eb2P45; // @error 'float' cannot be cast to '()'
-    any _ = <()> 0X4Eb2.0P45; // @error 'float' cannot be cast to '()'
-    any _ = <()> 0x3eA3.4Eb2P-45; // @error 'float' cannot be cast to '()'
-    any _ = <()> 0X.4Eb2p+45; // @error 'float' cannot be cast to '()'
-    any _ = <()> 0X4Eb2.0p+45; // @error 'float' cannot be cast to '()'
-    any _ = <())> 0x1.0ffffffffffffffp+1023; // @error 'float' cannot be cast to '())'
-
-    any _ = <string> 0x3eA3p34; // @error 'float' cannot be cast to 'string'
-    any _ = <string> 0X3eA3p34; // @error 'float' cannot be cast to 'string'
-    any _ = <string> 0x3eA3p+34; // @error 'float' cannot be cast to 'string'
-    any _ = <string> 0X3eA3P-34; // @error 'float' cannot be cast to 'string'
-    any _ = <string> 0x3eA3.4Eb2; // @error 'float' cannot be cast to 'string'
-    any _ = <string> 0x.4Eb2; // @error 'float' cannot be cast to 'string'
-    any _ = <string> 0x4Eb2.; // @error 'float' cannot be cast to 'string'
-    any _ = <string> 0x3eA3.4Eb2p45; // @error 'float' cannot be cast to 'string'
-    any _ = <string> 0X.4Eb2P45; // @error 'float' cannot be cast to 'string'
-    any _ = <string> 0X4Eb2.0P45; // @error 'float' cannot be cast to 'string'
-    any _ = <string> 0x3eA3.4Eb2P-45; // @error 'float' cannot be cast to 'string'
-    any _ = <string> 0X.4Eb2p+45; // @error 'float' cannot be cast to 'string'
-    any _ = <string> 0X4Eb2.0p+45; // @error 'float' cannot be cast to 'string'
-    any _ = <string> 0x1.0ffffffffffffffp+1023; // @error 'float' cannot be cast to 'string'
-
-    any _ = <boolean> 0x3eA3p34; // @error 'float' cannot be cast to 'boolean'
-    any _ = <boolean> 0X3eA3p34; // @error 'float' cannot be cast to 'boolean'
-    any _ = <boolean> 0x3eA3p+34; // @error 'float' cannot be cast to 'boolean'
-    any _ = <boolean> 0X3eA3P-34; // @error 'float' cannot be cast to 'boolean'
-    any _ = <boolean> 0x3eA3.4Eb2; // @error 'float' cannot be cast to 'boolean'
-    any _ = <boolean> 0x.4Eb2; // @error 'float' cannot be cast to 'boolean'
-    any _ = <boolean> 0x4Eb2.; // @error 'float' cannot be cast to 'boolean'
-    any _ = <boolean> 0x3eA3.4Eb2p45; // @error 'float' cannot be cast to 'boolean'
-    any _ = <boolean> 0X.4Eb2P45; // @error 'float' cannot be cast to 'boolean'
-    any _ = <boolean> 0X4Eb2.0P45; // @error 'float' cannot be cast to 'boolean'
-    any _ = <boolean> 0x3eA3.4Eb2P-45; // @error 'float' cannot be cast to 'boolean'
-    any _ = <boolean> 0X.4Eb2p+45; // @error 'float' cannot be cast to 'boolean'
-    any _ = <boolean> 0X4Eb2.0p+45; // @error 'float' cannot be cast to 'boolean'
-    any _ = <boolean> 0x1.0ffffffffffffffp+1023; // @error 'float' cannot be cast to 'boolean'
-}
-
 Test-Case: output
 Description: Test floating point literals with interpolation in template expressions.
-Labels: HexFloatingPointLiteral, raw-template-expr, FloatingPointTypeSuffix
+Labels: FloatingPointTypeSuffix, HexFloatingPointLiteral, raw-template-expr
 
 function init() {
     io:println(`${25e8}`); // @output 2.5E9
@@ -5014,7 +4035,8 @@ function init() {
 
 Test-Case: output
 Description: Test floating point literals as members of structural constructors.
-Labels: list-constructor-expr, mapping-constructor-expr, string, HexFloatingPointLiteral, FloatingPointTypeSuffix, tuple-type
+Labels: FloatingPointTypeSuffix, HexFloatingPointLiteral, list-constructor-expr, mapping-constructor-expr, string,
+        tuple-type
 
 function init() {
     io:println([25e8, 25E8]); // @output [2.5E9,2.5E9]
@@ -5173,7 +4195,7 @@ function subtypeDecimal(decimal x) {
 
 Test-Case: output
 Description: Test the basic type when the applicable contextually expected types are a subtype of float and a union with int and float.
-Labels: float, HexFloatingPointLiteral, int, nil-type, is-expr, union-type
+Labels: float, HexFloatingPointLiteral, int, is-expr, nil-type, union-type
 
 function init() {
     subtypeFloat(25e174); // @output true
@@ -5377,7 +4399,7 @@ function subtypeFloat(float x) {
 
 Test-Case: output
 Description: Test the basic type when the applicable contextually expected types are a combination of int, float and decimal with floating point literals.
-Labels: decimal, float, int, is-expr, HexFloatingPointLiteral, union-type
+Labels: decimal, float, HexFloatingPointLiteral, int, is-expr, union-type
 
 function init() {
     subtypeFloatDecimal(25e174); // @output true
@@ -5656,10 +4678,1482 @@ function subtypeFloatDecimal(float|decimal x) {
 
 Test-Case: error
 Description: Test out of range float assignment to a union of float and decimal
-Labels: float, decimal, union-type
+Labels: decimal, float, union-type
 
 function errorFunction() {
     float|decimal _ = 25e1742; // @error value is out of range for 'float'
     float|decimal _ = 245.32E-1742; // @error value is out of range for 'float'
     float|decimal _ = 25.e+1742; // @error value is out of range for 'float'
+}
+
+Test-Case: output
+Description: Test NAN and Infinity with float type descriptor.
+Labels: float
+
+function init() {
+    float f = 0.0 / 0.0;
+    io:println(f); // @output NaN
+    io:println(f is float); // @output true
+    io:println(f is float:NaN); // @output true
+
+    f = 3.0/0.0;
+    io:println(f); // @output Infinity
+    io:println(f is float); // @output true
+    io:println(f is float:Infinity); // @output true
+}
+
+Test-Case: panic
+Description: Test NAN with decimal type descriptor.
+Labels: decimal
+
+function init() {
+    decimal _ = 0.0 / 0.0; // @panic 'NaN' is not supported with decimal type
+}
+
+Test-Case: panic
+Description: Test Infinity with decimal type descriptor.
+Labels: decimal
+
+function init() {
+    decimal _ = 3.0/0.0; // @panic 'Infinity' is not supported with decimal type
+}
+
+Test-Case: panic
+Description: Test subnormal value with decimal type descriptor.
+Fail-Issue: ballerina-platform/ballerina-lang#39940
+Labels: decimal
+
+function init() {
+    decimal _ = 1.0e-6144; // @panic 'subnormal' values are not supported with decimal type
+    decimal _ = 1.0e-6150; // @panic 'subnormal' values are not supported with decimal type
+    decimal _ = 1.0e-6173; // @panic 'subnormal' values are not supported with decimal type
+}
+
+Test-Case: output
+Description: Test rounding floating point values with float type.
+Labels: float, FloatingPointTypeSuffix, HexFloatingPointLiteral
+
+function init() {
+    float c = float:round(0.001234, 2);
+    io:println(c); // @output 0.0
+
+    c = float:round(0.001234, 4);
+    io:println(c); // @output 0.0012
+
+    c = float:round(0.001234, 6);
+    io:println(c); // @output 0.001234
+
+    c = float:round(0.001234, 7);
+    io:println(c); // @output 0.001234
+
+    c = float:round(12345.67e-2, 2);
+    io:println(c); // @output 123.46
+
+    c = float:round(0.000055E2, 2);
+    io:println(c); // @output 0.01
+
+    c = float:round(123.123f, 2);
+    io:println(c); // @output 123.12
+
+    c = float:round(0X.2345, 2);
+    io:println(c); // @output 0.14
+
+    c = float:round(0X0.000002345p-2, 2);
+    io:println(c); // @output 0.0
+
+    c = float:round(0X0.05a45p2, 2);
+    io:println(c); // @output 0.09
+
+    c = float:round(0X0.05a45P-2, 2);
+    io:println(c); // @output 0.01
+}
+
+Test-Case: output
+Description: Test rounding floating point values with decimal type.
+Labels: decimal, FloatingPointTypeSuffix
+
+function init() {
+    decimal c = decimal:round(0.001234, 2);
+    io:println(c); // @output 0
+
+    c = decimal:round(0.001234, 4);
+    io:println(c); // @output 0.0012
+
+    c = decimal:round(0.001234, 6);
+    io:println(c); // @output 0.001234
+
+    c = decimal:round(0.001234, 7);
+    io:println(c); // @output 0.001234
+
+    c = decimal:round(12345.67e-2, 2);
+    io:println(c); // @output 123.46
+
+    c = decimal:round(0.000055E2, 2);
+    io:println(c); // @output 0.01
+
+    c = decimal:round(123.123d, 2);
+    io:println(c); // @output 123.12
+}
+
+Test-Case: output
+Description: Test equality of decimal mathematical value with different exponents.
+Labels: decimal, FloatingPointTypeSuffix
+
+function init() {
+    decimal a = 0.45e2;
+    decimal b = 0.0045e4;
+    io:println(a == b); // @output true
+    io:println(a === b); // @output true
+
+    a = 0.45e-2;
+    b = 4.5e-3;
+    io:println(a == b); // @output true
+    io:println(a === b); // @output true
+
+    a = 0.45e2d;
+    b = 0.0045e4D;
+    io:println(a == b); // @output true
+    io:println(a === b); // @output true
+
+    a = 0.45e-2D;
+    b = 4.5e-3d;
+    io:println(a == b); // @output true
+    io:println(a === b); // @output true
+}
+
+Test-Case: error
+Description: Test invalid HexFloatingPointLiteral type cast.
+Labels: any, boolean, HexFloatingPointLiteral, nil-type, string, type-cast-expr
+
+function errorFunction() {
+    any _ = <()> 0x3eA3p34; // @error 'float' cannot be cast to '()'
+    any _ = <()> 0X3eA3p34; // @error 'float' cannot be cast to '()'
+    any _ = <()> 0x3eA3p+34; // @error 'float' cannot be cast to '()'
+    any _ = <()> 0X3eA3P-34; // @error 'float' cannot be cast to '()'
+    any _ = <()> 0x3eA3.4Eb2; // @error 'float' cannot be cast to '()'
+    any _ = <()> 0x.4Eb2; // @error 'float' cannot be cast to '()'
+    any _ = <()> 0x4Eb2.; // @error 'float' cannot be cast to '()'
+    any _ = <()> 0x3eA3.4Eb2p45; // @error 'float' cannot be cast to '()'
+    any _ = <()> 0X.4Eb2P45; // @error 'float' cannot be cast to '()'
+    any _ = <()> 0X4Eb2.0P45; // @error 'float' cannot be cast to '()'
+    any _ = <()> 0x3eA3.4Eb2P-45; // @error 'float' cannot be cast to '()'
+    any _ = <()> 0X.4Eb2p+45; // @error 'float' cannot be cast to '()'
+    any _ = <()> 0X4Eb2.0p+45; // @error 'float' cannot be cast to '()'
+    any _ = <())> 0x1.0ffffffffffffffp+1023; // @error 'float' cannot be cast to '())'
+
+    any _ = <string> 0x3eA3p34; // @error 'float' cannot be cast to 'string'
+    any _ = <string> 0X3eA3p34; // @error 'float' cannot be cast to 'string'
+    any _ = <string> 0x3eA3p+34; // @error 'float' cannot be cast to 'string'
+    any _ = <string> 0X3eA3P-34; // @error 'float' cannot be cast to 'string'
+    any _ = <string> 0x3eA3.4Eb2; // @error 'float' cannot be cast to 'string'
+    any _ = <string> 0x.4Eb2; // @error 'float' cannot be cast to 'string'
+    any _ = <string> 0x4Eb2.; // @error 'float' cannot be cast to 'string'
+    any _ = <string> 0x3eA3.4Eb2p45; // @error 'float' cannot be cast to 'string'
+    any _ = <string> 0X.4Eb2P45; // @error 'float' cannot be cast to 'string'
+    any _ = <string> 0X4Eb2.0P45; // @error 'float' cannot be cast to 'string'
+    any _ = <string> 0x3eA3.4Eb2P-45; // @error 'float' cannot be cast to 'string'
+    any _ = <string> 0X.4Eb2p+45; // @error 'float' cannot be cast to 'string'
+    any _ = <string> 0X4Eb2.0p+45; // @error 'float' cannot be cast to 'string'
+    any _ = <string> 0x1.0ffffffffffffffp+1023; // @error 'float' cannot be cast to 'string'
+
+    any _ = <boolean> 0x3eA3p34; // @error 'float' cannot be cast to 'boolean'
+    any _ = <boolean> 0X3eA3p34; // @error 'float' cannot be cast to 'boolean'
+    any _ = <boolean> 0x3eA3p+34; // @error 'float' cannot be cast to 'boolean'
+    any _ = <boolean> 0X3eA3P-34; // @error 'float' cannot be cast to 'boolean'
+    any _ = <boolean> 0x3eA3.4Eb2; // @error 'float' cannot be cast to 'boolean'
+    any _ = <boolean> 0x.4Eb2; // @error 'float' cannot be cast to 'boolean'
+    any _ = <boolean> 0x4Eb2.; // @error 'float' cannot be cast to 'boolean'
+    any _ = <boolean> 0x3eA3.4Eb2p45; // @error 'float' cannot be cast to 'boolean'
+    any _ = <boolean> 0X.4Eb2P45; // @error 'float' cannot be cast to 'boolean'
+    any _ = <boolean> 0X4Eb2.0P45; // @error 'float' cannot be cast to 'boolean'
+    any _ = <boolean> 0x3eA3.4Eb2P-45; // @error 'float' cannot be cast to 'boolean'
+    any _ = <boolean> 0X.4Eb2p+45; // @error 'float' cannot be cast to 'boolean'
+    any _ = <boolean> 0X4Eb2.0p+45; // @error 'float' cannot be cast to 'boolean'
+    any _ = <boolean> 0x1.0ffffffffffffffp+1023; // @error 'float' cannot be cast to 'boolean'
+}
+
+Test-Case: output
+Description: Test HexFloatingPointLiteral with equality.
+Labels: equality, HexFloatingPointLiteral, union-type
+
+function init() {
+
+    returnEquality(0x3eA3p34, 0x3eA3P34);  // @output true
+                                           // @output false
+
+    returnEquality(0X3eA3p34, 0X3eA3P34);  // @output true
+                                           // @output false
+
+    returnEquality(0x3eA3p+34, 0x3eA3P-34);  // @output false
+                                             // @output true
+
+    returnEquality(0X3eA3p+34, 0X3eA3P-34);  // @output false
+                                             // @output true
+
+    returnEquality(0X3eA3P-34, 0X3eA3p-34);  // @output true
+                                             // @output false
+
+    returnEquality(0X3EA3p34, 0X3eA3P34);  // @output true
+                                           // @output false
+
+    returnEquality(0x.4Eb2, 0x0.4Eb2);  // @output true
+                                        // @output false
+
+    returnEquality(0x.4Eb2, 0X.4Eb2);  // @output true
+                                       // @output false
+
+    returnEquality(0X3eA3.4Eb2, 0x3eA3.4Eb2);  // @output true
+                                               // @output false
+
+    returnEquality(0x3eA3.4Eb2p45, 0x3eA3.4Eb2P45);  // @output true
+                                                     // @output false
+
+    returnEquality(0x.4Eb2p45, 0x.4Eb2P45);  // @output true
+                                             // @output false
+
+    returnEquality(0X3eA3.4Eb2p45, 0X3eA3.4Eb2P45);  // @output true
+                                                     // @output false
+
+    returnEquality(0X.4Eb2p45, 0X.4Eb2P45);  // @output true
+                                             // @output false
+
+    returnEquality(0x3eA3.4Eb2p+45, 0x3eA3.4Eb2P-45);  // @output false
+                                                       // @output true
+
+    returnEquality(0x.4Eb2p+45, 0x.4Eb2P-45);  // @output false
+                                               // @output true
+
+    returnEquality(0X3eA3.4Eb2p+45, 0X3eA3.4Eb2P-45);  // @output false
+                                                       // @output true
+
+    returnEquality(0X.4Eb2p+45, 0X.4Eb2P-45);  // @output false
+                                               // @output true
+
+    returnEquality(0X.4Eb2p+45, 0x.4eb2P+45);  // @output true
+                                               // @output false
+
+    returnEquality(0X3eA3.4Eb2p-45, 0x3eA3.4Eb2P-45);  // @output true
+                                                       // @output false
+}
+
+function returnEquality(float|decimal x, float|decimal y) {
+    io:println(x == y);
+    io:println(x != y);
+}
+
+Test-Case: output
+Description: Test HexFloatingPointLiteral with valid type cast to integer type.
+Labels: HexFloatingPointLiteral, int, type-cast-expr
+
+function init() {
+    io:println(<int> 0x3eA3p34); // @output 275479202365440
+
+    io:println(<int> 0x3eA3P34); // @output 275479202365440
+
+    io:println(<int> 0X3eA3p34); // @output 275479202365440
+
+    io:println(<int> 0X3eA3P34); // @output 275479202365440
+
+    io:println(<int> 0x3eA3p+34); // @output 275479202365440
+
+    io:println(<int> 0x3eA3P-34); // @output 0
+
+    io:println(<int> 0X3eA3p+34); // @output 275479202365440
+
+    io:println(<int> 0X3eA3P-34); // @output 0
+
+
+    io:println(<int> 0x3eA3.4Eb2); // @output 16035
+
+    io:println(<int> 0x.4Eb2); // @output 0
+
+    io:println(<int> 0X3eA3.4Eb2); // @output 16035
+
+    io:println(<int> 0X.4Eb2); // @output 0
+
+
+    io:println(<int> 0x3eA3.4Eb2p45); // @output 564192222245814272
+
+    io:println(<int> 0x3eA3.4Eb2P45); // @output 564192222245814272
+
+    io:println(<int> 0x.4Eb2p45); // @output 10815801393152
+
+    io:println(<int> 0x.4Eb2P45); // @output 10815801393152
+
+    io:println(<int> 0X3eA3.4Eb2p45); // @output 564192222245814272
+
+    io:println(<int> 0X3eA3.4Eb2P45); // @output 564192222245814272
+
+    io:println(<int> 0X.4Eb2p45); // @output 10815801393152
+
+    io:println(<int> 0X.4Eb2P45); // @output 10815801393152
+
+
+    io:println(<int> 0x3eA3.4Eb2p+45); // @output 564192222245814272
+
+    io:println(<int> 0x3eA3.4Eb2P-45); // @output 0
+
+    io:println(<int> 0x.4Eb2p+45); // @output 10815801393152
+
+    io:println(<int> 0x.4Eb2P-45); // @output 0
+
+    io:println(<int> 0X3eA3.4Eb2p+45); // @output 564192222245814272
+
+    io:println(<int> 0X3eA3.4Eb2P-45); // @output 0
+
+    io:println(<int> 0X.4Eb2p+45); // @output 10815801393152
+
+    io:println(<int> 0X.4Eb2P-45); // @output 0
+}
+
+Test-Case: output
+Description: Test HexFloatingPointLiteral with valid type cast to float type.
+Labels: float, HexFloatingPointLiteral, type-cast-expr
+
+function init() {
+    io:println(<float>  0x3eA3p34); // @output 2.7547920236544E14
+
+    io:println(<float>  0x3eA3P34); // @output 2.7547920236544E14
+
+    io:println(<float>  0X3eA3p34); // @output 2.7547920236544E14
+
+    io:println(<float>  0X3eA3P34); // @output 2.7547920236544E14
+
+    io:println(<float>  0x3eA3p+34); // @output 2.7547920236544E14
+
+    io:println(<float>  0x3eA3P-34); // @output 9.333598427474499E-7
+
+    io:println(<float>  0X3eA3p+34); // @output 2.7547920236544E14
+
+    io:println(<float>  0X3eA3P-34); // @output 9.333598427474499E-7
+
+
+    io:println(<float>  0x3eA3.4Eb2); // @output 16035.307403564453
+
+    io:println(<float>  0x.4Eb2); // @output 0.307403564453125
+
+    io:println(<float>  0X3eA3.4Eb2); // @output 16035.307403564453
+
+    io:println(<float>  0X.4Eb2); // @output 0.307403564453125
+
+
+    io:println(<float>  0x3eA3.4Eb2p45); // @output 5.6419222224581427E17
+
+    io:println(<float>  0x3eA3.4Eb2P45); // @output 5.6419222224581427E17
+
+    io:println(<float>  0x.4Eb2p45); // @output 1.0815801393152E13
+
+    io:println(<float>  0x.4Eb2P45); // @output 1.0815801393152E13
+
+    io:println(<float>  0X3eA3.4Eb2p45); // @output 5.6419222224581427E17
+
+    io:println(<float>  0X3eA3.4Eb2P45); // @output 5.6419222224581427E17
+
+    io:println(<float>  0X.4Eb2p45); // @output 1.0815801393152E13
+
+    io:println(<float>  0X.4Eb2P45); // @output 1.0815801393152E13
+
+
+    io:println(<float>  0x3eA3.4Eb2p+45); // @output 5.6419222224581427E17
+
+    io:println(<float>  0x3eA3.4Eb2P-45); // @output 4.55750847651315E-10
+
+    io:println(<float>  0x.4Eb2p+45); // @output 1.0815801393152E13
+
+    io:println(<float>  0x.4Eb2P-45); // @output 8.736934786757189E-15
+
+    io:println(<float>  0X3eA3.4Eb2p+45); // @output 5.6419222224581427E17
+
+    io:println(<float>  0X3eA3.4Eb2P-45); // @output 4.55750847651315E-10
+
+    io:println(<float>  0X.4Eb2p+45); // @output 1.0815801393152E13
+
+    io:println(<float>  0X.4Eb2P-45); // @output 8.736934786757189E-15
+}
+
+Test-Case: output
+Description: Test HexFloatingPointLiteral with valid type cast to decimal type.
+Labels: decimal, HexFloatingPointLiteral, type-cast-expr
+
+function init() {
+    io:println(<decimal>  0x3eA3p34); // @output 2.7547920236544E+14
+
+    io:println(<decimal>  0x3eA3P34); // @output 2.7547920236544E+14
+
+    io:println(<decimal>  0X3eA3p34); // @output 2.7547920236544E+14
+
+    io:println(<decimal>  0X3eA3P34); // @output 2.7547920236544E+14
+
+    io:println(<decimal>  0x3eA3p+34); // @output 2.7547920236544E+14
+
+    io:println(<decimal>  0x3eA3P-34); // @output 9.333598427474499E-7
+
+    io:println(<decimal>  0X3eA3p+34); // @output 2.7547920236544E+14
+
+    io:println(<decimal>  0X3eA3P-34); // @output 9.333598427474499E-7
+
+
+    io:println(<decimal>  0x3eA3.4Eb2); // @output 16035.307403564453
+
+    io:println(<decimal>  0x.4Eb2); // @output 0.307403564453125
+
+    io:println(<decimal>  0X3eA3.4Eb2); // @output 16035.307403564453
+
+    io:println(<decimal>  0X.4Eb2); // @output 0.307403564453125
+
+
+    io:println(<decimal>  0x3eA3.4Eb2p45); // @output 5.6419222224581427E+17
+
+    io:println(<decimal>  0x3eA3.4Eb2P45); // @output 5.6419222224581427E+17
+
+    io:println(<decimal>  0x.4Eb2p45); // @output 10815801393152
+
+    io:println(<decimal>  0x.4Eb2P45); // @output 10815801393152
+
+    io:println(<decimal>  0X3eA3.4Eb2p45); // @output 5.6419222224581427E+17
+
+    io:println(<decimal>  0X3eA3.4Eb2P45); // @output 5.6419222224581427E+17
+
+    io:println(<decimal>  0X.4Eb2p45); // @output 10815801393152
+
+    io:println(<decimal>  0X.4Eb2P45); // @output 10815801393152
+
+
+    io:println(<decimal>  0x3eA3.4Eb2p+45); // @output 5.6419222224581427E+17
+
+    io:println(<decimal>  0x3eA3.4Eb2P-45); // @output 4.55750847651315E-10
+
+    io:println(<decimal>  0x.4Eb2p+45); // @output 10815801393152
+
+    io:println(<decimal>  0x.4Eb2P-45); // @output 8.736934786757189E-15
+
+    io:println(<decimal>  0X3eA3.4Eb2p+45); // @output 5.6419222224581427E+17
+
+    io:println(<decimal>  0X3eA3.4Eb2P-45); // @output 4.55750847651315E-10
+
+    io:println(<decimal>  0X.4Eb2p+45); // @output 10815801393152
+
+    io:println(<decimal>  0X.4Eb2P-45); // @output 8.736934786757189E-15
+}
+
+Test-Case: output
+Description: Test HexFloatingPointLiteral with valid type cast to floating point type.
+Labels: decimal, float, HexFloatingPointLiteral, type-cast-expr, union-type
+
+function init() {
+    io:println(<decimal|float> 0x3eA3p34); // @output 2.7547920236544E14
+
+    io:println(<decimal|float> 0x3eA3P34); // @output 2.7547920236544E14
+
+    io:println(<decimal|float> 0X3eA3p34); // @output 2.7547920236544E14
+
+    io:println(<decimal|float> 0X3eA3P34); // @output 2.7547920236544E14
+
+    io:println(<decimal|float> 0x3eA3p+34); // @output 2.7547920236544E14
+
+    io:println(<decimal|float> 0x3eA3P-34); // @output 9.333598427474499E-7
+
+    io:println(<decimal|float> 0X3eA3p+34); // @output 2.7547920236544E14
+
+    io:println(<decimal|float> 0X3eA3P-34); // @output 9.333598427474499E-7
+
+
+    io:println(<decimal|float> 0x3eA3.4Eb2); // @output 16035.307403564453
+
+    io:println(<decimal|float> 0x.4Eb2); // @output 0.307403564453125
+
+    io:println(<decimal|float> 0X3eA3.4Eb2); // @output 16035.307403564453
+
+    io:println(<decimal|float> 0X.4Eb2); // @output 0.307403564453125
+
+
+    io:println(<decimal|float> 0x3eA3.4Eb2p45); // @output 5.6419222224581427E17
+
+    io:println(<decimal|float> 0x3eA3.4Eb2P45); // @output 5.6419222224581427E17
+
+    io:println(<decimal|float> 0x.4Eb2p45); // @output 1.0815801393152E13
+
+    io:println(<decimal|float> 0x.4Eb2P45); // @output 1.0815801393152E13
+
+    io:println(<decimal|float> 0X3eA3.4Eb2p45); // @output 5.6419222224581427E17
+
+    io:println(<decimal|float> 0X3eA3.4Eb2P45); // @output 5.6419222224581427E17
+
+    io:println(<decimal|float> 0X.4Eb2p45); // @output 1.0815801393152E13
+
+    io:println(<decimal|float> 0X.4Eb2P45); // @output 1.0815801393152E13
+
+
+    io:println(<decimal|float> 0x3eA3.4Eb2p+45); // @output 5.6419222224581427E17
+
+    io:println(<decimal|float> 0x3eA3.4Eb2P-45); // @output 4.55750847651315E-10
+
+    io:println(<decimal|float> 0x.4Eb2p+45); // @output 1.0815801393152E13
+
+    io:println(<decimal|float> 0x.4Eb2P-45); // @output 8.736934786757189E-15
+
+    io:println(<decimal|float> 0X3eA3.4Eb2p+45); // @output 5.6419222224581427E17
+
+    io:println(<decimal|float> 0X3eA3.4Eb2P-45); // @output 4.55750847651315E-10
+
+    io:println(<decimal|float> 0X.4Eb2p+45); // @output 1.0815801393152E13
+
+    io:println(<decimal|float> 0X.4Eb2P-45); // @output 8.736934786757189E-15
+}
+
+Test-Case: error
+Description: Test the basic type when the floating point literal is a HexFloatingPointLiteral
+Labels: decimal, HexFloatingPointLiteral, int
+
+function errorFunction() {
+    decimal _ = 0x3eA3p34; // @error expected 'decimal', found 'float'
+    decimal _ = 0x3eA3p+34; // @error expected 'decimal', found 'float'
+    decimal _ = 0X3eA3P-34; // @error expected 'decimal', found 'float'
+    decimal _ = 0x3eA3.4Eb2; // @error expected 'decimal', found 'float'
+    decimal _ = 0x.4Eb2; // @error expected 'decimal', found 'float'
+    decimal _ = 0x4Eb2.; // @error expected 'decimal', found 'float'
+    decimal _ = 0x3eA3.4Eb2p45; // @error expected 'decimal', found 'float'
+    decimal _ = 0x.4Eb2p45; // @error expected 'decimal', found 'float'
+    decimal _ = 0x3eA3.4Eb2p+45; // @error expected 'decimal', found 'float'
+    decimal _ = 0x.4Eb2p-45; // @error expected 'decimal', found 'float'
+    int _ = 0x3eA3p34; // @error expected 'int', found 'float'
+}
+
+Test-Case: output
+Description: Test HexFloatingPointLiteral with return statement.
+Labels: HexFloatingPointLiteral, return-stmt, union-type
+
+function init() {
+    io:println(printHexFloatingPoint13()); // @output 16035.0
+
+    io:println(printHexFloatingPoint1()); // @output 2.7547920236544E14
+
+    io:println(printHexFloatingPoint2()); // @output 2.7547920236544E14
+
+    io:println(printHexFloatingPoint3()); // @output 9.333598427474499E-7
+
+    io:println(printHexFloatingPoint4()); // @output 16035.307403564453
+
+    io:println(printHexFloatingPoint5()); // @output 0.307403564453125
+
+    io:println(printHexFloatingPoint6()); // @output 20146.0
+
+    io:println(printHexFloatingPoint7()); // @output 1.0815801393152E13
+
+    io:println(printHexFloatingPoint8()); // @output 5.6419222224581427E17
+
+    io:println(printHexFloatingPoint9()); // @output 5.6418140644442112E17
+
+    io:println(printHexFloatingPoint10()); // @output 5.6419222224581427E17
+
+    io:println(printHexFloatingPoint11()); // @output 8.736934786757189E-15
+
+    io:println(printHexFloatingPoint12()); // @output 4.5574211071652826E-10
+}
+
+function printHexFloatingPoint13() returns float|decimal {
+    return 0x3eA3;
+}
+
+function printHexFloatingPoint1() returns float|decimal {
+    return 0x3eA3p34;
+}
+
+function printHexFloatingPoint2() returns float|decimal {
+    return 0x3eA3p+34;
+}
+
+function printHexFloatingPoint3() returns float|decimal {
+    return 0X3eA3p-34;
+}
+
+function printHexFloatingPoint4() returns float|decimal {
+    return 0x3eA3.4Eb2;
+}
+
+function printHexFloatingPoint5() returns float|decimal {
+    return 0X.4Eb2;
+}
+
+function printHexFloatingPoint6() returns float|decimal {
+    return 0X4Eb2.0;
+}
+
+function printHexFloatingPoint7() returns float|decimal {
+    return 0x.4Eb2P45;
+}
+
+function printHexFloatingPoint8() returns float|decimal {
+    return 0X3eA3.4Eb2p45;
+}
+
+function printHexFloatingPoint9() returns float|decimal {
+    return 0X3eA3.0p45;
+}
+
+function printHexFloatingPoint10() returns float|decimal {
+    return 0x3eA3.4Eb2p+45;
+}
+
+function printHexFloatingPoint11() returns float|decimal {
+    return 0x.4Eb2P-45;
+}
+
+function printHexFloatingPoint12() returns float|decimal {
+    return 0X3eA3.0p-45;
+}
+
+Test-Case: output
+Description: Test HexFloatingPointLiteral with return statement using variable reference.
+Labels: HexFloatingPointLiteral, return-stmt, union-type
+
+function init() {
+    io:println(printFloatingPoint(0x3eA3)); // @output 16035.0
+
+    io:println(printFloatingPoint(0x3eA3p34)); // @output 2.7547920236544E14
+
+    io:println(printFloatingPoint(0x3eA3P34)); // @output 2.7547920236544E14
+
+    io:println(printFloatingPoint(0X3eA3p34)); // @output 2.7547920236544E14
+
+    io:println(printFloatingPoint(0X3eA3P34)); // @output 2.7547920236544E14
+
+    io:println(printFloatingPoint(0x3eA3p+34)); // @output 2.7547920236544E14
+
+    io:println(printFloatingPoint(0x3eA3P-34)); // @output 9.333598427474499E-7
+
+    io:println(printFloatingPoint(0X3eA3p+34)); // @output 2.7547920236544E14
+
+    io:println(printFloatingPoint(0X3eA3P-34)); // @output 9.333598427474499E-7
+
+
+    io:println(printFloatingPoint(0x3eA3.4Eb2)); // @output 16035.307403564453
+
+    io:println(printFloatingPoint(0x.4Eb2)); // @output 0.307403564453125
+
+    io:println(printFloatingPoint(0X3eA3.4Eb2)); // @output 16035.307403564453
+
+    io:println(printFloatingPoint(0X.4Eb2)); // @output 0.307403564453125
+
+
+    io:println(printFloatingPoint(0x3eA3.4Eb2p45)); // @output 5.6419222224581427E17
+
+    io:println(printFloatingPoint(0x3eA3.4Eb2P45)); // @output 5.6419222224581427E17
+
+    io:println(printFloatingPoint(0x.4Eb2p45)); // @output 1.0815801393152E13
+
+    io:println(printFloatingPoint(0x.4Eb2P45)); // @output 1.0815801393152E13
+
+    io:println(printFloatingPoint(0X3eA3.4Eb2p45)); // @output 5.6419222224581427E17
+
+    io:println(printFloatingPoint(0X3eA3.4Eb2P45)); // @output 5.6419222224581427E17
+
+    io:println(printFloatingPoint(0X.4Eb2p45)); // @output 1.0815801393152E13
+
+    io:println(printFloatingPoint(0X.4Eb2P45)); // @output 1.0815801393152E13
+
+
+    io:println(printFloatingPoint(0x3eA3.4Eb2p+45)); // @output 5.6419222224581427E17
+
+    io:println(printFloatingPoint(0x3eA3.4Eb2P-45)); // @output 4.55750847651315E-10
+
+    io:println(printFloatingPoint(0x.4Eb2p+45)); // @output 1.0815801393152E13
+
+    io:println(printFloatingPoint(0x.4Eb2P-45)); // @output 8.736934786757189E-15
+
+    io:println(printFloatingPoint(0X3eA3.4Eb2p+45)); // @output 5.6419222224581427E17
+
+    io:println(printFloatingPoint(0X3eA3.4Eb2P-45)); // @output 4.55750847651315E-10
+
+    io:println(printFloatingPoint(0X.4Eb2p+45)); // @output 1.0815801393152E13
+
+    io:println(printFloatingPoint(0X.4Eb2P-45)); // @output 8.736934786757189E-15
+}
+
+
+function printFloatingPoint(float|decimal x) returns float|decimal {
+    return x;
+}
+
+Test-Case: output
+Description: Test HexFloatingPointLiteral with toBalString().
+Labels: HexFloatingPointLiteral, value:toBalString
+
+function init() {
+    io:println((0x3eA3).toBalString()); // @output 16035
+
+    io:println((0x3eA3p34).toBalString()); // @output 2.7547920236544E14
+
+    io:println((0x3eA3P34).toBalString()); // @output 2.7547920236544E14
+
+    io:println((0X3eA3p34).toBalString()); // @output 2.7547920236544E14
+
+    io:println((0X3eA3P34).toBalString()); // @output 2.7547920236544E14
+
+    io:println((0x3eA3p+34).toBalString()); // @output 2.7547920236544E14
+
+    io:println((0x3eA3P-34).toBalString()); // @output 9.333598427474499E-7
+
+    io:println((0X3eA3p+34).toBalString()); // @output 2.7547920236544E14
+
+    io:println((0X3eA3P-34).toBalString()); // @output 9.333598427474499E-7
+
+
+    io:println((0x3eA3.4Eb2).toBalString()); // @output 16035.307403564453
+
+    io:println((0x.4Eb2).toBalString()); // @output 0.307403564453125
+
+    io:println((0X3eA3.4Eb2).toBalString()); // @output 16035.307403564453
+
+    io:println((0X.4Eb2).toBalString()); // @output 0.307403564453125
+
+
+    io:println((0x3eA3.4Eb2p45).toBalString()); // @output 5.6419222224581427E17
+
+    io:println((0x3eA3.4Eb2P45).toBalString()); // @output 5.6419222224581427E17
+
+    io:println((0x.4Eb2p45).toBalString()); // @output 1.0815801393152E13
+
+    io:println((0x.4Eb2P45).toBalString()); // @output 1.0815801393152E13
+
+    io:println((0X3eA3.4Eb2p45).toBalString()); // @output 5.6419222224581427E17
+
+    io:println((0X3eA3.4Eb2P45).toBalString()); // @output 5.6419222224581427E17
+
+    io:println((0X.4Eb2p45).toBalString()); // @output 1.0815801393152E13
+
+    io:println((0X.4Eb2P45).toBalString()); // @output 1.0815801393152E13
+
+
+    io:println((0x3eA3.4Eb2p+45).toBalString()); // @output 5.6419222224581427E17
+
+    io:println((0x3eA3.4Eb2P-45).toBalString()); // @output 4.55750847651315E-10
+
+    io:println((0x.4Eb2p+45).toBalString()); // @output 1.0815801393152E13
+
+    io:println((0x.4Eb2P-45).toBalString()); // @output 8.736934786757189E-15
+
+    io:println((0X3eA3.4Eb2p+45).toBalString()); // @output 5.6419222224581427E17
+
+    io:println((0X3eA3.4Eb2P-45).toBalString()); // @output 4.55750847651315E-10
+
+    io:println((0X.4Eb2p+45).toBalString()); // @output 1.0815801393152E13
+
+    io:println((0X.4Eb2P-45).toBalString()); // @output 8.736934786757189E-15
+}
+
+Test-Case: output
+Description: Test HexFloatingPointLiteral with toString().
+Labels: HexFloatingPointLiteral, value:toString
+
+function init() {
+
+    io:println((0x3eA3p34).toString()); // @output 2.7547920236544E14
+
+    io:println((0x3eA3P34).toString()); // @output 2.7547920236544E14
+
+    io:println((0X3eA3p34).toString()); // @output 2.7547920236544E14
+
+    io:println((0X3eA3P34).toString()); // @output 2.7547920236544E14
+
+    io:println((0x3eA3p+34).toString()); // @output 2.7547920236544E14
+
+    io:println((0x3eA3P-34).toString()); // @output 9.333598427474499E-7
+
+    io:println((0X3eA3p+34).toString()); // @output 2.7547920236544E14
+
+    io:println((0X3eA3P-34).toString()); // @output 9.333598427474499E-7
+
+
+    io:println((0x3eA3.4Eb2).toString()); // @output 16035.307403564453
+
+    io:println((0x.4Eb2).toString()); // @output 0.307403564453125
+
+    io:println((0X3eA3.4Eb2).toString()); // @output 16035.307403564453
+
+    io:println((0X.4Eb2).toString()); // @output 0.307403564453125
+
+
+    io:println((0x3eA3.4Eb2p45).toString()); // @output 5.6419222224581427E17
+
+    io:println((0x3eA3.4Eb2P45).toString()); // @output 5.6419222224581427E17
+
+    io:println((0x.4Eb2p45).toString()); // @output 1.0815801393152E13
+
+    io:println((0x.4Eb2P45).toString()); // @output 1.0815801393152E13
+
+    io:println((0X3eA3.4Eb2p45).toString()); // @output 5.6419222224581427E17
+
+    io:println((0X3eA3.4Eb2P45).toString()); // @output 5.6419222224581427E17
+
+    io:println((0X.4Eb2p45).toString()); // @output 1.0815801393152E13
+
+    io:println((0X.4Eb2P45).toString()); // @output 1.0815801393152E13
+
+
+    io:println((0x3eA3.4Eb2p+45).toString()); // @output 5.6419222224581427E17
+
+    io:println((0x3eA3.4Eb2P-45).toString()); // @output 4.55750847651315E-10
+
+    io:println((0x.4Eb2p+45).toString()); // @output 1.0815801393152E13
+
+    io:println((0x.4Eb2P-45).toString()); // @output 8.736934786757189E-15
+
+    io:println((0X3eA3.4Eb2p+45).toString()); // @output 5.6419222224581427E17
+
+    io:println((0X3eA3.4Eb2P-45).toString()); // @output 4.55750847651315E-10
+
+    io:println((0X.4Eb2p+45).toString()); // @output 1.0815801393152E13
+
+    io:println((0X.4Eb2P-45).toString()); // @output 8.736934786757189E-15
+}
+
+Test-Case: output
+Description: Test HexFloatingPointLiteral with function call.
+Labels: decimal, float, function-call-expr, HexFloatingPointLiteral
+
+function init() {
+    printFloatingPoint(0x3eA3); // @output 16035.0
+
+    printFloatingPoint(0x3eA3p34); // @output 2.7547920236544E14
+
+    printFloatingPoint(0x3eA3P34); // @output 2.7547920236544E14
+
+    printFloatingPoint(0X3eA3p34); // @output 2.7547920236544E14
+
+    printFloatingPoint(0X3eA3P34); // @output 2.7547920236544E14
+
+    printFloatingPoint(0x3eA3p+34); // @output 2.7547920236544E14
+
+    printFloatingPoint(0x3eA3P-34); // @output 9.333598427474499E-7
+
+    printFloatingPoint(0X3eA3p+34); // @output 2.7547920236544E14
+
+    printFloatingPoint(0X3eA3P-34); // @output 9.333598427474499E-7
+
+
+    printFloatingPoint(0x3eA3.4Eb2); // @output 16035.307403564453
+
+    printFloatingPoint(0x.4Eb2); // @output 0.307403564453125
+
+    printFloatingPoint(0X3eA3.4Eb2); // @output 16035.307403564453
+
+    printFloatingPoint(0X.4Eb2); // @output 0.307403564453125
+
+
+    printFloatingPoint(0x3eA3.4Eb2p45); // @output 5.6419222224581427E17
+
+    printFloatingPoint(0x3eA3.4Eb2P45); // @output 5.6419222224581427E17
+
+    printFloatingPoint(0x.4Eb2p45); // @output 1.0815801393152E13
+
+    printFloatingPoint(0x.4Eb2P45); // @output 1.0815801393152E13
+
+    printFloatingPoint(0X3eA3.4Eb2p45); // @output 5.6419222224581427E17
+
+    printFloatingPoint(0X3eA3.4Eb2P45); // @output 5.6419222224581427E17
+
+    printFloatingPoint(0X.4Eb2p45); // @output 1.0815801393152E13
+
+    printFloatingPoint(0X.4Eb2P45); // @output 1.0815801393152E13
+
+
+    printFloatingPoint(0x3eA3.4Eb2p+45); // @output 5.6419222224581427E17
+
+    printFloatingPoint(0x3eA3.4Eb2P-45); // @output 4.55750847651315E-10
+
+    printFloatingPoint(0x.4Eb2p+45); // @output 1.0815801393152E13
+
+    printFloatingPoint(0x.4Eb2P-45); // @output 8.736934786757189E-15
+
+    printFloatingPoint(0X3eA3.4Eb2p+45); // @output 5.6419222224581427E17
+
+    printFloatingPoint(0X3eA3.4Eb2P-45); // @output 4.55750847651315E-10
+
+    printFloatingPoint(0X.4Eb2p+45); // @output 1.0815801393152E13
+
+    printFloatingPoint(0X.4Eb2P-45); // @output 8.736934786757189E-15
+}
+
+function printFloatingPoint(float|decimal x) {
+    io:println(x);
+}
+
+Test-Case: output
+Description: Test the basic type of HexFloatingPointLiteral.
+Labels: any, decimal, float, HexFloatingPointLiteral, int, is-expr, union-type
+
+function init() {
+     isCheck(0x3eA3p34); // @output false
+                         // @output true
+                         // @output false
+                         // @output true
+
+     isCheck(0X3eA3p34); // @output false
+                         // @output true
+                         // @output false
+                         // @output true
+
+     isCheck(0X3eA3P34); // @output false
+                         // @output true
+                         // @output false
+                         // @output true
+
+     isCheck(0x3eA3P34); // @output false
+                         // @output true
+                         // @output false
+                         // @output true
+
+     isCheck(0x3eA3p+34); // @output false
+                          // @output true
+                          // @output false
+                          // @output true
+
+     isCheck(0x3eA3P-34); // @output false
+                          // @output true
+                          // @output false
+                          // @output true
+
+     isCheck(0X3eA3p+34); // @output false
+                          // @output true
+                          // @output false
+                          // @output true
+
+     isCheck(0X3eA3P-34); // @output false
+                          // @output true
+                          // @output false
+                          // @output true
+
+     isCheck(0x3eA3.4Eb2); // @output false
+                           // @output true
+                           // @output false
+                           // @output true
+
+     isCheck(0X.4Eb2); // @output false
+                       // @output true
+                       // @output false
+                       // @output true
+
+     isCheck(0x3eA3.0); // @output false
+                        // @output true
+                        // @output false
+                        // @output true
+
+     isCheck(0x3eA3.4Eb2p45); // @output false
+                              // @output true
+                              // @output false
+                              // @output true
+
+     isCheck(0x.4Eb2P45); // @output false
+                          // @output true
+                          // @output false
+                          // @output true
+
+     isCheck(0x3eA3.0p12); // @output false
+                           // @output true
+                           // @output false
+                           // @output true
+
+     isCheck(0x3eA3.4Eb2p+45); // @output false
+                               // @output true
+                               // @output false
+                               // @output true
+
+     isCheck(0x.4Eb2P-45); // @output false
+                           // @output true
+                           // @output false
+                           // @output true
+
+     isCheck(0x3eA3.0p-12); // @output false
+                            // @output true
+                            // @output false
+                            // @output true
+}
+
+function isCheck(any x) {
+    io:println(x is int);
+    io:println(x is float);
+    io:println(x is decimal);
+    io:println(x is decimal|float);
+}
+
+Test-Case: output
+Description: Test hex floating point literal with floating point type descriptor.
+Labels: decimal, float, HexFloatingPointLiteral, union-type
+
+function init() {
+    float|decimal c = 0x240aDfBcEe;
+    io:println(c); // @output 1.5480125771E11
+
+    c = 0x240aDfBcEep4;
+    io:println(c); // @output 2.47682012336E12
+
+    c = 0x240aDfBcEeP4;
+    io:println(c); // @output 2.47682012336E12
+
+    c = 0x240aDfBcEep+4;
+    io:println(c); // @output 2.47682012336E12
+
+    c = 0x240aDfBcEeP-4;
+    io:println(c); // @output 9.675078606875E9
+
+    c = 0x240aDfBcEep-0;
+    io:println(c); // @output 1.5480125771E11
+
+    c = 0x240aDfBcEeP+0;
+    io:println(c); // @output 1.5480125771E11
+
+    c = 0x240aDfBcEep-324;
+    io:println(c); // @output 4.529558674359502E-87
+
+    c = 0x240aDfBcEeP+205;
+    io:println(c); // @output 7.960192970026859E72
+
+    c = 0X0.0;
+    io:println(c); // @output 0.0
+
+    c = 0X9.9;
+    io:println(c); // @output 9.5625
+
+    c = 0X206.50743;
+    io:println(c); // @output 518.3142728805542
+
+    c = 0Xa.a;
+    io:println(c); // @output 10.625
+
+    c = 0XA.A;
+    io:println(c); // @output 10.625
+
+    c = 0XA.a;
+    io:println(c); // @output 10.625
+
+    c = 0Xa.A;
+    io:println(c); // @output 10.625
+
+    c = 0XaEbcD.0EaD;
+    io:println(c); // @output 715725.0573272705
+
+    c = 0XaE04bcD.0E91aD;
+    io:println(c); // @output 1.8247162905691034E8
+
+    c = 0X.0;
+    io:println(c); // @output 0.0
+
+    c = 0X.1;
+    io:println(c); // @output 0.0625
+
+    c = 0X.2345;
+    io:println(c); // @output 0.1377716064453125
+
+    c = 0X.A;
+    io:println(c); // @output 0.625
+
+    c = 0X.a;
+    io:println(c); // @output 0.625
+
+    c = 0x.aBdECFF;
+    io:println(c); // @output 0.671368595212698
+
+    c = 0x.aBd0E12C9FF4;
+    io:println(c); // @output 0.6711559995600993
+
+    c = 0X.2p+0;
+    io:println(c); // @output 0.125
+
+    c = 0X.AP-0;
+    io:println(c); // @output 0.625
+
+    c = 0X.ap-0;
+    io:println(c); // @output 0.625
+
+    c = 0x.263567p+46;
+    io:println(c); // @output 1.0502700793856E13
+
+    c = 0X.AEDP-46;
+    io:println(c); // @output 9.704043124614259E-15
+
+    c = 0X.aedp-46;
+    io:println(c); // @output 9.704043124614259E-15
+
+    c = 0x.1BeAP+948;
+    io:println(c); // @output 2.594292682612851E284
+
+    c = 0X.0EfCap-456;
+    io:println(c); // @output 3.1462367457512917E-139
+
+    c = 0x0.0p-0;
+    io:println(c); // @output 0.0
+
+    c = 0x0.0P+0;
+    io:println(c); // @output 0.0
+
+    c = 0x9.4p-1;
+    io:println(c); // @output 4.625
+
+    c = 0x9546.4748p+126;
+    io:println(c); // @output 3.250911279637454E42
+
+    c = 0xa.aP-1;
+    io:println(c); // @output 5.3125
+
+    c = 0Xa.ap+1;
+    io:println(c); // @output 21.25
+
+    c = 0xA.aP-12;
+    io:println(c); // @output 0.002593994140625
+
+    c = 0XA.ap+12;
+    io:println(c); // @output 43520.0
+
+    c = 0xaeb.acdfP-302;
+    io:println(c); // @output 3.431057809225094E-88
+
+    c = 0xABC.CEEFFp+302;
+    io:println(c); // @output 2.2397685993041007E94
+
+    c = 0xAbC.0eEfFp-453;
+    io:println(c); // @output 1.1815113934486016E-133
+
+    c = 0xAb12C.0e9E1f0FP+45;
+    io:println(c); // @output 2.465425448163409E19
+
+    c = 0x3e3.0;
+    io:println(c); // @output 995.0
+
+    c = 0x3e3.0p23;
+    io:println(c); // @output 8.34666496E9
+
+    c = 0x3e3.0P23;
+    io:println(c); // @output 8.34666496E9
+
+    c = 0x3e3.0p+23;
+    io:println(c); // @output 8.34666496E9
+
+    c = 0x3e3.0p-23;
+    io:println(c); // @output 1.1861324310302734E-4
+
+    c = 0x3e3.0P+23;
+    io:println(c); // @output 8.34666496E9
+
+    c = 0x3e3.0P-23;
+    io:println(c); // @output 1.1861324310302734E-4
+}
+
+Test-Case: error
+Description: Test hex indicator with float type descriptor.
+Labels: float, HexFloatingPointLiteral
+
+function errorFunction() {
+    float _ = 0xFFFFFFFFFFFFFFFF; // @error value is out of range for 'float'
+    float _ = 0xabc435de769FEAB0; // @error value is out of range for 'float'
+    float _ = 0xaaaaaaaaaaaaaaa0; // @error value is out of range for 'float'
+    float _ = 0xAAAAAAAAAAAAAAA0; // @error value is out of range for 'float'
+}
+
+Test-Case: output
+Description: Test hex floating point literal with float type descriptor.
+Labels: float, HexFloatingPointLiteral
+
+function init() {
+
+    float c = 0x0;
+    io:println(c); // @output 0.0
+
+    c = 0X9;
+    io:println(c); // @output 9.0
+
+    c = 0X2409;
+    io:println(c); // @output 9225.0
+
+    c = 0X240af;
+    io:println(c); // @output 147631.0
+
+    c = 0X240AF;
+    io:println(c); // @output 147631.0
+
+    c = 0x240aDfBcEe;
+    io:println(c); // @output 1.5480125771E11
+
+    c = 0x240aDfBcEep4;
+    io:println(c); // @output 2.47682012336E12
+
+    c = 0x240aDfBcEeP4;
+    io:println(c); // @output 2.47682012336E12
+
+    c = 0x240aDfBcEep+4;
+    io:println(c); // @output 2.47682012336E12
+
+    c = 0x240aDfBcEeP-4;
+    io:println(c); // @output 9.675078606875E9
+
+    c = 0x240aDfBcEep-0;
+    io:println(c); // @output 1.5480125771E11
+
+    c = 0x240aDfBcEeP+0;
+    io:println(c); // @output 1.5480125771E11
+
+    c = 0x240aDfBcEep-324;
+    io:println(c); // @output 4.529558674359502E-87
+
+    c = 0x240aDfBcEeP+205;
+    io:println(c); // @output 7.960192970026859E72
+
+    c = 0X0.0;
+    io:println(c); // @output 0.0
+
+    c = 0X9.9;
+    io:println(c); // @output 9.5625
+
+    c = 0X206.50743;
+    io:println(c); // @output 518.3142728805542
+
+    c = 0Xa.a;
+    io:println(c); // @output 10.625
+
+    c = 0XA.A;
+    io:println(c); // @output 10.625
+
+    c = 0XA.a;
+    io:println(c); // @output 10.625
+
+    c = 0Xa.A;
+    io:println(c); // @output 10.625
+
+    c = 0XaEbcD.0EaD;
+    io:println(c); // @output 715725.0573272705
+
+    c = 0XaE04bcD.0E91aD;
+    io:println(c); // @output 1.8247162905691034E8
+
+    c = 0X.0;
+    io:println(c); // @output 0.0
+
+    c = 0X.1;
+    io:println(c); // @output 0.0625
+
+    c = 0X.2345;
+    io:println(c); // @output 0.1377716064453125
+
+    c = 0X.A;
+    io:println(c); // @output 0.625
+
+    c = 0X.a;
+    io:println(c); // @output 0.625
+
+    c = 0x.aBdECFF;
+    io:println(c); // @output 0.671368595212698
+
+    c = 0x.aBd0E12C9FF4;
+    io:println(c); // @output 0.6711559995600993
+
+    c = 0X.2p+0;
+    io:println(c); // @output 0.125
+
+    c = 0X.AP-0;
+    io:println(c); // @output 0.625
+
+    c = 0X.ap-0;
+    io:println(c); // @output 0.625
+
+    c = 0x.263567p+46;
+    io:println(c); // @output 1.0502700793856E13
+
+    c = 0X.AEDP-46;
+    io:println(c); // @output 9.704043124614259E-15
+
+    c = 0X.aedp-46;
+    io:println(c); // @output 9.704043124614259E-15
+
+    c = 0x.1BeAP+948;
+    io:println(c); // @output 2.594292682612851E284
+
+    c = 0X.0EfCap-456;
+    io:println(c); // @output 3.1462367457512917E-139
+
+    c = 0x0.0p-0;
+    io:println(c); // @output 0.0
+
+    c = 0x0.0P+0;
+    io:println(c); // @output 0.0
+
+    c = 0x9.4p-1;
+    io:println(c); // @output 4.625
+
+    c = 0x9546.4748p+126;
+    io:println(c); // @output 3.250911279637454E42
+
+    c = 0xa.aP-1;
+    io:println(c); // @output 5.3125
+
+    c = 0Xa.ap+1;
+    io:println(c); // @output 21.25
+
+    c = 0xA.aP-12;
+    io:println(c); // @output 0.002593994140625
+
+    c = 0XA.ap+12;
+    io:println(c); // @output 43520.0
+
+    c = 0xaeb.acdfP-302;
+    io:println(c); // @output 3.431057809225094E-88
+
+    c = 0xABC.CEEFFp+302;
+    io:println(c); // @output 2.2397685993041007E94
+
+    c = 0xAbC.0eEfFp-453;
+    io:println(c); // @output 1.1815113934486016E-133
+
+    c = 0xAb12C.0e9E1f0FP+45;
+    io:println(c); // @output 2.465425448163409E19
+}
+
+Test-Case: error
+Description: Test hex floating point literal with decimal type descriptor.
+Labels: decimal, HexFloatingPointLiteral
+
+function errorFunction() {
+    decimal _ = 0x1.0fp+10; // @error hex floating point literal is incompatible  with 'decimal'
+
+    decimal _ = 0x1p-5; // @error hex floating point literal is incompatible  with 'decimal'
+
+    decimal _ = 0x1.0; // @error hex floating point literal is incompatible  with 'decimal'
+}
+
+Test-Case: error
+Description: Test out of range hex floating point literal with decimal type descriptor.
+Labels: decimal, HexFloatingPointLiteral
+
+function errorFunction() {
+    decimal _ = 0x1.0fffffffffffffp+1024; // @error '0x1.0fffffffffffffp+1024' is out of range for 'float'
+
+    decimal _ = 0x1p-1075; // @error '0x1p-1075' is out of range for 'float'
+}
+
+Test-Case: output
+Description: Test floating point literal max and min with float type descriptor.
+Labels: float, HexFloatingPointLiteral
+
+function init() {
+    float d = 1.7976931348623157E+308;
+    io:println(d); // @output 1.7976931348623157E308
+
+    d = 4.94065645841246544E-324;
+    io:println(d); // @output 4.9E-324
+
+    d = 0x1.0fffffffffffffp+1023;
+    io:println(d); // @output 9.550244778956053E307
+
+    d = 0x1p-1074;
+    io:println(d); // @output 4.9E-324
+
+    d = 0x0p-1074;
+    io:println(d); // @output 0.0
+
+    d = 0x0p-1075;
+    io:println(d); // @output 0.0
+}
+
+Test-Case: error
+Description: Test invalid hex floating point literal.
+Fail-Issue: ballerina-platform/ballerina-lang#39557
+Labels: decimal, float, HexFloatingPointLiteral, union-type
+
+function errorFunction() {
+    float|decimal _ = 0x 3eA3.4Eb2p+45; // @error invalid HexFloatingPointLiteral
+
+    float|decimal _ = 0x=4Eb2P-45; // @error invalid HexFloatingPointLiteral
+
+    float|decimal _ = 0x:4Eb2P-45; // @error invalid HexFloatingPointLiteral
+
+    float|decimal _ = 0x,4Eb2P-45; // @error invalid HexFloatingPointLiteral
+
+    float|decimal _ = 0x 3eA3 .4Eb2 p45; // @error invalid HexFloatingPointLiteral
+
+    float|decimal _ = 0x3eA3 .4Eb2; // @error invalid HexFloatingPointLiteral
+}
+
+Test-Case: parser-error
+Description: Test invalid hex floating point literal.
+Labels: decimal, float, HexFloatingPointLiteral, union-type
+
+function errorFunction() {
+    float|decimal _ = 3eA3p34; // @error invalid HexFloatingPointLiteral due to missing HexIndicator
+
+    float|decimal _ = 345eA; // @error invalid HexFloatingPointLiteral due to missing HexIndicator
+
+    float|decimal _ = 0x3 eA3p34; // @error invalid HexFloatingPointLiteral due to unnecessary space
+
+    float|decimal _ = 0X3eA3 p34; // @error invalid HexFloatingPointLiteral due to unnecessary space
+
+    float|decimal _ = 0X3eA3p 34; // @error invalid HexFloatingPointLiteral due to unnecessary space
+
+    float|decimal _ = 0X3eA3pAf; // @error invalid HexFloatingPointLiteral due to invalid HexExponent
+
+    float|decimal _ = 0aBV6p34; // @error invalid HexFloatingPointLiteral due to invalid HexNumber
+
+    float|decimal _ = 0XVVzp34; // @error invalid HexFloatingPointLiteral due to invalid HexNumber
+
+    float|decimal _ = 0X3eApVB; // @error invalid HexFloatingPointLiteral due to invalid HexExponent
+
+    float|decimal _ = 0x3eA3p++34; // @error invalid HexFloatingPointLiteral due to invalid HexExponent
+
+    float|decimal _ = 0x3eA3p+3dS4; // @error invalid HexFloatingPointLiteral due to invalid HexExponent
+
+    float|decimal _ = 0x3eA3p--34; // @error invalid HexFloatingPointLiteral due to invalid HexExponent
+
+    float|decimal _ = 0x3eA3p-+34; // @error invalid HexFloatingPointLiteral due to invalid HexExponent
+
+    float|decimal _ = 0x3eA3p.34; // @error invalid HexFloatingPointLiteral due to invalid sign in HexExponent
+
+    float|decimal _ = 0x3eA3p+ 34; // @error invalid HexFloatingPointLiteral due to unnecessary space
+
+    float|decimal _ = 0x3eA3p+34f; // @error invalid HexFloatingPointLiteral due to unnecessary suffix
+
+    float|decimal _ = 0x3eA3p+34F; // @error invalid HexFloatingPointLiteral due to unnecessary suffix
+
+    float|decimal _ = 0x3eA3p+34D; // @error invalid HexFloatingPointLiteral due to unnecessary suffix
+
+    float|decimal _ = 0x3eA3p+34d; // @error invalid HexFloatingPointLiteral due to unnecessary suffix
+
+    float|decimal _ = 0x3eA3H-34; // @error invalid HexFloatingPointLiteral
+
+    float|decimal _ = 8x3eA3p67; // @error invalid HexFloatingPointLiteral due to invalid HexIndicator
+
+    float|decimal _ = 0Z3eA3p67; // @error invalid HexFloatingPointLiteral due to invalid HexIndicator
+
+    float|decimal _ = 0x3eA3. 4Eb2; // @error invalid HexFloatingPointLiteral due to unnecessary space
+
+    float|decimal _ = 0x3e3=4Eb2p45; // @error invalid HexFloatingPointLiteral
+
+    float|decimal _ = 0x4E,b2P-45; // @error invalid HexFloatingPointLiteral
+
+    float|decimal _ = 0x4E:b2P-45; // @error invalid HexFloatingPointLiteral
+
+    float|decimal _ = .0x3e3; // @error invalid HexFloatingPointLiteral
+
+    float|decimal _ = 0x3e3 .0p23; // @error invalid HexFloatingPointLiteral due to unnecessary space
+
+    float|decimal _ = 0x3e3. p23; // @error invalid HexFloatingPointLiteral due to unnecessary space
+
+    float|decimal _ = 0x 3eA3p34; // @error invalid HexFloatingPointLiteral due to missing hex number after hex indicator
+
+    float|decimal _ = 0x; // @error invalid HexFloatingPointLiteral due to missing hex number after hex indicator
+
+    float|decimal _ = 0X; // @error invalid HexFloatingPointLiteral due to missing hex number after hex indicator
+
+    float|decimal _ = 0Xp34; // @error invalid HexFloatingPointLiteral due to missing hex number after hex indicator
+
+    float|decimal _ = 0x3eA3p-; // @error invalid HexFloatingPointLiteral due to missing digit after exponent indicator
+
+    float|decimal _ = 0x3eA3p+; // @error invalid HexFloatingPointLiteral due to missing digit after exponent indicator
+
+    float|decimal _ = 0x3eA3p; // @error invalid HexFloatingPointLiteral due to missing digit after exponent indicator
+
+    float|decimal _ = 0X3eAp; // @error invalid HexFloatingPointLiteral
+
+    float|decimal _ = 0x3eA3p=34; // @error invalid HexFloatingPointLiteral
+
+    float|decimal _ = 0x3eA3p:34; // @error invalid HexFloatingPointLiteral
+
+    float|decimal _ = 0x3eA3p,34; // @error invalid HexFloatingPointLiteral
 }
