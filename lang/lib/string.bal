@@ -235,7 +235,7 @@ public type RegExp regexp:RegExp;
 # + str - the string
 # + re - the regular expression
 # + return - true if there is full match of `re` with `str`, and false otherwise
-public function matches(string str, RegExp re) returns boolean = external;
+public isolated function matches(string str, RegExp re) returns boolean = external;
 
 # Tests whether there is a match of a regular expression somewhere within a string.
 # This is equivalent to `regexp:find(re, str, startIndex) != ()`.
@@ -243,4 +243,4 @@ public function matches(string str, RegExp re) returns boolean = external;
 # + str - the string to be matched
 # + re - the regular expression
 # + return - true if the is a match of `re` somewhere within `str`, otherwise false
-public function includesMatch(string str, RegExp re, int startIndex = 0) returns boolean = external;
+public isolated function includesMatch(string str, RegExp re, int startIndex = 0) returns boolean = external;
