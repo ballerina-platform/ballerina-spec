@@ -24,3 +24,17 @@
 # + s - string representing a boolean value
 # + return - boolean that `s` represents, or an error if there is no such boolean
 public isolated function fromString(string s) returns boolean|error = external;
+
+# Tests whether at least one of a number of boolean values is true.
+# 
+# + bs - boolean values to operate on
+# + return - true if one or more of its arguments are true and false otherwise;
+#    false if there are no arguments
+public isolated function some(boolean... bs) returns boolean = external;
+
+# Tests whether every one of a number of boolean values is true.
+# 
+# + bs - boolean values to operate on
+# + return - true if all of its arguments are true and false otherwise;
+#    true if there are no arguments
+public isolated function every(boolean... bs) returns boolean = external;
