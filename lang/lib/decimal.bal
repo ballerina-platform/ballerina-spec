@@ -34,6 +34,13 @@ public isolated function max(decimal x, decimal... xs) returns decimal = externa
 # + return - minimum value of `x` and all the `xs`.
 public isolated function min(decimal x, decimal... xs) returns decimal = external;
 
+# Average of one or more decimal values.
+# 
+# + x - first decimal value
+# + xs - other decimal values
+# + return - average value of `x` and all the `xs`.
+public isolated function avg(decimal x, decimal... xs) returns decimal = external;
+
 # IEEE abs operation.
 #
 # + x - decimal value to operate on
