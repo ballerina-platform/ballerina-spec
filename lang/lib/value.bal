@@ -14,6 +14,12 @@
 // specific language governing permissions and limitations
 // under the License.
 
+# A type parameter that is a subtype of `any|error`.
+# Has the special semantic that when used in a declaration
+# all uses in the declaration must refer to same type.
+@typeParam
+type Type any|error;
+
 # The type of value to which `clone` and `cloneReadOnly` can be applied.
 public type Cloneable readonly|xml|Cloneable[]|map<Cloneable>|table<map<Cloneable>>;
 
@@ -204,3 +210,26 @@ public isolated function fromJsonStringWithType(string str, typedesc<anydata> t 
 # - otherwise, the merge fails
 # If the merge fails, then `j1` is unchanged.
 public isolated function mergeJson(json j1, json j2) returns json|error = external;
+
+# Returns the number of arguments.
+# This is useful with aggregated variables created by `collect` and `group by` clauses.
+#
+# + vs - the arguments
+# + return - the number of arguments
+public isolated function count(any|error... vs) returns int = external;
+
+# Returns the first of its arguments.
+# This is useful with aggregated variables created by `collect` and `group by` clauses.
+#
+# + v - first argument
+# + vs - other arguments
+# + return - the first argument v
+public isolated function first(Type v, any|error... vs) returns Type = external;
+
+# Returns the last of its arguments.
+# This is useful with aggregated variables created by `collect` and `group by` clauses.
+#
+# + v - first argument
+# + vs - other arguments
+# + return - the last argument
+public isolated function last(Type v, Type... vs) returns Type = external;
