@@ -153,7 +153,9 @@ denoted by the hexadecimal numeral X</li>
 and is not a disallowed character;</li>
 <li><code>x..y</code> means any single Unicode character whose code point is
 greater than or equal to that of x and less than or equal to that of y</li>
-<li><code class="grammar">str</code> means the characters <code>str</code> literally</li>
+<li><code class="grammar">xyz</code> means the characters <code>xyz</code> literally</li>
+<li><code class="grammar">xyz</code><sub>NR</sub> means the characters <code>xyz</code> literally,
+and <code>xyz</code> is not a reserved keyword</li>
 <li><code>symbol </code>means a reference to production for the nonterminal
 <code>symbol</code></li>
 <li><code>x|y</code> means x or y</li>
@@ -6868,7 +6870,7 @@ resulting from binding typed-binding-pattern to <var>v</var>.</li>
 
 <section>
 <h4>Where clause</h4>
-<pre class="grammar">where-clause := <code>where</code> expression
+<pre class="grammar">where-clause := <code>where</code><sub>NR</sub> expression
 </pre>
 <p>
 A <code>where</code> clause is executed as follows:
@@ -6911,7 +6913,7 @@ E<sub>2</sub></code>.
 
 <section>
 <h4>Join clause</h4>
-<pre class="grammar">join-clause := [<code>outer</code>] <code>join</code> typed-binding-pattern <code>in</code> expression join-on-condition
+<pre class="grammar">join-clause := [<code>outer</code><sub>NR</sub>] <code>join</code><sub>NR</sub> typed-binding-pattern <code>in</code> expression join-on-condition
 join-on-condition := <code>on</code> expression <code>equals</code> expression
 </pre>
 <p>
@@ -6989,7 +6991,7 @@ if the type that would be inferred usually for the variable would be
 <section>
 <h4>Limit clause</h4>
 <pre class="grammar">
-limit-clause := <code>limit</code> expression
+limit-clause := <code>limit</code><sub>NR</sub> expression
 </pre>
 <p>
 A <code>limit</code> clause limits the number of frames emitted by a query pipeline.
@@ -7018,7 +7020,7 @@ The static type of expression must be a subtype of <code>int</code>.
 <section>
 <h4>Order by clause</h4>
 <pre class="grammar">
-order-by-clause := <code>order</code> <code>by</code> order-key [<code>,</code> order-key]*
+order-by-clause := <code>order</code><sub>NR</sub> <code>by</code><sub>NR</sub> order-key [<code>,</code> order-key]*
 order-key := expression [order-direction]
 order-direction := <code>ascending</code> | <code>descending</code>
 </pre>
@@ -7129,7 +7131,7 @@ variable-reference-expr, and then rejected as semantically incorrect.
 
 <section>
 <h4>Group by clause</h4>
-<pre class="grammar">group-by-clause := <code>group</code> <code>by</code> grouping-key (<code>,</code> grouping-key)*
+<pre class="grammar">group-by-clause := <code>group</code><sub>NR</sub> <code>by</code><sub>NR</sub> grouping-key (<code>,</code> grouping-key)*
 grouping-key :=
    variable-name
    | inferable-type-descriptor variable-name <code>=</code> expression
@@ -7178,7 +7180,7 @@ for every other variable is <a href="#aggregated_variables">aggregated from</a>
 
 <section>
 <h4>Collect clause</h4>
-<pre class="grammar">collect-clause := <code>collect</code> expression
+<pre class="grammar">collect-clause := <code>collect</code><sub>NR</sub> expression
 </pre>
 
 <p>
@@ -7210,7 +7212,7 @@ contextually expected type for the query-collect-expr.
 <h4>Select clause</h4>
 
 <pre class="grammar">
-select-clause := <code>select</code> expression
+select-clause := <code>select</code><sub>NR</sub> expression
 </pre>
 <p>
 When a query-select expression is evaluated, the <code>select</code> clause is
@@ -7310,7 +7312,7 @@ a subtype of readonly.
 <section>
 <h4>On conflict clause</h4>
 <pre class="grammar">
-on-conflict-clause := <code>on</code> <code>conflict</code> expression
+on-conflict-clause := <code>on</code><sub>NR</sub> <code>conflict</code><sub>NR</sub> expression
 </pre>
 <p>
 During the execution of the select clause of query-select-expr that is
@@ -7550,9 +7552,9 @@ intermediate-action-clause :=
 from-action-clause := <code>from</code> typed-binding-pattern <code>in</code> action-or-expr
 let-action-clause := <code>let</code> let-action-var-decl [<code>,</code> let-action-var-decl]*
 let-action-var-decl := [annots] typed-binding-pattern <code>=</code> action-or-expr
-join-action-clause := [<code>outer</code>] <code>join</code> typed-binding-pattern <code>in</code> action-or-expr join-on-condition
-select-action-clause := <code>select</code> action-or-expr
-collect-action-clause := <code>collect</code> action-or-expr
+join-action-clause := [<code>outer</code><sub>NR</sub>] <code>join</code><sub>NR</sub> typed-binding-pattern <code>in</code> action-or-expr join-on-condition
+select-action-clause := <code>select</code><sub>NR</sub> action-or-expr
+collect-action-clause := <code>collect</code><sub>NR</sub> action-or-expr
 </pre>
 <p>
 A <code>query-action-or-expr</code> is a <code>query-expr</code> in which
@@ -11630,6 +11632,9 @@ more than one basic type..</p>
 <ol>
 <li>Query expressions now support grouping and aggregation, using new
 <code>group by</code> and <code>collect</code> clauses.</li>
+<li>Keywords that start clauses of a query expression, except for
+<code>from</code> and <code>let</code>, are no longer reserved (and so can be
+used as identifier names).</li>
 <li>Functions useful for aggregation have been added to langlib:
 <code>int:avg</code>, <code>float:avg</code>, <code>decimal:avg</code>,
 <code>boolean:some</code>, <code>boolean:every</code>, <code>value:count</code>,
