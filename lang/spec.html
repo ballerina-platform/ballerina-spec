@@ -5743,27 +5743,27 @@ contextually expected type for the expression comes from the static type
 required for the expression as specified below.
 </p>
 <p>
-If
+If the function-reference is an unqualified identifier
+<code><var>f</var></code>, the arg-list has a rest-arg and no positional-args,
+and the rest-arg is an aggregated-variable-reference of type T, then the
+function-reference is treated as referring to a function
+<code><var>f</var></code> in a module lang.M of the lang library, where M is
+selected as follows.
 </p>
 <ul>
-<li>the function-reference is an unqualified identifier <code><var>f</var></code>,</li>
-<li>the arg-list has no positional-args,</li>
-<li>the arg-list has a rest-arg,</li>
-<li>the rest-arg is an aggregated-variable-reference,</li>
-<li>the type of the aggregated-variable-reference is a subtype
-of <code><var>B</var>[]</code> for some basic type <code><var>B</var></code>, and</li>
-<li>there is a langlib module corresponding to <code><var>B</var></code> (as
-listed in the <a href="#lang_library_modules">Lang library modules</a> section)
-and that module has a function <code><var>f</var></code></li>
+<li>If T is a subtype of B[], where B is a basic type with with corresponding
+langlib module lang.B and the module lang.B contains a function
+<code><var>f</var></code>, then M is B. The module corresponding to each basic
+type is listed in the <a href="#lang_library_modules">Lang library modules</a>
+section.</li>
+<li>Otherwise, M is <code>value</code>.</li>
 </ul>
 <p>
-then the function-reference is treated as a reference to that langlib function.
-In this case, if the langlib function requires at least one argument, but the
-type of the aggregated-variable-reference allows an empty list, then the
-evaluation of the function-call-expr will first check whether the
-aggregated-variable-reference refers to an empty list, and, if so, the result of
-the function-call-expr will be nil; the return type of the langlib function will
-accordingly be unioned with nil.
+In this case, if the langlib function requires at least one argument, but T
+allows the empty list, then the evaluation of the function-call-expr will first
+check whether the aggregated-variable-reference refers to an empty list, and, if
+so, the result of the function-call-expr will be nil; the return type of the
+langlib function will accordingly be unioned with nil.
 </p>
 <pre
 class="grammar">positional-args := positional-arg (<code>,</code> positional-arg)*
@@ -5925,7 +5925,7 @@ library, where M is selected as follows.
 <ul>
 <li>If the static type of <code>expression</code> is a subtype of basic type
 with corresponding langlib module lang.B and the module lang.B contains a
-function <code>method-name</code> then M is B. The module corresponding to each
+function <code>method-name</code>, then M is B. The module corresponding to each
 basic type is listed in the <a href="#lang_library_modules">Lang library
 modules</a> section.</li>
 <li>Otherwise, M is <code>value</code>.</li>
