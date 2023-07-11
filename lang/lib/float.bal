@@ -71,6 +71,13 @@ public isolated function max(float... xs) returns float = external;
 # + return - minimum value of all the `xs`
 public isolated function min(float... xs) returns float = external;
 
+# Average of zero or more float values.
+# Result is NaN if there are no arguments
+# 
+# + xs - float values to operate on
+# + return - average of all the `xs`
+public isolated function avg(float... xs) returns float = external;
+
 # IEEE abs operation.
 #
 # + x - float value to operate on

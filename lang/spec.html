@@ -13,7 +13,7 @@
   </style>
 </head>
 <body>
-<h1>Ballerina Language Specification, 2022R4</h1>
+<h1>Ballerina Language Specification, 2023R1 preview</h1>
 <p>
 Primary contributors:
 </p>
@@ -27,7 +27,7 @@ Primary contributors:
 (Other contributors are listed in <a href="#contributors">Appendix D</a>.)
 </p>
 <p>
-Copyright © 2018-2022 <a href="https://wso2.com/">WSO2</a>
+Copyright © 2018-2023 <a href="https://wso2.com/">WSO2</a>
 </p>
 <p>
 Licensed under the <a
@@ -153,7 +153,9 @@ denoted by the hexadecimal numeral X</li>
 and is not a disallowed character;</li>
 <li><code>x..y</code> means any single Unicode character whose code point is
 greater than or equal to that of x and less than or equal to that of y</li>
-<li><code class="grammar">str</code> means the characters <code>str</code> literally</li>
+<li><code class="grammar">xyz</code> means the characters <code>xyz</code> literally</li>
+<li><code class="grammar">xyz</code><sub>NR</sub> means the characters <code>xyz</code> literally,
+and <code>xyz</code> is not a reserved keyword</li>
 <li><code>symbol </code>means a reference to production for the nonterminal
 <code>symbol</code></li>
 <li><code>x|y</code> means x or y</li>
@@ -2936,6 +2938,15 @@ Intersection types are particularly useful in conjunction with
 <code>readonly&amp;T</code>, where <code>T</code> describes the primary aspect
 of the shape.
 </p>
+<p>
+When T is either <code>R&amp;readonly</code> or <code>readonly&amp;R</code>,
+where R is a record type descriptor, and a field in R has a default value with
+closure C, then, if the return type of C belongs to <a
+href="#Cloneable">Cloneable</a>, the field in T has a default value with a
+closure that applies the <a href="#ImmutableClone">ImmutableClone</a> operation
+to result of evaluating C; otherwise, the field in T does not have a default
+value.
+</p>
 </section>
 
 <section>
@@ -3311,6 +3322,11 @@ static type of T's init method allows no arguments and does not include error</t
 <code>xml:Text</code></td>
 </tr>
 <tr>
+<td><code>regexp:RegExp</code></td>
+<td><code>re``</code></td>
+<td></td>
+</tr>
+<tr>
 <td>singleton</td>
 <td>the single value used to specify the type</td>
 <td></td>
@@ -3675,6 +3691,13 @@ The following table summarizes the result of ToString(v,style) for each basic ty
   </tr>
   <tr>
     <td colspan="3"><code>S</code> in direct style where S is the result of calling the toString method</td>
+  </tr>
+  <tr>
+   <td>behavioural type other than error or object</td>
+   <td colspan="3">identifier for behavioural type (<code>function</code>,
+     <code>future</code>, <code>typedesc</code>, <code>stream</code> or <code>handle</code>) followed
+     by implementation-dependent string
+   </td>
   </tr>
   <tr>
    <td rowspan="2"><em>cycle detected</em>
@@ -4809,17 +4832,20 @@ class="grammar">list-constructor-expr := <code>[</code> [ list-member-list ] <co
 list-member-list := list-member (<code>,</code> list-member)*
 list-member := single-list-member | spread-list-member
 single-list-member := expression
-spread-list-member := <code>...</code> expression
+spread-list-member := spread | aggregated-variable-reference
+spread := <code>...</code> expression
 </pre>
 <p>
-A list-constructor-expr creates a new list value. The list is constructed by
-processing each list-member in the order specified as follows. The expression in
-the list-member is first evaluated resulting in a value <var>v</var>. If the
-list-member is a single-list-member, then <var>v</var> is added to the list
-being constructed. Otherwise <var>v</var> must be a list, and every member of
-<var>v</var> is added in order to the list being constructed. It is a
-compile-time error if the static type of the expression in a spread-list-member
-is not a subtype of list.
+A list-constructor-expr creates a new list value. It is a compile-time error if
+the static type of the expression in a spread in a spread-list-member is not a
+subtype of list. The list is constructed by processing each list-member in the
+order specified as follows. If the list-member is a single-list-member, then the
+expression in the list-member is first evaluated resulting in a value
+<var>v</var> and <var>v</var> is added to the list being constructed. If the
+list-member is a spread, then the expression in the spread is evaluated and each
+member of the resulting list is added in order to the list being constructed. An
+aggregated-variable-reference is handled like the <a
+href="#aggregated_variables">equivalent</a> spread.
 </p>
 <p>
 If there is a contextually expected type, then the inherent type of the newly
@@ -4830,7 +4856,7 @@ type descriptor, then it is a compile-time error unless there is exactly one
 member of the union that is a list type descriptor and that allows list shapes
 of a length that the static types of the expressions in the list-member-list
 make it possible for the constructed list to have; this list type descriptor is
-used as the inherent type. If there is a spread-list-member, and the type of its
+used as the inherent type. If there is a spread, and the type of its
 expression is not fixed length, then the minimum of the total number of members
 that may be added to the list being constructed by this spread-list-member and
 any previous list-member must be greater than or equal to the minimum length
@@ -4885,7 +4911,7 @@ specific-field :=
 value-expr := expression
 computed-name-field := <code>[</code> field-name-expr <code>]</code> <code>:</code> value-expr
 field-name-expr := expression
-spread-field := <code>...</code> expression
+spread-field := spread
 </pre>
 <p>
 A mapping-constructor-expr creates a new mapping value. 
@@ -5175,7 +5201,8 @@ class="grammar">method-defn-body := function-defn-body
 <p>
 Within a <code>method-defn-body</code>, the fields and methods of the object are
 not implicitly in-scope; instead the variable <code>self</code> is bound to the
-object and can be used to access fields and methods of the object. If the
+object and can be used to access fields and methods of the object. The
+<code>self</code> variable is implicitly final and cannot be modified. If the
 <code>object-constructor-expr</code> is explicitly isolated, then the
 <code>self</code> variable must be accessed only within the scope of a lock
 statement, except when <code>self</code> is part of a
@@ -5291,7 +5318,8 @@ is not definitely assigned at that point. It is a compile error if a
 If the <code>object-constructor-expr</code> is explicitly isolated, then a field
 can only be assigned to by an <code>assignment-stmt</code> with a right hand
 side that is an isolated expression. The requirement to access <code>self</code>
-within a lock statement does not apply to the <code>init</code> method.
+within a lock statement does not apply to the <code>init</code> method at any
+point where there is any potentially uninitialized field.
 </p>
 <p>
 The visibility of the <code>init</code> method cannot be <code>private</code>.
@@ -5399,6 +5427,11 @@ let-expr to an expression that is isolated.
 A variable-reference-expr that refers to a variable declared by a
 module-var-decl that includes <code>isolated</code> is only allowed within a
 lock-stmt.
+</p>
+<p>
+A variable-reference-expr cannot refer to an <a
+href="#aggregated_variables">aggregated variable</a>; an aggregated variable can
+be referenced only by an aggregated-variable-reference.
 </p>
 </section>
 <section>
@@ -5732,6 +5765,29 @@ arg-list are evaluated in the order in which they occur in the arg-list; the
 contextually expected type for the expression comes from the static type
 required for the expression as specified below.
 </p>
+<p>
+If the function-reference is an unqualified identifier
+<code><var>f</var></code>, the arg-list has a rest-arg and no positional-args,
+and the rest-arg is an aggregated-variable-reference of type T, then the
+function-reference is treated as referring to a function
+<code><var>f</var></code> in a module lang.M of the lang library, where M is
+selected as follows.
+</p>
+<ul>
+<li>If T is a subtype of B[], where B is a basic type with with corresponding
+langlib module lang.B and the module lang.B contains a function
+<code><var>f</var></code>, then M is B. The module corresponding to each basic
+type is listed in the <a href="#lang_library_modules">Lang library modules</a>
+section.</li>
+<li>Otherwise, M is <code>value</code>.</li>
+</ul>
+<p>
+In this case, if the langlib function requires at least one argument, but T
+allows the empty list, then the evaluation of the function-call-expr will first
+check whether the aggregated-variable-reference refers to an empty list, and, if
+so, the result of the function-call-expr will be nil; the return type of the
+langlib function will accordingly be unioned with nil.
+</p>
 <pre
 class="grammar">positional-args := positional-arg (<code>,</code> positional-arg)*
 positional-arg := expression
@@ -5782,17 +5838,18 @@ must be a subtype of the type declared for the corresponding parameter or
 field-descriptor.
 </p>
 <pre
-class="grammar">rest-arg := <code>...</code> expression
+class="grammar">rest-arg := spread | aggregated-variable-reference
 </pre>
 <p>
-The static type of the expression in a rest-arg must be either a list type or a
-mapping type. If it is a list type, then the rest-arg is equivalent to
-specifying each member of the list as a positional-arg. If it is a mapping type,
-then the rest-arg is equivalent to specifying each field of the mapping as a
-named-arg, with the name and value of the named-arg coming from the name and
-value of the field. In either case, the static type of the expression must be
-such as to ensure that the equivalent named-args or positional-args would be
-valid.
+The static type of the expression in a spread in a rest-arg must be either a
+list type or a mapping type. If it is a list type, then the rest-arg is
+equivalent to specifying each member of the list as a positional-arg. If it is a
+mapping type, then the rest-arg is equivalent to specifying each field of the
+mapping as a named-arg, with the name and value of the named-arg coming from the
+name and value of the field. In either case, the static type of the expression
+must be such as to ensure that the equivalent named-args or positional-args
+would be valid. An aggregated-variable-reference is handled like the <a
+href="#aggregated_variables">equivalent</a> spread.
 </p>
 <p>
 If there is neither a named-arg nor a positional-arg for a parameter that is not
@@ -5891,7 +5948,7 @@ library, where M is selected as follows.
 <ul>
 <li>If the static type of <code>expression</code> is a subtype of basic type
 with corresponding langlib module lang.B and the module lang.B contains a
-function <code>method-name</code> then M is B. The module corresponding to each
+function <code>method-name</code>, then M is B. The module corresponding to each
 basic type is listed in the <a href="#lang_library_modules">Lang library
 modules</a> section.</li>
 <li>Otherwise, M is <code>value</code>.</li>
@@ -6749,112 +6806,54 @@ T|error. It is permitted for T to be <code>never</code>.</li>
 <section>
 <h3>Query expression</h3>
 <p>
-A query expression provides a language-integrated query feature using SQL-like
-syntax. In this version of Ballerina, the functionality is similar to a list
-comprehensions; future versions will provided richer functionality.
+Query expressions provide a language-integrated query feature using SQL-like
+syntax.
 </p>
-
-<pre class="grammar">query-expr := [query-construct-type] query-pipeline select-clause [on-conflict-clause]
-query-construct-type :=
-  <code>map</code>
-  | <code>table</code> key-specifier
-  | <code>stream</code>
+<pre class="grammar">query-expr := query-select-expr | query-collect-expr
+query-select-expr := [query-construct-type] query-pipeline select-clause [on-conflict-clause]
+query-collect-expr := query-pipeline collect-clause
 query-pipeline := from-clause intermediate-clause*
 intermediate-clause :=
    from-clause
    | where-clause
    | let-clause
    | join-clause
-   | order-by-clause
    | limit-clause
+   | order-by-clause
+   | group-by-clause
 </pre>
 <p>
 A query expression consists of a sequence of clauses. The semantics of clauses
 is specified in terms of transforming a sequence of frames, where a frame is a
 binding of variables to values. The input to each clause is a sequence of
-frames. As each clause is executed, it iterates over its input frames and emits
-output: the final clause, which is a <code>select</code> clause, emits output
-<em>values</em>; the other clauses emit output <em>frames</em>. When a
-query-expr is evaluated, its clauses are executed in a pipeline by making the
-sequence of frames emitted by one clause be the input to the next clause. Each
-clause in the pipeline is executed lazily, pulling input from its preceding
-clause. The input to the first clause is a single empty frame.
+frames.
 </p>
 <p>
-When a <code>from</code> or <code>join</code> clause is executed, it makes calls
-to the <code>next</code> method of an Iterator object. If any of these calls
-return an error value <var>e</var>, then we say that the clause <em>completes
-early</em> with error value <var>e</var>.
+The initial part of a query expression is a pipeline, where each clause outputs
+a sequence of frames; the sequence of frames output by one clause become the
+input to the next clause. As each clause in the pipeline is executed, it
+iterates over its input frames and emits output frames. The pipeline is executed
+lazily, with each clause pulling input from its preceding clause. The input to
+the first clause is a single empty frame. The output of the pipeline is the
+output of its last clause.
 </p>
 <p>
-A query-expr that does not construct a stream is evaluated as described in this
-paragraph. If a clause completes early with error value <var>e</var>, then the
-result of evaluating the query-expr is <var>e</var>. The normal rules apply if
-the execution of any clause results in the evaluation of an expression
-completing abruptly. Otherwise, the result of evaluating a query expression is a
-single value, which is constructed from the sequence of values emitted by the
-last clause. The result must be one of the following basic types:
-</p>
-<ul>
-<li>list - the constructed list has a member for each emitted value; every
-emitted value must belong to type T, where T[] is the type of the constructed
-value</li>
-<li>mapping - the constructed mapping has a member for each emitted value; every
-emitted value must belong to type [string, T], where map&lt;T&gt; is the type
-of the constructed value </li>
-<li>table - the constructed table has a member for each emitted value; every
-emitted value must belong to type T, where table&lt;T&gt; is the type of the
-constructed value</li>
-<li>string - the constructed string is the concatenation of the emitted values;
-every emitted value must be of type string</li>
-<li>xml - the constructed xml value is the concatenation of the emitted values;
-every emitted value must be of type xml</li>
-<li>stream - the stream generates the emitted values</li>
-</ul>
-<p>
-A query-expr that constructs a stream must start with the <code>stream</code>
-keyword and is evaluated differently from a query-expr that constructs a value
-of other basic types. The clauses in the query-expr are executed lazily: clauses
-in the query-expr becomes closures, which are called as a result of next
-operations being performed on the stream. If a next operation causes the
-execution of a clause that completes early with an error value, then the error
-value is returned by the next operation; the evaluation of the query-expr will
-already have resulted in a stream value. If the next operation results in the
-evaluation of an expression within the query-expr completing abruptly with a
-check-fail, the associated error value will be returned as the result of the
-next operation. If the next operation results in the evaluation of an expression
-within the query-expr completely abruptly with a panic, then the next operation
-will complete abruptly with a panic.
+The remainder of the query expression says how to compute the result of the
+query expression using the sequence of frames output by the query pipeline.
+There are two kinds of query expression: query-select expressions and
+query-collect expressions. In a query-select expression the pipeline is followed
+by a <code>select</code> clause; in a query-collect expression, the pipeline is
+followed by a <code>collect</code> clause.
 </p>
 <p>
-A query-expr that constructs a mapping must start with the <code>map</code> keyword.
-An emitted value <code>[<var>k</var>, <var>v</var>]</code> results in adding a
-field with key <code><var>k</var></code> and value <code><var>v</var></code>.
-</p>
-<p>
-If the query-expr starts with <code>table</code>, then the query-expr will
-construct a table; the key-specifier specifies the key sequence of the
-constructed table in the same way as with a table-constructor-expr. Otherwise,
-the applicable contextually expected type determines the basic type of the value
-constructed. If there is no contextually expected type, then the basic type of
-the value constructed is the basic type of expression following <code>in</code>;
-it is a compile-time error if the static type of this expression is not a
-subtype of one of the basic types that a query expression can construct.
-</p>
-<p>
-When the query-expr is constructing a value of basic type list, mapping, table
-or xml, and the applicable contextually expected type is a subtype of readonly,
-then the query-expr will construct a value with its read-only bit set and the
-static type of the query-expr will be a subtype of readonly. Furthermore, the
-contextually expected type for the expression in the select-clause will also be
-a subtype of readonly.
-</p>
-<p>
-When during the construction of a map or table, an emitted value is added as a new
-member, it replaces any existing member with the same key value; when a new
-member replaces an existing member, it will have the same position in the order
-of members as the existing member. This behavior may be controlled by an
-<code>on conflict</code> clause.
+The execution of certain intermediate clauses can result in the pipeline being
+terminated prematurely. Specifically, when a <code>from</code> or
+<code>join</code> clause is executed, it makes calls to the <code>next</code>
+method of an Iterator object; if any of these calls return an error value
+<var>e</var>, then the clause is said to <em>complete early</em> with error
+value <var>e</var>. A query-select or query-collect expression will handle this
+early completion by terminating the execution of the pipeline, as described
+below.
 </p>
 <p>
 Variables bound by the clauses of a query-pipeline are implicitly final, and
@@ -6892,7 +6891,7 @@ resulting from binding typed-binding-pattern to <var>v</var>.</li>
 
 <section>
 <h4>Where clause</h4>
-<pre class="grammar">where-clause := <code>where</code> expression
+<pre class="grammar">where-clause := <code>where</code><sub>NR</sub> expression
 </pre>
 <p>
 A <code>where</code> clause is executed as follows:
@@ -6935,7 +6934,7 @@ E<sub>2</sub></code>.
 
 <section>
 <h4>Join clause</h4>
-<pre class="grammar">join-clause := [<code>outer</code>] <code>join</code> typed-binding-pattern <code>in</code> expression join-on-condition
+<pre class="grammar">join-clause := [<code>outer</code><sub>NR</sub>] <code>join</code><sub>NR</sub> typed-binding-pattern <code>in</code> expression join-on-condition
 join-on-condition := <code>on</code> expression <code>equals</code> expression
 </pre>
 <p>
@@ -7011,9 +7010,38 @@ if the type that would be inferred usually for the variable would be
 </section>
 
 <section>
+<h4>Limit clause</h4>
+<pre class="grammar">
+limit-clause := <code>limit</code><sub>NR</sub> expression
+</pre>
+<p>
+A <code>limit</code> clause limits the number of frames emitted by a query pipeline.
+</p>
+<p>
+A <code>limit</code> clause is executed as follows:
+</p>
+<ul>
+<li>evaluate expression resulting in a value <var>n</var>; variable bindings
+from input frames are not in scope for this evaluation;</li>
+<li>if <var>n</var> is less than zero, then panic;</li>
+<li>for each input frame <var>f</var>, while <var>n</var> is greater than 0
+<ul>
+<li>decrement <var>n</var>;</li>
+<li>emit <var>f</var>.</li> 
+</ul>
+</li> 
+</ul>
+
+<p>
+The static type of expression must be a subtype of <code>int</code>.
+</p>
+
+</section>
+
+<section>
 <h4>Order by clause</h4>
 <pre class="grammar">
-order-by-clause := <code>order</code> <code>by</code> order-key [<code>,</code> order-key]*
+order-by-clause := <code>order</code><sub>NR</sub> <code>by</code><sub>NR</sub> order-key [<code>,</code> order-key]*
 order-key := expression [order-direction]
 order-direction := <code>ascending</code> | <code>descending</code>
 </pre>
@@ -7074,74 +7102,263 @@ expression with <var>f</var> in scope</li>
 </ul>
 
 </section>
+
 <section>
-<h4>Limit clause</h4>
-<pre class="grammar">
-limit-clause := <code>limit</code> expression
-</pre>
-<p>
-A <code>limit</code> clause limits the number of frames emitted by a query pipeline.
-</p>
-<p>
-A <code>limit</code> clause is executed as follows:
-</p>
-<ul>
-<li>evaluate expression resulting in a value <var>n</var>; variable bindings
-from input frames are not in scope for this evaluation;</li>
-<li>if <var>n</var> is less than zero, then panic;</li>
-<li>for each input frame <var>f</var>, while <var>n</var> is greater than 0
-<ul>
-<li>decrement <var>n</var>;</li>
-<li>emit <var>f</var>.</li> 
-</ul>
-</li> 
-</ul>
+<h4 id="aggregated_variables">Aggregated variable bindings</h4>
 
 <p>
-The static type of expression must be a subtype of <code>int</code>.
+Frames constructed by collect and group-by clauses can contain
+<em>aggregated</em> variable bindings. The type of an aggregated variable
+binding is always a list type; as usual, the
+value bound to the variable belongs to this type. An aggregrated variable is
+special in that it is only allowed to be referenced by an
+aggregated-variable-reference; the semantics of such a reference are different
+from the semantics of a variable-reference-expr.
+</p>
+<p>
+An aggregated variable binding for a variable <var>x</var> is <em>aggregated
+from</em> a sequence of frames <var>S</var>, by binding <var>x</var> to a list
+with the same length as <var>S</var>, where the <var>i</var>-th member of the
+list is the value bound to <var>x</var> in the <var>i</var>-th frame in
+<var>S</var>. The type of the aggregated variable binding is derived from the
+type <code><var>T</var></code> of <var>x</var> in S and the kind of clause
+<var>C</var> that is constructing the binding. When <var>C</var> is a collect
+clause, <var>S</var> can be empty and the type is <code><var>T</var>[]</code>.
+When <var>C</var> is a group-by clause, <var>S</var> cannot be empty and so the
+type is <code>[<var>T</var>,<var>T</var>...]</code>.
+</p>
+
+<pre class="grammar">aggregated-variable-reference := identifier
+</pre>
+<p>
+A reference to an aggregated variable binding is <em>implicitly spread</em>: an
+identifier <code><var>x</var></code> that refers to an aggregated variable
+binding is treated like a spread <code>...<var>y</var></code>, where the
+variable <code><var>y</var></code> has the same type and value as
+<code><var>x</var></code> but is not aggregated.
+</p>
+<p>
+The grammar shows this by using the aggregated-variable-reference production. A
+reference to an aggregated variable is allowed only in a syntactic context where
+the grammar allows an aggregated-variable-reference. In each such syntactic
+context, the grammar also allows both a variable-reference-expr and a spread.
+When a reference to an aggregated variable occurs in an allowed context, it
+should be parsed as a aggregated-variable-reference rather than as a
+variable-reference-expr, and should be transformed into the equivalent spread.
+Any other reference to an aggregated variable should be parsed as a
+variable-reference-expr, and then rejected as semantically incorrect.
+</p>
+</section>
+
+<section>
+<h4>Group by clause</h4>
+<pre class="grammar">group-by-clause := <code>group</code><sub>NR</sub> <code>by</code><sub>NR</sub> grouping-key (<code>,</code> grouping-key)*
+grouping-key :=
+   variable-name
+   | inferable-type-descriptor variable-name <code>=</code> expression
+</pre>
+<p>
+A group-by-clause that uses an inferable-type-descriptor is transformed into a a
+let-clause followed by a group-by-clause where every grouping-key is a
+variable-name. For example:
+</p>
+<pre>group by var x1 = E1, var x2 = E2
+</pre>
+<p>
+is transformed to
+</p>
+<pre>let x1 = E1, x2 = E2 group by x1, x2
+</pre>
+<p>
+A group-by clause where every grouping-key is a variable-name is executed by
+first partitioning the sequence of input frames <var>S</var> into a set
+<var>P</var> of non-empty sequences of frames, such that:
+</p>
+<ul>
+<li>every member <var>P</var> is a subsequence (not necessarily consecutive) of <var>S</var>;</li>
+<li>every constituent of <var>S</var> is a constituent of exactly one member of <var>P</var>;</li>
+<li>two constituents <var>f</var><sub>1</sub> and <var>f</var><sub>2</sub> of
+<var>S</var> are constituents of the same member of <var>P</var> if and only if
+for every variable <var>x</var> that is a grouping-key,
+DeepEquals(<var>x</var><sub>1</sub>,<var>x</var><sub>2</sub>) is true, where
+<var>x</var><sub>1</sub> is the value bound to <var>x</var> in
+<var>f</var><sub>1</sub>, and <var>x</var><sub>2</sub> is the value bound to
+<var>x</var> in <var>f</var><sub>2</sub>.</li>
+</ul>
+<p>
+Next, for each sequence <var>G</var> in <var>P</var>, ordered by the order in
+which the first constituent of <var>G</var> occurs in <var>S</var>, an output
+frame is constructed from <var>G</var> and emitted. An output frame <var>g</var>
+is constructed from a sequence of input frames <var>G</var> as follows. The same
+variables are bound by <var>g</var> as are bound by <var>G</var>. For each
+variable that is a grouping-key, the value and type in <var>g</var> will be the
+same as the value and type in the first constituent of <var>G</var>. The binding
+for every other variable is <a href="#aggregated_variables">aggregated from</a>
+<var>G</var>.
 </p>
 
 </section>
 
 <section>
+<h4>Collect clause</h4>
+<pre class="grammar">collect-clause := <code>collect</code><sub>NR</sub> expression
+</pre>
+
+<p>
+A query-collect expression is used to perform aggregation. It is evaluated as
+follows.
+</p>
+
+<ol>
+<li>The query-pipeline is executed to produce a sequence of frames <var>S</var>.
+If during this any clause completes early with error value <var>e</var>, then
+the result of evaluating the query-collect-expr is <var>e</var>. In addition,
+the normal rules apply if the execution of any clause results in the evaluation
+of an expression completing abruptly.</li>
+<li>A frame <var>f</var> is constructed. For each variable <var>x</var> that is
+bound by <var>S</var>, <var>f</var> has a variable binding for <var>x</var> that
+is <a href="#aggregated_variables">aggregated from</a> <var>S</var>.</li>
+<li>The expression in the collect-clause is evaluated with <var>f</var> in scope
+resulting in a value <var>v</var>.</li>
+<li>The result of the query-collect expression is <var>v</var>.</li>
+</ol>
+
+<p>
+The contextually expected type for the expression in the collect-clause is the
+contextually expected type for the query-collect-expr.
+</p>
+</section>
+
+<section>
 <h4>Select clause</h4>
+
 <pre class="grammar">
-select-clause := <code>select</code> expression
+select-clause := <code>select</code><sub>NR</sub> expression
 </pre>
 <p>
-A <code>select</code> clause is executed as follows:
+When a query-select expression is evaluated, the <code>select</code> clause is
+executed as follows, so as to emit a sequence of values:
 </p>
 <ul>
-<li>for each input frame <var>f</var> 
+<li>for each frame <var>f</var> output by the query pipeline
 <ul>
-<li>evaluate the expression with <var>f</var> in scope resulting in value <var>v</var></li>
+<li>evaluate the expression that follows <code>select</code> with <var>f</var>
+in scope resulting in value <var>v</var></li>
 <li>emit <var>v</var></li> 
 </ul>
 </li> 
 </ul>
+<p>
+The sequence of values emitted by the execution of the <code>select</code>
+clause is used to construct a value, which becomes the result of the
+query-select-expr. The constructed result value must be one of the following
+basic types:
+</p>
+<ul>
+<li>list - the constructed list has a member for each emitted value; every
+emitted value must belong to type T, where T[] is the type of the constructed
+value;</li>
+<li>mapping - the constructed mapping has a member for each emitted value; every
+emitted value must belong to type [string, T], where map&lt;T&gt; is the type
+of the constructed value; an emitted value <code>[<var>k</var>,
+<var>v</var>]</code> results in adding a field with key
+<code><var>k</var></code> and value <code><var>v</var></code>;</li>
+<li>table - the constructed table has a member for each emitted value; every
+emitted value must belong to type T, where table&lt;T&gt; is the type of the
+constructed value;</li>
+<li>string - the constructed string is the concatenation of the emitted values;
+every emitted value must be of type string;</li>
+<li>xml - the constructed xml value is the concatenation of the emitted values;
+every emitted value must be of type xml;</li>
+<li>stream - the stream generates the emitted values.</li>
+</ul>
+<p>
+The clauses in a query-select-expr are executed either eagerly or lazily. If a
+query-select-expr is constructing a stream, they are executed lazily; otherwise,
+they are executed eagerly. When the clauses in a query-select-expr are being
+executed eagerly, the execution happens during the evaluation of the
+query-select-expr. When the clauses are being executed lazily, the evaluation of
+the query-select-expr constructs a stream object without executing any of the
+clauses; the clauses becomes closures, which are called later as a result of
+next operations being performed on the stream.
+</p>
+<p>
+With eager execution, if any clause completes early with error value
+<var>e</var>, then the result of evaluating the query-select-expr is
+<var>e</var>. In addition, the normal rules apply if the execution of any clause
+results in the evaluation of an expression completing abruptly.
+</p>
+<p>
+With lazy execution, when a next operation on the stream results in the
+execution of a clause that completes early with error value <var>e</var>, then
+that next operation returns <var>e</var>. Similarly, if the next operation
+results in the evaluation of an expression within the query-select-expr
+completing abruptly with a check-fail, the associated error value will be
+returned as the result of the next operation; if the next operation results in
+the evaluation of an expression within the query-select-expr completely abruptly
+with a panic, then the next operation will complete abruptly with a panic.
+</p>
+
+<pre class="grammar">query-construct-type :=
+  <code>map</code>
+  | <code>table</code> key-specifier
+  | <code>stream</code>
+</pre>
+<p>
+If a query-construct-type is specified, then it determines the basic type of the
+result. A query-select-expr that constructs a mapping or stream must specify a
+query-construct-type of <code>map</code> or <code>stream</code> respectively.
+When constructing a table, the key-specifier specifies the key
+sequence of the constructed table in the same way as with a
+table-constructor-expr.
+</p>
+<p>
+If no query-construct-type is specified, the applicable contextually expected
+type determines the basic type of the value constructed. If there is no
+contextually expected type, then the basic type of the value constructed is the
+basic type of expression following <code>in</code>; it is a compile-time error
+if the static type of this expression is not a subtype of one of the basic types
+list, table, string or xml.
+</p>
+<p>
+When the query-select-expr is constructing a value of basic type list, mapping, table
+or xml, and the applicable contextually expected type is a subtype of readonly,
+then the query-select-expr will construct a value with its read-only bit set and the
+static type of the query-select-expr will be a subtype of readonly. Furthermore, the
+contextually expected type for the expression in the select-clause will also be
+a subtype of readonly.
+</p>
 </section>
 
 <section>
 <h4>On conflict clause</h4>
 <pre class="grammar">
-on-conflict-clause := <code>on</code> <code>conflict</code> expression
+on-conflict-clause := <code>on</code> <code>conflict</code><sub>NR</sub> expression
 </pre>
 <p>
-An <code>on conflict</code> clause is allowed only for a query expression that
-constructs a map or table with a key sequence. The expression is evaluated when the
-<code>select</code> clause emits a value that conflicts with a previous value,
-in the sense that both values have the same key value in the map or table. The
-expression is evaluated with the same frame in scope as the select clause that
-emitted the value that conflicts with the previous value. The static type of the
-expression must be a subtype of <code>error?</code>. If the result of evaluating
-the expression is an error <var>e</var>, then the result of evaluating the
-query-expr is <var>e</var>. Otherwise, the result must be nil, and the earlier
-new value replaces the earlier conflicting value, in the same way as if there
-not been an <code>on conflict</code> clause.
+During the execution of the select clause of query-select-expr that is
+constructing a map or table, when value emitted by the select clause is added as
+a new member of the map or table being constructed, it replaces any existing
+member with the same key value; when a new member replaces an existing member,
+it will have the same position in the order of members as the existing member.
+This behavior may be controlled by an <code>on conflict</code> clause.
 </p>
 <p>
-Note that the expression may have side-effects; for example, it may call a
-function that logs an error.
+An <code>on conflict</code> clause is allowed only for a query-select-expr that
+constructs a table with a key sequence or a map. The expression is evaluated
+when the <code>select</code> clause emits a value that conflicts with a previous
+value, in the sense that both values have the same key value in the map or
+table. The expression is evaluated with the same frame in scope as the select
+clause that emitted the value that conflicts with the previous value. The static
+type of the expression must be a subtype of <code>error?</code>. If the result
+of evaluating the expression is an error <var>e</var>, then the result of
+evaluating the query-select-expr is <var>e</var>. Otherwise, the result must be
+nil, and the earlier new value replaces the earlier conflicting value, in the
+same way as if there not been an <code>on conflict</code> clause.
+</p>
+<p>
+Note that the expression in an on-conflict-clause may have side-effects; for
+example, it may call a function that logs an error.
 </p>
 </section>
 
@@ -7340,21 +7557,25 @@ A <code>type-cast-action-or-expr</code>, <code>checking-action-or-expr</code> or
 </p>
 
 <pre
-class="grammar">query-action-or-expr :=
-   [query-construct-type] query-action-pipeline select-action-clause [on-conflict-clause]
+class="grammar">query-action-or-expr := query-select-action-or-expr | query-collect-action-or-expr
+query-select-action-or-expr := [query-construct-type] query-action-pipeline select-action-clause [on-conflict-clause]
+query-collect-action-or-expr := query-action-pipeline collect-action-clause
 query-action-pipeline := from-action-clause intermediate-action-clause*
 intermediate-action-clause :=
    from-action-clause
    | let-action-clause
+   | join-action-clause
    | where-clause
-   | join-clause
-   | order-by-clause
    | limit-clause
+   | order-by-clause
+   | group-by-clause
 
 from-action-clause := <code>from</code> typed-binding-pattern <code>in</code> action-or-expr
 let-action-clause := <code>let</code> let-action-var-decl [<code>,</code> let-action-var-decl]*
 let-action-var-decl := [annots] typed-binding-pattern <code>=</code> action-or-expr
-select-action-clause := <code>select</code> action-or-expr
+join-action-clause := [<code>outer</code><sub>NR</sub>] <code>join</code><sub>NR</sub> typed-binding-pattern <code>in</code> action-or-expr join-on-condition
+select-action-clause := <code>select</code><sub>NR</sub> action-or-expr
+collect-action-clause := <code>collect</code><sub>NR</sub> action-or-expr
 </pre>
 <p>
 A <code>query-action-or-expr</code> is a <code>query-expr</code> in which
@@ -8278,7 +8499,7 @@ resource-access-path-segment :=
 
 computed-resource-access-path-segment := <code>[</code> expression <code>]</code>
 
-resource-access-rest-segment := <code>[</code> <code>...</code> expression <code>]</code>
+resource-access-rest-segment := <code>[</code> spread <code>]</code>
 </pre>
 <p>
 A <code>client-resource-access-action</code> performs a <a
@@ -11427,6 +11648,27 @@ more than one basic type..</p>
 </section>
 <section class="appendix">
 <h2 id="changes">B. Changes since previous releases</h2>
+<section>
+<h3>Summary of changes from 2022R4 to 2023R1</h3>
+<ol>
+<li>Query expressions now support grouping and aggregation, using new
+<code>group by</code> and <code>collect</code> clauses.</li>
+<li>Keywords that start clauses of a query expression, except for
+<code>from</code> and <code>let</code>, are no longer reserved (and so can be
+used as identifier names).</li>
+<li>Functions useful for aggregation have been added to langlib:
+<code>int:avg</code>, <code>float:avg</code>, <code>decimal:avg</code>,
+<code>boolean:some</code>, <code>boolean:every</code>, <code>value:count</code>,
+<code>value:first</code>, <code>value:last</code>.</li>
+<li>A <code>join</code> clause in a query expression can contain remote method
+calls and other actions.</li>
+<li>Clarify that the <code>self</code> variable in a method is implicitly
+final.</li>
+<li>Regexp type has a filler value.</li>
+<li>Readonly record types can have defaults.</li>
+</ol>
+</section>
+
 <section>
 <h3>Summary of changes from 2022R3 to 2022R4</h3>
 <ol>

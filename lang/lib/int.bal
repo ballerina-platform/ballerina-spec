@@ -103,6 +103,15 @@ public isolated function max(int n, int... ns) returns int = external;
 # + return - minimum value of `n` and all the `ns`
 public isolated function min(int n, int... ns) returns int = external;
 
+# Average of one or more int values.
+# The average is computed using the decimal type.
+# This function panics if the sum of the arguments overflows the decimal type.
+#
+# + n - first int value
+# + ns - other int values
+# + return - minimum value of `n` and all the `ns`
+public isolated function avg(int n, int... ns) returns decimal = external;
+
 # Returns the integer that `s` represents in decimal.
 # Returns error if `s` is not the decimal representation of an integer.
 # The first character may be `+` or `-`.
