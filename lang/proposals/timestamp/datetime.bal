@@ -1,4 +1,4 @@
-// Standard library date/time module.
+// Ballerina library `date/time` package.
 
 // Current time
 
