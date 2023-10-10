@@ -1,0 +1,239 @@
+Test-Case: output
+Description: Test `matchGroupsAt` function.
+Labels: function-call-expr, regexp, matchGroupsAt, method-call-expr
+
+import ballerina/lang.regexp;
+
+function init() {
+    string str1 = "John abcd@gmail.com +94123456789";
+    var personalDetailsRegex = re `([A-z]+)\s([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})\s(\+?[0-9]{10,14})`;
+    string:RegExp spaceRegex = re `(\s)`;
+
+    regexp:Groups? res0 = spaceRegex.matchGroupsAt("NoSpaces");
+    io:println(res0 is ()); // @output true
+
+    regexp:Groups? res1 = personalDetailsRegex.matchGroupsAt(str1);
+    io:println(res1 is regexp:Groups); // @output true
+    regexp:Groups resultGroups1 = <regexp:Groups>res1;
+    io:println(resultGroups1.length()); // @output 4
+    io:println((<regexp:Span> resultGroups1[0]).startIndex); // @output 0
+    io:println((<regexp:Span> resultGroups1[0]).endIndex); // @output 32
+    io:println((<regexp:Span> resultGroups1[0]).substring()); // @output John abcd@gmail.com +94123456789
+    io:println((<regexp:Span> resultGroups1[1]).startIndex); // @output 0
+    io:println((<regexp:Span> resultGroups1[1]).endIndex); // @output 4
+    io:println((<regexp:Span> resultGroups1[1]).substring()); // @output John
+    regexp:Span resultSpan1 = <regexp:Span>resultGroups1[2];
+    io:println(resultSpan1.startIndex); // @output 5
+    io:println(resultSpan1.endIndex); // @output 19
+    io:println(resultSpan1.substring()); // @output abcd@gmail.com
+    regexp:Span resultSpan2 = <regexp:Span>resultGroups1[3];
+    io:println(resultSpan2.startIndex); // @output 20
+    io:println(resultSpan2.endIndex); // @output 32
+    io:println(resultSpan2.substring()); // @output +94123456789
+
+    regexp:Groups? res2 = re `(.*)`.matchGroupsAt("Call me +94111111111, +941212121212 or +942222222222", 8);
+    io:println(res2 is regexp:Groups); // @output true
+    regexp:Groups resultGroups2 = <regexp:Groups>res2;
+    io:println(resultGroups2.length()); // @output 2
+    regexp:Span resultSpan20 = <regexp:Span>resultGroups2[0];
+    io:println(resultSpan20.startIndex); // @output 8
+    io:println(resultSpan20.endIndex); // @output 52
+    io:println(resultSpan20.substring()); // @output +94111111111, +941212121212 or +942222222222
+    regexp:Span resultSpan21 = <regexp:Span>resultGroups2[1];
+    io:println(resultSpan21.startIndex); // @output 8
+    io:println(resultSpan21.endIndex); // @output 52
+    io:println(resultSpan21.substring()); // @output +94111111111, +941212121212 or +942222222222
+
+    regexp:Groups? res3 = regexp:matchGroupsAt(re = personalDetailsRegex, str = "details: John abcd@gmail.com +94123456789", startIndex = 9);
+    io:println(res3 is regexp:Groups); // @output true
+    regexp:Groups resultGroups3 = <regexp:Groups>res3;
+    io:println(resultGroups1.length()); // @output 4
+    io:println((<regexp:Span>resultGroups3[0]).startIndex); // @output 9
+    io:println((<regexp:Span>resultGroups3[0]).endIndex); // @output 41
+    io:println((<regexp:Span>resultGroups3[0]).substring()); // @output John abcd@gmail.com +94123456789
+    io:println((<regexp:Span>resultGroups3[1]).startIndex); // @output 9
+    io:println((<regexp:Span>resultGroups3[1]).endIndex); // @output 13
+    io:println((<regexp:Span>resultGroups3[1]).substring()); // @output John
+    regexp:Span resultSpan32 = <regexp:Span>resultGroups3[2];
+    io:println(resultSpan32.startIndex); // @output 14
+    io:println(resultSpan32.endIndex); // @output 28
+    io:println(resultSpan32.substring()); // @output abcd@gmail.com
+    regexp:Span resultSpan33 = <regexp:Span>resultGroups3[3];
+    io:println(resultSpan33.startIndex); // @output 29
+    io:println(resultSpan33.endIndex); // @output 41
+    io:println(resultSpan33.substring()); // @output +94123456789
+}
+
+Test-Case: output
+Description: Test `matchGroupsAt` function at module level.
+Labels: function-call-expr, regexp, matchGroupsAt, method-call-expr
+
+import ballerina/lang.regexp;
+
+string str1 = "John abcd@gmail.com +94123456789";
+var personalDetailsRegex = re `([A-z]+)\s([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})\s(\+?[0-9]{10,14})`;
+string:RegExp spaceRegex = re `(\s)`;
+
+regexp:Groups? res0 = spaceRegex.matchGroupsAt("NoSpaces");
+regexp:Groups? res1 = personalDetailsRegex.matchGroupsAt(str1);
+regexp:Groups? res2 = re `(.*)`.matchGroupsAt("Call me +94111111111, +941212121212 or +942222222222", 8);
+regexp:Groups? res3 = regexp:matchGroupsAt(re = personalDetailsRegex, str = "details: John abcd@gmail.com +94123456789", startIndex = 9);
+
+function init() {
+    io:println(res0 is ()); // @output true
+
+    io:println(res1 is regexp:Groups); // @output true
+    regexp:Groups resultGroups1 = <regexp:Groups>res1;
+    io:println(resultGroups1.length()); // @output 4
+    io:println((<regexp:Span> resultGroups1[0]).startIndex); // @output 0
+    io:println((<regexp:Span> resultGroups1[0]).endIndex); // @output 32
+    io:println((<regexp:Span> resultGroups1[0]).substring()); // @output John abcd@gmail.com +94123456789
+    io:println((<regexp:Span> resultGroups1[1]).startIndex); // @output 0
+    io:println((<regexp:Span> resultGroups1[1]).endIndex); // @output 4
+    io:println((<regexp:Span> resultGroups1[1]).substring()); // @output John
+    regexp:Span resultSpan1 = <regexp:Span>resultGroups1[2];
+    io:println(resultSpan1.startIndex); // @output 5
+    io:println(resultSpan1.endIndex); // @output 19
+    io:println(resultSpan1.substring()); // @output abcd@gmail.com
+    regexp:Span resultSpan2 = <regexp:Span>resultGroups1[3];
+    io:println(resultSpan2.startIndex); // @output 20
+    io:println(resultSpan2.endIndex); // @output 32
+    io:println(resultSpan2.substring()); // @output +94123456789
+
+    io:println(res2 is regexp:Groups); // @output true
+    regexp:Groups resultGroups2 = <regexp:Groups>res2;
+    io:println(resultGroups2.length()); // @output 2
+    regexp:Span resultSpan20 = <regexp:Span>resultGroups2[0];
+    io:println(resultSpan20.startIndex); // @output 8
+    io:println(resultSpan20.endIndex); // @output 52
+    io:println(resultSpan20.substring()); // @output +94111111111, +941212121212 or +942222222222
+    regexp:Span resultSpan21 = <regexp:Span>resultGroups2[1];
+    io:println(resultSpan21.startIndex); // @output 8
+    io:println(resultSpan21.endIndex); // @output 52
+    io:println(resultSpan21.substring()); // @output +94111111111, +941212121212 or +942222222222
+
+    io:println(res3 is regexp:Groups); // @output true
+    regexp:Groups resultGroups3 = <regexp:Groups>res3;
+    io:println(resultGroups1.length()); // @output 4
+    io:println((<regexp:Span>resultGroups3[0]).startIndex); // @output 9
+    io:println((<regexp:Span>resultGroups3[0]).endIndex); // @output 41
+    io:println((<regexp:Span>resultGroups3[0]).substring()); // @output John abcd@gmail.com +94123456789
+    io:println((<regexp:Span>resultGroups3[1]).startIndex); // @output 9
+    io:println((<regexp:Span>resultGroups3[1]).endIndex); // @output 13
+    io:println((<regexp:Span>resultGroups3[1]).substring()); // @output John
+    regexp:Span resultSpan32 = <regexp:Span>resultGroups3[2];
+    io:println(resultSpan32.startIndex); // @output 14
+    io:println(resultSpan32.endIndex); // @output 28
+    io:println(resultSpan32.substring()); // @output abcd@gmail.com
+    regexp:Span resultSpan33 = <regexp:Span>resultGroups3[3];
+    io:println(resultSpan33.startIndex); // @output 29
+    io:println(resultSpan33.endIndex); // @output 41
+    io:println(resultSpan33.substring()); // @output +94123456789
+}
+
+Test-Case: output
+Description: Test `matchGroupsAt` function with negative range.
+Labels: function-call-expr, regexp, matchGroupsAt, method-call-expr
+
+import ballerina/lang.regexp;
+
+function errorFunction() {
+    string str1 = "John abcd@gmail.com +94123456789";
+    var personalDetailsRegex = re `([A-z]+)\s([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})\s(\+?[0-9]{10,14})`;
+    regexp:Groups|error? err = trap personalDetailsRegex.matchGroupsAt(str1, -5);
+    io:println(err is error); // @output true
+    io:println((<error> err).detail().get("message").ensureType()); // @output start index cannot be less than 0
+}
+
+Test-Case: error
+Description: Test `matchGroupsAt` function with large integer values.
+Labels: function-call-expr, regexp, matchGroupsAt, method-call-expr
+
+import ballerina/lang.regexp;
+
+function errorFunction() {
+    string str1 = "John abcd@gmail.com +94123456789";
+    var personalDetailsRegex = re `([A-z]+)\s([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})\s(\+?[0-9]{10,14})`;
+
+    regexp:Groups? _ = personalDetailsRegex.matchGroupsAt(str1, 1000000000000000000000); // @error out of range
+}
+
+Test-Case: output
+Description: Test assignability of `matchGroupsAt` function result.
+Labels: function-call-expr, regexp, matchGroupsAt, method-call-expr
+
+import ballerina/lang.regexp;
+
+function init() {
+    var wordSeparatorRegex = re `(\s*,\s*)`;
+    string str1 = "a, b , c,,   d,  e";
+
+    any result1 = wordSeparatorRegex.matchGroupsAt(str1);
+    io:println(result1 is regexp:Groups?); // @output true
+
+    var result2 = re `cd`.matchGroupsAt(str1);
+    io:println(result2 is regexp:Groups?); // @output true
+
+    int|regexp:Groups? result3 = regexp:matchGroupsAt(re = wordSeparatorRegex, str = str1);
+    io:println(result3 is regexp:Groups?); // @output true
+
+    var result4 = wordSeparatorRegex.matchGroupsAt("AA");
+    io:println(result4 is ()); // @output true
+}
+
+Test-Case: error
+Description: Test assigning the result of `matchGroupsAt` function to an incompatible type.
+Labels: function-call-expr, regexp, matchGroupsAt, method-call-expr
+
+import ballerina/lang.regexp;
+
+function errorFunction() {
+    var wordSeparatorRegex = re `(\s*,\s*)`;
+    string str1 = "a, b , c,,   d,  e";
+
+    regexp:Groups _ = wordSeparatorRegex.matchGroupsAt(str1); // @error expects a regexp:Groups, but matchGroupsAt() returns regexp:Groups?
+    regexp:Groups[] _ = wordSeparatorRegex.matchGroupsAt(str1); // @error expects a regexp:Groups[], but matchGroupsAt() returns regexp:Groups?
+    int _ = wordSeparatorRegex.matchGroupsAt(str1); // @error expects a int, but matchGroupsAt() returns regexp:Groups?
+}
+
+Test-Case: error
+Description: Test missing required parameters for `matchGroupsAt` method.
+Labels: function-call-expr, regexp, matchGroupsAt, method-call-expr
+
+import ballerina/lang.regexp;
+
+function errorFunction() {
+    var wordSeparatorRegex = re `(\s*,\s*)`;
+    string str1 = "a, b , c,,   d,  e";
+
+    regexp:Groups? _ = wordSeparatorRegex.matchGroupsAt(); // @error missing string argument
+    regexp:Groups? _ = regexp:matchGroupsAt(wordSeparatorRegex); // @error missing string argument
+    regexp:Groups? _ = regexp:matchGroupsAt(str = ""); // @error missing required parameter 're' in call to 'matchGroupsAt()'
+    regexp:Groups? _ = re `abc`.matchGroupsAt(); // @error missing string argument
+}
+
+Test-Case: error
+Description: Test passing invalid parameters to `matchGroupsAt` method.
+Labels: function-call-expr, regexp, matchGroupsAt, method-call-expr
+
+import ballerina/lang.regexp;
+
+function errorFunction() {
+    var wordSeparatorRegex = re `(\s*,\s*)`;
+    string str1 = "a, b , c,,   d,  e";
+
+    regexp:Groups? _ = wordSeparatorRegex.matchGroupsAt(12); // @error expected 'string', found 'int'
+    regexp:Groups? _ = regexp:matchGroupsAt(re = "abc", str = "MatchHereAndHere"); // @error expected 'regexp:RegExp', found 'string'
+}
+
+Test-Case: error
+Description: Test passing too many parameters to `matchGroupsAt` method.
+Labels: function-call-expr, regexp, matchGroupsAt, method-call-expr
+
+import ballerina/lang.regexp;
+
+function errorFunction() {
+    var regExpr1 = re `(Here)`;
+
+    regexp:Groups? _ = regExpr1.matchGroupsAt("MatchHereAndHere", 5, 1); // @error too many arguments
+}
