@@ -1,0 +1,142 @@
+Test-Case: output
+Description: Test `findGroups` function.
+Labels: function-call-expr, regexp, findGroups, method-call-expr
+
+import ballerina/lang.regexp;
+
+function init() {
+    string str1 = "HelloWorrrld";
+    var regExpr1 = re `Wor+ld`;
+    regexp:Groups? res1 = regExpr1.findGroups(str1);
+    io:println(res1 is regexp:Groups); // @output true
+    regexp:Groups resultGroups1 = <regexp:Groups>res1;
+    io:println(resultGroups1.length()); // @output 1
+    regexp:Span resultSpan1 = <regexp:Span>resultGroups1[0];
+    io:println(resultSpan1.startIndex); // @output 5
+    io:println(resultSpan1.endIndex); // @output 12
+    io:println(resultSpan1.substring()); // @output Worrrld
+
+    regexp:Groups? res0 = re `\s`.findGroups("NoSpaces");
+    io:println(res0 is ()); // @output true
+
+    string str2 = "bs!!!!!3r";
+    var regExpr2 = re `[a-z](!+)[0-9]`;
+    regexp:Groups? res2 = regExpr2.findGroups(str2);
+    io:println(res2 is regexp:Groups); // @output true
+    regexp:Groups resultGroups2 = <regexp:Groups>res2;
+    io:println(resultGroups2.length()); // @output 2
+    regexp:Span resultSpan20 = <regexp:Span>resultGroups2[0];
+    io:println(resultSpan20.startIndex); // @output 1
+    io:println(resultSpan20.endIndex); // @output 8
+    io:println(resultSpan20.substring()); // @output s!!!!!3
+    regexp:Span resultSpan21 = <regexp:Span>resultGroups2[1];
+    io:println(resultSpan21.startIndex); // @output 2
+    io:println(resultSpan21.endIndex); // @output 7
+    io:println(resultSpan21.substring()); // @output !!!!!
+
+    string str3 = "website is www.google.com";
+    var regExpr3 = re `(w{3})(.)([a-z]+)(.)([a-z]{2,6})`;
+    regexp:Groups? res3 = regExpr3.findGroups(str3);
+    io:println(res3 is regexp:Groups); // @output true
+    regexp:Groups resultGroups3 = <regexp:Groups>res3;
+    io:println(resultGroups3.length()); // @output 6
+    regexp:Span resultSpan30 = <regexp:Span>resultGroups3[0];
+    io:println(resultSpan30.startIndex); // @output 11
+    io:println(resultSpan30.endIndex); // @output 25
+    io:println(resultSpan30.substring()); // @output www.google.com
+    regexp:Span resultSpan31 = <regexp:Span>resultGroups3[1];
+    io:println(resultSpan31.substring()); // @output www
+    regexp:Span resultSpan32 = <regexp:Span>resultGroups3[2];
+    io:println(resultSpan32.substring()); // @output .
+    regexp:Span resultSpan33 = <regexp:Span>resultGroups3[3];
+    io:println(resultSpan33.substring()); // @output google
+    regexp:Span resultSpan34 = <regexp:Span>resultGroups3[4];
+    io:println(resultSpan34.substring()); // @output .
+    regexp:Span resultSpan35 = <regexp:Span>resultGroups3[5];
+    io:println(resultSpan35.substring()); // @output com
+}
+
+Test-Case: output
+Description: Test `findGroups` function at module level.
+Labels: function-call-expr, regexp, findGroups, method-call-expr
+
+import ballerina/lang.regexp;
+
+var regExpr = re `[0-2][0-4]:([0-5][0-9]|60)`;
+regexp:Groups? res = regExpr.findGroups("does not match 34:23 but match 24:59");
+
+function init() {
+    io:println(res is regexp:Groups); // @output true
+    regexp:Groups resspan = <regexp:Groups> res;
+    io:println(resspan.length()); // @output 2
+    io:println(resspan[0].substring()); // @output 24:59
+    io:println((<regexp:Span>resspan[1]).substring());  // @output 59
+}
+
+Test-Case: output
+Description: Test assignability of `findGroups` function result.
+Labels: function-call-expr, regexp, findGroups, method-call-expr
+
+import ballerina/lang.regexp;
+
+function init() {
+    var regExpr1 = re `Here`;
+    string str1 = "MatchHereAndHere";
+    any result1 = regExpr1.findGroups(str1);
+    io:println(result1 is regexp:Groups); // @output true
+
+    var result2 = regExpr1.findGroups(str1);
+    io:println(result2 is regexp:Groups); // @output true
+}
+
+Test-Case: error
+Description: Test assigning the result of `findGroups` function to an incompatible type.
+Labels: function-call-expr, regexp, findGroups, method-call-expr
+
+import ballerina/lang.regexp;
+
+function errorFunction() {
+    var regExpr1 = re `MatchHereAndHere`;
+    string str1 = "Here";
+
+    regexp:Groups _ = regExpr1.findGroups(str1, 5); // @error expects a regexp:Group, but findGroups() returns regexp:Groups?
+
+    int _ = regExpr1.findGroups(str1); // @error expects a int, but findGroups() returns regexp:Groups?
+}
+
+Test-Case: error
+Description: Test missing required parameters for `findGroups` method.
+Labels: function-call-expr, regexp, findGroups, method-call-expr
+
+import ballerina/lang.regexp;
+
+function errorFunction() {
+    var regExpr1 = re `regexp`;
+
+    regexp:Groups? _ = regExpr1.findGroups(); // @error missing string argument
+
+}
+
+Test-Case: error
+Description: Test passing invalid parameters to `findGroups()` method.
+Labels: function-call-expr, regexp, findGroups, method-call-expr
+
+import ballerina/lang.regexp;
+
+function errorFunction() {
+    var regExpr1 = re `Here`;
+
+    regexp:Groups? _ = regExpr1.findGroups(12); // @error int is not a subtype of string
+}
+
+Test-Case: error
+Description: Test passing too many parameters to `findGroups()` method.
+Labels: function-call-expr, regexp, find, method-call-expr
+
+import ballerina/lang.regexp;
+
+function errorFunction() {
+    var regExpr1 = re `Here`;
+
+    regexp:Groups? _ = regExpr1.findGroups("MatchHereAndHere", 5, 1); // @error too many arguments
+}
