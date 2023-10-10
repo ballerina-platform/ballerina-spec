@@ -1,0 +1,728 @@
+Test-Case: output
+Description: Test spread operator with basic contextually expected type.
+Labels: array-type, list-constructor-expr, spread-operator, tuple-type
+
+function init() {
+    int[] a0 = [];
+    int[2] a1 = [];
+    int[2] a2 = [1, 2];
+    int[] v0 = [...a0];
+    [int, int] v1 = [...a1];
+    int[] v2 = [...a2];
+    io:println(v0); // @output []
+    io:println(v1); // @output [0,0]
+    io:println(v2); // @output [1,2]
+    io:println(v2); // @output [1,2]
+}
+
+Test-Case: output
+Description: Test spread operator with record contextually expected type.
+Labels: array-type, list-constructor-expr, spread-operator, tuple-type, mapping-constructor-expr, module-type-defn, record-type
+
+type Foo record {|int i;|};
+
+function init() {
+    Foo[] a0 = [];
+    Foo[2] a1 = [{i:10}, {i:15}];
+    Foo[] v0 = [...a0];
+    [Foo, Foo] v1 = [...a1];
+    Foo[] v2 = [...a1];
+    io:println(v0); // @output []
+    io:println(v1); // @output [{"i":10},{"i":15}]
+    io:println(v2); // @output [{"i":10},{"i":15}]
+}
+
+Test-Case: output
+Description: Test spread operator with union of record types.
+Labels: array-type, list-constructor-expr, spread-operator, tuple-type, mapping-constructor-expr, module-type-defn, record-type,
+        union-type
+
+type Foo record {|int i;|};
+type Bar string|int|Foo;
+
+function init() {
+    (Bar|Foo)[] a0 = [];
+    (Bar|Foo)[4] a1 = [{i:10}, {i:15}, 1, 2];
+    (Bar|Foo)[] v0 = [...a0];
+    [Bar|Foo, Bar|Foo, Bar|Foo, Bar|Foo] v1 = [...a1];
+    (Bar|Foo)[] v2 = [...a1];
+    io:println(v0); // @output []
+    io:println(v1); // @output [{"i":10},{"i":15},1,2]
+    io:println(v2); // @output [{"i":10},{"i":15},1,2]
+}
+
+Test-Case: output
+Description: Test multiple spread operators with list constructor expr.
+Labels: array-type, list-constructor-expr, spread-operator, var
+
+function init() {
+    int[] a0 = [];
+    int[2] a1 = [];
+    int[2] a2 = [1, 2];
+    int[] a3 = [2, 2, 2];
+    int[] v0 = [...a0, ...a1];
+    var v1 = [...a1, ...a2];
+    int[] v2 = [...a2, ...a1];
+    int[] v3 = [...a0, ...a2, ...a1];
+    int[] v4 = [...a0, ...a2, ...a1, ...a3];
+    io:println(v0); // @output [0,0]
+    io:println(v1); // @output [0,0,1,2]
+    io:println(v2); // @output [1,2,0,0]
+    io:println(v3); // @output [1,2,0,0]
+    io:println(v4); // @output [1,2,0,0,2,2,2]
+}
+
+Test-Case: output
+Description: Test spread operator when there is union contextually expected type.
+Labels: array-type, list-constructor-expr, spread-operator, union-type
+
+function init() {
+    int[] a0 = [];
+    int[2] a1 = [];
+    int[2] a2 = [1, 2];
+    int[] a3 = [2, 2, 2];
+    int[] v0 = [...a0, ...a1];
+    (int|string)[] v1 = [...a1, ...a2];
+    (int|string)[] v2 = [...a2, ...a1];
+    (int|string)[] v3 = [...a0, ...a2, ...a1];
+    (int|string)[] v4 = [...a0, ...a2, ...a1, ...a3];
+    io:println(v0); // @output [0,0]
+    io:println(v1); // @output [0,0,1,2]
+    io:println(v2); // @output [1,2,0,0]
+    io:println(v3); // @output [1,2,0,0]
+    io:println(v4); // @output [1,2,0,0,2,2,2]
+}
+
+Test-Case: output
+Description: Test spread operator when there is union contextually expected type.
+Labels: array-type, list-constructor-expr, spread-operator, union-type
+
+function init() {
+    (int|string)[] a0 = [];
+    (int|string)[2] a1 = [0, 0];
+    (int|string)[2] a2 = [1, 2];
+    (int|string)[] a3 = [2, 2, 2];
+    (int|string)[] v0 = [...a0, ...a1];
+    (int|string)[] v1 = [...a1, ...a2];
+    (int|string)[] v2 = [...a2, ...a1];
+    (int|string)[] v3 = [...a0, ...a2, ...a1];
+    (int|string)[] v4 = [...a0, ...a2, ...a1, ...a3];
+    io:println(v0); // @output [0,0]
+    io:println(v1); // @output [0,0,1,2]
+    io:println(v2); // @output [1,2,0,0]
+    io:println(v3); // @output [1,2,0,0]
+    io:println(v4); // @output [1,2,0,0,2,2,2]
+}
+
+Test-Case: output
+Description: Test spread operator within various positions of list constructor expr.
+Labels: array-type, list-constructor-expr, spread-operator, var
+
+function init() {
+    int[2] a1 = [3, 4];
+    int[4] a2 = [1, 2, ...a1];
+    int[6] a3 = [...a2, 5, 6];
+    var v1 = [...a3, 7, 8];
+    io:println(v1); // @output [1,2,3,4,5,6,7,8]
+}
+
+Test-Case: output
+Description: Test spread operator within nested list constructor exprs.
+Labels: array-type, list-constructor-expr, spread-operator, var
+
+function init() {
+    int[4]a1 = [...[1, 2], 3, 4];
+    int[4] a2 = [1, 2, ...[]];
+    int[6] a3 = [...a2, 5, 6];
+    var v1 = [...a3, 7, 8];
+    io:println(v1); // @output [1,2,0,0,5,6,7,8]
+    io:println(a1); // @output [1,2,3,4]
+}
+
+
+Test-Case: output
+Description: Test spread operator within nested list constructor exprs.
+Labels: array-type, list-constructor-expr, spread-operator
+
+function init() {
+    int[8] a1 = [...[1, 2, ...[1, 2, ...[1, 2], ...[]]], 3, 4];
+    io:println(a1); // @output [1,2,3,4]
+}
+
+Test-Case: output
+Description: Test list constructor expr with spread operator.
+Labels: array-type, list-constructor-expr, spread-operator, readonly-type
+
+function init() {
+    int[4]|string[4] & readonly a0 = [1, 2, 3, 4];
+    int[8] a1 = [1, ...<int[4]>a0];
+    io:println(a1); // @output [1,1,2,3,4,0,0,0]
+}
+
+Test-Case: output
+Description: Test a member of list being able to fill automatically with spread operator.
+Labels: array-type, list-constructor-expr, spread-operator, tuple-type
+
+function init() {
+    int[3] a0 = [];
+    int[2] a1 = [1, 2];
+    [int, int...] v0 = [...a0];
+    [int, int] v1 = [...a1];
+    io:println(v0); // @output [0,0,0]
+    io:println(v1); // @output [1,2]
+}
+
+Test-Case: output
+Description: Test spread operator within nested list constructor exprs.
+Labels: list-constructor-expr, spread-operator, tuple-type
+
+function init() {
+    [int, [int]] a1 = [1, [2]];
+    [int, [int]] v0 = [...a1];
+    io:println(v0); // @output [1,[2]]
+}
+
+Test-Case: output
+Description: Test spread operator within nested list constructor exprs.
+Labels: array-type, list-constructor-expr, spread-operator, tuple-type
+
+function init() {
+    int[1] a2 = [];
+    [int, [int]] a1 = [1, [2]];
+    [int, [int, [int]]] v0 = [...a2, [...a1]];
+    io:println(v0); // @output [0,1,[2]]
+}
+
+Test-Case: output
+Description: Test spread operator within nested list constructor exprs.
+Labels: array-type, list-constructor-expr, spread-operator, tuple-type
+
+function init() {
+    int[1] a2 = [];
+    [int, [int]] a1 = [1, [2]];
+    [int|string, [int, [int|string]]] v0 = [...a2, [...a1]];
+    io:println(v0); // @output [0,1,[2]]
+}
+
+Test-Case: output
+Description: Test spread operator with inferred array length.
+Labels: array-type, list-constructor-expr, spread-operator
+
+function init() {
+    int[*] a1 = [1, 2];
+    int[*] a2 = [3, 4];
+    int[] v1 = [...a1, ...a2];
+    int[4] v2 = [...a1, ...a2];
+    int[*] v3 = [...a1, ...a2];
+    io:println(v1); // @output [1,2,3,4]
+    io:println(v2); // @output [1,2,3,4]
+    io:println(v3); // @output [1,2,3,4]
+}
+
+Test-Case: output
+Description: Test spread operator with inferred array length.
+Labels: array-type, list-constructor-expr, spread-operator, tuple-type
+
+function init() {
+    int[*] a1 = [1, 2];
+    int[*] a2 = [3, 4];
+    [(int|string)...] v0 = [...a1, ...a2];
+    [int, (int|string)...] v1 = [...a1, ...a2];
+    [int, int, (int|string)...] v2 = [...a1, ...a2];
+    [int, any, (int|string)...] v3 = [...a1, ...a2];
+    [int, anydata, (int|string)...] v4 = [...a1, ...a2];
+    [int, (int|string)...] v5 = [...a1, ...a2, ...[1, 1]];
+    io:println(v0); // @output [1,2,3,4]
+    io:println(v1); // @output [1,2,3,4]
+    io:println(v2); // @output [1,2,3,4]
+    io:println(v3); // @output [1,2,3,4]
+    io:println(v4); // @output [1,2,3,4]
+    io:println(v5); // @output [1,2,3,4,1,1]
+}
+
+Test-Case: output
+Description: Test spread operator with type cast expr.
+Labels: array-type, list-constructor-expr, spread-operator, tuple-type, union-type, type-cast-expr
+
+function init() {
+    int[*]|string[*] a1 = [1, 2];
+    int[*]|string[*] a2 = [3, 4];
+    [(int|string)...] v0 = [...<int[2]>a1, ...<int[2]>a2];
+    [int, (int|string)...] v1 = [...<int[2]>a1, ...<int[2]>a2];
+    [int, int, (int|string)...] v2 = [...<int[2]>a1, ...<int[2]>a2];
+    [int, any, (int|string)...] v3 = [...<int[2]>a1, ...<int[2]>a2];
+    [int, anydata, (int|string)...] v4 = [...<int[2]>a1, ...<int[2]>a2];
+    [int, (int|string)...] v5 = [...<int[2]>a1, ...<int[2]>a2, ...[1, 1]];
+    io:println(v0); // @output [1,2,3,4]
+    io:println(v1); // @output [1,2,3,4]
+    io:println(v2); // @output [1,2,3,4]
+    io:println(v3); // @output [1,2,3,4]
+    io:println(v4); // @output [1,2,3,4]
+    io:println(v5); // @output [1,2,3,4,1,1]
+}
+
+Test-Case: output
+Description: Test spread operator with tuple type.
+Labels: list-constructor-expr, spread-operator, tuple-type, union-type
+
+function init() {
+    [int, string] a1 = [1, "x"];
+    [int...] a2 = [1, 2];
+    [(int|string)...] v0 = [...a1, ...a2];
+    [int, (int|string)...] v1 = [...a1, ...a2];
+    [int, string, (int|string)...] v2 = [...a1, ...a2];
+    [int, any, (int|string)...] v3 = [...a1, ...a2];
+    [int, anydata, (int|string)...] v4 = [...a1, ...a2];
+    [int, (int|string)...] v5 = [...a1, ...a2, ...[1, 1]];
+    io:println(v0); // @output [1,"x",3,4]
+    io:println(v1); // @output [1,"x",3,4]
+    io:println(v2); // @output [1,"x",3,4]
+    io:println(v3); // @output [1,"x",3,4]
+    io:println(v4); // @output [1,"x",3,4]
+    io:println(v5); // @output [1,"x",3,4,1,1]
+}
+
+Test-Case: output
+Description: Test spread operator with tuple type.
+Labels: list-constructor-expr, spread-operator, tuple-type, union-type, never-type
+
+function init() {
+    [int, string, never...] a1 = [1, "x"];
+    [int...] a2 = [1, 2];
+    [never...] a3 = [];
+    [(int|string)...] v0 = [...a1, ...a2, ...a3];
+    [int, (int|string)...] v1 = [...a1, ...a2, ...a3];
+    [int, string, (int|string)...] v2 = [...a1, ...a2, ...a3];
+    [int, any, (int|string)...] v3 = [...a1, ...a2, ...a3];
+    [int, anydata, (int|string)...] v4 = [...a1, ...a2, ...a3];
+    [int, (int|string)...] v5 = [...a1, ...a2, ...a3, ...[1, 1]];
+    io:println(v0); // @output [1,"x",1,2]
+    io:println(v1); // @output [1,"x",1,2]
+    io:println(v2); // @output [1,"x",1,2]
+    io:println(v3); // @output [1,"x",1,2]
+    io:println(v4); // @output [1,"x",1,2]
+    io:println(v5); // @output [1,"x",1,2,1,1]
+}
+
+Test-Case: output
+Description:  Test spread operator without contextually expected type.
+Labels: list-constructor-expr, spread-operator, tuple-type, var, never-type
+
+function init() {
+    [int, string, never...] a1 = [1, "x"];
+    [int, int, never...] a2 = [1, 2];
+    [never...] a3 = [];
+    var v0 = [...a1];
+    var v1 = [...a2];
+    var v2 = [...a3];
+    var v3 = [...a1, ...a2];
+    var v4 = [...a1, ...a2, ...a3];
+    var v5 = [...a1, ...a2, ...a3, ...[1, 1]];
+    io:println(v0); // @output [1,"x"]
+    io:println(v1); // @output [,1,2]
+    io:println(v2); // @output []
+    io:println(v3); // @output [1,"x",1,2]
+    io:println(v4); // @output [1,"x",1,2]
+    io:println(v5); // @output [1,"x",1,2,1,1]
+}
+
+Test-Case: output
+Description: Test spread operator with readonly contextually expected type.
+Labels: list-constructor-expr, spread-operator, tuple-type, var, never-type, readonly-type,
+        intersection-type
+
+type Foo int[2] & readonly;
+type Bar int[2]|string|(readonly & int[3])|float;
+
+function init() {
+    [int, string, never...] & readonly a1 = [1, "x"];
+    [int, int, never...] & readonly a2 = [1, 2];
+    [never...] & readonly a3 = [];
+    [int, boolean] & readonly a4 = [1, true];
+    int[2] & readonly a5 = [1, 2];
+    Foo a6 = [1, 2];
+    Bar a7 = [1, 2, 3];
+    [readonly, readonly] a8 = ["x", 1];
+    readonly v0 = [...a1];
+    readonly v1 = [...a2];
+    readonly v2 = [...a3];
+    readonly v3 = [...a1, ...a2, ...a4];
+    readonly v4 = [...a1, ...a2, ...a3, ...a4];
+    readonly v5 = [1, 2, ...a1, ...a2, ...a3, ...a4, ...[1, 1]];
+    readonly v6 = [...a5];
+    readonly v7 = [...a6];
+    readonly v8 = [...<readonly & int[3]>a7];
+    [readonly, readonly] v9 = [...a8];
+    io:println(v0); // @output [1,"x"]
+    io:println(v1); // @output [,1,2]
+    io:println(v2); // @output []
+    io:println(v3); // @output [1,"x",1,2,true]
+    io:println(v4); // @output [1,"x",1,2,true]
+    io:println(v5); // @output [1,2,1,"x",1,2,1,true,1,1]
+    io:println(v6); // @output [1,2]
+    io:println(v7); // @output [1,2]
+    io:println(v8); // @output [1,2,3]
+    io:println(v9); // @output ["x",1]
+}
+
+Test-Case: output
+Description: Test spread operator without contextually expected type.
+Labels: list-constructor-expr, spread-operator, tuple-type, var, never-type, intersection-type,
+        boolean-type, var
+
+type Foo int[2] & readonly;
+type Bar int[2]|string|(readonly & int[3])|float;
+
+function init() {
+    [int, string, never...] & readonly a1 = [1, "x"];
+    [int, int, never...] & readonly a2 = [1, 2];
+    [never...] & readonly a3 = [];
+    [int, boolean] & readonly a4 = [1, true];
+    int[2] & readonly a5 = [1, 2];
+    Foo a6 = [1, 2];
+    Bar a7 = [1, 2, 3];
+    [readonly, readonly] a8 = ["x", 1];
+    var a10 = [1, 2];
+    var v0 = [...a1];
+    var v1 = [...a2];
+    var v2 = [...a3];
+    var v3 = [...a1, ...a2, ...a4];
+    var v4 = [...a1, ...a2, ...a3, ...a4];
+    var v5 = [1, 2, ...a1, ...a2, ...a3, ...a4, ...[1, 1]];
+    var v6 = [...a5];
+    var v7 = [...a6];
+    var v8 = [...<readonly & int[3]>a7];
+    var v9 = [...a8];
+    var v10 = [...a10];
+    io:println(v0); // @output [1,"x"]
+    io:println(v1); // @output [,1,2]
+    io:println(v2); // @output []
+    io:println(v3); // @output [1,"x",1,2,true]
+    io:println(v4); // @output [1,"x",1,2,true]
+    io:println(v5); // @output [1,2,1,"x",1,2,1,true,1,1]
+    io:println(v6); // @output [1,2]
+    io:println(v7); // @output [1,2]
+    io:println(v8); // @output [1,2,3]
+    io:println(v9); // @output ["x",1]
+    io:println(v10); // @output [1,2]
+}
+
+Test-Case: output
+Description: Test spread operator with typedesc contextually expected type.
+Labels: list-constructor-expr, spread-operator, tuple-type, var, never-type, intersection-type,
+        boolean-type, var, typedesc-type
+
+type Foo int[2] & readonly;
+type Bar int[2]|string|(readonly & int[3])|float;
+
+function init() {
+    [int, string, never...] & readonly a1 = [1, "x"];
+    [int, int, never...] & readonly a2 = [1, 2];
+    [never...] & readonly a3 = [];
+    [int, boolean] & readonly a4 = [1, true];
+    int[2] & readonly a5 = [1, 2];
+    Foo a6 = [1, 2];
+    Bar a7 = [1, 2, 3];
+    [readonly, readonly] a8 = ["x", 1];
+    var a10 = [1, 2];
+    typedesc v0 = [...a1];
+    typedesc v1 = [...a2];
+    typedesc v2 = [...a3];
+    typedesc v3 = [...a1, ...a2, ...a4];
+    typedesc v4 = [...a1, ...a2, ...a3, ...a4];
+    typedesc v5 = [1, 2, ...a1, ...a2, ...a3, ...a4, ...[1, 1]];
+    typedesc v6 = [...a5];
+    typedesc v7 = [...a6];
+    typedesc v8 = [...<readonly & int[3]>a7];
+    typedesc v9 = [...a8];
+    typedesc v10 = [...a10];
+    io:println(v0); // @output typedesc [int,string]
+    io:println(v1); // @output typedesc [int,int]
+    io:println(v2); // @output typedesc []
+    io:println(v3); // @output typedesc [int,string,int,int,int,boolean]
+    io:println(v4); // @output typedesc [int,string,int,int,int,boolean]
+    io:println(v5); // @output typedesc [int,int,int,string,int,int,int,boolean,int,int]
+    io:println(v6); // @output typedesc [int,int]
+    io:println(v7); // @output typedesc [int,int]
+    io:println(v8); // @output typedesc [int,int,int]
+    io:println(v9); // @output typedesc [readonly,readonly]
+    io:println(v10); // @output typedesc [int,int]
+}
+
+Test-Case: output
+Description: Test spread operator without contextually expected type.
+Labels: list-constructor-expr, spread-operator, tuple-type, var, never-type, intersection-type,
+        boolean-type, var
+
+type Foo int[2] & readonly;
+type Bar int[2]|string|(readonly & int[3])|float;
+
+[int, string, never...] & readonly a1 = [1, "x"];
+[int, int, never...] & readonly a2 = [1, 2];
+[never...] & readonly a3 = [];
+[int, boolean] & readonly a4 = [1, true];
+int[2] & readonly a5 = [1, 2];
+Foo a6 = [1, 2];
+Bar a7 = [1, 2, 3];
+[readonly, readonly] a8 = ["x", 1];
+var a10 = [1, 2];
+
+function init() {
+    var v0 = [...a1];
+    var v1 = [...a2];
+    var v2 = [...a3];
+    var v3 = [...a1, ...a2, ...a4];
+    var v4 = [...a1, ...a2, ...a3, ...a4];
+    var v5 = [1, 2, ...a1, ...a2, ...a3, ...a4, ...[1, 1]];
+    var v6 = [...a5];
+    var v7 = [...a6];
+    var v8 = [...<readonly & int[3]>a7];
+    var v9 = [...a8];
+    var v10 = [...a10];
+    io:println(v0); // @output [1,"x"]
+    io:println(v1); // @output [,1,2]
+    io:println(v2); // @output []
+    io:println(v3); // @output [1,"x",1,2,true]
+    io:println(v4); // @output [1,"x",1,2,true]
+    io:println(v5); // @output [1,2,1,"x",1,2,1,true,1,1]
+    io:println(v6); // @output [1,2]
+    io:println(v7); // @output [1,2]
+    io:println(v8); // @output [1,2,3]
+    io:println(v9); // @output ["x",1]
+    io:println(v10); // @output [1,2]
+}
+
+Test-Case: output
+Description: Test spread operator without contextually expected type.
+Labels: list-constructor-expr, spread-operator, tuple-type, var, never-type, intersection-type,
+        boolean-type, var
+
+type Foo int[2] & readonly;
+type Bar int[2]|string|(readonly & int[3])|float;
+
+[int, string, never...] & readonly a1 = [1, "x"];
+[int, int, never...] & readonly a2 = [1, 2];
+[never...] & readonly a3 = [];
+[int, boolean] & readonly a4 = [1, true];
+int[2] & readonly a5 = [1, 2];
+Foo a6 = [1, 2];
+Bar a7 = [1, 2, 3];
+[readonly, readonly] a8 = ["x", 1];
+var a10 = [1, 2];
+
+var v0 = [...a1];
+var v1 = [...a2];
+var v2 = [...a3];
+var v3 = [...a1, ...a2, ...a4];
+var v4 = [...a1, ...a2, ...a3, ...a4];
+var v5 = [1, 2, ...a1, ...a2, ...a3, ...a4, ...[1, 1]];
+var v6 = [...a5];
+var v7 = [...a6];
+var v8 = [...<readonly & int[3]>a7];
+var v9 = [...a8];
+var v10 = [...a10];
+
+function init() {
+    io:println(v0); // @output [1,"x"]
+    io:println(v1); // @output [,1,2]
+    io:println(v2); // @output []
+    io:println(v3); // @output [1,"x",1,2,true]
+    io:println(v4); // @output [1,"x",1,2,true]
+    io:println(v5); // @output [1,2,1,"x",1,2,1,true,1,1]
+    io:println(v6); // @output [1,2]
+    io:println(v7); // @output [1,2]
+    io:println(v8); // @output [1,2,3]
+    io:println(v9); // @output ["x",1]
+    io:println(v10); // @output [1,2]
+}
+
+Test-Case: output
+Description: Test tuple type with spread operator.
+Labels: list-constructor-expr, spread-operator, tuple-type, var, never-type, intersection-type,
+        boolean-type, var
+
+type Foo int[2] & readonly;
+type Bar int[2]|string|(readonly & int[3])|float;
+
+[int, string, never...] & readonly a1 = [1, "x"];
+[int, int, never...] & readonly a2 = [1, 2];
+[never...] & readonly a3 = [];
+[int, boolean] & readonly a4 = [1, true];
+int[2] & readonly a5 = [1, 2];
+Foo a6 = [1, 2];
+Bar a7 = [1, 2, 3];
+[readonly, readonly] a8 = ["x", 1];
+var a10 = [1, 2];
+
+[int, string] v0 = [...a1];
+[int, int] v1 = [...a2];
+[never...] v2 = [...a3];
+[int, string, int, int, int, boolean] v3 = [...a1, ...a2, ...a4];
+[int, string, int, int, int, boolean] v4 = [...a1, ...a2, ...a3, ...a4];
+var v5 = [1, 2, ...a1, ...a2, ...a3, ...a4, ...[1, 1]];
+int[] v6 = [...a5];
+int[] v7 = [...a6];
+int[3] v8 = [...<readonly & int[3]>a7];
+readonly[2] v9 = [...a8];
+readonly[] v10 = [...a10];
+
+function init() {
+    io:println(v0); // @output [1,"x"]
+    io:println(v1); // @output [,1,2]
+    io:println(v2); // @output []
+    io:println(v3); // @output [1,"x",1,2,true]
+    io:println(v4); // @output [1,"x",1,2,true]
+    io:println(v5); // @output [1,2,1,"x",1,2,1,true,1,1]
+    io:println(v6); // @output [1,2]
+    io:println(v7); // @output [1,2]
+    io:println(v8); // @output [1,2,3]
+    io:println(v9); // @output ["x",1]
+    io:println(v10); // @output [1,2]
+}
+
+Test-Case: output
+Description: Test spread operator with any or anydata contextually expected type.
+Labels: list-constructor-expr, spread-operator, tuple-type, var, never-type, intersection-type,
+        boolean-type, any-type, anydata-type
+
+type Foo any[2];
+type Bar [int, int, int];
+
+function init() {
+    [int, int] b1 = [1, 1];
+    int[2] b2 = [2, 2];
+    [int, int, int] b3 = [3, 3, 3];
+    [int, boolean] b4 = [1, true];
+    any a1 = b1;
+    anydata a2 = b2;
+    [any, any] a4 = b4;
+    any[2] a5 = b2;
+    Foo a6 = b2;
+    [int, int, int] a7 = b3;
+    [anydata, anydata] a8 = ["x", 1];
+    [int, int] v0 = [...<[int, int]>a1];
+    [int...] v1 = [...<int[2]>a2];
+    anydata v3 = [...<[int, int]>a1, ...<int[2]>a2, ...<[int, boolean]>a4];
+    any[] v6 = [...a5];
+    any[2] v7 = [...a6];
+    anydata v8 = [...<int[3]>a7];
+    anydata v9 = [...a8];
+    io:println(v0); // @output [1,1]
+    io:println(v1); // @output [2,2]
+    io:println(v3); // @output [1,1,2,2,1,true]
+    io:println(v6); // @output [2,2]
+    io:println(v7); // @output [2,2]
+    io:println(v8); // @output [3,3,3]
+    io:println(v9); // @output ["x",1]
+}
+
+Test-Case: output
+Description: Test spread operator without contextually expected type.
+Labels: list-constructor-expr, spread-operator, tuple-type, var, never-type
+
+function init() {
+    [never...] a1 = [];
+    int[] v1 = [...a1];
+    var v2 = [...a1];
+    var v3 = [1, 2, ...[1,2], 3];
+
+    io:println(v1); // @output []
+    io:println(v2); // @output []
+    io:println(v3); // @output [1,2,1,2,3]
+}
+
+Test-Case: error
+Description: Test open array as a spread operator.
+Labels: array-type, list-constructor-expr, spread-operator, tuple-type
+
+function errorFunction() {
+    int[] a1 = [3, 4];
+    int[4] _ = [1, 2, ...a1]; // @error invalid usage of spread operator: fixed length list expected
+}
+
+Test-Case: error
+Description: Test open array as a spread operator
+Labels: array-type, list-constructor-expr, spread-operator, union-type, type-cast-expr
+
+function init() {
+    int[2]|string[2] a1 = [3, 4];
+    int[4] a2 = [1, 2, ...<int[]>a1]; // @error invalid usage of spread operator: fixed length list expected
+}
+
+Test-Case: error
+Description: Test spread operator with varying length
+Labels: array-type, list-constructor-expr, spread-operator
+
+function errorFunction() {
+    int[4] a1 = [...[1, 2, ...[1, 2, ...[1, 2], ...[]]], 3, 4]; // @error size mismatch in closed array
+}
+
+Test-Case: error
+Description: Test type checking for array compatibility with spread operator.
+Labels: array-type, list-constructor-expr, spread-operator
+
+function errorFunction() {
+    int[11] a1 = [...[1, 2, ...[1, 2, ...[1, 2, 3.5], ...["", ""]]], 3, 4]; // @error incompatible types
+}
+
+Test-Case: error
+Description: Test open array as a spread operator.
+Labels: array-type, list-constructor-expr, spread-operator
+
+function errorFunction() {
+    int[] a0 = [];
+    int[2] v0 = [...a0]; // @error invalid usage of spread operator
+}
+
+Test-Case: error
+Description: Test open array as a spread operator.
+Labels: list-constructor-expr, spread-operator, tuple-type, string-type, never-type, var
+
+function errorFunction() {
+    [int, string, never...] a1 = [1, "x"];
+    [int...] a2 = [1, 2];
+    [never...] a3 = [];
+    var v0 = [...a1, ...a2, ...a3]; // @error fixed length list expected
+}
+
+Test-Case: error
+Description: Test open array as a spread operator.
+Labels: array-type, list-constructor-expr, spread-operator, readonly-type
+
+function errorFunction() {
+    int[] & readonly a1 = [1, 2];
+    readonly v7 = [...a1]; // @error fixed length list expected
+}
+
+Test-Case: error
+Description: Test spread operator with readonly contextually expected type.
+Labels: list-constructor-expr, spread-operator, readonly-type, type-cast-expr
+
+type Bar int[2]|string|(readonly & int[3])|float;
+
+function errorFunction() {
+    Bar a7 = [1, 2, 3];
+    readonly v7 = [...<readonly>a7]; // @error fixed length list expected
+}
+
+Test-Case: error
+Description: Test type checking for array compatibility.
+Labels: list-constructor-expr, spread-operator, int-type, function-type, json-type
+
+type Bar record {int x = 5;};
+
+function errorFunction() {
+    Bar a1 = {};
+    int a2 = 10;
+    json a3 = [];
+    function a4 = fn;
+    [Bar] _ = [...a1]; // @error incompatible types
+    int[] _ = [...a1]; // @error incompatible types
+    int[] _ = [...a2]; // @error incompatible types
+    int[] _ = [...a3]; // @error incompatible types
+    int[] _ = [...a4]; // @error incompatible types
+}
+
+function fn() returns int {
+    return 10;
+}
