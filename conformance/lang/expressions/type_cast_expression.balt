@@ -1,0 +1,2083 @@
+Test-Case: parser-error
+Description: Test syntax errors in type cast expression.
+Labels: any, type-cast-expr
+
+function errorFunction() {
+    any a = 4;
+    _ = int> a; // @error operator not defined for typedesc int an any
+
+    _ = <int a; // @error missing GT token
+
+    _ = <> a; // @error missing type descriptor
+
+    _ = <int> ; // @error missing expression
+
+    _ = <int %> a; // @error invalid token `%`
+
+    _ = <$int> a; // @error invalid token `$`
+}
+
+Test-Case: output
+Description: Test type cast param with a type containing annotations.
+Labels: annotation, annotation-decl, any, map-type, mapping-constructor-expr, string, type-cast-expr
+
+annotation map<string> MyAnnot on type;
+
+function init() {
+    any a = 5;
+    int _ = <@MyAnnot {name: "Ballerina"} int>a;
+}
+
+Test-Case: output
+Description: Test type cast param containing only annotations.
+Labels: annotation, annotation-decl, any, map-type, mapping-constructor-expr, string, type-cast-expr
+
+annotation map<string> MyAnnot on type;
+
+function init() {
+    any a = 5;
+    any _ = <@MyAnnot {name: "Ballerina"}>a;
+    any _ = <@MyAnnot>a;
+}
+
+Test-Case: error
+Description: Test type cast param containing annotations that are not allowed on type.
+Labels: annotation, annotation-decl, any, type-cast-expr
+
+const annotation MyAnnot on source var;
+
+const annotation MyAnnot2 on function;
+
+const annotation MyAnnot3 on source worker;
+
+function errorFunction() {
+    any a = 5;
+
+    any b = <@MyAnnot>a; // @error annotation 'MyAnnot' is not allowed on type
+
+    any c = <@MyAnnot2>a; // @error annotation 'MyAnnot2' is not allowed on type
+
+    any d = <@MyAnnot3>a; // @error annotation 'MyAnnot3' is not allowed on type
+
+    any e = <@MyAnnot int>a; // @error annotation 'MyAnnot' is not allowed on type
+
+    any f = <@MyAnnot2 int>a; // @error annotation 'MyAnnot2' is not allowed on type
+
+    any g = <@MyAnnot3 int>a; // @error annotation 'MyAnnot3' is not allowed on type
+}
+
+Test-Case: output
+Description: Test if the value v, which is the result of evaluating the expression, belongs to the type specified by 
+             the type cast expression then the  type cast expression is v, using simple types.
+Labels: any, boolean, decimal, DecimalFloatingPointNumber, float, FloatingPointTypeSuffix, nil-type, null, 
+        type-cast-expr, value:toBalString
+
+function init() {
+    any a = 5;
+    int a1 = <int>a;
+    io:println(a1); // @output 5
+
+    any c = ();
+    null c1 = <null>c;
+    io:println(c1.toBalString()); // @output ()
+
+    any d = false;
+    boolean d1 = <boolean>d;
+    io:println(d1); // @output false
+
+    any e = 445.5;
+    float e1 = <float>e;
+    io:println(e1); // @output 445.5
+
+    any f = 1.3e2d;
+    decimal f1 = <decimal>f;
+    io:println(f1); // @output 1.3E+2
+}
+
+Test-Case: output
+Description: Test if the value v of the expression belongs to the type described by the type cast expression then the 
+             result of the type cast expression is v, using unions of simple types.
+Labels: boolean, decimal, DecimalFloatingPointNumber, float, FloatingPointTypeSuffix, nil-type, optional-type, string, 
+        type-cast-expr, union-type
+
+function init() {
+    string|int a = 5;
+    int a1 = <int>a;
+    io:println(a1); // @output 5
+
+    int? c = ();
+    null c1 = <null>c;
+    io:println(c1.toBalString()); // @output ()
+
+    boolean? d = false;
+    boolean d1 = <boolean>d;
+    io:println(d1); // @output false
+
+    float|string e = 445.5;
+    float e1 = <float>e;
+    io:println(e1); // @output 445.5
+
+    decimal|int f = 1.3e2d;
+    decimal f1 = <decimal>f;
+    io:println(f1); // @output 1.3E+2
+}
+
+Test-Case: output
+Description: Test if the value v of the expression belongs to the type described by the type cast expression then the 
+             result of the type cast expression is v, using int builtin sub types.
+Labels: byte, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8, string, 
+        type-cast-expr, unary-minus
+
+function init() {
+    int a = 5;
+    int:Unsigned8 a1 = <int:Unsigned8>a;
+    io:println(a1); // @output 5
+
+    int:Unsigned32 b = 255;
+    int:Unsigned16 b1 = <int:Unsigned16>b;
+    io:println(b1); // @output 255
+    int:Unsigned8 b2 = <int:Unsigned8>b;
+    io:println(b2); // @output 255
+
+    int c = 3234343;
+    int:Unsigned32 c1 = <int:Unsigned32>c;
+    io:println(c1); // @output 3234343
+
+    int d = -5;
+    int:Signed8 d1 = <int:Signed8>d;
+    io:println(d1); // @output -5
+
+    int:Signed32 e = 255;
+    int:Signed16 e1 = <int:Signed16>e;
+    io:println(e1); // @output 255
+    int:Unsigned8 e2 = <int:Unsigned8>e;
+    io:println(e2); // @output 255
+    int:Unsigned8 e3 = <byte>e;
+    io:println(e3); // @output 255
+
+    int f = -3234;
+    int:Signed32 f1 = <int:Signed32>f;
+    io:println(f1); // @output -3234
+
+    int:Unsigned32 g = 543;
+    int:Signed32 g1 = <int:Signed32>g;
+    io:println(g1); // @output 543
+}
+
+Test-Case: output
+Description: Test if the value v of the expression belongs to the type described by the type cast expression then the 
+             result of the type cast expression is v, using string type.
+Labels: any, string, type-cast-expr
+
+function init() {
+    any a = "Ballerina";
+    string a1 = <string>a;
+    io:println(a1); // @output Ballerina
+}
+
+Test-Case: output
+Description: Test if the value v of the expression belongs to the type described by the type cast expression then the 
+             result of the type cast expression is v, using xml type.
+Labels: any, type-cast-expr, xml, xml-template-expr, xml:Element
+
+function init() {
+    any b = xml `<e>content</e>`;
+    xml b1 = <xml>b;
+    io:println(b1); // @output <e>content</e>
+
+    xml:Element b2 = <xml:Element>b;
+    io:println(b2); // @output <e>content</e>
+}
+
+Test-Case: output
+Description: Test if the value v of the expression belongs to the type described by the type cast expression then the 
+             result of the type cast expression is v, using unions of sequence types.
+Labels: string, type-cast-expr, union-type, xml, xml:Element
+
+function init() {
+    string|xml a = "Ballerina";
+    string a1 = <string>a;
+    io:println(a1); // @output Ballerina
+
+    string|xml b = xml `<e>content</e>`;
+    xml b1 = <xml>b;
+    io:println(b1); // @output <e>content</e>
+
+    xml:Element b2 = <xml:Element>b;
+    io:println(b2); // @output <e>content</e>
+}
+
+Test-Case: output
+Description: Test if the value v of the expression belongs to the type described by the type cast expression then the 
+             result of the type cast expression is v, using list type.
+Labels: any, array-type, boolean, list-constructor-expr, module-type-defn, string, tuple-rest-descriptor, tuple-type, 
+        type-cast-expr, union-type
+
+type MyStringArr string[];
+
+type MyIntArr int[];
+
+type MyUnion MyIntArr|MyStringArr;
+
+type MyBooleanOfLen2 boolean[2];
+
+type MyBooleanOfLen3 boolean[3];
+
+type MyBooleanUnion MyBooleanOfLen2|MyBooleanOfLen3;
+
+type MyTuple [int, boolean...];
+
+function init() {
+    int[2] a = [1, 2];
+    any a0 = a;
+    int[2] a1 = <int[2]>a0;
+    io:println(a1); // @output [1,2]
+
+    int[] a2 = <int[]>a0;
+    io:println(a2); // @output [1,2]
+
+    [int, int] a3 = <[int, int]>a0;
+    io:println(a3); // @output [1,2]
+
+    MyUnion b = ["Hellow", "World"];
+    MyStringArr b1 = <MyStringArr>b;
+    io:println(b1); // @output ["Hellow","World"]
+
+    MyUnion c = [45, 65];
+    MyIntArr c1 = <MyIntArr>c;
+    io:println(c1); // @output [45,65]
+
+    MyBooleanUnion d = [true, true, false];
+    MyBooleanOfLen3 d1 = <MyBooleanOfLen3>d;
+    io:println(d1); // @output [true,true,false]
+
+    boolean[2] e = [true, false];
+    any e0 = e;
+    MyBooleanOfLen2 e2 = <MyBooleanOfLen2>e0;
+    io:println(e2); // @output [true,false]
+
+    MyBooleanUnion e3 = <MyBooleanUnion>e0;
+    io:println(e3); // @output [true,false]
+
+    [int, boolean, boolean...] f = [776, false, true];
+    any f0 = f;
+    MyTuple f2 = <MyTuple>f0;
+    io:println(f2); // @output [776,false,true]
+}
+
+Test-Case: output
+Description: Test if the value v of the expression belongs to the type described by the type cast expression then the 
+             result of the type cast expression is v, using record type.
+Labels: any, boolean, map-type, mapping-constructor-expr, module-type-defn, record-rest-descriptor, record-type, string, 
+        type-cast-expr, union-type
+
+type Computer record {|
+    int memory;
+|};
+
+type Monitor record {|
+    string color;
+|};
+
+type Item Computer|Monitor;
+
+type Person record {|
+    boolean married;
+|};
+
+type Switch record {|
+    boolean status;
+|};
+
+type MyRecordUnion Person|Switch;
+
+function init() {
+    map<string> a = {name: "John"};
+    any a0 = a;
+    map<string> a1 = <map<string>>a0;
+    io:println(a1); // @output {"name":"John"}
+
+    record {|string...; |} a2 = <record {|string...; |}>a0;
+    io:println(a2); // @output {"name":"John"}
+
+    record {} a3 = <record {}>a0;
+    io:println(a3); // @output {"name":"John"}
+
+    Item b = {memory: 16};
+    Computer b1 = <Computer>b;
+    io:println(b1); // @output {"memory":16}
+
+    record {|int memory;|} c = {memory: 32};
+    any c0 = c;
+    Computer c1 = <Computer>c0;
+    io:println(c1); // @output {"memory":32}
+
+    Item c2 = <Item>c0;
+    io:println(c2); // @output {"memory":32}
+
+    MyRecordUnion d = {married: false};
+    any d0 = d;
+    Person d1 = <Person>d0;
+    io:println(d1); // @output {"married":false}
+
+    record {|boolean status;|} e = {status: true};
+    any e0 = e;
+    Switch e1 = <Switch>e0;
+    io:println(e1); // @output {"status":true}
+
+    MyRecordUnion e2 = <MyRecordUnion>e0;
+    io:println(e2); // @output {"status":true}
+}
+
+Test-Case: output
+Description: Test if the value v of the expression belongs to the type described by the type cast expression then the 
+             result of the type cast expression is v, using with mapping constructors containing spread fields, computed 
+             name fields and readonly fields.
+Labels: any, computed-name-field, map-type, mapping-constructor-expr, mapping-constructor-readonly-field, 
+        module-type-defn, record-rest-descriptor, record-type, record-type-inclusion, singleton-type, spread-field, 
+        string, type-cast-expr, var
+
+type Computer record {|
+    int memory;
+    string os;
+    *Monitor;
+|};
+
+type Monitor record {|
+    string color;
+    int size;
+    string brand;
+|};
+
+function init() {
+    string fieldName = "married";
+    var a = {name: "John", [fieldName] : false};
+    any a0 = a;
+    record {|string name;boolean...; |} a1 = <record {|string name;boolean...; |}>a0;
+    io:println(a1); // @output {"name":"John","married":false}
+
+    Monitor b = {color: "red", size: 24, brand: "asus"};
+    var b1 = {memory: 32, os: "linux", ...b};
+    any b2 = b1;
+    Computer b3 = <Computer>b2;
+    io:println(b3); // @output {"memory":32,"os":"linux","color":"red","size":24,"brand":"asus"}
+
+    var c = {name: "Mark", readonly id: 1001, readonly passed: true};
+    map<any> c1 = c;
+    record {|string name; 1001 id; true passed;|} c2 = <record {|string name; 1001 id; true passed;|}>c1;
+    io:println(c2); // @output {"name":"Mark","id":1001,"passed":true}
+}
+
+Test-Case: output
+Description: Test if the value v of the expression belongs to the type described by the type cast expression then the 
+             result of the type cast expression is v, using table type.
+Labels: any, mapping-constructor-expr, module-type-defn, record-type, string, table-constructor-expr, table-type, 
+        type-cast-expr, union-type
+
+type Person record {|
+    string name;
+    int age;
+|};
+
+type Animal record {|
+    string color;
+|};
+
+type MyUnion table<Person>|table<Animal>;
+
+function init() {
+    table<record {|
+        string name;
+        int age;
+    |}> a = table [{name: "John", age: 0}];
+
+    any a0 = a;
+    table<Person> a1 = <table<Person>>a0;
+    io:println(a1); // @output [{"name":"John","age":0}]
+
+    MyUnion b = table [{name: "Marry", age: 33}];
+    table<Person> b1 = <table<Person>>b;
+    io:println(b1); // @output [{"name":"Marry","age":33}]
+
+    b = table [{color: "red"}];
+    table<Animal> b2 = <table<Animal>>b;
+    io:println(b2); // @output [{"color":"red"}]
+}
+
+Test-Case: output
+Description: Test if the value v of the expression belongs to the type described by the type cast expression then the 
+             result of the type cast expression is v, using table type containing key specifier.
+Labels: any, mapping-constructor-expr, module-type-defn, record-type, record-type-readonly-field, string, 
+        table-constructor-expr, table-type, table-type-key-specifier, type-cast-expr, union-type
+
+type Person record {|
+    readonly string name;
+    int age;
+|};
+
+type Animal record {|
+    readonly string color;
+|};
+
+type MyUnion table<Person> key(name)|table<Animal> key(color);
+
+function init() {
+    table<record {|
+        readonly string name;
+        int age;
+    |}> key(name) a = table [{name: "John", age: 0}];
+
+    any a0 = a;
+    table<Person> a1 = <table<Person>>a0;
+    io:println(a1); // @output [{"name":"John","age":0}]
+
+    MyUnion b = table [{readonly name: "Marry", age: 33}];
+    table<Person> b1 = <table<Person>>b;
+    io:println(b1); // @output [{"name":"Marry","age":33}]
+
+    b = table [{color: "red"}];
+    table<Animal> b2 = <table<Animal>>b;
+    io:println(b2); // @output [{"color":"red"}]
+}
+
+Test-Case: output
+Description: Test if the value v of the expression belongs to the type described by the type cast expression then the 
+             result of the type cast expression is v, using error type.
+Labels: any, boolean, error-constructor-expr, error-type, error-type-parameter, module-type-defn, record-type, string, 
+        type-cast-expr, union-type
+
+type ErrorDetail1 record {|
+    int severity;
+|};
+
+type ErrorDetail2 record {|
+    boolean userDefined;
+|};
+
+type MyError1 error<ErrorDetail1>;
+
+type MyError2 error<ErrorDetail2>;
+
+type GeneralError MyError1|MyError2;
+
+function init() {
+    error a0 = error("errorMsg", errorType = "CCE");
+    error<record {|string errorType;|}> a1 = <error<record {|string errorType;|}>>a0;
+    io:println(a1); // @output error("errorMsg",errorType="CCE")
+
+    GeneralError b0 = error("errorMsg2", userDefined = false);
+    MyError2 b1 = <MyError2>b0;
+    io:println(b1); // @output error MyError2 ("errorMsg2",userDefined=false)
+
+    MyError1 c0 = error("errorMsg3", severity = 0);
+    error c1 = c0;
+    MyError1 c2 = <MyError1>c1;
+    io:println(c2); // @output error MyError1 ("errorMsg3",severity=0)
+
+    error d0 = error("errorMsg4", severity = 1);
+    MyError1 d1 = <MyError1>d0;
+    io:println(d1); // @output error("errorMsg4",severity=1)
+}
+
+Test-Case: output
+Description: Test if the value v of the expression belongs to the type described by the type cast expression then the 
+             result of the type cast expression is v, using function type.
+Labels: any, explicit-anonymous-function-expr, function-type, infer-anonymous-function-expr, isolated-function, string, 
+        type-cast-expr, union-type
+
+type Function1 function ();
+
+type Function2 isolated function (int a) returns int;
+
+type GeneralFunction Function1|Function2;
+
+function init() {
+    function a0 = function(int a) returns int => a;
+    function (int a) returns int a1 = <function (int a) returns int>a0;
+    io:println(a1); // @output function isolated function (int) returns (int)
+
+    GeneralFunction b0 = name;
+    Function1 b1 = <Function1>b0;
+    io:println(b1); // @output function isolated function () returns (())
+
+    Function2 c0 = isolated function(int a) returns int => a;
+    function c1 = c0;
+    Function2 c2 = <Function2>c1;
+    io:println(c2); // @output function isolated function (int) returns (int)
+
+    function d0 = isolated function(int a) returns int => a;
+    Function2 d1 = <Function2>d0;
+    io:println(d1); // @output function isolated function (int) returns (int)
+
+    function (string a) returns string e0 = (b) => b;
+    function e1 = e0;
+    function (string b) returns string e3 = <function (string b) returns string>e1;
+    io:println(e3); // @output function isolated function (string) returns (string)
+}
+
+function name() {
+
+}
+
+Test-Case: output
+Description: Test if the value v of the expression belongs to the type described by the type cast expression then the 
+             result of the type cast expression is v, using object type.
+Labels: any, field-access-expr, implicit-new-expr, method-call-expr, module-class-defn, module-type-defn, 
+        object-constructor-expr, object-type, string, type-cast-expr, union-type, var
+
+type Car object {
+    int number;
+};
+
+type Van object {
+    function engineStart() returns string;
+};
+
+type CarOrVan Car|Van;
+
+class Vehicle {
+    int number = 5674445;
+}
+
+function init() {
+    var a0 = object {string color = "green";};
+    any a1 = a0;
+    object {string color;} a2 = <object {string color;}>a1;
+    io:println(a2.color); // @output green
+
+    CarOrVan b0 = object Car {int number = 110;};
+    Car b1 = <Car>b0;
+    io:println(b1.number); // @output 110
+
+    Van c0 = object {
+        function engineStart() returns string {
+            return "engineStarted";
+        }
+    };
+    any c1 = c0;
+    Van c2 = <Van>c1;
+    io:println(c2.engineStart()); // @output engineStarted
+
+    var d0 = object {int number = 444;};
+    any d1 = d0;
+    Car d2 = <Car>d1;
+    io:println(d2.number); // @output 444
+
+    var e0 = object {int number = 49876;};
+    any e1 = e0;
+    CarOrVan e2 = <CarOrVan>e1;
+    io:println((<Car>e2).number); // @output 49876
+
+    Vehicle f0 = new;
+    any f1 = f0;
+    Car f2 = <Car>f1;
+    io:println(f2.number); // @output 5674445
+}
+
+Test-Case: output
+Description: Test if the value v of the expression belongs to the type described by the type cast expression then the 
+             result of the type cast expression is v, using object type with object type inclusion.
+Labels: any, field-access-expr, method-call-expr, module-type-defn, object-constructor-expr, object-type, 
+        object-type-inclusion, string, type-cast-expr
+
+type Car object {
+    *Vehicle;
+};
+
+type Vehicle object {
+    int number;
+    function engineStart() returns string;
+};
+
+function init() {
+    Car a0 = object {
+        int number = 54353;
+        function engineStart() returns string {
+            return "engineStarted";
+        }
+    };
+
+    any a1 = a0;
+
+    Vehicle a2 = <Vehicle>a1;
+    io:println(a2.number); // @output 54353
+    io:println(a2.engineStart()); // @output engineStarted
+}
+
+Test-Case: output
+Description: Test if the value v of the expression belongs to the type described by the type cast expression then the 
+             result of the type cast expression is v, using future type.
+Labels: any, future, future-type-parameter, named-worker-decl, single-wait-action, string, type-cast-expr, 
+        union-type
+
+function init() {
+    worker w1 returns string {
+        return "ballerina";
+    }
+    worker w2 returns int {
+        return 32;
+    }
+
+    future a0 = w1;
+    future<string> a1 = <future<string>>a0;
+    string|error a2 = wait a1;
+    io:println(a2); // @output ballerina
+
+    future<string>|future<int> b0 = w2;
+    future<int> b1 = <future<int>>b0;
+    int|error b2 = wait b1;
+    io:println(b2); // @output 32
+}
+
+Test-Case: output
+Description: Test if the value v of the expression belongs to the type described by the type cast expression then the 
+             result of the type cast expression is v, using user defined future type.
+Fail-Issue: ballerina-platform/ballerina-lang#35363
+Labels: any, future, future-type-parameter, module-type-defn, named-worker-decl, single-wait-action, string, 
+        type-cast-expr, union-type
+
+type MyFuture future<int>;
+
+function init() {
+    worker w2 returns int {
+        return 32;
+    }
+
+    future<string>|future<int> b0 = w2;
+    MyFuture b1 = <MyFuture> b0;
+    int|error b2 = wait b1;
+    io:println(b2) // @output 32
+}
+
+Test-Case: output
+Description: Test if the value v of the expression belongs to the type described by the type cast expression then the 
+             result of the type cast expression is v, using typedesc type.
+Labels: any, module-type-defn, string, type-cast-expr, typedesc, typedesc-type-parameter, union-type
+
+type MyTypeDescValue1 typedesc<int>;
+
+type MyTypeDescValue2 typedesc<string>;
+
+type MYTypeDescUnion MyTypeDescValue1|MyTypeDescValue2;
+
+function init() {
+    any a0 = int;
+    typedesc a1 = <typedesc>a0;
+    io:println(a1); // @output typedesc int
+
+    typedesc<int> a2 = <typedesc<int>>a0;
+    io:println(a2); // @output typedesc int
+
+    typedesc<int>|typedesc<string> b0 = string;
+    typedesc<string> b1 = <typedesc<string>>b0;
+    io:println(b1); // @output typedesc string
+
+    MYTypeDescUnion c0 = string;
+    MyTypeDescValue2 c1 = <typedesc<string>>c0;
+    io:println(c1); // @output typedesc string
+
+    typedesc d0 = int;
+    MyTypeDescValue1 d1 = <MyTypeDescValue1> d0;
+    io:println(d1); // @output typedesc int
+}
+
+Test-Case: output
+Description: Test if the value v of the expression belongs to the type described by the type cast expression then the 
+             result of the type cast expression is v, using stream type.
+Labels: additive-expr, any, checkpanic, error, explicit-new-expr, implicit-new-expr, isolated-method, 
+        mapping-constructor-expr, member-access-expr, method-call-expr, module-class-defn, object-constructor-expr, 
+        optional-type, record-type, stream, stream-type-parameters, string, type-cast-expr, union-type, var
+
+class NumberGenerator {
+    int number = 0;
+    public isolated function next() returns record {|int value;|}? {
+        self.number = self.number + 1;
+        return {value: self.number};
+    }
+}
+
+type MyIntStream stream<int, error?>;
+
+type MyStreamUnion MyIntStream|stream<string>;
+
+function init() {
+    NumberGenerator numberGen = new ();
+    stream<int> streamName = new (numberGen);
+    any a = streamName;
+    stream<int> a1 = <stream<int>>a;
+    io:println(a1.next()["value"]); // @output 1
+
+    stream a2 = <stream>a;
+    var a3 = a2.next();
+    if a3 is record {|int value;|} {
+        io:println(a3["value"]); // @output 2
+    } else {
+        io:println("This line should not be reached");
+    }
+
+    var stringGenObj = object {
+        string objectString = "hello";
+        public isolated function next() returns record {|string value;|}? {
+            self.objectString = self.objectString + "ballerina";
+            return {value: self.objectString};
+        }
+    };
+
+    stream<int>|stream<string> b = new stream<string>(stringGenObj);
+    stream<string> b1 = <stream<string>>b;
+    io:println(b1.next()["value"]); // @output helloballerina
+    io:println(b1.next()["value"]); // @output helloballerinaballerina
+
+    var intGenObj = object {
+        int number = 0;
+        public isolated function next() returns record {|int value;|}|error? {
+            self.number += 1;
+            return {value: self.number};
+        }
+    };
+
+    MyStreamUnion c = new MyIntStream(intGenObj);
+    MyIntStream c1 = <MyIntStream>c;
+    var c2 = checkpanic c1.next();
+    io:println(c2["value"]); // @output 1
+}
+
+Test-Case: output
+Description: Test if the value v of the expression belongs to the type described by the type cast expression then the 
+             result of the type cast expression is v, using singleton type.
+Labels: any, module-type-defn, singleton-type, string, type-cast-expr, union-type
+
+type MySingleton1 true;
+
+type MySingleton2 32;
+
+type MySingletonUnion MySingleton1|MySingleton2;
+
+function init() {
+    int a = 4;
+    4 a1 = <4>a;
+    io:println(a1); // @output 4
+
+    "hello"|"ballerina" b = "ballerina";
+    "ballerina" b1 = <"ballerina">b;
+    io:println(b1); // @output ballerina
+
+    MySingletonUnion c = true;
+    MySingleton1 c1 = <MySingleton1>c;
+    io:println(c1); // @output true
+
+    int d = 32;
+    MySingleton2 d1 = <32>d;
+    io:println(d1); // @output 32
+}
+
+Test-Case: output
+Description: Test if the value v of the expression belongs to the type described by the type cast expression then the 
+             result of the type cast expression is v, using optional type.
+Labels: any, module-type-defn, nil-type, optional-type, singleton-type, string, type-cast-expr, union-type, 
+        value:toBalString
+
+type MyType1 true?;
+
+type MyType2 "ballerina"?;
+
+type MYTypeUnion MyType1|MyType2;
+
+function init() {
+    any a = 5;
+    int? a1 = <int?>a;
+    io:println(a1); // @output 5
+
+    string|int|() b0 = 55;
+    int? b1 = <int?> b0;
+    io:println(b1); // @output 55
+
+    MYTypeUnion c0 = true;
+    MyType1 c1 = <MyType1> c0;
+    io:println(c1); // @output true
+
+    MYTypeUnion d0 = ();
+    MyType1 d1 = <MyType1> d0;
+    io:println(d1.toBalString()); // @output ()
+
+    string? e0 = ();
+    MyType1 e1 = <MyType1>e0;
+    io:println(e1.toBalString()); // @output ()
+}
+
+Test-Case: output
+Description: Test if the value v of the expression belongs to the type described by the type cast expression then the 
+             result of the type cast expression is v, using anydata, byte, xml and json type.
+Labels: any, array-type, anydata, byte, json, list-constructor-expr, map-type, record-type, string, type-cast-expr, 
+        union-type, xml
+
+function init() {
+    any a = 5;
+    anydata a1 = <anydata>a;
+    io:println(a1); // @output 5
+
+    anydata|json b0 = 55;
+    anydata b1 = <anydata>b0;
+    io:println(b1); // @output 55
+
+    byte|json c = 4;
+    byte c1 = <byte>c;
+    io:println(c1); // @output 4
+
+    xml|json d = 4;
+    json d2 = <(json)>d;
+    io:println(d2); // @output 4
+
+    int[3] e3 = [1, 2, 3];
+    json[3] e4 = <json[3]>e3;
+    io:println(e4); // @output [1,2,3]
+
+    record {| int field1; int[2] field2;|} f = {field1: 3, field2: [1, 2]};
+    map<json> f2 = <map<json>>f;
+    io:println(f2); // @output {"field1":3,"field2":[1,2]}
+}
+
+Test-Case: output
+Description: Test if the value v of the expression belongs to the type described by the type cast expression then the 
+             result of the type cast expression is v, by casting int variable length array to json fixed 
+             length array.
+Fail-Issue: ballerina-platform/ballerina-lang#36433
+Labels: array-type, json, list-constructor-expr, type-cast-expr
+
+function init() {
+    int[3] q = [1, 2, 3];
+    int[] e = q;
+    int[3] e2 = <int[3]>e;
+    io:println(e2); // @output [1,2,3]
+}
+
+Test-Case: output
+Description: Test numeric conversion of values by typecast expression.
+Labels: byte, decimal, DecimalFloatingPointNumber, float, FloatingPointTypeSuffix, int, multiplicative-expr, 
+        type-cast-expr, unary-minus
+
+function init() {
+    float a = 1 / 3;
+    decimal b = <decimal>a;
+    io:println(b); // @output 0.3333333333333333
+
+    float c = 5.5f;
+    int d = <int>c;
+    io:println(d); // @output 6
+    byte d0 = <byte>c;
+    io:println(d0); // @output 6
+
+    float e = 324.7E-2f;
+    int f = <int>e;
+    io:println(f); // @output 3
+    byte f0 = <byte>e;
+    io:println(f0); // @output 3
+
+    decimal g = 1 / 3;
+    io:println(g); // @output 0.3333333333333333333333333333333333
+    float h = <float>g;
+    io:println(h); // @output 0.3333333333333333
+
+    decimal i = 5.5d;
+    int j = <int>i;
+    io:println(j); // @output 6
+    byte j0 = <byte>i;
+    io:println(j0); // @output 6
+
+    decimal k = 324.7E-2d;
+    int m = <int>k;
+    io:println(m); // @output 3
+    byte m0 = <byte>k;
+    io:println(m0); // @output 3
+
+    int n = 54;
+    float p = <float>n;
+    io:println(p); // @output 54.0
+
+    int q = 949545456;
+    decimal r = <decimal>q;
+    io:println(r); // @output 949545456.0
+    
+    decimal s = 9223372036854775809e300d;
+    float t = <float>s;
+    io:println(t); // @output Infinity
+    
+    decimal u = -9223372036854775809e300d;
+    float v = <float>u;
+    io:println(v); // @output -Infinity
+}
+
+Test-Case: output
+Description: Test numeric conversion of values by casting to a union in which every member belongs to a same 
+             basic numeric type.
+Labels: byte, decimal, DecimalFloatingPointNumber, float, FloatingPointTypeSuffix, int, multiplicative-expr, 
+        type-cast-expr, unary-minus
+        
+function init() {
+    float floatVar = 1;
+    decimal decimalVar = 1;
+
+    int:Unsigned8|int:Unsigned16 n = <int:Unsigned8|int:Unsigned16>floatVar;
+    io:println(n); // @output 1
+
+    int:Unsigned8|int:Unsigned16 p = <int:Unsigned8|int:Unsigned16>decimalVar;
+    io:println(p); // @output 1
+
+    int:Unsigned8|int:Unsigned32 q = <int:Unsigned8|int:Unsigned32>floatVar;
+    io:println(q); // @output 1
+
+    int:Unsigned8|int:Unsigned32 r = <int:Unsigned8|int:Unsigned32>decimalVar;
+    io:println(r); // @output 1
+
+    int:Unsigned8|int:Signed8 s = <int:Unsigned8|int:Signed8>floatVar;
+    io:println(s); // @output 1
+
+    int:Unsigned8|int:Signed8 t = <int:Unsigned8|int:Signed8>decimalVar;
+    io:println(t); // @output 1
+
+    int:Unsigned8|int:Signed16 u = <int:Unsigned8|int:Signed16>floatVar;
+    io:println(u); // @output 1
+
+    int:Unsigned8|int:Signed16 v = <int:Unsigned8|int:Signed16>decimalVar;
+    io:println(v); // @output 1
+
+    int:Unsigned8|int:Signed32 w = <int:Unsigned8|int:Signed32>floatVar;
+    io:println(w); // @output 1
+
+    int:Unsigned8|int:Signed32 x = <int:Unsigned8|int:Signed32>decimalVar;
+    io:println(x); // @output 1
+
+    int:Unsigned16|int:Unsigned32 y = <int:Unsigned16|int:Unsigned32>x;
+    io:println(y); // @output 1
+
+    int:Unsigned16|int:Unsigned32 z = <int:Unsigned16|int:Unsigned32>y;
+    io:println(z); // @output 1
+
+    int:Unsigned16|int:Signed8 a1 = <int:Unsigned16|int:Signed8>floatVar;
+    io:println(a1); // @output 1
+
+    int:Unsigned16|int:Signed8 b1 = <int:Unsigned16|int:Signed8>decimalVar;
+    io:println(b1); // @output 1
+
+    int:Unsigned16|int:Signed16 c1 = <int:Unsigned16|int:Signed16>floatVar;
+    io:println(c1); // @output 1
+
+    int:Unsigned16|int:Signed16 d1 = <int:Unsigned16|int:Signed16>decimalVar;
+    io:println(d1); // @output 1
+
+    int:Unsigned16|int:Signed32 e1 = <int:Unsigned16|int:Signed32>floatVar;
+    io:println(e1); // @output 1
+
+    int:Unsigned16|int:Signed32 f1 = <int:Unsigned16|int:Signed32>decimalVar;
+    io:println(f1); // @output 1
+
+    int:Unsigned32|int:Signed8 g1 = <int:Unsigned32|int:Signed8>floatVar;
+    io:println(g1); // @output 1
+
+    int:Unsigned32|int:Signed8 h1 = <int:Unsigned32|int:Signed8>decimalVar;
+    io:println(h1); // @output 1
+
+    int:Unsigned32|int:Signed16 i1 = <int:Unsigned32|int:Signed16>floatVar;
+    io:println(i1); // @output 1
+
+    int:Unsigned32|int:Signed16 j1 = <int:Unsigned32|int:Signed16>decimalVar;
+    io:println(j1); // @output 1
+
+    int:Unsigned32|int:Signed32 k1 = <int:Unsigned32|int:Signed32>floatVar;
+    io:println(k1); // @output 1
+
+    int:Unsigned32|int:Signed32 m1 = <int:Unsigned32|int:Signed32>decimalVar;
+    io:println(m1); // @output 1
+
+    int:Signed8|int:Signed16 i2 = <int:Signed8|int:Signed16>floatVar;
+    io:println(i2); // @output 1
+
+    int:Signed8|int:Signed16 j2 = <int:Signed8|int:Signed16>decimalVar;
+    io:println(j2); // @output 1
+
+    int:Signed8|int:Signed32 k2 = <int:Signed8|int:Signed32>floatVar;
+    io:println(k2); // @output 1
+
+    int:Signed8|int:Signed32 m2 = <int:Signed8|int:Signed32>decimalVar;
+    io:println(m2); // @output 1
+
+    int:Signed16|int:Signed32 k3 = <int:Signed16|int:Signed32>floatVar;
+    io:println(k3); // @output 1
+
+    int:Signed16|int:Signed32 m3 = <int:Signed16|int:Signed32>decimalVar;
+    io:println(m3); // @output 1
+
+    int|int a5 = <int|int>floatVar;
+    io:println(a5); // @output 1
+    int|int b5 = <int|int>decimalVar;
+    io:println(b5); // @output 1
+
+    byte|byte c5 = <byte|byte>floatVar;
+    io:println(c5); // @output 1
+    byte|byte d5 = <byte|byte>decimalVar;
+    io:println(d5); // @output 1
+
+    int:Unsigned8|int:Unsigned8 e5 = <int:Unsigned8|int:Unsigned8>floatVar;
+    io:println(e5); // @output 1
+    int:Unsigned8|int:Unsigned8 f5 = <int:Unsigned8|int:Unsigned8>decimalVar;
+    io:println(f5); // @output 1
+
+    int:Unsigned16|int:Unsigned16 g5 = <int:Unsigned16|int:Unsigned16>floatVar;
+    io:println(g5); // @output 1
+    int:Unsigned16|int:Unsigned16 h5 = <int:Unsigned16|int:Unsigned16>decimalVar;
+    io:println(h5); // @output 1
+
+    int:Unsigned32|int:Unsigned32 i5 = <int:Unsigned32|int:Unsigned32>floatVar;
+    io:println(i5); // @output 1
+    int:Unsigned32|int:Unsigned32 j5 = <int:Unsigned32|int:Unsigned32>decimalVar;
+    io:println(j5); // @output 1
+
+    int:Signed8|int:Signed8 k5 = <int:Signed8|int:Signed8>floatVar;
+    io:println(k5); // @output 1
+    int:Signed8|int:Signed8 m5 = <int:Signed8|int:Signed8>decimalVar;
+    io:println(m5); // @output 1
+
+    int:Signed16|int:Signed16 n5 = <int:Signed16|int:Signed16>floatVar;
+    io:println(n5); // @output 1
+    int:Signed16|int:Signed16 p5 = <int:Signed16|int:Signed16>decimalVar;
+    io:println(p5); // @output 1
+
+    int:Signed32|int:Signed32 q5 = <int:Signed32|int:Signed32>floatVar;
+    io:println(q5); // @output 1
+    int:Signed32|int:Signed32 r5 = <int:Signed32|int:Signed32>decimalVar;
+    io:println(r5); // @output 1
+}
+
+Test-Case: output
+Description: Test numeric conversion of values by casting to a union in which every member belongs to a same 
+             basic numeric type.
+Fail-Issue: ballerina-platform/ballerina-lang#36418
+Labels: byte, decimal, DecimalFloatingPointNumber, float, FloatingPointTypeSuffix, int, multiplicative-expr, 
+        type-cast-expr, unary-minus
+
+function init() {
+    float floatVar = 1;
+    decimal decimalVar = 1;
+
+    byte|int:Unsigned8 a = <byte|int:Unsigned8>floatVar;
+    io:println(a); // @output 1
+
+    byte|int:Unsigned8 b = <byte|int:Unsigned8>decimalVar;
+    io:println(b); // @output 1
+
+    byte|int:Unsigned16 c = <byte|int:Unsigned16>floatVar;
+    io:println(c); // @output 1
+
+    byte|int:Unsigned16 d = <byte|int:Unsigned16>decimalVar;
+    io:println(d); // @output 1
+
+    byte|int:Unsigned32 e = <byte|int:Unsigned32>floatVar;
+    io:println(e); // @output 1
+
+    byte|int:Unsigned32 f = <byte|int:Unsigned32>decimalVar;
+    io:println(f); // @output 1
+
+    byte|int:Signed8 g = <byte|int:Signed8>floatVar;
+    io:println(g); // @output 1
+
+    byte|int:Signed8 h = <byte|int:Signed8>decimalVar;
+    io:println(h); // @output 1
+
+    byte|int:Signed16 i = <byte|int:Signed16>floatVar;
+    io:println(i); // @output 1
+
+    byte|int:Signed16 j = <byte|int:Signed16>decimalVar;
+    io:println(j); // @output 1
+
+    byte|int:Signed32 k = <byte|int:Signed32>floatVar;
+    io:println(k); // @output 1
+
+    byte|int:Signed32 m = <byte|int:Signed32>decimalVar;
+    io:println(m); // @output 1
+
+    int|int:Unsigned8 a4 = <int|int:Unsigned8>floatVar;
+    io:println(a4); // @output 1
+
+    int|int:Unsigned8 b4 = <int|int:Unsigned8>decimalVar;
+    io:println(b4); // @output 1
+
+    int|int:Unsigned16 c4 = <int|int:Unsigned16>floatVar;
+    io:println(c4); // @output 1
+
+    int|int:Unsigned16 d4 = <int|int:Unsigned16>decimalVar;
+    io:println(d4); // @output 1
+
+    int|int:Unsigned32 e4 = <int|int:Unsigned32>floatVar;
+    io:println(e4); // @output 1
+
+    int|int:Unsigned32 f4 = <int|int:Unsigned32>decimalVar;
+    io:println(f4); // @output 1
+    int|int:Signed8 g4 = <int|int:Signed8>floatVar;
+    io:println(g4); // @output 1
+
+    int|int:Signed8 h4 = <int|int:Signed8>decimalVar;
+    io:println(h4); // @output 1
+
+    int|int:Signed16 i4 = <int|int:Signed16>floatVar;
+    io:println(i4); // @output 1
+
+    int|int:Signed16 j4 = <int|int:Signed16>decimalVar;
+    io:println(j4); // @output 1
+
+    int|int:Signed32 k4 = <int|int:Signed32>floatVar;
+    io:println(k4); // @output 1
+
+    int|int:Signed32 m4 = <int|int:Signed32>decimalVar;
+    io:println(m4); // @output 1
+}
+
+Test-Case: output
+Description: Test numeric conversion of values by typecast expression using user defined types.
+Labels: byte, decimal, DecimalFloatingPointNumber, float, FloatingPointTypeSuffix, int, module-type-defn, 
+        multiplicative-expr, type-cast-expr
+
+type MyInt int;
+
+type MyDecimal decimal;
+
+type MyFloat float;
+
+type MyByte byte;
+
+function init() {
+    float a = 1 / 3;
+    MyDecimal b = <MyDecimal>a;
+    io:println(b); // @output 0.3333333333333333
+
+    float c = 5.5f;
+    MyInt d = <MyInt>c;
+    io:println(d); // @output 6
+    MyByte d0 = <MyByte>c;
+    io:println(d0); // @output 6
+
+    float e = 324.7E-2f;
+    MyInt f = <MyInt>e;
+    io:println(f); // @output 3
+    MyByte f0 = <MyByte>e;
+    io:println(f0); // @output 3
+
+    decimal g = 1 / 3;
+    io:println(g); // @output 0.3333333333333333333333333333333333
+    MyFloat h = <MyFloat>g;
+    io:println(h); // @output 0.3333333333333333
+
+    decimal i = 5.5d;
+    MyInt j = <MyInt>i;
+    io:println(j); // @output 6
+    MyByte j0 = <MyByte>i;
+    io:println(j0); // @output 6
+
+    decimal k = 324.7E-2d;
+    MyInt m = <MyInt>k;
+    io:println(m); // @output 3
+    MyByte m0 = <MyByte>k;
+    io:println(m0); // @output 3
+
+    int n = 54;
+    MyFloat p = <MyFloat>n;
+    io:println(p); // @output 54.0
+
+    int q = 949545456;
+    MyDecimal r = <MyDecimal>q;
+    io:println(r); // @output 949545456.0
+}
+
+Test-Case: output
+Description: Test numeric conversion of values by typecasting to int builtin subtypes.
+Labels: decimal, DecimalFloatingPointNumber, float, FloatingPointTypeSuffix, int, int:Signed16, int:Signed32, 
+        int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8, type-cast-expr
+
+function init() {
+    float a = 324.7E-2f;
+    int:Signed8 f = <int:Signed8>a;
+    io:println(f); // @output 3
+    int:Signed16 f1 = <int:Signed16>a;
+    io:println(f1); // @output 3
+    int:Signed32 f2 = <int:Signed32>a;
+    io:println(f2); // @output 3
+    int:Unsigned8 f3 = <int:Unsigned8>a;
+    io:println(f3); // @output 3
+    int:Unsigned16 f4 = <int:Unsigned16>a;
+    io:println(f4); // @output 3
+    int:Unsigned32 f5 = <int:Unsigned32>a;
+    io:println(f5); // @output 3
+
+    decimal b = 5.5d;
+    int:Signed8 c = <int:Signed8>b;
+    io:println(c); // @output 6
+    int:Signed16 c1 = <int:Signed16>b;
+    io:println(c1); // @output 6
+    int:Signed32 c2 = <int:Signed32>b;
+    io:println(c2); // @output 6
+    int:Unsigned8 c3 = <int:Unsigned8>b;
+    io:println(c3); // @output 6
+    int:Unsigned16 c4 = <int:Unsigned16>b;
+    io:println(c4); // @output 6
+    int:Unsigned32 c5 = <int:Unsigned32>b;
+    io:println(c5); // @output 6
+}
+
+Test-Case: output
+Description: Test numeric conversion of values by typecast expression from unions.
+Labels: array-type, byte, decimal, DecimalFloatingPointNumber, float, FloatingPointTypeSuffix, map-type, 
+        module-type-defn, record-type, type-cast-expr, union-type, xml
+
+type MyRecord record {|
+    int id;
+|};
+
+function init() {
+    float|string|MyRecord a = 3.44343;
+    decimal b = <decimal>a;
+    io:println(b); // @output 3.44343
+
+    float|byte|MyRecord c = 5.5f;
+    int d = <int>c;
+    io:println(d); // @output 6
+    byte d0 = <byte>c;
+    io:println(d0); // @output 6
+
+    float|xml|int[] e = 324.7E-2f;
+    int f = <int>e;
+    io:println(f); // @output 3
+    byte f0 = <byte>e;
+    io:println(f0); // @output 3
+
+    decimal|map<int> g = 4444.4444;
+    io:println(g); // @output 4444.4444
+    float h = <float>g;
+    io:println(h); // @output 4444.4444
+
+    decimal|MyRecord|boolean i = 5.5d;
+    int j = <int>i;
+    io:println(j); // @output 6
+    byte j0 = <byte>i;
+    io:println(j0); // @output 6
+
+    decimal|float|MyRecord k = 324.7E-2d;
+    int m = <int>k;
+    io:println(m); // @output 3
+    byte m0 = <byte>k;
+    io:println(m0); // @output 3
+
+    int|float|string n = 54;
+    float p = <float>n;
+    io:println(p); // @output 54.0
+
+    int|MyRecord|string q = 949545456;
+    decimal r = <decimal>q;
+    io:println(r); // @output 949545456.0
+}
+
+Test-Case: output
+Description: Test numeric conversion of values by typecast expression from unions to unions.
+Labels: array-type, byte, decimal, DecimalFloatingPointNumber, float, FloatingPointTypeSuffix, map-type, 
+        module-type-defn, record-type, type-cast-expr, union-type, xml
+
+type MyRecord record {|
+    int id;
+|};
+
+function init() {
+    float|string|MyRecord a = 3.44343;
+    decimal|string b = <decimal|string>a;
+    io:println(b); // @output 3.44343
+
+    float|byte|MyRecord c = 5.5f;
+    int|MyRecord d = <int|MyRecord>c;
+    io:println(d); // @output 6
+    byte|xml d0 = <byte|xml>c;
+    io:println(d0); // @output 6
+
+    float|xml|int[] e = 324.7E-2f;
+    int|int[] f = <int|int[]>e;
+    io:println(f); // @output 3
+    byte|json f0 = <byte|json>e;
+    io:println(f0); // @output 3.247
+
+    decimal|map<int> g = 4444.4444;
+    io:println(g); // @output 4444.4444
+    float|string h = <float|string>g;
+    io:println(h); // @output 4444.4444
+
+    decimal|MyRecord|boolean i = 5.5d;
+    int|map<int> j = <int|map<int>>i;
+    io:println(j); // @output 6
+    byte|boolean j0 = <byte|boolean>i;
+    io:println(j0); // @output 6
+
+    decimal|float|MyRecord k = 324.7E-2d;
+    int|string m = <int|string>k;
+    io:println(m); // @output 3
+    byte|boolean m0 = <byte|boolean>k;
+    io:println(m0); // @output 3
+
+    int|float|string n = 54;
+    float|string p = <float|string>n;
+    io:println(p); // @output 54.0
+
+    int|MyRecord|string q = 949545456;
+    decimal|string r = <decimal|string>q;
+    io:println(r); // @output 949545456.0
+}
+
+Test-Case: output
+Description: Test numeric conversion of values by typecast expression from unions to user defined unions.
+Labels: array-type, byte, decimal, DecimalFloatingPointNumber, float, FloatingPointTypeSuffix, map-type, 
+        module-type-defn, record-type, type-cast-expr, union-type, xml
+
+type MyRecord record {|
+    int id;
+|};
+
+type MyUnionContainsDecimal decimal|string;
+
+type MyUnionContainsInt int|MyRecord;
+
+type MyUnionContainsByte byte|boolean;
+
+type MyUnionContainsFloat float|string;
+
+function init() {
+    MyUnionContainsFloat|MyRecord a = 3.44343;
+    MyUnionContainsDecimal b = <MyUnionContainsDecimal>a;
+    io:println(b); // @output 3.44343
+
+    float|byte|MyRecord c = 5.5f;
+    MyUnionContainsInt d = <MyUnionContainsInt>c;
+    io:println(d); // @output 6
+    byte|xml d0 = <byte|xml>c;
+    io:println(d0); // @output 6
+
+    float|xml|int[] e = 324.7E-2f;
+    int|int[] f = <int|int[]>e;
+    io:println(f); // @output 3
+    MyUnionContainsByte f0 = <MyUnionContainsByte>e;
+    io:println(f0); // @output 3
+
+    decimal|map<int> g = 4444.4444;
+    io:println(g); // @output 4444.4444
+    MyUnionContainsFloat h = <MyUnionContainsFloat>g;
+    io:println(h); // @output 4444.4444
+
+    decimal|MyRecord|boolean i = 5.5d;
+    MyUnionContainsInt j = <MyUnionContainsInt>i;
+    io:println(j); // @output 6
+    MyUnionContainsByte j0 = <MyUnionContainsByte>i;
+    io:println(j0); // @output 6
+
+    decimal|float|MyRecord k = 324.7E-2d;
+    MyUnionContainsInt m = <MyUnionContainsInt>k;
+    io:println(m); // @output 3
+    MyUnionContainsByte m0 = <MyUnionContainsByte>k;
+    io:println(m0); // @output 3
+
+    int|MyUnionContainsFloat n = 54;
+    MyUnionContainsFloat p = <MyUnionContainsFloat>n;
+    io:println(p); // @output 54.0
+
+    int|MyRecord|string q = 949545456;
+    MyUnionContainsDecimal r = <MyUnionContainsDecimal>q;
+    io:println(r); // @output 949545456.0
+}
+
+Test-Case: error
+Description: Test error when type described by type descriptor is a union of two basic numeric types.
+Labels: byte, decimal, float, int:Signed16, int:Signed32, int:Signed8, int:Unsigned16, int:Unsigned32, int:Unsigned8, 
+        type-cast-expr, union-type
+
+function errorFunction() {
+    float a = 54;
+    int|decimal _ = <int|decimal>a; // @error 'float' cannot be cast to '(int|decimal)'
+
+    int:Signed8|decimal _ = <int:Signed8|decimal>a; // @error 'float' cannot be cast to '(int:Signed8|decimal)'
+
+    int:Signed16|decimal _ = <int:Signed16|decimal>a; // @error 'float' cannot be cast to '(int:Signed16|decimal)'
+
+    int:Signed32|decimal _ = <int:Signed32|decimal>a; // @error 'float' cannot be cast to '(int:Signed32|decimal)'
+
+    int:Unsigned8|decimal _ = <int:Unsigned8|decimal>a; // @error 'float' cannot be cast to '(int:Unsigned8|decimal)'
+
+    int:Unsigned16|decimal _ = <int:Unsigned16|decimal>a; // @error 'float' cannot be cast to '(int:Unsigned16|decimal)'
+
+    int:Unsigned32|decimal _ = <int:Unsigned32|decimal>a; // @error 'float' cannot be cast to '(int:Unsigned32|decimal)'
+
+    byte|decimal _ = <byte|decimal>a; // @error 'float' cannot be cast to '(byte|decimal)'
+
+    decimal b = 54;
+    int|float _ = <int|float>b; // @error 'decimal' cannot be cast to '(int|float)'
+
+    int:Signed8|float _ = <int:Signed8|float>b; // @error 'decimal' cannot be cast to '(int:Signed8|float)'
+
+    int:Signed16|float _ = <int:Signed16|float>b; // @error 'decimal' cannot be cast to '(int:Signed16|float)'
+
+    int:Signed32|float _ = <int:Signed32|float>b; // @error 'decimal' cannot be cast to '(int:Signed32|float)'
+
+    int:Unsigned8|float _ = <int:Unsigned8|float>b; // @error 'decimal' cannot be cast to '(int:Unsigned8|float)'
+
+    int:Unsigned16|float _ = <int:Unsigned16|float>b; // @error 'decimal' cannot be cast to '(int:Unsigned16|float)'
+
+    int:Unsigned32|float _ = <int:Unsigned32|float>b; // @error 'decimal' cannot be cast to '(int:Unsigned32|float)'
+
+    byte|float _ = <byte|float>b; // @error 'decimal' cannot be cast to '(byte|float)'
+
+    int c = 54;
+    decimal|float _ = <decimal|float>c; // @error 'int' cannot be cast to '(decimal|float)'
+}
+
+Test-Case: panic
+Description: Test panic when casting float infinity to int.
+Labels: float, infinity, int, type-cast-expr
+
+function init() {
+    float a = float:Infinity;
+    int _ = <int>a; // @panic 'float' value 'Infinity' cannot be converted to 'int'
+}
+
+Test-Case: panic
+Description: Test panic when casting float NaN to int.
+Labels: float, int, nan, type-cast-expr
+
+function init() {
+    float a = float:NaN;
+    int _ = <int>a; // @panic 'float' value 'NaN' cannot be converted to 'int'
+}
+
+Test-Case: panic
+Description: Test panic when casting out of range float value to int.
+Labels: DecimalFloatingPointNumber, float, FloatingPointTypeSuffix, int, type-cast-expr
+
+function init() {
+    float a = 9223372036854775808f;
+    int _ = <int>a; // @panic 'float' value '9,223,372,036,854,776,000' cannot be converted to 'int'
+}
+
+Test-Case: panic
+Description: Test panic when casting out of range decimal value to int.
+Labels: decimal, DecimalFloatingPointNumber, FloatingPointTypeSuffix, int, type-cast-expr
+
+function init() {
+    decimal a = 9223372036854775808d;
+    int _ = <int>a; // @panic 'decimal' value '9223372036854775808' cannot be converted to 'int'
+}
+
+Test-Case: panic
+Description: Test panic when casting very large float value to int.
+Labels: DecimalFloatingPointNumber, float, FloatingPointTypeSuffix, int, type-cast-expr
+
+function init() {
+    float a = 9229999999337203699998599999999999999999999947758084324422999999993f;
+    int _ = <int>a; // @panic 'float' value cannot be converted to 'int'
+}
+
+Test-Case: panic
+Description: Test panic when casting very large decimal value to int.
+Labels: decimal, DecimalFloatingPointNumber, FloatingPointTypeSuffix, int, type-cast-expr
+
+function init() {
+    decimal a = 92999999923372099999999936854775999999998083992354325499999999d;
+    int _ = <int>a; // @panic 'decimal' value cannot be converted to 'int'
+}
+
+Test-Case: panic
+Description: Test panic when casting out of range negative float value to int.
+Labels: DecimalFloatingPointNumber, float, FloatingPointTypeSuffix, int, type-cast-expr, unary-minus
+
+function init() {
+    float a = -9223372036854775809f;
+    int _ = <int>a; // @panic 'float' value cannot be converted to 'int'
+}
+
+Test-Case: panic
+Description: Test panic when casting out of range negative decimal value to int.
+Labels: decimal, DecimalFloatingPointNumber, FloatingPointTypeSuffix, int, type-cast-expr, unary-minus
+
+function init() {
+    decimal a = -9223372036854775809d;
+    int _ = <int>a; // @panic 'decimal' value '-9223372036854775809' cannot be converted to 'int'
+}
+
+Test-Case: panic
+Description: Test panic when casting very large negative float value to int.
+Labels: DecimalFloatingPointNumber, float, FloatingPointTypeSuffix, int, type-cast-expr, unary-minus
+
+function init() {
+    float a = -9229999999337203699998599999999999999999999947758084324422999999993f;
+    int _ = <int>a; // @panic 'float' value cannot be converted to 'int'
+}
+
+Test-Case: panic
+Description: Test panic when casting very large negative decimal value to int.
+Labels: decimal, DecimalFloatingPointNumber, FloatingPointTypeSuffix, int, type-cast-expr, unary-minus
+
+function init() {
+    decimal a = -92999999923372099999999936854775999999998083992354325499999999d;
+    int _ = <int>a; // @panic 'decimal' value cannot be converted to 'int'
+}
+
+Test-Case: panic
+Description: Test panic when casting float NaN to decimal
+Fail-Issue: ballerina-platform/ballerina-lang#33805
+Labels: decimal, float, nan, type-cast-expr
+
+function init() {
+    float a = float:NaN;
+    decimal b = <decimal>a; // @panic Nan is not supported by decimal
+}
+
+Test-Case: panic
+Description: Test panic when casting float Infinity to decimal
+Fail-Issue: ballerina-platform/ballerina-lang#33805
+Labels: decimal, float, infinity, type-cast-expr
+
+function init() {
+    float a = float:Infinity;
+    decimal b = <decimal>a; // @panic Infinity is not supported by decimal
+}
+
+Test-Case: panic
+Description: Test panic when value is not belonging to the type described by the type desc and numeric convert is not 
+             applicable by casting int to string.
+Labels: any, string, type-cast-expr
+
+function init() {
+    any c = 43;
+    string _ = <string> c;  // @panic 'int' cannot be cast to 'string'
+}
+
+Test-Case: panic
+Description: Test panic when value is not belonging to the type described by the type desc and numeric convert is not 
+             applicable by casting string to int.
+Labels: any, int, string, type-cast-expr
+
+function init() {
+    any c = "43";
+    int _ = <int> c;  // @panic 'string' cannot be cast to 'int'
+}
+
+Test-Case: panic
+Description: Test panic when value is not belonging to the type described by the type desc and numeric convert is not 
+             applicable by casting to a boolean type.
+Labels: any, boolean, nil-type, type-cast-expr, union-type
+
+function init() {
+    boolean|int|() b0 = 55;
+    any a = b0;
+    boolean b1 = <boolean>a; // @panic 'int' cannot be cast to 'boolean'
+}
+
+Test-Case: panic
+Description: Test panic when value is not belonging to the type described by the type desc and numeric convert is not 
+             applicable by casting to an int array.
+Labels: any, array-type, list-constructor-expr, string, type-cast-expr
+
+function init() {
+    any a = [1, "Ballerina"];
+    int[2] _ = <int[2]> a;  // @panic 'any[]' cannot be cast to 'int[2]'
+}
+
+Test-Case: panic
+Description: Test panic when value is not belonging to the type described by the type desc and numeric convert is not 
+             applicable by casting to a map of string.
+Labels: any, map-type, mapping-constructor-expr, string, type-cast-expr
+
+function init() {
+    map<any> a = {fieldA: "Car",  fieldB: "43"};
+    map<string> _ = <map<string>> a;  // @panic 'map' cannot be cast to 'map<string>'
+}
+
+Test-Case: panic
+Description: Test panic when value is not belonging to the type described by the type desc and numeric convert is not 
+             applicable by casting to a record with readonly field.
+Labels: any, boolean, mapping-constructor-expr, record-type, record-type-readonly-field, type-cast-expr, var 
+
+function init() {
+    var b = {fieldA: 34, fieldB: false};
+    record {|int fieldA; boolean fieldB;|} _  = <record {|int fieldA; readonly boolean fieldB;|}>b; // @panic cannot cast
+}
+
+Test-Case: panic
+Description: Test panic when value is not belonging to the type described by the type desc and numeric convert is not 
+             applicable by casting to a table.
+Labels: any, map-type, mapping-constructor-expr, string, table-constructor-expr, table-type, type-cast-expr
+
+function init() {
+    table<map<any>> a = table [
+        {fieldA: "Car", fieldB: "43"}
+        ];
+    table<map<string>> _ = <table<map<string>>>a; // @panic 'table<map>' cannot be cast to 'table<map<string>>'
+}
+
+Test-Case: panic
+Description: Test panic when value is not belonging to the type described by the type desc and numeric convert is not 
+             applicable by casting to a function type.
+Labels: explicit-anonymous-function-expr, function-type, nil-literal, string, type-cast-expr
+
+function init() {
+    function a = function(int b, string c) => ();
+    function(string b, string c) e = <function (string b, string c) returns ()> a; // @panic cannot cast
+}
+
+Test-Case: panic
+Description: Test panic when value is not belonging to the type described by the type desc and numeric convert is not 
+             applicable by casting to an object type.
+Labels: explicit-anonymous-function-expr, function-type, object-constructor-expr, object-type, type-cast-expr, 
+        union-type
+
+function init() {
+    object {int a;}|object {int b;} a = object {
+        int a = 5;
+    };
+
+    object {int b;} _ = <object {int b;}> a; // @panic cannot cast
+}
+
+Test-Case: panic
+Description: Test panic when value is not belonging to the type described by the type desc and numeric convert is not 
+             applicable by casting to a stream type.
+Labels: additive-expr, any, implicit-new-expr, isolated-method, mapping-constructor-expr, module-class-defn, 
+        optional-type, record-type, stream, stream-type-parameters, string, type-cast-expr
+
+class NumberGenerator {
+    int number = 0;
+    public isolated function next() returns record {|int value;|}? {
+        self.number = self.number + 1;
+        return {value: self.number};
+    }
+}
+
+function init() {
+    NumberGenerator numberGen = new ();
+    stream<int> streamName = new (numberGen);
+    any a = streamName;
+    stream<string> _ = <stream<string>>a; // @panic 'stream<int>' cannot be cast to 'stream<string>'
+}
+
+Test-Case: panic
+Description: Test panic when value is not belonging to the type described by the type desc and numeric convert is not 
+             applicable by casting a value of open array to fixed length array.
+Labels: array-type, json, list-constructor-expr, type-cast-expr
+
+function init() {
+    int[] e = [1, 2, 3];
+    int[3] e2 = <int[3]>e; // @panic 'int[]' cannot be cast to 'int[3]'
+}
+
+Test-Case: panic
+Description: Test panic when value is not belonging to the type described by the type desc and numeric convert is not 
+             applicable by casting a value of open array to fixed length json array.
+Fail-Issue: ballerina-platform/ballerina-lang#36433
+Labels: array-type, json, list-constructor-expr, type-cast-expr
+
+function init() {
+    int[] e = [1, 2, 3];
+    json[3] e2 = <json[3]>e; // @panic 'int[]' cannot be cast to 'json[3]'
+}
+
+Test-Case: error
+Description: Test error when value is not belonging to the type described by the type desc and numeric convert is not 
+             applicable.
+Labels: boolean, decimal, DecimalFloatingPointNumber, float, int, nil-literal, nil-type, string, type-cast-expr, xml
+
+function errorFunction() {
+    int a = 5;
+    string b = "ballerina";
+    null c = ();
+    boolean d = true;
+    float e = 6.4;
+    xml f = xml ``;
+    decimal g = 43.33;
+
+    a = <int>b; // @error incompatible types: 'string' cannot be cast to 'int'
+    a = <int>c; // @error incompatible types: 'null' cannot be cast to 'int'
+    a = <int>d; // @error incompatible types: 'boolean' cannot be cast to 'int'
+    a = <int>f; // @error incompatible types: 'xml' cannot be cast to 'int'
+
+    b = <string>a; // @error incompatible types: 'int' cannot be cast to 'string'
+    b = <string>c; // @error incompatible types: 'null' cannot be cast to 'string'
+    b = <string>d; // @error incompatible types: 'boolean' cannot be cast to 'string'
+    b = <string>e; // @error incompatible types: 'float' cannot be cast to 'string'
+    b = <string>f; // @error incompatible types: 'xml' cannot be cast to 'string'
+    b = <string>g; // @error incompatible types: 'decimal' cannot be cast to 'string'
+
+    c = <null>a; // @error incompatible types: 'int' cannot be cast to 'null'
+    c = <null>b; // @error incompatible types: 'string' cannot be cast to 'null'
+    c = <null>d; // @error incompatible types: 'boolean' cannot be cast to 'null'
+    c = <null>e; // @error incompatible types: 'float' cannot be cast to 'null'
+    c = <null>f; // @error incompatible types: 'xml' cannot be cast to 'null'
+    c = <null>g; // @error incompatible types: 'decimal' cannot be cast to 'null'
+
+    d = <boolean>a; // @error incompatible types: 'int' cannot be cast to 'boolean'
+    d = <boolean>b; // @error incompatible types: 'string' cannot be cast to 'boolean'
+    d = <boolean>c; // @error incompatible types: 'null' cannot be cast to 'boolean'
+    d = <boolean>e; // @error incompatible types: 'float' cannot be cast to 'boolean'
+    d = <boolean>f; // @error incompatible types: 'xml' cannot be cast to 'boolean'
+    d = <boolean>g; // @error incompatible types: 'decimal' cannot be cast to 'boolean'
+
+    e = <float>b; // @error incompatible types: 'string' cannot be cast to 'float'
+    e = <float>c; // @error incompatible types: 'null' cannot be cast to 'float'
+    e = <float>d; // @error incompatible types: 'boolean' cannot be cast to 'float'
+    e = <float>f; // @error incompatible types: 'xml' cannot be cast to 'float'
+
+    f = <xml>a; // @error incompatible types: 'int' cannot be cast to 'xml'
+    f = <xml>b; // @error incompatible types: 'string' cannot be cast to 'xml'
+    f = <xml>c; // @error incompatible types: 'null' cannot be cast to 'xml'
+    f = <xml>d; // @error incompatible types: 'boolean' cannot be cast to 'xml'
+    f = <xml>e; // @error incompatible types: 'float' cannot be cast to 'xml'
+    f = <xml>g; // @error incompatible types: 'decimal' cannot be cast to 'xml'
+
+    g = <decimal>b; // @error incompatible types: 'string' cannot be cast to 'decimal'
+    g = <decimal>c; // @error incompatible types: 'null' cannot be cast to 'decimal'
+    g = <decimal>d; // @error incompatible types: 'boolean' cannot be cast to 'decimal'
+    g = <decimal>f; // @error incompatible types: 'xml' cannot be cast to 'decimal'
+}
+
+Test-Case: error
+Description: Test error when value is not belonging to the type described by the type desc and numeric convert is not 
+             applicable by casting to an int array.
+Labels: array-type, list-constructor-expr, string, type-cast-expr, var
+
+function errorFunction() {
+    var a = [1, "Ballerina"];
+    int[2] _ = <int[2]> a; // @error '[int,string]' cannot be cast to 'int[2]'
+}
+
+Test-Case: error
+Description: Test error when value is not belonging to the type described by the type desc and numeric convert is not 
+             applicable by casting to a map of string.
+Labels: map-type, mapping-constructor-expr, string, type-cast-expr, var
+
+function errorFunction() {
+    var a = {fieldA: "Car",  fieldB: 43};
+    map<string> _ = <map<string>> a; // @error record value cannot be cast to 'map<string>'
+}
+
+Test-Case: error
+Description: Test error when value is not belonging to the type described by the type desc and numeric convert is not 
+             applicable by casting to a record.
+Labels: boolean, mapping-constructor-expr, record-type, string, type-cast-expr, var
+
+function errorFunction() {
+    var a = {fieldA: 32,  fieldB: "43"};
+    record {|int fieldA; boolean fieldC;|} _ = <record {|int fieldA; boolean fieldC;|}> a; // @error incompatible types
+    
+    var b = {fieldA: 34, fieldB: false};
+    record {|int fieldA; boolean fieldC;|} _  = <record {|int fieldA; boolean fieldC;|}>b; // @error incompatible field names
+}
+
+Test-Case: error
+Description: Test error when value is not belonging to the type described by the type desc and numeric convert is not 
+             applicable by casting to a table.
+Labels: map-type, mapping-constructor-expr, record-type, record-type-readonly-field, string, table-constructor-expr, 
+        table-type, table-type-key-specifier, type-cast-expr, var
+
+function errorFunction() {
+    table<map<string>> a = table [
+        {fieldA: "Car", fieldB: "43"}
+        ];
+    table<record {|int fieldA; string fieldB;|}> _ = <table<record {|int fieldA; string fieldB;|}>>a; // @error incompatible types
+
+    table<record {|readonly int fieldA; string fieldB;|}> key(fieldA) b = table [
+        {fieldA: 11, fieldB: "43"}
+        ];
+    table<record {|int fieldA; readonly string fieldB;|}> key(fieldB) _ = <table<record {|int fieldA; readonly string fieldB;|}> key(fieldB)>b; // @error key fields
+}
+
+Test-Case: error
+Description: Test error when value is not belonging to the type described by the type desc and numeric convert is not 
+             applicable by casting to a function type.
+Labels: explicit-anonymous-function-expr, function-type, nil-literal, string, type-cast-expr, var
+
+function errorFunction() {
+    var a = function(int b, string c) => ();
+    function(string b, string c) _ = <function (string b, string c) returns ()> a; // @error incompatible parameter types
+
+    function(int b, string c) returns int _ = <function (int b, string c) returns int> a; // @error incompatible return types
+
+    function(int b, string c, string d = "") _ = <function (int b, string c, string d = "")> a; // @error incompatible parameter count
+}
+
+Test-Case: error
+Description: Test error when value is not belonging to the type described by the type desc and numeric convert is not 
+             applicable by casting to an object type.
+Labels: object-constructor-expr, object-type, type-cast-expr, var
+
+function errorFunction() {
+    var a = object {
+        int a = 5;
+    };
+
+    object {int b;} _ = <object {int b;}> a; // @error incompatible field names
+}
+
+Test-Case: error
+Description: Test error when value is not belonging to the type described by the type desc and numeric convert is not 
+             applicable by casting to a stream type.
+Labels: additive-expr, implicit-new-expr, isolated-method, mapping-constructor-expr, module-class-defn, optional-type, 
+        record-type, stream, stream-type-parameters, string, type-cast-expr
+
+class NumberGenerator {
+    int number = 0;
+    public isolated function next() returns record {|int value;|}? {
+        self.number = self.number + 1;
+        return {value: self.number};
+    }
+}
+
+function errorFunction() {
+    NumberGenerator numberGen = new ();
+    stream<int> streamName = new (numberGen);
+    stream<string> _ = <stream<string>>streamName; // @error 'stream<int>' cannot be cast to 'stream<string>'
+}
+
+Test-Case: output
+Description: Test static type of the type cast expression is the intersection of type described by the type descriptor 
+             and TE' where TE' is static type of the expression with its numeric shapes transformed to take account of 
+             the possibility of the numeric conversion.
+Fail-Issue: ballerina-platform/ballerina-lang#24559
+Labels: any, anydata, boolean, DecimalFloatingPointNumber, float, json, type-cast-expr
+
+function init() {
+    boolean a = true;
+    boolean b = <json>a;
+    io:println(b); // @output true
+
+    int c = 5;
+    int d = <json>c;
+    io:println(d); // @output 5
+
+    float e = 5.3;
+    float f = <any>e;
+    io:println(f); // @output 5.3
+
+    float g = <anydata>e;
+    io:println(g); // @output 5.3
+    
+    record {|int a;string...; |} h = <record {|any a;|}>{a: 5};
+    io:println(h.a); // @output 5
+}
+
+Test-Case: error
+Description: Test error when attempting to use a type cast to cast away an error.
+Labels: error-type, module-type-defn, string, type-cast-expr, union-type
+
+type MyError error;
+
+type MyUnion int|MyError;
+
+function errorFunction() {
+    int|error a = 1;
+    int b = <int>a; // @error attempt to cast away an error
+
+    string c = <string>getString(); // @error attempt to cast away an error
+
+    MyUnion d = 3;
+    int e = <int>d; // @error attempt to cast away an error
+}
+
+function getString() returns error|string {
+    return "car";
+}
+
+Test-Case: output
+Description: Test if static type of expression contains error, then the intersection of T and error must 
+             also be non-empty.
+Labels: error-type, error-constructor-expr, error-type-parameter, field-access-expr, method-call-expr, module-type-defn, 
+        record-type, string, type-cast-expr, union-type
+
+type MyError error<record {|int severity;|}>;
+
+type MyUnion any|MyError;
+
+function init() {
+    MyUnion a = 3;
+    int|error b = <int|error>a;
+    io:println(b); // @output 3
+
+    string|error c = error("msg", severity = 1);
+    MyError e = <MyError> c;
+    io:println(e.detail().severity); // @output 1
+}
+
+Test-Case: output
+Description: Test the contextually expected type for expression is the intersection of the contextually expected type 
+             of the type-cast-expr and the type described by the type-descriptor
+Labels: any, array-type, byte, decimal, DecimalFloatingPointNumber, float, mapping-constructor-expr, 
+        record-rest-descriptor, record-type, record-type-readonly-field, string, tuple-type, type-cast-expr, union-type,
+        value:toBalString
+
+function init() {
+    record {|int a;string...; |} a = <record {|int a;|}>{a: 5};
+    io:println(typeof a); // @output typedesc record {| int a; |}
+
+    record {|int a;string...; |} b = <record {|readonly int a;|}>{a: 5};
+    io:println(typeof b); // @output typedesc record {| readonly int a; |}
+
+    record {|int a;string...; |} c = <record {|readonly int a; "Car" b;|}>{a: 5, b: "Car"};
+    io:println(typeof c); // @output typedesc record {| readonly int a; "Car" b; |}
+
+    record {|int a;string...; |}|string d = <record {|readonly int a; "Car" b;|}|string>{a: 5, b: "Car"};
+    io:println(typeof d); // @output typedesc record {| readonly int a; "Car" b; |}
+
+    int[] e = <[int, byte]>[444, 21];
+    io:println(typeof e); // @output typedesc [int,byte]
+
+    int[]|byte[] f = <[int, byte]>[444, 21];
+    io:println(typeof f); // @output typedesc [int,byte]
+
+    any g = <float>1;
+    io:println(g); // @output 1.0
+
+    any h = <decimal>1.4;
+    io:println(h.toBalString()); // @output 1.4d
+}
+
+Test-Case: error
+Description: Test the contextually expected type for expression is the intersection of the contextually expected type 
+             of the type-cast-expr and the type described by the type-descriptor by invalid assignments
+Labels: any, array-type, mapping-constructor-expr, record-rest-descriptor, record-type, string, tuple-type,
+        type-cast-expr, union-type
+        
+function init() {
+    string[] a = <any[]>[1, ""]; // @error expected `string` found `int`
+
+    any[] b = <string[]>[1, ""]; // @error expected `string` found `int`
+
+    [int|string, int] c = <[int, int|string]>[1, "3"]; // @error expected `int`` found `string`
+
+    [int|string, int|string] d = <[int|string, int]>[1, "3"]; // @error expected `int`` found `string`
+
+    [int, int|string] e = <[int|string, int]>[1, "3"]; // @error expected `int`` found `string`
+
+    record {|any a;|} g = <record {|string a;any...; |}>{a: 5}; // @error expected `string`` found `int`
+
+    record {|any a;|} h = <record {|string a;|}>{a: 5}; // @error expected `string`` found `int`
+}
+
+Test-Case: output
+Description: Test cast to readonly can be used to cause constructors withing the expression to construct values
+             with the read-only bit on.
+Labels: any, array-type, list-constructor-expr, map-type, mapping-constructor-expr, readonly-type, string, 
+        table-constructor-expr, table-type, type-cast-expr, typeof-expr
+
+function init() {
+    int[] a = <readonly>[1, 2];
+    io:println(a is int[] & readonly); // @output true
+    io:println(a is int[2] & readonly); // @output true
+    io:println(a is [1, 2] & readonly); // @output true
+
+    any[] b = <readonly>[1, "Ballerina"];
+    io:println(b is any[] & readonly); // @output true
+    io:println(b is any[2] & readonly); // @output true
+    io:println(b is [1, "Ballerina"] & readonly); // @output true
+
+    map<string> c = <readonly>{a: "4", b: "car"};
+    io:println(c is map<string> & readonly); // @output true
+    io:println(c is record {|"4" a; "car" b;|} & readonly); // @output true
+
+    map<any> d = <readonly>{a: 3, b: "car"};
+    io:println(d is map<any> & readonly); // @output true
+    io:println(d is record {|3 a; "car" b;|} & readonly); // @output true
+
+    table<record {|int a;|}> e = <readonly>table [
+            {a: 54}
+    ];
+    io:println(e is table<record {|int a;|}> & readonly); // @output true
+    io:println(e is table<record {|54 a;|}> & readonly); // @output true
+
+    table<record {|int a;|}> f = <readonly>table [
+            {a: 54},
+            {a: 77}
+    ];
+    io:println(f is table<record {|int a;|}> & readonly); // @output true
+    io:println(f is table<record {|77|54 a;|}> & readonly); // @output true
+}
+
+Test-Case: output
+Description: Test cast to readonly can be used to cause constructors withing the expression to construct values
+             with the read-only bit on using byte array literal.
+Labels: array-type, byte, byte-array-literal, readonly-type, type-cast-expr, typeof-expr, var
+        
+function init() {
+    byte[1] f = <readonly>base16 `aa`;
+    io:println(f is byte[1] & readonly); // @output true
+    io:println(f is [170] & readonly); // @output true
+
+    var g = <byte[] & readonly>base16 `aa 4b`;
+    io:println(g is byte[] & readonly); // @output true
+    io:println(g is [170, 75] & readonly); // @output true
+
+    byte[2] h = <byte[2] & readonly>base16 `ba16`;
+    io:println(h is byte[2] & readonly); // @output true
+    io:println(h is [186, 22] & readonly); // @output true
+
+    var i = <int[1] & readonly>base16 `ff`;
+    io:println(i is int[1] & readonly); // @output true
+    io:println(i is [255] & readonly); // @output true
+
+    byte[3] j = <readonly>base64 `AAAB`;
+    io:println(j is byte[3] & readonly); // @output true
+    io:println(j is [0, 0, 1] & readonly); // @output true
+
+    var k = <byte[] & readonly>base64 `AAAB ABB=`;
+    io:println(k is byte[] & readonly); // @output true
+    io:println(k is [0,0,1,0,16] & readonly); // @output true
+
+    byte[] m = <byte[3] & readonly>base64 `pqrs`;
+    io:println(m is byte[3] & readonly); // @output true
+    io:println(m is [166,170,236] & readonly); // @output true
+
+    var n = <int[3] & readonly>base64 `+/12`;
+    io:println(n is int[3] & readonly); // @output true
+    io:println(n is [251,253,118] & readonly); // @output true
+}
+
+Test-Case: output
+Description: Test cast to readonly can be used to verify that the value resulting from the evaluation of expression 
+             has its read-only bit on. 
+Labels: any, array-type, list-constructor-expr, map-type, mapping-constructor-expr, readonly-type, string, 
+        table-constructor-expr, table-type, type-cast-expr, typeof-expr
+
+function init() {
+    int[] & readonly a = [1, 2];
+    int[] a1 = a;
+    int[] a2 = <readonly>a1;
+    io:println(typeof a2); // @output typedesc [1,2]
+
+    any[] & readonly b = [1, "Ballerina"];
+    any[] b1 = b;
+    any[] b2 = <readonly>b1;
+    io:println(typeof b2); // @output typedesc [1,"Ballerina"]
+
+    map<string> & readonly c = {a: "4", b: "car"};
+    map<string> c1 = c;
+    map<string> c2 = <readonly>c1;
+    io:println(typeof c2); // @output typedesc {"a":"4","b":"car"}
+
+    map<any> & readonly d = {a: 3, b: "car"};
+    map<any> d1 = d;
+    map<any> d2 = <readonly>d1;
+    io:println(typeof d2); // @output typedesc {"a":3,"b":"car"}
+
+    table<record {|int a;|}> & readonly e = table [
+            {a: 54}
+    ];
+    table<record {|int a;|}> e1 = e;
+    table<record {|int a;|}> e2 = <readonly>e1;
+    io:println(typeof e2); // @output typedesc [{"a":54}]
+}
+
+Test-Case: panic
+Description: Test cast to readonly can be used to verify that the value resulting from the evaluation of expression 
+             has its read-only bit on via runtime panic. 
+Labels: array-type, list-constructor-expr, readonly-type, type-cast-expr
+        
+function init() {
+    int[] a1 = [1, 2];
+    int[] a = <readonly>a1; // @panic `a1` is not readonly
+}
