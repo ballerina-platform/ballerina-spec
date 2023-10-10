@@ -1,0 +1,70 @@
+Test-Case: error
+Description: Test negative assignability of regular expression to non-readonly types.
+Labels: RegExp, boolean, decimal, float, int, json, map, string, table, xml
+
+function errorFunction() {
+    string:RegExp reg1 = re `([A-D]+|[H-Z]*)|C{2,9}`;
+
+    string reg2 = reg1; // @error incompatible types
+    int reg3 = reg1; // @error incompatible types
+    boolean reg4 = reg1; // @error incompatible types
+    float reg5 = reg1; // @error incompatible types
+    decimal reg6 = reg1; // @error incompatible types
+    xml reg7 = reg1; // @error incompatible types
+    map<anydata> reg8 = reg1; // @error incompatible types
+    table<map<anydata>> reg9 = reg1; // @error incompatible types
+    json reg10 = reg1; // @error incompatible types
+}
+
+Test-Case: error
+Description: Test negative subtyping with regular expression.
+Labels: RegExp, module-type-defn, subtyping
+
+type UserDefUnionType int|string|map<anydata>; 
+
+function errorFunction() {
+    json reg1 = re `([A-D]+|[H-Z]*)|C{2,9}`; // @error incompatible types
+    UserDefUnionType reg2 = re `([A-D]+|[H-Z]*)|C{2,9}`; // @error incompatible types
+}
+
+Test-Case: error
+Description: Test regular expression as function parameter with invalid argument.
+Labels: RegExp, function-type-descriptor
+
+function getRegExp(string:RegExp re) returns string:RegExp {
+    return re;
+}
+
+function errorFunction() {
+    _ = getRegExp("ABC"); // @error incompatible types
+}
+
+Test-Case: error
+Description: Test regular expression as list member with invalid expected type.
+Labels: RegExp, list-constructor-expr
+
+function errorFunction() {
+    string:RegExp[2] regArr = [re `ABC`, re `([A-D]+|[H-Z]*)|C{2,9}`, re `[a-z]`]; // @error size mismatch in closed array
+    string:RegExp[4] regArr = [re `ABC`, re `([A-D]+|[H-Z]*)|C{2,9}`, re `[a-z]`]; // @error regexp does not have a filer value
+}
+
+Test-Case: error
+Description: Test invalid assignability of regular expression array.
+Labels: RegExp, list-constructor-expr
+
+function errorFunction() {
+    string:RegExp[3] regArr = [re `ABC`, re `([A-D]+|[H-Z]*)|C{2,9}`, re `[a-z]`]; 
+    string:RegExp[4] regArr2 = regArr; // @error incompatible types
+    string:RegExp[2] regArr3 = regArr; // @error incompatible types
+    string:RegExp[*] regArr4 = regArr; // @error length of the array cannot be inferred from the context
+
+    string:RegExp[*] regArr5 = [re `ABC`, re `([A-D]+|[H-Z]*)|C{2,9}`, re `[a-z]`]; 
+    string:RegExp[4] regArr6 = regArr; // @error incompatible types
+    string:RegExp[2] regArr7 = regArr; // @error incompatible types
+    string:RegExp[*] regArr8 = regArr; // @error length of the array cannot be inferred from the context
+
+    string:RegExp[] regArr = [re `ABC`, re `([A-D]+|[H-Z]*)|C{2,9}`, re `[a-z]`]; 
+    string:RegExp[3] regArr2 = regArr; // @error incompatible types
+    string:RegExp[4] regArr3 = regArr; // @error incompatible types
+    string:RegExp[*] regArr4 = regArr; // @error length of the array cannot be inferred from the context
+}

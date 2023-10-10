@@ -1,0 +1,719 @@
+Test-Case: output
+Description: Test basic regular expression.
+Labels: RegExp, string
+
+import ballerina/lang.regexp;
+
+function init() {
+    string:RegExp reg1 = re `([A-D]+|[H-Z]*)|C{2,9}`;
+    io:println(reg1); // @output ([A-D]+|[H-Z]*)|C{2,9}
+
+    regexp:RegExp reg2 = re `([A-D]+|[H-Z]*)|C{2,9}`;
+    io:println(reg2); // @output ([A-D]+|[H-Z]*)|C{2,9}
+}
+
+Test-Case: output
+Description: Test basic regular expression at module-level.
+Labels: RegExp, module-var-decl, string
+
+import ballerina/lang.regexp;
+
+string:RegExp reg1 = re `([A-D]+|[H-Z]*)|C{2,9}`;
+regexp:RegExp reg2 = re `([A-D]+|[H-Z]*)|C{2,9}`;
+
+function init() {
+    io:println(reg1); // @output ([A-D]+|[H-Z]*)|C{2,9}
+    io:println(reg2); // @output ([A-D]+|[H-Z]*)|C{2,9}
+}
+
+Test-Case: output
+Description: Test assignability of regular expression to non-readonly types.
+Labels: RegExp, any, anydata, assignment-stmt, string
+
+function init() {
+    string:RegExp reg1 = re `([A-D]+|[H-Z]*)|C{2,9}`;
+
+    anydata reg2 = reg1;
+    io:println(reg2 is string:RegExp); // @output true
+
+    any reg3 = reg1;
+    io:println(reg3 is string:RegExp); // @output true
+}
+
+Test-Case: output
+Description: Test assignability of regular expression to readonly types.
+Labels: RegExp, any, anydata, assignment-stmt, readonly, string
+
+function init() {
+    string:RegExp reg1 = re `([A-D]+|[H-Z]*)|C{2,9}`;
+
+    readonly reg2 = reg1;
+    io:println(reg2 is string:RegExp); // @output true
+
+    anydata & readonly reg3 = reg1;
+    io:println(reg3 is string:RegExp); // @output true
+
+    any & readonly reg4 = reg1;
+    io:println(reg4 is string:RegExp); // @output true
+}
+
+Test-Case: output
+Description: Test imutability of regular expression.
+Labels: RegExp, readonly
+
+function init() {
+    string:RegExp reg1 = re `([A-D]+|[H-Z]*)|C{2,9}`;
+
+    io:println(reg1 is readonly); // @output true
+}
+
+Test-Case: output
+Description: Test regular expression lang type.
+Labels: RegExp, assignment-stmt
+
+import ballerina/lang.regexp;
+
+function init() {
+    string:RegExp reg1 = re `([A-D]+|[H-Z]*)|C{2,9}`;
+    io:println(reg1 is regexp:RegExp); // @output true
+
+    regexp:RegExp reg2 = reg1;
+    io:println(reg2 is regexp:RegExp); // @output true
+    io:println(reg2 is string:RegExp); // @output true
+
+    regexp:RegExp reg3 = re `([A-D]+|[H-Z]*)|C{2,9}`;
+    io:println(reg3 is string:RegExp); // @output true
+
+    regexp:RegExp reg4 = reg3;
+    io:println(reg4 is regexp:RegExp); // @output true
+    io:println(reg4 is string:RegExp); // @output true
+}
+
+Test-Case: output
+Description: Test regular expression with var.
+Labels: RegExp, assignment-stmt, var
+
+import ballerina/lang.regexp;
+
+function init() {
+    var reg1 = re `([A-D]+|[H-Z]*)|C{2,9}`;
+    io:println(reg1 is string:RegExp); // @output true
+    io:println(reg1 is regexp:RegExp); // @output true
+
+    anydata reg2 = reg1;
+    io:println(reg2 is string:RegExp); // @output true
+    io:println(reg2 is regexp:RegExp); // @output true
+
+    any reg3 = reg1;
+    io:println(reg3 is string:RegExp); // @output true
+    io:println(reg3 is regexp:RegExp); // @output true
+
+    readonly reg4 = reg1;
+    io:println(reg4 is string:RegExp); // @output true
+    io:println(reg4 is regexp:RegExp); // @output true
+
+    anydata & readonly reg5 = reg1;
+    io:println(reg5 is string:RegExp); // @output true
+    io:println(reg5 is regexp:RegExp); // @output true
+
+    any & readonly reg6 = reg1;
+    io:println(reg6 is string:RegExp); // @output true
+    io:println(reg6 is regexp:RegExp); // @output true
+}
+
+Test-Case: output
+Description: Test regular expression with user defined types.
+Labels: RegExp, module-type-defn
+
+type UserDefType string:RegExp; 
+
+function init() {
+    UserDefType reg1 = re `([A-D]+|[H-Z]*)|C{2,9}`;
+    io:println(reg1 is string:RegExp); // @output true
+    io:println(re `([A-D]+|[H-Z]*)|C{2,9}` == reg1); // @output true
+}
+
+Test-Case: output
+Description: Test regular expression with user defined union types.
+Labels: RegExp, module-type-defn
+
+type UserDefUnionType string:RegExp|json|map<anydata>; 
+
+function init() {
+    UserDefUnionType reg1 = re `([A-D]+|[H-Z]*)|C{2,9}`;
+    io:println(reg1 is string:RegExp); // @output true
+    io:println(re `([A-D]+|[H-Z]*)|C{2,9}` == reg1); // @output true
+}
+
+Test-Case: output
+Description: Test subtyping with regular expression.
+Labels: RegExp, module-type-defn, subtyping
+
+type UserDefUnionType string:RegExp|string|map<anydata>; 
+
+function init() {
+    string:RegExp reg1 = re `([A-D]+|[H-Z]*)|C{2,9}`;
+    io:println(reg1 is anydata); // @output true
+    io:println(reg1 is any); // @output true
+    io:println(reg1 is anydata); // @output true
+    
+    anydata reg2 = re `([A-D]+|[H-Z]*)|C{2,9}`;
+    io:println(reg2 is string:RegExp); // @output true
+
+    any reg3 = re `([A-D]+|[H-Z]*)|C{2,9}`;
+    io:println(reg3 is string:RegExp); // @output true
+
+    readonly reg4 = re `([A-D]+|[H-Z]*)|C{2,9}`;
+    io:println(reg4 is string:RegExp); // @output true
+
+    anydata & readonly reg5 = re `([A-D]+|[H-Z]*)|C{2,9}`;
+    io:println(reg5 is string:RegExp); // @output true
+
+    any & readonly reg6 = re `([A-D]+|[H-Z]*)|C{2,9}`;
+    io:println(reg6 is string:RegExp); // @output true
+
+    anydata & readonly reg7 = re `([A-D]+|[H-Z]*)|C{2,9}`;
+    io:println(reg7 is string:RegExp); // @output true
+
+    UserDefUnionType reg8 = re `([A-D]+|[H-Z]*)|C{2,9}`;
+    io:println(reg8 is string:RegExp); // @output true
+}
+
+Test-Case: output
+Description: Test regular expression as function parameter.
+Labels: RegExp, function-type-descriptor
+
+function getRegExp(string:RegExp re) returns string:RegExp {
+    return re;
+}
+
+function init() {
+    string:RegExp reg1 = re `([A-D]+|[H-Z]*)|C{2,9}`;
+    io:println(getRegExp(reg1) == re `([A-D]+|[H-Z]*)|C{2,9}`); // @output true
+
+    string:RegExp reg2 = getRegExp(re `([A-D]+|[H-Z]*)|C{2,9}`);
+    io:println(reg2 == re `([A-D]+|[H-Z]*)|C{2,9}`); // @output true
+
+    string:RegExp reg3 = getRegExp(re = re `([A-D]+|[H-Z]*)|C{2,9}`);
+    io:println(reg3 == re `([A-D]+|[H-Z]*)|C{2,9}`); // @output true
+}
+
+Test-Case: output
+Description: Test regular expression as function defaultable parameter.
+Labels: RegExp, defaultable-params, function-type-descriptor
+
+function getRegExp(string:RegExp re = re `ABC`) returns string:RegExp {
+    return re;
+}
+
+function init() {
+    string:RegExp reg1 = getRegExp();
+    io:println(getRegExp(reg1) == re `ABC`); // @output true
+
+    string:RegExp reg2 = getRegExp(re `EFG`);
+    io:println(getRegExp(reg2) == re `EFG`); // @output true
+}
+
+Test-Case: output
+Description: Test regular expression as record field.
+Labels: RegExp, module-type-defn, record-type-descriptor
+
+type ReRec1 record {
+    string:RegExp re1;
+    ReRec2 rec?;
+};
+
+type ReRec2 record {
+    string:RegExp re2;
+};
+
+function init() {
+    ReRec1 r1 = {re1 : re `([A-D]+|[H-Z]*)|C{2,9}`};
+    io:println(r1.re1 is string:RegExp); // @output true
+    io:println(r1.re1 == re `([A-D]+|[H-Z]*)|C{2,9}`); // @output true
+
+    ReRec1 r2 = {re1 : re `ABC`, rec : {re2 : re `DEF`}};
+    io:println((<ReRec2>r2.rec).re2 is string:RegExp); // @output true
+    io:println((<ReRec2>r2.rec).re2 == re `([A-D]+|[H-Z]*)|C{2,9}`); // @output true
+}
+
+Test-Case: output
+Description: Test regular expression as record field with defaultable value.
+Labels: RegExp, module-type-defn, record-type-descriptor
+
+type ReRec1 record {
+    string:RegExp re1 = re `ABC`;
+};
+
+function init() {
+    ReRec1 r1 = {};
+    io:println(r1.re1 is string:RegExp); // @output true
+    io:println(r1.re1 == re `ABC`); // @output true
+}
+
+Test-Case: output
+Description: Test regular expression as table field.
+Labels: RegExp, table-constructor-expr, table-type-descriptor
+
+type Foo record {
+    readonly int id;
+    string:RegExp re;
+};
+
+table<Foo> key(id) t = table [
+    {id : 1, re : re `ABC`},
+    {id : 2, re : re `DEF`}
+];
+
+function init() {
+    io:println(t.get(1).re is string:RegExp); // @output true
+    io:println(t.get(1).re == re `ABC`); // @output true
+
+    io:println(t.get(2).re is string:RegExp); // @outout true
+    io:println(t.get(2).re == re `DEF`); // @output true
+}
+
+Test-Case: output
+Description: Test regular expression as table field.
+Labels: RegExp, table-constructor-expr, table-type-descriptor
+
+type Foo record {
+    readonly int id;
+    string:RegExp re;
+};
+
+table<Foo> key(id) t = table [
+    {id : 1, re : re `ABC`},
+    {id : 2, re : re `DEF`}
+];
+
+function init() {
+    io:println(t.get(1).re is string:RegExp); // @output true
+    io:println(t.get(1).re == re `ABC`); // @output true
+
+    io:println(t.get(2).re is string:RegExp); // @outout true
+    io:println(t.get(2).re == re `DEF`); // @output true
+}
+
+Test-Case: output
+Fail-Issue: https://github.com/ballerina-platform/ballerina-lang/issues/38679 
+Description: Test 1 for regular expression as table key.
+Labels: RegExp, table-constructor-expr, table-type-descriptor
+
+type Foo record {
+    readonly int id;
+    readonly string:RegExp re;
+};
+
+table<Foo> key(re) t = table [
+    {id : 1, re : re `ABC`},
+    {id : 2, re : re `DEF`}
+];
+
+function init() {
+    io:println(t.get(re `ABC`).re is string:RegExp); // @output true
+    io:println(t.get(re `ABC`).re == re `ABC`); // @output true
+
+    io:println(t.get(re `DEF`).re is string:RegExp); // @output true
+    io:println(t.get(re `DEF`).re == re `DEF`); // @output true
+}
+
+Test-Case: output
+Fail-Issue: https://github.com/ballerina-platform/ballerina-lang/issues/38679
+Description: Test 2 for regular expression as table key.
+Labels: RegExp, table-constructor-expr, table-type-descriptor
+
+type Foo record {
+    readonly int id;
+    readonly string:RegExp re;
+};
+
+function init() {
+    table<Foo> key(re) t = table [
+        {id: 1, re: re `ABC`},
+        {id: 2, re: re `DEF`}
+    ];
+
+    io:println(t.get(re `ABC`).re is string:RegExp); // @output true
+    io:println(t.get(re `ABC`).re == re `ABC`); // @output true
+
+    io:println(t.get(re `DEF`).re is string:RegExp); // @output true
+    io:println(t.get(re `DEF`).re == re `DEF`); // @output true
+}
+
+Test-Case: output
+Description: Test 1 for regular expression as list member.
+Labels: RegExp, list-constructor-expr
+
+function init() {
+    string:RegExp[] regArr = [re `ABC`, re `([A-D]+|[H-Z]*)|C{2,9}`, re `[a-z]`];
+    io:println(regArr.length().toString()); // @output 3
+    io:println(regArr[0] == re `ABC`); // @output true
+    io:println(regArr[1] == re `([A-D]+|[H-Z]*)|C{2,9}`); // @output true
+    io:println(regArr[2] == re `[a-z]`); // @output true
+}
+
+Test-Case: output
+Description: Test 2 for regular expression as list member.
+Labels: RegExp, list-constructor-expr
+
+function init() {
+    string:RegExp[3] regArr = [re `ABC`, re `([A-D]+|[H-Z]*)|C{2,9}`, re `[a-z]`];
+    io:println(regArr.length().toString()); // @output 3
+    io:println(regArr[0] == re `ABC`); // @output true
+    io:println(regArr[1] == re `([A-D]+|[H-Z]*)|C{2,9}`); // @output true
+    io:println(regArr[2] == re `[a-z]`); // @output true
+}
+
+Test-Case: output
+Description: Test 3 for regular expression as list member.
+Labels: RegExp, list-constructor-expr
+
+function init() {
+    string:RegExp[*] regArr = [re `ABC`, re `([A-D]+|[H-Z]*)|C{2,9}`, re `[a-z]`];
+    io:println(regArr.length().toString()); // @output 3
+    io:println(regArr[0] == re `ABC`); // @output true
+    io:println(regArr[1] == re `([A-D]+|[H-Z]*)|C{2,9}`); // @output true
+    io:println(regArr[2] == re `[a-z]`); // @output true
+}
+
+Test-Case: output
+Description: Test assignability of regular expression array.
+Labels: RegExp, list-constructor-expr
+
+function init() {
+    string:RegExp[3] regArr1 = [re `ABC`, re `([A-D]+|[H-Z]*)|C{2,9}`, re `[a-z]`];
+    string:RegExp[] regArr2 = regArr1;
+    io:println(regArr2.length().toString()); // @output 3
+    io:println(regArr2[0] == re `ABC`); // @output true
+    io:println(regArr2[1] == re `([A-D]+|[H-Z]*)|C{2,9}`); // @output true
+    io:println(regArr2[2] == re `[a-z]`); // @output true
+
+    string:RegExp[*] regArr3 = [re `ABC`, re `([A-D]+|[H-Z]*)|C{2,9}`, re `[a-z]`];
+    string:RegExp[3] regArr4 = regArr3;
+    io:println(regArr4.length().toString()); // @output 3
+    io:println(regArr4[0] == re `ABC`); // @output true
+    io:println(regArr4[1] == re `([A-D]+|[H-Z]*)|C{2,9}`); // @output true
+    io:println(regArr4[2] == re `[a-z]`); // @output true
+
+    string:RegExp[] regArr5 = regArr3;
+    io:println(regArr5.length().toString()); // @output 3
+    io:println(regArr5[0] == re `ABC`); // @output true
+    io:println(regArr5[1] == re `([A-D]+|[H-Z]*)|C{2,9}`); // @output true
+    io:println(regArr5[2] == re `[a-z]`); // @output true
+}
+
+Test-Case: output
+Description: Test regular expression as tuple member.
+Labels: RegExp, tuple-type-descriptor
+
+function init() {
+    [string:RegExp, int, string:RegExp...] arr = [re `A`, 1, re `([A-D]+|[H-Z]*)|C{2,9}`, re `[a-z]`];
+    io:println(arr[0] == re `A`); // @output true
+    io:println(arr[1] == 1); // @output true
+    io:println(arr[2] == re `([A-D]+|[H-Z]*)|C{2,9}`); // @output true
+    io:println(arr[3] == re `[a-z]`); // @output true
+}
+
+Test-Case: output
+Description: Test 1 for regular expression with map.
+Labels: RegExp, map-type-descriptor, mapping-constructor-expr
+
+function init() {
+    map<string:RegExp> m = {
+        "x" : re `ABC`,
+        "y" : re `A{3,6}[0-9]`,
+        "z" : re `[a-z\-]+`
+    };
+
+    io:println(m["x"] is string:RegExp); // @output true
+    io:println(m["x"] == re `ABC`); // @output true
+
+    io:println(m["y"] is string:RegExp); // @output true
+    io:println(m["y"] == re `A{3,6}[0-9]`); // @output true
+
+    io:println(m["z"] is string:RegExp); // @output true
+    io:println(m["z"] == re `[a-z\-]+`); // @output true
+}
+
+Test-Case: output
+Description: Test 2 for regular expression with map.
+Labels: RegExp, map-type-descriptor, mapping-constructor-expr
+
+map<string:RegExp> m = {
+    "x" : re `ABC`,
+    "y" : re `A{3,6}[0-9]`,
+    "z" : re `[a-z\-]+`
+};
+
+function init() {
+    io:println(m["x"] is string:RegExp); // @output true
+    io:println(m["x"] == re `ABC`); // @output true
+
+    io:println(m["y"] is string:RegExp); // @output true
+    io:println(m["y"] == re `A{3,6}[0-9]`); // @output true
+
+    io:println(m["z"] is string:RegExp); // @output true
+    io:println(m["z"] == re `[a-z\-]+`); // @output true
+}
+
+Test-Case: output
+Description: Test regular expression with class definition.
+Labels: RegExp, module-class-defn, new-expr
+
+class A {
+    string:RegExp reg;
+
+    function init(string:RegExp reg) {
+        self.reg = reg;
+    }
+
+    function getRegExp() returns string:RegExp {
+        return self.reg;
+    }
+
+    function setRegExp(string:RegExp reg) {
+        self.reg = reg;
+    }
+}
+
+function init() {
+    A classA = new(re `([A-D]+|[H-Z]*)|C{2,9}`);
+    io:println(classA.reg == re `([A-D]+|[H-Z]*)|C{2,9}`); // @output true
+    io:println(classA.getRegExp() == re `([A-D]+|[H-Z]*)|C{2,9}`); // @output true
+
+    classA.setRegExp(re `[A-Z]`);
+    io:println(classA.reg == re `[A-Z]`); // @output true
+    io:println(classA.getRegExp() == re `[A-Z]`); // @output true
+}
+
+Test-Case: output
+Description: Test regular expression with object type.
+Labels: RegExp, object-constructor-expr, var
+
+function init() {
+    var obj = object {
+        string:RegExp reg = re `([A-D]+|[H-Z]*)|C{2,9}`;
+        
+        function getRegExp() returns string:RegExp {
+            return self.reg;
+        }
+        
+        function setRegExp(string:RegExp reg) {
+            self.reg = reg;
+        }
+    };
+
+    io:println(obj.reg == re `([A-D]+|[H-Z]*)|C{2,9}`); // @output true
+    io:println(obj.getRegExp() == re `([A-D]+|[H-Z]*)|C{2,9}`); // @output true
+
+    obj.setRegExp(re `[A-Z]`);
+    io:println(obj.reg == re `[A-Z]`); // @output true
+    io:println(obj.getRegExp() == re `[A-Z]`); // @output true
+}
+
+Test-Case: output
+Description: Test regular expression with type cast expression.
+Labels: RegExp, type-cast-expr
+
+type userType string:RegExp|json|xml;
+
+function init() {
+    anydata x1 = re `([A-D]+|[H-Z]*)|C{2,9}`;
+    var x2 = <string:RegExp> x1;
+    io:println(x2 is string:RegExp); // @output true
+    io:println(x2 == re `([A-D]+|[H-Z]*)|C{2,9}`); // @output true
+
+    any x3 = re `([A-D]+|[H-Z]*)|C{2,9}`;
+    var x4 = <string:RegExp> x3;
+    io:println(x4 is string:RegExp); // @output true
+    io:println(x4 == re `([A-D]+|[H-Z]*)|C{2,9}`); // @output true
+
+    userType x5 = re `([A-D]+|[H-Z]*)|C{2,9}`;
+    var x6 = <string:RegExp> x5;
+    io:println(x6 is string:RegExp); // @output true
+    io:println(x6 == re `([A-D]+|[H-Z]*)|C{2,9}`); // @output true
+}
+
+Test-Case: output
+Description: Test regular expression with stream.
+Labels: RegExp, module-class-defn, module-type-defn, stream
+
+class RegExpGenerator {
+    int i = 0;
+    public isolated function next() returns record {| string:RegExp value; |}|error? {
+        self.i += 1;
+        return { value: re `${self.i}` };
+    }
+}
+
+type ResultValue record {|
+    string:RegExp value;
+|};
+
+function init() {
+    RegExpGenerator regGen = new();
+
+    stream<string:RegExp, error?> regExpStream = new(regGen);
+
+    var regExp = regExpStream.next();
+    
+    if (regExp is ResultValue) {
+        io:println(regExp.value.toString()); // @output 1
+    }
+}
+
+Test-Case: output
+Description: Test 1 for regular expression with query expression.
+Labels: RegExp, from-clause, query-expr, select-clause
+
+function init() {
+    string:RegExp[] arr1 = [re `A`, re `B`, re `C`];
+    string:RegExp[] arr2 = from var reg in arr1
+        select reg;
+    io:println(arr1 == arr2); // @output true
+}
+
+Test-Case: output
+Description: Test 2 for regular expression with query expression.
+Labels: RegExp, from-clause, query-expr, select-clause, var
+
+function init() {
+    var arr1 = [re `A`, re `B`, re `C`];
+    io:println(arr1 is string:RegExp[3]); // @output true
+
+    var arr2 = from var reg in arr1
+        select reg;
+    io:println(arr1 == arr2); // @output true
+}
+
+Test-Case: output
+Fail-Issue: https://github.com/ballerina-platform/ballerina-lang/issues/38692
+Description: Test querying regular expression array with where clause.
+Labels: RegExp, from-clause, query-expr, select-clause, where-clause
+
+function init() {
+    string:RegExp[] arr1 = [re `A`, re `B`, re `C`];
+    string:RegExp[] arr2 = from var reg in arr1
+        where reg != re `B`
+        select reg;
+    io:println(arr2 == [re `A`, re `C`]); // @output true
+}
+
+Test-Case: output
+Description: Test querying regular expression array with nested from clause.
+Labels: RegExp, from-clause, query-expr, select-clause, where-clause
+
+function init() {
+    string:RegExp[] arr1 = [re `A`, re `B`, re `C`];
+    string:RegExp[] arr2 = from var reg1 in arr1
+        from var reg2 in arr1
+        where reg1 == reg2
+        select reg1;
+    io:println(arr2 == arr1); // @output true
+}
+
+Test-Case: output
+Description: Test querying regular expression array with let clause.
+Labels: RegExp, let-clause, query-expr, select-clause, where-clause
+
+function init() {
+    string:RegExp[] arr1 = [re `A`, re `B`, re `C`];
+    string:RegExp[] arr2 = from var reg in arr1
+        let string str = reg.toString()
+        where str != "B"
+        select reg;
+    io:println(arr2 == [re `A`, re `C`]); // @output true
+}
+
+Test-Case: output
+Description: Test querying regular expression array with limit clause.
+Labels: RegExp, limit-clause, query-expr, select-clause
+
+function init() {
+    string:RegExp[] arr1 = [re `A`, re `B`, re `C`, re `D`, re `E`, re `F`];
+    var arr2 = from var reg in arr1
+        limit 4
+        select reg;
+    io:println(arr2 is string:RegExp[]); // @output true
+    io:println(arr2 == [re `A`, re `B`, re `C`, re `D`]); // @output true
+}
+
+Test-Case: output
+Description: Test querying regular expression array with order by clause.
+Labels: RegExp, order-by-clause, query-expr, select-clause
+
+function init() {
+    string:RegExp[] arr1 = [re `B`, re `A`, re `E`, re `C`, re `D`, re `F`];
+    var arr2 = from var reg in arr1
+        order by reg.toString() ascending
+        select reg;
+    io:println(arr2 is string:RegExp[]); // @output true
+    io:println(arr2 == [re `A`, re `B`, re `C`, re `D`, re `E`, re `F`]); // @output true
+}
+
+Test-Case: output
+Description: Test regular expression with typed binding pattern.
+Labels: RegExp, typed-binding-pattern
+
+function init() {
+    [string, string:RegExp, int] [x , y, z] = ["A", re `([A-D]+|[H-Z]*)|C{2,9}`, 3];
+    io:println(x == "A");
+    io:println(y == re `([A-D]+|[H-Z]*)|C{2,9}`);
+    io:println(z == 3);
+}
+
+Test-Case: output
+Description: Test regular expression with capture binding pattern.
+Labels: RegExp, list-binding-pattern
+
+function init() {
+    string:RegExp x;
+    x = re `([A-D]+|[H-Z]*)|C{2,9}`;
+    io:println(x == re `([A-D]+|[H-Z]*)|C{2,9}`);
+}
+
+Test-Case: output
+Description: Test regular expression with list binding pattern.
+Labels: RegExp, list-binding-pattern
+
+function init() {
+    string x;
+    string:RegExp y;
+    [x , y] = ["A", re `([A-D]+|[H-Z]*)|C{2,9}`];
+    io:println(x == "A"); // @output true
+    io:println(y == re `([A-D]+|[H-Z]*)|C{2,9}`); // @output true
+}
+
+Test-Case: output
+Description: Test regular expression with map binding pattern.
+Labels: RegExp, list-binding-pattern
+
+type Rec record {|
+    string str;
+    string:RegExp reg;
+|};
+
+function init() {
+    string x;
+    string:RegExp y;
+
+    Rec rec = {str : "A", reg : re `([A-D]+|[H-Z]*)|C{2,9}`};
+    {str : x, reg : y} = rec;
+    io:println(x == "A"); // @output true
+    io:println(y == re `([A-D]+|[H-Z]*)|C{2,9}`); // @output true
+}
+
+Test-Case: output
+Description: Test looping regular expression array.
+Labels: RegExp, foreach-stmt
+
+function init() {
+    string:RegExp[] arr2 = [];
+    string:RegExp[] arr1 = [re `A`, re `B`, re `C`];
+    foreach var [i, reg] in arr1.enumerate() {
+        arr2[i] = reg;
+    }
+
+    io:println(arr2 == arr1); // @output true
+}
