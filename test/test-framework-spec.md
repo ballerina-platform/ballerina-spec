@@ -29,14 +29,14 @@ project-name/
     -- resources/       <- resources for these tests
 
 ```
-In Ballerina testframework, tests are organized into per module test suites. The tests for a particular module should be added in a sub folder named `tests` within that module.
-Tests defined outside the test directory will not get executed when executing tests for a Ballerina package/module.
+In the Ballerina test framework, tests are organized into per-module test suites. The tests for a particular module should be added in a subdirectory named `tests` within that module.
+Tests defined outside the test directory will not get executed when executing tests for a Ballerina package.
 
 ### Visibility
 
 The symbols defined in a module are accessible from within the test files of the same module. This includes globally-defined objects and variables.
  Hence, redefining a symbol in a test file is not allowed if it is already declared in the module. Instead, they can be reassigned in the test files.
- It must be noted that symbols defined in the test files will not be visible inside the module source files. 
+Symbols defined in the test files will not be visible inside the module source files.
 
 ### Test Resources
 
@@ -199,22 +199,22 @@ Consequently, the permissible scope of the expected value is confined to `anydat
   <tr>
    <td>@test:assertNotEquals(any actual, anydata expected, string message)
    </td>
-   <td>Checks if the specified value is not equal to the expected value. This assertion utilizes the != operator for a deep equality check, thus limiting the expected value to the `anydata` type.
+   <td>Checks if the specified value is not equal to the expected value. 
+This assertion utilizes the `==` operator for a deep equality check, thus limiting the expected value to the `anydata` type.
 The actual value does not include `error` type to avoid automatically passing the tests when there is an error.
-This ensures that tests accurately reflect intended outcomes without misinterpreting errors as correct behavior.
    </td>
   </tr>
   <tr>
      <td>@test:assertExactEquals(any|error actual, any|error expected, string message)
      </td>
-     <td>Checks if the specified value is exactly equal to the expected value i.e. both refer to the same entity. This assertion utilizes the === operator for an exact equality check.
+     <td>Checks if the specified value is exactly equal to the expected value i.e. both refer to the same entity. This assertion utilizes the `===` operator for an exact equality check.
      </td>
     </tr>
     <tr>
      <td>@test:assertNotExactEquals
      </td>
      <td>Checks if the specified value is not exactly equal to the expected value i.e. both do not refer to the same entity.
-This assertion utilizes the === operator for an exact equality check.
+This assertion utilizes the `===` operator for an exact equality check.
      </td>
     </tr>
   <tr>
@@ -232,7 +232,7 @@ This assertion utilizes the === operator for an exact equality check.
   <tr>
    <td>@test:assertFail
    </td>
-   <td>Forces a test case to fail. This assertion facilitate the failing of a test during its execution when a specific condition is not met.
+   <td>This assertion facilitates forcefully failing a test during its execution.
    </td>
   </tr>
 </table>
@@ -318,14 +318,17 @@ Initializing a function mock needs a preceding annotation in order to identify a
   <tr>
    <td>@test:Mock {}
    </td>
-   <td>This annotation can be applied to either a function or a test:MockFunction intialization. When placed before a function, it identifies that function as a mock, which will be invoked whenever the original function is called.
- If it is a test:MockFunction initialization, the behaviour of the function needs to be stubbed in the test cases.
+   <td>This annotation can be applied to either a function or to initialize a `test:MockFunction` object.
+<ul>
+<li>When placed before a function, it identifies that function as a mock, which will be invoked whenever the original function is called.
+<li>If it is a `test:MockFunction` initialization, the behaviour of the function needs to be stubbed in the test cases.
+</ul>
 
 <p>
 Annotation value fields :
 <ul>
 
-<li>moduleName 
+<li>moduleName (Optional) 
 <ul>
  
 <li>Default : Uses the current module
@@ -334,7 +337,7 @@ Annotation value fields :
 </li> 
 </ul>
 
-<li>functionName 
+<li>functionName (Mandatory) 
 <ul>
  
 <li>Name of the function to be mocked
@@ -348,34 +351,39 @@ Annotation value fields :
 
 ### Initialization
 
-*   Mock object 
+#### Mock object 
 
     ```ballerina
     http:Client mockClient = test:mock(http:Client, new MockHttpClient());
     ```
 
-*   Mock function 
-    
-    Compile-time mocking
+#### Mock function 
 
-    ```ballerina
-    @test:Mock { 
-        functionName: "intializeClient" 
-    }
-    function getMockClient() returns http:Client|error {
-        return test:mock(http:Client);
-    }
-    ```
+* Static mocking
+      
+   The mock replacement is done at compile-time. Hence, cannot be changed within test functions.
 
-    MockFunction based mocking
+  ```ballerina
+       @test:Mock { 
+           functionName: "intializeClient" 
+       }
+       function getMockClient() returns http:Client|error {
+           return test:mock(http:Client);
+       }
+  ```
 
-    ```ballerina
-    @test:Mock {
-        moduleName : "ballerina/io"
-        functionName : "println"
-    }
-    test:MockFunction mockFunc1  = new();
-    ```
+* Dynamic mocking
+      
+  Stubbing of the mock values can be done within test functions.
+
+  ```ballerina
+      @test:Mock {
+          moduleName : "ballerina/io"
+          functionName : "println"
+      }
+      test:MockFunction mockFunc1  = new();
+  ```
+
 
 ### Features
 
@@ -389,104 +397,99 @@ Using the available features, the user can stub with preferred behaviors for fun
 #### Case A: Features available in object mocking
 
 1. Provide a replacement mock object defined by the user at initialization.
+   
+The MockClient serves as a custom mock object designed to replace the actual object.
+It allows for the implementation of only those member functions utilized within the module, acting as a test double. 
+Should there be an attempt to invoke any other member function of the MockClient, a runtime error will occur.
 
-   The MockClient serves as a custom mock object designed to replace the actual object.
-   It allows for the implementation of only those member functions utilized within the module, acting as a test double. 
-   Should there be an attempt to invoke any other member function of the MockClient, a runtime error will occur.
-
-    ```ballerina
-    http:Client mockClient = test:mock (http:Client, new MockClient());
-    ```
+```ballerina
+ http:Client mockClient = test:mock (http:Client, new MockClient());
+```
 
 2. If the function doesn't have a return type or has an optional return type, then do nothing. 
-    
-    ```ballerina
-    test:prepare(mockClient).when("functionName").doNothing();
-    ```
 
-3. Provide a return value. The function call will return the specified value, regardless of the arguments' values.
+```ballerina
+ test:prepare(mockClient).when("functionName").doNothing();
+```
 
-    ```ballerina
-    test:prepare(mockClient).when("functionName").thenReturn(5);
-    ```
+3. Provide a return value. The function call will return the specified value, regardless of the values of the arguments.
+
+```ballerina
+ test:prepare(mockClient).when("functionName").thenReturn(5);
+```
 
 4. Provide a return value based on the arguments.  
 
-    ```ballerina
-    test:prepare(mockClient).when("functionName").withArguments(anydata...).thenReturn(5);
-    ```
+```ballerina
+ test:prepare(mockClient).when("functionName").withArguments(anydata...).thenReturn(5);
+```
 
 5. Mock the member variables of an object.
 
-    ```ballerina
-    test:prepare(mockClient).getMember("member").thenReturn(5);
-    ```
+```ballerina
+ test:prepare(mockClient).getMember("member").thenReturn(5);
+```
 
 6. Provide generalized inputs to accept any value for certain arguments.
 
-   This feature can be used when there is a need to selectively differentiate the mock behavior for a set of arguments.
+```ballerina
+ test:prepare(mockClient).when("functionName").withArguments("/pets", test:ANY, ...).thenReturn(5);
+```
 
-   ```ballerina
-   test:prepare(mockClient).when("functionName").withArguments("/pets", test:ANY, ...).thenReturn(5);
-   ```
+7. Provide multiple return values to be returned sequentially for each function call.
 
-7. Provide multiple return values to be returned sequentially for each function call
-
-   This feature can be used when the arguments cannot be identified to differentiate the mock behavior based on
-   the arguments.
-
-   ```ballerina
-   test:prepare(mockClient).when("functionName").thenReturnSequence(5, 10, 15);
-   ```
+```ballerina
+ test:prepare(mockClient).when("functionName").thenReturnSequence(5, 10, 15);
+```
 
 #### Case B : Features available in MockFunction based function mocking 
 
 1. Provide a replacement function body.
 
-    ```ballerina
-    test:when(mockFunc1).call("mockFuncName");
-    ```
+```ballerina
+ test:when(mockFunc1).call("mockFuncName");
+```
 
 2. If the function doesn't have a return type, do nothing. 
 
-    ```ballerina
-    test:when(mockFunc1).doNothing();
-    ```
+```ballerina
+ test:when(mockFunc1).doNothing();
+```
 
 3. Provide a return value.
 
-    ```ballerina
-    test:when(mockFunc1).thenReturn(5);
-    ```
+```ballerina
+ test:when(mockFunc1).thenReturn(5);
+```
 
 4. Provide a return value based on the input.
 
-    ```ballerina
-    test:when(mockFunc1).withArguments(anydata...).thenReturn(5);
-    ```
+```ballerina
+ test:when(mockFunc1).withArguments(anydata|error...).thenReturn(5);
+```
 
 5. If mocking should not take place, call the original function.
 
-    ```ballerina
-    test:when(mockFunc1).callOriginal();
-    ```
+```ballerina
+ test:when(mockFunc1).callOriginal();
+```
 
 6. Provide generalized inputs to accept any value for certain arguments.
 
-  This feature can be used when there is a need to selectively differentiate the mock behavior for a set of arguments.
-
-   ```ballerina
-   test:when(mockFunc1).withArguments(test:ANY,...).thenReturn(5);
-   ```
+This feature can be used when there is a need to selectively differentiate the mock behavior for a set of arguments.
+   
+```ballerina
+ test:when(mockFunc1).withArguments(test:ANY,...).thenReturn(5);
+```
 
 7. Provide multiple return values to be returned sequentially for each function call
 
-   This feature can be used when the arguments cannot be identified to differentiate the mock behavior based on
-   the arguments.
-   
-    ```ballerina
-    test:when(mockFunc1).thenReturnSequence(5,6,0)
-    ```
+This feature can be used when the arguments cannot be identified to differentiate the mock behavior based on 
+the arguments. Using `withArguments` with `thenReturnSequence` is not supported.
+
+```ballerina
+ test:when(mockFunc1).thenReturnSequence(5,6,0)
+```
 
 #### Case C : Features available in compile-time function mocking
 
@@ -537,7 +540,6 @@ The above cases can throw errors at the runtime for the following reasons:
 **Case A**
 
 The mocking examples are written to mock the HTTP calls of the following *main.bal* file.
-
 
 ```ballerina
     // main.bal
@@ -853,7 +855,7 @@ The mocking examples are written to mock the functions of the following *main.ba
 
 ```
    
-4. If the function does not have a return type do nothing
+4. If the function does not have a return type, do nothing.
  
 ```ballerina
     // main.bal
@@ -864,6 +866,7 @@ The mocking examples are written to mock the functions of the following *main.ba
     }
 
 ```
+
 ```ballerina
     // main_test.bal
     import ballerina/test;
@@ -975,8 +978,8 @@ The test framework provides an option to analyze the code coverage of a Ballerin
 When the `--code-coverage` flag is passed to the test execution command along with the `--test-report` flag, an HTML file will be generated at the end of the test execution. The generated file is an extended version of the test report.
 In addition to the test results, this file contains details about source code coverage by tests that are calculated in three levels.
 
-*   Project coverage
-*   Module coverage
+*   Package coverage
+*   Individual module coverage
 *   Individual source file coverage
 
 The code coverage only includes the source files being tested and not any files under the `tests/` directory.
