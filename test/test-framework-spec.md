@@ -15,24 +15,28 @@ In a Ballerina project, test cases are written in a separate directory/folder na
 ```
 project-name/
   - Ballerina.toml
-  - src/
+  - modules/
     -- mymodule/
       --- Module.md      
-      --- main.bal       
+      --- mymodule.bal       
       --- resources/     
-      --- tests/           <- tests for this module (e.g. unit tests)
-        ---- main_test.bal <- test file for main
+      --- tests/           <- tests for a non-default module (e.g. unit tests)
+        ---- lib_test.bal  <- test file for a non-default module
         ---- resources/    <- resources for these tests
+  - main.bal
+  - tests/              <- tests for the default module
+    -- main_test.bal    <- test file for default module
+    -- resources/       <- resources for these tests
+
 ```
-
-
-The Ballerina test framework will only execute tests defined inside the `tests/` directory of a module. Tests defined
- outside the test directory will not get executed when building the Ballerina project. Test files can be put into sub directories within the tests folder much like a Ballerina module.
-
+In the Ballerina test framework, tests are organized into per-module test suites. The tests for a particular module should be added in a subdirectory named `tests` within that module.
+Tests defined outside the test directory will not get executed when executing tests for a Ballerina package.
 
 ### Visibility
 
-The symbols defined in a module are accessible from within the test files. This includes globally-defined objects and variables. Hence, redefining a symbol in a test file is not allowed if it is already declared in the module. Instead, they can be reassigned in the test files. It must be noted that symbols defined in the test files will not be visible inside the module source files. 
+The symbols defined in a module are accessible from within the test files of the same module. This includes globally-defined objects and variables.
+ Hence, redefining a symbol in a test file is not allowed if it is already declared in the module. Instead, they can be reassigned in the test files.
+Symbols defined in the test files will not be visible inside the module source files.
 
 ### Test Resources
 
@@ -64,6 +68,24 @@ Ballerina tests are defined using a set of annotations. The following are the an
    <td>@test:BeforeSuite {}
    </td>
    <td>Function specified will be run once before any of the tests in the test suite is run.
+   </td>
+  </tr>
+  <tr>
+   <td>@test:BeforeGroups {}
+   </td>
+    <td>Function specified will be run before any of the tests belonging to the specified groups are executed.
+<p>
+Annotation value fields :
+<ul>
+
+<li>groups : [“&lt;test group name&gt;”, ...] 
+<ul>
+
+<li>List of group names that this function should run before
+</li> 
+</ul>
+</li> 
+</ul>
    </td>
   </tr>
   <tr>
@@ -128,6 +150,30 @@ Annotation value fields :
    </td>
   </tr>
   <tr>
+   <td>@test:AfterEach {}
+   </td>
+   <td>Function specified will be run after every test when the test suite is run.
+   </td>
+  </tr>
+  <tr>
+   <td>@test:AfterGroups {}
+   </td>
+    <td>Function specified will be run after all the tests belonging to the specified groups are executed.
+<p>
+Annotation value fields :
+<ul>
+
+<li>groups : [“&lt;test group name&gt;”, ...] 
+<ul>
+
+<li>List of group names that this function should run after
+</li> 
+</ul>
+</li> 
+</ul>
+   </td>
+  </tr>
+  <tr>
    <td>@test:AfterSuite {}
    </td>
    <td>The function specified in the following annotation will be run once after all the tests in the test suite are run.
@@ -143,53 +189,55 @@ The following are the list of available assertions available in the test framewo
 
 <table>
   <tr>
-   <td>@test:assertEquals
+   <td>@test:assertEquals(any|error actual, anydata expected, string message)
    </td>
-   <td>Checks if the specified value is equal to the expected value.
-   </td>
-  </tr>
-  <tr>
-   <td>@test:assertNotEquals
-   </td>
-   <td>Checks if the specified value is not equal to the expected value.
+   <td>Checks if the specified value is equal to the expected value. This assertion relies on `==` based deep equality check. 
+For the deep equality check to be applicable, it is required that at least one of the participating operands is of a static type that is a subtype of `anydata`. 
+Consequently, the permissible scope of the expected value is confined to `anydata` type.
    </td>
   </tr>
   <tr>
-     <td>@test:assertExactEquals
+   <td>@test:assertNotEquals(any actual, anydata expected, string message)
+   </td>
+   <td>Checks if the specified value is not equal to the expected value. 
+This assertion utilizes the `==` operator for a deep equality check, thus limiting the expected value to the `anydata` type.
+The actual value does not include `error` type to avoid automatically passing the tests when there is an error.
+   </td>
+  </tr>
+  <tr>
+     <td>@test:assertExactEquals(any|error actual, any|error expected, string message)
      </td>
-     <td>Checks if the specified value is exactly equal to the expected value
-     i.e. both refer to the same entity.
+     <td>Checks if the specified value is exactly equal to the expected value i.e. both refer to the same entity. This assertion utilizes the `===` operator for an exact equality check.
      </td>
     </tr>
     <tr>
      <td>@test:assertNotExactEquals
      </td>
-     <td>Checks if the specified value is not exactly equal to the expected value
-     i.e. both do not refer to the same entity.
+     <td>Checks if the specified value is not exactly equal to the expected value i.e. both do not refer to the same entity.
+This assertion utilizes the `===` operator for an exact equality check.
      </td>
     </tr>
   <tr>
-   <td>@test:assertTrue
+   <td>@test:assertTrue(boolean expression, string message)	
    </td>
-   <td>Checks if the specified value is true.
+   <td>Checks if the specified boolean expression is true.
    </td>
   </tr>
   <tr>
    <td>@test:assertFalse
    </td>
-   <td>Checks if the specified value is false.
+   <td>Checks if the specified boolean expression is false.
    </td>
   </tr>
   <tr>
    <td>@test:assertFail
    </td>
-   <td>Forces a test case to fail.
+   <td>This assertion facilitates forcefully failing a test during its execution.
    </td>
   </tr>
 </table>
 
-
-Each assertion allows providing an optional assertion fail message. 
+Each assertion allows providing an optional assertion failure message. 
 
 **Example**
 
@@ -262,22 +310,25 @@ The mocking feature can be used to control the behavior of functions and objects
   Ballerina code independently from other modules and external endpoints.
 
 
-### Mock Annotation
+### Annotation
 
 Initializing a function mock needs a preceding annotation in order to identify and replace the occurrence of the original function during compilation.
-
-This annotation is only required when mocking functions since a part of function mocking is handled during the compile time. Mocking an object is completely handled in the runtime, and thereby, this annotation is not required when initializing a mock for an object.
 
 <table>
   <tr>
    <td>@test:Mock {}
    </td>
-   <td>The function specified will be considered as a mock function that gets triggered every time the original function is called. 
+   <td>This annotation can be applied to either a function or to initialize a `test:MockFunction` object.
+<ul>
+<li>When placed before a function, it identifies that function as a mock, which will be invoked whenever the original function is called.
+<li>If it is a `test:MockFunction` initialization, the behaviour of the function needs to be stubbed in the test cases.
+</ul>
+
 <p>
 Annotation value fields :
 <ul>
 
-<li>moduleName 
+<li>moduleName (Optional) 
 <ul>
  
 <li>Default : Uses the current module
@@ -286,7 +337,7 @@ Annotation value fields :
 </li> 
 </ul>
 
-<li>functionName 
+<li>functionName (Mandatory) 
 <ul>
  
 <li>Name of the function to be mocked
@@ -300,122 +351,168 @@ Annotation value fields :
 
 ### Initialization
 
-*   Mock object 
+#### Mock object 
 
     ```ballerina
-    http:Client mockClient = <http:Client> test:mock(http:Client, mockObj = new);
+    http:Client mockClient = test:mock(http:Client, new MockHttpClient());
     ```
 
-*   Mock function 
+#### Mock function 
 
-    ```ballerina
-    @test:Mock {
-        moduleName : "ballerina/io"
-        functionName : "println"
-    }
-    test:MockFunction mockFunc1  = new();
-    ```
+* Static mocking
+      
+   The mock replacement is done at compile-time. Hence, cannot be changed within test functions.
+
+  ```ballerina
+       @test:Mock { 
+           functionName: "intializeClient" 
+       }
+       function getMockClient() returns http:Client|error {
+           return test:mock(http:Client);
+       }
+  ```
+
+* Dynamic mocking
+      
+  Stubbing of the mock values can be done within test functions.
+
+  ```ballerina
+      @test:Mock {
+          moduleName : "ballerina/io"
+          functionName : "println"
+      }
+      test:MockFunction mockFunc1  = new();
+  ```
+
 
 ### Features
 
 **Default behavior**
 
-If a mock object or function is used without registering any cases, the default behavior would be to throw a runtime exception. 
+If a mock object or a mock function initialization is used without registering any cases, the default behavior would be to throw a runtime exception. 
 
 Using the available features, the user can stub with preferred behaviors for function calls and values for member
  variables (of objects) before testing the required function. 
 
-
 #### Case A: Features available in object mocking
 
-**Basic Cases**
-
-
 1. Provide a replacement mock object defined by the user at initialization.
+   
+The MockClient serves as a custom mock object designed to replace the actual object.
+It allows for the implementation of only those member functions utilized within the module, acting as a test double. 
+Should there be an attempt to invoke any other member function of the MockClient, a runtime error will occur.
 
-    ```ballerina
-    http:Client mockClient = <http:Client> test:mock (http:Client, mockClient);
-    ```
+```ballerina
+ http:Client mockClient = test:mock (http:Client, new MockClient());
+```
 
 2. If the function doesn't have a return type or has an optional return type, then do nothing. 
-    
-    ```ballerina
-    test:prepare(mockClient).when("functionName").doNothing();
-    ```
 
-3. Provide a return value.
+```ballerina
+ test:prepare(mockClient).when("functionName").doNothing();
+```
 
-    ```ballerina
-    test:prepare(mockClient).when("functionName").thenReturn(5);
-    ```
+3. Provide a return value. The function call will return the specified value, regardless of the values of the arguments.
 
-4. Provide a return value based on the input.
+```ballerina
+ test:prepare(mockClient).when("functionName").thenReturn(5);
+```
 
-    ```ballerina
-    test:prepare(mockClient).when("functionName").withArguments(anydata...).thenReturn(5);
-    ```
-   
+4. Provide a return value based on the arguments.  
+
+```ballerina
+ test:prepare(mockClient).when("functionName").withArguments(anydata...).thenReturn(5);
+```
+
 5. Mock the member variables of an object.
 
-    ```ballerina
-    test:prepare(mockClient).getMember("member").thenReturn(5);
-    ```
+```ballerina
+ test:prepare(mockClient).getMember("member").thenReturn(5);
+```
 
-#### Case B : Features available in function mocking 
+6. Provide generalized inputs to accept any value for certain arguments.
+
+```ballerina
+ test:prepare(mockClient).when("functionName").withArguments("/pets", test:ANY, ...).thenReturn(5);
+```
+
+7. Provide multiple return values to be returned sequentially for each function call.
+
+```ballerina
+ test:prepare(mockClient).when("functionName").thenReturnSequence(5, 10, 15);
+```
+
+#### Case B : Features available in MockFunction based function mocking 
 
 1. Provide a replacement function body.
 
-    ```ballerina
-    test:when(mockFunc1).call("mockFuncName");
-    ```
+```ballerina
+ test:when(mockFunc1).call("mockFuncName");
+```
 
 2. If the function doesn't have a return type, do nothing. 
 
-    ```ballerina
-    test:when(mockFunc1).doNothing();
-    ```
+```ballerina
+ test:when(mockFunc1).doNothing();
+```
 
 3. Provide a return value.
 
-    ```ballerina
-    test:when(mockFunc1).thenReturn(5);
-    ```
+```ballerina
+ test:when(mockFunc1).thenReturn(5);
+```
 
 4. Provide a return value based on the input.
 
-    ```ballerina
-    test:when(mockFunc1).withArguments(any...).thenReturn(5);
-    ```
+```ballerina
+ test:when(mockFunc1).withArguments(anydata|error...).thenReturn(5);
+```
 
-5. If mocking should not take place, call the real function.
+5. If mocking should not take place, call the original function.
 
-    ```ballerina
-    test:when(mockFunc1).callRealFunction();
-
-    ```
-
-**Advance Cases**
+```ballerina
+ test:when(mockFunc1).callOriginal();
+```
 
 6. Provide generalized inputs to accept any value for certain arguments.
-    
-   ```ballerina
-   test:prepare(mockClient).when("functionName").withArguments("/pets", test:ANY, ...).thenReturn(5);
-   ```
-   ```ballerina
-   test:when(mockFunc1).withArguments(test:ANY,...).thenReturn(5);
-    ```
+
+This feature can be used when there is a need to selectively differentiate the mock behavior for a set of arguments.
+   
+```ballerina
+ test:when(mockFunc1).withArguments(test:ANY,...).thenReturn(5);
+```
 
 7. Provide multiple return values to be returned sequentially for each function call
 
-    ```ballerina
-    test:when(mockFunc1).thenReturnSequence(5,6,0)
-    ```
+This feature can be used when the arguments cannot be identified to differentiate the mock behavior based on 
+the arguments. Using `withArguments` with `thenReturnSequence` is not supported.
+
+```ballerina
+ test:when(mockFunc1).thenReturnSequence(5,6,0)
+```
+
+#### Case C : Features available in compile-time function mocking
+
+1. Annotate a function as the mock function for a specific function.
+
+This annotation replaces the usage of the original function with the mock function at compile time.
+
+```ballerina
+    @test:Mock { 
+        moduleName: "client"
+        functionName: "intializeClient" 
+    }
+    function getMockClient() returns http:Client|error {
+        return test:mock(http:Client);
+    }
+
+```
 
 #### Errors
 
-The cases can throw errors at the runtime for the following reasons:
+The above cases can throw errors at the runtime for the following reasons:
 
-*   All Cases - If the function is not available in the mocked type:
+*   All Cases - If the function is not available
 *   Case A1
     *   If the function signatures are not equal
     *   If the corresponding functions are not found
@@ -432,6 +529,11 @@ The cases can throw errors at the runtime for the following reasons:
 *   Case B1
     *   If the function signatures are not equal
     *   If the replacing mock function is not found
+*   Case A7, Case B7
+    *   If the number of function invocations is not equal to the number of 
+        return values specified in the sequence
+*   Case C1
+    *   If the function is not available
 
 #### Examples
 
@@ -439,325 +541,366 @@ The cases can throw errors at the runtime for the following reasons:
 
 The mocking examples are written to mock the HTTP calls of the following *main.bal* file.
 
-
 ```ballerina
     // main.bal
-    http:Client petStoreClient = new("http://petstore.com");
-    email:SmtpClient smtpClient = new ("localhost", "admin","admin");
-
-    // performs a get request and returns the Pet object or an error
-    function getPet(string petId) returns Pet | error {
-      http:Response|error result = petStoreClient->get("/pets?id="+petId);
-      if(result is error) {
-    	return result;
-      } else {
-          Pet pet = constructPetObj(result); 
-    	return pet;
-      }
-    }
-
-    // sends an email and optionally returns an error if sending fails
-    function sendEmail() returns email:Error? {
-       email:SmtpClient smtpClient = new(
-       config:getAsString("MAIL_SMTP_HOST"),
-       config:getAsString("MAIL_SMTP_AUTH_USERNAME"),
-       config:getAsString("MAIL_SMTP_AUTH_PASSWORD")
-
-
-       //create email
-       email:Email msg = {
-         'from: "builder@test.com",
-         to: "dev@test.com",
-         subject: "#54 - Build Failure",
-         body: ""
-       };
-
-       // send email
-       email:Error? response = smtpClient->send(msg);
-       if (response is email:Error) {
-          string errMsg = <string> response.detail()["message"];
-          log:printError("error while sending the email: " + errMsg);
-          return response;
-       }
+    import ballerina/http;
+    
+    http:Client clientEndpoint = check new ("https://api.chucknorris.io/jokes/");
+    
+    type Joke readonly & record {
+        string value;
+    };
+    
+    // This function performs a `get` request to the Chuck Norris API and returns a random joke 
+    // with the name replaced by the provided name or an error if the API invocation fails.
+    function getRandomJoke(string name) returns string|error {
+        Joke joke = check clientEndpoint->get("/random");
+        string replacedText = re `Chuck Norris`.replaceAll(joke.value, name);
+        return replacedText;
     }
 
 ```
 
 1. Provide a replacement mock object defined by the user
 
-    ```ballerina
+```ballerina
     // main_test.bal
-    // Mock object definition
-    public type MockHttpClient client object {
-       public remote function get(@untainted string path, public http:RequestMessage message = ()) returns http:Response|http:ClientError {
-          http:Response res = new;
-          res.statusCode = 500;
-          return res;
-       }
-    };
-
-    @test:Config {}
-    function testGetPet() {
-       // 1) create and assign mock to global http client
-       petStoreClient = <http:Client>mock(http:Client, new MockHttpClient());
-
-       // 2) invoke getPet function
-       http:Response res = getPet("D123");
-       test:assertEquals(res.statusCode, 500);
+    import ballerina/http;
+    import ballerina/test;
+    
+    // An instance of this object can be used as the test double for the `clientEndpoint`.
+    public client class MockHttpClient {
+    
+        remote function get(string path, map<string|string[]>? headers = (), http:TargetType targetType = http:Response) returns http:Response|anydata|http:ClientError {
+            Joke joke = {"value": "Mock When Chuck Norris wants an egg, he cracks open a chicken."};
+            return joke;
+        }
+    
     }
-    ```
-
+    
+    @test:Config {}
+    public function testGetRandomJoke() {
+    
+        // create and assign a test double to the `clientEndpoint` object
+        clientEndpoint = test:mock(http:Client, new MockHttpClient());
+    
+        // invoke the function to test
+        string|error result = getRandomJoke("Sheldon");
+    
+        // verify that the function returns the mock value after replacing the name
+        test:assertEquals(result, "Mock When Sheldon wants an egg, he cracks open a chicken.");
+    }
+    
+```
 
 2. Provide a return value
 
-    ```ballerina
+```ballerina
     // main_test.bal
-   
+    import ballerina/http;
+    import ballerina/test;
+    
     @test:Config {}
-    function testGetPet2() {
-       // 1) create mock
-       http:Client mockHttpClient = <http:Client>mock(http:Client);
-       http:Response mockResponse = new;
-       mockResponse.statusCode = 500;
-   
-       test:prepare(mockHttpClient).when("get").thenReturn(mockResponse);
-
-       // 2) assign mock to global http client
-       petStoreClient = mockHttpClient;
-
-       // 3) invoke getPet function
-       http:Response res = getPet("D123");
-       test:assertEquals(res.statusCode, 500);
+    public function testGetRandomJoke() {
+        // Create a default mock HTTP Client and assign it to the `clientEndpoint` object
+        clientEndpoint = test:mock(http:Client);
+    
+        // Stub to return the specified mock response when the `get` function is called.
+        test:prepare(clientEndpoint).when("get").thenReturn(getMockResponse());
+    
+        // Stub to return the specified mock response when the specified argument is passed.
+        test:prepare(clientEndpoint).when("get").withArguments("/categories")
+                .thenReturn(getCategoriesResponse());
+    
+        // Invoke the function to test.
+        string|error result = getRandomJoke("Sheldon");
+    
+        // Verify the return value against the expected string.
+        test:assertEquals(result, "When Sheldon wants an egg, he cracks open a chicken.");
+    }
+    
+    // Returns a mock Joke to be used for the random joke API invocation.
+    function getMockResponse() returns Joke {
+        Joke joke = {"value": "When Chuck Norris wants an egg, he cracks open a chicken."};
+        return joke;
+    }
+    
+    // Returns a mock response to be used for the category API invocation.
+    function getCategoriesResponse() returns string[] {
+        return ["animal", "food", "history", "money", "movie"];
     }
 
-    @test:Config {}
-    function testGetPet2WithArgs() {
-       // 1) create mock
-       http:Client mockHttpClient = <http:Client>mock(http:Client);
-       http:Response mockResponse = new;
-       mockResponse.statusCode = 500;
-
-       test:prepare(mockHttpClient).when("get").withArguments("/pets?id=D123", test:ANY).thenReturn(mockResponse);
-
-       // 2) assign mock to global http client
-       petStoreClient = mockHttpClient;
-
-       // 3) invoke getPet function
-       http:Response res = getPet("D123");
-       test:assertEquals(res.statusCode, 500);
-    }
-    ```
+```
 
 3. If function doesn't have a return type or has an optional return type then do nothing 
 
-    ```ballerina
-    // main_test.bal
-    @test:Config {}
-    function testSendEmail() {
-       email:SmtpClient mockSmtpCl = <email:SmtpClient>mock(email:SmtpClient);
-       test:prepare(mockSmtpCl).when("send").doNothing();
-
-       smtpClient = mockSmtpCl;
-       error? sendResult = sendEmail();
-       test:assertTrue(sendResult is ());
+```ballerina
+    // main.bal
+    import ballerina/email;
+    
+    email:SmtpClient smtpClient = check new ("localhost", "admin", "admin");
+    
+    // This function sends out emails to specified email addresses and returns an error if sending failed.
+    function sendNotification(string[] emailIds) returns error? {
+        email:Message msg = {
+            'from: "builder@abc.com",
+            subject: "Error Alert ...",
+            to: emailIds,
+            body: ""
+        };
+        return check smtpClient->sendMessage(msg);
     }
-    ```
+
+```
+
+```ballerina
+    // main_test.bal
+    import ballerina/email;
+    import ballerina/test;
+    
+    @test:Config {}
+    function testSendNotification() {
+        string[] emailIds = ["user1@test.com", "user2@test.com"];
+    
+        // Create a default mock SMTP client and assign it to the `smtpClient` object.
+        smtpClient = test:mock(email:SmtpClient);
+    
+        // Stub to do nothing when the`send` function is invoked.
+        test:prepare(smtpClient).when("sendMessage").doNothing();
+    
+        // Invoke the function to test and verify that no error occurred.
+        test:assertEquals(sendNotification(emailIds), ());
+    }
+
+```
 
 4. Mock member variables of an object
 
-    ```ballerina
+```ballerina
+    // main.bal
+    # A record that represents a Product.
+    #
+    # + code - Code used to identify the product
+    # + name - Product Name
+    # + quantity - Quantity included in the product
+    public type Product record {|
+        readonly int code;
+        string name;
+        string quantity;
+    |};
+    
+    # A table with a list of Products uniquely identified using the code.
+    public type ProductInventory table<Product> key(code);
+    
+    // This is a sample data set in the defined inventory.
+    ProductInventory inventory = table [
+        {code: 1, name: "Milk", quantity: "1l"},
+        {code: 2, name: "Bread", quantity: "500g"},
+        {code: 3, name: "Apple", quantity: "750g"}
+    ];
+    
+    # This client represents a product.
+    #
+    # + productCode - An int code used to identify the product.
+    public client class ProductClient {
+        public int productCode;
+    
+        public function init(int productCode) {
+            self.productCode = productCode;
+        }
+    }
+    
+    // The Client represents the product with the code `1` (i.e. "Milk").
+    ProductClient productClient = new (1);
+    
+    # Get the name of the product represented by the ProductClient.
+    #
+    # + return - The name of the product
+    public function getProductName() returns string? {
+        if !inventory.hasKey(productClient.productCode) {
+            return;
+        }
+        Product? product = inventory.get(productClient.productCode);
+        return product is Product ? product.name : ();
+    }
+
+```
+
+```ballerina
     // main_test.bal
-    test:prepare(mockHttpClient).getMember("method").thenReturn("get");
+    import ballerina/test;
+    
+    @test:Config {}
+    function testMemberVariable() {
+        int mockProductCode = 2;
+        // Create a mockClient which represents product with the code `mockProductCode`
+        ProductClient mockClient = test:mock(ProductClient);
+        // Stub the member variable `productCode`
+        test:prepare(mockClient).getMember("productCode").thenReturn(mockProductCode);
+        // Replace `productClient` with the `mockClient`
+        productClient = mockClient;
+        // Assert for the mocked product name.
+        test:assertEquals(getProductName(), "Bread");
+    }
 
-    ```
+```
 
-### Case B
+**Case B**
+
+The mocking examples are written to mock the functions of the following *main.bal* file.
+
+```ballerina
+    // main.bal
+    // This function returns the result provided by the `intAdd` function.
+    public function addValues(int a, int b) returns int {
+        return intAdd(a, b);
+    }
+    
+    // This function adds two integers and returns the result.
+    public function intAdd(int a, int b) returns int {
+        return (a + b);
+    }
+
+```
 
 1. Provide a replacement function body
 
-    ```ballerina
-    // main.bal
-    public function printMathConsts() {
-       io:println("Value of PI : ", math:PI);
-       io:println("Value of E  : ", math:E);
-    }
-
+```ballerina
     // main_test.bal
-    @test:Mock { functionName : "io:println" }
-    test:MockFunction mockIoPrintLnFunc = new();
-
-    string[] logs = [];
-
-    function mockIoPrintLn(string text) {
-     logs.push(text);
-    }
-
-    @test:Config {}
-    function testMathConsts() {
-       test:when(mockIoPrintLnFunc).call("mockIoPrintLn");
-
-       // Invoke the printMathConsts function
-       printMathConsts();
-
-       string out1 = "Value of PI : 3.141592653589793";
-       string out2 = "Value of E  : 2.718281828459045";
-
-       test:assertEquals(outputs[0], out1);
-       test:assertEquals(outputs[1], out2);
-    }
-    ```
-
-2. Provide a return value
+    import ballerina/test;
     
-    ```ballerina
-    // main.bal
-    public function calculateAvg(int a, int b) returns int {
-        log:printDebug("Calling intAdd function to add the provided integers");
-        return intAdd(a, b)/2;
+    @test:Mock {functionName: "intAdd"}
+    test:MockFunction intAddMockFn = new ();
+    
+    @test:Config {}
+    function testCall() {
+        // Stub to call another function when `intAdd` is called.
+        test:when(intAddMockFn).call("mockIntAdd");
+        test:assertEquals(addValues(11, 6), 5, msg = "function mocking failed");
     }
         
-    public function intAdd(int a, int b) returns int {
-        return a + b;
+    // The mock function to be used in place of the `intAdd` function
+    public function mockIntAdd(int a, int b) returns int {
+        return (a - b);
     }
-    ```
-   
-   ```ballerina
+
+```
+
+2. Provide a return value
+
+```ballerina
     // main_test.bal
-    @test:Mock { functionName : "intAdd" }
-    test:MockFunction mockIntAddFunc = new();
-
+    import ballerina/test;
+    
+    @test:Mock {functionName: "intAdd"}
+    test:MockFunction intAddMockFn = new ();
+       
     @test:Config {}
-    function testCalculateAvg() {
-       test:when(mockIntAddFunc).thenReturn(10);
+    function testReturn() {
+        // Stub to return the specified value when the `intAdd` is invoked.
+        test:when(intAddMockFn).thenReturn(20);
 
-       // Invoke the calculateAvg function
-       int average1 = calculateAvg(6,5);
-       int average2 = calculateAvg(8,7);
-
-       test:assertEquals(average1, 5);
-       test:assertEquals(average2, 5);
+        test:assertEquals(addValues(10, 6), 20, msg = "function mocking failed");
+        test:assertEquals(addValues(0, 0), -1, msg = "function mocking with arguments failed");
     }
-   ```
+
+```
 
 3. Provide return value based on input
 
-    ```ballerina
-	// main.bal
-    public function calculateAvg(int a, int b) returns int {
-       log:printDebug("Calling intAdd function to add the provided integers");
-       return intAdd(a, b)/2;
-    }
-
-    public function intAdd(int a, int b) returns int {
-       return a + b;
-    }
-    ```
-    ```ballerina
+```ballerina
     // main_test.bal
-    @test:Mock { functionName : "intAdd" }
-    test:MockFunction mockIntAddFunc = new();
-
-    @test:Config {}
-    function testCalculateAvg() {
-       test:when(mockIntAddFunc).withArguments(6,5).thenReturn(10);
-       test:when(mockIntAddFunc).withArguments(6,-5).thenReturn(0);
-
-       // Invoke the calculateAvg function
-       int average1 = calculateAvg(6,5);
-       int average2 = calculateAvg(6,-5);
-
-       test:assertEquals(average1, 5);
-       test:assertEquals(average2, 0);
-    }
-    ```
-
-4. If the function does not have a return type do nothing
- 
-    ```ballerina
-    // main.bal
-    public function calculateAvg(int a, int b) returns int {
-       log:printDebug("Calling intAdd function to add the provided integers");
-       return intAdd(a, b)/2;
-    }
-
-    public function intAdd(int a, int b) returns int {
-       return a + b;
-    }
-    ```
-    ```ballerina
-    // main_test.bal
-    @test:Mock { functionName : "log:printDebug" }
-    test:MockFunction mockLogPrintDebugFunc = new();
-
-    @test:Config {}
-    function testCalculateAvg() {
-       test:when(mockLogPrintDebugFunc).doNothing();
-
-       // Invoke the calculateAvg function
-       int average2 = calculateAvg(9,7);
-       test:assertEquals(average2, 8);
-    }
-
-    ```
-
-5. If mocking should not take place, then call the real function
-
-    ```ballerina
-    // main.bal
-    public function calculateAvg(int a, int b) returns int {
-       log:printDebug("Calling intAdd function to add the provided integers");
-       return intAdd(a, b)/2;
-    }
-
-    public function intAdd(int a, int b) returns int {
-       return a + b;
-    }
-    ```
-    ```ballerina
-    // main_test.bal
-    @test:Mock { functionName : "intAdd" }
-    test:MockFunction mockIntAddFunc = new();
-
-    @test:Config {}
-    function testCalculateAvg() {
-       // return a specific value when intAdd is called
-       test:when(mockIntAddFunc).thenReturn(10);
-       int average1 = calculateAvg(6,8);
-       test:assertEquals(average1, 5);
+    import ballerina/test;
+    
+    @test:Mock {functionName: "intAdd"}
+    test:MockFunction intAddMockFn = new ();
        
-       // call the real function when intAdd is called
-       test:when(mockIntAddFunc).callRealFunction();
-       int average2 = calculateAvg(6,8);
-       test:assertEquals(average2, 7);
+    @test:Config {}
+    function testReturn() {
+        // Stub to return the specified value when the `intAdd` is invoked with the specified arguments.
+        test:when(intAddMockFn).withArguments(0, 0).thenReturn(-1);
+        test:when(intAddMockFn).withArguments(10, 6).thenReturn(20);
+
+        test:assertEquals(addValues(10, 6), 20, msg = "function mocking failed");
+        test:assertEquals(addValues(0, 0), -1, msg = "function mocking with arguments failed");
     }
-    ```
+
+```
+
+4. If mocking should not take place, then call the real function
+
+```ballerina
+    // main_test.bal
+    import ballerina/test;
+    
+    @test:Mock {functionName: "intAdd"}
+    test:MockFunction intAddMockFn = new ();
+    
+    @test:Config {}
+    function testCallOriginal() {
+        // Stub to call another function when `intAdd` is called.
+        test:when(intAddMockFn).call("mockIntAdd");
+    
+        test:assertEquals(addValues(11, 6), 5, msg = "function mocking failed");
+    
+        // Stub to call the original `intAdd` function.
+        test:when(intAddMockFn).callOriginal();
+        test:assertEquals(addValues(11, 6), 17, msg = "function mocking failed");
+    }
+    
+    // The mock function to be used in place of the `intAdd` function
+    public function mockIntAdd(int a, int b) returns int {
+        return (a - b);
+    }
+
+```
+   
+4. If the function does not have a return type, do nothing.
+ 
+```ballerina
+    // main.bal
+    import ballerina/io;
+    
+    public function func() {
+        io:println("hello");
+    }
+
+```
+
+```ballerina
+    // main_test.bal
+    import ballerina/test;
+    
+    @test:Mock {functionName: "func"}
+    test:MockFunction funcMockFn = new ();
+    
+    @test:Config {}
+    function testReturn() {
+        func();
+    }
+
+```
     
 ## Running the Test Suite
 
-Tests will be automatically executed when you run the build command or the user can explicitly run them using the test command. Running the test command will exit the process once the tests are executed whereas running the build command will continue to generate the executables after executing the tests.
+Tests will be executed when the user can explicitly run the test command.
 
 **Executing tests of a specific module**
 
 ```
-$ ballerina build <module_name>
-```
-```
-$ ballerina test <module_name>
+$ bal test <module_name>
 ```
 
 **Executing tests in the entire project**
 
 ```
-$ ballerina test --all
+$ bal test
 ```
-```
-$ ballerina build --all
-```
-Single test files can be executed as long as they are stand-alone files, and not within a Ballerina project. This is
- only supported with the test command.
+
+Single test files can be executed as long as they are stand-alone files, and not within a Ballerina project.
 
 ```
-$ ballerina test <test_file>.bal
+$ bal test <test_file>.bal
 ```
 
 **Executing Groups**
@@ -765,20 +908,7 @@ $ ballerina test <test_file>.bal
 Execute grouped tests using the following command :
 
 ```
-$ ballerina build  --groups <group name> <module_name>
-```
-```
-$ ballerina test  --groups <group name> <module_name>
-```
-
-
-**Execution with Test Configuration**
-
-```
-$ ballerina build <module_name> --b7a.config.file=<path_to_config_file>
-```
-```
-$ ballerina test <module_name> --b7a.config.file=<path_to_config_file>
+$ bal test  --groups <group1>,<group2>
 ```
 
 ### Startup order of module and the test suite
@@ -794,17 +924,17 @@ initialization of the module and the test suite happens sequentially in the foll
 Once the test suite is initialized, functions in the test suite are executed in the following order.
 
 1. Execution of the `BeforeSuite` function
-2. Execution of the `BeforeEach` function
-3. Execution of before function (the function declared by the `before` field of `@Config` annotation)
-4. Execution of the test function
-5. Execution of the after function (the function declared by the `after` field of `@Config` annotation)
-6. Execution of `AfterEach` function
-7. Execution of the `AfterSuite` function
+2. Execution of the `BeforeGroups` function
+3. Execution of the `BeforeEach` function
+4. Execution of before function (the function declared by the `before` field of `@test:Config` annotation)
+5. Execution of the test function
+6. Execution of the after function (the function declared by the `after` field of `@test:Config` annotation)
+7. Execution of `AfterEach` function 
+8. Execution of the `AfterGroups` function
+9. Execution of the `AfterSuite` function
 
 The test cases are executed in an arbitrary manner unless a particular order is defined
- using the `dependsOn` attribute within the test configurations. After executing a test function, regardless of the
-  test status, the `after` function and the `AfterEach` functions are executed before moving on to the next test function.
-
+ using the `dependsOn` attribute within the test configurations. 
 
 ### Test Results
 
@@ -816,10 +946,9 @@ The result of a test can be one of the following three statuses:
 2. **Fail** - Test throws an exception due an assertion failure or any other runtime exception
 3. **Skipped** - Test is not executed due to failure of another test function on which it depends or due to an exception thrown from the before functions
 
-A summary of the test statuses is printed in the console at the end of the test execution. This displays the passed tests with the prefix `[pass]` and the failed tests with the prefix `[fail]` followed by the exception thrown that caused the failure.
-
-The final test result can be one of the two statuses: Passing or Failing. If all tests pass, then the test result is said to be Passing and if there are any failing tests, then the result is said to be failing. Failing status can contain a combination of one or more failed tests and optionally skipped and passed tests.
-
+A summary of the test statuses is printed in the console at the end of the test execution.
+The final test result can be one of the two statuses: Passing or Failing. If all tests pass, then the test result is said to be Passing and if there are any failing tests, then the result is said to be failing.
+Failing status can contain a combination of one or more failed tests and optionally skipped and passed tests.
 
 #### Exit Code
 
@@ -831,40 +960,34 @@ If the final result is Passing, the exit code will be 0, else the exit code will
 #### Test Report
 
 In addition to the results printed in the console, a test report can be generated by passing the flag `--test-report`
- to the test execution command. This flag is supported with both  `ballerina
-  build` and `ballerina test` commands. The generated file is in HTML format and link to the file will be printed in
+ to the test execution command. The generated file is in HTML format and link to the file will be printed in
    the console at the end of test execution.
 
-The test report contains the total passed, failed and skipped tests of the entire project and of individual modules.
+The test report contains the total passed, failed and skipped tests of the entire project.
 
 **Example** 
 
 ```
-$ ballerina build --test-report <module_name> [args]
-```
-```
-$ ballerina test --test-report <module_name> [args]
+$ ballerina test --test-report
 ```
 
 ### Code Coverage
 
 The test framework provides an option to analyze the code coverage of a Ballerina project. This feature provides details about coverage of program source code by the tests executed. 
 
-When the `--code-coverage` flag is passed to the test execution command, an HTML file will be generated at the end of the test execution. The generated file is an extended version of the test report. In addition to the test results, this file contains details about source code coverage by tests that are calculated in three levels.
+When the `--code-coverage` flag is passed to the test execution command along with the `--test-report` flag, an HTML file will be generated at the end of the test execution. The generated file is an extended version of the test report.
+In addition to the test results, this file contains details about source code coverage by tests that are calculated in three levels.
 
-*   Project coverage
-*   Module coverage
+*   Package coverage
+*   Individual module coverage
 *   Individual source file coverage
 
 The code coverage only includes the source files being tested and not any files under the `tests/` directory.
 
-This option is supported with `ballerina build` and `ballerina test` commands. The link to the file will be printed in the console at the end of test execution.
+The link to the file will be printed in the console at the end of test execution.
 
 **Example**
 
 ```
-$ ballerina build --code-coverage <module_name> 
-```
-```
-$ ballerina test --code-coverage <module_name>    
+$ bal test --code-coverage --test-report    
 ```
