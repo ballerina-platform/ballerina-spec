@@ -1,6 +1,7 @@
 name: Update major spec releases in ballerina.io
 
 on:
+  workflow_dispatch:
   release:
     types: [published]
 
@@ -13,15 +14,6 @@ jobs:
     steps:
       - name: Checkout ballerina-spec
         uses: actions/checkout@v2
-
-      - name: Setup Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.x'
-
-      - name: Install Python Packages
-        run: |
-          pip install requests
 
       - name: Clone ballerina-dev-website
         run: git clone -b master --single-branch https://ballerina-bot:$GITHUB_TOKEN@github.com/ballerina-platform/ballerina-dev-website.git
@@ -46,16 +38,6 @@ jobs:
           if [ -d "${NEW_FOLDER}" ]; then rm -Rf "${NEW_FOLDER}"; fi
           mkdir "${NEW_FOLDER}"
 
-      - name: Update the latest to new url in ballerina-dev-website
-        run: |
-          cd ballerina-dev-website/public/spec/lang
-          echo -e "---\nredirect_to: /spec/\n---" > index.md
-
-      - name: Update the latest to new url in ballerina-prod-website
-        run: |
-          cd ballerina-platform.github.io/spec/lang
-          echo -e "---\nredirect_to: /spec/\n---" > index.md
-
       - name: Install xsltproc
         run: sudo apt-get install -y xsltproc
 
@@ -78,18 +60,18 @@ jobs:
       - name: Sync ballerina-spec with ballerina-dev-website
         run: |
           cd ballerina-dev-website
-          git pull --rebase origin gh-pages
+          git pull origin master
 
           git config --global user.email "ballerina-bot@ballerina.org"
           git config --global user.name "ballerina-bot"
 
-          git add spec/
+          git add public/spec/
           git commit --allow-empty -m "[Automated] Sync new spec release with ballerina dev site"
 
       - name: Sync ballerina-spec with ballerina-prod-website
         run: |
           cd ballerina-platform.github.io
-          git pull --rebase origin gh-pages
+          git pull origin gh-pages
 
           git config --global user.email "ballerina-bot@ballerina.org"
           git config --global user.name "ballerina-bot"
