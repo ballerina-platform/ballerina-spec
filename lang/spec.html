@@ -5157,7 +5157,13 @@ If a field does not specify a field-initializer, then there must be an
 <code>init</code> method and the <code>init</code> method must initialize the
 field. The field-initializer must meet the requirements for an isolated function
 unless the <code>init</code> method is present and not declared as
-<code>isolated</code>. If the <code>object-constructor-expr</code> is implicitly
+<code>isolated</code>.
+If the <code>init</code> method is not present, 
+it is a compile-time error if the expression in an
+individual-field-descriptor contains a checking-expr with a checking-keyword of
+<code>check</code>, i.e. if evaluation of the expression could complete abruptly
+with a check-fail.
+If the <code>object-constructor-expr</code> is implicitly
 read-only, then the contextually expected type for a field-initializer will be
 the intersection of readonly and the type specified in the type-descriptor of
 the object-field.
@@ -5300,6 +5306,10 @@ is used to initialize the object and is treated specially. The return type of
 the <code>init</code> method must be a subtype of the union of error and nil,
 and must contain nil; if <code>init</code> returns an error, it means that
 initialization of the object failed.
+If the evaluation of a <code>field-initializer</code> completes abruptly with a check-fail
+with associated value <var>v</var>, then the <code>init</code> method
+returns <var>v</var> before its <code>method-defn-body</code> is executed;
+the return type of the <code>init</code> method must be consistent with this.
 </p>
 <p>
 The parameter list of an <code>init</code> method within an
