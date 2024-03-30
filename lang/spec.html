@@ -7877,9 +7877,6 @@ class="grammar">statement :=
    | break-stmt
    | stmt-with-on-fail
    | fail-stmt
-   | retry-stmt
-   | transaction-stmt
-   | retry-transaction-stmt
    | rollback-stmt
    | panic-stmt
    | return-stmt
@@ -7889,11 +7886,14 @@ class="grammar">statement :=
 <pre
 class="grammar">
 regular-compound-stmt :=
-  do-stmt
-  | match-stmt
-  | foreach-stmt
-  | while-stmt
-  | lock-stmt
+   do-stmt
+   | match-stmt
+   | foreach-stmt
+   | while-stmt
+   | lock-stmt
+   | retry-stmt
+   | transaction-stmt
+   | retry-transaction-stmt
 </pre>
 <p>
 A <code>regular-compound-stmt</code> can be combined with an
@@ -9738,6 +9738,10 @@ A <code>stmt-with-on-fail</code> is executed by executing the
 or a <code>fail</code> statement may cause control to transfer to the
 <code>on-fail-cause</code>. If so, the <code>statement-block</code> is executed;
 otherwise the <code>statement-block</code> is not executed.
+When the regular-compound-stmt is itself a failure handling statement,
+then only failure of that regular-compound-stmt itself causes control to
+transfer to the <code>on-fail-clause</code>; a failure <em>within</em> that
+regular-compound-stmt will be handled by that regular-compound-statement.
 </p>
 <p>
 If there is a <code>typed-binding-pattern</code>, then it is matched to the
@@ -11676,6 +11680,8 @@ more than one basic type..</p>
 <li>A query-select-expr can construct a stream without explicitly specififying
 the <code>stream</code> keyword.</li>
 <li>It is no longer allowed for a lock statement to contain a sync-send-action or a receive-action.</li>
+<li>A <code>retry</code> or <code>transaction</code> statement may now have an <code>on fail</code>
+clause.</li>
 </ol>
 </section>
 <section>
