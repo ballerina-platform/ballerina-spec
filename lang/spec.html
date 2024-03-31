@@ -7678,7 +7678,7 @@ class="grammar">block-function-body :=
 default-worker-init := statement*
 default-worker := statement*
 named-worker-decl :=
-   [annots] [transactional-qual] <code>worker</code> worker-name return-type-descriptor statement-block
+   [annots] [transactional-qual] <code>worker</code> worker-name return-type-descriptor statement-block [on-fail-clause]
 worker-name := identifier
 </pre>
 <p>
@@ -9746,6 +9746,13 @@ transfer to the <code>on-fail-clause</code>; a failure <em>within</em> that
 regular-compound-stmt will be handled by that regular-compound-statement.
 </p>
 <p>
+An <code>on-fail-clause</code> attached to a <code>named-worker-decl</code> is a
+shorthand for a <code>named-worker-decl</code> with a statement block that is a
+<code>do-stmt</code> with that <code>on-fail-clause</code>: <code>worker
+<var>X</var> { <var>Y</var> } on fail <var>Z</var></code> is equivalent to
+<code>worker <var>X</var> { do { <var>Y</var> } on fail <var>Z</var> }</code>.
+</p>
+<p>
 If there is a <code>typed-binding-pattern</code>, then it is matched to the
 associated error value, binding the variables occurring within the
 <code>typed-binding-pattern</code>; the <code>statement-block</code> is executed
@@ -11684,6 +11691,7 @@ the <code>stream</code> keyword.</li>
 <li>It is no longer allowed for a lock statement to contain a sync-send-action or a receive-action.</li>
 <li>A <code>retry</code> or <code>transaction</code> statement may now have an <code>on fail</code>
 clause.</li>
+<li>A named worker declaration may now have an <code>on fail</code> clause.</li>
 </ol>
 </section>
 <section>
