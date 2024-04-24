@@ -8172,13 +8172,8 @@ of all of its wait-future-exprs.
 <section>
 <h3>Worker message passing</h3>
 <p>
-Messages can be sent between workers.
-</p>
-<p>
-Sends and receives are matched up at compile-time. This allows the connection
-between the send and the receive to be shown in the sequence diagram. It is also
-guarantees that any sent message will be received, provided that neither the
-sending nor the receiving worker terminate abnormally or with an error.
+Messages can be sent between workers. A message is a value, which must belong to
+<code>value:Cloneable</code>.
 </p>
 <p>
 Messages can only be sent between workers that are peers of each other. A
@@ -8197,12 +8192,54 @@ scope; <code>function</code> refers to the function's default worker. The
 referenced worker must be a peer worker.
 </p>
 <p>
-Each worker maintains a separate logical queue for each peer worker to which it
-sends messages; a sending worker sends a message by adding it to the queue; a
-receiving worker receives a message by removing it from the sending worker's
-queue for that worker; messages are removed in the order in which they were
-added to the queue.
+Each worker maintains a separate queue for each peer worker to which it sends
+messages; thus for each queue a sending worker and a receiving worker, which
+must be distinct. A queue has an array of slots together with two integers
+<var>w</var> and <var>r</var> that index into the array. Each slot is either
+empty or contains a message. The length of each queue's array is determined at
+compile-time. When a message is sent, the sending worker writes it to a slot in
+the queue. The receiving worker receives the message by reading it from a slot.
+Each slot is written to at most once and is read from at most once.
+The slots in a queue's array are written to in increasing order,
+and are read from in increasing order.
+The <var>w</var> and <var>r</var> indices are used to coordinate the sending and
+receiving worker: <var>w</var> is incremented by the sending worker as it writes
+messages to successive slots in the array; <var>r</var> is incremented by the
+receiving worker as it reads messages from successive slots in the array.
+The minimum value <var>w</var> and <var>r</var> is 0, and the maximum
+is the length of the array of slots.
 </p>
+<p>
+A message is sent by a send-action and received by a receive-action. The index
+of the slot used by each send-action and receive-action is determined at compile
+time. This allows the connection between the send-action and the receive-action
+to be shown in the sequence diagram.
+There is a one-to-one correspondence between slots and send-actions; there is
+a many-to-one correspondence between slots and receive-actions.
+</p>
+<p>
+There are three types determined at compile-time for each slot:
+</p>
+<ul>
+<li>a message type: if a message v is written to the slot, then v belongs to the
+slot's message type</li>
+<li>a send failure type: this is the type of termination failure in the sending
+worker that caused the corresponding message not to be sent; more precisely, if
+the index <var>w</var> in a queue had value <var>k</var> at the time that the
+sending worker terminates normally with associated value <var>e</var>, then for
+each <var>i</var> &#x2265; <var>k</var>, <var>e</var> belongs to the send
+failure type of the slot with index <var>i</var>; it is a compile-time error if
+the send failure type is not a (possibly empty) subtype of error</li>
+<li>a receive failure type: this is the type of termination failure in the
+receiving worker that caused the corresponding message not to be received; more
+precisely, if the index <var>r</var> in a queue had value <var>k</var> at the
+time that the receiving worker terminates normally with associated value
+<var>e</var>, then for each <var>i</var> &#x2265; <var>k</var>, <var>e</var>
+belongs to the receive failure type of the slot with index <var>i</var>; it is a
+compile-time error if the receive failure type is not a (possibly empty) subtype
+of error</li>
+</ul>
+
 <section>
 <h4>Send action</h4>
 
@@ -8213,34 +8250,34 @@ async-send-action := expression <code>-&gt;</code> peer-worker <code>;</code>
 </pre>
 <p>
 A send-action sends a message to the worker that is identified by peer-worker. A
-send-action starts by evaluating the expression, resulting in a value
-<code><var>v</var></code>; the Clone abstract operation is then applied to
-<code><var>v</var></code> resulting in value <code><var>c</var></code>. This
-value <code><var>c</var></code> is added to the message queue maintained by the
-sending worker for messages to be sent to the receiving worker; this queue
-continues to exist even if the receiving worker has already terminated.
+send-action with peer-worker R occurring within worker W is associated with the
+queue with sending worker W and receiving worker R. There is a one-to-one
+correspondence between the slots in a queue and the send-actions associated with
+that queue. The order of the slots in the queue is the same as the syntactic
+order of the send-actions.
 </p>
 <p>
-For each send-action S, the compiler determines a unique corresponding
-receive-action R, such that a message sent by S will be received by R, unless
-R's worker has terminated abnormally or with failure. It is a compile-time error
-if this cannot be done. The compiler determines a <em>failure type</em> for the
-corresponding receive-action. If the receive-action was not executed and its
-worker terminated normally, then the termination value of the worker will belong
-to the failure type. The failure type will be a (possibly empty) subtype of
-error.
+The evaluation of a send-action starts by evaluating the expression, resulting
+in a value <code><var>v</var></code>; the Clone abstract operation is then
+applied to <code><var>v</var></code> resulting in value
+<code><var>c</var></code>. This value <code><var>c</var></code> is then written
+to the slot in the associated queue corresponding to the send-action. The index
+<var>w</var> in the queue is set to 1 greater than the index of that slot in the
+queue.
 </p>
 <p>
 The difference between async-send-action and sync-send-action is in what happens
-after the message is added to the queue. The evaluation of async-send-action
-completes immediately after this, and the result is always <code>()</code>. A
-subsequent flush action can be used to check whether the message was received.
-With sync-send-action, evaluation waits until the receiving worker either
-executes a receive action that receives the queued message or terminates. The
-evaluation of sync-send-action completes as follows:
+after the message has been written to a slot in the queue. The evaluation of
+async-send-action completes immediately after this, and the result is always
+<code>()</code>. A subsequent flush-action can be used to check whether the
+message was received. With a sync-send-action to a slot with index <var>i</var>,
+the evaluation waits until either the index <var>r</var> of the queue is &gt;
+<var>i</var> or the receiving worker has terminated. It then completes as
+follows:
 </p>
 <ul>
-<li>if the queued message was received, then normally with result nil;</li>
+<li>if index <var>r</var> of the queue is &gt; <var>i</var>, then normally with
+result <code>()</code></li>
 <li>otherwise
 <ul>
 <li>if the receiving worker terminated with failure, then normally with the
@@ -8252,8 +8289,8 @@ with the associated value being the termination value of the receiving worker.</
 </li>
 </ul>
 <p>
-The static type of the sync-send-action is F|() where F is the failure type of
-the corresponding receive action. If F is empty, then this static type will be
+The static type of the sync-send-action is F|() where F is the receive failure
+type of the corresponding slot. If F is empty, then this static type will be
 equivalent to ().
 </p>
 <p>
@@ -8263,19 +8300,39 @@ The static type of the <code>expression</code> must be a subtype of
 receive-action.
 </p>
 <p>
-If the receive-action corresponding to an async-send-action has a non-empty
+It is possible that a send-action is not evaluated. This can happen when the
+worker containing the send-action terminates with an error or abnormally. It can
+also happen when the send-action occurs within a conditional or match statement;
+in this case, when there is no longer a possibility that the send-action will be
+evaluated, the <code>w</code> index in queue needs to be incremented past the
+index of the corresponding slot so as to ensure that a corresponding
+receive-action does not wait any longer than necessary. This is achieved by
+performing a <em>queue update</em> for every queue for whenever execution of the
+sending worker reaches specific points. A queue update is performed for a worker
+at a particular execution point by setting the <var>w</var> index to the least
+<var>k</var> such that <var>k</var> is &gt; <var>i</var> for every <var>i</var>
+where the send-action corresponding to the slot with index <var>i</var> is
+syntactically before the execution point. There is a queue update execution
+point immediately before every statement that might result in the worker's
+strand yielding. A final queue update is also performed following a return statement
+that returns a non-error value or when execution falls off the end
+of the worker body.
+</p>
+<p>
+If the slot corresponding to an async-send-action has a non-empty receive
 failure type, then it is a compile-time error unless it can be determined that a
 sync-send-action or a flush-action will be executed before the sending worker
 terminates with success.
 </p>
 <p>
-If a worker W is about to terminate normally and there are messages still to be
-sent in a queue (which must be the result of executing an async-send-action), then
-the worker waits until the messages have been received or some receiving worker
-terminates. If a receiving worker R terminates without the message being
-received, R must have terminated abnormally, because the rule in the preceding
-paragraph. In this case, W terminates abnormally and W will use R's termination
-value as its termination value.
+If a worker W is about to terminate normally, and any final queue updates have
+been performed, then for each queue for which W is the sending worker, W waits
+until either the receiving worker has terminated or the <var>r</var> index is
+&#x2265; the <var>w</var> index. If after waiting, the <var>r</var> index is
+still &lt; the <var>w</var> index in some queue with receiving worker R, R must
+have terminated abnormally, because the rule in the preceding paragraph. In this
+case, W terminates abnormally and W will use R's termination value as its
+termination value.
 </p>
 </section>
 <section>
