@@ -8229,7 +8229,8 @@ the index <var>w</var> in a queue had value <var>k</var> at the time that the
 sending worker terminates normally with associated value <var>e</var>, then for
 each <var>i</var> &#x2265; <var>k</var>, <var>e</var> belongs to the send
 failure type of the slot with index <var>i</var>; it is a compile-time error if
-the send failure type is not a (possibly empty) subtype of error</li>
+the send failure type is not a (possibly empty) subtype of error
+XXX need to include error:NoMessage</li>
 <li>a receive failure type: this is the type of termination failure in the
 receiving worker that caused the corresponding message not to be received; more
 precisely, if the index <var>r</var> in a queue had value <var>k</var> at the
@@ -8314,9 +8315,8 @@ at a particular execution point by setting the <var>w</var> index to the least
 where the send-action corresponding to the slot with index <var>i</var> is
 syntactically before the execution point. There is a queue update execution
 point immediately before every statement that might result in the worker's
-strand yielding. A final queue update is also performed following a return statement
-that returns a non-error value or when execution falls off the end
-of the worker body.
+strand yielding. A final queue update is also performed if the worker terminates
+successfully, by setting <var>w</var> to the length of the queue's array.
 </p>
 <p>
 If the slot corresponding to an async-send-action has a non-empty receive
@@ -8341,6 +8341,22 @@ termination value.
 <pre
 class="grammar">receive-action := single-receive-action | multiple-receive-action
 </pre>
+<p>
+Each receive-action has one or more references to peer workers. A reference to a
+peer-worker W occurring in receive-action within worker R is associated with the
+queue with sending worker W and receiving worker R. There is a one-to-one
+correspondence between the slots in a queue and the references to
+receive-actions associated with that queue. The order of the slots in the queue
+is the same as the syntactic order of the references to peer workers.
+</p>
+<p>
+A slot with index <var>i</var> in its queue becomes <em>ready</em> when the
+index <var>w</var> of the queue is &gt; <var>i</var>. When a slot is ready, a
+value can be read from a slot as follows. If the slot is empty, then result is a
+new error value belonging to type <code>error:NoMessage</code>; otherwise, the
+result is the value contained in the slot.
+</p>
+
 <section>
 <h5>Single receive action</h5>
 
@@ -8348,35 +8364,18 @@ class="grammar">receive-action := single-receive-action | multiple-receive-actio
 class="grammar">single-receive-action := <code>&lt;-</code> peer-worker
 </pre>
 <p>
-A single-receive-action receives a message from a single worker.
+A single-receive-action receives a message from a single worker,
+and accordingly has a reference to single peer worker.
 </p>
 <p>
-For each single-receive-action R receiving from worker W, the compiler
-determines a <em>corresponding send set</em>. The corresponding send set S is a
-set of send actions in W, such that
+A single-receive-action associated with a slot is evaluated by waiting until the
+slot is ready or the sending worker has terminated. It then completes as
+follows:
 </p>
 <ul>
-<li>in any execution of W that terminates successfully, exactly one member of S
-is executed and is executed once only</li>
-<li>if R is evaluated, it will receive the single message sent by a member of S,
-unless W has terminated abnormally or with failure.</li>
-</ul>
-<p>
-The compiler terminates a failure type for the corresponding send set. If no
-member of the corresponding send set was evaluated and the sending worker
-terminated normally, then the termination value of the sending worker will
-belong to the failure type. The failure type will be a (possibly empty) subtype
-of error.
-</p>
-<p>
-A single-receive-action is evaluated by waiting until there is a message
-available in the queue or the sending worker terminates.  The evaluation of
-single-receive-action completes as follows:
-</p>
-<ul>
-<li>if a message becomes available in the queue, then the first available
-message is removed and the evaluation completes normally with the result being
-that message;</li>
+<li>if the slot is ready, then normally with the value read from the slot;
+the index <var>r</var> of the slot's queue is incremented to be one greater than the
+index of the slot</li>
 <li>otherwise
 <ul>
 <li>if the sending worker terminated with failure, then normally with the result
@@ -8387,9 +8386,8 @@ with the associated value being the termination value of the sending worker.</li
 </li>
 </ul>
 <p>
-The static type of the single-receive-action is T|F where T is the union of the
-static type of the expressions in the corresponding send set and F is the
-failure type of the corresponding send set.
+The static type of the single-receive-action is T|F where T is message type of
+the associated slot and F is its send failure type.
 </p>
 </section>
 <section>
@@ -8413,12 +8411,10 @@ A receive-field consisting of a peer-worker <code>W</code> is equivalent to a
 field <code>W:W</code>.
 </p>
 <p>
-The compiler determines a corresponding send set for each receive field, in the
-same way as for a single-receive-action. A multiple-receive-action is evaluated
-by waiting until there is a message available in the queue for every
-peer-worker.  If any of the peer workers W terminate before a message becomes
-available, then the evaluation of the multiple-receive-action completes as
-follows
+A multiple-receive-action is evaluated by waiting until every slot associated
+with a peer worker is ready. If, while waiting for a slot, the sending worker
+for the queue of that slot terminates, then the evaluation of the
+multiple-receive-action completes as follows
 </p>
 <ul>
 <li>if the sending worker terminated with failure, then normally with the result
@@ -8428,28 +8424,25 @@ with the associated value being the termination value of the sending worker.</li
 </ul>
 <p>
 Otherwise, the result of the evaluation of multiple-receive-action completes by
-removing the first message from each queue and constructing a record with one
-field for each receive-field, where the value of the record is the message
-received.
+reading each slot and constructing a record with one field for each
+receive-field, where the value of the field is the value read from the slot.
 </p>
 <p>
 The contextually expected typed for the multiple-receive-action determines a
 contextually expected type for each receive-field, in the same way as for a
 mapping constructor. The contextually expected type for each receive-field
-provides the contextually expected type for the expression in each member of the
-corresponding send set.
+provides the contextually expected type for the expression in the corresponding
+send-action.
 </p>
 <p>
 The static type of multiple-receive-action is R|F where
 </p>
 <ul>
 <li>R is a record type, where R is determined in the same way as for a mapping
-constructor, where the static type of each field comes from the union of the
-static types of the expressions in each member of the corresponding send set and
-the contextually expected type is the contextually expected type of the
-multiple-receive-action</li>
-<li>F is the union of the failure types for the corresponding send set for each
-receive-field</li>
+constructor, where the static type of each field comes from the message type of
+the slot and the contextually expected type is the contextually expected type of
+the multiple-receive-action</li>
+<li>F is the union of the send failure types of the slots</li>
 </ul>
 </section>
 </section>
