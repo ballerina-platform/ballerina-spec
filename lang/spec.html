@@ -8351,11 +8351,11 @@ is the same as the syntactic order of the references to peer workers.
 </p>
 <p>
 A slot with index <var>i</var> in its queue becomes <em>ready</em> when the
-index <var>w</var> of the queue is &gt; <var>i</var>. When a slot is ready, a
-value can be read from a slot as follows. If the slot is empty, then result is a
-new error value belonging to type <code>error:NoMessage</code>; otherwise, the
-result is the value contained in the slot.
-XXX need a term other than "read from" here
+index <var>w</var> of the queue is &gt; <var>i</var>. A value can be
+<em>received from</em> a slot with index <var>i</var> in a queue as follows. If
+the slot is empty, then the receive operation fails; otherwise, the value
+received result the value contained in the slot; in either case, the
+<var>r</var> index in the queue is set to <var>i</var> + 1.
 </p>
 
 <section>
@@ -8370,14 +8370,17 @@ and accordingly has a reference to single peer worker.
 </p>
 <p>
 A single-receive-action associated with a slot is evaluated by waiting until the
-slot is ready or the sending worker has terminated. It then completes as
-follows:
+slot is ready or the sending worker has terminated. Then
 </p>
 <ul>
-<li>if the slot is ready, then normally with the value read from the slot;
-the index <var>r</var> of the slot's queue is incremented to be one greater than the
-index of the slot</li>
-<li>otherwise
+<li>if the slot is ready, a value is received from the slot and the evaluation
+completes normally, with the result being
+<ul>
+<li>if the receive operation fails, a new value of type <code>error:NoMessage</code>;</li>
+<li>otherwise, the value received from the slot;</li>
+</ul>
+</li>
+<li>otherwise, the evaluation completes as follows:
 <ul>
 <li>if the sending worker terminated with failure, then normally with the result
 being the the termination value of the sending worker, which will be an error;</li>
@@ -8424,10 +8427,12 @@ being the the termination value of the sending worker, which will be an error;</
 with the associated value being the termination value of the sending worker.</li>
 </ul>
 <p>
-Otherwise, the result of the evaluation of multiple-receive-action completes by
-reading each slot and constructing a record with one field for each
-receive-field, where the value of the field is the value read from the slot.
-XXX need to increment r here (maybe should be done as part of renamed "read" operation)
+Otherwise, a value is received from every slot. If any of these receive
+operations fail, then the evaluation of the multiple-receive action completes
+normally with the result being a new value of type <code>error:NoMessage</code>,
+Otherwise, the evaluation completes normally with the result being a new record
+value, with one field for each receive-field, where the value of the field is
+the value received from the slot.
 </p>
 <p>
 The contextually expected typed for the multiple-receive-action determines a
