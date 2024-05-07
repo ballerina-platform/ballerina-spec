@@ -83,6 +83,9 @@ public isolated function toString(error e) returns string = external;
 # defined in the Ballerina Language Specification, using the expression style.
 public isolated function toBalString(error e) returns string = external;
 
+# The type of error for a receive-action when no message has been sent.
+public type NoMessage distinct error;
+
 # A type of error which can be retried.
 public type Retriable distinct error;
 
