@@ -8245,13 +8245,12 @@ receiving worker completes normally with termination value <var>e</var>, then
 </ul>
 
 <section>
-<h4>Send action</h4>
+<h4>Sending messages</h4>
 
 <pre
-class="grammar">send-action := sync-send-action | async-send-action
-sync-send-action := expression <code>-&gt;&gt;</code> peer-worker
-async-send-action := expression <code>-&gt;</code> peer-worker <code>;</code>
+class="grammar">send-action := async-send-action | sync-send-action
 </pre>
+
 <p>
 A send-action sends a message to the worker that is identified by peer-worker. A
 send-action with peer-worker R occurring within worker W is associated with the
@@ -8261,47 +8260,10 @@ that queue. The order of the slots in the queue is the same as the syntactic
 order of the send-actions.
 </p>
 <p>
-The evaluation of a send-action starts by evaluating the expression, resulting
-in a value <code><var>v</var></code>; the Clone abstract operation is then
-applied to <code><var>v</var></code> resulting in value
-<code><var>c</var></code>. This value <code><var>c</var></code> is then written
-to the slot in the associated queue corresponding to the send-action. The index
-<var>w</var> in the queue is set to 1 greater than the index of that slot in the
-queue.
-</p>
-<p>
-The difference between async-send-action and sync-send-action is in what happens
-after the message has been written to a slot in the queue. The evaluation of
-async-send-action completes immediately after this, and the result is always
-<code>()</code>. A subsequent flush-action can be used to check whether the
-message was received. With a sync-send-action to a slot with index <var>i</var>,
-the evaluation waits until either the index <var>r</var> of the queue is &gt;
-<var>i</var> or the receiving worker has terminated. It then completes as
-follows:
-</p>
-<ul>
-<li>if index <var>r</var> of the queue is &gt; <var>i</var>, then normally with
-result <code>()</code></li>
-<li>otherwise
-<ul>
-<li>if the receiving worker terminated with failure, then normally with the
-result being the the termination value of the receiving worker, which will be an
-error;</li>
-<li>if the receiving worker terminated abnormally, then abruptly with a panic,
-with the associated value being the termination value of the receiving worker.</li>
-</ul>
-</li>
-</ul>
-<p>
-The static type of the sync-send-action is F|() where F is the receive failure
-type of the corresponding slot. If F is empty, then this static type will be
-equivalent to ().
-</p>
-<p>
-The static type of the <code>expression</code> must be a subtype of
-<code>value:Cloneable</code>. The contextually expected type used to interpret
-<code>expression</code> is the contextually expected type from the corresponding
-receive-action.
+An async-send-action sends a message without waiting for it to be received by
+the receiving worker. A flush-action on a queue waits until the receiving worker
+has received all messages that have been send to the queue. A sync-send-action
+is equivalent to an async-send-action followed by a flush-action.
 </p>
 <p>
 It is possible that a send-action is not evaluated. This can happen when the
@@ -8322,12 +8284,6 @@ strand yielding. A final queue update is also performed if the worker terminates
 successfully, by setting <var>w</var> to the length of the queue's array.
 </p>
 <p>
-If the slot corresponding to an async-send-action has a non-empty receive
-failure type, then it is a compile-time error unless it can be determined that a
-sync-send-action or a flush-action will be executed before the sending worker
-terminates with success.
-</p>
-<p>
 If a worker W is about to terminate normally, and any final queue updates have
 been performed, then for each queue for which W is the sending worker, W waits
 until either the receiving worker has terminated or the <var>r</var> index is
@@ -8337,9 +8293,93 @@ have terminated abnormally, because the rule in the preceding paragraph. In this
 case, W terminates abnormally and W will use R's termination value as its
 termination value.
 </p>
+
+
+<section>
+<h5>Async send action</h5>
+<pre
+class="grammar">async-send-action := expression <code>-&gt;</code> peer-worker <code>;</code>
+</pre>
+
+<p>
+The evaluation of a async-send-action starts by evaluating the expression, resulting
+in a value <code><var>v</var></code>; the Clone abstract operation is then
+applied to <code><var>v</var></code> resulting in value
+<code><var>c</var></code>. This value <code><var>c</var></code> is then written
+to the slot in the associated queue corresponding to the send-action. The index
+<var>w</var> in the queue is set to 1 greater than the index of that slot in the
+queue. The result of an async-send-action is always <code>()</code>.
+</p>
+<p>
+The static type of the <code>expression</code> must be a subtype of
+<code>value:Cloneable</code>. The contextually expected type used to interpret
+<code>expression</code> is the contextually expected type from the corresponding
+receive-action.
+</p>
+<p>
+If the slot corresponding to an async-send-action has a non-empty receive
+failure type, then it is a compile-time error unless it can be determined that a
+sync-send-action or a flush-action will be executed before the sending worker
+terminates with success.
+</p>
 </section>
 <section>
-<h4>Receive action</h4>
+<h5>Flush action</h5>
+
+<pre
+class="grammar">flush-action := <code>flush</code> [peer-worker]
+</pre>
+<p>
+A flush-action with peer-worker R occurring within worker W is associated with the
+queue with sending worker W and receiving worker R. Evaluating
+the flush-action flushes the queue up to index
+<var>i</var> where <var>k</var> is the number of send-actions in W that syntactically
+precede the flush-action. More precisely, the evaluation of a flush-action waits until
+until either the index <var>r</var> of the queue is &#x2265;
+<var>i</var> or the receiving worker has terminated. It then completes as
+follows:
+</p>
+<ul>
+<li>if index <var>r</var> of the queue is &#x2265; <var>i</var>, then normally with
+result <code>()</code></li>
+<li>otherwise
+<ul>
+<li>if the receiving worker terminated with failure, then normally with the
+result being the the termination value of the receiving worker, which will be an
+error;</li>
+<li>if the receiving worker terminated abnormally, then abruptly with a panic,
+with the associated value being the termination value of the receiving worker.</li>
+</ul>
+</li>
+</ul>
+<p>
+If the flush-action has a preceding async-send-action without any intervening
+sync-send-action or other flush-action, then the static type of the flush-action
+is F|(), where F is the receive failure type of the slot corresponding to that
+async-send-action. Otherwise, the static type of the flush-action is nil.
+</p>
+<p>
+If a peer-worker is not specified in the flush-action, then the flush-action
+flushes the queues to all other workers. In this case, the static type will be
+the union of the static type of flush on each worker separately.
+</p>
+</section>
+<section>
+<h5>Sync send action</h5>
+<pre
+class="grammar">sync-send-action := expression <code>-&gt;&gt;</code> peer-worker
+</pre>
+<p>
+A sync-send-action <code><var>E</var> -> <var>R</var></code> is equivalent to an
+async-send-action <code><var>E</var> ->> <var>R</var></code> followed by a
+flush-action <code>flush <var>R</var></code>. The static type of the
+sync-send-action is the static type of the flush-action.
+</p>
+</section>
+</section>
+
+<section>
+<h4>Receiving messages</h4>
 
 <pre
 class="grammar">receive-action := single-receive-action | multiple-receive-action
@@ -8455,76 +8495,6 @@ the multiple-receive-action</li>
 <li>F is the union of the send failure types of the slots</li>
 </ul>
 </section>
-</section>
-<section>
-<h4>Flush action</h4>
-
-<pre
-class="grammar">flush-action := <code>flush</code> [peer-worker]
-</pre>
-<p>
-If peer-worker is specified, then flush waits until the queue of messages to be
-received by peer-worker is empty or until the peer-worker terminates.
-</p>
-<p>
-Send-receive correspondence for async-send-action implies that the queue will
-eventually become empty, unless the peer-worker terminates abnormally or with
-failure. The evaluation of flush-action completes as follows:
-</p>
-<ul>
-<li>if the queue of messages is empty, then normally with result nil;</li>
-<li>otherwise
-<ul>
-<li>if the peer-worker terminated with failure, then normally with the result
-being the the termination value of the peer-worker, which will be an error;</li>
-<li>if the peer-worker terminated abnormally, then abruptly with a panic, with
-the associated value being the termination value of the peer-worker.</li>
-</ul>
-</li>
-</ul>
-<p>
-If the flush-action has a preceding async-send-action without any intervening
-sync-send-action or other flush-action, then the static type of the flush-action
-is F|(), where F is the failure type of the receive-action corresponding to that
-async-send-action. Otherwise, the static type of the flush-action is nil.
-</p>
-<p>
-If peer-worker is omitted, then the flush-action flushes the queues to all other
-workers. In this case, the static type will be the union of the static type of
-flush on each worker separately.
-</p>
-</section>
-<section>
-<h4>Send-receive correspondence</h4>
-<p>
-This section provides further details about how compile-time correspondence is
-established between sends and receive. This is based on the concept of the index
-of a message in its queue: a message has index n in its queue if it is the nth
-message added to the queue during the current execution of the worker.
-</p>
-<ul>
-<li>A send action/statement has index i in its queue if the message that it adds
-to the queue is always the i-th message added to the queue during the execution
-of its worker. It is a compile time error if a send statement or action does not
-have an index in its queue.</li>
-<li>A receive action has index i in a queue if any message that it removes from
-the queue is always the i-th message removed from the queue during the execution
-of its worker. It is a compile time error if a receive action does not have an
-index in each of its queues.</li>
-<li>A send action/statement and a receive action correspond if they have the
-same index in a queue.</li>
-<li>It is a compile time error if two or more receive actions have the same
-index in a queue.</li>
-<li>A send action/statement is in the same send set as another send
-action/statement if they have the same index in a queue. It is allowed for a
-send set to have more than one member.</li>
-<li>The maximum index that a receive action has in a queue must be the same as
-the maximum index that a send action or statement has in that queue.</li>
-<li>It is a compile time error if it is possible for a worker to terminate with
-success before it has executed all its receive actions.</li>
-<li>It is a compile time error if it is possible for a worker to terminate with
-success before it has executed one member from every send set.</li>
-</ul>
 </section>
 </section>
 
