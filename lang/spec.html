@@ -8216,6 +8216,9 @@ time. This allows the connection between the send-action and the receive-action
 to be shown in the sequence diagram.
 There is a one-to-one correspondence between slots and send-actions; there is
 a many-to-one correspondence between slots and receive-actions.
+It is a compile-time error if a send-action or receive-action occurs in a
+syntactic context, such as within the body of a foreach statement, where it
+could be executed more than once.
 </p>
 <p>
 There are three types determined at compile-time for each slot:
@@ -8243,9 +8246,21 @@ receiving worker completes normally with termination value <var>e</var>, then
 <var>i</var>; it is a compile-time error if the receive failure type is not a
 (possibly empty) subtype of error</li>
 </ul>
+<p>
+The sections below on <a href="#sending_messages">Sending messages</a> and
+<a href="#receiving_messages">Receiving messages</a> describe
+how the sending worker and receiving worker respectively increment the <var>w</var>
+and <var>r</var> indices of a queue.
+Note that the <var>w</var> index of a queue is updated to the length of the queue's
+slot array upon successful termination of the sending worker, but the <var>r</var>
+index is <em>not</em> similarly updated by the receiving worker.
+The overall effect of this in conjunction with the typing rules is that
+a send-action may occur in a conditional context where it may never be executed
+but a receive-action may not.
+</p>
 
 <section>
-<h4>Sending messages</h4>
+<h4 id="sending_messages">Sending messages</h4>
 
 <pre
 class="grammar">send-action := async-send-action | sync-send-action
@@ -8379,7 +8394,7 @@ sync-send-action is the static type of the flush-action.
 </section>
 
 <section>
-<h4>Receiving messages</h4>
+<h4 id="receiving_messages">Receiving messages</h4>
 
 <pre
 class="grammar">receive-action := single-receive-action | multiple-receive-action
