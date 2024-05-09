@@ -8226,17 +8226,18 @@ There are three types determined at compile-time for each slot:
 <ul>
 <li>a message type: if a message v is written to the slot, then v belongs to the
 slot's message type</li>
+<li>a no message type: if it is possible for the index <var>w</var> of the queue
+to be &gt; <var>i</var> while the slot with index <var>i</var> is empty, then
+the no message type of the slot with index <var>i</var> is
+<code>error:NoMessage</code>, otherwise it is empty;</li>
 <li>a send failure type: this is the type of termination failure in the sending
 worker that caused the corresponding message not to be sent; more precisely, for
 any slot index <var>i</var>, if it is possible for <var>i</var> to be &#x2265;
 the value of index <var>w</var> of the queue at the time when the sending worker
 completes normally with termination value <var>e</var>, then <var>e</var>
-belongs to the send failure type of the slot with index <var>i</var>;
-furthemore, if it is possible for the index <var>w</var> of the queue to be &gt;
-<var>i</var> while the slot with index <var>i</var> is empty, then
-<code>error:NoMessage</code> is a subtype of the send failure type of the slot
-with index <var>i</var>; it is a compile-time error if the send failure type is
-not a (possibly empty) subtype of error;</li>
+belongs to the send failure type of the slot with index <var>i</var>; it is a
+compile-time error if the send failure type is not a (possibly empty) subtype of
+error;</li>
 <li>a receive failure type: this is the type of termination failure in the
 receiving worker that caused the corresponding message not to be received; more
 precisely, for any slot index <var>i</var>, if it is possible for <var>i</var>
@@ -8448,8 +8449,8 @@ with the associated value being the termination value of the sending worker.</li
 </li>
 </ul>
 <p>
-The static type of the single-receive-action is T|F where T is message type of
-the associated slot and F is its send failure type.
+The static type of the single-receive-action is T|N|F where T is message type of
+the associated slot, N is its no message type, and F is its send failure type.
 </p>
 </section>
 <section>
@@ -8500,13 +8501,14 @@ provides the contextually expected type for the expression in the corresponding
 send-action.
 </p>
 <p>
-The static type of multiple-receive-action is R|F where
+The static type of multiple-receive-action is R|N|F where
 </p>
 <ul>
 <li>R is a record type, where R is determined in the same way as for a mapping
 constructor, where the static type of each field comes from the message type of
 the slot and the contextually expected type is the contextually expected type of
 the multiple-receive-action</li>
+<li>N is the union of the no message types of the slots</li>
 <li>F is the union of the send failure types of the slots</li>
 </ul>
 </section>
@@ -8545,9 +8547,9 @@ of the alternative-receive-action being as follows
 </li>
 </ul>
 <p>
-The static type of the alternative-receive-action is T|F, where T is union of
-message type of the associated slots and F is the union the send failure type of
-the slots.
+The static type of the alternative-receive-action is T|N|F, where T is union of
+message type of the associated slots, N is the intersection of the no message
+types of the slots and F is the union the send failure type of the slots.
 </p>
 
 </section>
