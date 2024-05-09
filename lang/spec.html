@@ -8397,7 +8397,7 @@ sync-send-action is the static type of the flush-action.
 <h4 id="receiving_messages">Receiving messages</h4>
 
 <pre
-class="grammar">receive-action := single-receive-action | multiple-receive-action
+class="grammar">receive-action := single-receive-action | multiple-receive-action | alternate-receive-action
 </pre>
 <p>
 Each receive-action has one or more references to peer workers. A reference to a
@@ -8509,6 +8509,47 @@ the slot and the contextually expected type is the contextually expected type of
 the multiple-receive-action</li>
 <li>F is the union of the send failure types of the slots</li>
 </ul>
+</section>
+<section>
+<h5>Alternate receive action</h5>
+
+<pre
+class="grammar">alternate-receive-action := <code>&lt;-</code> peer-worker (<code>|</code> peer-worker)+
+</pre>
+
+<p>
+An alternate-receive-action receives a message from one of multiple peer-workers.
+</p>
+<p>
+As with other receive actions, each reference to a peer worker is associated with a slot in
+a queue. An alternate-receive-action is evaluated by repeatedly waiting until either
+</p>
+<ul>
+<li>a sending worker terminates abnormally with a panic; in this, case the
+evaluation completes abruptly with a panic, with the associated value being the
+termination value of the sending worker;</li>
+<li>a slot <var>k</var> is ready, and is not empty, and the value in the slot is
+not an error; in this case the alternate-receive-action; in this case, a value
+is received from every slot; the result or failure of these receive operations
+is ignored except for slot <var>k</var>; the evaluation completes normally, with
+the result being the value received from slot <var>k</var>; or</li>
+<li>all sending workers have terminated normally; in this case also, a value is
+received from every slot and the evaluation completes normally with the result
+of the alternative-receive-action being as follows
+<ul>
+<li>if the receive operation of every slot fails, then a new value of type
+<code>error:NoMessage</code>;</li>
+<li>otherwise, the result of the first receive operation that did not fail,
+(in this case, that result will be an error value).</li>
+</ul>
+</li>
+</ul>
+<p>
+The static type of the alternative-receive-action is T|F, where T is union of
+message type of the associated slots and F is the union the send failure type of
+the slots.
+</p>
+
 </section>
 </section>
 </section>
@@ -11740,6 +11781,7 @@ clause.</li>
 <li>The compile-time requirement that a send-action must always be executed
 unless its containing worker terminates with an error or panic has been
 removed.</li>
+<li>An alternate-receive-action has been added.</li>
 </ol>
 </section>
 <section>
