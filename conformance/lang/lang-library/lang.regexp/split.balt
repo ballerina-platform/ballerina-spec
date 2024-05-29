@@ -1,0 +1,117 @@
+Test-Case: output
+Description: Test `split` function.
+Labels: function-call-expr, regexp, split, method-call-expr
+
+import ballerina/lang.regexp;
+
+function init() {
+    var wordSeparatorRegex = re `\s*,\s*`;
+    string str1 = "a, b , c,,   d,  e";
+
+    string[] split1 = wordSeparatorRegex.split(str1);
+    io:println(split1); // @output ["a","b","c","","d","e"]
+
+    string[] split2 = regexp:split(re `\d+|\s+`, "This1is22a digit  Separator");
+    io:println(split2); // @output ["This","is","a","digit","Separator"]
+
+    string[] split3 = (<string:RegExp> wordSeparatorRegex).split("abcde");
+    io:println(split3); // @output ["abcde"]
+
+    string[] split4 = re `\s*`.split("");
+    io:println(split4); // @output [""]
+}
+
+Test-Case: output
+Description: Test `split` function at module level.
+Labels: function-call-expr, regexp, split, method-call-expr
+
+import ballerina/lang.regexp;
+
+var wordSeparatorRegex = re `\s*,\s*`;
+string str1 = "a, b , c,,   d,  e";
+string[] split1 = wordSeparatorRegex.split(str1);
+string[] split2 = regexp:split(re `\d+|\s+`, "This1is22a digit  Separator");
+string[] split3 = (<string:RegExp> wordSeparatorRegex).split("abcde");
+string[] split4 = re `\s*`.split("");
+
+function init() {
+    io:println(split1); // @output ["a","b","c","","d","e"]
+    io:println(split2); // @output ["This","is","a","digit","Separator"]
+    io:println(split3); // @output ["abcde"]
+    io:println(split4); // @output [""]
+}
+
+Test-Case: output
+Description: Test assignability of `split` function result.
+Labels: function-call-expr, regexp, split, method-call-expr
+
+import ballerina/lang.regexp;
+
+function init() {
+    var wordSeparatorRegex = re `\s*,\s*`;
+    string str1 = "a, b , c,,   d,  e";
+
+    any|error result1 = wordSeparatorRegex.split(str1);
+    io:println(result1 is string[]); // @output true
+    io:println(result1); // @output ["a","b","c","","d","e"]
+
+    var result2 = regexp:split(re `\d+|\s+`, "This1is22a digit  Separator");
+    io:println(result2 is string[]); // @output true
+    io:println(result2); // @output ["This","is","a","digit","Separator"]
+
+    [string...] result3 = re `\s*,\s*`.split(str1);
+    io:println(result3 is string[]); // @output true
+    io:println(result3); // @output ["a","b","c","","d","e"]
+}
+
+Test-Case: error
+Description: Test assigning the result of `split` function to an incompatible type.
+Labels: function-call-expr, regexp, split, method-call-expr
+
+type False false;
+
+function errorFunction() {
+    var spaceSeparatorRegex = re `\s+`;
+    string str1 = "A B C";
+
+    int _ = spaceSeparatorRegex.split(str1); // @error expects a int, but split returns string[]
+    [string, string, string] _ = spaceSeparatorRegex.split(str1); // @error expects a [string,string,string], but split returns string[]
+}
+
+Test-Case: error
+Description: Test missing required parameters for `split()` method.
+Labels: function-call-expr, regexp, split, method-call-expr
+
+import ballerina/lang.regexp;
+
+function errorFunction() {
+    var spaceSeparatorRegex = re `\s+`;
+    string str1 = "A B C";
+
+    string[] _ = spaceSeparatorRegex.split(); // @error missing string argument
+    string[] _ = regexp:split(str = str1); // @error missing RegExp argument
+}
+
+Test-Case: error
+Description: Test passing invalid parameters to `split()` method.
+Labels: function-call-expr, regexp, split, method-call-expr
+
+import ballerina/lang.regexp;
+
+function errorFunction(string|int si) {
+    var spaceSeparatorRegex = re `\s+`;
+    string str1 = "A B C";
+
+    string[] _ = spaceSeparatorRegex.split(1234); // @error expected 'string', found 'int'
+    string[] _ = regexp:split(re = 123, str = str1); // @error expected 'regexp:RegExp', found 'int'
+}
+
+Test-Case: error
+Description: Test passing too many parameters to `split()` method.
+Labels: function-call-expr, regexp, split, method-call-expr
+
+function errorFunction(string|int si) {
+    var spaceRegex = re `\s+`;
+
+    string[] _ = spaceRegex.split("regexp", "regexp1"); // @error too many arguments
+}

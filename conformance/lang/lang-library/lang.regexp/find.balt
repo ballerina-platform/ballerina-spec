@@ -1,0 +1,225 @@
+Test-Case: output
+Description: Test `find` function.
+Labels: function-call-expr, regexp, find, method-call-expr, nil
+
+import ballerina/lang.regexp;
+
+function init() {
+    var emailRegex = re `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`;
+    string:RegExp phoneRegex = re `^\+?[0-9]{10,14}$`;
+    string str1 = "abc@gmail.com";
+    string str2 = "abcd1AB<> C\\d";
+    string str3 = "+94111111111";
+
+    regexp:Span? res1 = emailRegex.find("NotMatching");
+    io:println(res1 is ()); // @output true
+
+    regexp:Span? res2 = emailRegex.find(str1);
+    io:println(res2 is regexp:Span); // @output true
+    regexp:Span res2span = <regexp:Span> res2;
+    io:println(res2span.startIndex); // @output 0
+    io:println(res2span.endIndex);  // @output 13
+
+    regexp:Span? res3 = regexp:find(re `\d\D*\w\W\W\s\S\\d`, str2, 3);
+    io:println(res3 is regexp:Span); // @output true
+    regexp:Span res3span = <regexp:Span> res3;
+    io:println(res3span.startIndex); // @output 4
+    io:println(res3span.endIndex); // @output 13
+
+    regexp:Span res4span = <regexp:Span> phoneRegex.find(str3, 0);
+    io:println(res4span.startIndex); // @output 0
+    io:println(res4span.endIndex); // @output 12
+
+    regexp:Span? res5 = re `(?im-sx:H*ere?!?)`.find("matchhere andthere1", 2);
+    io:println(res5 is regexp:Span); // @output true
+    regexp:Span res5span = <regexp:Span> res5;
+    io:println(res5span.startIndex); // @output 4
+    io:println(res5span.endIndex); // @output 9
+
+    regexp:Span? res6 = re `${"3*"}`.find("2341234567890", 2);
+    io:println(res6 is regexp:Span); // @output true
+    regexp:Span res6span = <regexp:Span> res6;
+    io:println(res6span.startIndex); // @output 2
+    io:println(res6span.endIndex); // @output 2
+
+    regexp:Span? res7 = re `${""}`.find("empty match");
+    io:println(res7 is regexp:Span); // @output true
+    regexp:Span res7span = <regexp:Span> res7;
+    io:println(res7span.startIndex); // @output 0
+    io:println(res7span.endIndex);  // @output 0
+
+    regexp:Span? res8 = regexp:find(re = re `\p{sc=Greek}\P{Lu}`, str = "ThisisGreekCharacterWithNumberΑ1", startIndex = 28);
+    io:println(res8 is regexp:Span); // @output true
+    regexp:Span res8span = <regexp:Span> res8;
+    io:println(res8span.startIndex); // @output 30
+    io:println(res8span.endIndex); // @output 32
+
+    regexp:Span? res9 = re `cde.*123`.find("abcdefgh12345", 2);
+    io:println(res9 is regexp:Span); // @output true
+    regexp:Span res9span = <regexp:Span> res9;
+    io:println(res9span.startIndex); // @output 2
+    io:println(res9span.endIndex);  // @output 11
+}
+
+Test-Case: output
+Description: Test `find` function at module level.
+Labels: function-call-expr, regexp, find, method-call-expr
+
+import ballerina/lang.regexp;
+
+var emailRegex = re `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`;
+string:RegExp phoneRegex = re `^\+?[0-9]{10,14}$`;
+string str1 = "abc@gmail.com";
+string str2 = "abcd1AB<> C\\d";
+string str3 = "+94111111111";
+
+regexp:Span? res1 = emailRegex.find("NotMatching");
+regexp:Span? res2 = emailRegex.find(str1);
+regexp:Span? res3 = regexp:find(re `\d\D*\w\W\W\s\S\\d`, str2, 3);
+regexp:Span res4span = <regexp:Span> phoneRegex.find(str3, 0);
+regexp:Span? res5 = re `(?im-sx:H*ere?!?)`.find("matchhere andthere1", 2);
+regexp:Span? res6 = re `${"3*"}`.find("2341234567890", 2);
+regexp:Span? res7 = re `${""}`.find("empty match");
+regexp:Span? res8 = regexp:find(re = re `\p{sc=Greek}\P{Lu}`, str = "ThisisGreekCharacterWithNumberΑ1", startIndex = 28);
+
+function init() {
+    io:println(res1 is ()); // @output true
+
+    io:println(res2 is regexp:Span); // @output true
+    regexp:Span res2span = <regexp:Span> res2;
+    io:println(res2span.startIndex); // @output 0
+    io:println(res2span.endIndex);  // @output 13
+
+    io:println(res3 is regexp:Span); // @output true
+    regexp:Span res3span = <regexp:Span> res3;
+    io:println(res3span.startIndex); // @output 4
+    io:println(res3span.endIndex); // @output 13
+
+    io:println(res4span.startIndex); // @output 0
+    io:println(res4span.endIndex); // @output 12
+
+    io:println(res5 is regexp:Span); // @output true
+    regexp:Span res5span = <regexp:Span> res5;
+    io:println(res5span.startIndex); // @output 4
+    io:println(res5span.endIndex); // @output 9
+
+    io:println(res6 is regexp:Span); // @output true
+    regexp:Span res6span = <regexp:Span> res6;
+    io:println(res6span.startIndex); // @output 2
+    io:println(res6span.endIndex); // @output 2
+
+    io:println(res7 is regexp:Span); // @output true
+    regexp:Span res7span = <regexp:Span> res7;
+    io:println(res7span.startIndex); // @output 0
+    io:println(res7span.endIndex);  // @output 0
+
+    io:println(res8 is regexp:Span); // @output true
+    regexp:Span res8span = <regexp:Span> res8;
+    io:println(res8span.startIndex); // @output 30
+    io:println(res8span.endIndex); // @output 32
+}
+
+Test-Case: output
+Description: Test `find` function with negative range.
+Labels: function-call-expr, regexp, find, method-call-expr
+
+import ballerina/lang.regexp;
+
+function errorFunction() {
+    var emailRegex = re `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`;
+    string str1 = "abc@gmail.com";
+    regexp:Span|error? err = trap emailRegex.find(str1, -5);
+    io:println(err is error); // @output true
+    io:println((<error> err).detail().get("message").ensureType()); // @output start index cannot be less than 0
+}
+
+Test-Case: error
+Description: Test `find` function with large integer values.
+Labels: function-call-expr, regexp, find, method-call-expr
+
+import ballerina/lang.regexp;
+
+function errorFunction() {
+    var emailRegex = re `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`;
+    string str1 = "abc@gmail.com";
+
+    regexp:Span? _ = emailRegex.find(str1, 1000000000000000000000); // @error out of range
+}
+
+Test-Case: output
+Description: Test assignability of `find` function result.
+Labels: function-call-expr, regexp, find, method-call-expr
+
+import ballerina/lang.regexp;
+
+function init() {
+    var emailRegex = re `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`;
+    string str1 = "abcde@gmail.com";
+
+    any result1 = emailRegex.find(str1);
+    io:println(result1 is regexp:Span); // @output true
+
+    var result2 = re `cd`.find(str1, 1);
+    io:println(result2 is regexp:Span); // @output true
+
+    var result3 = regexp:find(re = emailRegex, str = str1, startIndex = 10);
+    io:println(result3 is ()); // @output true
+}
+
+Test-Case: error
+Description: Test assigning the result of `find` function to an incompatible type.
+Labels: function-call-expr, regexp, find, method-call-expr
+
+import ballerina/lang.regexp;
+
+function errorFunction() {
+    var phoneRegex = re `^\+?[0-9]{10,14}$`;
+    string str1 = "+94111111111";
+
+    regexp:Span _ = phoneRegex.find(str1, 5); // @error expects a regexp:Span, but find() returns regexp:Span?
+    int _ = re `.*`.find(str = str1); // @error expects a int, but find() returns regexp:Span?
+    string _ = regexp:find(re = phoneRegex, str = str1, startIndex = 5); // @error expects a string, but find() returns regexp:Span?
+}
+
+Test-Case: error
+Description: Test missing required parameters for `find` method.
+Labels: function-call-expr, regexp, find, method-call-expr
+
+import ballerina/lang.regexp;
+
+function errorFunction() {
+    var emailRegex = re `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`;
+    string str1 = "abcde@gmail.com";
+
+    regexp:Span? _ = emailRegex.find(); // @error missing string argument
+    regexp:Span? _ = regexp:find(emailRegex); // @error missing string argument
+    regexp:Span? _ = regexp:find(str = ""); // @error missing required parameter 're' in call to 'find()'
+    regexp:Span? _ = re `abc`.find(); // @error missing string argument
+}
+
+Test-Case: error
+Description: Test passing invalid parameters to `find()` method.
+Labels: function-call-expr, regexp, find, method-call-expr
+
+import ballerina/lang.regexp;
+
+function errorFunction() {
+    var emailRegex = re `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`;
+    string str1 = "abcde@gmail.com";
+
+    regexp:Span? _ = emailRegex.find(12); // @error expected 'string', found 'int'
+    regexp:Span? _ = emailRegex.find("MatchHereAndHere", "5"); // @error expected 'int', found 'string'
+    regexp:Span? _ = regexp:find(re = "abc", str = "MatchHereAndHere",  startIndex = 2); // @error 'regexp:RegExp', found 'string'
+}
+
+Test-Case: error
+Description: Test passing too many parameters to `find()` method.
+Labels: function-call-expr, regexp, find, method-call-expr
+
+import ballerina/lang.regexp;
+
+function errorFunction() {
+    var regExpr1 = re `Here`;
+
+    regexp:Span? _ = regExpr1.find("MatchHereAndHere", 5, 1); // @error too many arguments
+}

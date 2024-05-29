@@ -1,0 +1,296 @@
+Test-Case: output
+Description: Test `findAll` function.
+Labels: function-call-expr, regexp, findAll, method-call-expr
+
+import ballerina/lang.regexp;
+
+function init() {
+    var emailRegex = re `[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}`;
+    string:RegExp phoneRegex = re `\+?[0-9]{10,14}`;
+    string str1 = "abc@gmail.com and def@gmail.com are emails, but ut@.com is not an email";
+    string str2 = "this string contains 1AB<> C\\d";
+    string str3 = "2341233334567890";
+
+    regexp:Span[] res1 = emailRegex.findAll("NotMatching");
+    io:println(res1.length() == 0); // @output true
+
+    regexp:Span[]? res2 = emailRegex.findAll(str1);
+    io:println(res2 is regexp:Span[]); // @output true
+    regexp:Span[] res2SpanArr = <regexp:Span[]>res2;
+    io:println(res2SpanArr.length());  // @output 2
+    regexp:Span res2SpanArr_1 = res2SpanArr[0];
+    regexp:Span res2SpanArr_2 = res2SpanArr[1];
+    io:println(res2SpanArr_1.startIndex); // @output 0
+    io:println(res2SpanArr_1.endIndex);  // @output 13
+    io:println(res2SpanArr_2.startIndex); // @output 18
+    io:println(res2SpanArr_2.endIndex);  // @output 31
+
+    regexp:Span[]? res3 = regexp:findAll(re `\d\D*\w\W\W\s\S\\d`, str2, 10);
+    regexp:Span[] res3SpanArr = <regexp:Span[]>res3;
+    io:println(res3SpanArr.length());  // @output 1
+    regexp:Span res3SpanArr_1 = res3SpanArr[0];
+    io:println(res3SpanArr_1.startIndex); // @output 21
+    io:println(res3SpanArr_1.endIndex);  // @output 30
+    
+    regexp:Span[]? res4 = <regexp:Span[]> phoneRegex.findAll("+94111111111, +94123, +95123456789", 0);
+    io:println(res4 is regexp:Span[]); // @output true
+    regexp:Span[] res4spans = <regexp:Span[]> res4;
+    io:println(res4spans.length());  // @output 2
+
+    regexp:Span res4span1 = <regexp:Span> res4spans[0];
+    io:println(res4span1.startIndex); // @output 0
+    io:println(res4span1.endIndex);  // @output 12
+    io:println(res4span1.substring()); // @output +94111111111
+
+    regexp:Span res4span2 = <regexp:Span> res4spans[1];
+    io:println(res4span2.startIndex); // @output 22
+    io:println(res4span2.endIndex);  // @output 34
+    io:println(res4span2.substring()); // @output +95123456789
+
+    regexp:Span[]? res5 =  re `(?im-sx:H*ere?!?)`.findAll("matchhereand here ", 2);
+    io:println(res5 is regexp:Span[]); // @output true
+    regexp:Span[] res5spans = <regexp:Span[]> res5;
+    io:println(res5spans.length());  // @output 2
+
+    regexp:Span res5span1 = <regexp:Span> res5spans[0];
+    io:println(res5span1.startIndex); // @output 4
+    io:println(res5span1.endIndex);  // @output 9
+    io:println(res5span1.substring()); // @output hhere
+
+    regexp:Span res5span2 = <regexp:Span> res5spans[1];
+    io:println(res5span2.startIndex); // @output 13
+    io:println(res5span2.endIndex);  // @output 17
+    io:println(res5span2.substring()); // @output here
+
+    regexp:Span[]? res6 =  re `${"3+"}`.findAll(str3, 2);
+    io:println(res6 is regexp:Span[]); // @output true
+    regexp:Span[] res6spans = <regexp:Span[]> res6;
+    io:println(res6spans.length());  // @output 1
+
+    regexp:Span res6span1 = <regexp:Span> res6spans[0];
+    io:println(res6span1.startIndex); // @output 5
+    io:println(res6span1.endIndex);  // @output 9
+    io:println(res6span1.substring()); // @output 3333
+
+    regexp:Span[]? res7 =  regexp:findAll(re = re `\p{sc=Greek}\P{Lu}`, str = "ThisisGreekCharacterWithNumberΑ1", startIndex = 28);
+    io:println(res7 is regexp:Span[]); // @output true
+    regexp:Span[] res7spans = <regexp:Span[]> res7;
+    io:println(res7spans.length());  // @output 1
+
+    regexp:Span res7span1 = <regexp:Span> res7spans[0];
+    io:println(res7span1.startIndex); // @output 30
+    io:println(res7span1.endIndex);  // @output 32
+
+    regexp:Span[]? res8 = re `cde.*123`.findAll("abcdefcdeAA123gh123459", 2);
+    io:println(res8 is regexp:Span[]); // @output true
+    regexp:Span[] res8spans = <regexp:Span[]> res8;
+    io:println(res8spans.length());  // @output 1
+
+    regexp:Span res8span1 = <regexp:Span> res8spans[0];
+    io:println(res8span1.startIndex); // @output 2
+    io:println(res8span1.endIndex);  // @output 19
+    io:println(res8span1.substring()); // @output cdefcdeAA123gh123
+}
+
+Test-Case: output
+Description: Test `findAll` function at module level.
+Labels: function-call-expr, regexp, findAll, method-call-expr
+
+import ballerina/lang.regexp;
+
+var emailRegex = re `[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}`;
+string:RegExp phoneRegex = re `\+?[0-9]{10,14}`;
+string str1 = "abc@gmail.com and def@gmail.com are emails, but ut@.com is not an email";
+string str2 = "this string contains 1AB<> C\\d";
+string str3 = "2341233334567890";
+
+regexp:Span[] res1 = emailRegex.findAll("NotMatching");
+regexp:Span[]? res2 = emailRegex.findAll(str1);
+regexp:Span[]? res3 = regexp:findAll(re `\d\D*\w\W\W\s\S\\d`, str2, 10);
+regexp:Span[]? res4 = <regexp:Span[]> phoneRegex.findAll("+94111111111, +94123, +95123456789", 0);
+regexp:Span[]? res5 =  re `(?im-sx:H*ere?!?)`.findAll("matchhereand here ", 2);
+regexp:Span[]? res6 =  re `${"3+"}`.findAll(str3, 2);
+regexp:Span[]? res7 =  regexp:findAll(re = re `\p{sc=Greek}\P{Lu}`, str = "ThisisGreekCharacterWithNumberΑ1", startIndex = 28);
+regexp:Span[]? res8 = re `cde.*123`.findAll("abcdefcdeAA123gh123459", 2);
+
+function init() {
+    io:println(res1.length() == 0); // @output true
+
+    io:println(res2 is regexp:Span[]); // @output true
+    regexp:Span[] res2SpanArr = <regexp:Span[]>res2;
+    io:println(res2SpanArr.length());  // @output 2
+    regexp:Span res2SpanArr_1 = res2SpanArr[0];
+    regexp:Span res2SpanArr_2 = res2SpanArr[1];
+    io:println(res2SpanArr_1.startIndex); // @output 0
+    io:println(res2SpanArr_1.endIndex);  // @output 13
+    io:println(res2SpanArr_2.startIndex); // @output 18
+    io:println(res2SpanArr_2.endIndex);  // @output 31
+
+    regexp:Span[] res3SpanArr = <regexp:Span[]>res3;
+    io:println(res3SpanArr.length());  // @output 1
+    regexp:Span res3SpanArr_1 = res3SpanArr[0];
+    io:println(res3SpanArr_1.startIndex); // @output 21
+    io:println(res3SpanArr_1.endIndex);  // @output 30
+
+    io:println(res4 is regexp:Span[]); // @output true
+    regexp:Span[] res4spans = <regexp:Span[]> res4;
+    io:println(res4spans.length());  // @output 2
+
+    regexp:Span res4span1 = <regexp:Span> res4spans[0];
+    io:println(res4span1.startIndex); // @output 0
+    io:println(res4span1.endIndex);  // @output 12
+    io:println(res4span1.substring()); // @output +94111111111
+
+    regexp:Span res4span2 = <regexp:Span> res4spans[1];
+    io:println(res4span2.startIndex); // @output 22
+    io:println(res4span2.endIndex);  // @output 34
+    io:println(res4span2.substring()); // @output +95123456789
+
+    io:println(res5 is regexp:Span[]); // @output true
+    regexp:Span[] res5spans = <regexp:Span[]> res5;
+    io:println(res5spans.length());  // @output 2
+
+    regexp:Span res5span1 = <regexp:Span> res5spans[0];
+    io:println(res5span1.startIndex); // @output 4
+    io:println(res5span1.endIndex);  // @output 9
+    io:println(res5span1.substring()); // @output hhere
+
+    regexp:Span res5span2 = <regexp:Span> res5spans[1];
+    io:println(res5span2.startIndex); // @output 13
+    io:println(res5span2.endIndex);  // @output 17
+    io:println(res5span2.substring()); // @output here
+
+    io:println(res6 is regexp:Span[]); // @output true
+    regexp:Span[] res6spans = <regexp:Span[]> res6;
+    io:println(res6spans.length());  // @output 1
+
+    regexp:Span res6span1 = <regexp:Span> res6spans[0];
+    io:println(res6span1.startIndex); // @output 5
+    io:println(res6span1.endIndex);  // @output 9
+    io:println(res6span1.substring()); // @output 3333
+
+    io:println(res7 is regexp:Span[]); // @output true
+    regexp:Span[] res7spans = <regexp:Span[]> res7;
+    io:println(res7spans.length());  // @output 1
+
+    regexp:Span res7span1 = <regexp:Span> res7spans[0];
+    io:println(res7span1.startIndex); // @output 30
+    io:println(res7span1.endIndex);  // @output 32
+
+    io:println(res8 is regexp:Span[]); // @output true
+    regexp:Span[] res8spans = <regexp:Span[]> res8;
+    io:println(res8spans.length());  // @output 1
+
+    regexp:Span res8span1 = <regexp:Span> res8spans[0];
+    io:println(res8span1.startIndex); // @output 2
+    io:println(res8span1.endIndex);  // @output 19
+    io:println(res8span1.substring()); // @output cdefcdeAA123gh123
+}
+
+Test-Case: output
+Description: Test `findAll` function with negative range.
+Labels: function-call-expr, regexp, findAll, method-call-expr
+
+import ballerina/lang.regexp;
+
+function errorFunction() {
+    var emailRegex = re `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`;
+    string str1 = "abc@gmail.com and def@gmail.com are emails, but ut@.com is not an email";
+    regexp:Span[]|error? err = trap emailRegex.findAll(str1, -5);
+    io:println(err is error); // @output true
+    io:println((<error> err).detail().get("message").ensureType()); // @output start index cannot be less than 0
+}
+
+Test-Case: error
+Description: Test `findAll` function with large integer values.
+Labels: function-call-expr, regexp, findAll, method-call-expr
+
+import ballerina/lang.regexp;
+
+function errorFunction() {
+    var emailRegex = re `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`;
+    string str1 = "abc@gmail.com and def@gmail.com are emails, but ut@.com is not an email";
+
+    regexp:Span[] _ = emailRegex.findAll(str1, 1000000000000000000000); // @error out of range
+}
+
+Test-Case: output
+Description: Test assignability of `findAll` function result.
+Labels: function-call-expr, regexp, findAll, method-call-expr
+
+import ballerina/lang.regexp;
+
+function init() {
+    var emailRegex = re `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`;
+    string str1 = "abc@gmail.com and def@gmail.com are emails, but ut@.com is not an email";
+
+    any result1 = emailRegex.findAll(str1);
+    io:println(result1 is regexp:Span[]); // @output true
+
+    var result2 = re `cd`.findAll(str1, 1);
+    io:println(result2 is regexp:Span[]); // @output true
+
+    [regexp:Span...] result3 = regexp:findAll(re = emailRegex, str = str1, startIndex = 23);
+    io:println(result3 is regexp:Span[]); // @output true
+}
+
+Test-Case: error
+Description: Test assigning the result of `findAll` function to an incompatible type.
+Labels: function-call-expr, regexp, findAll, method-call-expr
+
+import ballerina/lang.regexp;
+
+function errorFunction() {
+    var emailRegex = re `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`;
+    string str1 = "abc@gmail.com and def@gmail.com are emails, but ut@.com is not an email";
+
+    [regexp:Span] _ = emailRegex.findAll(str1, 5); // @error expects a [regexp:Span], but findAll() returns regexp:Span[]
+
+    regexp:Span? _ = emailRegex.findAll(str1, 5); // @error expects a regexp:Span?, but findAll() returns regexp:Span[]
+
+    int _ = emailRegex.findAll(str1); // @error expects a int, but findAll() returns regexp:Span[]
+}
+
+Test-Case: error
+Description: Test missing required parameters for `findAll` method.
+Labels: function-call-expr, regexp, findAll, method-call-expr
+
+import ballerina/lang.regexp;
+
+function errorFunction() {
+    var emailRegex = re `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`;
+    string str1 = "abc@gmail.com and def@gmail.com are emails, but ut@.com is not an email";
+
+    regexp:Span[] _ = emailRegex.findAll(); // @error missing string argument
+    regexp:Span[] _ = regexp:findAll(emailRegex); // @error missing string argument
+    regexp:Span[] _ = regexp:findAll(str = ""); // @error missing required parameter 're' in call to 'findAll()'
+    regexp:Span[] _ = re `abc`.findAll(); // @error missing string argument
+
+}
+
+Test-Case: error
+Description: Test passing invalid parameters to `findAll()` method.
+Labels: function-call-expr, regexp, findAll, method-call-expr
+
+import ballerina/lang.regexp;
+
+function errorFunction() {
+    var emailRegex = re `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`;
+    string str1 = "abcde@gmail.com";
+
+    regexp:Span[] _ = emailRegex.findAll(12); // @error 'string', found 'int'
+    regexp:Span[] _ = emailRegex.findAll("MatchHereAndHere", "5"); // @error 'int', found 'string'
+    regexp:Span[] _ = regexp:findAll(re = "abc", str = "MatchHereAndHere",  startIndex = 2); // @error 'regexp:RegExp', found 'string'
+}
+
+Test-Case: error
+Description: Test passing too many parameters to `findAll()` method.
+Labels: function-call-expr, regexp, findAll, method-call-expr
+
+import ballerina/lang.regexp;
+
+function errorFunction() {
+    var regExpr1 = re `Here`;
+
+    regexp:Span[]? _ = regExpr1.findAll("MatchHereAndHere", 5, 1); // @error too many arguments
+}
