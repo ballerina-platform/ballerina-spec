@@ -182,7 +182,7 @@ public enum SortDirection {
 public type OrderedType ()|boolean|int|float|decimal|string|OrderedType[];
 
 # Sorts an array.
-# If the member type of the array is not sorted, then the `key` function
+# If the member type of the array is not ordered, then the `key` function
 # must be specified.
 # Sorting works the same as with the `sort` clause of query expressions.
 #
