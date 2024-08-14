@@ -26,6 +26,7 @@ numbers for all other levels.
   <xsl:copy>
     <xsl:copy-of select="@*"/>
     <xsl:apply-templates select="node()"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link  rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:100,100i,300,300i,400,400i,500,500i,700,700i,900,900i&amp;display=swap"/> 
     <link rel="stylesheet" href="style/ballerina-language-specification.css"/>  
     <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
