@@ -25,17 +25,17 @@ numbers for all other levels.
 <xsl:template match="head" priority="1">
   <xsl:copy>
     <xsl:copy-of select="@*"/>
-    <xsl:apply-templates select="title"/>
-    <xsl:element name="meta">
-      <xsl:attribute name="name">viewport</xsl:attribute>
-      <xsl:attribute name="content">width=device-width, initial-scale=1.0</xsl:attribute>
-    </xsl:element>
-    <xsl:apply-templates select="meta[not(@name='viewport')]"/>
-    <link  rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:100,100i,300,300i,400,400i,500,500i,700,700i,900,900i&amp;display=swap"/> 
-    <link rel="stylesheet" href="style/ballerina-language-specification.css"/> 
+    <xsl:apply-templates select="meta[not(@name='viewport')] | *[not(self::meta)]"/>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:100,100i,300,300i,400,400i,500,500i,700,700i,900,900i&amp;display=swap"/> 
+    <link rel="stylesheet" href="style/ballerina-language-specification.css"/>  
     <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
-    <script src="style/ballerina-language-specification.js" ></script>
+    <script src="style/ballerina-language-specification.js"></script>
   </xsl:copy>
+</xsl:template>
+
+<xsl:template match="meta[@charset]">
+  <xsl:copy-of select="."/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
 </xsl:template>
 
 <xsl:template match="pre[@class='grammar']/dfn" priority="1">
