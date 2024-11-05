@@ -6,7 +6,7 @@
 - Created date
     - 2021-11-04
 - Issue
-    - [1321](https://github.com/ballerina-platform/ballerina-spec/issues/1321)
+    - [1322](https://github.com/ballerina-platform/ballerina-spec/issues/1322)
 - State
     - Submitted
 
@@ -15,7 +15,7 @@ This proposal introduces contextual logging support in the `ballerina/log` packa
 
 Additionally, this proposal makes loggers explicit constructs in the API, allowing developers to create custom loggers with unique configurations, such as different log levels, formats, or destinations for specialized needs like audits or metrics.
 
-Please add any comments to issue [#1321](https://github.com/ballerina-platform/ballerina-spec/issues/1321
+Please add any comments to issue [#1322](https://github.com/ballerina-platform/ballerina-spec/issues/1322
 ).
 
 ## Goals,
@@ -72,14 +72,14 @@ destinations = ["stderr", "./logs/app.log"]
 keyValues = {env = "prod", nodeId = "delivery-svc-001"}
 ```
 
-The current ‘ballerina/log’ module has an implicit root logger, which we configure using the above configurable variables. Conceptually, functions such as `log:printInfo()` use the root logger underneath the log. The following section describes a way to make loggers explicit in the API. 
+The current `ballerina/log` module has an implicit root logger, which we configure using the above configurable variables. Conceptually, functions such as `log:printInfo()` use the root logger underneath. The following section describes a way to make loggers explicit in the API. 
 
 ### Loggers
-Loggers are a fundamental concept in almost every log library on this planet. Loggers define the front end of a log library that developers interact with. This proposal makes Loggers an explicit construct in the `ballerina/log` module by allowing developers to create new loggers, child loggers from a parent, etc.  
+Loggers are a fundamental concept in almost every log library on this planet. Loggers define the front end of a log library that developers interact with. This proposal makes Loggers an explicit construct in the `ballerina/log` API by allowing developers to create new loggers, child loggers from a parent.  
 
 A logger can be configured with a format, a level, a list of destinations, and a default context, enabling developers to isolate general application logs from other special loggers such as audits and metrics. 
 
-The following object type defines the Logger. All print* function signatures are the same as the top-level print* functions in the current log module. 
+The following object type defines the Logger. All print* function signatures are the same as the top-level print* functions in the current log API. 
 
 ```ballerina
 public type Logger isolated object {
@@ -95,7 +95,7 @@ public type Logger isolated object {
 ```
 
 #### Root logger 
-The root logger is created automatically when the Ballerina program starts and is always present. It can be configured via configurable variables defined in the `ballerina/log` module. Since it’s the ancestor of all other loggers, any configurable applied to the root logger can affect all child loggers unless they are specifically overridden.
+The root logger is created automatically when the Ballerina program starts and is always present. It can be configured via configurable variables defined in the `ballerina/log` module. Since it’s the ancestor of all other loggers, any configurables applied to the root logger can affect all child loggers unless they are specifically overridden.
 
 The following proposed function allows you to access the root logger instance. 
 
@@ -106,8 +106,8 @@ public isolated function root() returns Logger {
 
 #### Child loggers 
 This proposal describes two ways to create child loggers: 
-The everyday use case is to create a child logger with just additional context (key-value pairs). 
-Some applications require loggers with unique logging configurations. For example, audit logs might need a different format or a destination.
+- The everyday use case is to create a child logger with just additional context (key-value pairs). 
+- Some applications require loggers with unique logging configurations. For example, audit logs might need a different format or a destination.
 
 Thia approach lets developers choose between context-enhanced child loggers and loggers with custom configurations for distinct logging needs. 
 
