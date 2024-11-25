@@ -140,7 +140,7 @@ function init() {
 Test-Case: output
 Description: Test xml-optional-attribute-access-expr when xml-attribute-name is an identifier and
              expression is a xml-step-expr.
-Labels: local-init-var-decl-stmt, string, xml, xml-filter-expr, xml-qualified-name, xml-optional-attribute-access-expr, xml-step-expr
+Labels: checking-expr, checkpanic, local-init-var-decl-stmt, string, xml, xml-filter-expr, xml-qualified-name, xml-optional-attribute-access-expr, xml-step-expr
 
 function init() {
     xml x = xml `<messages>
@@ -184,11 +184,14 @@ function init() {
     io:println(x/*.<pen>/<color>?.id); // @output 21
     io:println(x/<*>.<planner>/<kind>?.id); // @output 14
     io:println(x/<*>.<pen>/<color>?.id); // @output 21
-    io:println(x/**/<items>/<book>[0]/<author>/<name>/<Date>?.id); // @output 12
-    io:println(x/**/<items>/<book>[1]?.id); // @output 20
-    io:println(x/**/<items>/<planner>/<kind>?.id); // @output 14
-    io:println(x/**/<items>/<pen>/<color>?.id); // @output 21
-    io:println(x/**/<items>/<book>[0]/<author>/<name>/<Date>?.id); // @output 12
+    io:println(x/**/<book>[0]/<author>/<name>/<Date>?.id); // @output 12
+    io:println(x/**/<book>[1]?.id); // @output 20
+    io:println(x/**/<planner>/<kind>?.id); // @output 14
+    io:println(x/**/<pen>/<color>?.id); // @output 21
+    io:println(x/**/<book>[0]/<author>/<name>/<Date>?.id); // @output 12
+    io:println((checkpanic (x/**/<items>/<planner>/<kind>?.id)).toBalString()); // @output ()
+    io:println((checkpanic (x/**/<items>/<pen>/<color>?.id)).toBalString()); // @output ()
+    io:println((checkpanic (x/**/<items>/<book>[0]/<author>/<name>/<Date>?.id)).toBalString()); // @output ()
 }
 
 Test-Case: output
@@ -348,11 +351,11 @@ function init() {
     io:println(x/*.<pen>/<color>?.ns:id); // @output 21
     io:println(x/<*>.<planner>/<kind>?.ns:id); // @output 14
     io:println(x/<*>.<pen>/<color>?.ns:id); // @output 21
-    io:println(x/**/<items>/<book>[0]/<author>/<name>/<Date>?.ns:id); // @output 12
-    io:println(x/**/<items>/<book>[1]?.id); // @output 20
-    io:println(x/**/<items>/<planner>/<kind>?.ns:id); // @output 14
-    io:println(x/**/<items>/<pen>/<color>?.ns:id); // @output 21
-    io:println(x/**/<items>/<book>[0]/<author>/<name>/<Date>?.ns:id); // @output 12
+    io:println(x/**/<book>[0]/<author>/<name>/<Date>?.ns:id); // @output 12
+    io:println(x/**/<book>[1]?.id); // @output 20
+    io:println(x/**/<planner>/<kind>?.ns:id); // @output 14
+    io:println(x/**/<pen>/<color>?.ns:id); // @output 21
+    io:println(x/**/<book>[0]/<author>/<name>/<Date>?.ns:id); // @output 12
 }
 
 Test-Case: output
@@ -520,14 +523,14 @@ function init() {
     io:println(x/<*>.<planner>/<kind>?.idx == ()); // @output true
     io:println(x/<*>.<pen>/<color>?.id); // @output 21
     io:println(x/<*>.<pen>/<color>?.idx == ()); // @output true
-    io:println(x/**/<items>/<book>[0]/<author>/<name>/<Date>?.id); // @output 12
-    io:println(x/**/<items>/<book>[0]/<author>/<name>/<Date>?.idx == ()); // @output true
-    io:println(x/**/<items>/<book>[1]?.id); // @output 20
-    io:println(x/**/<items>/<book>[1]?.idx == ()); // @output true
-    io:println(x/**/<items>/<planner>/<kind>?.id); // @output 14
-    io:println(x/**/<items>/<planner>/<kind>?.idx == ()); // @output true
-    io:println(x/**/<items>/<pen>/<color>?.id); // @output 21
-    io:println(x/**/<items>/<pen>/<color>?.idx == ()); // @output true
+    io:println(x.<items>/<book>[0]/<author>/<name>/<Date>?.id); // @output 12
+    io:println(x.<items>/<book>[0]/<author>/<name>/<Date>?.idx == ()); // @output true
+    io:println(x.<items>/<book>[1]?.id); // @output 20
+    io:println(x.<items>/<book>[1]?.idx == ()); // @output true
+    io:println(x.<items>/<planner>/<kind>?.id); // @output 14
+    io:println(x.<items>/<planner>/<kind>?.idx == ()); // @output true
+    io:println(x.<items>/<pen>/<color>?.id); // @output 21
+    io:println(x.<items>/<pen>/<color>?.idx == ()); // @output true
 }
 
 Test-Case: output
