@@ -751,7 +751,7 @@ function init() {
     io:println(seq[3] is xml:Element); // @output true
 
     xml:Comment comment = xml `<!--Comment-->`;
-    xml:Comment commentMem = comment[0];
+    xml:Comment|xml<never> commentMem = comment[0];
     io:println(commentMem); // @output <!--Comment-->
     io:println(comment[0] is xml:Comment); // @output true
 
@@ -761,7 +761,7 @@ function init() {
     io:println(ele2[0] is xml:Text); // @output true
 
     XmlType2 com = xml `<!--Comment1-->`;
-    xml:Comment comMem = com[0];
+    xml:Comment|xml<never> comMem = com[0];
     io:println(comMem); // @output <!--Comment1-->
     io:println(com[0] is xml:Comment); // @output true
 }
@@ -769,7 +769,6 @@ function init() {
 Test-Case: output
 Description: Test the static type of member access expression when static type of the container expression is
              a subtype of xml<M>.
-Fail-Issue: ballerina-platform/ballerina-lang#35019
 Labels: is-expr, member-access-expr, module-type-defn, union-type, xml, xml:Comment, xml:Element,
         xml:ProcessingInstruction, xml:Text, xml-template-expr, xml-type-parameter
 
@@ -777,19 +776,24 @@ type XmlType1 xml<xml:Element|xml:ProcessingInstruction>;
 
 function init() {
     xml<xml:Comment> xml1 = xml `<!--Comment1--><!--Comment2-->`;
-    xml:Comment mem1 = xml1[1];
+    xml:Comment|xml<never> mem1 = xml1[1];
+    io:println(mem1); // @output <!--Comment2-->
 
     xml<xml:ProcessingInstruction> xml2 = xml `<?xml-stylesheet type="text/xsl" href="style.xsl"?>`;
-    xml:ProcessingInstruction mem2 = xml2[0];
+    xml:ProcessingInstruction|xml<never> mem2 = xml2[0];
+    io:println(mem2); // @output <?xml-stylesheet type="text/xsl" href="style.xsl"?>
 
     xml<xml:Element> xml3 = xml `<name>Sherlock Holmes</name><name>Enid Blyton</name>`;
-    xml:Element mem3 = xml3[1];
+    xml:Element|xml<never> mem3 = xml3[1];
+    io:println(mem3); // @output <name>Enid Blyton</name>
 
     XmlType1 xml4 = xml `<name>Enid Blyton</name><name>Dan Brown</name>`;
-    xml:Element|xml:ProcessingInstruction mem4 = xml4[1];
+    xml:Element|xml:ProcessingInstruction|xml<never> mem4 = xml4[1];
+    io:println(mem4); // @output <name>Dan Brown</name>
 
     xml<xml:Element|xml:Comment|xml:Text> xml5 = xml `<name>Enid Blyton</name><name>Dan Brown</name>`;
     xml:Element|xml:Comment|xml:Text mem5 = xml5[0];
+    io:println(mem5); // @output <name>Enid Blyton</name>
 }
 
 Test-Case: error
@@ -798,7 +802,28 @@ Labels: member-access-expr, string, xml, xml-template-expr
 
 function errorFunction() {
     xml e = xml `<name>Enid Blyton</name><name>Dan Brown</name>`;
-    string _ = e[1]; // @error @error expected string, found xml
+    string _ = e[1]; // @error expected string, found xml
+    xml:Element|xml:Comment|xml:ProcessingInstruction _ = e[2]; // @error expected string, found xml
+}
+
+Test-Case: error
+Description: Test assigning result of member access expression to an invalid type, when the static type of 
+             the container expression is a subtype of xml<M>.
+Labels: member-access-expr, string, xml, xml:Comment, xml:Element, xml:ProcessingInstruction, 
+        xml:Text, xml-template-expr, xml-type-parameter
+
+function errorFunction() {
+    xml<xml:Element> e = xml `<name>Enid Blyton</name><name>Dan Brown</name>`;
+    xml:Element _ = e[1]; // @error expected xml:Element, found xml:Element|xml<never>
+
+    xml<xml:Comment> c = xml `<!--comments!-->`;
+    xml:Comment _ = c[1]; // @error expected xml:Comment, found xml:Comment|xml<never>
+
+    xml<xml:ProcessingInstruction> p = xml `<?pi 1?><?pi 2?><?pi 3?>`;
+    xml:ProcessingInstruction _ = p[0]; // @error expected xml:ProcessingInstruction, found xml:ProcessingInstruction|xml<never>
+
+    xml<xml:Element|xml:Text|xml:Comment> s = xml `<elem/><!--comment-->`;
+    xml:Comment|xml:Text _ = s[0]; // @error expected xml:Comment|xml:Text, found xml:Element|xml:Text|xml:Comment
 }
 
 Test-Case: output
