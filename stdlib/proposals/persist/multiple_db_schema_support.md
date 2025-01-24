@@ -151,7 +151,7 @@ type EmployeeUser record {|
 
 ### Why not use the `@sql:Name` annotation to specify the schema?
 
-The `@sql:Name` annotation is used to specify the name of both the table and the column in the database. The schema is a part of the table name in the database and it is a grouping of tables in the database. So it is not a good idea to use the `@sql:Name` annotation to specify the schema. The `@sql:Name` annotation should be used to specify the name of the table and the column in the database.
+The `@sql:Name` annotation is used to specify the name of both the table and the column in the database. The schema is not a part of the table name in the database and it is a grouping of tables in the database. So it is not a good idea to use the `@sql:Name` annotation to specify the schema. The `@sql:Name` annotation should be used to specify the name of the table and the column in the database.
 
 ### Limitations
 
