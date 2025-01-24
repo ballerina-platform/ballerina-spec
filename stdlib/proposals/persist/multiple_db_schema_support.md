@@ -49,7 +49,7 @@ type Patient record {|
     string address;
     string phoneNumber;
     Gender gender;
-	Appointment[] appointment;
+    Appointment[] appointment;
 |};
 ```
 
