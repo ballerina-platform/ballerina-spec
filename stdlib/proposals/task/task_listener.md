@@ -1,14 +1,15 @@
 # Listener support for ballerina/task
+
 - Authors
   - Tharmigan Krishnananthalingam
 - Reviewed by
-    - TBD
+  - TBD
 - Created date
-    - 2025-01-30
+  - 2025-01-30
 - Issue
-    - [1329](https://github.com/ballerina-platform/ballerina-spec/issues/1329)
+  - [1329](https://github.com/ballerina-platform/ballerina-spec/issues/1329)
 - State
-    - Submitted
+  - Submitted
 
 ## Summary
 
@@ -22,7 +23,6 @@ The Ballerina Task package provides APIs to create, schedule, and manage jobs. T
 
 ## Non-Goals
 
-- Make the job ID in the service optional. If not provided, the job implemented by that service cannot be managed.
 - Implement a compiler plugin to validate job IDs in task services or provide code actions for onTrigger function implementation.
 - Enable job-level schedule configuration via annotations.
 
@@ -79,7 +79,7 @@ The `onTrigger` function executes when the scheduled trigger fires.
 
 #### Configuration
 
-The task listener requires a schedule (one-time or recurring) and supports worker pool configurations:
+The task listener requires a schedule configuration (one-time or recurring) and supports an optional worker pool:
 
 ```ballerina
 # Listener configuration.
@@ -88,7 +88,7 @@ The task listener requires a schedule (one-time or recurring) and supports worke
 # + workerPool - The worker pool configuration for the listener
 public type ListenerConfiguration record {|
     OneTimeConfiguration|RecurringConfiguration schedule;
-    WorkerPoolConfiguration workerPool = {};
+    WorkerPoolConfiguration? workerPool;
 |};
 
 # Recurring schedule configuration.
@@ -126,27 +126,50 @@ public type WorkerPoolConfiguration record {|
 |};
 ```
 
+If no worker pool is provided, the listener uses a global scheduler with the following configuration:
+
+```ballerina
+# Worker count for the global schedular
+public configurable int globalSchedularWorkerCount = 5;
+
+# Waiting time for the global schedular
+public configurable time:Seconds globalSchedularWaitingTime = 5;
+```
+
+> **Note:** If a worker pool is specified, the listener creates a new scheduler; otherwise, it uses
+> the global scheduler.
+
 #### Listener APIs
 
 The task listener provides the following APIs:
 
 - Lifecycle Management
-   - `start`: Starts the task listener.
-   - `gracefulStop`: Stops the task listener gracefully.
-   - `immediateStop`: Stops the task listener immediately.
-   - `attach`/`schedule`: Attaches/Schedules a task service to the task listener.
-   - `detach`/`unschedule`: Detaches/Unschedules a task service from the task listener.
+  - `start()`: Starts the task listener.
+  - `gracefulStop()`: Stops the task listener gracefully.
+  - `immediateStop()`: Stops the task listener immediately.
+  - `attach(service)`/`scheduleJob(service)`: Attaches/Schedules a task service to the task listener.
+  - `detach(service)`/`unscheduleJob(service)`: Detaches/Unschedules a task service from the task listener.
 
 - Job Management
-   - `pauseAllJobs`: Pauses all the jobs.
-   - `resumeAllJobs`: Resumes all the jobs.
-   - `pauseJob`: Pauses a specific job.
-   - `resumeJob`: Resumes a specific job.
-   - `getRunningJobs`: Returns the list of running job ids.
+  - `pauseAllJobs()`: Pauses all the jobs.
+  - `resumeAllJobs()`: Resumes all the jobs.
+  - `pauseJob(id)`: Pauses a specific job.
+  - `resumeJob(id)`: Resumes a specific job.
+  - `getRunningJobs()`: Returns the list of running job ids.
 
 ### Service implementation
 
-Each task service should have a unique task ID for job management.
+Each task service should have a unique task ID for job management, specified in the service declaration as an attachment point. The service must also implement the `onTrigger` remote function, which defines the job's execution logic.
+
+```ballerina
+service "job-1" on taskListener {
+    remote function onTrigger() returns error? {
+        // Job implementation
+    }
+}
+```
+
+> **Note:** If a job is implemented without an ID, the listener generates a unique one. However, this prevents explicit job management, making it difficult to track individual jobs when multiple are running.
 
 ### Example
 
