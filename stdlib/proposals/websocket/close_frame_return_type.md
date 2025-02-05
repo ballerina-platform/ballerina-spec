@@ -1,6 +1,6 @@
 # Close frame retun type support for ballerina/websocket
 - Authors
-  - Mohamed Sabthar, Ayesh Almeida
+  - Mohamed Sabthar, Ayesh Almeida, Chathushka Ayash
 - Reviewed by
     - Bhashinee Nirmali, 
 - Created date
@@ -87,8 +87,153 @@ public type NormalClosure record {|
 public final readonly & NormalClosure NORMAL_CLOSURE = {};
 ```
 
-2. - 16. // TODO: Add the ballerina record mapping
+2. Going Away - 1001
 
+```ballerina
+public const GOING_AWAY_STATUS_CODE = 1001;
+
+public readonly distinct class GoingAwayStatus {
+    *Status;
+    public int code = GOING_AWAY_STATUS_CODE;
+}
+
+public final GoingAwayStatus GOING_AWAY_STATUS_OBJ = new;
+
+public type GoingAway record {|
+    *CloseFrame;
+    readonly GoingAwayStatus status = GOING_AWAY_STATUS_OBJ;
+|};
+
+public final readonly & GoingAway GOING_AWAY = {};
+```
+
+3. Protocol Error - 1002
+
+```ballerina
+public const PROTOCOL_ERROR_STATUS_CODE = 1002;
+
+public readonly distinct class ProtocolErrorStatus {
+    *Status;
+    public int code = PROTOCOL_ERROR_STATUS_CODE;
+}
+
+public final ProtocolErrorStatus PROTOCOL_ERROR_STATUS_OBJ = new;
+
+public type ProtocolError record {|
+    *CloseFrame;
+    readonly ProtocolErrorStatus status = PROTOCOL_ERROR_STATUS_OBJ;
+    string reason = "Connection closed due to protocol error.";
+|};
+
+public final readonly & ProtocolError PROTOCOL_ERROR = {};
+```
+
+4. Unsupported Data - 1003
+
+```ballerina
+public const UNSUPPORTED_DATA_STATUS_CODE = 1003;
+
+public readonly distinct class UnsupportedDataStatus {
+    *Status;
+    public int code = UNSUPPORTED_DATA_STATUS_CODE;
+}
+
+public final UnsupportedDataStatus UNSUPPORTED_DATA_STATUS_OBJ = new;
+
+public type UnsupportedData record {|
+    *CloseFrame;
+    readonly UnsupportedDataStatus status = UNSUPPORTED_DATA_STATUS_OBJ;
+    string reason = "Endpoint received unsupported frame.";
+|};
+
+public final readonly & UnsupportedData UNSUPPORTED_DATA = {};
+```
+
+> **Note:** We already support sending `error: data binding failed: {ballerina}ConversionError: Status code: 1003` when a data binding failure occurs.
+
+5. Invalid Payload - 1007
+
+```ballerina
+public const INVALID_PAYLOAD_STATUS_CODE = 1007;
+
+public readonly distinct class InvalidPayloadStatus {
+    *Status;
+    public int code = INVALID_PAYLOAD_STATUS_CODE;
+}
+
+public final InvalidPayloadStatus INVALID_PAYLOAD_STATUS_OBJ = new;
+
+public type InvalidPayload record {|
+    *CloseFrame;
+    readonly InvalidPayloadStatus status = INVALID_PAYLOAD_STATUS_OBJ;
+    string reason = "Payload does not match the expected format or encoding.";
+|};
+
+public final readonly & InvalidPayload INVALID_PAYLOAD = {};
+```
+
+6. Policy Violation - 1008
+
+```ballerina
+public const POLICY_VIOLATION_STATUS_CODE = 1008;
+
+public readonly distinct class PolicyViolationStatus {
+    *Status;
+    public int code = POLICY_VIOLATION_STATUS_CODE;
+}
+
+public final PolicyViolationStatus POLICY_VIOLATION_STATUS_OBJ = new;
+
+public type PolicyViolation record {|
+    *CloseFrame;
+    readonly PolicyViolationStatus status = POLICY_VIOLATION_STATUS_OBJ;
+    string reason = "Received message violates its policy.";
+|};
+
+public final readonly & PolicyViolation POLICY_VIOLATION = {};
+```
+
+7. Message Too Big - 1009
+
+```ballerina
+public const MESSAGE_TOO_BIG_STATUS_CODE = 1009;
+
+public readonly distinct class MessageTooBigStatus {
+    *Status;
+    public int code = MESSAGE_TOO_BIG_STATUS_CODE;
+}
+
+public final MessageTooBigStatus MESSAGE_TOO_BIG_STATUS_OBJ = new;
+
+public type MessageTooBig record {|
+    *CloseFrame;
+    readonly MessageTooBigStatus status = MESSAGE_TOO_BIG_STATUS_OBJ;
+    string reason = "The received message exceeds the allowed size limit.";
+|};
+
+public final readonly & MessageTooBig MESSAGE_TOO_BIG = {};
+```
+
+8. Internal Server Error - 1011
+
+```ballerina
+public const INTERNAL_SERVER_ERROR_STATUS_CODE = 1011;
+
+public readonly distinct class InternalServerErrorStatus {
+    *Status;
+    public int code = INTERNAL_SERVER_ERROR_STATUS_CODE;
+}
+
+public final InternalServerErrorStatus INTERNAL_SERVER_ERROR_STATUS_OBJ = new;
+
+public type InternalServerError record {|
+    *CloseFrame;
+    readonly InternalServerErrorStatus status = INTERNAL_SERVER_ERROR_STATUS_OBJ;
+    string reason = "Internal server error occurred.";
+|};
+
+public final readonly & InternalServerError INTERNAL_SERVER_ERROR = {};
+```
 
 ### Service Implementation with Close Frame Types
 Utilizing the new close frame return types, the service code can be refactored as follows:
