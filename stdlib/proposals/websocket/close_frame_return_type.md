@@ -65,7 +65,7 @@ type CloseFrame record {|
 |};
 ```
 
-The status code of the close frame can vary between the range of 1000 to 4999. However, there are 16 commonly used status codes for which we are proposing the following predefined status code records in the WebSocket module. These can be directly inferred and used by the user.
+The status code of the close frame can vary between the range of 1000 to 4999. However, there are 8 commonly used status codes for which we are proposing the following predefined status code records in the WebSocket module. These can be directly inferred and used by the user.
 
 1. Normal Closure - 1000
 
