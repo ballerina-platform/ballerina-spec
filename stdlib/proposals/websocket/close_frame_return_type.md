@@ -6,7 +6,7 @@
 - Created date
     - 2025-01-31
 - Issue
-    - TODO
+    - [#1333](https://github.com/ballerina-platform/ballerina-spec/issues/1333)
 - State
     - Submitted
 
