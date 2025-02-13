@@ -1,4 +1,4 @@
-# Auto-verify of subscriptions in Ballerina WebSubHub
+# Auto-verify subscriptions in Ballerina WebSubHub
 
 - Authors
   - Ayesh Almeida
