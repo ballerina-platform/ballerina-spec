@@ -73,7 +73,7 @@ Along with the configuration for `websubhub:ServiceConfig` the developer needs t
 * If `autoVerifySubscription` is enabled in `websubhub:ServiceConfig` and the developer marks the subscription as auto-verifiable, the hub skips the subscription intent verification step.  
 * If `autoVerifySubscription` is disabled and the developer marks the subscription as auto-verifiable, the hub follows the standard challenge-response verification process.
 * If `autoVerifySubscription` is enabled and the subscription is not explicitly marked as auto-verifiable, the hub follows the standard challenge-response verification process.
-* If `autoVerifySubscription` is disabled or the subscription is not explicitly marked as auto-verifiable, the hub follows the standard challenge-response verification process.
+* If `autoVerifySubscription` is disabled and the subscription is not explicitly marked as auto-verifiable, the hub follows the standard challenge-response verification process.
 
 #### Reference Implementation
 
