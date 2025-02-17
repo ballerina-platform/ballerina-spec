@@ -64,7 +64,7 @@ Along with the configuration for `websubhub:ServiceConfig` the developer needs t
     public type Controller client object {
 
         # Marks a specific subscription or unsubscription request as verified, bypassing the standard challenge-response verification process. 
-        public function markAsVerified(websubhub:Subscription|websubhub:Unsubscription subscription) returns error?;
+        public function markAsVerified(websubhub:Subscription|websubhub:Unsubscription subscription) returns websubhub:Error?;
     };
 ```
 
