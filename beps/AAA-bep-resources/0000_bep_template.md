@@ -1,11 +1,11 @@
 # NNNN: Your short, descriptive title
 
-- Authors - <author's name>
+- Authors - <authors name>
 - Reviewed by - <list of all the members who reviewed the proposal> 
 - Created date - <proposal creation date>
 - Updated date - <proposal last updated date>
 - Issue - <link to the issue>
-- State - <Submitted/Accepted/Rejected/Implemented/Deferred>
+- State - <state of the proposal>
 
 ## Summary
 // Provide a short summary of the proposal.
