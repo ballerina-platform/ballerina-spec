@@ -3,7 +3,7 @@
 - Authors
   - Ayesh Almeida
 - Reviewed by
-  - Shafreen Anfar, Danesh Kuruppu
+  - Shafreen Anfar, Danesh Kuruppu, Maryam Ziyad
 - Created date
   - 2025-02-13
 - Issue
