@@ -74,8 +74,7 @@ an optional parameter to the `onSubscription` and `onUnsubscription` remote meth
 
 * If `autoVerifySubscription` is enabled in `websubhub:ServiceConfig` and the developer marks the subscription as verified, the hub skips the subscription intent verification step.  
 * If `autoVerifySubscription` is disabled and the developer marks the subscription as verfied, the `websubhub:Controller` will throw and error saying marking subscription as 
-verified but the configuration has not been turned-on. As `websubhub:Controller` is only available as a parameter to `onSubscription` and `onUnsubsription` methods, this error will 
-translate back as an error response to the subscriber.
+verified but the configuration has not been turned-on. Since `websubhub:Controller` is only available as a parameter in the `onSubscription` and `onUnsubscription` methods, this error will be returned as an error response to the subscriber.
 * If `autoVerifySubscription` is enabled and the subscription is not explicitly marked as verified, the hub follows the standard challenge-response verification process.
 * If `autoVerifySubscription` is disabled and the subscription is not explicitly marked as verified, the hub follows the standard challenge-response verification process.
 
