@@ -69,7 +69,7 @@ In addition to the `websubhub:ServiceConfig` configuration, developers need a me
     };
 ```
 
-> **Note: The `websubhub:Controller` will be available only as an optional parameter in the `onSubscription` and `onUnsubscription` remote methods of the `websubhub:Service`.**
+> Note: The `websubhub:Controller` will be available only as an optional parameter in the `onSubscription` and `onUnsubscription` remote methods of the `websubhub:Service`.
 
 ### Behavior
 
