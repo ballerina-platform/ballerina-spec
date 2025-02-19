@@ -59,8 +59,7 @@ An annotation field, which will be set to `false` by default, will be added to t
 
 ### `websubhub:Controller` parameter
 
-Along with the configuration for `websubhub:ServiceConfig` the developer needs to have a way to mark specific subscription/unsubscription as verified. For that we need to introduce 
-an optional parameter to the `onSubscription` and `onUnsubscription` remote methods of the `websubhub:Service`.
+In addition to the `websubhub:ServiceConfig` configuration, developers need a mechanism to mark specific subscriptions and unsubscriptions as verified. To address this, we are introducing a new Ballerina object type, `websubhub:Controller`.
 
 ```ballerina
     public type Controller client object {
@@ -69,6 +68,8 @@ an optional parameter to the `onSubscription` and `onUnsubscription` remote meth
         public function markAsVerified(websubhub:Subscription|websubhub:Unsubscription subscription) returns websubhub:Error?;
     };
 ```
+
+> **Note: The `websubhub:Controller` will be available only as an optional parameter in the `onSubscription` and `onUnsubscription` remote methods of the `websubhub:Service`.**
 
 ### Behavior
 
