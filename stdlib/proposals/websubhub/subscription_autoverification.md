@@ -48,7 +48,7 @@ This proposal introduces two levels of validation to enable subscription auto-ve
 
 ### Service-level configuration
 
-An optional boolean configuration parameter will be added to the `@websubhub:ServiceConfig` annotation:
+An annotation field, which will be set to `false` by default, will be added to the `@websubhub:ServiceConfig` annotation:
 
 ```ballerina
     @websubhub:ServiceConfig { 
@@ -88,19 +88,19 @@ A sample implementation in a WebSubHub service:
         autoVerifySubscription: true 
     }
     service /hub on new websubhub:Listener(9090) {
-        // implement the other required remote methods
+        // Implement the other required remote methods
 
         remote function onSubscription(websubhub:Subscription msg, websubhub:Controller hubController) 
             returns websubhub:SubscriptionAccepted|error {
         
-            // perform the authn/authz operation
+            // Perform the authn/authz operation
             check hubController.markAsVerified(msg);
         }
 
         remote function onUnsubscription(websubhub:Unsubscription msg, websubhub:Controller hubController) 
             returns websubhub:UnsubscriptionAccepted|error {
         
-            // perform the authn/authz operation
+            // Perform the authn/authz operation
             check hubController.markAsVerified(msg);
         }
     }
