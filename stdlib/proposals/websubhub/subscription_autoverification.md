@@ -59,7 +59,8 @@ An optional boolean configuration parameter will be added to the `@websubhub:Ser
 
 ### `websubhub:Controller` parameter
 
-Along with the configuration for `websubhub:ServiceConfig` the developer needs to have a way to mark specific subscription/unsubscription as auto-verifiable. For that we need to introduce an optional parameter to the `onSubscription` and `onUnsubscription` remote methods of the `websubhub:Service`.
+Along with the configuration for `websubhub:ServiceConfig` the developer needs to have a way to mark specific subscription/unsubscription as verified. For that we need to introduce 
+an optional parameter to the `onSubscription` and `onUnsubscription` remote methods of the `websubhub:Service`.
 
 ```ballerina
     public type Controller client object {
@@ -71,10 +72,12 @@ Along with the configuration for `websubhub:ServiceConfig` the developer needs t
 
 ### Behavior
 
-* If `autoVerifySubscription` is enabled in `websubhub:ServiceConfig` and the developer marks the subscription as auto-verifiable, the hub skips the subscription intent verification step.  
-* If `autoVerifySubscription` is disabled and the developer marks the subscription as auto-verifiable, the `websubhub:Controller` will throw and error saying marking subscription as auto-verifiable but the configuration has not been turned-on.
-* If `autoVerifySubscription` is enabled and the subscription is not explicitly marked as auto-verifiable, the hub follows the standard challenge-response verification process.
-* If `autoVerifySubscription` is disabled and the subscription is not explicitly marked as auto-verifiable, the hub follows the standard challenge-response verification process.
+* If `autoVerifySubscription` is enabled in `websubhub:ServiceConfig` and the developer marks the subscription as verified, the hub skips the subscription intent verification step.  
+* If `autoVerifySubscription` is disabled and the developer marks the subscription as verfied, the `websubhub:Controller` will throw and error saying marking subscription as 
+verified but the configuration has not been turned-on. As `websubhub:Controller` is only available as a parameter to `onSubscription` and `onUnsubsription` methods, this error will 
+translate back as an error response to the subscriber.
+* If `autoVerifySubscription` is enabled and the subscription is not explicitly marked as verified, the hub follows the standard challenge-response verification process.
+* If `autoVerifySubscription` is disabled and the subscription is not explicitly marked as verified, the hub follows the standard challenge-response verification process.
 
 #### Reference Implementation
 
@@ -112,8 +115,8 @@ through a configuration.
 
 ## Risks and Assumptions
 
-* When this configuration is enabled, it is assumed that the developer will integrate some authentication mechanism to authenticate the subscription during the subscription phase.
-* This feature might be a potential violation of the defined WebSub standard, and users should be notified about that in the API documentation.
+- Enabling this configuration assumes that the developer will implement an authentication and authorization mechanism to verify subscription intent during the subscription process.  
+- A WebSub `hub` implementation utilizing this feature may potentially violate the WebSub standard; therefore, users should be informed of this in the API documentation.
 
 ## Dependencies
 
