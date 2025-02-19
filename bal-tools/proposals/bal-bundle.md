@@ -32,7 +32,8 @@ This proposal suggests 2 options that facilitate users for creating/updating a b
 
 #### Manual approach
    
-By creating a package manually using the `bal new <package-name>`, users can add the bundle tool entry as shown in the below example and into the `Ballerina.toml` and add/remove services as needed by updating the values provided for the `options.services` array.
+By creating a package manually using the `bal new <package-name>`, users can add the bundle tool entry into the `Ballerina.toml` as shown in the below example. 
+The users can add/remove services as needed by updating the values provided for the `options.services` array.
 
 ```toml
 [package]
@@ -52,7 +53,7 @@ Alternatively, users can install the tool to create and modify the bundle packag
 $ bal tool install bundle
 ```
 
-##### Creating a new bundle package**
+##### Creating a new bundle package
 ```
 $ bal bundle create --services myorg/svc1,myorg/svc2 [--name <package-name>]
 ```
