@@ -1,4 +1,4 @@
-# Auto-verify subscriptions in Ballerina WebSubHub
+# Automatic subscriptin intent verification in Ballerina WebSubHub
 
 - Authors
   - Ayesh Almeida
@@ -14,8 +14,8 @@
 ## Summary
 
 This proposal introduces an enhancement to the Ballerina `websubhub` library that enables the developer to disable the WebSub 
-subscription verification process for well known or authenticated subscriptions. This proposal introduces a service-level 
-configuration to enable automatic subscription verification and an optional parameter for the `onSubscription` and 
+subscription intent verification process for well known or authenticated subscriptions. This proposal introduces a service-level 
+configuration to enable automatic subscription intent verification and an optional parameter for the `onSubscription` and 
 `onUnsubscription` methods in `websubhub:Service` to mark specific subscriptions as auto-verified. The identification of 
 properly authenticated subscriptions remains the responsibility of the developer implementing the WebSub hub.
 
@@ -25,13 +25,14 @@ properly authenticated subscriptions remains the responsibility of the developer
 
 ## Non-Goals
 
-- This proposal will not change the current behavior of the WebSub hub. It will only introduce an alternate mechanism which the developer can use to disable the current subscription verification process if needed.
+- This proposal will not change the current behavior of the WebSub hub. It will only introduce an alternate mechanism which the developer can use to disable the current subscription 
+intent verification process if needed.
 
 ## Motivation
 
 The subscription intent verification step exists to verify and authenticate the subscription request sent to the hub. However, 
 in some scenarios, a developer may have well-known (and authenticated) subscribers who do not require this additional 
-verification step. This proposal aims to allow developers more control over the subscription verification process by 
+verification step. This proposal aims to allow developers more control over the subscription intent verification process by 
 introducing a configuration in the Ballerina `websubhub` library. This will enable developers to skip the standard subscription 
 intent verification process based on the requirement.
 
@@ -40,7 +41,7 @@ intent verification process based on the requirement.
 This proposal introduces two levels of validation to enable subscription auto-verification in Ballerina WebSubHub:
 
 1. **Service-level configuration** :
-    - Add a new configuration parameter in the `@websubhub:ServiceConfig` annotation that allows enabling or disabling automatic subscription verification at the hub level.
+    - Add a new configuration parameter in the `@websubhub:ServiceConfig` annotation that allows enabling or disabling automatic subscription intent verification at the hub level.
 
 2. **Introduce an optional parameter for `onSubscription` and `onUnsubscription` methods of `websubhub:Service`** :
     - Add a new client object that allows dynamically marking a subscription or unsubscription for auto-verification.
