@@ -2,7 +2,7 @@
 - Authors
   - Mohamed Sabthar, Ayesh Almeida, Chathushka Ayash
 - Reviewed by
-    - Bhashinee Nirmali, 
+    - Bhashinee Nirmali, Tharmigan Krishnananthalingam
 - Created date
     - 2025-01-31
 - Issue
