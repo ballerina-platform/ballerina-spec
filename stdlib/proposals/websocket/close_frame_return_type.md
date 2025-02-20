@@ -52,36 +52,52 @@ By introducing dedicated close frame return types, we can streamline the process
 We propose the introduction of specific record types to represent WebSocket close frames. When a service returns one of these types, the WebSocket module will automatically send the corresponding close frame and terminate the connection. This approach eliminates the need for explicit invocation of the `close()` method and passing of the `caller` parameter.
 
 ### Close Frame Record Design
-Define a base `CloseFrame` record to encapsulate common fields:
 
-```
-public type Status distinct object {
-    public int code; //  Constraint minValue: 1000, maxValue: 4999
-};
+#### Base Close Frame Definition
+Define a `CloseFrameBase` record to encapsulate common fields:
 
-type CloseFrame record {|
-    readonly Status status;
+```ballerina
+type CloseFrameBase record {|
+    readonly object {} 'type;
+    readonly int status;
     string reason?;
 |};
 ```
 
+#### Custom Close Frame
+Allows users to define custom close frames with any status code (1000–4999).
+
+```ballerina
+public readonly distinct class CustomCloseFrameType {
+};
+
+public final CustomCloseFrameType CUSTOM_CLOSE_FRAME = new;
+
+public type CustomCloseFrame record {|
+    *CloseFrameBase;
+    readonly CustomCloseFrameType 'type = CUSTOM_CLOSE_FRAME;
+|};
+```
+#### Predefined Close Frames
+
 The status code of the close frame can vary between the range of 1000 to 4999. However, there are 8 commonly used status codes for which we are proposing the following predefined status code records in the WebSocket module. These can be directly inferred and used by the user.
+
+Predefined close frames extend CloseFrameBase and use PredefinedCloseFrameType.
+
+```ballerina
+public readonly distinct class PredefinedCloseFrameType {
+};
+
+public final PredefinedCloseFrameType PREDEFINED_CLOSE_FRAME = new;
+```
 
 1. Normal Closure - 1000
 
 ```ballerina
-public const NORMAL_CLOSURE_STATUS_CODE = 1000;
-
-public readonly distinct class NormalClosureStatus {
-    *Status;
-    public int code = NORMAL_CLOSURE_STATUS_CODE;
-}
-
-public final NormalClosureStatus NORMAL_CLOSURE_STATUS_OBJ = new;
-
 public type NormalClosure record {|
-    *CloseFrame;
-    readonly NormalClosureStatus status = NORMAL_CLOSURE_STATUS_OBJ;
+    *CloseFrameBase;
+    readonly PredefinedCloseFrameType 'type = PREDEFINED_CLOSE_FRAME;
+    readonly 1000 status = 1000;
 |};
 
 public final readonly & NormalClosure NORMAL_CLOSURE = {};
@@ -90,18 +106,10 @@ public final readonly & NormalClosure NORMAL_CLOSURE = {};
 2. Going Away - 1001
 
 ```ballerina
-public const GOING_AWAY_STATUS_CODE = 1001;
-
-public readonly distinct class GoingAwayStatus {
-    *Status;
-    public int code = GOING_AWAY_STATUS_CODE;
-}
-
-public final GoingAwayStatus GOING_AWAY_STATUS_OBJ = new;
-
 public type GoingAway record {|
-    *CloseFrame;
-    readonly GoingAwayStatus status = GOING_AWAY_STATUS_OBJ;
+    *CloseFrameBase;
+    readonly PredefinedCloseFrameType 'type = PREDEFINED_CLOSE_FRAME;
+    readonly 1001 status = 1001;
 |};
 
 public final readonly & GoingAway GOING_AWAY = {};
@@ -110,19 +118,11 @@ public final readonly & GoingAway GOING_AWAY = {};
 3. Protocol Error - 1002
 
 ```ballerina
-public const PROTOCOL_ERROR_STATUS_CODE = 1002;
-
-public readonly distinct class ProtocolErrorStatus {
-    *Status;
-    public int code = PROTOCOL_ERROR_STATUS_CODE;
-}
-
-public final ProtocolErrorStatus PROTOCOL_ERROR_STATUS_OBJ = new;
-
 public type ProtocolError record {|
-    *CloseFrame;
-    readonly ProtocolErrorStatus status = PROTOCOL_ERROR_STATUS_OBJ;
-    string reason = "Connection closed due to protocol error.";
+    *CloseFrameBase;
+    readonly PredefinedCloseFrameType 'type = PREDEFINED_CLOSE_FRAME;
+    readonly 1002 status = 1002;
+    string reason = "Connection closed due to protocol error";
 |};
 
 public final readonly & ProtocolError PROTOCOL_ERROR = {};
@@ -131,19 +131,11 @@ public final readonly & ProtocolError PROTOCOL_ERROR = {};
 4. Unsupported Data - 1003
 
 ```ballerina
-public const UNSUPPORTED_DATA_STATUS_CODE = 1003;
-
-public readonly distinct class UnsupportedDataStatus {
-    *Status;
-    public int code = UNSUPPORTED_DATA_STATUS_CODE;
-}
-
-public final UnsupportedDataStatus UNSUPPORTED_DATA_STATUS_OBJ = new;
-
 public type UnsupportedData record {|
-    *CloseFrame;
-    readonly UnsupportedDataStatus status = UNSUPPORTED_DATA_STATUS_OBJ;
-    string reason = "Endpoint received unsupported frame.";
+    *CloseFrameBase;
+    readonly PredefinedCloseFrameType 'type = PREDEFINED_CLOSE_FRAME;
+    readonly 1003 status = 1003;
+    string reason = "Endpoint received unsupported frame";
 |};
 
 public final readonly & UnsupportedData UNSUPPORTED_DATA = {};
@@ -154,19 +146,11 @@ public final readonly & UnsupportedData UNSUPPORTED_DATA = {};
 5. Invalid Payload - 1007
 
 ```ballerina
-public const INVALID_PAYLOAD_STATUS_CODE = 1007;
-
-public readonly distinct class InvalidPayloadStatus {
-    *Status;
-    public int code = INVALID_PAYLOAD_STATUS_CODE;
-}
-
-public final InvalidPayloadStatus INVALID_PAYLOAD_STATUS_OBJ = new;
-
 public type InvalidPayload record {|
-    *CloseFrame;
-    readonly InvalidPayloadStatus status = INVALID_PAYLOAD_STATUS_OBJ;
-    string reason = "Payload does not match the expected format or encoding.";
+    *CloseFrameBase;
+    readonly PredefinedCloseFrameType 'type = PREDEFINED_CLOSE_FRAME;
+    readonly 1007 status = 1007;
+    string reason = "Payload does not match the expected format or encoding";
 |};
 
 public final readonly & InvalidPayload INVALID_PAYLOAD = {};
@@ -175,19 +159,11 @@ public final readonly & InvalidPayload INVALID_PAYLOAD = {};
 6. Policy Violation - 1008
 
 ```ballerina
-public const POLICY_VIOLATION_STATUS_CODE = 1008;
-
-public readonly distinct class PolicyViolationStatus {
-    *Status;
-    public int code = POLICY_VIOLATION_STATUS_CODE;
-}
-
-public final PolicyViolationStatus POLICY_VIOLATION_STATUS_OBJ = new;
-
 public type PolicyViolation record {|
-    *CloseFrame;
-    readonly PolicyViolationStatus status = POLICY_VIOLATION_STATUS_OBJ;
-    string reason = "Received message violates its policy.";
+    *CloseFrameBase;
+    readonly PredefinedCloseFrameType 'type = PREDEFINED_CLOSE_FRAME;
+    readonly 1008 status = 1008;
+    string reason = "Received message violates its policy";
 |};
 
 public final readonly & PolicyViolation POLICY_VIOLATION = {};
@@ -196,19 +172,11 @@ public final readonly & PolicyViolation POLICY_VIOLATION = {};
 7. Message Too Big - 1009
 
 ```ballerina
-public const MESSAGE_TOO_BIG_STATUS_CODE = 1009;
-
-public readonly distinct class MessageTooBigStatus {
-    *Status;
-    public int code = MESSAGE_TOO_BIG_STATUS_CODE;
-}
-
-public final MessageTooBigStatus MESSAGE_TOO_BIG_STATUS_OBJ = new;
-
 public type MessageTooBig record {|
-    *CloseFrame;
-    readonly MessageTooBigStatus status = MESSAGE_TOO_BIG_STATUS_OBJ;
-    string reason = "The received message exceeds the allowed size limit.";
+    *CloseFrameBase;
+    readonly PredefinedCloseFrameType 'type = PREDEFINED_CLOSE_FRAME;
+    readonly 1009 status = 1009;
+    string reason = "The received message exceeds the allowed size limit";
 |};
 
 public final readonly & MessageTooBig MESSAGE_TOO_BIG = {};
@@ -217,22 +185,21 @@ public final readonly & MessageTooBig MESSAGE_TOO_BIG = {};
 8. Internal Server Error - 1011
 
 ```ballerina
-public const INTERNAL_SERVER_ERROR_STATUS_CODE = 1011;
-
-public readonly distinct class InternalServerErrorStatus {
-    *Status;
-    public int code = INTERNAL_SERVER_ERROR_STATUS_CODE;
-}
-
-public final InternalServerErrorStatus INTERNAL_SERVER_ERROR_STATUS_OBJ = new;
-
 public type InternalServerError record {|
-    *CloseFrame;
-    readonly InternalServerErrorStatus status = INTERNAL_SERVER_ERROR_STATUS_OBJ;
-    string reason = "Internal server error occurred.";
+    *CloseFrameBase;
+    readonly PredefinedCloseFrameType 'type = PREDEFINED_CLOSE_FRAME;
+    readonly 1011 status = 1011;
+    string reason = "Internal server error occurred";
 |};
 
 public final readonly & InternalServerError INTERNAL_SERVER_ERROR = {};
+```
+
+#### `CloseFrame` Type Definition
+Defines a union type that includes both predefined and custom close frames.
+```ballerina
+public type CloseFrame NormalClosure|GoingAway|ProtocolError|UnsupportedData|
+    InvalidPayload|PolicyViolation|MessageTooBig|InternalServerError|CustomCloseFrame;
 ```
 
 ### Service Implementation with Close Frame Types
@@ -242,7 +209,7 @@ Utilizing the new close frame return types, the service code can be refactored a
 service class MyService {
     *websocket:Service;
 
-    remote function onSubscribe(websocket:Caller caller, types:Subscribe sub) returns types:Response|websocket:NormalClosure {
+    remote function onSubscribe(websocket:Caller caller, types:Subscribe sub) returns types:Response|websocket:CloseFrame {
         // ... omitted for brevity
         return websocket:NORMAL_CLOSURE; // Automatically sends the close frame and closes the connection.
     }
