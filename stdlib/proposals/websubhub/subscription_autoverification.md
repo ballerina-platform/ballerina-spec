@@ -53,7 +53,7 @@ An annotation field, which will be set to `false` by default, will be added to t
 ```ballerina
     @websubhub:ServiceConfig { 
         // other fields
-        autoVerifySubscription: true
+        autoVerifySubscriptionIntent: true
     }
 ```
 
@@ -73,11 +73,11 @@ In addition to the `websubhub:ServiceConfig` configuration, developers need a me
 
 ### Behavior
 
-* If `autoVerifySubscription` is enabled in `websubhub:ServiceConfig` and the developer marks the subscription as verified, the hub skips the subscription intent verification step.  
-* If `autoVerifySubscription` is disabled and the developer marks the subscription as verfied, the `websubhub:Controller` will throw and error saying marking subscription as 
+* If `autoVerifySubscriptionIntent` is enabled in `websubhub:ServiceConfig` and the developer marks the subscription as verified, the hub skips the subscription intent verification step.  
+* If `autoVerifySubscriptionIntent` is disabled and the developer marks the subscription as verfied, the `websubhub:Controller` will throw and error saying marking subscription as 
 verified but the configuration has not been turned-on. Since `websubhub:Controller` is only available as a parameter in the `onSubscription` and `onUnsubscription` methods, this error will be returned as an error response to the subscriber.
-* If `autoVerifySubscription` is enabled and the subscription is not explicitly marked as verified, the hub follows the standard challenge-response verification process.
-* If `autoVerifySubscription` is disabled and the subscription is not explicitly marked as verified, the hub follows the standard challenge-response verification process.
+* If `autoVerifySubscriptionIntent` is enabled and the subscription is not explicitly marked as verified, the hub follows the standard challenge-response verification process.
+* If `autoVerifySubscriptionIntent` is disabled and the subscription is not explicitly marked as verified, the hub follows the standard challenge-response verification process.
 
 #### Reference Implementation
 
@@ -85,7 +85,7 @@ A sample implementation in a WebSubHub service:
 
 ```ballerina
     @websubhub:ServiceConfig { 
-        autoVerifySubscription: true 
+        autoVerifySubscriptionIntent: true 
     }
     service /hub on new websubhub:Listener(9090) {
         // Implement the other required remote methods
@@ -124,5 +124,5 @@ No additional dependencies are introduced. The feature will be built into the `b
 
 ## Testing
 
-- Unit tests will be added to verify the correct behavior when `autoVerifySubscription` is enabled and the subscription has been marked to skip the verification.
+- Unit tests will be added to verify the correct behavior when `autoVerifySubscriptionIntent` is enabled and the subscription has been marked to skip the verification.
 - Integration tests will confirm that the standard verification process remains intact when the flag is `false`.
