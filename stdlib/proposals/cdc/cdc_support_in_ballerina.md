@@ -33,18 +33,18 @@ CDC is a critical component in real-time data integration, benefiting industries
 
 1. **JDBC Polling**
 
-   ✅ Simple, works with standard JDBC drivers.
-   ✅ Compatible with MSSQL native CDC support.
-   ❌ Polling introduces delays in detecting changes.
-   ❌ Adds additional load on the database.
+   ✅ Simple, works with standard JDBC drivers.  
+   ✅ Compatible with MSSQL native CDC support.  
+   ❌ Polling introduces delays in detecting changes.  
+   ❌ Adds additional load on the database.  
 
 2. **Debezium-Based CDC (Preferred)**
 
-   ✅ Provides real-time changes.
-   ✅ Uses log-based CDC, avoiding additional database load.
-   ✅ Designed for high-frequency updates.
-   ✅ Supports event filtering, transformation, and error handling.
-   ❌ Requires a Kafka cluster.
+   ✅ Provides real-time changes.  
+   ✅ Uses log-based CDC, avoiding additional database load.  
+   ✅ Designed for high-frequency updates.  
+   ✅ Supports event filtering, transformation, and error handling.  
+   ❌ Requires a Kafka cluster.  
 
 Ballerina's CDC component will use **Debezium** as the underlying engine to capture database events. The module will use **Debezium in Embedded mode**, which does not make a Kafka cluster mandatory.
 
