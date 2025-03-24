@@ -1,7 +1,7 @@
 # CDC Support in Ballerina
 
 - Author: @niveathika
-- Reviewers: 
+- Reviewers: @daneshk @ThisaruGuruge
 - Created: 2025-03-16
 - Updated: 2025-03-16
 - Issue: [#1341](https://github.com/ballerina-platform/ballerina-spec/issues/1341)
