@@ -3,7 +3,7 @@
 - Author: @niveathika
 - Reviewers: @daneshk @ThisaruGuruge
 - Created: 2025-03-16
-- Updated: 2025-03-16
+- Updated: 2025-05-06
 - Issue: [#1341](https://github.com/ballerina-platform/ballerina-spec/issues/1341)
 - Status: Submitted
 
