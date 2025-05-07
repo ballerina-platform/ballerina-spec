@@ -116,6 +116,15 @@ public type OneTimeConfiguration record {|
 |};
 ```
 
+There will be a single global scheduler for all jobs services attached to the task listener. It can be configured by the following global scheduler configurations.
+
+```ballerina
+# Worker count for the global schedular
+public configurable int globalSchedularWorkerCount = 5;
+# Waiting time for the global schedular
+public configurable time:Seconds globalSchedularWaitingTime = 5;
+```
+
 #### Listener APIs
 
 The task listener provides the following APIs:
