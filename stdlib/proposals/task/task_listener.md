@@ -30,7 +30,8 @@ The Ballerina Task package provides APIs to create, schedule, and manage jobs. T
 
 ## Motivation
 
-Currently, scheduling a task in Ballerina requires blocking the main strand, typically using a `sleep` statement in the main function:
+Currently, scheduling a task in Ballerina requires blocking the main strand, typically using a `sleep` statement in the main function. In monolithic and microservice architectures, applications are typically deployed as long-running services rather than as main functions with explicit termination. The current approach doesn't align with this deployment model.
+Introducing a task listener addresses these limitations by allowing developers to implement scheduled tasks as service.
 
 ```ballerina
 import ballerina/io;
