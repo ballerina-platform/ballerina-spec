@@ -6,6 +6,8 @@
   - TBD
 - Created date
   - 2025-01-30
+- Updated date
+  - 2025-05-07   
 - Issue
   - [1329](https://github.com/ballerina-platform/ballerina-spec/issues/1329)
 - State
@@ -28,7 +30,8 @@ The Ballerina Task package provides APIs to create, schedule, and manage jobs. T
 
 ## Motivation
 
-Currently, scheduling a task in Ballerina requires blocking the main strand, typically using a `sleep` statement in the main function:
+Currently, scheduling a task in Ballerina requires blocking the main strand, typically using a `sleep` statement in the main function. In monolithic and microservice architectures, applications are typically deployed as long-running services rather than as main functions with explicit termination. The current approach doesn't align with this deployment model.
+Introducing a task listener addresses these limitations by allowing developers to implement scheduled tasks as service.
 
 ```ballerina
 import ballerina/io;
@@ -85,10 +88,8 @@ The task listener requires a schedule configuration (one-time or recurring) and 
 # Listener configuration.
 #
 # + schedule - The schedule configuration for the listener
-# + workerPool - The worker pool configuration for the listener
 public type ListenerConfiguration record {|
     OneTimeConfiguration|RecurringConfiguration schedule;
-    WorkerPoolConfiguration? workerPool;
 |};
 
 # Recurring schedule configuration.
@@ -113,31 +114,16 @@ public type RecurringConfiguration record {|
 public type OneTimeConfiguration record {|
     time:Civil triggerTime;
 |};
-
-# Worker pool configuration.
-#
-# + workerCount - Specifies the number of workers that are available for the concurrent execution of jobs.
-#                 It should be a positive integer. The recommendation is to set a value less than 10. Default sets to 5.
-# + waitingTime - The number of seconds as a decimal the scheduler will tolerate a trigger to pass its next-fire-time
-#                 before being considered as `ignored the trigger`
-public type WorkerPoolConfiguration record {|
-    int workerCount = 5;
-    time:Seconds waitingTime = 5;
-|};
 ```
 
-If no worker pool is provided, the listener uses a global scheduler with the following configuration:
+There will be a single global scheduler for all jobs services attached to the task listener. It can be configured by the following global scheduler configurations.
 
 ```ballerina
 # Worker count for the global schedular
 public configurable int globalSchedularWorkerCount = 5;
-
 # Waiting time for the global schedular
 public configurable time:Seconds globalSchedularWaitingTime = 5;
 ```
-
-> **Note:** If a worker pool is specified, the listener creates a new scheduler; otherwise, it uses
-> the global scheduler.
 
 #### Listener APIs
 
