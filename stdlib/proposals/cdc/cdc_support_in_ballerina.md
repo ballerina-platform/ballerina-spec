@@ -87,7 +87,7 @@ The implementation will consist of the following components:
    ```
 
    ```ballerina
-   import ballerinax/cdc.mssql.driver as _;
+   import ballerinax/mssql.cdc.driver as _;
    ```
 
 ### Example Usage
