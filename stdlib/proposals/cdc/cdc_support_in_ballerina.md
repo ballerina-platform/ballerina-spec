@@ -56,7 +56,15 @@ Ballerina's CDC component will use **Debezium** as the underlying engine to capt
 
 ### Module Organization
 
-The implementation will consist of the following components:
+Similar to the organization of the `ballerina/sql` module, where the `sql:Client` is extended by database-specific packages such as `mysql:Client`, `mssql:Client`, `postgres:Client`, and `oracledb:Client`, the CDC module will follow a similar structure.
+
+The following diagram shows the organization of the SQL module:
+
+![SQL Organization](resources/SQLOrg.jpg)
+
+The CDC module implementation will be structured into the following key components:
+
+![CDC Organization](resources/CDCOrg.jpg)
 
 1. **Core Module**  
    The core module will act as the foundation for CDC support in Ballerina.
@@ -65,7 +73,7 @@ The implementation will consist of the following components:
    module-ballerinax-cdc
    ```
 
-   The core module will include common services, shared configurations, utilities, and abstractions that can be reused across database-specific implementations.
+   The core module will include common service, shared configurations, utilities, and abstractions that can be reused across database-specific implementations.
 
 2. **Database-Specific Listeners**  
    Each supported database will have its own dedicated listener, available in the respective database default packages. For example:
