@@ -73,17 +73,17 @@ The CDC module implementation will be structured into the following key componen
    module-ballerinax-cdc
    ```
 
-   The core module will include common service, shared configurations, utilities, and abstractions that can be reused across database-specific implementations.
+   The core module will include the CDC service, shared configurations, utilities, and an abstract listener that can be reused across database-specific implementations.
 
 2. **Database-Specific Listeners**  
-   Each supported database will have its own dedicated listener, available in the respective database default packages. For example:
+   Each supported database will have its dedicated listener, available in the respective database default packages. For example:
 
    ```
    module-ballerinax-mysql
    module-ballerinax-mssql
    ```
 
-   The `CdcListener` will be available in the default package alongside the `Client` to connect to the database.
+   The `CdcListener` will be available alongside the `Client` in the default package to connect to the database.
 
 3. **Database-Specific Driver Modules**  
    These modules will package the necessary dependencies for different database CDC connectors. They can be imported as ignored imports.
@@ -97,56 +97,6 @@ The CDC module implementation will be structured into the following key componen
    ```ballerina
    import ballerinax/mssql.cdc.driver as _;
    ```
-
-### Example Usage
-
-The following example demonstrates how to use the proposed CDC module to capture and process database change events in Ballerina. This example highlights the key components of the CDC module, including the listener, service, and event-handling logic.
-
-```ballerina
-import ballerina/log;
-import ballerinax/cdc;
-import ballerinax/mysql;
-import ballerinax/mysql.cdc.driver as _;
-
-configurable string username = ?;
-configurable string password = ?;
-
-listener mysql:CdcListener financeDBListener = new (
-    database = {
-        username: username,
-        password: password,
-        includedDatabases: "finance_db",
-        includedTables: "finance_db.transactions"
-    },
-    snapshotMode: cdc:NO_DATA,
-    skippedOperations: [cdc:TRUNCATE, cdc:UPDATE, cdc:DELETE] 
-);
-
-service cdc:Service on financeDBListener {
-
-    isolated remote function onCreate(Transactions trx) returns error? {
-        log:printInfo(`Create event received for Transaction ID: ${trx.tx_id}`);
-        
-        // Example: Detect potential fraud based on transaction amount
-        if trx.amount > 10000.00 {
-            string fraudAlert = string `Fraud detected! Transaction ID: ${trx.tx_id}, User ID: ${trx.user_id}, Amount: $${trx.amount}`;
-            log:printInfo(fraudAlert);
-        }
-    }
-
-    isolated remote function onError(cdc:Error e) {
-        log:printError(`Error occurred while processing CDC event: ${e.message()}`);
-    }
-}
-
-type Transactions record {|
-    int tx_id;       // Transaction ID
-    int user_id;     // User ID associated with the transaction
-    float amount;    // Transaction amount
-    string status;   // Status of the transaction
-    int created_at;  // Timestamp of transaction creation
-|};
-```
 
 ### Components
 
@@ -166,17 +116,17 @@ The following example demonstrates the structure of a `CdcListener` for MySQL:
 # Ballerina CDC Listener
 public isolated class CdcListener {
 
-    public isolated function init(*MySqlListenerConfiguration config) returns Error? {
-        return externInit(self, config);
+    public isolated function init(*MySqlListenerConfiguration config) {
+        // Process configurations
     }
 
-    public isolated function attach(Service s, string[]|string? name = ()) returns Error? =
+    public isolated function attach(cdc:Service s, string[]|string? name = ()) returns Error? =
         @java:Method { 'class: "io.ballerina.lib.cdc.Listener" } external;
 
     public isolated function 'start() returns Error? =
         @java:Method { 'class: "io.ballerina.lib.cdc.Listener" } external;
 
-    public isolated function detach(Service s) returns Error? =
+    public isolated function detach(cdc:Service s) returns Error? =
         @java:Method { 'class: "io.ballerina.lib.cdc.Listener" } external;
 
     public isolated function gracefulStop() returns Error? =
@@ -191,8 +141,32 @@ public isolated class CdcListener {
 
 #### Listener Configuration
 
-Each listener requires a set of **mandatory and optional** configuration properties to define its behavior. These configurations are divided into general CDC configurations (available in the `cdc` module) and database-specific configurations (available in the respective database modules).
+Each listener requires a set of **mandatory and optional** configuration properties to define its behaviour. These configurations are divided into general CDC configurations (available in the `cdc` module) and database-specific configurations (available in the respective database modules).
 
+##### Database-Specific Configuration (Available in Database Modules)
+
+Each database module provides additional configurations specific to the database. For example:
+
+###### MySQL Module
+
+```ballerina
+public type MySqlListenerConfiguration record {| 
+    *cdc:CdcConfiguration;
+    string connectorClass = "io.debezium.connector.mysql.MySqlConnector";
+    MySqlDatabaseConnection database;
+|};
+
+public type MySqlDatabaseConnection record {|
+    *cdc:DatabaseConnection;
+    string hostname = "localhost";
+    int port = 3306;
+    string databaseServerId = (checkpanic random:createIntInRange(0, 100000)).toString();
+    string|string[] includedDatabases?;
+    string|string[] excludedDatabases?;
+    int tasksMax = 1;
+    cdc:SecureDatabaseConnection secure = {};
+|};
+```
 ##### General CDC Configuration (Available in `cdc` Module)
 
 The `ListenerConfiguration` type defines the general properties required for all listeners:
@@ -233,43 +207,9 @@ public type DatabaseConnection record {|
 |};
 ```
 
-##### Database-Specific Configuration (Available in Database Modules)
-
-Each database module provides additional configurations specific to the database. For example:
-
-###### MySQL Module
-
-```ballerina
-public type MySqlConnectorConfiguration record {| 
-    *cdc:CdcConfiguration;
-    string connectorClass = "io.debezium.connector.mysql.MySqlConnector";
-    MySqlDatabaseConnection database;
-|};
-
-public type MySqlDatabaseConnection record {|
-    *cdc:DatabaseConnection;
-    string hostname = "localhost";
-    int port = 3306;
-    string databaseServerId = (checkpanic random:createIntInRange(0, 100000)).toString();
-    string|string[] includedDatabases?;
-    string|string[] excludedDatabases?;
-    int tasksMax = 1;
-    cdc:SecureDatabaseConnection secure = {};
-|};
-```
-
-###### MSSQL Module
-
-```ballerina
-public type MSSQLConnectorConfiguration record {| 
-    *cdc:CdcConfiguration;
-    string connectorClass = "io.debezium.connector.sqlserver.SqlServerConnector";
-    MSSQLDatabaseConnection database;
-|};
-```
 ---
 
-### 2. Services
+### 2. Service
 
 Multiple **services** can be attached to a **single listener**. Services allow event grouping based on business logic.
 
@@ -277,11 +217,11 @@ Multiple **services** can be attached to a **single listener**. Services allow e
 
 ```ballerina
 public type Service distinct service object {
-    remote function onRead(record{} after, string tableName = "") returns Error?;
-    remote function onCreate(record{} after, string tableName = "") returns Error?;
-    remote function onUpdate(record{} before, record{} after, string tableName = "") returns Error?;
-    remote function onDelete(record{} before, string tableName = "") returns Error?;
-    remote function onError(Error 'error) returns Error?;
+    remote function onRead(record{} after) returns cdc:Error?;
+    remote function onCreate(record{} after) returns cdc:Error?;
+    remote function onUpdate(record{} before, record{} after) returns cdc:Error?;
+    remote function onDelete(record{} before) returns cdc:Error?;
+    remote function onError(cdc:Error 'error) returns cdc:Error?;
 };
 ```
 
