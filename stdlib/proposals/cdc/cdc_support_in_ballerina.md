@@ -3,7 +3,7 @@
 - Author: @niveathika
 - Reviewers: @daneshk @ThisaruGuruge
 - Created: 2025-03-16
-- Updated: 2025-05-06
+- Updated: 2025-05-16
 - Issue: [#1341](https://github.com/ballerina-platform/ballerina-spec/issues/1341)
 - Status: Submitted
 
@@ -150,21 +150,24 @@ Each database module provides additional configurations specific to the database
 ###### MySQL Module
 
 ```ballerina
-public type MySqlListenerConfiguration record {| 
-    *cdc:CdcConfiguration;
-    string connectorClass = "io.debezium.connector.mysql.MySqlConnector";
+# Represents the configuration for a MySQL CDC connector.
+#
+# + database - The MySQL database connection configuration
+public type MySqlListenerConfiguration record {|
     MySqlDatabaseConnection database;
+    *ListenerConfiguration;
 |};
 
 public type MySqlDatabaseConnection record {|
-    *cdc:DatabaseConnection;
+    *DatabaseConnection;
+    string connectorClass = "io.debezium.connector.mysql.MySqlConnector";
     string hostname = "localhost";
     int port = 3306;
     string databaseServerId = (checkpanic random:createIntInRange(0, 100000)).toString();
     string|string[] includedDatabases?;
     string|string[] excludedDatabases?;
     int tasksMax = 1;
-    cdc:SecureDatabaseConnection secure = {};
+    SecureDatabaseConnection secure = {};
 |};
 ```
 ##### General CDC Configuration (Available in `cdc` Module)
@@ -174,18 +177,23 @@ The `ListenerConfiguration` type defines the general properties required for all
 ```ballerina
 public type ListenerConfiguration record {|
     string engineName = "ballerina-cdc-connector";
-    string connectorClass;
+    FileInternalSchemaStorage|KafkaInternalSchemaStorage internalSchemaStorage = {};
+    FileOffsetStorage|KafkaOffsetStorage offsetStorage = {};
+    Options options = {
+        eventProcessingFailureHandlingMode: WARN,
+        decimalHandlingMode: DOUBLE
+    };
+|};
+
+public type Options record {|
+    SnapshotMode snapshotMode = INITIAL;
+    EventProcessingFailureHandlingMode eventProcessingFailureHandlingMode = FAIL;
+    Operation[] skippedOperations = [TRUNCATE];
+    boolean skipMessagesWithoutChange = false;
+    DecimalHandlingMode decimalHandlingMode = PRECISE;
     int maxQueueSize = 8192;
     int maxBatchSize = 2048;
     decimal queryTimeout = 60;
-    FileInternalSchemaStorage|KafkaInternalSchemaStorage internalSchemaStorage = {};
-    FileOffsetStorage|KafkaOffsetStorage offsetStorage = {};
-    EventProcessingFailureHandlingMode eventProcessingFailureHandlingMode = WARN;
-    SnapshotMode snapshotMode = INITIAL;
-    Operation[] skippedOperations = [TRUNCATE];
-    boolean skipMessagesWithoutChange = false;
-    boolean sendTombstonesOnDelete = false;
-    DecimalHandlingMode decimalHandlingMode = DOUBLE;
 |};
 ```
 
