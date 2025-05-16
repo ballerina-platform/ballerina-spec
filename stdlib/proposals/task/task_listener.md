@@ -7,7 +7,7 @@
 - Created date
   - 2025-01-30
 - Updated date
-  - 2025-05-14
+  - 2025-05-16
 - Issue
   - [1329](https://github.com/ballerina-platform/ballerina-spec/issues/1329)
 - State
@@ -73,7 +73,6 @@ With the new listener-based approach, a job is implemented as a Ballerina servic
 ```ballerina
 public type Service distinct service object {
     function execute() returns error?;
-    function onError() returns error?;
 }
 ```
 
@@ -129,10 +128,6 @@ Each task service should have a unique task ID for job management, specified in 
 service "job-1" on taskListener {
     function execute() returns error? {
         // Job implementation
-    }
-
-    function onError() returns error? {
-        // handle errors
     }
 }
 ```
