@@ -34,11 +34,11 @@ application-specific content types for domain-specific data formats (e.g., JWT-s
 To accommodate this, the Ballerina `websubhub` implementation must go beyond just standard MIME types and correctly support content delivery 
 for any `application/*` type — ensuring both correct processing and distribution.
 
-## **Description**
+## Description
 
 To enable proper support for custom content types, enhancements are required in two main areas of the WebSubHub flow:
 
-### 1. **Receiving Content Updates from Publishers**
+### 1. Receiving Content Updates from Publishers
 
 The `hub` must accept content updates with both standard and custom MIME types. The content type will guide how the message payload is interpreted and stored for subsequent distribution.
 
@@ -54,7 +54,7 @@ The `hub` must accept content updates with both standard and custom MIME types. 
 
 * For all other types under `application/*` (e.g., `application/secevent+jwt`, `application/x.custom-type`), the payload will be treated as `byte[]`.
 
-### 2. **Distributing Content to Subscribers**
+### 2. Distributing Content to Subscribers
 
 When relaying the content to subscribers, the `hub` must preserve the original `Content-Type` (including custom ones). The payload will be passed along as `byte[]` to ensure fidelity, allowing the subscriber to decode and process it appropriately based on the content type.
 
