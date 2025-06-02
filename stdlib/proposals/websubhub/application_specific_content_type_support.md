@@ -13,13 +13,9 @@
 
 ## Summary
 
-This proposal introduces support for application-specific content types in the Ballerina `websubhub` library, enabling more flexible content 
-handling during WebSub content distribution. The [WebSub specification](https://www.w3.org/TR/websub/) allows a `topic` to declare any 
-`Content-Type` for its content and does not restrict it to common MIME types such as `application/json`, `application/xml`, or `text/plain`.
+This proposal introduces support for application-specific content types in the Ballerina `websubhub` library, enabling more flexible content handling during WebSub content distribution. The [WebSub specification](https://www.w3.org/TR/websub/) allows a `topic` to declare any `Content-Type` for its content and does not restrict it to common MIME types such as `application/json`, `application/xml`, or `text/plain`.
 
-This enhancement focuses on supporting custom media types under the `application/*` top-level MIME type. These include structured and 
-vendor-specific types such as `application/secevent+jwt`, `application/vnd.example+json`, and others. By treating such types as first-class 
-citizens, Ballerina will be able to interoperate more effectively in real-world WebSub ecosystems that rely on non-standard content types.
+This enhancement focuses on supporting custom media types under the `application/*` top-level MIME type. These include structured and vendor-specific types such as `application/secevent+jwt`, `application/vnd.example+json`, and others. By treating such types as first-class citizens, Ballerina will be able to interoperate more effectively in real-world WebSub ecosystems that rely on non-standard content types.
 
 ## Goals
 
@@ -27,12 +23,9 @@ citizens, Ballerina will be able to interoperate more effectively in real-world 
 
 ## Motivation
 
-In the WebSub model, content updates related to a `topic` are distributed from the `hub` to its `subscribers`. The specification allows for 
-flexible use of MIME types to describe the nature of the content associated with a topic. Real-world WebSub implementations often use 
-application-specific content types for domain-specific data formats (e.g., JWT-secured payloads, vendor-specific schemas).
+In the WebSub model, content updates related to a `topic` are distributed from the `hub` to its `subscribers`. The specification allows for flexible use of MIME types to describe the nature of the content associated with a topic. Real-world WebSub implementations often use application-specific content types for domain-specific data formats (e.g., JWT-secured payloads, vendor-specific schemas).
 
-To accommodate this, the Ballerina `websubhub` implementation must go beyond just standard MIME types and correctly support content delivery 
-for any `application/*` type — ensuring both correct processing and distribution.
+To accommodate this, the Ballerina `websubhub` implementation must go beyond just standard MIME types and correctly support content delivery for any `application/*` type — ensuring both correct processing and distribution.
 
 ## Description
 
