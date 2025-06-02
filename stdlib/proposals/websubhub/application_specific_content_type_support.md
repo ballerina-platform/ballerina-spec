@@ -7,7 +7,7 @@
 - Created date
   - 2025-06-02
 - Issue
-  - [1336](https://github.com/ballerina-platform/ballerina-spec/issues/1336)
+  - [1358](https://github.com/ballerina-platform/ballerina-spec/issues/1358)
 - State
   - Submitted
 
