@@ -1,11 +1,11 @@
-# Automatic subscriptin intent verification in Ballerina WebSubHub
+# Custom Content Type Support in Ballerina WebSubHub
 
 - Authors
   - Ayesh Almeida
 - Reviewed by
-  - Shafreen Anfar, Danesh Kuruppu, Maryam Ziyad
+  - Shafreen Anfar, Danesh Kuruppu, Thisaru Guruge
 - Created date
-  - 2025-02-13
+  - 2025-06-02
 - Issue
   - [1336](https://github.com/ballerina-platform/ballerina-spec/issues/1336)
 - State
@@ -13,116 +13,57 @@
 
 ## Summary
 
-This proposal introduces an enhancement to the Ballerina `websubhub` library that enables the developer to disable the WebSub 
-subscription intent verification process for authenticated and authorized subscriptions. This proposal introduces a service-level 
-configuration to enable automatic subscription intent verification and an optional parameter for the `onSubscription` and 
-`onUnsubscription` methods in `websubhub:Service` to mark specific subscriptions as auto-verified. The identification of 
-properly authenticated and authorized subscriptions remains the responsibility of the developer implementing the WebSub hub.
+This proposal introduces an enhancement to the Ballerina `websubhub` library to support custom content types in the content distribution 
+flow. According to the WebSub specification, a topic can define a `Content-Type` for its content, and this is not limited to standard MIME 
+types such as `application/json`, `application/xml`, or `text/plain`. This proposal specifically targets support for custom content types 
+that fall under the `application/*` media type, including vendor-specific and structured syntax suffix types like `application/vnd.example
++json` or `application/secevent+jwt`. Providing first-class support for such types is essential for broader interoperability and 
+specification compliance.
 
 ## Goals
 
-- Provide the WebSub hub implementer more control over how to verify subscription intent.
-
-## Non-Goals
-
-- This proposal will not change the current behavior of the WebSub hub. It will only introduce an alternate mechanism which the developer can use to disable the current subscription 
-intent verification process if needed.
+* Support custom `Content-Type` values in the WebSub content distribution flow.
 
 ## Motivation
 
-The subscription intent verification step exists to verify and authenticate the subscription request sent to the hub. However, 
-in some scenarios, a developer may have authenticated and authorized subscribers who do not require this additional 
-verification step. This proposal aims to allow developers more control over the subscription intent verification process by 
-introducing a configuration in the Ballerina `websubhub` library. This will enable developers to skip the standard subscription 
-intent verification process based on the requirement.
+In WebSub, content distribution refers to the process by which a `hub` distributes content updates about a `topic` to its `subscribers`. The specification allows a topic to define any `Content-Type` for its content, without restricting it to well-known standard types. Therefore, the Ballerina `websubhub` implementation must be able to handle and distribute content with arbitrary custom MIME types — in addition to standard ones — to support broader and more flexible use cases.
 
 ## Description
 
-This proposal introduces two levels of validation to enable subscription auto-verification in Ballerina WebSubHub:
+To support custom content types in the WebSub flow, two key processing paths need to be enhanced:
 
-1. **Service-level configuration** :
-    - Add a new configuration parameter in the `@websubhub:ServiceConfig` annotation that allows enabling or disabling automatic subscription intent verification at the hub level.
+1. **Publisher to Hub Notification**:
+   When the publisher sends a content update to the `hub`, the `hub` must accept content with both standard and custom content types.
 
-2. **Introduce an optional parameter for `onSubscription` and `onUnsubscription` methods of `websubhub:Service`** :
-    - Add a new client object that allows dynamically marking a subscription or unsubscription for auto-verification.
+2. **Hub to Subscriber Distribution**:
+   When the `hub` distributes the content to a `subscriber`, it must be able to deliver the content using the same `Content-Type` originally received (including custom types).
 
-### Service-level configuration
+The scope of this proposal is limited to content types under the `application/*` top-level media type. This includes both standard types (e.g., `application/json`) and custom types such as `application/vnd.example+json` or `application/x.custom-format`. 
 
-An annotation field, which will be set to `false` by default, will be added to the `@websubhub:ServiceConfig` annotation:
+### Handling Custom Content Types When Receiving Content Updates at the Hub
 
-```ballerina
-    @websubhub:ServiceConfig { 
-        // other fields
-        autoVerifySubscriptionIntent: true
-    }
-```
+For standard content types, the content should be mapped to corresponding Ballerina types as shown below:
 
-### `websubhub:Controller` parameter
+| Content-Type                        | Mapped Ballerina Type |
+| ----------------------------------- | --------------------- |
+| `application/json`                  | `json`                |
+| `application/xml`                   | `xml`                 |
+| `text/plain`                        | `string`              |
+| `application/octet-stream`          | `byte[]`              |
+| `application/x-www-form-urlencoded` | `map<string>`         |
 
-In addition to the `websubhub:ServiceConfig` configuration, developers need a mechanism to mark specific subscriptions and unsubscriptions as verified. To address this, we are introducing a new Ballerina object type, `websubhub:Controller`.
+For custom content types with the structure `application/*` (e.g., `application/secevent+jwt`), the content will be mapped to a Ballerina `byte[]`.
 
-```ballerina
-    public type Controller client object {
+### Content Distribution to Subscribers
 
-        # Marks a specific subscription or unsubscription request as verified, bypassing the standard challenge-response verification process. 
-        public function markAsVerified(websubhub:Subscription|websubhub:Unsubscription subscription) returns websubhub:Error?;
-    };
-```
+When distributing content with custom content types, the same MIME type must be preserved, and the payload should be sent as a `byte[]`.
 
-> Note: The `websubhub:Controller` will be available only as an optional parameter in the `onSubscription` and `onUnsubscription` remote methods of the `websubhub:Service`.
-
-### Behavior
-
-* If `autoVerifySubscriptionIntent` is enabled in `websubhub:ServiceConfig` and the developer marks the subscription as verified, the hub skips the subscription intent verification step.  
-* If `autoVerifySubscriptionIntent` is disabled and the developer marks the subscription as verfied, the `websubhub:Controller` will throw and error saying marking subscription as 
-verified but the configuration has not been turned-on. Since `websubhub:Controller` is only available as a parameter in the `onSubscription` and `onUnsubscription` methods, this error will be returned as an error response to the subscriber.
-* If `autoVerifySubscriptionIntent` is enabled and the subscription is not explicitly marked as verified, the hub follows the standard challenge-response verification process.
-* If `autoVerifySubscriptionIntent` is disabled and the subscription is not explicitly marked as verified, the hub follows the standard challenge-response verification process.
-
-#### Reference Implementation
-
-A sample implementation in a WebSubHub service:
-
-```ballerina
-    @websubhub:ServiceConfig { 
-        autoVerifySubscriptionIntent: true 
-    }
-    service /hub on new websubhub:Listener(9090) {
-        // Implement the other required remote methods
-
-        remote function onSubscription(websubhub:Subscription msg, websubhub:Controller hubController) 
-            returns websubhub:SubscriptionAccepted|error {
-        
-            // Perform the authn/authz operation
-            check hubController.markAsVerified(msg);
-        }
-
-        remote function onUnsubscription(websubhub:Unsubscription msg, websubhub:Controller hubController) 
-            returns websubhub:UnsubscriptionAccepted|error {
-        
-            // Perform the authn/authz operation
-            check hubController.markAsVerified(msg);
-        }
-    }
-
-```
-
-## Alternatives
-
-Some vendors like GitHub use an HTTP POST (instead of HTTP GET) request with a Ping payload to verify the subscription intent 
-whenever a subscription or webhook is registered. This mechanism could be adopted in the `websubhub` library by enabling it 
-through a configuration.
-
-## Risks and Assumptions
-
-- Enabling this configuration assumes that the developer will implement an authentication and authorization mechanism to verify subscription intent during the subscription process.  
-- A WebSub `hub` implementation utilizing this feature may potentially violate the WebSub standard; therefore, users should be informed of this in the API documentation.
+This ensures that subscribers can handle the content using appropriate logic for their domain-specific content type.
 
 ## Dependencies
 
-No additional dependencies are introduced. The feature will be built into the `ballerina/websubhub` module.
+* This support must also be incorporated into the Ballerina `websub` subscriber service to ensure seamless end-to-end support for custom content types across the entire publish-subscribe workflow.
 
 ## Testing
 
-- Unit tests will be added to verify the correct behavior when `autoVerifySubscriptionIntent` is enabled and the subscription has been marked to skip the verification.
-- Integration tests will confirm that the standard verification process remains intact when the flag is `false`.
+* Unit tests will be added to cover various standard and custom `Content-Type` values and to verify correct content mapping and distribution behavior.
