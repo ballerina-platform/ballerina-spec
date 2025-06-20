@@ -34,8 +34,8 @@ Every RAG system starts with a set of documents.
 
 ```ballerina
 public type Document record {|
-   string content;
-   map<anydata> metadata?;
+    string content;
+    map<anydata> metadata?;
 |};
 ```
 
@@ -70,7 +70,7 @@ The embeddings are created by embedding providers.
 
 ```ballerina
 public type EmbeddingProvider isolated client object {
-    isolated remote function embed(string document) returns Embedding|Error;
+    isolated remote function embed(Document document) returns Embedding|Error;
 };
 ```
 
@@ -93,7 +93,7 @@ public isolated client class Wso2EmbeddingProvider {
         // omitted for brevity 
     }
 
-    isolated remote function embed(string document) returns Embedding|Error {
+    isolated remote function embed(Document document) returns Embedding|Error {
         // omitted for brevity 
     }
 }
@@ -106,6 +106,7 @@ A `VectorStore` is where the embedded documents are stored and queried.
 public type VectorStore isolated object {
     public isolated function add(VectorEntry[] entries) returns Error?;
     public isolated function query(VectorStoreQuery query) returns VectorMatch[]|Error;
+    public isolated function delete(string id) returns Error?;
 };
 ```
 
@@ -130,24 +131,24 @@ Metadata filtering is also supported during queries. The following types define 
 
 ```ballerina
 public type VectorStoreQuery record {|
-    Embedding embedding; // represent the query vector
+    Embedding embedding;
     MetadataFilters filters?;
 |};
 
 public type MetadataFilters record {|
-    MetadataFilter[] filter?;
-    MetadataFilterCondition condition?;
+    (MetadataFilters|MetadataFilter)[] filters;
+    MetadataFilterCondition condition = AND;
 |};
 
 public type MetadataFilter record {|
     string key;
-    MetadataFilterOperator operator?;
-    anydata value;
+    MetadataFilterOperator operator = EQUAL;
+    json value;
 |};
 
 public enum MetadataFilterOperator {
-    EQUALS = "==",
-    NOT_EQUALS = "!=",
+    EQUAL = "==",
+    NOT_EQUAL = "!=",
     GREATER_THAN = ">",
     LESS_THAN = "<",
     GREATER_THAN_OR_EQUAL = ">=",
@@ -184,19 +185,24 @@ public isolated class InMemoryVectorStore {
 
     public isolated function query(VectorStoreQuery query) returns VectorMatch[]|Error {
         if query.embedding !is Vector {
-            return error Error("InMemoryVectorStore implementation only supports dense vectors");
+            return error Error("InMemoryVectorStore supports dense vectors exclusively");
         }
 
         lock {
-            VectorMatch[] results = from var entry in self.entries
-                let float similarity = self.cosineSimilarity(query.clone(), <Vector>entry.embedding)
+            VectorMatch[] sorted = from var entry in self.entries
+                let float similarity = self.cosineSimilarity(<Vector>query.embedding.clone(), <Vector>entry.embedding)
+                order by similarity descending
                 limit self.topK
-                select {document: entry.document, embedding: entry.embedding, score: similarity};
-            return results.clone();
+                select {document: entry.document, embedding: entry.embedding, similarityScore: similarity};
+            return sorted.clone();
         }
     }
 
     isolated function cosineSimilarity(Vector a, Vector b) returns float {
+        // ommited for brevity
+    }
+
+    public isolated function delete(string id) returns Error? {
         // ommited for brevity
     }
 }
@@ -223,7 +229,7 @@ public isolated class Retriever {
 
     public isolated function retrieve(string query, MetadataFilters? filters = {})
     returns DocumentMatch[]|Error {
-        Embedding queryVec = check self.embeddingModel->embed(query);
+        Embedding queryVec = check self.embeddingModel->embed({content: query});
         VectorStoreQuery vectorStoreQuery = {
             embeddingVector: queryVec,
             filters: filters
@@ -361,7 +367,8 @@ The Rag constructor supports optional injection of custom implementations. If no
 isolated function getDefaultModelProvider() returns Wso2ModelProvider|Error {
     Wso2ModelProviderConfig? config = wso2ModelProviderConfig;
     if config is () {
-        return error Error("Set the WSO2 model provider config in toml file");
+        return error Error("The `wso2ProviderConfig` is not configured correctly."
+        + " Ensure that the WSO2 model provider configuration is defined in your TOML file.");
     }
     return new Wso2ModelProvider(config);
 }
@@ -369,7 +376,8 @@ isolated function getDefaultModelProvider() returns Wso2ModelProvider|Error {
 isolated function getDefaultKnowledgeBase() returns VectorKnowledgeBase|Error {
     Wso2ModelProviderConfig? config = wso2ModelProviderConfig;
     if config is () {
-        return error Error("Set the WSO2 model provider config in toml file");
+        return error Error("The `wso2ProviderConfig` is not configured correctly."
+        + " Ensure that the WSO2 model provider configuration is defined in your TOML file.");
     }
     EmbeddingProvider|Error wso2EmbeddingProvider = new Wso2EmbeddingProvider(config);
     if wso2EmbeddingProvider is Error {
@@ -383,15 +391,17 @@ isolated function getDefaultKnowledgeBase() returns VectorKnowledgeBase|Error {
 
 ```ballerina
 import ballerina/ai;
+import ballerina/io;
 
 public function main() returns error? {
-    ai:Rag rag = check new ();
+    ai:Rag rag = check new ai:Rag();
 
-    ai:Documents[] docs = ai:splitDocumentByLine(stringData);
-    check rag.ingest(docs);
+    string poilicy = check io:fileReadString("pizza_shop_policy_doc.md");
+    ai:Document[] poilicyDocs = ai:splitDocumentByLine(poilicy);
+    check rag.ingest(poilicyDocs);
 
-    string answer = check rag.query("predective maintanance and analytics");
-    //...
+    string answer = check rag.query("How long is the unpaid lunch break?");
+    io:println(answer);
 }
 ```
 
@@ -406,11 +416,12 @@ public function main() returns error? {
     ai:VectoStore store = check new pinecone:VectoreStore(pineconeServiceUrl, pineconeKey);
     ai:EmbeddingProvider embeddingModel = check new openai:EmbeddingProvider(openAiApiKey, openai:TEXT_EMBEDDING_ADA_002);
     ai:VectorKnowlegeBase knowledgeBase = new (store, embeddingModel);
-
     ai:Rag rag = new (model, knowledgeBase);
 
-    ai:Document[] docs = ai:splitDocumentByLine(stringData);
-    check rag.ingest(docs)
+    string poilicy = check io:fileReadString("pizza_shop_policy_doc.md");
+    ai:Document[] poilicyDocs = ai:splitDocumentByLine(poilicy);
+    check rag.ingest(poilicyDocs);
+
 
     string answer = check rag.query("predective maintenance and analytics");
     //...
