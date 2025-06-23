@@ -209,15 +209,25 @@ public distinct isolated class InMemoryVectorStore {
 ```
 
 ### 4. Retriever
+To retrieve the most relevant documents for a given question, we use a `Retriever`. The `Retriever` accepts a natural language query and optional metadata filters, then returns a list of matching documents.
 
-To fetch relevant documents for a given question, we use a `Retriever`.
-The `Retriever`: 
+```ballerina
+public type Retriever distinct isolated object {
+    public isolated function retrieve(string query, MetadataFilters? filters = ()) returns DocumentMatch[]|Error;
+};
+```
+
+Users can implement their own `Retriever` to suit their requirements — for example, by incorporating custom ranking logic, re-ranking top matches with a more advanced scoring model, or applying domain-specific retrieval techniques.
+
+
+We also provide a simple `Retriever` implementation named `VectorRetriever`  that
 1. Embeds the query,
-2. Runs a similarity search in the vector store,
+2. Runs a similarity against the underlying vector store,
 3. Returns top-matching documents with similarity scores.
 
 ```ballerina
-public distinct isolated class Retriever {
+public distinct isolated class VectorRetriever {
+    *Retriever;
     private final VectorStore vectorStore;
     private final EmbeddingProvider embeddingModel;
 
@@ -243,11 +253,21 @@ public distinct isolated class Retriever {
 
 ### 5. Knowledge Base
 
+A `KnowledgeBase` manages a collection of documents and provides an interface for indexing and retrieval. Implementations can use any underlying storage or retrieval mechanism.
+
+```ballerina
+public type KnowledgeBase distinct isolated object {
+    public isolated function index(Document[] documents) returns Error?;
+    public isolated function getRetriever() returns Retriever;
+};
+```
+
 The `VectorKnowledgeBase` defined below is a wrapper around a `VectorStore` and `EmbeddingProvider`.
 It provides indexing and access to a `Retriever`.
 
 ```ballerina
 public distinct isolated class VectorKnowledgeBase {
+    *KnowledgeBase;
     private final VectorStore vectorStore;
     private final EmbeddingProvider embeddingModel;
     private final Retriever retriever;
@@ -318,11 +338,11 @@ It abstracts away the internal complexity and allows developers to interact with
 
 public distinct isolated class Rag {
     private final ModelProvider model;
-    private final VectorKnowledgeBase knowledgeBase;
+    private final KnowledgeBase knowledgeBase;
     private final RagPromptTemplate promptTemplate;
 
     public isolated function init(ModelProvider? model = (),
-            VectorKnowledgeBase? knowledgeBase = (),
+            KnowledgeBase? knowledgeBase = (),
             RagPromptTemplate promptTemplate = new DefaultRagPromptTemplate()) returns Error? {
         self.model = model ?: check getDefaultModel();
         self.knowledgeBase = knowledgeBase ?: check getDefualtKnowlegeBase();
