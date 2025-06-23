@@ -46,7 +46,7 @@ This proposal introduces a new Ballerina package, `ballerina/msgstore`, which wi
 The `MessageStore` interface will define the following core methods:
 
 - `store`: This method will be used to persist a message in the message store. It accepts an `anydata` typed value as the message content. It returns an `error` if the message could not be stored, or `()` upon successful storage.
-- `retrieve`: This method will be used to retrieve the top message from the message store without removing it. It returns a `Message` record if a message is available, a `NoMessage` object if the store is empty, or an `error` if there was an issue retrieving the message. The `Message` record encapsulates the message content and a unique identifier. The `NoMessage` is a distinct object specifically indicating an empty store.
+- `retrieve`: This method will be used to retrieve the top message from the message store without removing it. It returns a `Message` record if a message is available, a `()` if the store is empty, or an `error` if there was an issue retrieving the message. The `Message` record encapsulates the message content and a unique identifier.
 - `acknowledge`: This method will be used to acknowledge the top message previously retrieved from the message store. It takes the unique string identifier of the message (matching the id from the `Message` record) and a boolean indicating whether the message was processed successfully. It returns an `error` if the acknowledgment fails, or `()` upon successful processing of the acknowledgment.
 
 The proposed interface and associated types are as follows:
@@ -61,12 +61,6 @@ public type Message record {|
     anydata content;
 |};
 
-# Represents an object type that indicates no message is available in the message store.
-public type NoMessage distinct object {};
-
-# Represents a constant instance of `NoMessage` to indicate that no message is available in the message store.
-public final readonly & NoMessage NO_MESSAGE = object {};
-
 # Represents a message store interface for storing and retrieving messages.
 public type MessageStore isolated client object {
 
@@ -78,8 +72,8 @@ public type MessageStore isolated client object {
 
     # Retrieves the top message from the message store without removing it.
     #
-    # + return - The retrieved message, or `NoMessage` if the store is empty, or an error if an error occurs
-    isolated remote function retrieve() returns Message|NoMessage|error;
+    # + return - The retrieved message, or () if the store is empty, or an error if an error occurs
+    isolated remote function retrieve() returns Message|error?;
 
     # Acknowledges the top message retrieved from the message store.
     #
