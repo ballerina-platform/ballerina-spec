@@ -69,7 +69,7 @@ The Embedding type supports three kinds of vector formats:
 The embeddings are created by embedding providers.
 
 ```ballerina
-public type EmbeddingProvider isolated client object {
+public type EmbeddingProvider distinct isolated client object {
     isolated remote function embed(Document document) returns Embedding|Error;
 };
 ```
@@ -85,7 +85,7 @@ public type Wso2ProviderConfig record {|
     string accessToken;
 |};
 
-public isolated client class Wso2EmbeddingProvider {
+public distinct isolated client class Wso2EmbeddingProvider {
     *EmbeddingProvider;
     private final wso2:Client embeddingClient;
 
@@ -103,7 +103,7 @@ public isolated client class Wso2EmbeddingProvider {
 A `VectorStore` is where the embedded documents are stored and queried.
 
 ```ballerina
-public type VectorStore isolated object {
+public type VectorStore distinct isolated object {
     public isolated function add(VectorEntry[] entries) returns Error?;
     public isolated function query(VectorStoreQuery query) returns VectorMatch[]|Error;
     public isolated function delete(string id) returns Error?;
@@ -167,7 +167,7 @@ Different providers or users can implement their own vector store integrations (
 We provide a simple in-memory implementation for testing and local experimentation, which supports only dense vectors.
 
 ```ballerina
-public isolated class InMemoryVectorStore {
+public distinct isolated class InMemoryVectorStore {
     *VectorStore;
     private final VectorEntry[] entries = [];
 
@@ -217,7 +217,7 @@ The `Retriever`:
 3. Returns top-matching documents with similarity scores.
 
 ```ballerina
-public isolated class Retriever {
+public distinct isolated class Retriever {
     private final VectorStore vectorStore;
     private final EmbeddingProvider embeddingModel;
 
@@ -247,7 +247,7 @@ The `VectorKnowledgeBase` defined below is a wrapper around a `VectorStore` and 
 It provides indexing and access to a `Retriever`.
 
 ```ballerina
-public isolated class VectorKnowledgeBase {
+public distinct isolated class VectorKnowledgeBase {
     private final VectorStore vectorStore;
     private final EmbeddingProvider embeddingModel;
     private final Retriever retriever;
@@ -278,7 +278,7 @@ public isolated class VectorKnowledgeBase {
 After retrieving the relevant documents or context, we use them to construct a prompt for the language model. The RagPromptTemplate is responsible for injecting this context and generating the final prompt.
 
 ```ballerina
-public type RagPromptTemplate isolated object {
+public type RagPromptTemplate distinct isolated object {
    public isolated function format(Document[] context, string query) returns Prompt;
 };
 
@@ -290,7 +290,7 @@ public type Prompt {|
 
 By default we'll provide the following default implmentation:
 ```
-public isolated class DefaultRagPromptTemplate {
+public distinct isolated class DefaultRagPromptTemplate {
     *RagPromptTemplate;
 
     public isolated function format(Document[] context, string query) returns Prompt {
@@ -316,7 +316,7 @@ It abstracts away the internal complexity and allows developers to interact with
 
 ```ballerina
 
-public isolated class Rag {
+public distinct isolated class Rag {
     private final ModelProvider model;
     private final VectorKnowledgeBase knowledgeBase;
     private final RagPromptTemplate promptTemplate;
