@@ -275,7 +275,7 @@ public distinct isolated class VectorKnowledgeBase {
     public isolated function init(VectorStore vectorStore, EmbeddingProvider embeddingModel) {
         self.embeddingModel = embeddingModel;
         self.vectorStore = vectorStore;
-        self.retriever = new (vectorStore, embeddingModel);
+        self.retriever = new VectorRetriever(vectorStore, embeddingModel);
     }
 
     public isolated function index(Document[] documents) returns Error? {
