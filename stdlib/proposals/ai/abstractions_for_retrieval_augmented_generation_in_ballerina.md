@@ -16,8 +16,6 @@ Retrieval-Augmented Generation (RAG) systems are becoming increasingly important
 ## Goals
 - Provide abstractions to ingest data into knowledge bases
 - Provide abstractions to retrieve data from knowledge bases
-- Provide abstractions to interact with language models using retrieved context
-- Support integration with various vector stores and embedding models
 
 ## Motivation
 As generative AI continues to evolve, Retrieval-Augmented Generation (RAG) has emerged as a key pattern for building intelligent, context-aware applications. RAG enhances the quality and relevance of language model responses by grounding them in external knowledge sources. However, implementing RAG workflows from scratch can be complex and fragmented, often requiring developers to manually integrate vector stores, embedding models, retrieval logic, and prompt construction.
