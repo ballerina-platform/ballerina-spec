@@ -446,3 +446,54 @@ public function main() returns error? {
     //...
 }
 ```
+
+### Dependency Diagram
+The following diagram illustrates the dependencies between the abstractions and components introduced above.
+
+```mermaid
+classDiagram
+    class Rag
+    class ModelProvider {
+        <<interface>>
+    }
+    class KnowledgeBase {
+        <<interface>>
+    }
+    class RagPromptTemplate {
+        <<interface>>
+    }
+    class Wso2ModelProvider
+    class VectorKnowledgeBase
+    class DefaultRagPromptTemplate
+    class VectorStore {
+        <<interface>>
+    }
+    class InMemoryVectorStore
+    class EmbeddingProvider {
+        <<interface>>
+    }
+    class Wso2EmbeddingProvider
+    class Retriever {
+        <<interface>>
+    }
+    class VectorRetriever
+
+    Rag <-- ModelProvider
+    Rag <-- KnowledgeBase
+    Rag <-- RagPromptTemplate
+
+    ModelProvider <|-- Wso2ModelProvider
+    KnowledgeBase <|-- VectorKnowledgeBase
+    RagPromptTemplate <|-- DefaultRagPromptTemplate
+
+    VectorKnowledgeBase <-- VectorStore
+    VectorKnowledgeBase <-- EmbeddingProvider
+    VectorKnowledgeBase <-- Retriever
+
+    VectorStore <|-- InMemoryVectorStore
+    EmbeddingProvider <|-- Wso2EmbeddingProvider
+    Retriever <|-- VectorRetriever
+
+   VectorRetriever <-- VectorStore
+   VectorRetriever <-- EmbeddingProvider
+```
