@@ -6,6 +6,8 @@
   - TBD
 - Created date
   - 2025-01-30
+- Updated date
+  - 2025-05-16
 - Issue
   - [1329](https://github.com/ballerina-platform/ballerina-spec/issues/1329)
 - State
@@ -28,7 +30,8 @@ The Ballerina Task package provides APIs to create, schedule, and manage jobs. T
 
 ## Motivation
 
-Currently, scheduling a task in Ballerina requires blocking the main strand, typically using a `sleep` statement in the main function:
+Currently, scheduling a task in Ballerina requires blocking the main strand, typically using a `sleep` statement in the main function. In monolithic and microservice architectures, applications are typically deployed as long-running services rather than as main functions with explicit termination. The current approach doesn't align with this deployment model.
+Introducing a task listener addresses these limitations by allowing developers to implement scheduled tasks as service.
 
 ```ballerina
 import ballerina/io;
@@ -69,11 +72,11 @@ With the new listener-based approach, a job is implemented as a Ballerina servic
 
 ```ballerina
 public type Service distinct service object {
-    remote function onTrigger() returns error?;
+    function execute() returns error?;
 }
 ```
 
-The `onTrigger` function executes when the scheduled trigger fires.
+The `execute` function executes when the scheduled trigger fires.
 
 ### Task listener
 
@@ -85,10 +88,8 @@ The task listener requires a schedule configuration (one-time or recurring) and 
 # Listener configuration.
 #
 # + schedule - The schedule configuration for the listener
-# + workerPool - The worker pool configuration for the listener
 public type ListenerConfiguration record {|
-    OneTimeConfiguration|RecurringConfiguration schedule;
-    WorkerPoolConfiguration? workerPool;
+    TriggerConfiguration trigger;
 |};
 
 # Recurring schedule configuration.
@@ -99,45 +100,14 @@ public type ListenerConfiguration record {|
 #               start immediately
 # + endTime - The trigger end time in Ballerina `time:Civil`
 # + taskPolicy -  The policy, which is used to handle the error and will be waiting during the trigger time
-public type RecurringConfiguration record {|
+public type TriggerConfiguration record {|
     decimal interval;
     int maxCount = -1;
     time:Civil startTime?;
     time:Civil endTime?;
     task:TaskPolicy taskPolicy = {};
 |};
-
-# One-time schedule configuration.
-#
-# + triggerTime - The specific time in Ballerina `time:Civil` to trigger only one time
-public type OneTimeConfiguration record {|
-    time:Civil triggerTime;
-|};
-
-# Worker pool configuration.
-#
-# + workerCount - Specifies the number of workers that are available for the concurrent execution of jobs.
-#                 It should be a positive integer. The recommendation is to set a value less than 10. Default sets to 5.
-# + waitingTime - The number of seconds as a decimal the scheduler will tolerate a trigger to pass its next-fire-time
-#                 before being considered as `ignored the trigger`
-public type WorkerPoolConfiguration record {|
-    int workerCount = 5;
-    time:Seconds waitingTime = 5;
-|};
 ```
-
-If no worker pool is provided, the listener uses a global scheduler with the following configuration:
-
-```ballerina
-# Worker count for the global schedular
-public configurable int globalSchedularWorkerCount = 5;
-
-# Waiting time for the global schedular
-public configurable time:Seconds globalSchedularWaitingTime = 5;
-```
-
-> **Note:** If a worker pool is specified, the listener creates a new scheduler; otherwise, it uses
-> the global scheduler.
 
 #### Listener APIs
 
@@ -150,20 +120,13 @@ The task listener provides the following APIs:
   - `attach(service)`/`scheduleJob(service)`: Attaches/Schedules a task service to the task listener.
   - `detach(service)`/`unscheduleJob(service)`: Detaches/Unschedules a task service from the task listener.
 
-- Job Management
-  - `pauseAllJobs()`: Pauses all the jobs.
-  - `resumeAllJobs()`: Resumes all the jobs.
-  - `pauseJob(id)`: Pauses a specific job.
-  - `resumeJob(id)`: Resumes a specific job.
-  - `getRunningJobs()`: Returns the list of running job ids.
-
 ### Service implementation
 
-Each task service should have a unique task ID for job management, specified in the service declaration as an attachment point. The service must also implement the `onTrigger` remote function, which defines the job's execution logic.
+Each task service should have a unique task ID for job management, specified in the service declaration as an attachment point. The service must also implement the `execute` and `onError` functions, which define the job's execution logic and handle errors.
 
 ```ballerina
 service "job-1" on taskListener {
-    remote function onTrigger() returns error? {
+    function execute() returns error? {
         // Job implementation
     }
 }
@@ -184,7 +147,7 @@ listener task:Listener taskListener = new(schedule = {interval: 1});
 service "job-1" on taskListener {
     private int i = 1;
 
-    remote function onTrigger() {
+    function execute() returns error? {
         lock {
             self.i += 1;
             io:println("MyCounter: ", self.i);
