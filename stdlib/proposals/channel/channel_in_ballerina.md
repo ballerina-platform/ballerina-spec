@@ -321,7 +321,7 @@ In the current design, the processors and destinations are indetified using spec
 isolated function processor(channel:MsgContext context) returns error? {
     // The context will contain the message content as `anydata`
     // The developer needs to manually convert the content to the specific type they want to work with
-    MyType myContent = check context.getContentWithType(MyType);
+    MyType myContent = check context.getContentWithType();
     // Process the content
 }
 
