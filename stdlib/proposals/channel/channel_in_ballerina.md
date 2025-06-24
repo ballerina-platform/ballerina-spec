@@ -111,7 +111,7 @@ The flow of a message through a `channel:Channel` is meticulously orchestrated t
 
     - If a replayed message consistently fails even after the configured number of maxRetries, it can be sent to a Dead Letter Store (another `msgstore:MessageStore` instance) for manual inspection or further automated handling outside the main channel flow.
 
-![Channel Flow Diagram](https://raw.githubusercontent.com/TharmiganK/ballerina-spec/master/stdlib/proposals/channel/resources/channel_flow.png)
+![Channel Flow Diagram](https://raw.githubusercontent.com/TharmiganK/ballerina-spec/channel-proposal/stdlib/proposals/channel/resources/channel_flow.png)
 
 ### Components Overview
 
