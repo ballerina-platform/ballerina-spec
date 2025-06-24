@@ -256,7 +256,7 @@ A `KnowledgeBase` manages a collection of documents and provides an interface fo
 ```ballerina
 public type KnowledgeBase distinct isolated object {
     public isolated function index(Document[] documents) returns Error?;
-    public isolated function getRetriever() returns Retriever;
+    public isolated function retrieve(string query, MetadataFilters? filters = ()) returns DocumentMatch[]|Error;
 };
 ```
 
@@ -285,8 +285,8 @@ public distinct isolated class VectorKnowledgeBase {
         check self.vectorStore.add(entries);
     }
 
-    isolated function getRetriever() returns Retriever {
-        return self.retriever;
+    public isolated function retrieve(string query, MetadataFilters? filters = ()) returns DocumentMatch[]|Error {
+        return self.retriever.retrieve(query, filters);
     }
 }
 ```
@@ -307,7 +307,8 @@ public type Prompt {|
 ```
 
 By default we'll provide the following default implmentation:
-```
+
+```ballerina
 public distinct isolated class DefaultRagPromptTemplate {
     *RagPromptTemplate;
 
@@ -348,7 +349,7 @@ public distinct isolated class Rag {
     }
 
     public isolated function query(string query, MetadataFilters? filters = ()) returns string|Error {
-        DocumentMatch[] context = check self.knowledgeBase.getRetriever().retrieve(query, filters);
+        DocumentMatch[] context = check self.knowledgeBase.retrieve(query, filters);
         // later when we allow re-rankers we can use the score in the document match
         Prompt prompt = self.promptBuilder.format(context.'map(ctx => ctx.document), query);
         ChatMessage[] messages = self.mapPromptToChatMessages(prompt);
