@@ -478,22 +478,22 @@ classDiagram
     }
     class VectorRetriever
 
-    Rag <-- ModelProvider
-    Rag <-- KnowledgeBase
-    Rag <-- RagPromptTemplate
+    Rag --> ModelProvider
+    Rag --> KnowledgeBase
+    Rag --> RagPromptTemplate
 
     ModelProvider <|-- Wso2ModelProvider
     KnowledgeBase <|-- VectorKnowledgeBase
     RagPromptTemplate <|-- DefaultRagPromptTemplate
 
-    VectorKnowledgeBase <-- VectorStore
-    VectorKnowledgeBase <-- EmbeddingProvider
-    VectorKnowledgeBase <-- Retriever
+    VectorKnowledgeBase --> VectorStore
+    VectorKnowledgeBase --> EmbeddingProvider
+    VectorKnowledgeBase --> Retriever
 
     VectorStore <|-- InMemoryVectorStore
     EmbeddingProvider <|-- Wso2EmbeddingProvider
     Retriever <|-- VectorRetriever
 
-   VectorRetriever <-- VectorStore
-   VectorRetriever <-- EmbeddingProvider
+   VectorRetriever --> VectorStore
+   VectorRetriever --> EmbeddingProvider
 ```
