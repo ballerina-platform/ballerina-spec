@@ -104,32 +104,28 @@ service "topic-2-consumer" on jmsListener {
 
 
   ```ballerina
-  # Represents common configurations related to JMS destination.
-  #
-  # + messageSelector - Only messages with properties matching the message selector expression are added to the durable subscription. 
-  #                     An empty string indicates that there is no message selector for the durable subscription.
-  type CommonDestinationConfig record {|
-    string messageSelector = "";
-  |};
-
   # Represents configurations for a JMS queue.
   #
   # + queueName - The name of the queue to consume messages from
+  # + messageSelector - Only messages with properties matching the message selector expression are delivered. 
+  #                     If this value is not set that indicates that there is no message selector for the message consumer
   public type QueueConfig record {|
-    *CommonDestinationConfig;
     string queueName;
+    string messageSelector?;
   |};
 
   # Represents configurations for JMS topic subscription.
   #
   # + topicName - The name of the topic to subscribe to
+  # + messageSelector - Only messages with properties matching the message selector expression are delivered. 
+  #                     If this value is not set that indicates that there is no message selector for the message consumer
   # + noLocal - If true then any messages published to the topic using this session's connection, or any other connection 
   #             with the same client identifier, will not be added to the durable subscription.
   # + consumerType - The message consumer type
   # + subscriberName - the name used to identify the subscription
   public type TopicConfig record {|
-    *CommonDestinationConfig;
     string topicName;
+    string messageSelector?;
     boolean noLocal = false;
     jms:ConsumerType consumerType = jms:DEFAULT;
     string subscriberName?;
