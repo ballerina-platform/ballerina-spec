@@ -146,6 +146,14 @@ The package provides four types of processors:
 
 ##### Filter Processor
 
+Defintion:
+```ballerina
+# Represents a filter function that checks the message context and returns a boolean indicating 
+# whether the message should be processed further.
+public type Filter isolated function (MessageContext msgCtx) returns boolean|error;
+```
+
+Example:
 ```ballerina
 @channel:Filter {name: "filter"}
 isolated function filter(channel:MsgContext context) returns boolean|error {
@@ -155,6 +163,14 @@ isolated function filter(channel:MsgContext context) returns boolean|error {
 
 ##### Transformer Processor
 
+Defintion:
+```ballerina
+# Represents a transformer function that processes the message content and returns a modified 
+# message content.
+public type Transformer isolated function (MessageContext msgCtx) returns anydata|error;
+```
+
+Example:
 ```ballerina
 @channel:Transformer {name: "transformer"}
 isolated function transformer(channel:MsgContext context) returns anydata|error {
@@ -165,6 +181,14 @@ isolated function transformer(channel:MsgContext context) returns anydata|error 
 
 #### Processor Router
 
+Defintion:
+```ballerina
+# Represents a processor router function that processes the message context and returns a processor.
+# An error can be returned if the routing fails, or nil if it wants to stop processing the message.
+public type ProcessorRouter isolated function (MessageContext msgCtx) returns Processor|error?;
+```
+
+Example:
 ```ballerina
 @channel:ProcessingRouter {name: "processorRouter"}
 isolated function processorRouter(channel:MsgContext context) returns channel:Processor|error {
@@ -175,6 +199,14 @@ isolated function processorRouter(channel:MsgContext context) returns channel:Pr
 
 #### Generic Processor
 
+Defintion:
+```ballerina
+# Represents a generic message processor that can process the message and return an error if the 
+# processing fails.
+public type GenericProcessor isolated function (MessageContext msgCtx) returns error?;
+```
+
+Example:
 ```ballerina
 @channel:Processor {name: "generic"}
 isolated function generic(channel:MsgContext context) returns error? {
@@ -195,6 +227,20 @@ channel:SourceFlow sourceFlow = [
 ];
 ```
 
+Defintion:
+```ballerina
+# Represents a processor that can be a filter, transformer, or processor and can be attached to a 
+# channel for processing messages. Processors should be idompotent i.e. repeating the execution 
+# should not change the outcome or the channel state.
+public type Processor GenericProcessor|Filter|Transformer|ProcessorRouter;
+
+# Represents a source flow that processes the message context. The pipline can consist a single 
+# processor or an array of processors. The source pipline will run in the configured order and the 
+# result of the last processor will be used as the message content for the next step in the channel 
+# flow.
+public type SourceFlow Processor|[Processor...];
+```
+
 #### Destination
 
 A destination is similar to a generic processor but is used to deliver the message to an external system or endpoint. It accepts a copy of the *Context* and returns an error if the delivery fails. Additionally, it can return any result that is relevant to the delivery operation, such as a confirmation or status.
@@ -204,6 +250,14 @@ A destination is similar to a generic processor but is used to deliver the messa
 isolated function destination(channel:MsgContext context) returns any|error {
     // Deliver the message to an external system or endpoint
 }
+```
+
+Defintion:
+```ballerina
+# Represents a destination function that processes the message context and returns a result or an 
+# error if it failed to send the message to the destination. Destinations are typically contains a 
+# sender or a writer that sends or writes the message to a specific destination.
+public type Destination isolated function (MessageContext msgCtx) returns any|error;
 ```
 
 #### Destination Flow
@@ -224,6 +278,21 @@ channel:DestinationFlow destinationWithPreprocessors = [
 ];
 ```
 
+Definition:
+```ballerina
+# Represents a destination with processors that processes the message context and sends the message
+# to a destination. The flow can consist of an array of processors followed by a destination. The
+# processors in the flow will run in the configured order and the result of the last processor will
+# be used as the message content for the destination.
+public type DestinationWithProcessors [[Processor...], Destination];
+
+# Represents a destination flow that processes the message context and sends the message to a
+# destination. The flow can consist of a single destination or an array of processors followed by a
+# destination. The processors in the flow will run in the configured order and the result of the last
+# processor will be used as the message content for the destination.
+public type DestinationFlow Destination|DestinationWithProcessors;
+```
+
 #### Destination Router
 
 A destination router is a special type of processor that can route messages to different destinations based on some criteria. It accepts the *Context* and returns the target destination flow to which the message should be routed.
@@ -234,6 +303,14 @@ isolated function destinationRouter(channel:MsgContext context) returns channel:
     // Determine the target destination based on some criteria
     // Return the target destination to which the message should be routed
 }
+```
+
+Defintion:
+```ballerina
+# Represents a destination router function that processes the message context and returns a 
+# destination or an error if the routing fails, or nil if it wants to stop processing the message.
+public type DestinationRouter isolated function (MessageContext msgCtx)
+    returns DestinationFlow|error?;
 ```
 
 #### Destinations Flow
@@ -249,6 +326,15 @@ channel:DestinationsFlow destinationsFlow = [
     destination, // a destination
     destinationWithPreprocessors // a destination with preprocessors
 ];
+```
+
+Definition:
+```ballerina
+# Represents the flow of destinations that can be used to send the message to multiple
+# destinations. The flow can consist of a single destination router or a single destination flow, 
+# or an array of destination flows. The destination flows will run in parallel and the results will 
+# be collected.
+public type DestinationsFlow DestinationRouter|DestinationFlow|DestinationFlow[];
 ```
 
 #### Failure Store
@@ -286,6 +372,30 @@ channel:Channel channel = check new ({
         }
     }
 });
+```
+
+Channel configuration is defined as follows:
+```bal
+# Represents the failure handler configuration for the channel.
+# 
+# + failureStore - The store to use for storing messages that failed to process
+# + replayListenerConfig - The configuration for replaying messages in the channel
+public type ChannelFailureHandlerConfig record {|
+    msgstore:MessageStore failureStore;
+    ReplayListenerConfiguration replayListenerConfig?;
+|};
+
+# Represent the configuration for a channel.
+#
+# + sourceFlow - The source flow that processes the message context
+# + destinationsFlow - The destinations flow that processes the message context and sends the 
+# message to one or more destinations
+# + failureConfig - The configuration for handling failures in the channel
+public type ChannelConfiguration record {|
+    SourceFlow sourceFlow;
+    DestinationsFlow destinationsFlow;
+    ChannelFailureHandlerConfig failureConfig?;
+|};
 ```
 
 > **Note:** When replay listener is configured in the channel initialization, the listener will be automatically created and started. So, the channels with replay listener configuration should be used as global variables and initializing the channel again and again will result in multiple instances of the replay listener being created.
