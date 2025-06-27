@@ -275,13 +275,15 @@ channel:Channel channel = check new ({
         destination, // a destination
         destinationWithPreprocessors // a destination with preprocessors
     ],
-    failureStore: failureStore,
-    replayListenerConfig: {
-        replayStore: replayStore, // a replay store to replay the failed messages
-        pollingInterval: 10, // interval in seconds to poll for failed messages
-        maxRetries: 2, // maximum number of retries for replay
-        retryInterval: 2 // interval in seconds between retries
-        deadLetterStore: deadLetterStore // a dead letter store to store the messages that cannot be replayed
+    failureConfig: {
+        failureStore: failureStore,
+        replayListenerConfig: {
+            replayStore: replayStore, // a replay store to replay the failed messages
+            pollingInterval: 10, // interval in seconds to poll for failed messages
+            maxRetries: 2, // maximum number of retries for replay
+            retryInterval: 2 // interval in seconds between retries
+            deadLetterStore: deadLetterStore // a dead letter store to store the messages that cannot be replayed
+        }
     }
 });
 ```
