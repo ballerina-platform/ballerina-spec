@@ -3,13 +3,13 @@
 - Authors
   - Tharmigan Krishnananthalingam
 - Reviewed by
-  - TBD
+  - Shafreen Anfar, Danesh Kuruppu
 - Created date
   - 2025-06-20
 - Updated date
-  - 2025-06-20
+  - 2025-06-27
 - Issue
-  - TBD
+  - [#1361](https://github.com/ballerina-platform/ballerina-spec/issues/1361)
 - State
   - Submitted
 
