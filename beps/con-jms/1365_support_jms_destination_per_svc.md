@@ -68,7 +68,7 @@ listener jms:Listener jmsListener = check new ({
 });
 
 @jms:ServiceConfig {
-  sessionAckMode: jms:AUTO_ACKNOWLEDGE,
+  acknowledgementMode: jms:AUTO_ACKNOWLEDGE,
   config: {
     topicName: "topic-1"
     ...
@@ -79,7 +79,7 @@ service "topic-1-consumer" on jmsListener {
 }
 
 @jms:ServiceConfig {
-  sessionAckMode: jms:AUTO_ACKNOWLEDGE,
+  acknowledgementMode: jms:AUTO_ACKNOWLEDGE,
   config: {
     topicName: "topic-2"
     ...
