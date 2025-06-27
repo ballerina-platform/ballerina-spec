@@ -15,13 +15,13 @@
 
 ## Summary
 
-This proposal introduces a new `ballerina/channel` package that defines a messaging channel concept in Ballerina. A channel acts as an orchestrator, enabling developers to define a complete message processing pipeline. Messages pushed into a channel will undergo a series of transformations and validations by "processors" in a defined sequential order, followed by parallel delivery to multiple "destinations". The channel also provides built-in mechanisms for robust error handling, including a configurable failure store for failed messages and a replay listener for automatic or on-demand re-processing, significantly simplifying the development of reliable and resilient message-driven applications.
+This proposal introduces a new `ballerinax/channel` package that defines a messaging channel concept in Ballerina. A channel acts as an orchestrator, enabling developers to define a complete message processing pipeline. Messages pushed into a channel will undergo a series of transformations and validations by "processors" in a defined sequential order, followed by parallel delivery to multiple "destinations". The channel also provides built-in mechanisms for robust error handling, including a configurable failure store for failed messages and a replay listener for automatic or on-demand re-processing, significantly simplifying the development of reliable and resilient message-driven applications.
 
 ## Motivation
 
 Building message-driven applications often involves complex tasks: transforming data, routing messages, and reliably delivering them to multiple systems. Developers frequently write repetitive code for common patterns like retries, error handling, and parallel delivery. This leads to increased development time, inconsistent implementations, and systems that are harder to maintain and evolve.
 
-The proposed `ballerina/channel` package simplifies these challenges. It offers a standardized, declarative way to define message pipelines, reducing boilerplate code and making it easier to build resilient, fault-tolerant applications. By centralizing message flow management, it improves developer experience and promotes consistent, reliable integration patterns across Ballerina projects.
+The proposed `ballerinax/channel` package simplifies these challenges. It offers a standardized, declarative way to define message pipelines, reducing boilerplate code and making it easier to build resilient, fault-tolerant applications. By centralizing message flow management, it improves developer experience and promotes consistent, reliable integration patterns across Ballerina projects.
 
 ## Goals
 
@@ -32,7 +32,7 @@ The proposed `ballerina/channel` package simplifies these challenges. It offers 
 
 ## Design
 
-This proposal introduces a new `ballerina/channel` package that provides a structured and opinionated way to handle message processing and delivery through a "channel" concept. A channel orchestrates the flow of messages through a configurable series of processors and destinations, allowing for flexible, reliable, and fault-tolerant message handling.
+This proposal introduces a new `ballerinax/channel` package that provides a structured and opinionated way to handle message processing and delivery through a "channel" concept. A channel orchestrates the flow of messages through a configurable series of processors and destinations, allowing for flexible, reliable, and fault-tolerant message handling.
 
 ### Core Components
 
