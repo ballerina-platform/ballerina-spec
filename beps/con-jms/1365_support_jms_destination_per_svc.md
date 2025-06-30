@@ -104,7 +104,7 @@ service "topic-2-consumer" on jmsListener {
 
 
   ```ballerina
-  # Represents configurations for a JMS queue.
+  # Represents configurations for a JMS queue subscription.
   #
   # + queueName - The name of the queue to consume messages from
   # + messageSelector - Only messages with properties matching the message selector expression are delivered. 
@@ -137,7 +137,7 @@ service "topic-2-consumer" on jmsListener {
   # + config - The topic or queue configuration to subscribe to
   public type ServiceConfiguration record {|
       jms:AcknowledgementMode acknowledgementMode = jms:AUTO_ACKNOWLEDGE;
-      QueueConfig|TopicConfig config;
+      QueueConfig|TopicConfig subscriptionConfig;
   |};
 
   # Annotation to configure the `jms:Service`.
