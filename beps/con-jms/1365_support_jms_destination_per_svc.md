@@ -109,6 +109,11 @@ service "topic-2-consumer" on jmsListener {
   # + queueName - The name of the queue to consume messages from
   # + messageSelector - Only messages with properties matching the message selector expression are delivered. 
   #                     If this value is not set that indicates that there is no message selector for the message consumer
+  #                     Example:
+  #                     ```
+  #                     // Only receive messages with a property `priority` set to 'high'
+  #                     messageSelector = "priority = 'high'"
+  #                     ```
   public type QueueConfig record {|
     string queueName;
     string messageSelector?;
