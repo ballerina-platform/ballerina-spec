@@ -109,21 +109,21 @@ service "topic-2-consumer" on jmsListener {
   # + queueName - The name of the queue to consume messages from
   # + messageSelector - Only messages with properties matching the message selector expression are delivered. 
   #                     If this value is not set that indicates that there is no message selector for the message consumer
-  #                     Example:
-  #                     ```
-  #                     // Only receive messages with a property `priority` set to 'high'
-  #                     messageSelector = "priority = 'high'"
-  #                     ```
+  #                     For example, to only receive messages with a property `priority` set to `'high'`, use:
+  #                     `"priority = 'high'"`. If this value is not set, all messages in the queue will be delivered.
   public type QueueConfig record {|
     string queueName;
     string messageSelector?;
   |};
+
 
   # Represents configurations for JMS topic subscription.
   #
   # + topicName - The name of the topic to subscribe to
   # + messageSelector - Only messages with properties matching the message selector expression are delivered. 
   #                     If this value is not set that indicates that there is no message selector for the message consumer
+  #                     For example, to only receive messages with a property `priority` set to `'high'`, use:
+  #                     `"priority = 'high'"`. If this value is not set, all messages in the queue will be delivered.
   # + noLocal - If true then any messages published to the topic using this session's connection, or any other connection 
   #             with the same client identifier, will not be added to the durable subscription.
   # + consumerType - The message consumer type
