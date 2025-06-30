@@ -17,6 +17,7 @@ The MCP Client APIs for Ballerina enable developers to build applications that a
 
 ## Non-Goals
 - Supporting any MCP resource-related operations, such as `resources/list`, `resources/read`, or resource subscriptions
+- Supporting any prompt-related operations, such as `prompts/list`, `prompts/get`, or prompt subscriptions
 - Implementing an MCP server (to be proposed separately)
 - Supporting advanced features like session resumption, resource subscriptions, or OAuth2 auth (initially out of scope)
 
@@ -38,7 +39,10 @@ This interaction occurs over HTTP POST and is responsible for:
 - Receiving either a synchronous HTTP response or an asynchronous response via an SSE stream
 
 ```ballerina
-CallToolResult result = check mcpClient->callTool("summarizeText", { text: "The quick brown fox..." });
+CallToolResult result = check mcpClient->callTool({
+    name: "summarizeText",
+    arguments: {"text": "The quick brown fox..."}
+});
 ```
 
 The server may respond:
@@ -91,28 +95,10 @@ ListToolsResult tools = check mcpClient->listTools();
 Invokes a tool with given parameters.
 
 ```ballerina
-CallToolResult result = check mcpClient->callTool("summarizeText", { text: "The quick brown fox..." });
-```
-
-### `prompts/list`
-Lists available prompts.
-
-```ballerina
-ListPromptsResult prompts = check mcpClient->listPrompts();
-```
-
-### `prompts/get`
-Fetches a prompt by ID.
-
-```ballerina
-GetPromptResult prompt = check mcpClient->getPrompt("askCustomer");
-```
-
-### `ping`
-Checks server connectivity.
-
-```ballerina
-check mcpClient->ping();
+CallToolResult result = check mcpClient->callTool({
+    name: "summarizeText",
+    arguments: {"text": "The quick brown fox..."}
+});
 ```
 
 ## Example Usage (Main Function)
@@ -121,22 +107,26 @@ check mcpClient->ping();
 import ballerinax/mcp;
 
 public function main() returns error? {
-    mcp:Client client = check new ({
-        url: "https://localhost:3000/mcp",
-        clientInfo: {
-            name: "BallerinaClient",
-            version: "1.0.0"
+    mcp:Client mcpClient = new (
+        "http://localhost:3000/mcp",
+        info = {
+            "name": "MCP Client",
+            "version": "1.0.0"
         },
-        capabilities: {
-            tools: true,
-            prompts: true
+        capabilityConfig = {
+            capabilities: {
+                roots: {
+                    listChanged: true
+                }
+            }
         }
-    });
+    );
 
-    check client->initialize();
+    check mcpClient->initialize();
 
-    CallToolResult result = check client->callTool("summarize", {
-        text: "Ballerina is an open-source language designed for integration."
+    CallToolResult result = check mcpClient->callTool({
+        name: "summarizeText",
+        arguments: {"text": "Ballerina is an open-source language designed for integration."}
     });
 
     io:println(result);
