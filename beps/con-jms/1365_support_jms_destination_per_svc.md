@@ -139,7 +139,7 @@ service "topic-2-consumer" on jmsListener {
   # The service configuration type for the `jms:Service`.
   #
   # + acknowledgementMode - Configuration indicating how messages received by the session will be acknowledged
-  # + config - The topic or queue configuration to subscribe to
+  # + subscriptionConfig - The topic or queue configuration to subscribe to
   public type ServiceConfiguration record {|
       jms:AcknowledgementMode acknowledgementMode = jms:AUTO_ACKNOWLEDGE;
       QueueConfig|TopicConfig subscriptionConfig;
