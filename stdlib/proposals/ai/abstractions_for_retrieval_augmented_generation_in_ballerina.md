@@ -20,7 +20,7 @@ Retrieval-Augmented Generation (RAG) systems are becoming increasingly important
 ## Motivation
 As generative AI continues to evolve, Retrieval-Augmented Generation (RAG) has emerged as a key pattern for building intelligent, context-aware applications. RAG enhances the quality and relevance of language model responses by grounding them in external knowledge sources. However, implementing RAG workflows from scratch can be complex and fragmented, often requiring developers to manually integrate vector stores, embedding models, retrieval logic, and prompt construction.
 
-Ballerina, being a language designed for integration, is well-positioned to simplify and standardize RAG application development. By introducing structured abstractions for common RAG tasks such as ingesting data into knowledge bases, retrieving relevant context, and generating grounded responses we can significantly reduce development time and lower the barrier to entry for developers building GenAI powered applications.
+Ballerina, being a language designed for integration, is well-positioned to simplify and standardize RAG application development. By introducing structured abstractions for common RAG tasks such as ingesting data into knowledge bases, retrieving relevant context, and generating grounded responses, we can significantly reduce development time and lower the barrier to entry for developers building GenAI powered applications.
 
 This initiative aims to empower developers with a cohesive and extensible framework for building robust RAG systems using Ballerina.
 
@@ -31,9 +31,27 @@ This section describes the core abstractions and components involved in implemen
 Every RAG system starts with a set of documents.
 
 ```ballerina
+# Represents the common structure for all document types
 public type Document record {|
+    string 'type;
+    DocumentMetaData metadata?;
+    anydata content;
+|};
+
+public type DocumentMetaData record {|
+    string mimeType?;
+    string fileName?;
+    decimal fileSize?;
+    time:Utc createdAt?;
+    time:Utc modifiedAt?;
+    json...;
+|};
+
+# Represents documents containing plain text content
+public type TextDocument record {|
+    *Document;
+    readonly TEXT 'type = TEXT;
     string content;
-    map<anydata> metadata?;
 |};
 ```
 
@@ -59,7 +77,7 @@ public type Embedding Vector|SparseVector|HybridVector;
 ```
 
 The Embedding type supports three kinds of vector formats:
-- Dense vectors (most common),
+- Dense vectors (most common)
 - Sparse vectors (useful for symbolic info)
 - Hybrid vectors (combining both).
 
@@ -120,7 +138,7 @@ Querying returns a ranked list of VectorMatch items:
 ```ballerina
 public type VectorMatch record {|
    *VectorEntry;
-   float score; // represents the similariy score
+   float score; // represents the similarity score
 |};
 ```
 
@@ -197,17 +215,17 @@ public distinct isolated class InMemoryVectorStore {
     }
 
     isolated function cosineSimilarity(Vector a, Vector b) returns float {
-        // ommited for brevity
+        // omitted for brevity
     }
 
     public isolated function delete(string id) returns Error? {
-        // ommited for brevity
+        // omitted for brevity
     }
 }
 ```
 
 ### 4. Retriever
-To retrieve the most relevant documents for a given question, we use a `Retriever`. The `Retriever` accepts a natural language query and optional metadata filters, then returns a list of matching documents.
+To retrieve the most relevant documents for a given question, we use a `Retriever`. The `Retriever` accepts a natural language query and optional metadata filters and then returns a list of matching documents.
 
 ```ballerina
 public type Retriever distinct isolated object {
@@ -237,7 +255,8 @@ public distinct isolated class VectorRetriever {
 
     public isolated function retrieve(string query, MetadataFilters? filters = {})
     returns DocumentMatch[]|Error {
-        Embedding queryVec = check self.embeddingModel->embed({content: query});
+        TextDocument queryDocument = {content: query, 'type: TEXT};
+        Embedding queryVec = check self.embeddingModel->embed(queryDocument);
         VectorStoreQuery vectorStoreQuery = {
             embeddingVector: queryVec,
             filters: filters
@@ -291,89 +310,233 @@ public distinct isolated class VectorKnowledgeBase {
 }
 ```
 
-### 6. RAG Prompt Template
+### 6. RAG Prompt Template Builder
 
-After retrieving the relevant documents or context, we use them to construct a prompt for the language model. The RagPromptTemplate is responsible for injecting this context and generating the final prompt.
+After retrieving the relevant documents or context, we use them to construct a prompt for the language model. The RagPromptTemplateBuilder is responsible for injecting this context and generating the final prompt.
 
 ```ballerina
-public type RagPromptTemplate distinct isolated object {
-   public isolated function format(Document[] context, string query) returns Prompt;
-};
+public type RagPromptTemplateBuilder isolated function (Document[] context, string query) returns RagPrompt;
 
-public type Prompt {|
-   string systemPrompt?;
-   string userPrompt;
+# Represents a prompt constructed by `RagPromptTemplateBuilder`.
+public type RagPrompt record {|
+    string|Prompt systemPrompt?;
+    string|Prompt userPrompt;
 |};
+
+# Represents a prompt.
+#
+# + strings - Read-only array of string literals from the template
+# + insertions - Array of values to be inserted into the template, can be any data or Document types
+public type Prompt isolated object {
+    *object:RawTemplate;
+
+    public string[] & readonly strings;
+    public (anydata|Document)[] insertions;
+};
 ```
 
-By default we'll provide the following default implmentation:
+> **Note:** The `Prompt` object mentioned above has already been introduced in the module to support natural programming constructs.  
+> We will be reusing it here to allow users to write prompts more easily.
+
+
+By default we'll provide the following default implementation:
 
 ```ballerina
-public distinct isolated class DefaultRagPromptTemplate {
-    *RagPromptTemplate;
-
-    public isolated function format(Document[] context, string query) returns Prompt {
-        // following is a sample implementation
-        string systemPrompt = string `Answer the question based on the following provided context: `
-            + string `<CONTEXT>${string:'join("\n", ...context.'map(doc => doc.content))}</CONTEXT>"""`;
-        string userPrompt = "Question:\n" + query;
-        return {systemPrompt, userPrompt};
-    }
+public isolated function defaultRagPromptTemplateBuilder(Document[] context, string query) returns RagPrompt {
+    Prompt systemPrompt = `Answer the question based on the following provided context: 
+    <CONTEXT>${context}</CONTEXT>`;
+    string userPrompt = "Question:\n" + query;
+    return {systemPrompt, userPrompt};
 }
 ```
 
 ### 7. Rag: The Orchestrator
 
-The Rag class acts as the high-level orchestrator that brings together all core components of a Retrieval-Augmented Generation (RAG) system. It provides a simple and unified interface for indexing knowledge and querying against it.
-The Rag class simplifies the RAG workflow by:
-- Handling document ingestion,
-- Retrieving relevant context,
-- Building a prompt using that context,
-- Calling the LLM to generate a response.
+The `Rag` object is desinged to acts as the central orchestrator that brings together all the core components of a Retrieval-Augmented Generation system. It provides a streamlined and unified interface for indexing knowledge and executing queries.
 
-It abstracts away the internal complexity and allows developers to interact with the system through two main functions: ingest() and query().
+An implementation of the `Rag` could simplifies the RAG workflow by:
+- Ingesting and indexing documents
+- Retrieving relevant contextual information
+- Constructing prompts using the retrieved context
+- Invoking the LLM to generate a final response
+
+The `Rag` object abstracts away the internal complexity and exposes two primary functions that developers can use to interact with the system:
 
 ```ballerina
+public type Rag distinct isolated object {
+    public isolated function query(string query, MetadataFilters? filters = ()) returns string|Error;
+    public isolated function ingest(Document[] documents) returns Error?;
+};
+```
 
-public distinct isolated class Rag {
-    private final ModelProvider model;
-    private final KnowledgeBase knowledgeBase;
-    private final RagPromptTemplate promptTemplate;
+### 8. RAG implementations
 
-    public isolated function init(ModelProvider? model = (),
-            KnowledgeBase? knowledgeBase = (),
-            RagPromptTemplate promptTemplate = new DefaultRagPromptTemplate()) returns Error? {
-        self.model = model ?: check getDefaultModel();
-        self.knowledgeBase = knowledgeBase ?: check getDefualtKnowlegeBase();
-        self.promptTemplate = promptTemplate;
+
+The plan is to implement and maintain various RAG patterns under a separate package named `ballerinax/ai.rag`.
+By default, the initial implementation will include a naive RAG, pattern as shown below.
+
+```ballerina
+import ballerina/ai;
+import ballerinax/ai.openai;
+import ballerinax/ai.pinecone;
+
+// The `KnowledgeBaseConfig` will be updated as new KnowledgeBase types are introduced.
+// For example, `GraphKnowledgeBaseConfig` will be added once we decide to support Graph-based knowledge bases.
+public type KnowledgeBaseConfig VectorKnowledgeBaseConfig|...;
+
+public type VectorKnowledgeBaseConfig record {|
+    VectorStoreConfig vectorStoreConfig;
+    EmbeddingProviderConfig embeddingProviderConfig;
+|};
+
+public type VectorStoreConfig PineConeVectorStoreConfig|InMemoryVectorStoreConfig;
+
+public type PineConeVectorStoreConfig record {|
+    string serviceUrl;
+    string apiKey;
+    ai:VectorStoreQueryMode queryMode = ai:DENSE;
+    pinecone:PineconeConfigs conf = {};
+    "pinecone" provider = "pinecone";
+    ai:ConnectionConfig connectionConfig = {}; // advanced http configurations
+|};
+
+public type InMemoryVectorStoreConfig record {|
+    int topK = 5;
+    "inMemory" provider = "inMemory";
+|};
+
+public type EmbeddingProviderConfig Wso2EmbeddingProviderConfig|OpenAiEmbeddingProviderConfig|...;
+
+public type Wso2EmbeddingProviderConfig record {|
+    *ai:Wso2ProviderConfig;
+    "wso2" provider = "wso2";
+    ai:ConnectionConfig connectionConfig = {};
+|};
+
+public type OpenAiEmbeddingProviderConfig record {|
+    string serviceUrl;
+    string apiKey;
+    "openai" provider = "openai";
+    openai:OPEN_AI_EMBEDDING_MODEL_NAMES modelType;
+    ai:ConnectionConfig connectionConfig = {};
+|};
+
+public type ModelProviderConfig Wso2ModelProviderConfig|OpenAiModelProviderConfig|....;
+
+public type Wso2ModelProviderConfig record {|
+    *ai:Wso2ProviderConfig;
+    "wso2" provider = "wso2";
+    ai:ConnectionConfig connectionConfig = {};
+|};
+
+public type OpenAiModelProviderConfig record {|
+    string apiKey;
+    openai:OPEN_AI_MODEL_NAMES modelType;
+    string serviceUrl = openai:DEFAULT_OPENAI_SERVICE_URL;
+    int maxTokens = openai:DEFAULT_MAX_TOKEN_COUNT;
+    decimal temperature = openai:DEFAULT_TEMPERATURE;
+    ai:ConnectionConfig connectionConfig = {};
+    "openai" provider = "openai";
+|};
+
+public distinct isolated class NaiveRag {
+    *ai:Rag;
+    private final ai:ModelProvider model;
+    private final ai:KnowledgeBase knowledgeBase;
+    private final ai:RagPromptTemplateBuilder promptTemplateBuilder;
+
+    # Creates a new `Rag` instance.
+    #
+    # + modelProviderConfig - The configuration of language model provider used by the RAG pipeline. If `nil`, `Wso2ModelProvider` is used as the default
+    # + knowledgeBase - configuration to create knowledge base.
+    # If `nil`, a default `VectorKnowledgeBase` is created, backed by `InMemoryVectorStore` and `Wso2EmbeddingProvider`
+    # + promptTemplate - The function pointer of a RAG prompt template builder used to construct context-aware prompts.
+    # Defaults to `defaultRagPromptTemplateBuilder` if not provided
+    # + return - `nil` on success, or an `Error` if initialization fails
+    public isolated function init(ModelProviderConfig? modelProviderConfig = (),
+            KnowledgeBaseConfig? knowledgeBaseConfig = (),
+            ai:RagPromptTemplateBuilder promptTemplate = ai:defaultRagPromptTemplateBuilder) returns ai:Error? {
+        self.model = modelProviderConfig is () ? check ai:getDefaultModelProvider() : check createModelProvider(modelProviderConfig);
+        self.knowledgeBase = knowledgeBaseConfig is () ? check ai:getDefaultKnowledgeBase() : check createKnowledgeBase(knowledgeBaseConfig);
+        self.promptTemplateBuilder = promptTemplate;
     }
 
-    public isolated function query(string query, MetadataFilters? filters = ()) returns string|Error {
-        DocumentMatch[] context = check self.knowledgeBase.retrieve(query, filters);
-        // later when we allow re-rankers we can use the score in the document match
-        Prompt prompt = self.promptBuilder.format(context.'map(ctx => ctx.document), query);
-        ChatMessage[] messages = self.mapPromptToChatMessages(prompt);
-        ChatAssistantMessage response = check self.model->chat(messages, []);
-        return response.content ?: error Error("Unable to obtain valid answer");
+    public isolated function query(string query, ai:MetadataFilters? filters = ()) returns string|ai:Error {
+        ai:DocumentMatch[] context = check self.knowledgeBase.retrieve(query, filters);
+        ai:RagPrompt prompts = check self.executePromptBuilder(context.'map(ctx => ctx.document), query);
+        ai:ChatMessage[] messages = self.mapPromptToChatMessages(prompts);
+        ai:ChatAssistantMessage response = check self.model->chat(messages, []);
+        return response.content ?: error ai:Error("Unable to obtain valid answer");
     }
 
-    public isolated function ingest(Document[] documents) returns Error? {
+    private isolated function executePromptBuilder(ai:Document[] documents, string query) returns ai:RagPrompt|ai:Error {
+        // ...omitted for brevity
+    }
+
+    public isolated function ingest(ai:Document[] documents) returns ai:Error? {
         return self.knowledgeBase.index(documents);
     }
 
-    private isolated function mapPromptToChatMessages(Prompt prompt) returns ChatMessage[] {
-        string? systemPrompt = prompt?.systemPrompt;
-        string? userPrompt = prompt?.userPrompt;
-        ChatMessage[] messages = [];
-        if systemPrompt is string {
-            messages.push({role: SYSTEM, content: systemPrompt});
-        }
-        if userPrompt is string {
-            messages.push({role: USER, content: userPrompt});
-        }
-        return messages;
+    private isolated function mapPromptToChatMessages(ai:RagPrompt prompt) returns ai:ChatMessage[] {
+        // ...omitted for brevity
     }
-};
+}
+
+public isolated function createModelProvider(ModelProviderConfig modelProviderConfig) returns ai:ModelProvider|ai:Error {
+    if modelProviderConfig is Wso2ModelProviderConfig {
+        return new ai:Wso2ModelProvider(
+            serviceUrl = modelProviderConfig.serviceUrl,
+            accessToken = modelProviderConfig.accessToken,
+            connectionConfig = modelProviderConfig.connectionConfig
+        );
+    }
+    // handle other providers
+    return new openai:ModelProvider(
+        apiKey = modelProviderConfig.apiKey,
+        modelType = modelProviderConfig.modelType,
+        serviceUrl = modelProviderConfig.serviceUrl,
+        maxTokens = modelProviderConfig.maxTokens,
+        temperature = modelProviderConfig.temperature,
+        connectionConfig = modelProviderConfig.connectionConfig
+    );
+}
+
+public isolated function createKnowledgeBase(KnowledgeBaseConfig knowledgeBaseConfig) returns ai:KnowledgeBase|ai:Error {
+    ai:VectorStore vectorStore = check createVectorStore(knowledgeBaseConfig.vectorStoreConfig);
+    ai:EmbeddingProvider embeddingProvider = check createEmbeddingProvider(knowledgeBaseConfig.embeddingProviderConfig);
+    return new ai:VectorKnowledgeBase(vectorStore, embeddingProvider);
+    // handle other cases when we introduce different KnowledgeBase kinds (ex. GraphKnowledgeBase)
+}
+
+public isolated function createVectorStore(VectorStoreConfig vectorStoreConfig) returns ai:VectorStore|ai:Error {
+    if vectorStoreConfig is PineConeVectorStoreConfig {
+        return new pinecone:VectorStore(
+            serviceUrl = vectorStoreConfig.serviceUrl,
+            apiKey = vectorStoreConfig.apiKey,
+            queryMode = vectorStoreConfig.queryMode,
+            conf = vectorStoreConfig.conf
+        );
+    } 
+    // handle other cases
+    return new ai:InMemoryVectorStore(topK = vectorStoreConfig.topK);
+}
+
+public isolated function createEmbeddingProvider(EmbeddingProviderConfig embeddingProviderConfig) 
+returns ai:EmbeddingProvider|ai:Error {
+    if embeddingProviderConfig is Wso2EmbeddingProviderConfig {
+        return new ai:Wso2EmbeddingProvider(
+            serviceUrl = embeddingProviderConfig.serviceUrl,
+            accessToken = embeddingProviderConfig.accessToken,
+            connectionConfig = embeddingProviderConfig.connectionConfig
+        );
+    }
+    return new openai:EmbeddingProvider(
+        serviceUrl = embeddingProviderConfig.serviceUrl,
+        apiKey = embeddingProviderConfig.apiKey,
+        modelType = embeddingProviderConfig.modelType,
+        connectionConfig = embeddingProviderConfig.connectionConfig
+    );
+}
 ```
 
 #### Default Initialization:
@@ -383,7 +546,7 @@ The Rag constructor supports optional injection of custom implementations. If no
 - `RagPromptTemplate` → `DefaultRagPromptBuilder`
 
 ```ballerina
-isolated function getDefaultModelProvider() returns Wso2ModelProvider|Error {
+public isolated function getDefaultModelProvider() returns Wso2ModelProvider|Error {
     Wso2ModelProviderConfig? config = wso2ModelProviderConfig;
     if config is () {
         return error Error("The `wso2ProviderConfig` is not configured correctly."
@@ -392,7 +555,7 @@ isolated function getDefaultModelProvider() returns Wso2ModelProvider|Error {
     return new Wso2ModelProvider(config);
 }
 
-isolated function getDefaultKnowledgeBase() returns VectorKnowledgeBase|Error {
+public isolated function getDefaultKnowledgeBase() returns VectorKnowledgeBase|Error {
     Wso2ModelProviderConfig? config = wso2ModelProviderConfig;
     if config is () {
         return error Error("The `wso2ProviderConfig` is not configured correctly."
@@ -400,51 +563,106 @@ isolated function getDefaultKnowledgeBase() returns VectorKnowledgeBase|Error {
     }
     EmbeddingProvider|Error wso2EmbeddingProvider = new Wso2EmbeddingProvider(config);
     if wso2EmbeddingProvider is Error {
-        return error Error("error creatating default vector konwledge base");
+        return error Error("error creating default vector knowledge base");
     }
     return new VectorKnowledgeBase(new InMemoryVectorStore(), wso2EmbeddingProvider);
 }
 ```
 
-### Example Usage with Default Configuration
+### 9. Changes in ModelProvider
+
+The ModelProvider currently defines its `chat()` method to accept an array of `ChatMessage` as input. The type definitions are as follows:
+
+```ballerina
+# Chat message record.
+public type ChatMessage ChatUserMessage|ChatSystemMessage|ChatAssistantMessage|ChatFunctionMessage;
+
+# User chat message record.
+public type ChatUserMessage record {|
+    USER role;
+    string content;
+    string name?;
+|};
+
+# System chat message record.
+public type ChatSystemMessage record {|
+    SYSTEM role;
+    string content;
+    string name?;
+|};
+
+# Assistant chat message record.
+public type ChatAssistantMessage record {|
+    // ...omited for brevity
+|};
+
+# Function message record.
+public type ChatFunctionMessage record {|
+     // ...omited for brevity
+|};
+```
+
+To enable multimodal support in ModelProvider—for example, allowing models to handle different types of documents such as `TextDocument`, `AudioDocument`, `ImageDocument`, etc.—we are updating the `content` field in `ChatUserMessage` and `ChatSystemMessage` to use the `PromptParts` type:
+
+```
+public type PromptParts record {|
+    string[] & readonly strings;
+    (anydata|Document)[] insertions;
+|};
+
+public type ChatUserMessage record {|
+    string|PromptParts content;
+    // ...omitted for brevity
+|};
+
+public type ChatSystemMessage record {|
+    string|PromptParts content;
+    // ...omitted for brevity
+|};
+```
+
+The `PromptParts` type is designed to represent the structured data extracted from a `Prompt` raw template. If the `insertions` array contains any `Document` values, model providers that support multimodal input will implement the necessary logic to convert and forward this data to the LLM.
+
+### NaiveRag Example Usage with Default Configuration
 
 ```ballerina
 import ballerina/ai;
 import ballerina/io;
+import ballerinax/ai.rag;
 
 public function main() returns error? {
-    ai:Rag rag = check new ai:Rag();
+    rag:Naive rag = check new ();
 
-    string poilicy = check io:fileReadString("pizza_shop_policy_doc.md");
-    ai:Document[] poilicyDocs = ai:splitDocumentByLine(poilicy);
-    check rag.ingest(poilicyDocs);
+    string policy = check io:fileReadString("./resources/pizza_shop_policy_doc.md");
+    ai:Document[] policyDocs = ai:splitDocumentByLine(policy);
+    check rag.ingest(policyDocs);
 
     string answer = check rag.query("How long is the unpaid lunch break?");
     io:println(answer);
 }
+
 ```
 
-### Example Usage with Custom Implementation
+### NaiveRag Example Usage with Custom Configuration
 ```ballerina
 import ballerina/ai;
-import ballerinax/ai.openai;
-import ballerinax/ai.pinecone;
+import ballerina/io;
+import ballerinax/ai.rag;
+
+configurable rag:ModelProviderConfig modelProviderConfig = ?;
+configurable rag:KnowledgeBaseConfig knowledgeBaseConfig = ?;
 
 public function main() returns error? {
-    ai:ModelProvider model = check new openai:ModelProvider(openAiApiKey, openai:GPT_4O);
-    ai:VectoStore store = check new pinecone:VectoreStore(pineconeServiceUrl, pineconeKey);
-    ai:EmbeddingProvider embeddingModel = check new openai:EmbeddingProvider(openAiApiKey, openai:TEXT_EMBEDDING_ADA_002);
-    ai:VectorKnowlegeBase knowledgeBase = new (store, embeddingModel);
-    ai:Rag rag = new (model, knowledgeBase);
+    rag:Naive rag = check new (modelProviderConfig, knowledgeBaseConfig);
 
-    string poilicy = check io:fileReadString("pizza_shop_policy_doc.md");
-    ai:Document[] poilicyDocs = ai:splitDocumentByLine(poilicy);
-    check rag.ingest(poilicyDocs);
+    string policy = check io:fileReadString("./resources/pizza_shop_policy_doc.md");
+    ai:Document[] policyDocs = ai:splitDocumentByLine(policy);
+    check rag.ingest(policyDocs);
 
-
-    string answer = check rag.query("predective maintenance and analytics");
-    //...
+    string answer = check rag.query("How long is the unpaid lunch break?");
+    io:println(answer);
 }
+
 ```
 
 ### Dependency Diagram
@@ -452,19 +670,22 @@ The following diagram illustrates the dependencies between the abstractions and 
 
 ```mermaid
 classDiagram
-    class Rag
+namespace ballerina_ai {
+    class Rag {
+        <<interface>>
+    }
     class ModelProvider {
         <<interface>>
     }
     class KnowledgeBase {
         <<interface>>
     }
-    class RagPromptTemplate {
+    class RagPromptTemplateBuilder {
         <<interface>>
     }
     class Wso2ModelProvider
     class VectorKnowledgeBase
-    class DefaultRagPromptTemplate
+    class defaultRagPromptTemplateBuilder
     class VectorStore {
         <<interface>>
     }
@@ -477,23 +698,29 @@ classDiagram
         <<interface>>
     }
     class VectorRetriever
+}
 
-    Rag --> ModelProvider
-    Rag --> KnowledgeBase
-    Rag --> RagPromptTemplate
+namespace ballerinax_ai.rag {
+    class NaiveRag
+}
 
-    ModelProvider <|-- Wso2ModelProvider
-    KnowledgeBase <|-- VectorKnowledgeBase
-    RagPromptTemplate <|-- DefaultRagPromptTemplate
+ModelProvider <|-- Wso2ModelProvider
+KnowledgeBase <|-- VectorKnowledgeBase
+RagPromptTemplateBuilder <|-- defaultRagPromptTemplateBuilder
 
-    VectorKnowledgeBase --> VectorStore
-    VectorKnowledgeBase --> EmbeddingProvider
-    VectorKnowledgeBase --> Retriever
+VectorKnowledgeBase --> VectorStore
+VectorKnowledgeBase --> EmbeddingProvider
+VectorKnowledgeBase --> Retriever
 
-    VectorStore <|-- InMemoryVectorStore
-    EmbeddingProvider <|-- Wso2EmbeddingProvider
-    Retriever <|-- VectorRetriever
+VectorStore <|-- InMemoryVectorStore
+EmbeddingProvider <|-- Wso2EmbeddingProvider
+Retriever <|-- VectorRetriever
 
-   VectorRetriever --> VectorStore
-   VectorRetriever --> EmbeddingProvider
+VectorRetriever --> VectorStore
+VectorRetriever --> EmbeddingProvider
+
+NaiveRag --> ModelProvider
+NaiveRag --> KnowledgeBase
+NaiveRag --> RagPromptTemplateBuilder
+Rag <|-- NaiveRag
 ```
