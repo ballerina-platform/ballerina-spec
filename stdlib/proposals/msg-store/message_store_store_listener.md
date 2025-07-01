@@ -15,7 +15,7 @@
 
 ## Summary
 
-This proposal introduces a new Ballerina package(`ballerina/msgstore`) that provides a standardized interface for message stores and a robust message store listener. This package will enable Ballerina applications to interact with various message storage systems consistently, store messages, and listen for changes, simplifying development and enhancing flexibility.
+This proposal introduces a new Ballerina package(`ballerina/gd`) that provides a standardized interface for message stores and a robust message store listener to implement [**Guranteed Delivery**](https://www.enterpriseintegrationpatterns.com/patterns/messaging/GuaranteedMessaging.html). This package will enable Ballerina applications to interact with various message storage systems consistently, store messages, and listen for changes, simplifying development and enhancing flexibility.
 
 ## Motivation
 
@@ -39,11 +39,11 @@ This proposal addresses the current lack of a unified message persistence and co
 
 ## Design
 
-This proposal introduces a new Ballerina package, `ballerina/msgstore`, which will define the message store interface and provide a robust implementation of a message store listener.
+This proposal introduces a new Ballerina package, `ballerina/gd`, which will define the message store interface and provide a robust implementation of a message store listener.
 
 ### Message Store Interface
 
-The `MessageStore` interface will define the following core methods:
+The `Store` interface will define the following core methods:
 
 - `store`: This method will be used to persist a message in the message store. It accepts an `anydata` typed value as the message content. It returns an `error` if the message could not be stored, or `()` upon successful storage.
 - `retrieve`: This method will be used to retrieve the top message from the message store without removing it. It returns a `Message` record if a message is available, a `()` if the store is empty, or an `error` if there was an issue retrieving the message. The `Message` record encapsulates the message content and a unique identifier.
@@ -62,7 +62,7 @@ public type Message record {|
 |};
 
 # Represents a message store interface for storing and retrieving messages.
-public type MessageStore isolated client object {
+public type Store isolated client object {
 
     # Stores a message in the message store.
     #
@@ -87,12 +87,12 @@ public type MessageStore isolated client object {
 
 ### Message Store Listener
 
-The `Listener` object will be responsible for orchestrating message consumption from a `MessageStore`. It must be initialized with an instance of a `MessageStore`:
+The `StoreListener` object will be responsible for orchestrating message consumption from a `Store`. It must be initialized with an instance of a `Store`:
 
 ```ballerina
-msgstore:MessageStore msgStore = new msgstore:InMemoryMessageStore();
+gd:Store msgStore = new gd:InMemoryMessageStore();
 
-listener msgstore:Listener msgStoreListener = new(msgStore);
+listener gd:StoreListener msgStoreListener = new(msgStore);
 ```
 
 The listener can be configured with the following options:
@@ -117,13 +117,13 @@ public type ListenerConfiguration record {|
 
 #### The Message Store Service
 
-A message store service, defined by the `msgstore:Service` type, can be attached to the `msgstore:Listener` to handle messages retrieved from the message store. This service will expose a single remote method, `onMessage`, which will be invoked upon message reception.
+A message store service, defined by the `StoreService` type, can be attached to the `StoreListener` to handle messages retrieved from the message store. This service will expose a single remote method, `onMessage`, which will be invoked upon message reception.
 
 The service type definition is as follows:
 
 ```ballerina
 # This service object defines the contract for processing messages from a message store.
-public type Service distinct isolated service object {
+public type StoreService distinct isolated service object {
 
     # This remote function is called when a new message is received from the message store.
     #
@@ -137,20 +137,20 @@ public type Service distinct isolated service object {
 
 #### The Listener Lifecycle
 
-- **Attach:** A `msgstore:Service` object can be attached to the `msgstore:Listener`. The listener supports attachment without a path since it's not relevant in this context. Only one service can be attached to a given listener instance.
+- **Attach:** A `StoreService` object can be attached to the `StoreListener`. The listener supports attachment without a path since it's not relevant in this context. Only one service can be attached to a given listener instance.
 
-- **Start:** When the listener is started, a scheduled task will be initiated. This task will periodically retrieve messages from the associated `MessageStore` at the `pollingInterval` defined in the `ListenerConfiguration`.
+- **Start:** When the listener is started, a scheduled task will be initiated. This task will periodically retrieve messages from the associated `Store` at the `pollingInterval` defined in the `ListenerConfiguration`.
 
 - **Scheduled Message Poll Task:** Upon successful retrieval of a message, its content will be extracted from the `Message` record and dispatched to the attached service's `onMessage` function for processing.
 
-  - **Success:** If the `onMessage` function returns `()`, the message will be acknowledged as successfully processed in the `MessageStore`.
+  - **Success:** If the `onMessage` function returns `()`, the message will be acknowledged as successfully processed in the `Store`.
   - **Failure:** If the `onMessage` function returns an `error`, the message processing will be retried based on the configured `maxRetries` and `retryInterval`.
 If the maxRetries is reached:
     - The message will be acknowledged as a **failure** if `dropMessageAfterMaxRetries` is `false` and `deadLetterStore` is not set. This typically means the message remains in the original store or its status is updated to "failed".
     - The message will be acknowledged as a **success** if `dropMessageAfterMaxRetries` is `true` and `deadLetterStore` is not set. This implies the message is discarded.
     - The message will be stored in the `deadLetterStore` (if configured) regardless of `dropMessageAfterMaxRetries`. This provides a mechanism for inspecting and reprocessing failed messages.
 
-- **Detach:** The `msgstore:Service` can be programmatically detached from the `msgstore:Listener`. This action will stop the scheduled message polling task, preventing the listener from retrieving further messages.
+- **Detach:** The `StoreService` can be programmatically detached from the `StoreListener`. This action will stop the scheduled message polling task, preventing the listener from retrieving further messages.
 
 - **Immediate Stop:** The listener can be stopped immediately. This will halt the scheduled task, and no further messages will be retrieved. Any messages currently in the process of being handled by `onMessage` will not be acknowledged.
 
@@ -162,11 +162,11 @@ The following example demonstrates how to utilize the message store and the mess
 
 ```ballerina
 import ballerina/io;
-import ballerina/msgstore;
+import ballerina/gd;
 
-msgstore:MessageStore msgStore = new msgstore:InMemoryMessageStore();
+gd:Store msgStore = new gd:InMemoryMessageStore();
 
-listener msgstore:Listener msgStoreListener = new(msgStore, {
+listener gd:StoreListener msgStoreListener = new(msgStore, {
     pollingInterval: 10,
     maxRetries: 2,
     retryInterval: 2
@@ -190,15 +190,15 @@ service on msgStoreListener {
 
 ### Risks
 
-- **Performance Overhead:** The abstraction layer introduced by the `MessageStore` interface and the listener's polling mechanism might introduce some performance overhead compared to direct interaction with underlying message broker APIs.
-- **Complexity of External Implementations:** Ensuring that external `MessageStore` implementations (e.g., for Kafka, JMS, etc.) correctly adhere to the `MessageStore` interface contract, especially regarding idempotency and exactly-once processing semantics (if supported by the underlying broker), could be challenging. Clear guidelines and robust testing will be crucial.
+- **Performance Overhead:** The abstraction layer introduced by the `Store` interface and the listener's polling mechanism might introduce some performance overhead compared to direct interaction with underlying message broker APIs.
+- **Complexity of External Implementations:** Ensuring that external `Store` implementations (e.g., for Kafka, JMS, etc.) correctly adhere to the `Store` interface contract, especially regarding idempotency and exactly-once processing semantics (if supported by the underlying broker), could be challenging. Clear guidelines and robust testing will be crucial.
 - **Error Handling Granularity:** The current `acknowledge` method has a single `success` boolean. Some advanced message brokers might offer more granular acknowledgment types (e.g., re-queue, reject with specific error codes). This proposal adopts a simpler success/failure model.
 - **Thread Model and Concurrency:** Careful consideration is needed for how the listener's polling and message processing interact with Ballerina's concurrency model to avoid blocking the event loop and ensure efficient resource utilization.
 - **Dead-Letter Queue Semantics:** The interaction between the listener's retry mechanism and the `deadLetterStore` needs to be carefully designed to avoid message loss or duplication, especially under failure conditions during the transfer to the DLQ.
 
 ### Assumptions
 
-- **Message Order:** The retrieve method is expected to return the "top" message, implying an ordered queue in most message store implementations. For unordered stores, this means returning any available message. The consistency of this ordering across different `MessageStore` implementations is assumed to be handled by the specific implementation.
+- **Message Order:** The retrieve method is expected to return the "top" message, implying an ordered queue in most message store implementations. For unordered stores, this means returning any available message. The consistency of this ordering across different `Store` implementations is assumed to be handled by the specific implementation.
 - **Message Uniqueness:** The `id` in the `Message` record is assumed to be **unique** and stable for a given message within the lifetime of its processing by the listener.
 - **Atomic Operations:** It is assumed that the `retrieve` and `acknowledge` operations, particularly for external message stores, are designed to be atomic or effectively atomic to prevent message loss or duplicate processing in distributed environments.
 - **Polling-based Listener Acceptability:** The initial design relies on a polling mechanism. While generally acceptable for many use cases, extremely low-latency requirements might necessitate push-based notification mechanisms, which are not part of this initial proposal.
@@ -206,13 +206,13 @@ service on msgStoreListener {
 ## Dependencies
 
 - Ballerina Language and Runtime: This proposal depends on core Ballerina language features and its runtime environment.
-- Existing Ballerina Connectors: Specific `MessageStore` implementations (e.g., for RabbitMQ, Kafka) will depend on their respective Ballerina connector packages (e.g., `ballerinax/rabbitmq`, `ballerinax/kafka`).
+- Existing Ballerina Connectors: Specific `Store` implementations (e.g., for RabbitMQ, Kafka) will depend on their respective Ballerina connector packages (e.g., `ballerinax/rabbitmq`, `ballerinax/kafka`).
 - Standard Library Modules: `ballerina/log` for logging and potentially `ballerina/task` for scheduling.
 
 ## Future Work
 
-- **Data-Binding for onMessage:** Enhance the `onMessage` function in `msgstore:Service` to support automatic data-binding for message content, allowing developers to define specific record as parameters. This would involve compiler plugin support for validation.
-- **Graceful Shutdown:** Implement a graceful shutdown mechanism for the `msgstore:Listener` that ensures all in-flight messages are processed and acknowledged before the listener fully stops.
+- **Data-Binding for onMessage:** Enhance the `onMessage` function in `StoreService` to support automatic data-binding for message content, allowing developers to define specific record as parameters. This would involve compiler plugin support for validation.
+- **Graceful Shutdown:** Implement a graceful shutdown mechanism for the `StoreListener` that ensures all in-flight messages are processed and acknowledged before the listener fully stops.
 - **Batch Processing:** Add support for retrieving and processing messages in batches to improve throughput for high-volume scenarios.
 - **Message Headers/Metadata:** Extend the `Message` record to include a mechanism for handling message headers or other metadata, beyond just the content.
 - **Metrics and Observability:** Integrate with Ballerina's observability framework to provide metrics on message processing rates, retry counts, and DLQ activity.
