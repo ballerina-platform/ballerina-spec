@@ -190,7 +190,7 @@ service on msgStoreListener {
 
 ### Risks
 
-- **Performance Overhead:** The abstraction layer introduced by the `MessageStor`e interface and the listener's polling mechanism might introduce some performance overhead compared to direct interaction with underlying message broker APIs.
+- **Performance Overhead:** The abstraction layer introduced by the `MessageStore` interface and the listener's polling mechanism might introduce some performance overhead compared to direct interaction with underlying message broker APIs.
 - **Complexity of External Implementations:** Ensuring that external `MessageStore` implementations (e.g., for Kafka, JMS, etc.) correctly adhere to the `MessageStore` interface contract, especially regarding idempotency and exactly-once processing semantics (if supported by the underlying broker), could be challenging. Clear guidelines and robust testing will be crucial.
 - **Error Handling Granularity:** The current `acknowledge` method has a single `success` boolean. Some advanced message brokers might offer more granular acknowledgment types (e.g., re-queue, reject with specific error codes). This proposal adopts a simpler success/failure model.
 - **Thread Model and Concurrency:** Careful consideration is needed for how the listener's polling and message processing interact with Ballerina's concurrency model to avoid blocking the event loop and ensure efficient resource utilization.
