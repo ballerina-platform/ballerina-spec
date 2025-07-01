@@ -106,7 +106,7 @@ remote isolated function onCallTool(CallToolParams params) returns CallToolResul
 
 ### Basic Weather Server
 ```ballerina
-import ballerinax/mcp;
+import ballerina/mcp;
 
 public type Weather record {
     string location;
@@ -138,7 +138,7 @@ isolated service mcp:Service /mcp on mcpListener {
 
 ### Advanced File System Server
 ```ballerina
-import ballerinax/mcp;
+import ballerina/mcp;
 import ballerina/io;
 
 isolated service mcp:AdvancedService /mcp on mcpListener {
