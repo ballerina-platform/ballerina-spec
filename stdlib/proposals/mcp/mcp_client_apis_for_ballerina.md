@@ -104,7 +104,7 @@ CallToolResult result = check mcpClient->callTool({
 ## Example Usage (Main Function)
 
 ```ballerina
-import ballerinax/mcp;
+import ballerina/mcp;
 
 public function main() returns error? {
     mcp:Client mcpClient = new (
