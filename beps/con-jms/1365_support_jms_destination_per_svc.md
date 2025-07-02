@@ -68,22 +68,16 @@ listener jms:Listener jmsListener = check new ({
 });
 
 @jms:ServiceConfig {
-  acknowledgementMode: jms:AUTO_ACKNOWLEDGE,
-  config: {
-    topicName: "topic-1"
-    ...
-  }
+  sessionAckMode: jms:AUTO_ACKNOWLEDGE,
+  topicName: "topic-1"
 }
 service "topic-1-consumer" on jmsListener {
   remote function onMessage(jms:Message message) { ... }
 }
 
 @jms:ServiceConfig {
-  acknowledgementMode: jms:AUTO_ACKNOWLEDGE,
-  config: {
-    topicName: "topic-2"
-    ...
-  }
+  sessionAckMode: jms:AUTO_ACKNOWLEDGE,
+  topicName: "topic-2"
 }
 service "topic-2-consumer" on jmsListener {
   remote function onMessage(jms:Message message) { ... }
@@ -106,12 +100,14 @@ service "topic-2-consumer" on jmsListener {
   ```ballerina
   # Represents configurations for a JMS queue subscription.
   #
+  # + acknowledgementMode - Configuration indicating how messages received by the session will be acknowledged
   # + queueName - The name of the queue to consume messages from
   # + messageSelector - Only messages with properties matching the message selector expression are delivered. 
   #                     If this value is not set that indicates that there is no message selector for the message consumer
   #                     For example, to only receive messages with a property `priority` set to `'high'`, use:
   #                     `"priority = 'high'"`. If this value is not set, all messages in the queue will be delivered.
   public type QueueConfig record {|
+    jms:AcknowledgementMode sessionAckMode = jms:AUTO_ACKNOWLEDGE;
     string queueName;
     string messageSelector?;
   |};
@@ -119,6 +115,7 @@ service "topic-2-consumer" on jmsListener {
 
   # Represents configurations for JMS topic subscription.
   #
+  # + acknowledgementMode - Configuration indicating how messages received by the session will be acknowledged
   # + topicName - The name of the topic to subscribe to
   # + messageSelector - Only messages with properties matching the message selector expression are delivered. 
   #                     If this value is not set that indicates that there is no message selector for the message consumer
@@ -129,6 +126,7 @@ service "topic-2-consumer" on jmsListener {
   # + consumerType - The message consumer type
   # + subscriberName - the name used to identify the subscription
   public type TopicConfig record {|
+    jms:AcknowledgementMode sessionAckMode = jms:AUTO_ACKNOWLEDGE;
     string topicName;
     string messageSelector?;
     boolean noLocal = false;
@@ -137,13 +135,7 @@ service "topic-2-consumer" on jmsListener {
   |};
 
   # The service configuration type for the `jms:Service`.
-  #
-  # + acknowledgementMode - Configuration indicating how messages received by the session will be acknowledged
-  # + subscriptionConfig - The topic or queue configuration to subscribe to
-  public type ServiceConfiguration record {|
-      jms:AcknowledgementMode acknowledgementMode = jms:AUTO_ACKNOWLEDGE;
-      QueueConfig|TopicConfig subscriptionConfig;
-  |};
+  public type ServiceConfiguration QueueConfig|TopicConfig;
 
   # Annotation to configure the `jms:Service`.
   public annotation ServiceConfiguration ServiceConfig on service;
