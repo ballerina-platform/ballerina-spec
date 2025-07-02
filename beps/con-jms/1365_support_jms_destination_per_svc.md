@@ -100,7 +100,7 @@ service "topic-2-consumer" on jmsListener {
   ```ballerina
   # Represents configurations for a JMS queue subscription.
   #
-  # + acknowledgementMode - Configuration indicating how messages received by the session will be acknowledged
+  # + sessionAckMode - Configuration indicating how messages received by the session will be acknowledged
   # + queueName - The name of the queue to consume messages from
   # + messageSelector - Only messages with properties matching the message selector expression are delivered. 
   #                     If this value is not set that indicates that there is no message selector for the message consumer
@@ -115,7 +115,7 @@ service "topic-2-consumer" on jmsListener {
 
   # Represents configurations for JMS topic subscription.
   #
-  # + acknowledgementMode - Configuration indicating how messages received by the session will be acknowledged
+  # + sessionAckMode - Configuration indicating how messages received by the session will be acknowledged
   # + topicName - The name of the topic to subscribe to
   # + messageSelector - Only messages with properties matching the message selector expression are delivered. 
   #                     If this value is not set that indicates that there is no message selector for the message consumer
