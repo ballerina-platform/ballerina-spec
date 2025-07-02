@@ -662,7 +662,79 @@ public function main() returns error? {
     string answer = check rag.query("How long is the unpaid lunch break?");
     io:println(answer);
 }
+```
 
+### RAG Ingestion Example Using Fundamental Building Blocks
+
+```ballerina
+import ballerina/ai;
+import ballerina/io;
+import ballerinax/ai.pinecone;
+
+configurable string pineconeServiceUrl = ?;
+configurable string pineconeApiKey = ?;
+configurable string wso2EmbeddingServiceUrl = ?;
+configurable string wso2AccessToken = ?;
+
+public function main() returns error? {
+    ai:VectorStore vectorStore = check new pinecone:VectorStore(serviceUrl = pineconeServiceUrl, apiKey = pineconeApiKey);
+    ai:EmbeddingProvider embeddingModel = check new ai:Wso2EmbeddingProvider(wso2EmbeddingServiceUrl, wso2AccessToken);
+    ai:VectorKnowledgeBase knowlegeBase = new ai:VectorKnowledgeBase(vectorStore, embeddingModel);
+
+    io:println("Pre-processing data...");
+    string policy = check io:fileReadString("./resources/pizza_shop_policy_doc.md");
+    ai:Document[] policyDocs = ai:splitDocumentByLine(policy);
+    io:println("Pre-processing done.");
+
+    io:println("Ingesting data...");
+    check knowlegeBase.index(policyDocs);
+    io:println("Ingestion done.");
+}
+```
+
+### RAG Query Example Using Fundamental Building Blocks
+
+```ballerina
+import ballerina/ai;
+import ballerina/http;
+import ballerina/log;
+import ballerinax/ai.pinecone;
+
+configurable string pineconeServiceUrl = ?;
+configurable string pineconeApiKey = ?;
+configurable string wso2ServiceUrl = ?;
+configurable string wso2AccessToken = ?;
+
+isolated service /rag on new http:Listener(9090) {
+    private final ai:KnowledgeBase knowledgeBase;
+    private final ai:ModelProvider llm;
+
+    isolated function init() returns error? {
+        ai:VectorStore vectorStore = check new pinecone:VectorStore(pineconeServiceUrl, pineconeApiKey);
+        ai:EmbeddingProvider embeddingModel = check new ai:Wso2EmbeddingProvider(wso2ServiceUrl, wso2AccessToken);
+        self.knowledgeBase = new ai:VectorKnowledgeBase(vectorStore, embeddingModel);
+        self.llm = check new ai:Wso2ModelProvider(wso2ServiceUrl, wso2AccessToken);
+    }
+
+    isolated resource function post query(QueryRequest request) returns QueryResponse|http:InternalServerError {
+        log:printInfo("Received query: " + request.query);
+        do {
+            ai:DocumentMatch[] documentMatch = check self.knowledgeBase.retrieve(request.query);
+            ai:Document[] context = documentMatch.'map(ctx => ctx.document);
+
+            ai:RagPrompt prompts = ai:defaultRagPromptTemplateBuilder(context, request.query);
+            ai:ChatMessage[] messages = mapPromptToChatMessages(prompts);
+
+            ai:ChatAssistantMessage response = check self.llm->chat(messages, []);
+
+            string answer = response.content ?: "I couldn't find an answer to your question.";
+            return {response: answer};
+        } on fail error e {
+            log:printError("Failed to process query", 'error = e);
+            return {body: "Unable to obtain a valid answer at this time."};
+        }
+    }
+}
 ```
 
 ### Dependency Diagram
