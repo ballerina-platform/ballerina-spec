@@ -5,7 +5,7 @@
 - Reviewed by
   - Danesh Kuruppu, Thisaru Guruge
 - Created date
-  - 2025-06-26
+  - 2025-07-04
 - Issue
   - [#1371](https://github.com/ballerina-platform/ballerina-spec/issues/1371)
 - State
