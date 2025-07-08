@@ -381,7 +381,7 @@ public isolated function augmentUserQuery(QueryMatch[]|Document[] context, strin
     <CONTEXT>${relevantContext}</CONTEXT>
     
     Question: ${query}`;
-    return {role: USER, content: getPromptParts(userPrompt)};
+    return {role: USER, content: userPrompt};
 }
 ```
 
@@ -391,7 +391,7 @@ public type ChatUserMessage record {|
     # Role of the message
     USER role;
     # Content of the message
-    string|PromptParts content;
+    string|Prompt content;
     # An optional name for the participant
     # Provides the model information to differentiate between participants of the same role
     string name?;
@@ -450,26 +450,21 @@ public type ChatFunctionMessage record {|
 |};
 ```
 
-To enable multimodal support in ModelProvider—for example, allowing models to handle different types of documents such as `TextDocument`, `TextChunk` `AudioDocument`, `ImageDocument`, etc. we are updating the `content` field in `ChatUserMessage` and `ChatSystemMessage` to use the `PromptParts` type:
+To enable multimodal support in ModelProvider—for example, allowing models to handle different types of documents such as `TextDocument`, `TextChunk` `AudioDocument`, `ImageDocument`, etc. we are updating the `content` field in `ChatUserMessage` and `ChatSystemMessage` to use the `Prompt` type:
 
 ```ballerina
-public type PromptParts record {|
-    string[] & readonly strings;
-    (anydata|Document)[] insertions;
-|};
-
 public type ChatUserMessage record {|
-    string|PromptParts content;
+    string|Prompt content;
     // ...omitted for brevity
 |};
 
 public type ChatSystemMessage record {|
-    string|PromptParts content;
+    string|Prompt content;
     // ...omitted for brevity
 |};
 ```
 
-The `PromptParts` type is designed to represent the structured data extracted from a `Prompt` raw template. If the `insertions` array contains any `Document` or `Chunk` values, model providers that support multimodal input will implement the necessary logic to convert and forward this data to the LLM.
+If the content is a `Prompt` and its `insertions` field includes any `Document` or `Chunk` values, model providers that support multimodal input should implement the logic required to convert and forward this data to the LLM.
 
 Additionally, the `chat()` method is updated to accept either a single `ChatUserMessage` or a list of `ChatMessage` values. The updated API is:
 
