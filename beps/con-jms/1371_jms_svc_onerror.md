@@ -45,7 +45,7 @@ service "consumer" on jms:Listener {
         // message handling logic
     }
 
-    remote function onError(jms:Error 'error) returns error? {
+    remote function onError(jms:Error err) returns error? {
         // error handling logic
     }
 }
