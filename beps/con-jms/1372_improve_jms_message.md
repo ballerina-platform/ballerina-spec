@@ -1,4 +1,4 @@
-# Improve `jms:Message` record to support a union-typed `content` field
+# Improve `jms:Message` record to be fully compliant with JMS specification
 
 - Authors
   - Ayesh Almeida
@@ -13,81 +13,49 @@
 
 ## Summary
 
-This proposal aims to enhance the `jms:Message` record in the Ballerina `java.jms` module by introducing a union-typed `content` field. Currently, separate records such as `TextMessage`, `BytesMessage`, and `MapMessage` are used to represent different JMS message types, each extending the base `jms:Message` record and including a type-specific `content` field. This proposal suggests unifying these into a single `Message` record that contains a polymorphic `content` field capable of holding `string`, `byte[]`, or `map<anydata>`. This change leverages Ballerina's union type system to simplify the API and improve developer ergonomics.
+This proposal aims to improve the `jms:Message` record in the Ballerina `java.jms` module by unifying the different JMS message types—`TextMessage`, `BytesMessage`, and `MapMessage`—into a single record with a polymorphic `content` field. By leveraging Ballerina’s union type system, the `content` field can represent either a `string`, `byte[]`, or a `map<ValueType>`, where `ValueType` includes only types permitted by the JMS specification: `boolean`, `int`, `byte`, `float`, `string`, and `byte[]`. Similarly, the `properties` field is redefined as `map<PropertyType>`, restricting values to `boolean`, `int`, `byte`, `float`, or `string`, in alignment with JMS constraints. This change simplifies the API, reduces the need for type-specific message records, and provides a more idiomatic and type-safe developer experience when working with JMS in Ballerina.
 
 ## Goals
 
 * Consolidate multiple message types into a single, unified `jms:Message` record.
+* Make the message content and metadata type-safe and aligned with JMS spec.
 * Improve the developer experience when consuming or processing JMS messages.
 
 ## Motivation
 
-The current JMS message model in Ballerina mirrors the Java JMS API by defining separate message record types for each message variant:
+The current design of the Ballerina JMS module defines separate record types to represent different JMS message types—such as `TextMessage`, `BytesMessage`, and `MapMessage`—each extending a common `Message` base. While this structure closely follows the Java JMS API, it introduces fragmentation in the Ballerina API, requiring developers to perform type discrimination and manage multiple record types manually. Furthermore, the current `MapMessage` implementation allows a `map<anydata>` for its content, which is **not compliant** with the JMS specification. According to JMS, only a restricted set of value types—`boolean`, `int`, `byte`, `float`, `string`, and `byte[]`—are allowed in a map message. 
 
-```ballerina
-public type TextMessage record {|
-    *Message;
-    string content;
-|};
-
-public type BytesMessage record {|
-    *Message;
-    byte[] content;
-|};
-
-public type MapMessage record {|
-    *Message;
-    map<anydata> content;
-|};
-```
-
-Each of these records includes all metadata fields from the base `jms:Message` using record inclusion. While this approach is structurally sound, it results in API fragmentation. Consumers of JMS messages are forced to perform type discrimination manually or rely on utility functions to access the message payload.
-
-Ballerina supports union types natively, which allows us to represent multiple possible types in a single field in a type-safe way. By redesigning `jms:Message` to include a single union-typed `content` field, we can simplify the message model and make it more idiomatic for Ballerina users.
+Similarly, the `properties` field in the `jms:Message` record currently uses `map<anydata>`, which is also overly permissive. JMS message properties must only contain values of primitive types (`boolean`, `int`, `byte`, `float`, `string`). These inconsistencies could lead to runtime issues or incompatibilities when interacting with standard JMS brokers. Addressing these issues by unifying the message representation and constraining value types will improve correctness, type safety, and the overall developer experience in Ballerina.
 
 ## Description
 
-### Current Structure
+### **New Unified `jms:Message` Record**
 
 ```ballerina
+public type PropertyType boolean|int|byte|float|string;
+public type ValueType PropertyType|byte[];
+
 public type Message record {|
     string messageId?;
-    map<string> properties?;
-    // other fields...
-|};
-
-public type TextMessage record {|
-    *Message;
-    string content;
-|};
-
-public type BytesMessage record {|
-    *Message;
-    byte[] content;
-|};
-
-public type MapMessage record {|
-    *Message;
-    map<anydata> content;
+    map<PropertyType> properties?;
+    string|byte[]|map<ValueType> content;
+    // other metadata fields like timestamp, correlationId, etc.
 |};
 ```
 
-### Proposed Change
+### **Mapping from JMS Types**
 
-Merge all specific message types into a single `Message` record with a union-typed `content` field:
+| JMS Type       | `content` Type   |
+| -------------- | -----------------|
+| `TextMessage`  | `string`         |
+| `BytesMessage` | `byte[]`         |
+| `MapMessage`   | `map<ValueType>` |
 
-```ballerina
-public type Message record {|
-    // other fields
-    string|byte[]|map<anydata> content;
-|};
-```
+### **Notes:**
 
-The module logic will populate the `content` field based on the underlying JMS message type:
-
-* `TextMessage` → `string`
-* `BytesMessage` → `byte[]`
-* `MapMessage` → `map<anydata>`
+* The `map` key is always `string`, as per JMS.
+* Both `content` and `properties` use constrained value types that align with the JMS specification.
+* `JMSMapValue` includes `byte[]`, but `JMSPropertyValue` does **not**.
 
 ### Example Usage
 
@@ -102,7 +70,8 @@ This pattern is more concise and Ballerina-idiomatic, and it eliminates the need
 
 ### Compatibility
 
-This change will require deprecating or removing the existing `TextMessage`, `BytesMessage`, and `MapMessage` types.
+* The distinct types `TextMessage`, `BytesMessage`, and `MapMessage` will be **removed or deprecated**, as their functionality is now unified within the enhanced `jms:Message` record.
+* The type of the `properties` field in the `jms:Message` record will be changed from `map<anydata>` to `map<PropertyType>`, where `PropertyType` is a constrained union type (`boolean|int|byte|float|string`) to comply with the JMS specification.
 
 ## Testing
 
