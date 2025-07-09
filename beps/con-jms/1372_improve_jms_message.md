@@ -1,4 +1,4 @@
-# Improve `jms:Message` record to be fully compliant with JMS specification
+# Improve `jms:Message` record to be compliant with JMS specification
 
 - Authors
   - Ayesh Almeida
