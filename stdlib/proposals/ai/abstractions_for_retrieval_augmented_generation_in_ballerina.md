@@ -327,7 +327,7 @@ A `KnowledgeBase` manages a collection of chunks and provides an interface for i
 
 ```ballerina
 public type KnowledgeBase distinct isolated object {
-    public isolated function index(Chunk[] chunks) returns Error?;
+    public isolated function ingest(Chunk[] chunks) returns Error?;
     public isolated function retrieve(string query, MetadataFilters? filters = ()) returns QueryMatch[]|Error;
 };
 ```
@@ -348,7 +348,7 @@ public distinct isolated class VectorKnowledgeBase {
         self.retriever = new VectorRetriever(vectorStore, embeddingModel);
     }
 
-    public isolated function index(Chunk[] chunks) returns Error? {
+    public isolated function ingest(Chunk[] chunks) returns Error? {
         VectorEntry[] entries = [];
         foreach Chunk chunk in chunks {
             Embedding embedding = check self.embeddingModel->embed(chunk);
@@ -503,12 +503,11 @@ public function main() returns error? {
     };
 
     // A recursive chunker will be introduced as part of future improvements
-    ai:Chunker chunker = new ai:RecursiveChunker(50, 20);
-    ai:Chunk[] policyDocs = check chunker.chunk(policyDoc); 
+    ai:Chunk[] policyChunks = check ai:chunkDocumentRecursively(policyDoc); 
     io:println("Pre-processing done.");
 
     io:println("Ingesting data...");
-    check knowlegeBase.index(policyDocs);
+    check knowlegeBase.ingest(policyChunks);
     io:println("Ingestion done.");
 }
 ```
