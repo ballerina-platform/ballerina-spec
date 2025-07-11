@@ -46,22 +46,18 @@ A new record type will be introduced to represent metadata that is retrieved whi
 ```ballerina
 # Represents metadata of a Kafka record.
 public type RecordMetadata record {|
-# Indicates whether the record metadata has an offset.
-boolean hasOffset;
-# The offset of the record in the topic partition
-int offset;
-# Indicates whether the record metadata has a timestamp
-boolean hasTimestamp;
-# The timestamp of the record in the topic partition
-int timestamp;
-# The size of the serialized, uncompressed key in bytes. If key is null, the returned size is -1.
-int serializedKeySize;
-# The size of the serialized, uncompressed value in bytes. If value is null, the returned size is -1.
-int serializedValueSize;
-# The topic the record is appended to
-string topic;
-# The partition the record is sent to
-int partition;
+    # The offset of the record in the topic partition
+    int? offset = ();
+    # The timestamp of the record in the topic partition
+    int? timestamp = ();
+    # The size of the serialized, uncompressed key in bytes. If key is null, the returned size is -1.
+    int serializedKeySize;
+    # The size of the serialized, uncompressed value in bytes. If value is null, the returned size is -1.
+    int serializedValueSize;
+    # The topic the record is appended to
+    string topic;
+    # The partition the record is sent to
+    int partition;
 |};
 ```
 
@@ -91,7 +87,7 @@ Therefore, the **first approach above is preferred** since it allows the existin
 
 ### Offsets for Times
 
-In the Apache Kafka Java SDK, a separate API is provided for finding offsets for a given timestamp. This will return the map of topic partitions for the provided timestamp value, which can be used to seek the consumer for a given timestamp. A new API will be implemented in the Ballerina Kafka connector to reflect this functionality.
+In the Apache Kafka Java SDK, a separate API is provided for finding offsets for a given timestamp. This will return the map of topic partitions for the provided timestamp value, which can be used to seek the consumer for a given timestamp. A new API will be implemented in the `kafka:Consumer` object to reflect this functionality.
 
 ```ballerina
 isolated remote function offsetsForTimes(TopicPartitionTimestamp[] topicPartitionTimestamps, decimal? duration = ()) returns TopicPartitionOffset[]|Error
@@ -102,19 +98,26 @@ The `TopicPartitionTimestamp` type is defined as a tuple type as described below
 ```ballerina
 # Represents a topic partition and a timestamp.
 public type TopicPartitionTimestamp [TopicPartition, time:Utc];
-The ​​TopicPartitionOffset is defined as a tuple as described below:
+```
+
+The `TopicPartitionOffset` is defined as a tuple as described below:
+
+```ballerina
 # Represents a topic partition and an offset with a timestamp.
 public type TopicPartitionOffset [TopicPartition, OffsetAndTimestamp];
-The OffsetAndTimestamp type is defined as follows:
+```
 
+The `OffsetAndTimestamp` type is defined as follows:
+
+```ballerina
 # Represents an offset and a timestamp for a topic partition.
 public type OffsetAndTimestamp record {|
-# The offset of the record in the topic partition
-int offset;
-# The timestamp of the record in the topic partition
-int timestamp;
-# The leader epoch of the record in the topic partition
-int? leaderEpoch = ();
+    # The offset of the record in the topic partition
+    int offset;
+    # The timestamp of the record in the topic partition
+    int timestamp;
+    # The leader epoch of the record in the topic partition
+    int? leaderEpoch = ();
 |};
 ```
 
