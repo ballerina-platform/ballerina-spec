@@ -15,7 +15,7 @@
 
 ## Summary
 
-This proposal introduces a new Ballerina package(`ballerina/gd`) that provides a standardized interface for message stores and a robust message store listener to implement [**Guranteed Delivery**](https://www.enterpriseintegrationpatterns.com/patterns/messaging/GuaranteedMessaging.html). This package will enable Ballerina applications to interact with various message storage systems consistently, store messages, and listen for changes, simplifying development and enhancing flexibility.
+This proposal introduces a new Ballerina package(`ballerina/messaging`) that provides a standardized interface for message stores and a robust message store listener to implement [**Guranteed Delivery**](https://www.enterpriseintegrationpatterns.com/patterns/messaging/GuaranteedMessaging.html). This package will enable Ballerina applications to interact with various message storage systems consistently, store messages, and listen for changes, simplifying development and enhancing flexibility.
 
 ## Motivation
 
@@ -39,7 +39,7 @@ This proposal addresses the current lack of a unified message persistence and co
 
 ## Design
 
-This proposal introduces a new Ballerina package, `ballerina/gd`, which will define the message store interface and provide a robust implementation of a message store listener.
+This proposal introduces a new Ballerina package, `ballerina/messaging`, which will define the message store interface and provide a robust implementation of a message store listener.
 
 ### Message Store Interface
 
@@ -90,9 +90,9 @@ public type Store isolated client object {
 The `StoreListener` object will be responsible for orchestrating message consumption from a `Store`. It must be initialized with an instance of a `Store`:
 
 ```ballerina
-gd:Store msgStore = new gd:InMemoryMessageStore();
+messaging:Store msgStore = new messaging:InMemoryMessageStore();
 
-listener gd:StoreListener msgStoreListener = new(msgStore);
+listener messaging:StoreListener msgStoreListener = new(msgStore);
 ```
 
 The listener can be configured with the following options:
@@ -162,11 +162,11 @@ The following example demonstrates how to utilize the message store and the mess
 
 ```ballerina
 import ballerina/io;
-import ballerina/gd;
+import ballerina/messaging;
 
-gd:Store msgStore = new gd:InMemoryMessageStore();
+messaging:Store msgStore = new messaging:InMemoryMessageStore();
 
-listener gd:StoreListener msgStoreListener = new(msgStore, {
+listener messaging:StoreListener msgStoreListener = new(msgStore, {
     pollingInterval: 10,
     maxRetries: 2,
     retryInterval: 2
