@@ -4,6 +4,7 @@
   - Thisaru Guruge
 - Reviewed by
   - Danesh Kuruppu
+  - Ayesh Almeida
 - Created date 
   - 2025-07-08 
 - Updated date
@@ -49,7 +50,7 @@ public type RecordMetadata record {|
     # The offset of the record in the topic partition
     int? offset = ();
     # The timestamp of the record in the topic partition
-    int? timestamp = ();
+    time:Utc? timestamp = ();
     # The size of the serialized, uncompressed key in bytes. If key is null, the returned size is -1.
     int serializedKeySize;
     # The size of the serialized, uncompressed value in bytes. If value is null, the returned size is -1.
@@ -115,7 +116,7 @@ public type OffsetAndTimestamp record {|
     # The offset of the record in the topic partition
     int offset;
     # The timestamp of the record in the topic partition
-    int timestamp;
+    time:Utc timestamp;
     # The leader epoch of the record in the topic partition
     int? leaderEpoch = ();
 |};
