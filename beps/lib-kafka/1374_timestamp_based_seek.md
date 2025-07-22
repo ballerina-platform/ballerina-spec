@@ -50,7 +50,7 @@ public type RecordMetadata record {|
     # The offset of the record in the topic partition
     int? offset = ();
     # The timestamp of the record in the topic partition
-    time:Utc? timestamp = ();
+    int? timestamp = ();
     # The size of the serialized, uncompressed key in bytes. If key is null, the returned size is -1.
     int serializedKeySize;
     # The size of the serialized, uncompressed value in bytes. If value is null, the returned size is -1.
@@ -98,7 +98,7 @@ The `TopicPartitionTimestamp` type is defined as a tuple type as described below
 
 ```ballerina
 # Represents a topic partition and a timestamp.
-public type TopicPartitionTimestamp [TopicPartition, time:Utc];
+public type TopicPartitionTimestamp [TopicPartition, int];
 ```
 
 The `TopicPartitionOffset` is defined as a tuple as described below:
@@ -116,7 +116,7 @@ public type OffsetAndTimestamp record {|
     # The offset of the record in the topic partition
     int offset;
     # The timestamp of the record in the topic partition
-    time:Utc timestamp;
+    int timestamp;
     # The leader epoch of the record in the topic partition
     int? leaderEpoch = ();
 |};
@@ -129,7 +129,7 @@ To seek using a timestamp, users can use the existing `consumer->seek()` API. To
 Here’s an example code for seek by timestamp:
 
 ```ballerina
-isolated function seekByTimestamp(kafka:Consumer consumer, string topic, time:Utc timestamp) returns error? {
+isolated function seekByTimestamp(kafka:Consumer consumer, string topic, int timestamp) returns error? {
     TopicPartition[] topicPartitions = check consumer->getTopicPartitions(topic);
     TopicPartitionTimestamp[] topicPartitionTimestamps = [];
     foreach TopicPartition topicPartition in topicPartitions {
