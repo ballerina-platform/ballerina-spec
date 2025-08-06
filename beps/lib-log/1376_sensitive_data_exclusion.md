@@ -146,18 +146,6 @@ By default, sensitive data exclusion is enabled. However, users can configure th
 sensitiveDataExclusion = false
 ```
 
-#### API to Get the Masked Sensitive Data
-
-The `ballerina/log` package provides an API to retrieve the masked string representation of a given value.
-
-```ballerina
-# Returns a masked string representation of the given value based on the sensitive data configuration
-#
-# + value - The value to be masked
-# + returns - The masked string representation of the value. This returns an empty string if the type of the value is configured to be excluded.
-public function toMaskedString(anydata value) returns string|error;
-```
-
 #### Error Handling with Masking Functions
 
 When using masking functions, it's important to handle potential errors gracefully. The `ballerina/log` package provides built-in error handling mechanisms to ensure that masking functions do not disrupt the logging process by panicking errors. Internal logging framework will trap those panics and log them as errors.
