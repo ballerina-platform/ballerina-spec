@@ -150,7 +150,7 @@ sensitiveDataExclusion = false
 
 When using masking functions, it's important to handle potential errors gracefully. The `ballerina/log` package provides built-in error handling mechanisms to ensure that masking functions do not disrupt the logging process by panicking errors. Internal logging framework will trap those panics and log them as errors.
 
-## Alternatives
+## Alternative
 
 ### Programmatic Field Exclusion
 
@@ -164,18 +164,24 @@ public type LoggerConfig record {
     LogLevel level = "INFO";
     string[] destinations = ["stderr"];
     KeyValues keyValues = {};
-    MaskingFunction? masker = ();
+    MaskingFunction? masker;
 };
 ```
 
 This would allow users to define custom masking logic at runtime making it more flexible, but it adds complexity and may not be as intuitive as the annotation-based approach.
+
+#### Root logger masking function
+
+Root level logger can have a default masking function which is based on regular expressions. These regular expressions can be configured at runtime, and each log line is checked for all the configured patterns. If any match is found, it is masked with `*****`.
+
+> **Note:** Root logger mask function is a simple replacement and if the user wants to have a custom masking function they should use a custom logger or create a logger from the root logger using `fromConfig` method as proposed in the contextual logging proposal[1].
 
 ### Reasons to Choose Annotation-Based Approach
 
 - **Simplicity**: Annotations provide a clear and declarative way to mark sensitive data, making it easy to understand and maintain
 - **Consistency**: The annotation-based approach aligns with existing Ballerina practices, making it easier for developers to adopt
 
-### Risks and Assumptions
+## Risks and Assumptions
 
 - **Performance Impact**: Annotation processing may introduce some overhead during compilation, but this is generally outweighed by the benefits of having a clear and maintainable codebase
 - **Functional Limitations**: The masking functions must be pure and not cause side effects, as they will be called during logging. This is a reasonable assumption for most use cases
