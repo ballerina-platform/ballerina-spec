@@ -172,7 +172,30 @@ This would allow users to define custom masking logic at runtime making it more 
 
 #### Root logger masking function
 
-Root level logger can have a default masking function which is based on regular expressions. These regular expressions can be configured at runtime, and each log line is checked for all the configured patterns. If any match is found, it is masked with `*****`.
+Root level logger can have a default masking function which is based on regular expressions. These regular expressions can be configured at runtime, and each log line is checked for all the configured patterns. If any match is found, it is masked with the configured replacement.
+
+Definition:
+```ballerina
+# Masking sensitive data configuration
+public type MaskingPattern record {|
+    # Pattern to match the sensitive data
+    string pattern;
+    # Replacement value
+    string replacement = "****";
+|};
+
+# Masking patterns to be applied with the root logger
+configurable MaskingPattern[] maskingPatterns = [];
+```
+Sample Configuration:
+```toml
+[[maskingPatterns]]
+pattern = "4[0-9]{6,}$"
+
+[[maskingPatterns]]
+pattern = "\"SSN\"\\s*:\\s*\"(.*)\""
+replacement = ""
+```
 
 > **Note:** Root logger mask function is a simple replacement and if the user wants to have a custom masking function they should use a custom logger or create a logger from the root logger using `fromConfig` method as proposed in the contextual logging proposal[1].
 
