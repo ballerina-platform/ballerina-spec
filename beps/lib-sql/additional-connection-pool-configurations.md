@@ -4,6 +4,7 @@
   - Thisaru Guurge
 - Reviewed by
   - Sameera Jayasoma
+  - Danesh Kuruppu
 - Created date
   - 2025-09-11
 - Issue
@@ -116,58 +117,56 @@ The proposed state introduces the following configurable variables to the Baller
 
 ```ballerina
 # Maximum time (in seconds) to wait for a connection from the pool before failing.
-configurable decimal connectionTimeout = 30.0;
+public configurable decimal connectionTimeout = 30.0;
 
 # Maximum time (in seconds) an idle connection is kept before retirement.
-configurable decimal idleTimeout = 600.0;
+public configurable decimal idleTimeout = 600.0;
 
 # Maximum time (in seconds) allowed for a connection validation.
-configurable decimal validationTimeout = 5.0;
+public configurable decimal validationTimeout = 5.0;
 
 # Threshold (in seconds) to flag a potential connection leak (use `0` to disable leak detection).
-configurable decimal leakDetectionThreshold = 0.0;
+public configurable decimal leakDetectionThreshold = 0.0;
 
 # Interval (in seconds) to periodically keep idle connections alive (use `0` to disable keep alive).
-configurable decimal keepAliveTime = 0.0;
+public configurable decimal keepAliveTime = 0.0;
 
 # Pool name for logs/metrics. If unset, an internal name is used.
-configurable string? poolName = ();
+public configurable string? poolName = ();
 
 # Controls pool boot behavior: fail fast vs. lazy init. Use negative value to disable failure timeout.
-configurable decimal initializationFailTimeout = 1.0;
+public configurable decimal initializationFailTimeout = 1.0;
 
 # Default transaction isolation for connections. If unset, driver default is used.
-# Allowed values typically: `NONE`, `READ_UNCOMMITTED`, `READ_COMMITTED`, `REPEATABLE_READ`, `SERIALIZABLE`.
-configurable TransactionIsolation transactionIsolation = NONE;
+# Allowed values typically: `TRANSACTION_READ_UNCOMMITTED`, `TRANSACTION_READ_COMMITTED`,
+# `TRANSACTION_REPEATABLE_READ`, `TRANSACTION_SERIALIZABLE`.
+public configurable TransactionIsolation? transactionIsolation = ();
 
-# SQL query to validate a connection.
-# Leave unset to use driver-native validation.
-configurable string? connectionTestQuery = ();
+# SQL query to validate a connection. Leave unset to use driver-native validation.
+public configurable string? connectionTestQuery = ();
 
 # SQL executed when a new connection is created. Useful for session-level settings.
-configurable string|string[]? connectionInitSql = ();
+public configurable readonly & (string|string[]?) connectionInitSql = ();
 
 # Marks connections as read-only by default. Use with care when apps issue writes.
-configurable boolean readOnly = false;
+public configurable boolean readOnly = false;
 
 # Allows suspending the pool for maintenance. Rarely needed; keep disabled.
-configurable boolean allowPoolSuspension = false;
+public configurable boolean allowPoolSuspension = false;
 
-# Isolates pool’s internal queries from application transactions.
-configurable boolean isolateInternalQueries = false;
+# Isolates pool's internal queries from application transactions.
+public configurable boolean isolateInternalQueries = false;
 
 # Represents the transaction isolation level.
 public enum TransactionIsolation {
-    # No isolation level
-    NONE,
     # Read committed isolation level
-    READ_COMMITTED,
+    TRANSACTION_READ_COMMITTED,
     # Read uncommitted isolation level
-    READ_UNCOMMITTED,
+    TRANSACTION_READ_UNCOMMITTED,
     # Repeatable read isolation level
-    REPEATABLE_READ,
+    TRANSACTION_REPEATABLE_READ,
     # Serializable isolation level
-    SERIALIZABLE
+    TRANSACTION_SERIALIZABLE
 }
 ```
 
@@ -183,43 +182,49 @@ public type ConnectionPool record {|
     int     minIdleConnections = minIdleConnections;
 
     // New fields
-    # Maximum time (in seconds) to wait for a connection from the pool before failing
+    # Maximum time (in seconds) to wait for a connection from the pool before failing. The default value is
+    # 30 seconds. This can be changed through the configuration API with the `ballerina.sql.connectionTimeout` key
     decimal connectionTimeout = connectionTimeout;
-
-    # Maximum time (in seconds) an idle connection is kept before retirement
+    # Maximum time (in seconds) an idle connection is kept before retirement. The default value is 600 seconds
+    # (10 minutes). This can be changed through the configuration API with the `ballerina.sql.idleTimeout` key
     decimal idleTimeout = idleTimeout;
-
-    # Maximum time (in seconds) allowed for a connection validation
+    # Maximum time (in seconds) allowed for a connection validation. The default value is 5 seconds. This
+    # can be changed through the configuration API with the `ballerina.sql.validationTimeout` key
     decimal validationTimeout = validationTimeout;
-
-    # Threshold (in seconds) to flag a potential connection leak (use `0` to disable leak detection)
+    # Threshold (in seconds) to flag a potential connection leak (use `0` to disable leak detection). The default
+    # value is 0 seconds. This can be changed through the configuration API with the
+    # `ballerina.sql.leakDetectionThreshold` key
     decimal leakDetectionThreshold = leakDetectionThreshold;
-
-    # Interval (in seconds) to periodically keep idle connections alive (use `0` to disable keep alive)
+    # Interval (in seconds) to periodically keep idle connections alive (use `0` to disable keep alive). The
+    # default value is 0 seconds. This can be changed through the configuration API with the
+    # `ballerina.sql.keepAliveTime` key
     decimal keepAliveTime = keepAliveTime;
-
-    # Pool name for logs/metrics. If unset, an internal name is used
+    # Pool name for logs/metrics. If unset, an internal name is used. The default value is nil. This can be
+    # changed through the configuration API with the `ballerina.sql.poolName` key
     string? poolName = poolName;
-
-    # Controls pool boot behavior: fail fast vs. lazy init. Use negative value to disable failure timeout
+    # Controls pool boot behavior: fail fast vs. lazy init. Use negative value to disable failure timeout. The
+    # default value is 1 second. This can be changed through the configuration API with the
+    # `ballerina.sql.initializationFailTimeout` key
     decimal initializationFailTimeout = initializationFailTimeout;
-
-    # Default transaction isolation for connections. If unset, driver default is used
-    TransactionIsolation transactionIsolation = transactionIsolation;
-
-    # SQL query to validate a connection. Use nil to use driver-native validation
+    # Default transaction isolation for connections. If unset, driver default is used. Allowed values typically:
+    # `TRANSACTION_READ_UNCOMMITTED`, `TRANSACTION_READ_COMMITTED`, `TRANSACTION_REPEATABLE_READ`,
+    # `TRANSACTION_SERIALIZABLE`.
+    # This can be changed through the configuration API with the `ballerina.sql.transactionIsolation` key
+    TransactionIsolation? transactionIsolation = transactionIsolation;
+    # SQL query to validate a connection. Leave unset to use driver-native validation. The default value is
+    # nil. This can be changed through the configuration API with the `ballerina.sql.connectionTestQuery` key
     string? connectionTestQuery = connectionTestQuery;
-
-    # SQL executed when a new connection is created. Useful for session-level settings
+    # SQL executed when a new connection is created. Useful for session-level settings. The default value is
+    # nil. This can be changed through the configuration API with the `ballerina.sql.connectionInitSql` key
     string|string[]? connectionInitSql = connectionInitSql;
-
-    # Marks connections as read-only by default. Use with care when apps issue writes
+    # Marks connections as read-only by default. Use with care when apps issue writes. The default value is
+    # false. This can be changed through the configuration API with the `ballerina.sql.readOnly` key
     boolean readOnly = readOnly;
-
-    # Allows suspending the pool for maintenance. Rarely needed; keep disabled
+    # Allows suspending the pool for maintenance. Rarely needed; keep disabled. The default value is false.
+    # This can be changed through the configuration API with the `ballerina.sql.allowPoolSuspension` key
     boolean allowPoolSuspension = allowPoolSuspension;
-
-    # Isolates pool’s internal queries from application transactions
+    # Isolates pool's internal queries from application transactions. The default value is false. This can
+    # be changed through the configuration API with the `ballerina.sql.isolateInternalQueries` key
     boolean isolateInternalQueries = isolateInternalQueries;
 |};
 ```
