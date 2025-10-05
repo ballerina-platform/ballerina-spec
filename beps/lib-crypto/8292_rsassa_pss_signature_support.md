@@ -3,7 +3,7 @@
 - Authors
   - Randil Tharusha (@randilt)
 - Reviewed by
-  - TBD
+  - @daneshk @ThisaruGuruge 
 - Created date
   - 2025-10-03
 - Updated date
@@ -77,8 +77,8 @@ Two new functions will be added to the `crypto` module following the exact namin
 # byte[] signature = check crypto:signRsaSsaPss256(data, privateKey);
 # ```
 #
-# + input - The content to be signed
-# + privateKey - Private key used for signing
+# + input - The content to be signed  as a byte array
+# + privateKey - The private key used for signing
 # + return - The generated signature or else a `crypto:Error` if the private key is invalid
 public isolated function signRsaSsaPss256(byte[] input, PrivateKey privateKey) returns byte[]|Error;
 ````
@@ -98,9 +98,9 @@ public isolated function signRsaSsaPss256(byte[] input, PrivateKey privateKey) r
 # boolean validity = check crypto:verifyRsaSsaPss256Signature(data, signature, publicKey);
 # ```
 #
-# + data - The content to be verified
-# + signature - Signature value
-# + publicKey - Public key used for verification
+# + data - The content to be verified  as a byte array
+# + signature - The signature value  as a byte array
+# + publicKey - The public key used for verification
 # + return - Validity of the signature or else a `crypto:Error` if the public key is invalid
 public isolated function verifyRsaSsaPss256Signature(byte[] data, byte[] signature, PublicKey publicKey) returns boolean|Error;
 ````
