@@ -30,62 +30,54 @@ Currently, the listener only reports metadata and processing a new file requires
 
 ## Design
 
-### 1. New listener class
+### 1. Service callbacks
+
+#### 1.1. Generic
 
 ```ballerina
-public isolated class ContentListener {
-    public isolated function init(*ListenerConfiguration cfg) returns Error?;
-}
+remote function onFile(stream<byte[], error> content, ftp:FileInfo fileInfo, ftp:Caller caller) returns error?;
+
+remote function onFile(byte[] content, ftp:FileInfo fileInfo, ftp:Caller caller) returns error?;
 ```
 
-- Takes the same `ftp:ListenerConfiguration` you use today.
-- Users route by `path` and/or `fileNamePattern` to target specific formats.
-
-### 2. Service callbacks
-
-#### 2.1. Generic
-
-```ballerina
-remote function onFile(stream<byte[], error> content, ftp:FileInfo fileInfo?, ftp:Caller caller?) returns error?;
-
-remote function onFile(byte[] content, ftp:FileInfo fileInfo?, ftp:Caller caller?) returns error?;
-```
-
-#### 2.2. Data-friendly
+#### 1.2. Data-friendly
 
 ```ballerina
 # UTF-8 (simple default)
-remote function onFileText(string content, ftp:FileInfo fileInfo?, ftp:Caller caller?) returns error?;
+remote function onFileText(string content, ftp:FileInfo fileInfo, ftp:Caller caller) returns error?;
 
 # Delivered as json
-remote function onFileJson(json content, ftp:FileInfo fileInfo?, ftp:Caller caller?) returns error?;
-remote function onFileJson(record{} content, ftp:FileInfo fileInfo?, ftp:Caller caller?) returns error?;
+remote function onFileJson(json content, ftp:FileInfo fileInfo, ftp:Caller caller) returns error?;
+remote function onFileJson(record{} content, ftp:FileInfo fileInfo, ftp:Caller caller) returns error?;
 
 # Delivered as xml
-remote function onFileXml(xml content, ftp:FileInfo fileInfo?, ftp:Caller caller?) returns error?;
-remote function onFileXml(record{} content, ftp:FileInfo fileInfo?, ftp:Caller caller?) returns error?;
+remote function onFileXml(xml content, ftp:FileInfo fileInfo, ftp:Caller caller) returns error?;
+remote function onFileXml(record{} content, ftp:FileInfo fileInfo, ftp:Caller caller) returns error?;
 
 # RFC4180 defaults
-remote function onFileCsv(string[][] content, ftp:FileInfo fileInfo?, ftp:Caller caller?) returns error?;
-remote function onFileCsv(record{}[] content, ftp:FileInfo fileInfo?, ftp:Caller caller?) returns error?;
-remote function onFileCsv(stream<byte[], content> rows, ftp:FileInfo fileInfo?, ftp:Caller caller?) returns error?;
+remote function onFileCsv(string[][] content, ftp:FileInfo fileInfo, ftp:Caller caller) returns error?;
+remote function onFileCsv(record{}[] content, ftp:FileInfo fileInfo, ftp:Caller caller) returns error?;
+remote function onFileCsv(stream<byte[], error> content, ftp:FileInfo fileInfo, ftp:Caller caller) returns error?;
 ```
 
-- If a format-specific method is implemented and the file matches your `fileNamePattern`, that method is invoked (`onFileJson` / `onFileXml` / `onFileCsv` / `onFileText`).
-- Else, if `onFile` is implemented, it is invoked (stream). 
-- Else, if `onFileBytes` is implemented, it is invoked (bytes). 
-- Else, no callback is made (use the legacy listener if you only need metadata).
+> Note: 
+> - `fileInfo` and `caller` parameters are optional and user can skip them if needed.
+> - The legacy `onFileChange(WatchEvent, Caller)` remain available and unchanged.
 
-> The legacy `onFileChange(WatchEvent, Caller)` remain available and unchanged.
+- If a format-specific method is implemented and the file matches your `fileNamePattern`, that method is invoked (`onFileJson` / `onFileXml` / `onFileCsv` / `onFileText`).
+- Else, if `onFile(stream<...> ...)` is implemented, it is invoked (stream).
+- Else, if `onFile(byte[] ...)` is implemented, it is invoked (bytes).
+- Else, no callback is made (use the legacy listener if you only need metadata).
 
 ### Usage Examples
 
-1. Stream big files, then delete via `Caller`
+1. Consume a binary file.
 
 ```ballerina
 import ballerina/ftp;
+import ballerina/io;
 
-listener ftp:ContentListener ContentListener = check new ({
+listener ftp:Listener ContentListener = check new ({
     protocol: ftp:SFTP,
     host: "sftp.example.com",
     path: "/drop/in",
@@ -94,11 +86,11 @@ listener ftp:ContentListener ContentListener = check new ({
 });
 
 service on ContentListener {
-    remote function onFile(stream<byte[] & readonly, io:Error?> stream,
+    remote function onFile(byte[] content,
                                   ftp:FileInfo fileInfo,
                                   ftp:Caller caller) returns error? {
-        // Consume the stream…
-        check stream.close();
+        string localFilePath = string `./downloads/${fileInfo.name}`;
+        check io:fileWriteBytes(localFilePath, content);
         if caller is ftp:Caller {
             check caller->delete(fileInfo.path);
         }
@@ -111,7 +103,7 @@ service on ContentListener {
 ```ballerina
 import ballerina/ftp;
 
-listener ftp:ContentListener ContentListener = check new ({
+listener ftp:Listener ContentListener = check new ({
     protocol: ftp:FTP,
     host: "ftp.example.com",
     path: "/notes",
