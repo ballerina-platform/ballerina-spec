@@ -64,10 +64,19 @@ remote function onFileCsv(stream<byte[], error> content, ftp:FileInfo fileInfo, 
 > - `fileInfo` and `caller` parameters are optional and user can skip them if needed.
 > - The legacy `onFileChange(WatchEvent, Caller)` remain available and unchanged.
 
-- If a format-specific method is implemented and the file matches your `fileNamePattern`, that method is invoked (`onFileJson` / `onFileXml` / `onFileCsv` / `onFileText`).
-- Else, if `onFile(stream<...> ...)` is implemented, it is invoked (stream).
-- Else, if `onFile(byte[] ...)` is implemented, it is invoked (bytes).
-- Else, no callback is made (use the legacy listener if you only need metadata).
+### 2. Service Dispatching Logic and Method Exclusivity
+
+To provide a predictable and unambiguous API, the listener will adhere to a strict method exclusivity rule at compile time. A developer must choose one of the following strategies for handling file content within a single service.
+
+1. **Format-Specific Handling**: The service can implement one or more format-specific methods (e.g., `onFileJson`, `onFileXml`).
+    - **Behavior**: The listener attempts to parse the content into the required type.
+    - **Failure Case**: A content parsing failure is treated as a terminal error for that file event. The error will be logged, and no other methods will be invoked.
+
+2. **Generic Content Handling**: If no format-specific methods are used, the service can implement a single generic method.
+    - Either `onFile(stream<byte[], error> ...)` for efficient stream processing.
+    - Or `onFile(byte[] ...)` for in-memory byte array processing.
+
+3. **Metadata-Only Handling (Legacy)**: For backward compatibility, a service can implement only the `onFileChange(ftp:WatchEvent ...)` method if no content-handling methods are present.
 
 ### Usage Examples
 
