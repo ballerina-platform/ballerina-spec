@@ -15,8 +15,8 @@
 
 The current Ballerina FTP listener provides basic file monitoring capabilities with regex-based file name filtering and fixed-interval polling. However, it lacks enterprise-grade file selection capabilities essential for production integration scenarios. This proposal introduces a unified Advanced File Selection and Processing Framework that addresses four critical enterprise requirements through a cohesive set of enhancements:
 
-1. **Cron Expression Scheduling** - Introduce flexible cron-based scheduling
-2. **File Lock Detection** - Prevent processing files actively being written by other processes
+1. **Cron Expression Scheduling** - Introduce flexible cron-based scheduling via union type support in `pollingInterval`
+2. **File Stability Detection** - Prevent processing files actively being written by other processes
 3. **File Age Filtering** - Process files only within specified age ranges (minimum/maximum age)
 4. **Conditional File Processing** - Process files based on the existence of dependent files
 
@@ -65,14 +65,14 @@ The existing FTP listener has several limitations that prevent it from being use
 ### New Type Definitions
 
 ```ballerina
-# Strategy for detecting if a file is being written by another process
+# Strategy for detecting if a file is still being written by another process
 #
-# + NONE - No lock checking (default, backward compatible)
+# + NONE - No stability checking (default, backward compatible)
 # + LOCK_FILE - Check for companion .lock file (e.g., data.csv requires absence of data.csv.lock)
-# + SIZE_STABILITY - Check if file size remains unchanged between consecutive polls
-# + TIMESTAMP_STABILITY - Check if last modified timestamp remains unchanged between polls
+# + SIZE_STABILITY - Check if file size remains unchanged between 2 consecutive polling cycles
+# + TIMESTAMP_STABILITY - Check if last modified timestamp remains unchanged between 2 consecutive polling cycles
 # + COMBINED_STABILITY - Both size and timestamp must be stable (most reliable)
-public enum FileLockStrategy {
+public enum FileStabilityStrategy {
     NONE,
     LOCK_FILE,
     SIZE_STABILITY,
@@ -138,12 +138,9 @@ public type FileDependencyCondition record {|
 # + auth - Authentication configuration
 # + path - Remote FTP directory path to monitor
 # + fileNamePattern - Regex pattern for filtering files (optional)
-# + pollingInterval - Polling interval in seconds (default: 60). Mutually exclusive with cronExpression.
-# + cronExpression - Cron expression for scheduling polls (optional). Mutually exclusive with pollingInterval.
+# + pollingInterval - Polling interval in seconds (decimal, default: 60) OR cron expression (string, e.g., "0 */15 * * * *")
 # + userDirIsRoot - If `true`, treats the user's home directory as root (/)
-# + fileLockStrategy - Strategy for detecting if files are being written (default: NONE)
-# + stabilityCheckInterval - Interval in seconds between stability checks for SIZE_STABILITY,
-#                            TIMESTAMP_STABILITY, or COMBINED_STABILITY (default: 2.0)
+# + fileStabilityStrategy - Strategy for detecting if files are being written (default: NONE)
 # + fileAgeFilter - Configuration for filtering files based on age (optional)
 # + fileDependencyConditions - Array of dependency conditions for conditional file processing (default: [])
 public type ListenerConfiguration record {|
@@ -155,13 +152,11 @@ public type ListenerConfiguration record {|
     string fileNamePattern?;
     boolean userDirIsRoot = false;
 
-    # Scheduling configurations (mutually exclusive)
-    decimal pollingInterval = 60;
-    string cronExpression?;
+    # Scheduling configuration
+    decimal|string pollingInterval = 60;
 
-    # File lock detection configurations
-    FileLockStrategy fileLockStrategy = NONE;
-    decimal stabilityCheckInterval = 2.0;
+    # File stability detection configuration
+    FileStabilityStrategy fileStabilityStrategy = NONE;
 
     # File age filtering configuration
     FileAgeFilter fileAgeFilter?;
@@ -176,10 +171,9 @@ public type ListenerConfiguration record {|
 | Configuration | Type | Default | Description |
 |--------------|------|---------|-------------|
 | **Scheduling** ||||
-| `cronExpression` | string? | - | Cron expression for flexible scheduling (e.g., "0 */15 * * * *" for every 15 minutes). Mutually exclusive with `pollingInterval`. |
-| **File Lock Detection** ||||
-| `fileLockStrategy` | enum | NONE | Strategy to detect if files are being written: NONE, LOCK_FILE, SIZE_STABILITY, TIMESTAMP_STABILITY, COMBINED_STABILITY. |
-| `stabilityCheckInterval` | decimal | 2.0 | Interval (seconds) between stability checks for SIZE_STABILITY, TIMESTAMP_STABILITY, or COMBINED_STABILITY modes. |
+| `pollingInterval` | decimal\|string | 60 | Polling interval in seconds (decimal) OR cron expression (string, e.g., "0 */15 * * * *" for every 15 minutes). |
+| **File Stability Detection** ||||
+| `fileStabilityStrategy` | enum | NONE | Strategy to detect if files are being written: NONE, LOCK_FILE, SIZE_STABILITY, TIMESTAMP_STABILITY, COMBINED_STABILITY. Stability checks use 2 consecutive polling cycles. |
 | **File Age Filtering** ||||
 | `fileAgeFilter` | record? | - | Optional configuration for filtering files based on age criteria. |
 | `fileAgeFilter.minAge` | decimal | -1 | Minimum age in seconds. Files younger than this are skipped. -1 means no minimum. |
@@ -217,47 +211,48 @@ public type ListenerConfiguration record {|
 - `"0 30 14 1 * *"` - At 2:30 PM on the 1st of every month
 
 **Behavior**:
-- `cronExpression` and `pollingInterval` are mutually exclusive
-- If both are specified, initialization fails with validation error
-- If neither is specified, `pollingInterval` defaults to 60 seconds
+- If `pollingInterval` is a decimal, it represents the polling interval in seconds
+- If `pollingInterval` is a string, it is treated as a cron expression
+- If not specified, `pollingInterval` defaults to 60 seconds (decimal)
 - Cron scheduling uses the server's local timezone
+- Invalid cron expressions will cause initialization to fail with a validation error
 
 **Implementation**: Leverage Ballerina's `task` module or implement a cron parser that calculates the next execution time and uses `task:scheduleJobRecurAtTime`.
 
-#### Feature 2: File Lock Detection
+#### Feature 2: File Stability Detection
 
 **Purpose**: Prevent processing files actively being written by other processes.
 
 **Strategies**:
 
-1. **NONE (default)**: No lock checking. Files are processed immediately upon discovery. This is the current behavior.
+1. **NONE (default)**: No stability checking. Files are processed immediately upon discovery. This is the current behavior.
 
 2. **LOCK_FILE**: Check for the existence of a companion `.lock` file.
    - Example: `data.csv` is processed only if `data.csv.lock` does NOT exist
    - Useful when external writers create `.lock` files during upload
    - Low overhead, instant detection
 
-3. **SIZE_STABILITY**: Check if file size remains unchanged between polls.
-   - Files are polled twice with `stabilityCheckInterval` delay
-   - If size changes, file is skipped in this cycle
+3. **SIZE_STABILITY**: Check if file size remains unchanged between 2 consecutive polling cycles.
+   - File metadata is checked in the current poll and again in the next 2 polls
+   - If size changes between any of the polls, file is skipped in the current cycle
    - Useful for detecting active writes without lock files
-   - Moderate overhead
+   - Moderate overhead (adds 2 polling intervals to processing latency)
 
-4. **TIMESTAMP_STABILITY**: Check if last modified timestamp remains unchanged.
-   - Files are polled twice with `stabilityCheckInterval` delay
-   - If timestamp changes, file is skipped
+4. **TIMESTAMP_STABILITY**: Check if last modified timestamp remains unchanged between 2 consecutive polling cycles.
+   - File metadata is checked in the current poll and again in the next 2 polls
+   - If timestamp changes between any of the polls, file is skipped
    - Useful for systems that update timestamps during writes
-   - Moderate overhead
+   - Moderate overhead (adds 2 polling intervals to processing latency)
 
-5. **COMBINED_STABILITY**: Both size AND timestamp must be stable.
+5. **COMBINED_STABILITY**: Both size AND timestamp must be stable across 2 consecutive polling cycles.
    - Most reliable detection method
-   - Highest overhead (two checks)
+   - Highest overhead (adds 2 polling intervals to processing latency)
    - Recommended for critical data integrity scenarios
 
 **Behavior**:
-- Lock checking occurs **after** file name pattern matching and **before** age filtering
-- Files that fail lock checks are silently skipped (not reported as added)
-- Stability checks add `stabilityCheckInterval` seconds to processing latency
+- Stability checking occurs **after** file name pattern matching and **before** age filtering
+- Files that fail stability checks are silently skipped (not reported as added)
+- Stability checks require 2 polling cycles (e.g., with `pollingInterval: 30`, stability verification takes 60 seconds)
 - For LOCK_FILE mode, `.lock` files themselves are automatically excluded from processing
 
 #### Feature 3: File Age Filtering
@@ -346,7 +341,7 @@ All features work together in a unified pipeline executed during each poll cycle
    ↓
 2. File Name Pattern Matching (fileNamePattern)
    ↓
-3. File Lock Detection (fileLockStrategy)
+3. File Stability Detection (fileStabilityStrategy)
    ↓
 4. File Age Filtering (fileAgeFilter)
    ↓
@@ -366,28 +361,25 @@ All features work together in a unified pipeline executed during each poll cycle
 
 Runtime validation enforces the following rules:
 
-1. **Mutual Exclusivity**: `pollingInterval` and `cronExpression` cannot both be customized (non-default).
-   - Error: `"Cannot specify both pollingInterval and cronExpression"`
+1. **Polling Interval Type Validation**:
+   - If `pollingInterval` is a decimal, it must be positive (> 0).
+     - Error: `"pollingInterval must be greater than 0"`
+   - If `pollingInterval` is a string, it must be a valid cron expression.
+     - Error: `"Invalid cron expression: <expression>"`
 
-2. **Cron Expression Syntax**: If `cronExpression` is set, it must be a valid cron expression.
-   - Error: `"Invalid cron expression: <expression>"`
-
-3. **Timeout Values**: `stabilityCheckInterval` must be positive (> 0).
-   - Error: `"stabilityCheckInterval must be greater than 0"`
-
-4. **Age Filter Values**: `minAge` and `maxAge` must be either -1 (disabled) or positive values.
+2. **Age Filter Values**: `minAge` and `maxAge` must be either -1 (disabled) or positive values.
    - Error: `"minAge/maxAge must be -1 or greater than 0"`
    - Warning: If `minAge > maxAge`, log warning (no files will ever match)
 
-5. **Dependency Patterns**: `targetPattern` and `requiredFiles` must be valid regex patterns.
+3. **Dependency Patterns**: `targetPattern` and `requiredFiles` must be valid regex patterns.
    - Error: `"Invalid regex in targetPattern/requiredFiles"`
 
-6. **Exact Count Mode**: If `matchingMode = EXACT_COUNT`, `requiredFileCount` must be > 0.
+4. **Exact Count Mode**: If `matchingMode = EXACT_COUNT`, `requiredFileCount` must be > 0.
    - Error: `"requiredFileCount must be positive for EXACT_COUNT mode"`
 
 ## Usage Examples
 
-### Example 1: Basic File Lock Detection with Size Stability
+### Example 1: Basic File Stability Detection with Size Stability
 
 Wait for files to finish uploading before processing:
 
@@ -406,9 +398,8 @@ listener ftp:Listener remoteServer = check new({
     fileNamePattern: ".*\\.csv",
     pollingInterval: 30,  // Check every 30 seconds
 
-    // Only process files whose size is stable for 2 seconds
-    fileLockStrategy: ftp:SIZE_STABILITY,
-    stabilityCheckInterval: 2.0
+    // Only process files whose size is stable across 2 polling cycles (60 seconds)
+    fileStabilityStrategy: ftp:SIZE_STABILITY
 });
 
 service on remoteServer {
@@ -440,8 +431,8 @@ listener ftp:Listener businessHoursListener = check new({
     path: "/data/uploads",
     fileNamePattern: "report_.*\\.xml",
 
-    // Every 15 minutes from 9 AM to 5 PM, Monday through Friday
-    cronExpression: "0 */15 9-17 * * MON-FRI"
+    // Every 15 minutes from 9 AM to 5 PM, Monday through Friday (cron expression)
+    pollingInterval: "0 */15 9-17 * * MON-FRI"
 });
 
 service on businessHoursListener {
@@ -607,8 +598,8 @@ service on dependencyListener {
 ## Risks and Assumptions
 
 - **Cron syntax**: Invalid expressions can break schedules. We validate at startup and fail fast with clear errors; docs include copy-pasteable examples.
-- **Stability checks**: SIZE/COMBINED stability adds a small delay (≈ 2 × stabilityCheckInterval, default 2s). Use LOCK_FILE for high-frequency folders, COMBINED for critical data.
+- **Stability checks**: SIZE/COMBINED stability adds a delay of 2 polling cycles. For example, with `pollingInterval: 30`, this adds 60 seconds. Use LOCK_FILE for high-frequency folders, COMBINED for critical data.
 - **Dependency patterns**: Complex regex across many files can slow polls. Patterns are compiled once; keep them simple where possible.
-- **Age filter window**: Files can age out before pickup (e.g., processed elsewhere). Use minAge only as a short “settle” buffer (60–300s) and document behavior.
-- **Lock heuristics**: SIZE stability can false-positive during brief write pauses; .lock files require writer cooperation.
+- **Age filter window**: Files can age out before pickup (e.g., processed elsewhere). Use minAge only as a short "settle" buffer (60–300s) and document behavior.
+- **Stability heuristics**: SIZE stability can false-positive during brief write pauses; .lock files require writer cooperation.
 - **No clustering**: No distributed coordination or shared locks; assume a single listener instance per directory.
