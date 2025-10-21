@@ -119,7 +119,7 @@ public type ClientConfiguration record {|
 
     # FTP-specific configurations
     decimal dataTimeout = 120.0;           // Seconds
-    decimal socketTimeout = 60.0;              // Seconds
+    decimal socketTimeout = 60.0;          // Seconds
     FtpFileType fileType = BINARY;
 
     # SFTP-specific configurations
@@ -166,7 +166,7 @@ public type ListenerConfiguration record {|
 
     # FTP-specific configurations
     decimal dataTimeout = 120.0;           // Seconds
-    decimal socketTimeout = 60.0;              // Seconds
+    decimal socketTimeout = 60.0;          // Seconds
     FtpFileType fileType = BINARY;
 
     # SFTP-specific configurations
@@ -193,7 +193,7 @@ public type ListenerConfiguration record {|
 ### Protocol-Specific Behavior
 
 **FTP-only configurations** (ignored for SFTP):
-- `dataTimeout`, `soTimeout`, `fileType`
+- `dataTimeout`, `socketTimeout`, `fileType`
 
 **SFTP-only configurations** (ignored for FTP):
 - `sessionTimeout`, `compression`, `knownHosts`, `proxy`
@@ -233,7 +233,7 @@ public function main() returns error? {
         auth: {credentials: {username: "user", password: "pass"}},
         connectTimeout: 15.0,    // 15 seconds to connect
         dataTimeout: 300.0,      // 5 minutes for large file transfers
-        soTimeout: 60.0          // 1 minute for socket operations
+        socketTimeout: 60.0      // 1 minute for socket operations
     };
 
     ftp:Client ftpClient = check new(config);
