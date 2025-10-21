@@ -87,6 +87,17 @@ public type ProxyConfiguration record {|
     ProxyType 'type = HTTP;
     ProxyCredentials auth?;
 |};
+
+# Socket timeout configurations
+#
+# + dataTimeout - Data transfer timeout in seconds (FTP only, default: 120.0)
+# + socketTimeout - Socket operation timeout in seconds (FTP only, default: 60.0)
+# + sessionTimeout - SSH session timeout in seconds (SFTP only, default: 300.0)
+public type SocketConfig record {|
+    decimal dataTimeout = 120.0;      // FTP only
+    decimal socketTimeout = 60.0;     // FTP only
+    decimal sessionTimeout = 300.0;   // SFTP only
+|};
 ```
 
 ### Updated ClientConfiguration
@@ -100,10 +111,8 @@ public type ProxyConfiguration record {|
 # + auth - Authentication configuration
 # + userDirIsRoot - If `true`, treats the user's home directory as root (/)
 # + connectTimeout - Connection timeout in seconds (default: 30.0 for FTP, 10.0 for SFTP)
-# + dataTimeout - Data transfer timeout in seconds (FTP only, default: 120.0)
-# + socketTimeout - Socket operation timeout in seconds (FTP only, default: 60.0)
+# + socketConfig - Socket timeout configurations (optional)
 # + fileType - File transfer type: BINARY or ASCII (FTP only, default: BINARY)
-# + sessionTimeout - SSH session timeout in seconds (SFTP only, default: 300.0)
 # + compression - Compression algorithms (SFTP only, default: "none")
 # + knownHosts - Path to SSH known_hosts file (SFTP only)
 # + proxy - Proxy configuration for SFTP connections (SFTP only)
@@ -116,14 +125,12 @@ public type ClientConfiguration record {|
 
     # Common configurations (both FTP and SFTP)
     decimal connectTimeout = 30.0;  // Seconds
+    SocketConfig socketConfig?;     // Optional socket timeout configurations
 
     # FTP-specific configurations
-    decimal dataTimeout = 120.0;           // Seconds
-    decimal socketTimeout = 60.0;          // Seconds
     FtpFileType fileType = BINARY;
 
     # SFTP-specific configurations
-    decimal sessionTimeout = 300.0;        // Seconds
     string compression = "none";           // e.g., "zlib,none" to prefer compression
     string knownHosts?;                    // Optional, path to known_hosts file
     ProxyConfiguration proxy?;             // Optional proxy settings
@@ -144,10 +151,8 @@ public type ClientConfiguration record {|
 # + pollingInterval - Polling interval in seconds (default: 60)
 # + userDirIsRoot - If `true`, treats the user's home directory as root (/)
 # + connectTimeout - Connection timeout in seconds (default: 30.0 for FTP, 10.0 for SFTP)
-# + dataTimeout - Data transfer timeout in seconds (FTP only, default: 120.0)
-# + socketTimeout - Socket operation timeout in seconds (FTP only, default: 60.0)
+# + socketConfig - Socket timeout configurations (optional)
 # + fileType - File transfer type: BINARY or ASCII (FTP only, default: BINARY)
-# + sessionTimeout - SSH session timeout in seconds (SFTP only, default: 300.0)
 # + compression - Compression algorithms (SFTP only, default: "none")
 # + knownHosts - Path to SSH known_hosts file (SFTP only)
 # + proxy - Proxy configuration for SFTP connections (SFTP only)
@@ -163,14 +168,12 @@ public type ListenerConfiguration record {|
 
     # Common configurations (both FTP and SFTP)
     decimal connectTimeout = 30.0;  // Seconds
+    SocketConfig socketConfig?;     // Optional socket timeout configurations
 
     # FTP-specific configurations
-    decimal dataTimeout = 120.0;           // Seconds
-    decimal socketTimeout = 60.0;          // Seconds
     FtpFileType fileType = BINARY;
 
     # SFTP-specific configurations
-    decimal sessionTimeout = 300.0;        // Seconds
     string compression = "none";
     string knownHosts?;                    // Optional
     ProxyConfiguration proxy?;             // Optional
@@ -182,10 +185,11 @@ public type ListenerConfiguration record {|
 | Configuration | Protocol | Type | Default | Description |
 |--------------|----------|------|---------|-------------|
 | `connectTimeout` | Both | decimal | 30.0 (FTP), 10.0 (SFTP) | Max time (seconds) to wait for the initial connection to be established. Use this to "fast-fail" and prevent hangs if the server is down or unreachable. |
-| `dataTimeout` | FTP | decimal | 120.0 | Max time (seconds) to wait for data on the data channel. This should be set high to accomodate large file transfers without timing out mid-transfer. |
-| `socketTimeout` | FTP | decimal | 60.0 | Max time (seconds) to wait for a server response on the control channel. Prevents hangs if the server becomes unresponsive. |
+| `socketConfig` | Both | SocketConfig? | (none) | Optional socket timeout configurations. Contains `dataTimeout`, `socketTimeout`, and `sessionTimeout`. |
+| `socketConfig.dataTimeout` | FTP | decimal | 120.0 | Max time (seconds) to wait for data on the data channel. This should be set high to accomodate large file transfers without timing out mid-transfer. |
+| `socketConfig.socketTimeout` | FTP | decimal | 60.0 | Max time (seconds) to wait for a server response on the control channel. Prevents hangs if the server becomes unresponsive. |
+| `socketConfig.sessionTimeout` | SFTP | decimal | 300.0 | Max idle time (seconds) for the entire SFTP session. Prevents disconnection during long pauses and cleans up idle connections. |
 | `fileType` | FTP | enum | BINARY | Transfer mode. `BINARY` (default) is safe for all files. Use `ASCII` only for legacy text-file transfers requiring server-side line-ending conversion. |
-| `sessionTimeout` | SFTP | decimal | 300.0 | Max idle time (seconds) for the entire SFTP session. Prevents disconnection during long pauses and cleans up idle connections. |
 | `compression` | SFTP | string | "none" | Enables transport-level compression (e.g., `zlib`,`none`). Speeds up transfers of compressible files (like logs, XML, JSON) on low-bandwidth networks. |
 | `knownHosts` | SFTP | string? | (none) | Path to a `known_hosts` file (e.g., `/home/user/.ssh/known_hosts`). Verifies the server's identity to prevent man-in-the-middle attacks. |
 | `proxy` | SFTP | record? | (none) | Routes the SFTP connection through a proxy (HTTP/SOCKS5). Essential for connecting to external servers from within restrictive corporate networks. |
@@ -193,10 +197,10 @@ public type ListenerConfiguration record {|
 ### Protocol-Specific Behavior
 
 **FTP-only configurations** (ignored for SFTP):
-- `dataTimeout`, `socketTimeout`, `fileType`
+- `socketConfig.dataTimeout`, `socketConfig.socketTimeout`, `fileType`
 
 **SFTP-only configurations** (ignored for FTP):
-- `sessionTimeout`, `compression`, `knownHosts`, `proxy`
+- `socketConfig.sessionTimeout`, `compression`, `knownHosts`, `proxy`
 
 **Common configurations** (both FTP and SFTP):
 - `connectTimeout`
@@ -232,8 +236,10 @@ public function main() returns error? {
         port: 21,
         auth: {credentials: {username: "user", password: "pass"}},
         connectTimeout: 15.0,    // 15 seconds to connect
-        dataTimeout: 300.0,      // 5 minutes for large file transfers
-        socketTimeout: 60.0      // 1 minute for socket operations
+        socketConfig: {
+            dataTimeout: 300.0,      // 5 minutes for large file transfers
+            socketTimeout: 60.0      // 1 minute for socket operations
+        }
     };
 
     ftp:Client ftpClient = check new(config);
@@ -261,8 +267,10 @@ public function main() returns error? {
             privateKey: {path: "~/.ssh/id_rsa"}
         },
         connectTimeout: 45.0,           // Slow connection
-        sessionTimeout: 600.0,          // 10 minutes for large transfers
-        compression: "zlib,none",       // Prefer zlib compression
+        socketConfig: {
+            sessionTimeout: 600.0       // 10 minutes for large transfers
+        },
+        compression: "zlib,none"        // Prefer zlib compression
     };
 
     ftp:Client sftpClient = check new(config);
@@ -291,7 +299,9 @@ public function main() returns error? {
         },
         knownHosts: "/etc/ssh/known_hosts",  // Verify host key
         connectTimeout: 20.0,
-        sessionTimeout: 300.0
+        socketConfig: {
+            sessionTimeout: 300.0
+        }
     };
 
     ftp:Client sftpClient = check new(config);
@@ -316,7 +326,9 @@ public function main() returns error? {
         port: 22,
         auth: {credentials: {username: "partner_user", password: "partner_pass"}},
         connectTimeout: 30.0,
-        sessionTimeout: 300.0,
+        socketConfig: {
+            sessionTimeout: 300.0
+        },
         proxy: {
             host: "proxy.corporate.com",
             port: 8080,
@@ -352,9 +364,11 @@ listener ftp:Listener sftpListener = check new({
     fileNamePattern: ".*\\.(json|xml)$",
     pollingInterval: 60,
     connectTimeout: 15.0,
-    sessionTimeout: 600.0,
+    socketConfig: {
+        sessionTimeout: 600.0
+    },
     compression: "zlib,none",
-    knownHosts: "~/.ssh/known_hosts",
+    knownHosts: "~/.ssh/known_hosts"
 });
 
 service on sftpListener {
@@ -387,7 +401,9 @@ function getClientConfig(Environment env) returns ftp:ClientConfiguration {
             port: 22,
             auth: {credentials: {username: "dev_user", password: "dev_pass"}},
             connectTimeout: 60.0,        // Longer timeout for debugging
-            sessionTimeout: 600.0,
+            socketConfig: {
+                sessionTimeout: 600.0
+            },
             compression: "none"
         };
     } else {
@@ -400,7 +416,9 @@ function getClientConfig(Environment env) returns ftp:ClientConfiguration {
                 privateKey: {path: "/etc/keys/prod_id_rsa"}
             },
             connectTimeout: 20.0,        // Fast fail in production
-            sessionTimeout: 300.0,
+            socketConfig: {
+                sessionTimeout: 300.0
+            },
             compression: "zlib,none",
             knownHosts: "/etc/ssh/known_hosts",
             proxy: {
