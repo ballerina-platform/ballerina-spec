@@ -183,7 +183,7 @@ service on ContentListener {
     // Override: treat .txt files as JSON instead of text
     @ftp:FileConfig { pattern: ".*\\.txt$" }
     remote function onFileJson(json content, ftp:FileInfo fileInfo) returns error? {
-        // Process both .txt and .json files as JSON
+        // Process .txt files as JSON
         // .txt files will be parsed as JSON due to annotation
     }
 }
@@ -343,7 +343,7 @@ service on ContentListener {
     @ftp:FileConfig { pattern: ".*\\.txt$" }
     remote function onFileJson(json content, ftp:FileInfo fileInfo) returns error? {
         log:printInfo(string `Processing ${fileInfo.name} as JSON`);
-        // Both .txt and .json files are processed here as JSON
+        // Process .txt files as JSON
     }
 }
 ```
