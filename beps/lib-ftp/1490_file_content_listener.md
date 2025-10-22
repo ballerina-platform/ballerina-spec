@@ -14,19 +14,23 @@
 ## Summary
 
 The current `ftp:Listener` reports file add/delete events via `onFileChange`, exposing metadata only. To process content, developers must invoke a client (`Caller->get`) inside the handler.
-This proposal adds content-first callbacks to the existing listener, so services can receive file content directly (stream, bytes, text, JSON, XML, CSV) as soon as a file is detected
+This proposal adds content-first callbacks to the existing listener, so services can receive file content directly (stream, bytes, text, JSON, XML, CSV) as soon as a file is detected. Additionally, this proposal deprecates the `onFileChange` method and introduces a dedicated `onFileDeleted` method for handling file deletion events
 
 ## Goals
 
 1. Extend the current `ftp:Listener` service contract to provide file content directly upon detection of a new file.
+2. Introduce a dedicated `onFileDeleted` method to handle file deletion events separately from file addition events.
+3. Deprecate the `onFileChange` method in favor of more specific and intuitive content-handling methods.
 
 ## Non-Goals
 
-1. This proposal will not remove the existing `onFileChange` method that provides `ftp:WatchEvent`. This will be maintained for backward compatibility and for use cases where only file metadata is required.
+1. This proposal will not immediately remove the existing `onFileChange` method. It will be deprecated but maintained for backward compatibility during a transition period.
 
 ## Motivation
 
-Currently, the listener only reports metadata and processing a new file requires significant boilerplate code. The developer must handle the event, instantiate a client, fetch the content as a stream, and then perform data conversion. Many real-world flows need the file’s content the moment it lands. A content-first callback lets your service start processing immediately, and if needed, use the provided `Caller` to move or delete the file afterward.
+Currently, the listener only reports metadata and processing a new file requires significant boilerplate code. The developer must handle the event, instantiate a client, fetch the content as a stream, and then perform data conversion. Many real-world flows need the file's content the moment it lands. A content-first callback lets your service start processing immediately, and if needed, use the provided `Caller` to move or delete the file afterward.
+
+Additionally, the existing `onFileChange` method conflates file addition and deletion events, requiring developers to handle both scenarios within a single method. By deprecating `onFileChange` and introducing dedicated content methods for file additions and a separate `onFileDeleted` method for deletions, we provide a clearer, more intuitive API that aligns with common use cases.
 
 ## Design
 
@@ -60,9 +64,17 @@ remote function onFileCsv(record{}[] content, ftp:FileInfo fileInfo, ftp:Caller 
 remote function onFileCsv(stream<byte[], error> content, ftp:FileInfo fileInfo, ftp:Caller caller) returns error?;
 ```
 
-> Note: 
-> - `fileInfo` and `caller` parameters are optional and user can skip them if needed.
-> - The legacy `onFileChange(WatchEvent, Caller)` remain available and unchanged.
+#### 1.3. File Deletion Handler
+
+```ballerina
+# Handles deleted files
+remote function onFileDeleted(string[] deletedFiles, ftp:Caller caller) returns error?;
+```
+
+> Note:
+> - `fileInfo` and `caller` parameters are optional in content methods and user can skip them if needed.
+> - The `deletedFiles` parameter in `onFileDeleted` contains an array of file paths that were deleted.
+> - **DEPRECATED**: The legacy `onFileChange(WatchEvent, Caller)` method is deprecated and will be removed in a future version. Use the content-specific methods (`onFile`, `onFileText`, `onFileJson`, `onFileXml`, `onFileCsv`) for file additions and `onFileDeleted` for file deletions instead.
 
 ### 2. Service Dispatching Logic
 
@@ -80,9 +92,13 @@ When a file is detected, the listener determines which method to invoke using th
    - If no annotation override applies, the listener uses the file extension to determine the appropriate content method based on default mappings (e.g., `.json` → `onFileJson`, `.txt` → `onFileText`).
    - See [Section 3: Default File Extension to Content Method Mapping](#3-default-file-extension-to-content-method-mapping) for the full mapping table.
 
-3. **Fallback to Generic or Metadata Methods**:
-   - If no format-specific method is available for the detected file, the listener falls back to `onFile` (generic byte stream handling) or `onFileChange` (metadata-only handling).
+3. **Fallback to Generic Methods**:
+   - If no format-specific method is available for the detected file, the listener falls back to `onFile` (generic byte stream handling).
    - See [Section 5: Fallback Behavior](#5-fallback-behavior-for-unmatched-content-methods) for fallback chain details.
+
+4. **File Deletion Handling**:
+   - When files are deleted, the listener invokes the `onFileDeleted` method with an array of deleted file paths.
+   - If `onFileDeleted` is not implemented, the service will not receive deletion notifications (unless the deprecated `onFileChange` method is implemented for backward compatibility).
 
 #### 2.2. Method Handling Strategies
 
@@ -96,7 +112,11 @@ A developer can choose one of the following strategies for handling file content
     - Either `onFile(stream<byte[], error> ...)` for efficient stream processing.
     - Or `onFile(byte[] ...)` for in-memory byte array processing.
 
-3. **Metadata-Only Handling (Legacy)**: For backward compatibility, a service can implement only the `onFileChange(ftp:WatchEvent ...)` method if no content-handling methods are present.
+3. **File Deletion Handling**: To handle deleted files, implement the `onFileDeleted(string[] deletedFiles, ftp:Caller caller)` method.
+    - This method receives an array of file paths that were deleted from the monitored directory.
+    - The `caller` parameter is optional and can be omitted if not needed.
+
+4. **Legacy Metadata-Only Handling (Deprecated)**: For backward compatibility only, a service can still implement the deprecated `onFileChange(ftp:WatchEvent ...)` method. However, this approach is discouraged, and developers should migrate to the new content-specific methods and `onFileDeleted`.
 
 ### 3. Default File Extension to Content Method Mapping
 
@@ -201,9 +221,9 @@ In this scenario, when a `.txt` file arrives, it will be parsed as JSON and rout
 
 When the listener detects a file but no appropriate content method exists in the service, a fallback mechanism is triggered to handle the file gracefully.
 
-#### 5.1. Fallback Chain
+#### 5.1. Fallback Chain for File Additions
 
-The fallback operates in the following order:
+The fallback operates in the following order when a new file is added:
 
 1. **Primary Fallback - `onFile` (Generic Content Method)**:
    - If a format-specific content method (e.g., `onFileJson`, `onFileText`) is not available for the detected file extension, the listener will attempt to invoke the generic `onFile` method with the file content as a stream of bytes or byte array.
@@ -215,20 +235,24 @@ The fallback operates in the following order:
    }
    ```
 
-2. **Secondary Fallback - `onFileChange` (Metadata-Only)**:
-   - If neither a format-specific method nor a generic `onFile` method is available, the listener will fall back to invoking the `onFileChange` method, if present.
-   - This method receives only the file metadata (`ftp:WatchEvent`), allowing the service to know a file was added without reading its content.
+2. **Compilation Error**:
+   - If neither a format-specific method nor a generic `onFile` method is available, the service will fail at compile time with an error message indicating that at least one content handling method (`onFile` or format-specific methods) must be implemented.
 
-   ```ballerina
-   remote function onFileChange(ftp:WatchEvent event, ftp:Caller caller) returns error? {
-       // Handle file addition event without reading content
-   }
-   ```
+#### 5.2. File Deletion Handling
 
-3. **Tertiary Fallback - Compilation Error**:
-   - If none of the above methods are available, the service will fail at compile time with an error message indicating that at least one content handling method (`onFile`, format-specific methods, or `onFileChange`) must be implemented.
+For file deletion events:
+- If the `onFileDeleted` method is implemented, it will be invoked with the array of deleted file paths.
+- If `onFileDeleted` is not implemented, deletion events will be silently ignored (no error will be thrown).
 
-#### 5.2. Example Scenarios
+#### 5.3. Deprecated `onFileChange` Behavior
+
+**IMPORTANT**: The deprecated `onFileChange` method cannot coexist with the new content methods (`onFile`, `onFileText`, `onFileJson`, `onFileXml`, `onFileCsv`) or `onFileDeleted` in the same service.
+
+- If a service implements `onFileChange`, it must be the **only** remote method in the service (for backward compatibility).
+- If a service implements any of the new content methods or `onFileDeleted`, the presence of `onFileChange` will result in a compilation error.
+- New implementations should use the content-specific methods and `onFileDeleted` instead of the deprecated `onFileChange`.
+
+#### 5.4. Example Scenarios
 
 **Scenario 1: Missing format-specific method, fallback to `onFile`**
 
@@ -249,7 +273,7 @@ service on ContentListener {
 }
 ```
 
-**Scenario 2: No content methods, fallback to `onFileChange`**
+**Scenario 2: Using deprecated `onFileChange` (backward compatibility only)**
 
 ```ballerina
 listener ftp:Listener ContentListener = check new ({
@@ -260,8 +284,7 @@ listener ftp:Listener ContentListener = check new ({
 });
 
 service on ContentListener {
-    // No onFile or format-specific methods
-    // Fallback: only metadata is processed
+    // DEPRECATED: Using legacy onFileChange method alone (no other methods allowed)
     remote function onFileChange(ftp:WatchEvent event) returns error? {
         // Only file metadata is available here
         // User must fetch content manually if needed
@@ -281,7 +304,7 @@ listener ftp:Listener ContentListener = check new ({
 
 service on ContentListener {
     // No methods implemented
-    // Compilation error: "Service must implement at least one of: onFile, onFileText, onFileJson, onFileXml, onFileCsv, or onFileChange"
+    // Compilation error: "Service must implement at least one of: onFile, onFileText, onFileJson, onFileXml, onFileCsv"
 }
 ```
 
@@ -376,7 +399,37 @@ service on ContentListener {
 }
 ```
 
-#### 6.4. Fallback to Metadata-Only `onFileChange`
+#### 6.4. Handling File Deletions with `onFileDeleted`
+
+```ballerina
+import ballerina/ftp;
+import ballerina/log;
+
+listener ftp:Listener ContentListener = check new ({
+    protocol: ftp:FTP,
+    host: "ftp.example.com",
+    path: "/monitored",
+    fileNamePattern: ".*\\.(txt|json)$"
+});
+
+service on ContentListener {
+    // Handle new JSON files
+    remote function onFileJson(json content, ftp:FileInfo fileInfo) returns error? {
+        log:printInfo(string `Processing new JSON file: ${fileInfo.name}`);
+        // Process JSON content
+    }
+
+    // Handle deleted files
+    remote function onFileDeleted(string[] deletedFiles, ftp:Caller caller) returns error? {
+        foreach string filePath in deletedFiles {
+            log:printInfo(string `File deleted: ${filePath}`);
+            // Perform cleanup or logging for deleted files
+        }
+    }
+}
+```
+
+#### 6.5. Deprecated `onFileChange` Usage (Backward Compatibility Only)
 
 ```ballerina
 import ballerina/ftp;
@@ -390,18 +443,21 @@ listener ftp:Listener ContentListener = check new ({
 });
 
 service on ContentListener {
-    // No content methods implemented
-    // Fallback: only file metadata is received
+    // DEPRECATED: Using legacy onFileChange method
+    // Cannot coexist with other content methods or onFileDeleted
     remote function onFileChange(ftp:WatchEvent event) returns error? {
         foreach ftp:FileInfo fileInfo in event.addedFiles {
             log:printInfo(string `New file detected: ${fileInfo.name}, size: ${fileInfo.size}`);
-            // User can manually fetch content if needed using a client
+            // User must fetch content manually if needed using a client
+        }
+        foreach string deletedFile in event.deletedFiles {
+            log:printInfo(string `File deleted: ${deletedFile}`);
         }
     }
 }
 ```
 
-#### 6.5. Mixed Strategy - Some Extensions with Specific Handlers, Others with Fallback
+#### 6.6. Mixed Strategy - Some Extensions with Specific Handlers, Others with Fallback
 
 ```ballerina
 import ballerina/ftp;
@@ -485,8 +541,13 @@ service on ContentListener {
 
 ### 8. Compatibility and Migration
 
-- Existing `ftp:Listener` and `onFileChange` continue to work as-is.
-- Services can adopt the new content callbacks incrementally by adding one of the allowed signatures for the formats they need.
+- **Backward compatible today**: Services using onFileChange continue to work without modification.
+- **Deprecation in effect**: onFileChange is deprecated; the compiler surfaces warnings and it will be removed in a future major release.
+- **Incremental adoption**: You can add any of the new content callbacks (onFile, onFileText, onFileJson, onFileXml, onFileCsv) only for the formats you need.
+- **Simpler handling**: New callbacks deliver already-fetched (and, where applicable, parsed) content—no manual caller->get(...) or parsing required.
+- **Clear separation of concerns**: File additions are handled by the content callbacks; deletions are handled by onFileDeleted in a dedicated method.
+- **Mutual exclusivity**: onFileChange must not coexist with the new content callbacks or onFileDeleted in the same service.
+- **Migration at your pace**: Replace onFileChange with the relevant content callback(s) and add onFileDeleted for removals when you’re ready; no other code changes are required.
 
 ## Risks and Assumptions
 
