@@ -13,21 +13,19 @@
 
 ## Summary
 
-The current Ballerina FTP listener provides basic file monitoring capabilities with regex-based file name filtering and fixed-interval polling. However, it lacks enterprise-grade file selection capabilities essential for production integration scenarios. This proposal introduces a unified Advanced File Selection and Processing Framework that addresses four critical enterprise requirements through a cohesive set of enhancements:
+The current Ballerina FTP listener provides basic file monitoring capabilities with regex-based file name filtering and fixed-interval polling. However, it lacks enterprise-grade file selection capabilities essential for production integration scenarios. This proposal introduces a unified Advanced File Selection and Processing Framework that addresses three critical enterprise requirements through a cohesive set of enhancements:
 
 1. **Cron Expression Scheduling** - Introduce flexible cron-based scheduling via union type support in `pollingInterval`
-2. **File Stability Detection** - Prevent processing files actively being written by other processes
-3. **File Age Filtering** - Process files only within specified age ranges (minimum/maximum age)
-4. **Conditional File Processing** - Process files based on the existence of dependent files
+2. **File Age Filtering** - Process files only within specified age ranges (minimum/maximum age)
+3. **Conditional File Processing** - Process files based on the existence of dependent files
 
 ## Goals
 
 1. **Flexible Scheduling**: Enable cron-based scheduling for precise control over polling times (e.g., "every 15 minutes", "daily at 2 AM").
-2. **Data Integrity**: Prevent processing incomplete files that are actively being written by external processes.
-3. **Age-Based Processing**: Allow file selection based on age criteria to handle stabilization periods and archival policies.
-4. **Dependency-Aware Processing**: Support complex file processing workflows where files depend on the presence of other related files.
-5. **Unified Configuration**: Provide a cohesive API where all features work together naturally.
-6. **Backward Compatibility**: Maintain full compatibility with existing configurations; all new features are opt-in.
+2. **Age-Based Processing**: Allow file selection based on age criteria to handle stabilization periods and archival policies.
+3. **Dependency-Aware Processing**: Support complex file processing workflows where files depend on the presence of other related files.
+4. **Unified Configuration**: Provide a cohesive API where all features work together naturally.
+5. **Backward Compatibility**: Maintain full compatibility with existing configurations; all new features are opt-in.
 
 ## Non-Goals
 
@@ -44,18 +42,12 @@ The existing FTP listener has several limitations that prevent it from being use
 
 1. **Fixed Polling Only**: The `pollingInterval` parameter only supports fixed intervals (e.g., every 60 seconds). Enterprise workflows often require specific schedules like "every weekday at 9 AM" or "every 15 minutes during business hours," which cannot be expressed with simple intervals.
 
-2. **No File Stability Detection**: The listener immediately processes files as soon as they appear in the monitored directory. If an external process is actively writing a large file, the listener may begin processing it prematurely, leading to:
-   - Incomplete data reads
-   - File corruption
-   - Processing failures and retries
-   - Data integrity issues
-
-3. **No Age-Based Filtering**: Many integration scenarios require files to "settle" before processing. For example:
+2. **No Age-Based Filtering**: Many integration scenarios require files to "settle" before processing. For example:
    - **Minimum Age**: Wait 5 minutes after a file appears to ensure the writing process has completed
    - **Maximum Age**: Process only files less than 24 hours old to avoid processing stale or archived data
    - Currently, developers must implement this logic manually in their service code
 
-4. **No Dependency Checking**: Complex file processing workflows often involve multiple related files. For example:
+3. **No Dependency Checking**: Complex file processing workflows often involve multiple related files. For example:
    - Process `invoice_2024_01.xml` only if `invoice_2024_01.csv` and `invoice_2024_01.checksum` exist
    - Process `*.xml` files only if corresponding `*.metadata` files are present
    - Currently, there is no built-in mechanism to express these dependencies
@@ -65,21 +57,6 @@ The existing FTP listener has several limitations that prevent it from being use
 ### New Type Definitions
 
 ```ballerina
-# Strategy for detecting if a file is still being written by another process
-#
-# + NONE - No stability checking (default, backward compatible)
-# + LOCK_FILE - Check for companion .lock file (e.g., data.csv requires absence of data.csv.lock)
-# + SIZE_STABILITY - Check if file size remains unchanged between 2 consecutive polling cycles
-# + TIMESTAMP_STABILITY - Check if last modified timestamp remains unchanged between 2 consecutive polling cycles
-# + COMBINED_STABILITY - Both size and timestamp must be stable (most reliable)
-public enum FileStabilityStrategy {
-    NONE,
-    LOCK_FILE,
-    SIZE_STABILITY,
-    TIMESTAMP_STABILITY,
-    COMBINED_STABILITY
-}
-
 # Mode for calculating file age
 #
 # + LAST_MODIFIED - Use file's last modified timestamp (default)
@@ -140,7 +117,6 @@ public type FileDependencyCondition record {|
 # + fileNamePattern - Regex pattern for filtering files (optional)
 # + pollingInterval - Polling interval in seconds (decimal, default: 60) OR cron expression (string, e.g., "0 */15 * * * *")
 # + userDirIsRoot - If `true`, treats the user's home directory as root (/)
-# + fileStabilityStrategy - Strategy for detecting if files are being written (default: NONE)
 # + fileAgeFilter - Configuration for filtering files based on age (optional)
 # + fileDependencyConditions - Array of dependency conditions for conditional file processing (default: [])
 public type ListenerConfiguration record {|
@@ -154,9 +130,6 @@ public type ListenerConfiguration record {|
 
     # Scheduling configuration
     decimal|string pollingInterval = 60;
-
-    # File stability detection configuration
-    FileStabilityStrategy fileStabilityStrategy = NONE;
 
     # File age filtering configuration
     FileAgeFilter fileAgeFilter?;
@@ -172,8 +145,6 @@ public type ListenerConfiguration record {|
 |--------------|------|---------|-------------|
 | **Scheduling** ||||
 | `pollingInterval` | decimal\|string | 60 | Polling interval in seconds (decimal) OR cron expression (string, e.g., "0 */15 * * * *" for every 15 minutes). |
-| **File Stability Detection** ||||
-| `fileStabilityStrategy` | enum | NONE | Strategy to detect if files are being written: NONE, LOCK_FILE, SIZE_STABILITY, TIMESTAMP_STABILITY, COMBINED_STABILITY. Stability checks use 2 consecutive polling cycles. |
 | **File Age Filtering** ||||
 | `fileAgeFilter` | record? | - | Optional configuration for filtering files based on age criteria. |
 | `fileAgeFilter.minAge` | decimal | -1 | Minimum age in seconds. Files younger than this are skipped. -1 means no minimum. |
@@ -219,43 +190,7 @@ public type ListenerConfiguration record {|
 
 **Implementation**: Leverage Ballerina's `task` module or implement a cron parser that calculates the next execution time and uses `task:scheduleJobRecurAtTime`.
 
-#### Feature 2: File Stability Detection
-
-**Purpose**: Prevent processing files actively being written by other processes.
-
-**Strategies**:
-
-1. **NONE (default)**: No stability checking. Files are processed immediately upon discovery. This is the current behavior.
-
-2. **LOCK_FILE**: Check for the existence of a companion `.lock` file.
-   - Example: `data.csv` is processed only if `data.csv.lock` does NOT exist
-   - Useful when external writers create `.lock` files during upload
-   - Low overhead, instant detection
-
-3. **SIZE_STABILITY**: Check if file size remains unchanged between 2 consecutive polling cycles.
-   - File metadata is checked in the current poll and again in the next 2 polls
-   - If size changes between any of the polls, file is skipped in the current cycle
-   - Useful for detecting active writes without lock files
-   - Moderate overhead (adds 2 polling intervals to processing latency)
-
-4. **TIMESTAMP_STABILITY**: Check if last modified timestamp remains unchanged between 2 consecutive polling cycles.
-   - File metadata is checked in the current poll and again in the next 2 polls
-   - If timestamp changes between any of the polls, file is skipped
-   - Useful for systems that update timestamps during writes
-   - Moderate overhead (adds 2 polling intervals to processing latency)
-
-5. **COMBINED_STABILITY**: Both size AND timestamp must be stable across 2 consecutive polling cycles.
-   - Most reliable detection method
-   - Highest overhead (adds 2 polling intervals to processing latency)
-   - Recommended for critical data integrity scenarios
-
-**Behavior**:
-- Stability checking occurs **after** file name pattern matching and **before** age filtering
-- Files that fail stability checks are silently skipped (not reported as added)
-- Stability checks require 2 polling cycles (e.g., with `pollingInterval: 30`, stability verification takes 60 seconds)
-- For LOCK_FILE mode, `.lock` files themselves are automatically excluded from processing
-
-#### Feature 3: File Age Filtering
+#### Feature 2: File Age Filtering
 
 **Purpose**: Process files only within specified age ranges.
 
@@ -277,11 +212,11 @@ public type ListenerConfiguration record {|
 - **Both**: Process files in a specific age window (e.g., between 1 hour and 7 days old)
 
 **Behavior**:
-- Age filtering occurs **after** lock checking and **before** dependency checking
+- Age filtering occurs **after** file name pattern matching and **before** dependency checking
 - Files that fail age requirements are silently skipped
 - Age is re-evaluated on every poll (stale files eventually become too old)
 
-#### Feature 4: Conditional File Processing (Dependencies)
+#### Feature 3: Conditional File Processing (Dependencies)
 
 **Purpose**: Process files only when required dependent files exist.
 
@@ -341,21 +276,19 @@ All features work together in a unified pipeline executed during each poll cycle
    ↓
 2. File Name Pattern Matching (fileNamePattern)
    ↓
-3. File Stability Detection (fileStabilityStrategy)
+3. File Age Filtering (fileAgeFilter)
    ↓
-4. File Age Filtering (fileAgeFilter)
+4. Dependency Checking (fileDependencyConditions)
    ↓
-5. Dependency Checking (fileDependencyConditions)
-   ↓
-6. Fire onFileChange Event with Qualified Files
+5. Fire onFileChange Event with Qualified Files
 ```
 
 **Key Principles**:
 - Each stage filters out non-qualifying files
-- Filters are applied in order (pattern → lock → age → dependencies)
+- Filters are applied in order (pattern → age → dependencies)
 - Only files passing all stages are reported in `WatchEvent.addedFiles`
 - Failed checks are silent (no errors thrown, files simply skipped)
-- Performance: Early stages (pattern, lock) fail fast to minimize expensive checks
+- Performance: Early stages (pattern) fail fast to minimize expensive checks
 
 ### Value Validation
 
@@ -379,40 +312,7 @@ Runtime validation enforces the following rules:
 
 ## Usage Examples
 
-### Example 1: Basic File Stability Detection with Size Stability
-
-Wait for files to finish uploading before processing:
-
-```ballerina
-import ballerina/ftp;
-import ballerina/log;
-
-listener ftp:Listener remoteServer = check new({
-    protocol: ftp:FTP,
-    host: "ftp.example.com",
-    port: 21,
-    auth: {
-        credentials: {username: "user", password: "pass"}
-    },
-    path: "/incoming",
-    fileNamePattern: ".*\\.csv",
-    pollingInterval: 30,  // Check every 30 seconds
-
-    // Only process files whose size is stable across 2 polling cycles (60 seconds)
-    fileStabilityStrategy: ftp:SIZE_STABILITY
-});
-
-service on remoteServer {
-    remote function onFileChange(ftp:WatchEvent event) {
-        foreach ftp:FileInfo file in event.addedFiles {
-            log:printInfo("Processing stable file: " + file.name);
-            // File is guaranteed to not be actively written
-        }
-    }
-}
-```
-
-### Example 2: Cron Scheduling for Business Hours
+### Example 1: Cron Scheduling for Business Hours
 
 Process files every 15 minutes during business hours (9 AM - 5 PM, Monday-Friday):
 
@@ -444,7 +344,7 @@ service on businessHoursListener {
 }
 ```
 
-### Example 3: File Age Filtering for Stabilization Period
+### Example 2: File Age Filtering for Stabilization Period
 
 Wait 5 minutes after file creation before processing (prevents processing incomplete uploads):
 
@@ -480,7 +380,7 @@ service on stabilizedListener {
 }
 ```
 
-### Example 4: Maximum Age Filter for Fresh Files Only
+### Example 3: Maximum Age Filter for Fresh Files Only
 
 Process only files less than 24 hours old (ignore stale/archived files):
 
@@ -514,7 +414,7 @@ service on freshFilesListener {
 }
 ```
 
-### Example 5: Age Range Filter (Min and Max)
+### Example 4: Age Range Filter (Min and Max)
 
 Process files between 1 hour and 7 days old:
 
@@ -549,7 +449,7 @@ service on ageRangeListener {
 }
 ```
 
-### Example 6: Simple File Dependencies (All Required)
+### Example 5: Simple File Dependencies (All Required)
 
 Process XML files only if corresponding CSV and checksum files exist:
 
@@ -592,14 +492,12 @@ service on dependencyListener {
 
 - Existing `ftp:Listener` usage continues to work as-is.
 - All new configurations are optional with safe defaults.
-- Users can incrementally enable additional features (cron scheduling, lock detection, age filtering, dependencies) based on deployment needs.
+- Users can incrementally enable additional features (cron scheduling, age filtering, dependencies) based on deployment needs.
 - No migration or code changes are required unless a user explicitly opts in to new configurations.
 
 ## Risks and Assumptions
 
 - **Cron syntax**: Invalid expressions can break schedules. We validate at startup and fail fast with clear errors; docs include copy-pasteable examples.
-- **Stability checks**: SIZE/COMBINED stability adds a delay of 2 polling cycles. For example, with `pollingInterval: 30`, this adds 60 seconds. Use LOCK_FILE for high-frequency folders, COMBINED for critical data.
 - **Dependency patterns**: Complex regex across many files can slow polls. Patterns are compiled once; keep them simple where possible.
 - **Age filter window**: Files can age out before pickup (e.g., processed elsewhere). Use minAge only as a short "settle" buffer (60–300s) and document behavior.
-- **Stability heuristics**: SIZE stability can false-positive during brief write pauses; .lock files require writer cooperation.
 - **No clustering**: No distributed coordination or shared locks; assume a single listener instance per directory.
