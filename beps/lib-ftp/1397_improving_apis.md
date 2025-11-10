@@ -13,7 +13,7 @@
 
 ## Summary
 
-The Ballerina FTP client currently provides functional coverage for foundational file transfer operations. However, when comparing industry trends across modern integration languages, enterprise middleware, and cloud-native file processing platforms, it is evident that many platforms now expose richer file operation semantics such as pattern-based selection, conditional processing, controlled overwrite behaviour, stream-safe transformations, compression/decompression, and file-based orchestration parameters like retries, age filters, and file stability checks. This document identifies such capability areas as potential future expansion directions for the Ballerina FTP client.
+The Ballerina FTP client already delivers the core primitives required for basic file transfer. However, common modern integration usage patterns frequently rely on a few essential file manipulation primitives that eliminate the need for custom orchestration logic. This proposal introduces such base-level convenience APIs (move, copy and existence checking) which are widely expected in integration runtimes.
 
 ## Goals
 
@@ -22,6 +22,7 @@ The Ballerina FTP client currently provides functional coverage for foundational
 ## Non-Goals
 
 1. This proposal does not aim to any changes to existing APIs. It will only add a few new APIs to the current stack.
+2. More advanced file processing capabilities (such as compression/decompression, file pattern matching, file age filters, multi-file aggregation/splitting etc.) are explicitly out of scope here and will be handled as separate future proposals if needed.
 
 ## Motivation
 
@@ -29,7 +30,7 @@ This aims to improve the FTP Client of Ballerina, hence improving File Integrati
 
 ## Design
 
-The proposed. changes will introduce 3 new APIs which are identified as essential to encompass a minimal File Inetgration experience to the user.
+The proposed changes will introduce 3 new APIs, identified as essential to provide a minimal File Integration experience for the user.
 
 ### Proposed New APIs
 
@@ -112,7 +113,7 @@ The proposed. changes will introduce 3 new APIs which are identified as essentia
             io:println("Does not exist!");
         }
         ```
-        
+
 
 ### Compatibility and Migration
 
