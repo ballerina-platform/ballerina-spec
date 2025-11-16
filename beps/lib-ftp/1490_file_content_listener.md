@@ -61,7 +61,8 @@ remote function onFileXml(record{} content, ftp:FileInfo fileInfo, ftp:Caller ca
 # RFC4180 defaults
 remote function onFileCsv(string[][] content, ftp:FileInfo fileInfo, ftp:Caller caller) returns error?;
 remote function onFileCsv(record{}[] content, ftp:FileInfo fileInfo, ftp:Caller caller) returns error?;
-remote function onFileCsv(stream<byte[], error> content, ftp:FileInfo fileInfo, ftp:Caller caller) returns error?;
+remote function onFileCsv(stream<string[], error> content, ftp:FileInfo fileInfo, ftp:Caller caller) returns error?;
+remote function onFileCsv(stream<record{}, error> content, ftp:FileInfo fileInfo, ftp:Caller caller) returns error?;
 ```
 
 #### 1.3. File Deletion Handler
@@ -85,7 +86,7 @@ The listener employs an intelligent dispatching mechanism to route incoming file
 When a file is detected, the listener determines which method to invoke using the following priority order:
 
 1. **Annotation-Based Override** (Highest Priority):
-   - If a method is annotated with `@ftp:FileConfig { pattern: "..." }` and the file matches the specified pattern, that method is invoked regardless of the file extension's default mapping.
+   - If a method is annotated with `@ftp:FunctionConfig { fileNamePattern: "..." }` and the file matches the specified pattern, that method is invoked regardless of the file extension's default mapping.
    - See [Section 4: Method Override via Annotation](#4-method-override-via-annotation) for details.
 
 2. **Default Extension Mapping**:
@@ -173,13 +174,13 @@ In this example, when a file with `.txt` extension arrives, `onFileText` is invo
 
 ### 4. Method Override via Annotation
 
-While the default extension-to-method mapping covers common use cases, there are scenarios where a user may want to process a file using a different content method than the default. The `@ftp:FileConfig` annotation allows users to override the default behavior on a per-method basis.
+While the default extension-to-method mapping covers common use cases, there are scenarios where a user may want to process a file using a different content method than the default. The `@ftp:FunctionConfig` annotation allows users to override the default behavior on a per-method basis.
 
 #### 4.1. Annotation Definition
 
 ```ballerina
-public type FileConfig record {|
-    string pattern;
+public type FunctionConfig record {|
+    string fileNamePattern;
 |};
 
 public annotation FileConfig FileConfig on function;
@@ -187,7 +188,7 @@ public annotation FileConfig FileConfig on function;
 
 #### 4.2. Override Behavior
 
-The `pattern` field in `@ftp:FileConfig` specifies a file name pattern that should be routed to the annotated method, overriding the default extension mapping. The pattern must be a subset (or more specific version) of the listener-level `fileNamePattern`.
+The `pattern` field in `@ftp:FunctionConfig` specifies a file name pattern that should be routed to the annotated method, overriding the default extension mapping. The pattern must be a subset (or more specific version) of the listener-level `fileNamePattern`.
 
 **Example: Processing `.txt` files as JSON**
 
