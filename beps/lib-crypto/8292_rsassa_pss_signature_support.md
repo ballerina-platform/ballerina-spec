@@ -3,7 +3,7 @@
 - Authors
   - Randil Tharusha (@randilt)
 - Reviewed by
-  - @daneshk @ThisaruGuruge 
+  - @daneshk @ThisaruGuruge
 - Created date
   - 2025-10-03
 - Updated date
@@ -64,7 +64,7 @@ This proposal follows the existing architectural patterns of the Ballerina crypt
 
 Two new functions will be added to the `crypto` module following the exact naming pattern of existing RSA signature functions:
 
-````ballerina
+```ballerina
 # Returns the RSASSA-PSS with SHA-256 based signature value for the given data.
 # ```ballerina
 # string input = "Hello Ballerina";
@@ -81,9 +81,9 @@ Two new functions will be added to the `crypto` module following the exact namin
 # + privateKey - The private key used for signing
 # + return - The generated signature or else a `crypto:Error` if the private key is invalid
 public isolated function signRsaSsaPss256(byte[] input, PrivateKey privateKey) returns byte[]|Error;
-````
+```
 
-````ballerina
+```ballerina
 # Verifies the RSASSA-PSS with SHA-256 based signature.
 # ```ballerina
 # string input = "Hello Ballerina";
@@ -103,7 +103,7 @@ public isolated function signRsaSsaPss256(byte[] input, PrivateKey privateKey) r
 # + publicKey - The public key used for verification
 # + return - Validity of the signature or else a `crypto:Error` if the public key is invalid
 public isolated function verifyRsaSsaPss256Signature(byte[] data, byte[] signature, PublicKey publicKey) returns boolean|Error;
-````
+```
 
 ### Implementation Architecture
 
