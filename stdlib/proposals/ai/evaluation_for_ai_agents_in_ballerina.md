@@ -52,7 +52,7 @@ See the design section for more details.
 4. **Optional Observability Integration**
 Observability can be layered on top if needed, but it is not required. Developers may still integrate systems like Arize or Langfuse by configuring an observability backend, without affecting the core evaluation mechanism.
 
-## Desing
+## Design
 
 To enable evaluation without relying on any observability infrastructure, the `ballerina/ai` module will introduce a set of new APIs that expose intermediate steps and agent state transitions. These additions allow developers to inspect an agent’s reasoning process, tool interactions, and final outputs directly. Using this information, users can write evaluations through input–output–driven testing and behavioral assertions, all within the standard Ballerina testing framework.
 
