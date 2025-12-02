@@ -235,21 +235,10 @@ public type ToolCallEvalDataProvider record {|
 
 isolated function toolCallOrderDataSet() returns ToolCallEvalDataProvider[][] {
     return [
-        // Simple greeting, no tools expected
-        [{input: "Hi", expectedTools: []}],
-
-        // Email-related tasks
-        [{input: "Forward the last email from HR to my manager.", expectedTools: ["readEmail", "sendEmail"]}],
-        [{input: "Delete all unread promotional emails.", expectedTools: ["readEmail", "deleteEmail"]}],
-
-        // Calendar and scheduling tasks
-        [{input: "Reschedule my call with Alice to next Monday.", expectedTools: ["readCalendar", "updateCalendar"]}],
-        [{input: "List all my meetings for this week.", expectedTools: ["readCalendar"]}],
-
-        // Mixed tasks
         [{input: "Summarize my unread emails and schedule a follow-up meeting.", expectedTools: ["readEmail", "summarizeEmail", "readCalendar", "bookCalendar"]}],
         [{input: "Send an email to Raj and add a calendar invite.", expectedTools: ["sendEmail", "bookCalendar"]}]
     ];
+    // or load it from a file
 }
 ```
 
@@ -261,9 +250,9 @@ With this approach, writing AI evaluation tests feels natural, concise, and they
 
 Evaluation platforms like Arize, Phoenix, Langfuse, and LangSmith maintain a persistent store of historical agent runs. This enables powerful capabilities such as:
 
-* Monitoring performance trends over time
-* Comparing current results against historical baselines
-* Querying and analyzing metrics across versions, tasks, or datasets
+- Monitoring performance trends over time
+- Comparing current results against historical baselines
+- Querying and analyzing metrics across versions, tasks, or datasets
 
 While the Ballerina testing framework can replicate the **evaluation logic**, it does **not** provide built-in support for persistent storage, trend analysis, or historical comparisons. These capabilities could be added by exporting evaluation results to an external storage system—and in the future, they could be offered through **Devant** as a first-class feature.
 
@@ -276,6 +265,17 @@ For example:
 2. Use Arize’s REST API to run evaluations and submit results back to the Arize platform.
 
 This approach ensures that both **trace-free** and **observability-driven** evaluation workflows remain fully supported.
+
+### Further enhancement to the Ballerina Test framework
+
+To overcome the limitation around storing and tracking past evaluation outputs, the Ballerina Test framework can be extended with a set of improvements that make evaluation results easier to retain, organize, and analyze over time.
+
+* Support a dedicated directory for storing evaluation reports by using `bal test --test-report --test-report-dir evaluation`. This places all generated reports inside an `evaluation` folder, allowing teams to version and track them through source control.
+* Produce a new report file for every test execution that includes a timestamp in its name. This ensures older reports remain intact, making it possible to review historical data and understand how performance changes across versions.
+* Include the input values passed to tests through the `dataProvider` field in the annotations. Recording this information makes each report self-contained so developers can fully understand what was evaluated without checking the test sources.
+
+With these additions, the Ballerina Test framework can serve both immediate regression checks and longer term evaluation tracking.
+
 
 ## Conclusion
 
