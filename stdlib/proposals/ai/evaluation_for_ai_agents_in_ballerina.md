@@ -118,7 +118,7 @@ public isolated class Agent {
 ```
 The above change allows you to retrieve either the agent’s string response or the full execution trace.
 
-> Note: Any types not explicitly listed here are imported from the `ballerina/ai` module.
+>**Note:** Any types not explicitly listed here are imported from the `ballerina/ai` module.
 
 ### Trace utility functions
 
@@ -171,6 +171,8 @@ public isolated function getTotalExecutionTime(Trace|Iteration trace) returns ti
     return time:utcDiffSeconds(trace.endTime, trace.startTime);
 }
 ```
+
+>**Note:** To better separate these evaluation utility methods from the AI module, we can introduce the above methods in a separate package called ballerina/ai.eval. This will become an independent package from the existing ballerina/aimodule.
 
 #### Example of Writing an AI Evaluation
 
@@ -244,7 +246,7 @@ isolated function toolCallOrderDataSet() returns ToolCallEvalDataProvider[][] {
 
 With this approach, writing AI evaluation tests feels natural, concise, and they integrate seamlessly with the Ballerina test framework.
 
-**Note:** In addition to the above enhancement, the test report generated via `bal test --test-report` should also be improved to display the confidence score calculated for each evaluation test. This value can then serve as a baseline for future regression testing.
+>**Note:** In addition to the above enhancement, the test report generated via `bal test --test-report` should also be improved to display the confidence score calculated for each evaluation test. This value can then serve as a baseline for future regression testing.
 
 ## Limitation
 
@@ -266,9 +268,9 @@ For example:
 
 This approach ensures that both **trace-free** and **observability-driven** evaluation workflows remain fully supported.
 
-### Further enhancement to the Ballerina Test framework
+### Further enhancement to the Ballerina test framework
 
-To overcome the limitation around storing and tracking past evaluation outputs, the Ballerina Test framework can be extended with a set of improvements that make evaluation results easier to retain, organize, and analyze over time.
+To overcome the limitation around storing and tracking past evaluation outputs, the Ballerina test framework can be extended with a set of improvements that make evaluation results easier to retain, organize, and analyze over time.
 
 * Support a dedicated directory for storing evaluation reports by using `bal test --test-report --test-report-dir evaluation`. This places all generated reports inside an `evaluation` folder, allowing teams to version and track them through source control.
 * Produce a new report file for every test execution that includes a timestamp in its name. This ensures older reports remain intact, making it possible to review historical data and understand how performance changes across versions.
@@ -276,6 +278,43 @@ To overcome the limitation around storing and tracking past evaluation outputs, 
 
 With these additions, the Ballerina Test framework can serve both immediate regression checks and longer term evaluation tracking.
 
+## Summary of changes required
+
+### Changes to the `ballerina/ai` module
+
+1. **New Record Types**
+   - Add `Trace` record to represent agent execution traces
+   - Add `Iteration` record to represent individual steps in execution
+   - Add `ToolSchema` record to capture tool metadata
+
+2. **Agent API Enhancement**
+   - Modify `Agent.run()` method to support type binding with `typedesc<Trace|string>` parameter
+   - Return either string response or full `Trace` object based on the type descriptor
+
+### Introduce `ballerina/ai.eval` module
+
+3. **Trace Utility Functions**
+   - `getAllToolCalls()` - Extract all function calls from a trace
+   - `assertToolCall()` - Verify function call matches expected parameters
+   - `hasError()` - Check for errors in execution
+   - `getErrors()` - Retrieve all errors from a trace
+   - `getFinalAnswer()` - Extract the final agent response
+   - `getTotalExecutionTime()` - Calculate execution duration
+   - Additional utilities and evaluation prompts for LLM-as-a-judge
+
+### Changes to the Ballerina test framework
+
+1. **Confidence-based Evaluation**
+   - Add new `confidence` (or `threshold`) field to `@test:Config` annotation
+   - Implement pass/fail logic based on aggregate performance across dataset (dataProvider) entries
+   - Calculate pass rate and compare against confidence threshold
+
+2. **Enhanced Test Reporting**
+   - Display confidence scores in test reports generated via `bal test --test-report`
+   - Show aggregate metrics for evaluation tests (Caculated confidence score)
+   - Support `--test-report-dir` flag to specify custom report directory
+   - Generate timestamped report files for historical tracking
+   - Include `dataProvider` input values in test reports for better traceability
 
 ## Conclusion
 
