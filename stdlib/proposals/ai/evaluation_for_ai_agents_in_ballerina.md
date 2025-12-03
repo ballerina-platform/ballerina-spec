@@ -289,7 +289,7 @@ With these additions, the Ballerina Test framework can serve both immediate regr
 
 2. **Agent API Enhancement**
    - Modify `Agent.run()` method to support type binding with `typedesc<Trace|string>` parameter
-   - Return either string response or full `Trace` object based on the type descriptor
+   - Return either string response or full `Trace` record based on the type descriptor
 
 ### Introduce `ballerina/ai.eval` module
 
