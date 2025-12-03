@@ -50,41 +50,31 @@ public type Options record {
 };
 ```
 
-The `FailSafeOptions` record includes an `outputMode` field that specifies how error logs should be output.
+The `FailSafeOptions` record provides configuration for the fail-safe mechanism, including console logging and file output configurations.
 
 ```ballerina
 # Represents the options for fail-safe mechanism during parsing.
 public type FailSafeOptions record {|
-    # Specifies the output mode for logging errors encountered during parsing
-    ConsoleOutputMode|FileOutputMode outputMode = {};
-|};
-```
-
-The `failSafe` configuration supports two distinct output modes for error reporting: the console output mode and the file output mode.
-
-### Console output mode
-
-In console output mode, any errors encountered during parsing are displayed directly in the console. This option is to allow users to review parsing issues as they are detected.
-
-```ballerina
-# Represents the console output mode for logging errors.
-public type ConsoleOutputMode record {|
     # Specifies enabling logging errors to the console
-    boolean excludeSourceData = true;
+    boolean enableConsoleLogs = true;
+    # Excludes logging source data to the console
+    boolean excludeSourceDataInConsole = true;
+    # Specifies the output mode for logging errors encountered during parsing
+    FileOutputMode fileOutputMode?;
 |};
 ```
 
-When `excludeSourceData` is set to `true`, the error log must not include the source data row that caused the error. When set to `false`, the source data row also will be included in the error output.
+### Console logging
+
+When `enableConsoleLogs` is set to `true` (default), errors encountered during parsing are displayed in the console. The `excludeSourceDataInConsole` flag controls whether the source data row is included in the console output. When set to `true` (default), the error log will not include the source data row that caused the error. When set to `false`, the source data row will be included in the error output.
 
 ### File output mode
 
-In file output mode, error details encountered during CSV parsing are written as structured logs to a user-specified file path. This allows users to persist error diagnostics for review, independent of the console output.
+In file output mode, error details encountered during CSV parsing are written as structured logs to a user-specified file path. This allows users to persist error diagnostics for review. This is an optional configuration in `FailSafeOptions`.
 
 ```ballerina
 # Represents the file output mode for logging errors.
 public type FileOutputMode record {|
-    # Specifies whether to enable logging errors to the console in addition to the file
-    boolean enableConsoleLogs = false;
     # The file path where errors will be logged
     string filePath;
     # Controls the level of detail included in the error logs.
@@ -94,13 +84,23 @@ public type FileOutputMode record {|
 |};
 ```
 
-When `enableConsoleLogs` is set to `true`, errors will be logged to both the specified file and the console. When set to `false`, errors will only be written to the specified file.
-
 ### Error log content type
 
-The `csv:ErrorLogContentType` enumeration determines the type and amount of information included in error logs.
+The `csv:ErrorLogContentType` enumeration determines the type and amount of information included in error logs when writing to a file.
 
-**Fields:**
+```ballerina
+# Represents the content type for error logging.
+public enum ErrorLogContentType {
+    # Logs only the metadata (timestamp, location, message) without source data rows
+    METADATA,
+    # Logs the source data rows along with error messages
+    RAW,
+    # Logs both source data rows and metadata along with error messages
+    RAW_AND_METADATA
+};
+```
+
+**Values:**
 
 - `csv:METADATA`: The implementation will log only error metadata including timestamp, location, and error message. The source data row will not be included. This will be the default behaviour.
 
@@ -112,6 +112,18 @@ The `csv:ErrorLogContentType` enumeration determines the type and amount of info
 
 The `csv:FileWriteOption` enumeration defines the file write behaviour. It specifies how error logs are persisted to the log file during CSV parsing. Users can choose whether new logs should be appended to an existing file or if the file should be overwritten at the start of processing.
 
+```ballerina
+# Represents the options for writing data.
+public enum FileWriteOption {
+    # If the file already exists, new logs will be appended to the existing file
+    APPEND,
+    # When the error logging starts, if the file already exists, the file will be overwritten
+    OVERWRITE
+};
+```
+
+**Values:**
+
 - `csv:APPEND`: New error log entries will be appended to the existing file content. If the file does not exist, new file will be created. This will be the default behaviour.
 
 - `csv:OVERWRITE`: The file will be truncated and overwritten at the start of each parsing operation. Any existing content will be discarded in the file.
@@ -122,11 +134,35 @@ Error log entries provide users with rich context to understand and address CSV 
 
 #### Console log format
 
-Console error logs use the standard Ballerina logging output format as defined by the `ballerina/log` module. If `excludeSourceData` is set to `false`, the log entry will  include the `offendingRow` field to present the problematic input data for context.
+Console error logs use the standard Ballerina logging output format as defined by the `ballerina/log` module. If `excludeSourceDataInConsole` is set to `false`, the log entry will include the offending row to present the problematic input data for context.
 
 #### File log format
 
-File error logs SHALL be written as newline-delimited JSON objects. Each error log entry MUST be a valid JSON object with the following schema:
+File error logs SHALL be written as newline-delimited JSON objects. Each error log entry MUST be a valid JSON object conforming to the `LogOutput` record type:
+
+```ballerina
+# Represents an error log entry.
+public type LogOutput record {|
+    # The timestamp of the error occurrence
+    string time?;
+    # The location where the error occurred
+    Location location?;
+    # The error message
+    string message?;
+    # The source data row related to the error
+    string offendingRow?;
+|};
+
+# Represents the location of an error.
+public type Location record {|
+    # The row number where the error occurred
+    int row;
+    # The column number where the error occurred
+    int column;
+|};
+```
+
+**Field descriptions:**
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
