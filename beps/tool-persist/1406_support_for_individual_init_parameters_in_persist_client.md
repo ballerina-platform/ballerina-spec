@@ -69,7 +69,7 @@ When this flag is used:
 1. The generated `init()` function accepts individual parameters instead of relying on configurables
 2. No `Config.toml` file is generated
 3. No `persist_db_config.bal` file is generated
-4. The `Ballerina.toml` is updated with `options.initParams = true` for build integration
+4. The `Ballerina.toml` is updated with `options.withInitParams = true` for build integration
 
 ### Generated Code Structure
 
@@ -141,7 +141,7 @@ When using `bal persist add --with-init-params`, the tool configuration in `Ball
 id = "generate-db-client"
 targetModule = "myapp.entities"
 options.datastore = "mysql"
-options.initParams = true
+options.withInitParams = true
 filePath = "persist/model.bal"
 ```
 
