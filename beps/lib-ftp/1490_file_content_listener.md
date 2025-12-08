@@ -14,12 +14,12 @@
 ## Summary
 
 The current `ftp:Listener` reports file add/delete events via `onFileChange`, exposing metadata only. To process content, developers must invoke a client (`Caller->get`) inside the handler.
-This proposal adds content-first callbacks to the existing listener, so services can receive file content directly (stream, bytes, text, JSON, XML, CSV) as soon as a file is detected. Additionally, this proposal deprecates the `onFileChange` method and introduces a dedicated `onFileDeleted` method for handling file deletion events
+This proposal adds content-first callbacks to the existing listener, so services can receive file content directly (stream, bytes, text, JSON, XML, CSV) as soon as a file is detected. Additionally, this proposal deprecates the `onFileChange` method and introduces a dedicated `onFileDelete` method for handling file deletion events
 
 ## Goals
 
 1. Extend the current `ftp:Listener` service contract to provide file content directly upon detection of a new file.
-2. Introduce a dedicated `onFileDeleted` method to handle file deletion events separately from file addition events.
+2. Introduce a dedicated `onFileDelete` method to handle file deletion events separately from file addition events.
 3. Deprecate the `onFileChange` method in favor of more specific and intuitive content-handling methods.
 
 ## Non-Goals
@@ -30,7 +30,7 @@ This proposal adds content-first callbacks to the existing listener, so services
 
 Currently, the listener only reports metadata and processing a new file requires significant boilerplate code. The developer must handle the event, instantiate a client, fetch the content as a stream, and then perform data conversion. Many real-world flows need the file's content the moment it lands. A content-first callback lets your service start processing immediately, and if needed, use the provided `Caller` to move or delete the file afterward.
 
-Additionally, the existing `onFileChange` method conflates file addition and deletion events, requiring developers to handle both scenarios within a single method. By deprecating `onFileChange` and introducing dedicated content methods for file additions and a separate `onFileDeleted` method for deletions, we provide a clearer, more intuitive API that aligns with common use cases.
+Additionally, the existing `onFileChange` method conflates file addition and deletion events, requiring developers to handle both scenarios within a single method. By deprecating `onFileChange` and introducing dedicated content methods for file additions and a separate `onFileDelete` method for deletions, we provide a clearer, more intuitive API that aligns with common use cases.
 
 ## Design
 
@@ -69,13 +69,13 @@ remote function onFileCsv(stream<record{}, error> content, ftp:FileInfo fileInfo
 
 ```ballerina
 # Handles deleted files
-remote function onFileDeleted(string[] deletedFiles, ftp:Caller caller) returns error?;
+remote function onFileDelete(string deletedFile, ftp:Caller caller) returns error?;
 ```
 
 > Note:
 > - `fileInfo` and `caller` parameters are optional in content methods and user can skip them if needed.
-> - The `deletedFiles` parameter in `onFileDeleted` contains an array of file paths that were deleted.
-> - **DEPRECATED**: The legacy `onFileChange(WatchEvent, Caller)` method is deprecated and will be removed in a future version. Use the content-specific methods (`onFile`, `onFileText`, `onFileJson`, `onFileXml`, `onFileCsv`) for file additions and `onFileDeleted` for file deletions instead.
+> - The `deletedFiles` parameter in `onFileDelete` contains the path of the file that was deleted.
+> - **DEPRECATED**: The legacy `onFileChange(WatchEvent, Caller)` method is deprecated and will be removed in a future version. Use the content-specific methods (`onFile`, `onFileText`, `onFileJson`, `onFileXml`, `onFileCsv`) for file additions and `onFileDelete` for file deletions instead.
 
 ### 2. Service Dispatching Logic
 
@@ -98,8 +98,8 @@ When a file is detected, the listener determines which method to invoke using th
    - See [Section 5: Fallback Behavior](#5-fallback-behavior-for-unmatched-content-methods) for fallback chain details.
 
 4. **File Deletion Handling**:
-   - When files are deleted, the listener invokes the `onFileDeleted` method with an array of deleted file paths.
-   - If `onFileDeleted` is not implemented, the service will not receive deletion notifications (unless the deprecated `onFileChange` method is implemented for backward compatibility).
+   - When files are deleted, the listener invokes the `onFileDelete` method with the deleted file path.
+   - If `onFileDelete is not implemented, the service will not receive deletion notifications (unless the deprecated `onFileChange` method is implemented for backward compatibility).
 
 #### 2.2. Method Handling Strategies
 
@@ -113,11 +113,11 @@ A developer can choose one of the following strategies for handling file content
     - Either `onFile(stream<byte[], error> ...)` for efficient stream processing.
     - Or `onFile(byte[] ...)` for in-memory byte array processing.
 
-3. **File Deletion Handling**: To handle deleted files, implement the `onFileDeleted(string[] deletedFiles, ftp:Caller caller)` method.
+3. **File Deletion Handling**: To handle deleted files, implement the `onFileDelete(string deletedFile, ftp:Caller caller)` method.
     - This method receives an array of file paths that were deleted from the monitored directory.
     - The `caller` parameter is optional and can be omitted if not needed.
 
-4. **Legacy Metadata-Only Handling (Deprecated)**: For backward compatibility only, a service can still implement the deprecated `onFileChange(ftp:WatchEvent ...)` method. However, this approach is discouraged, and developers should migrate to the new content-specific methods and `onFileDeleted`.
+4. **Legacy Metadata-Only Handling (Deprecated)**: For backward compatibility only, a service can still implement the deprecated `onFileChange(ftp:WatchEvent ...)` method. However, this approach is discouraged, and developers should migrate to the new content-specific methods and `onFileDelete`.
 
 ### 3. Default File Extension to Content Method Mapping
 
@@ -242,16 +242,16 @@ The fallback operates in the following order when a new file is added:
 #### 5.2. File Deletion Handling
 
 For file deletion events:
-- If the `onFileDeleted` method is implemented, it will be invoked with the array of deleted file paths.
-- If `onFileDeleted` is not implemented, deletion events will be silently ignored (no error will be thrown).
+- If the `onFileDelete` method is implemented, it will be invoked with the deleted file path.
+- If `onFileDelete` is not implemented, deletion events will be silently ignored (no error will be thrown).
 
 #### 5.3. Deprecated `onFileChange` Behavior
 
-**IMPORTANT**: The deprecated `onFileChange` method cannot coexist with the new content methods (`onFile`, `onFileText`, `onFileJson`, `onFileXml`, `onFileCsv`) or `onFileDeleted` in the same service.
+**IMPORTANT**: The deprecated `onFileChange` method cannot coexist with the new content methods (`onFile`, `onFileText`, `onFileJson`, `onFileXml`, `onFileCsv`) or `onFileDelete` in the same service.
 
 - If a service implements `onFileChange`, it must be the **only** remote method in the service (for backward compatibility).
-- If a service implements any of the new content methods or `onFileDeleted`, the presence of `onFileChange` will result in a compilation error.
-- New implementations should use the content-specific methods and `onFileDeleted` instead of the deprecated `onFileChange`.
+- If a service implements any of the new content methods or `onFileDelete`, the presence of `onFileChange` will result in a compilation error.
+- New implementations should use the content-specific methods and `onFileDelete` instead of the deprecated `onFileChange`.
 
 #### 5.4. Example Scenarios
 
@@ -400,7 +400,7 @@ service on ContentListener {
 }
 ```
 
-#### 6.4. Handling File Deletions with `onFileDeleted`
+#### 6.4. Handling File Deletions with `onFileDelete`
 
 ```ballerina
 import ballerina/ftp;
@@ -421,11 +421,9 @@ service on ContentListener {
     }
 
     // Handle deleted files
-    remote function onFileDeleted(string[] deletedFiles, ftp:Caller caller) returns error? {
-        foreach string filePath in deletedFiles {
-            log:printInfo(string `File deleted: ${filePath}`);
-            // Perform cleanup or logging for deleted files
-        }
+    remote function onFileDelete(string deletedFile, ftp:Caller caller) returns error? {
+        log:printInfo(string `File deleted: ${filePath}`);
+        // Perform cleanup or logging for deleted file
     }
 }
 ```
@@ -445,7 +443,7 @@ listener ftp:Listener ContentListener = check new ({
 
 service on ContentListener {
     // DEPRECATED: Using legacy onFileChange method
-    // Cannot coexist with other content methods or onFileDeleted
+    // Cannot coexist with other content methods or onFileDelete
     remote function onFileChange(ftp:WatchEvent event) returns error? {
         foreach ftp:FileInfo fileInfo in event.addedFiles {
             log:printInfo(string `New file detected: ${fileInfo.name}, size: ${fileInfo.size}`);
@@ -546,9 +544,9 @@ service on ContentListener {
 - **Deprecation in effect**: onFileChange is deprecated; the compiler surfaces warnings and it will be removed in a future major release.
 - **Incremental adoption**: You can add any of the new content callbacks (onFile, onFileText, onFileJson, onFileXml, onFileCsv) only for the formats you need.
 - **Simpler handling**: New callbacks deliver already-fetched (and, where applicable, parsed) content—no manual caller->get(...) or parsing required.
-- **Clear separation of concerns**: File additions are handled by the content callbacks; deletions are handled by onFileDeleted in a dedicated method.
-- **Mutual exclusivity**: onFileChange must not coexist with the new content callbacks or onFileDeleted in the same service.
-- **Migration at your pace**: Replace onFileChange with the relevant content callback(s) and add onFileDeleted for removals when you’re ready; no other code changes are required.
+- **Clear separation of concerns**: File additions are handled by the content callbacks; deletions are handled by onFileDelete in a dedicated method.
+- **Mutual exclusivity**: onFileChange must not coexist with the new content callbacks or onFileDelete in the same service.
+- **Migration at your pace**: Replace onFileChange with the relevant content callback(s) and add onFileDelete for removals when you’re ready; no other code changes are required.
 
 ## Risks and Assumptions
 
