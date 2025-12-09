@@ -132,7 +132,7 @@ public function init(
 }
 ```
 
-> **Note:** For Non-SQL data stores, the init function will not change based on this option. It will remain as deafult where we use module level configurable variables.
+> **Note:** For non-SQL data stores, the init function will not change based on this option. It will remain as the default where we use module-level configurable variables.
 
 ### Build Integration
 
