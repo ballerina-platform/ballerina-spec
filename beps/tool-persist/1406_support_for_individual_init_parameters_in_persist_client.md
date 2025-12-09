@@ -132,6 +132,8 @@ public function init(
 }
 ```
 
+> **Note:** For Non-SQL data stores, the init function will not change based on this option. It will remain as deafult where we use module level configurable variables.
+
 ### Build Integration
 
 When using `bal persist add --with-init-params`, the tool configuration in `Ballerina.toml` includes:
