@@ -13,44 +13,123 @@
 
 ## Summary
 
-This proposal introduces an observability-free, test-driven evaluation method for AI Agents in Ballerina. Unlike frameworks such as Arize Phoenix or Langfuse that rely heavily on observability traces, this approach focuses on input–output evaluation and behavioral assertions, allowing validation of agent behavior without requiring any observability infrastructure.
+This proposal introduces a test-driven evaluation method for AI Agents in Ballerina that integrates directly into the existing Ballerina test framework. Unlike observability-dependent frameworks such as Arize Phoenix or Langfuse, this approach treats AI agent evaluation as an extension of integration testing—allowing developers to validate agent behavior using the same tools, patterns, and workflows they already use for testing Ballerina applications.
 
-The result is a lightweight, reproducible, and environment-agnostic method suitable for CI/CD pipelines, multi-agent workflows, and integration scenarios.
+The result is a lightweight, reproducible, and CI-friendly evaluation method that requires no additional infrastructure, no new toolchains, and no learning curve for integration engineers.
 
-## Goal
+## Goals
 
-* Provide a test driven approach to evaluate AI agents
-* Provide a lightweight, modular evaluation approach without coupling to any observability infrastructure. 
+- Provide a test-driven approach to evaluate AI agents that integrates seamlessly with existing Ballerina testing framework
+- Enable evaluation without coupling to observability infrastructure
+- Make AI evaluation accessible to integration engineers through familiar testing patterns
 
 ## Motivation
 
-Most existing AI agent evaluation frameworks—such as **Arize Phoenix**, **LangSmith**, and **Langfuse**—depend heavily on observability traces to perform evaluations. While trace-based evaluation is powerful, it is not a requirement for assessing AI agent behavior. In many cases, evaluation can be approached just like testing traditional software: supplying inputs, simulating tool interactions, and asserting that the resulting outputs or actions meet expectations.
+### The Problem with Observability-Dependent Evaluation
 
-Traditional software testing relies on deterministic behavior—tests pass when the output matches an expected result. AI agents differ because they are driven by LLMs, which are inherently non-deterministic and may produce varying responses for the same input. This makes strict output matching ineffective. Instead, evaluation relies on **metrics** such as task success rate, relevance, coherence, or correctness. These metrics can be subjective or probabilistic, making them more suitable for **relative comparison** (e.g., comparing model or agent versions) than for exact correctness.
+Most existing AI agent evaluation frameworks—such as Arize Phoenix, LangSmith, and Langfuse—depend heavily on observability traces to perform evaluations. While trace-based evaluation is powerful for certain use cases, it introduces several challenges:
 
-However, these evaluation metrics can still be expressed as **pass/fail conditions** by establishing baselines or thresholds—such as requiring an agent to reach at least an 85% task success rate. With such thresholds, evaluation becomes analogous to traditional testing, even if the underlying behavior is probabilistic. This means that the **Ballerina testing framework itself can handle agent evaluation**, without the need for an external observability-dependent evaluation system.
+- **Infrastructure Overhead:** Requires dedicated observability backends, trace collectors, and storage systems
+- **Environment Constraints:** Cannot be used in air-gapped environments, CI pipelines without network access, or compliance-restricted contexts where trace data cannot be externalized
+- **Complexity:** Adds a separate toolchain that integration engineers must learn and maintain
+- **Slower Feedback:** Trace collection, indexing, and query latency can slow down evaluation cycles
+- **Deployment Friction:** Not suitable for lightweight or local deployment scenarios
 
-This proposal, therefore, introduces a simple, lightweight design that leverages Ballerina’s native testing framework to evaluate agent behavior in a deterministic, CI-friendly manner—while remaining entirely **independent of observability infrastructure**. This approach avoids several drawbacks commonly found in observability-based evaluation frameworks, such as:
-* Mandatory dependency on observability infrastructure
-* Higher overhead, making them slower or unsuitable for lightweight or CI-driven workflows
-* Inability to publish traces in certain environments due to compliance or privacy restrictions
+### Why Integration Engineers Need Test-Driven Evaluation
 
-## Proposed Approach
+Integration engineers building Ballerina applications already rely on the Ballerina test framework to validate service behavior, API contracts, and business logic. When AI agents are introduced into these integrations, engineers need to validate agent behavior in the same way—ensuring that agents make correct decisions, invoke the right tools, and produce expected outputs.
 
-Agent behavior can be evaluated by treating the agent as verifiable logic and applying familiar testing methodologies. The approach consists of the following key elements:
+**Test-driven evaluation aligns perfectly with this reality:**
 
-1. **Input–Output Driven Testing**
-Deterministic evaluations are performed by supplying prompts, simulating tool responses, and asserting expected outcomes. Developers can use standard Ballerina unit tests to validate agent behavior through either code-based checks or LLM-as-a-judge evaluations.
+- **Familiar Workflow:** Integration engineers already use the Ballerina test framework daily. Adding AI evaluation there keeps their workflow consistent—no new tools, servers, or platforms to learn.
+- **No New Toolchain:** Tests run with `bal test`, produce standard test reports, and integrate into existing CI/CD pipelines without modification.
+- **Unified Validation:** The same pass/fail signal that works for integration logic now also works for AI behavior, giving instant clarity and confidence.
+- **Fast Feedback Loops:** Tests run locally, in CI, and in isolated environments without extra setup. Engineers catch regressions early and ensure new features do not degrade expected behavior.
+- **Lightweight and Portable:** No observability backends, no trace storage, no network dependencies—just code, tests, and assertions.
 
-2. **Behavioral Assertions**
-Beyond final outputs, intermediate reasoning steps, tool invocations, and execution patterns can be validated to ensure the agent follows the intended workflow and logic.
+For integration engineers, **evaluation is just testing AI behavior the same way they test everything else**. This proposal makes that possible.
 
-3. **Trace-Free Execution**
-The evaluation process does not rely on observability traces, making it fast, lightweight, and fully environment-agnostic—ideal for CI/CD pipelines and constrained environments.
-See the design section for more details.
+## Key Concepts
 
-4. **Optional Observability Integration**
-Observability can be layered on top if needed, but it is not required. Developers may still integrate systems like Arize or Langfuse by configuring an observability backend, without affecting the core evaluation mechanism.
+### Understanding Evaluation vs Testing
+
+While traditional software testing relies on **deterministic behavior** (exact output matching), AI agent evaluation must account for the **non-deterministic nature** of LLMs. The same input can produce different outputs across runs, making strict assertions impractical.
+
+| Aspect | Traditional Testing | AI Evaluation |
+|--------|-------------------|---------------|
+| **Behavior** | Deterministic | Non-deterministic |
+| **Assertion Style** | Exact matching (`assertEquals`) | Probabilistic metrics (accuracy, relevance, task success) |
+| **Pass Criteria** | Single execution must pass | Aggregate performance across dataset must meet threshold |
+| **Measurement** | Binary (pass/fail) | Scored (0.0 to 1.0 or percentage) |
+
+**However, evaluation can be expressed as testing when:**
+
+1. Individual dataset entries produce binary outcomes: Each entry evaluates to pass or fail, even if the underlying decision uses scoring internally
+2. Aggregate performance determines overall pass/fail: A confidence threshold (e.g., 80%) is set for the entire dataset—if 80% or more entries pass, the evaluation passes
+
+This allows **evaluation to be expressed within the test framework** while respecting the probabilistic nature of AI systems.
+
+### Why Binary Outcomes Per Dataset Entry?
+
+Each dataset entry in an AI evaluation produces a **binary pass/fail outcome**. This design choice addresses a fundamental question: **Why not use a range of scores (e.g., 0.0 to 1.0) at the dataset entry level?**
+
+#### Rationale for Binary Outcomes
+
+**1. Scores Don't Aggregate Meaningfully Across Different Dimensions**
+
+If test cases measure different qualities (relevance, correctness, tool selection), averaging their scores produces a meaningless number. You can't meaningfully average a relevance score with a tool selection score—they measure different things. Binary outcomes avoid this problem: each test either meets its specific criteria or it doesn't.
+
+**2. Ranges Create Ambiguity in Test Results**
+
+What does a score of 0.6 mean? Is that acceptable? Without a threshold, scores lack actionability. Binary outcomes provide immediate clarity: the test met expectations or it didn't.
+
+**3. Developers Must Set Thresholds Anyway**
+
+Even if the framework supported ranges, developers would need to decide: "At what score does this test case pass?" This threshold decision is unavoidable. By making it explicit in code, we:
+- Force developers to think about acceptable quality levels
+- Make the evaluation criteria visible and reviewable
+- Allow different thresholds for different test cases based on their importance
+
+**4. Binary Outcomes Match Integration Testing Mental Models**
+
+Integration engineers already think in pass/fail terms:
+- Did the API return the expected status code? ✓ or ✗
+- Did the integration flow complete successfully? ✓ or ✗
+- Did the agent invoke the correct tools? ✓ or ✗
+
+**5. Discrete Labels Reduce Variance When Using an LLM as the Judge**
+
+When the judge itself is an LLM, numeric scoring becomes unstable. The same test case can produce noticeably different numeric ratings across multiple runs even when the inputs are unchanged. A difference such as 78 compared to 82 has no real interpretive value and is mostly noise. Discrete labels such as pass(correct) or fail(wrong) produce far more consistent outcomes because the model must classify instead of choosing an arbitrary point on a large scale. These labels reduce sensitivity to prompt phrasing, create more stable results across repeated evaluations, and make metrics such as accuracy or majority voting easier to compute and interpret.
+
+Extending this pattern to AI evaluation reduces cognitive load and keeps the testing workflow consistent.
+
+#### Converting Scores to Binary Outcomes
+
+When a test case requires a scored judgment (e.g., LLM-as-a-judge returning 0.0 to 1.0), the developer implements threshold logic within the test:
+
+```ballerina
+    // ... omitted for brevity
+    int relevanceScore = getRelavanceScore(query, agentOutput);
+    if relevanceScore < 0.7 {
+        return error(string `Relevance score ${relevanceScore} below threshold 0.7`);
+    }
+    // Implicitly returns success
+    // ... omitted for brevity
+```
+
+This approach provides:
+- **Flexibility:** Different test cases can use different thresholds
+- **Transparency:** The threshold is visible in code, not hidden in framework configuration
+- **Composability:** Binary outcomes from diverse test cases can be aggregated cleanly
+
+### Why Confidence Thresholds for Datasets?
+
+The confidence threshold set for the dataset represents the **minimum acceptable pass rate** across all entries. This approach accounts for the inherent non-determinism of AI systems:
+
+- **Realistic Expectations:** AI agents will not achieve 100% accuracy on every input. Setting a confidence threshold (e.g., 80%) acknowledges this while still enforcing a quality bar.
+- **Aggregate Performance Matters:** A single failure should not cause the entire evaluation to fail. What matters is whether the agent performs reliably across a representative set of inputs.
+- **Prevents Brittle Tests:** Without a confidence threshold, a single flaky LLM response could break the entire test suite. The confidence-based approach makes evaluations more resilient.
+- **Enables Baseline Tracking:** The calculated pass rate becomes a baseline for future runs. Teams can track whether performance improves or degrades over time.
 
 ## Design
 
@@ -209,19 +288,38 @@ However, this approach does not provide a `first-class` experience for writing A
 
 Currently, the test framework allows providing a dataset through the `dataProvider` field in the `@test:Config` annotation. But in the default behavior, the entire `bal test` command fails if **any single entry** fails. For AI evaluation, we usually want the test to fail **only if the overall performance falls below a specified threshold**, not because of one failed case.
 
-To achieve this, the test framework could introduce a new field in `@test:Config` called `confidence` (or `threshold`). When this field is set, the framework would treat the entire dataset as a single evaluation test, calculate the average result, and pass or fail the test based on the configured threshold.
+To achieve this, the test framework could introduce a new annotation.
+
+```ballerina
+# Configuration used when running an evaluation.
+public type EvaluationConfig record {|
+    # Minimum pass rate required for the dataset.
+    float confidence;
+
+    # Number of times the evaluation should repeat.
+    int iterations = 1;
+|};
+
+public annotation EvaluationConfig EvalConfig on function;
+```
+
+When the proposed annotation is applied to a test case, the framework treats the whole dataset as one evaluation test. It computes the average outcome and decides whether the test passes or fails based on the configured `confidence` value. The `iteration` field allows the dataset to be evaluated multiple times. If the value is greater than 1, the framework runs the evaluation repeatedly with the same dataset and records the outcome of each run. After completing all runs, it computes the mean of those results. This combined average is then used to decide whether the evaluation meets the required `confidence` level.
 
 After this enhancement, users can write AI evaluation tests with a much cleaner and intuitive syntax:
 
-#### Example of Writing an AI evaluation with test framework enhancement
+#### Example of Writing an AI evaluation
+
+1. Evaluating the trajectory of tool calls
 
 ```ballerina
 import ballerina/ai;
 import ballerina/test;
 
+@test:EvalConfig {
+    confidence: 0.8 // Confidence Thresholds for Dataset
+}
 @test:Config {
     dataProvider: toolCallOrderDataSet,
-    confidence: 0.8
 }
 isolated function evaluateToolCallOrder(ToolCallEvalDataProvider entry) returns error? {
     ai:Trace trace = check agent.run(entry.input);
@@ -241,6 +339,31 @@ isolated function toolCallOrderDataSet() returns ToolCallEvalDataProvider[][] {
         [{input: "Send an email to Raj and add a calendar invite.", expectedTools: ["sendEmail", "bookCalendar"]}]
     ];
     // or load it from a file
+}
+```
+
+2. LLM-as-a-Judge Evaluation
+
+For cases where strict assertions are insufficient, developers can use LLM-as-a-judge evaluation with threshold logic:
+
+```ballerina
+@test:EvalConfig {
+    confidence: 0.85 // Confidence Thresholds for Dataset
+}
+@test:Config {
+    dataProvider: relevanceDataSet,
+}
+isolated function evaluateAnswerRelevance(RelevanceTestCase entry) returns error? {
+    ai:Trace trace = check agent.run(entry.input);
+    string answer = check ai:getFinalAnswer(trace);
+    
+    // LLM-as-a-judge returns a score between 0.0 and 1.0
+    float relevanceScore = check ai:evaluateRelevance(answer, entry.expectedContext);
+    
+    // Convert score to binary pass/fail
+    if relevanceScore < 0.7 {
+        return error(string `Relevance score ${relevanceScore} below threshold 0.7`);
+    }
 }
 ```
 
@@ -305,7 +428,7 @@ With these additions, the Ballerina Test framework can serve both immediate regr
 ### Changes to the Ballerina test framework
 
 1. **Confidence-based Evaluation**
-   - Add new `confidence` (or `threshold`) field to `@test:Config` annotation
+   - Add new `@test:EvalConfig` annotation
    - Implement pass/fail logic based on aggregate performance across dataset (dataProvider) entries
    - Calculate pass rate and compare against confidence threshold
 
