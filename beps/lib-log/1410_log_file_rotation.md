@@ -11,8 +11,6 @@
 
 This proposal introduces native log rotation capability to the `ballerina/log` module, enabling automatic rotation of log files based on size, time, or both. Log rotation prevents unbounded growth of log files in long-running applications, reducing disk space consumption and improving operational manageability in production environments.
 
-Please add any comments to the associated GitHub issue.
-
 ## Motivation
 
 Currently, Ballerina writes logs continuously without built-in rotation, causing log files to grow indefinitely in long-running deployments. This can lead to:
