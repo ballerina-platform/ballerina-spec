@@ -76,8 +76,8 @@ public type RotationConfig record {|
     # Default: 10MB (10 * 1024 * 1024 bytes)
     int maxFileSize = 10485760;
     # Maximum age in milliseconds before rotation (used with TIME_BASED or BOTH policies)
-    # Default: 24 hours (24 * 60 * 60 * 1000 ms)
-    int maxAge = 86400000;
+    # Default: 24 hours (24 * 60 * 60 s)
+    int maxAge = 86400;
     # Maximum number of backup files to retain. Older files are deleted.
     # Default: 10 backup files
     int maxBackupFiles = 10;
@@ -139,7 +139,7 @@ public function main() returns error? {
                 path: "./logs/daily.log",
                 rotation: {
                     policy: log:TIME_BASED,
-                    maxAge: 86400000,  // 24 hours
+                    maxAge: 86400,  // 24 hours
                     maxBackupFiles: 7   // Keep one week
                 }
             }
@@ -166,7 +166,7 @@ public function main() returns error? {
                 rotation: {
                     policy: log:BOTH,
                     maxFileSize: 104857600,  // 100MB
-                    maxAge: 43200000,        // 12 hours
+                    maxAge: 43200,        // 12 hours
                     maxBackupFiles: 14       // Two weeks
                 }
             }
@@ -188,7 +188,7 @@ mode = "APPEND"
 [ballerina.log.destinations.rotation]
 policy = "BOTH"
 maxFileSize = 52428800   # 50MB
-maxAge = 86400000        # 24 hours
+maxAge = 86400           # 24 hours
 maxBackupFiles = 7
 ```
 
