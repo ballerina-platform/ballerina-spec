@@ -59,9 +59,7 @@ public enum RotationPolicy {
     # Rotate logs based on time only
     TIME_BASED = "TIME_BASED",
     # Rotate logs based on both file size and time (whichever condition is met first)
-    BOTH = "BOTH",
-    # No rotation
-    NONE = "NONE"
+    BOTH = "BOTH"
 };
 ```
 
@@ -71,7 +69,7 @@ public enum RotationPolicy {
 # Log rotation configuration for file destinations.
 public type RotationConfig record {|
     # Rotation policy to use
-    RotationPolicy policy = NONE;
+    RotationPolicy policy = BOTH;
     # Maximum file size in bytes before rotation (used with SIZE_BASED or BOTH policies)
     # Default: 10MB (10 * 1024 * 1024 bytes)
     int maxFileSize = 10485760;
@@ -96,7 +94,7 @@ public type FileOutputDestination record {
     # File output mode
     FileOutputMode mode = APPEND;
     # Log rotation configuration
-    RotationConfig? rotation = ();
+    RotationConfig rotation?;
 };
 ```
 
