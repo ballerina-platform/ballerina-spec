@@ -85,11 +85,11 @@ public type RotationConfig record {|
 #### 3. Enhanced FileOutputDestination
 
 ```ballerina
-# File output destination
+# File output destination.
 public type FileOutputDestination record {
     # Type of the file destination. Allowed value is "file".
     readonly FILE 'type = FILE;
-    # File path(only files with .log extension are supported)
+    # File path (only files with .log extension are supported)
     string path;
     # File output mode
     FileOutputMode mode = APPEND;
