@@ -64,7 +64,7 @@ A scheduled workflow will iterate through all registry entries daily/weekly/mont
 If a change is detected in an OpenAPI specification, the bot will perform a series of automated actions:
 
 ##### (i) Update OpenAPI Specification Repository
-The updated OpenAPI file will be added to the centralised API specification repository, and the system will create a pull request containing the new spec version. Since this doesn't involve any AI-related work and only updating the content which is in the updated OpenAPI spec, this will be merged to the repository without human reviewal. 
+The updated OpenAPI file will be added to the centralised API specification repository, and the system will create a pull request containing the new spec version. Since this doesn't involve any AI-related work and only updating the content which is in the updated OpenAPI spec, this will be merged to the repository without human review. 
 
 ##### (ii) Regenerate the Corresponding Connector
 The system will then regenerate the connector in its dedicated repository using the existing AI-driven connector generation pipeline (developed by another internship project) supported by Ballerina. 
@@ -82,6 +82,17 @@ Based on the diff analysis (e.g., patch, minor, or major change), the connector'
 Finally, the updated connector will be submitted as a pull request to the connector's repository, completing the automated update cycle. Simultaneously, the system will send an automated email notification to the integration team detailing the update and providing a link to the generated pull request.
 
 This solution reduces human intervention, ensures connectors remain up-to-date with the rapidly evolving ecosystem of third-party APIs, and establishes a scalable long-term process for maintaining Ballerina's large connector library.
+
+#### 4. Workflow Diagram
+
+The following diagram illustrates the complete end-to-end workflow of the AI-driven Dependabot system:
+
+![Workflow Diagram](workflow-diagram.png)
+
+**Workflow Overview:**
+- **API Specification Repository (Left)**: Handles OpenAPI version monitoring, change detection, and spec updates
+- **Ballerina Library Repository (Right)**: Manages connector regeneration, AI-based analysis, and release preparation
+- The workflow is triggered when OpenAPI changes are detected, automating the entire update process from detection to pull request creation
 
 ### Connector Registry Design
 
