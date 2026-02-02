@@ -3,7 +3,7 @@
 - Authors - @TharmiganK
 - Reviewed by - @daneshk
 - Created date - 2025-12-16
-- Updated date - 2025-12-16
+- Updated date - 2026-02-02
 - Issue - [#1411](https://github.com/ballerina-platform/ballerina-spec/issues/1411)
 - State - Submitted
 
@@ -83,6 +83,18 @@ All persist commands are extended to support optional model specification:
 - Behavior: Pulls schema from the database and generates the specified model file
 - Default: Creates or updates `model.bal` if no model name is provided
 
+**`bal persist migrate`**
+
+- New optional argument: `--model <model-name>`
+- Behavior: Generates database migration scripts for the specified model
+- Error handling: If multiple models exist and no model is specified, display an error message requesting model specification
+- Default: Uses `model.bal` if it's the only model file present
+- Migration directory structure: Model-specific subdirectories under `persist/migrations/`
+  - New structure: `persist/migrations/{modelName}/{timestamp}_{label}/`
+  - Old structure: `persist/migrations/{timestamp}_{label}/` (maintained for backward compatibility with default model)
+- Each model maintains independent migration history
+- Backward compatibility: Existing migrations for `model.bal` continue to work with the old structure
+
 ### Data Store Configuration
 
 - Each model can be configured to connect to a different data store type or instance
@@ -99,6 +111,18 @@ All persist commands are extended to support optional model specification:
 - Developers can specify different target modules for generated code from different models
 - Each model's generated code is isolated and independent
 - If no module is specified, generated code follows existing default behavior
+
+### Migration Management
+
+- Each model maintains its own independent migration history
+- Migration directory structure:
+  - **New projects or custom models**: `persist/migrations/{modelName}/{timestamp}_{label}/`
+  - **Existing projects with `model.bal`**: `persist/migrations/{timestamp}_{label}/` (backward compatible)
+- Each migration folder contains:
+  - The model file snapshot (`{modelName}.bal`)
+  - The migration SQL script (`script.sql`)
+- Migration detection automatically handles both old and new structures
+- Validation prevents datastore changes for models with existing migrations
 
 ### Compiler Plugin Behavior
 
@@ -167,12 +191,20 @@ Without this feature, developers will continue to face limitations when working 
    - Verify no conflicts occur
    - Verify independent operation of each model
 
-6. **Compiler Plugin Integration**
+6. **Migration Support**
+   - Test migration generation for individual models
+   - Verify model-specific migration directories are created correctly
+   - Test migration with multiple models having different schemas
+   - Verify backward compatibility with existing migrations for `model.bal`
+   - Test that migrations for different models are independent
+   - Verify datastore change validation for models with existing migrations
+
+7. **Compiler Plugin Integration**
    - Verify compiler plugin processes all model files
    - Verify build-time validation for each model
    - Test error reporting for invalid model definitions
 
-7. **Command Error Handling**
+8. **Command Error Handling**
    - Verify appropriate error messages when model specification is missing in multi-model projects
    - Test invalid model name/path scenarios
 
@@ -181,6 +213,7 @@ Without this feature, developers will continue to face limitations when working 
 - Unit tests for CLI command parsing and validation
 - Integration tests for multi-model project workflows
 - End-to-end tests with multiple database types (MySQL, PostgreSQL, Redis, etc.)
+- Migration tests for model-specific migration directories and backward compatibility
 - Compiler plugin tests for multiple model processing
 - Backward compatibility tests with existing single-model projects
 
@@ -189,7 +222,8 @@ Without this feature, developers will continue to face limitations when working 
 ### Risks
 
 - **Increased Complexity**: Introducing multiple models increases the complexity of the persist tool and may lead to a steeper learning curve for new users
-- **Documentation Overhead**: Comprehensive documentation will be needed to guide developers on best practices for organizing multiple models
+- **Migration Conflicts**: Although each model has independent migration history, developers must be careful not to create conflicting schema changes in the database if multiple models target the same database
+- **Documentation Overhead**: Comprehensive documentation will be needed to guide developers on best practices for organizing multiple models and managing migrations
 
 ### Assumptions
 
@@ -197,6 +231,7 @@ Without this feature, developers will continue to face limitations when working 
 - Each model will typically represent a distinct domain or data source
 - The majority of use cases involve connecting to different data stores rather than organizing a single data store into multiple models
 - Generated client code being named `Client` for all models is acceptable, with module separation providing sufficient organization
+- Migration histories for different models are independent, even when targeting the same database
 
 ## Dependencies
 
