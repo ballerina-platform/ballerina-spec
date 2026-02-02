@@ -62,11 +62,11 @@ A new optional `coordination` field is added to `ListenerConfiguration`:
 ```ballerina
 public type ListenerConfiguration record {|
     // ... existing fields ...
-    CoordinationConfiguration coordination?;
+    CoordinationConfig coordination?;
 |};
 ```
 
-The `CoordinationConfiguration` record provides FTP-specific naming while mapping to the task module's `WarmBackupConfig`:
+The `CoordinationConfig` record provides FTP-specific naming while mapping to the task module's `WarmBackupConfig`:
 
 ```ballerina
 # Represents the configuration required for distributed task coordination.
@@ -79,7 +79,7 @@ The `CoordinationConfiguration` record provides FTP-specific naming while mappin
 # + coordinationGroup - The name of the coordination group of FTP listeners that coordinate together.
 #                       It is recommended to use a unique name for each group.
 # + heartbeatFrequency - The interval (in seconds) for the node to update its heartbeat status. Default is 1 second.
-public type CoordinationConfiguration record {|
+public type CoordinationConfig record {|
     task:DatabaseConfig databaseConfig;
     int livenessCheckInterval = 30;
     string memberId;
@@ -123,7 +123,7 @@ public isolated function init(*ListenerConfiguration listenerConfig) returns Err
     lock {
         task:Listener|error taskListener;
         if listenerConfig.coordination is CoordinationConfiguration {
-            CoordinationConfiguration coordination = <CoordinationConfiguration>listenerConfig.coordination;
+            CoordinationConfig coordination = <CoordinationConfig>listenerConfig.coordination;
             taskListener = new ({
                 trigger: {interval: listenerConfig.pollingInterval},
                 warmBackupConfig: {
@@ -221,7 +221,7 @@ Implement per-file locking to allow multiple nodes to process different files si
 
 ### Unit Tests
 
-1. Verify `CoordinationConfiguration` is correctly mapped to `task:WarmBackupConfig`
+1. Verify `CoordinationConfig` is correctly mapped to `task:WarmBackupConfig`
 2. Verify task listener is created with coordination when configured
 3. Verify task listener is created without coordination when not configured
 4. Verify backward compatibility with existing configurations
