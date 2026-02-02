@@ -15,7 +15,7 @@ Add circuit breaker support to the FTP client to prevent cascade failures by tem
 
 FTP/SFTP connections can experience prolonged outages due to server failures, network partitions, or infrastructure issues. Without a circuit breaker:
 
-1. **Resource exhaustion**: Clients keep attempting connections to an unavailable server, wasting threads and connections
+1. **Resource exhaustion**: Clients keep attempting connections to an unavailable server, wasting resources (strands, connections)
 2. **Cascade failures**: Slow/failing FTP operations cause upstream timeouts and failures
 3. **Delayed recovery**: No mechanism to gradually test if the server has recovered
 
@@ -55,7 +55,8 @@ The circuit breaker pattern addresses these by:
 │      │                                                ▼                 │
 │      └─────────(trial request succeeds)───────── HALF_OPEN              │
 │                                                       │                 │
-│                (trial request fails)──────────────────┘                 │
+│                (trial request fails)──────────────────►                 │
+│                (returns to OPEN state)                                  │
 │                                                                         │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
@@ -73,12 +74,12 @@ The circuit breaker pattern addresses these by:
 3. **HALF_OPEN → CLOSED**: When the trial request succeeds
 4. **HALF_OPEN → OPEN**: When the trial request fails
 
-### Thread Safety
+### Concurrency Safety
 
-The circuit breaker state is thread-safe and can be shared across multiple concurrent requests using the same client.
-- All state updates (failure counts, state transitions) are atomic or synchronized.
-- The rolling window buckets are updated in a thread-safe manner.
-- Blocking in `OPEN` state is non-blocking for the thread (immediate error return).
+The circuit breaker state is concurrency-safe and can be shared across multiple concurrent strands using the same client.
+- All state updates (failure counts, state transitions) are safe for concurrent access.
+- The rolling window buckets are updated using appropriate isolation or locking mechanisms.
+- Blocking in `OPEN` state is non-blocking for the strand (immediate error return).
 
 ---
 
@@ -95,7 +96,7 @@ public enum FailureCategory {
     AUTHENTICATION_ERROR,
     # Server disconnected unexpectedly during operation
     TRANSIENT_ERROR,
-    # All errors regardless of type
+    # All errors regardless of type (includes any error not covered by other categories)
     ALL_ERRORS
 }
 ```
@@ -104,14 +105,12 @@ public enum FailureCategory {
 
 ```ballerina
 # Configuration for the sliding time window used in failure calculation.
-#
-# + requestVolumeThreshold - Minimum number of requests in the window before
-#                            evaluating failure threshold (default: 10)
-# + timeWindow - Time period in seconds for the sliding window (default: 60)
-# + bucketSize - Granularity of time buckets in seconds (default: 10)
 public type RollingWindow record {|
+    # Minimum number of requests in the window before evaluating failure threshold
     int requestVolumeThreshold = 10;
+    # Time period in seconds for the sliding window
     decimal timeWindow = 60;
+    # Granularity of time buckets in seconds
     decimal bucketSize = 10;
 |};
 ```
@@ -120,19 +119,18 @@ public type RollingWindow record {|
 
 ```ballerina
 # Configuration for circuit breaker behavior.
-#
-# + rollingWindow - Time window configuration for failure tracking
-# + failureThreshold - Failure ratio threshold (0.0 to 1.0) that trips the circuit (default: 0.5)
-# + resetTime - Seconds to wait in OPEN state before transitioning to HALF_OPEN (default: 30)
-# + failureCategories - Error categories that count as failures for the circuit breaker
-#                       (default: [CONNECTION_ERROR, TRANSIENT_ERROR])
 public type CircuitBreakerConfig record {|
+    # Time window configuration for failure tracking
     RollingWindow rollingWindow = {};
+    # Failure ratio threshold (0.0 to 1.0) that trips the circuit
     float failureThreshold = 0.5;
+    # Seconds to wait in OPEN state before transitioning to HALF_OPEN
     decimal resetTime = 30;
+    # Error categories that count as failures for the circuit breaker
     FailureCategory[] failureCategories = [CONNECTION_ERROR, TRANSIENT_ERROR];
 |};
 ```
+
 
 #### Extended ClientConfiguration
 
@@ -190,7 +188,7 @@ The circuit breaker categorizes errors from the underlying library:
 | Connection reset during transfer | TRANSIENT_ERROR |
 | Unexpected EOF | TRANSIENT_ERROR |
 | Server closed connection | TRANSIENT_ERROR |
-| All other errora | Maps to ALL_ERRORS only |
+| All other errors | Maps to ALL_ERRORS only |
 
 **Logic**: An error trips the circuit if its category is in the configured `failureCategories` list, OR if `ALL_ERRORS` is in the list.
 
@@ -233,25 +231,25 @@ The circuit breaker wraps the retry mechanism:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│ Client.getBytes(path)                        │
+│ Client->getBytes(path)                        │
 └─────────────────────────────────────────────────────────┘
                           ↓
 ┌─────────────────────────────────────────────────────────┐
-│ CircuitBreaker.execute()                          │
+│ CircuitBreakerClient.execute()                          │
 │   - Check circuit state                                 │
-│   - If OPEN → throw ServiceUnavailableError          │
+│   - If OPEN → return ServiceUnavailableError         │
 │   - If CLOSED/HALF_OPEN → proceed                       │
 └─────────────────────────────────────────────────────────┘
                           ↓
 ┌─────────────────────────────────────────────────────────┐
-│ RetryHandler.execute()                            │
+│ RetryClient.execute()                            │
 │   - Attempt operation                                   │
 │   - On failure: wait, reconnect, retry                  │
 │   - Repeat until success or max retries                 │
 └─────────────────────────────────────────────────────────┘
                           ↓
 ┌─────────────────────────────────────────────────────────┐
-│ VfsClientConnector.send()                         │
+│ Client->send()                         │
 │   - Execute actual FTP operation                        │
 └─────────────────────────────────────────────────────────┘
                           ↓
