@@ -13,21 +13,21 @@
 
 ## Summary
 
-This proposal introduces a test-driven evaluation method for AI Agents in Ballerina that integrates directly into the existing Ballerina test framework. Unlike observability-dependent frameworks such as Arize Phoenix or Langfuse, this approach treats AI agent evaluation as an extension of integration testing—allowing developers to validate agent behavior using the same tools, patterns, and workflows they already use for testing Ballerina applications.
+This proposal introduces a test-driven evaluation method for AI Agents in Ballerina that integrates directly into the existing Ballerina test framework. Unlike observability-dependent frameworks, this approach treats AI agent evaluation as an extension of integration testing—allowing developers to validate agent behavior using the same tools, patterns, and workflows they already use for testing Ballerina applications.
 
 The result is a lightweight, reproducible, and CI-friendly evaluation method that requires no additional infrastructure, no new toolchains, and no learning curve for integration engineers.
 
 ## Goals
 
-- Provide a test-driven approach to evaluate AI agents that integrates seamlessly with existing Ballerina testing framework
-- Enable evaluation without coupling to observability infrastructure
+- Provide a test-driven approach to evaluate AI agents that integrates seamlessly with existing Ballerina test framework
+- Enable evaluation that is not coupled to observability infrastructure
 - Make AI evaluation accessible to integration engineers through familiar testing patterns
 
 ## Motivation
 
 ### The Problem with Observability-Dependent Evaluation
 
-Most existing AI agent evaluation frameworks—such as Arize Phoenix, LangSmith, and Langfuse—depend heavily on observability traces to perform evaluations. While trace-based evaluation is powerful for certain use cases, it introduces several challenges:
+Most existing AI agent evaluation frameworks depend heavily on observability traces to perform evaluations (e.g., Arize Phoenix, LangSmith, and Langfuse). While trace-based evaluation is powerful for certain use cases, it introduces several challenges:
 
 - **Infrastructure Overhead:** Requires dedicated observability backends, trace collectors, and storage systems
 - **Environment Constraints:** Cannot be used in air-gapped environments, CI pipelines without network access, or compliance-restricted contexts where trace data cannot be externalized
@@ -50,6 +50,12 @@ Integration engineers building Ballerina applications already rely on the Baller
 For integration engineers, **evaluation is just testing AI behavior the same way they test everything else**. This proposal makes that possible.
 
 ## Key Concepts
+
+In this framework, it is important to distinguish between **dataset entries** and **evaluation tests**:
+
+- **Dataset Entry:** A single input–output pair that the agent is evaluated against. Each entry produces a **binary pass/fail outcome** based on whether the agent meets the specified criterion for that input. Entries themselves are not considered full test cases; they are the atomic units of evaluation.
+
+- **Evaluation Test /Test Case:** A function annotated with `@test:EvalConfig` that receives a dataset entries (via a data provider). The **entire dataset together forms one evaluation test**, and the overall pass/fail of the evaluation is determined by the **cumulative pass rate across all entries**, compared against the configured confidence threshold.
 
 ### Understanding Evaluation vs Testing
 
@@ -75,33 +81,41 @@ Each dataset entry in an AI evaluation produces a **binary pass/fail outcome**. 
 
 #### Rationale for Binary Outcomes
 
-**1. Scores Don't Aggregate Meaningfully Across Different Dimensions**
-
-If test cases measure different qualities (relevance, correctness, tool selection), averaging their scores produces a meaningless number. You can't meaningfully average a relevance score with a tool selection score—they measure different things. Binary outcomes avoid this problem: each test either meets its specific criteria or it doesn't.
-
-**2. Ranges Create Ambiguity in Test Results**
+**1. Ranges Create Ambiguity in Test Results**
 
 What does a score of 0.6 mean? Is that acceptable? Without a threshold, scores lack actionability. Binary outcomes provide immediate clarity: the test met expectations or it didn't.
 
-**3. Developers Must Set Thresholds Anyway**
+**2. Developers Must Set Thresholds Anyway**
 
 Even if the framework supported ranges, developers would need to decide: "At what score does this test case pass?" This threshold decision is unavoidable. By making it explicit in code, we:
 - Force developers to think about acceptable quality levels
 - Make the evaluation criteria visible and reviewable
 - Allow different thresholds for different test cases based on their importance
 
-**4. Binary Outcomes Match Integration Testing Mental Models**
+**3. Binary Outcomes Match Integration Testing Mental Models**
 
 Integration engineers already think in pass/fail terms:
 - Did the API return the expected status code? ✓ or ✗
 - Did the integration flow complete successfully? ✓ or ✗
 - Did the agent invoke the correct tools? ✓ or ✗
 
-**5. Discrete Labels Reduce Variance When Using an LLM as the Judge**
+**4. Discrete Labels Reduce Variance When Using an LLM as the Judge**
+
+In some evaluation scenarios, correctness cannot be determined through strict assertions or rule based logic. In these cases, an LLM itself may be used as an evaluator to judge the quality of an agent's output, such as relevance, correctness, or alignment with expected intent. This pattern is commonly referred to as LLM-based evaluation or LLM-as-a-judge.
 
 When the judge itself is an LLM, numeric scoring becomes unstable. The same test case can produce noticeably different numeric ratings across multiple runs even when the inputs are unchanged. A difference such as 78 compared to 82 has no real interpretive value and is mostly noise. Discrete labels such as pass(correct) or fail(wrong) produce far more consistent outcomes because the model must classify instead of choosing an arbitrary point on a large scale. These labels reduce sensitivity to prompt phrasing, create more stable results across repeated evaluations, and make metrics such as accuracy or majority voting easier to compute and interpret.
 
-Extending this pattern to AI evaluation reduces cognitive load and keeps the testing workflow consistent.
+**5. Binary Outcomes Prevent Outlier Skew in Aggregation**
+
+Using numeric scores in evaluations makes the overall result sensitive to outliers. A small number of extreme values can disproportionately skew the aggregate score, making the evaluation unstable and misleading.
+
+This is why the **Binary Outcomes per Dataset Entry** approach is used. Each dataset entry produces a simple **pass/fail outcome**. This makes aggregation robust, because:
+
+1. Extreme values cannot distort the overall result.
+2. Each entry contributes equally to the final outcome.
+3. The aggregate pass rate reflects consistent behavior rather than numerical extremes.
+
+In short, binary outcomes make evaluations more stable, interpretable, and resilient to outliers when aggregating results across a dataset.
 
 #### Converting Scores to Binary Outcomes
 
@@ -110,9 +124,7 @@ When a test case requires a scored judgment (e.g., LLM-as-a-judge returning 0.0 
 ```ballerina
     // ... omitted for brevity
     int relevanceScore = getRelavanceScore(query, agentOutput);
-    if relevanceScore < 0.7 {
-        return error(string `Relevance score ${relevanceScore} below threshold 0.7`);
-    }
+    test:assertTrue(relevanceScore >= 0.7, string `Relevance score ${relevanceScore} below threshold 0.7`);
     // Implicitly returns success
     // ... omitted for brevity
 ```
@@ -133,7 +145,7 @@ The confidence threshold set for the dataset represents the **minimum acceptable
 
 ## Design
 
-To enable evaluation without relying on any observability infrastructure, the `ballerina/ai` module will introduce a set of new APIs that expose intermediate steps and agent state transitions. These additions allow developers to inspect an agent’s reasoning process, tool interactions, and final outputs directly. Using this information, users can write evaluations through input–output–driven testing and behavioral assertions, all within the standard Ballerina testing framework.
+To enable evaluation without relying on any observability infrastructure, the `ballerina/ai` module will introduce a set of new APIs that expose intermediate steps and agent state transitions. These additions allow developers to inspect an agent's reasoning process, tool interactions, and final outputs directly. Using this information, users can write evaluations through input–output–driven testing and behavioral assertions, all within the standard Ballerina testing framework.
 
 ### Trace and Iteration Records
 
@@ -195,7 +207,7 @@ public isolated class Agent {
         typedesc<Trace|string> td = <>) returns td|Error = external;
 }
 ```
-The above change allows you to retrieve either the agent’s string response or the full execution trace.
+The above change allows you to retrieve either the agent's string response or the full execution trace.
 
 >**Note:** Any types not explicitly listed here are imported from the `ballerina/ai` module.
 
@@ -333,13 +345,13 @@ public type ToolCallEvalDataProvider record {|
     string[] expectedTools;
 |};
 
-isolated function toolCallOrderDataSet() returns ToolCallEvalDataProvider[][] {
-    return [
-        [{input: "Summarize my unread emails and schedule a follow-up meeting.", expectedTools: ["readEmail", "summarizeEmail", "readCalendar", "bookCalendar"]}],
-        [{input: "Send an email to Raj and add a calendar invite.", expectedTools: ["sendEmail", "bookCalendar"]}]
+isolated function toolCallOrderDataSet() returns ToolCallEvalDataProvider[][] => [
+        [{input: "Summarize my unread emails and schedule a follow-up meeting.",
+            expectedTools: ["readEmail", "summarizeEmail", "readCalendar", "bookCalendar"]}],
+        [{input: "Send an email to Raj and add a calendar invite.",
+            expectedTools: ["sendEmail", "bookCalendar"]}]
     ];
     // or load it from a file
-}
 ```
 
 2. LLM-as-a-Judge Evaluation
@@ -361,9 +373,7 @@ isolated function evaluateAnswerRelevance(RelevanceTestCase entry) returns error
     float relevanceScore = check ai:evaluateRelevance(answer, entry.expectedContext);
     
     // Convert score to binary pass/fail
-    if relevanceScore < 0.7 {
-        return error(string `Relevance score ${relevanceScore} below threshold 0.7`);
-    }
+    test:assertTrue(relevanceScore >= 0.7, string `Relevance score ${relevanceScore} below threshold 0.7`);
 }
 ```
 
@@ -371,23 +381,23 @@ With this approach, writing AI evaluation tests feels natural, concise, and they
 
 >**Note:** In addition to the above enhancement, the test report generated via `bal test --test-report` should also be improved to display the confidence score calculated for each evaluation test. This value can then serve as a baseline for future regression testing.
 
-## Limitation
+## Limitations
 
-Evaluation platforms like Arize, Phoenix, Langfuse, and LangSmith maintain a persistent store of historical agent runs. This enables powerful capabilities such as:
+Observability-dependent platforms maintain a persistent store of historical agent runs. This enables powerful capabilities such as:
 
 - Monitoring performance trends over time
 - Comparing current results against historical baselines
 - Querying and analyzing metrics across versions, tasks, or datasets
 
-While the Ballerina testing framework can replicate the **evaluation logic**, it does **not** provide built-in support for persistent storage, trend analysis, or historical comparisons. These capabilities could be added by exporting evaluation results to an external storage system—and in the future, they could be offered through **Devant** as a first-class feature.
+While the Ballerina testing framework can replicate the **evaluation logic**, it does **not** provide built-in support for persistent storage, trend analysis, or historical comparisons. These capabilities could be added in the future by exporting evaluation results to an external storage system.
 
 For most integration and deployment scenarios, however, the proposed test-driven evaluation approach is more than sufficient to ensure agent reliability and prevent regressions.
 
-Developers who prefer observability-based evaluation can still integrate existing tooling. As long as the agent is configured with a compatible observability provider, frameworks like Arize Phoenix can be used without friction. 
+Developers who prefer observability-based evaluation can continue using the existing Ballerina observability provider implementations. When the agent is configured with a compatible provider, frameworks like Arize Phoenix can be integrated seamlessly.
 
 For example:
 1. Configure Arize as the observability backend so that agent traces are exported directly to Arize.
-2. Use Arize’s REST API to run evaluations and submit results back to the Arize platform.
+2. Use Arize's REST API to run evaluations and submit results back to the Arize platform.
 
 This approach ensures that both **trace-free** and **observability-driven** evaluation workflows remain fully supported.
 
@@ -397,7 +407,7 @@ To overcome the limitation around storing and tracking past evaluation outputs, 
 
 * Support a dedicated directory for storing evaluation reports by using `bal test --test-report --test-report-dir evaluation`. This places all generated reports inside an `evaluation` folder, allowing teams to version and track them through source control.
 * Produce a new report file for every test execution that includes a timestamp in its name. This ensures older reports remain intact, making it possible to review historical data and understand how performance changes across versions.
-* Include the input values passed to tests through the `dataProvider` field in the annotations. Recording this information makes each report self-contained so developers can fully understand what was evaluated without checking the test sources.
+* If a data provider is configured for the evaluation test, include the input values passed to the tests through the data provider. Recording this information makes each report self-contained, allowing developers to fully understand what was evaluated without checking the test sources. If no data provider is configured, the generated report should not include any inputs and should explicitly state that no data provider is configured for that evaluation test.
 
 With these additions, the Ballerina Test framework can serve both immediate regression checks and longer term evaluation tracking.
 
@@ -429,7 +439,7 @@ With these additions, the Ballerina Test framework can serve both immediate regr
 
 1. **Confidence-based Evaluation**
    - Add new `@test:EvalConfig` annotation
-   - Implement pass/fail logic based on aggregate performance across dataset (dataProvider) entries
+   - Implement pass/fail logic based on aggregate performance across dataset (`dataProvider`) entries
    - Calculate pass rate and compare against confidence threshold
 
 2. **Enhanced Test Reporting**
