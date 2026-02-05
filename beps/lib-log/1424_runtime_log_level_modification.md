@@ -98,6 +98,32 @@ internalLogger.printDebug("Internal debug message");
 // This logger's level cannot be changed via ICP
 ```
 
+### Child Loggers
+
+Child loggers can be created from the root logger or from custom loggers (loggers created using `fromConfig` or loggers created by implementing the `Logger` interface) using the `withContext` method.
+
+Child loggers are not treated specially for runtime log level modification. They inherit their log level behavior from their parent logger:
+
+- When the parent logger's log level is changed at runtime, the child logger's effective log level changes as well.
+- Child loggers created from a custom logger with an `id` will automatically reflect any runtime log level changes made to that parent logger via ICP.
+
+```ballerina
+// Create a parent logger with an ID
+log:Logger paymentLogger = check log:fromConfig(id = "payment-service", level = log:INFO);
+
+// Create child loggers with additional context
+log:Logger orderLogger = check paymentLogger.withContext(component = "order-handler");
+log:Logger refundLogger = check paymentLogger.withContext(component = "refund-handler");
+
+// All three loggers use INFO level initially
+paymentLogger.printInfo("Payment processed");
+orderLogger.printInfo("Order created");
+refundLogger.printInfo("Refund initiated");
+
+// When ICP changes "payment-service" to DEBUG level,
+// orderLogger and refundLogger will also log at DEBUG level
+```
+
 ### Java APIs
 
 The following Java APIs are provided in `io.ballerina.stdlib.log.LogConfigManager` for ICP agent integration:
@@ -109,9 +135,9 @@ The following Java APIs are provided in `io.ballerina.stdlib.log.LogConfigManage
  * Get the current log configuration.
  *
  * @return BMap containing:
- *   - "rootLevel": current root log level (String)
- *   - "modules": map of module name -> log level
- *   - "customLoggers": map of logger ID -> log level (only user-named loggers)
+ *   - "rootLogger": map with "level" key containing the root log level
+ *   - "modules": map of module name -> map with "level" key
+ *   - "customLoggers": map of logger ID -> map with "level" key (only user-named loggers)
  */
 public static BMap<BString, Object> getLogConfig();
 ```
@@ -173,18 +199,28 @@ public static Object setLoggerLevel(BString loggerId, BString level);
 
 ### Configuration Response Structure
 
-The `getLogConfig()` method returns a map with the following structure:
+The `getLogConfig()` method returns a map with the following nested structure. This design allows for future extensibility to include additional configuration properties (like log context) without breaking the existing contract:
 
 ```json
 {
-  "rootLevel": "INFO",
+  "rootLogger": {
+    "level": "INFO"
+  },
   "modules": {
-    "myorg/payment": "DEBUG",
-    "myorg/notification": "WARN"
+    "myorg/payment": {
+      "level": "DEBUG"
+    },
+    "myorg/notification": {
+      "level": "WARN"
+    }
   },
   "customLoggers": {
-    "payment-service": "INFO",
-    "audit-logger": "DEBUG"
+    "payment-service": {
+      "level": "INFO"
+    },
+    "audit-logger": {
+      "level": "DEBUG"
+    }
   }
 }
 ```
