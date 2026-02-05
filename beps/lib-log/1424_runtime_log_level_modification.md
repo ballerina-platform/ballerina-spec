@@ -34,7 +34,7 @@ This proposal introduces Java APIs to modify log levels at runtime without appli
 
 In production environments, the ability to change log levels dynamically is crucial for debugging and monitoring without requiring application restarts. Currently, the only way to change log levels in Ballerina applications is through the `Config.toml` file, which requires an application restart to take effect.
 
-The ICP (Integrated Control Panel) dashboard needs to provide operators with the ability to:
+The WSO2 Integrator: ICP (Integration Control Plane) dashboard needs to provide operators with the ability to:
 1. View the current logging configuration of running applications.
 2. Increase log verbosity (e.g., switch to DEBUG) when investigating issues.
 3. Reduce log verbosity (e.g., switch to ERROR) to reduce noise and storage costs.
