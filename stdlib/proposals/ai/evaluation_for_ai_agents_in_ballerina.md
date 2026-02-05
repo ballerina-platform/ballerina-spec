@@ -55,7 +55,7 @@ In this framework, it is important to distinguish between **dataset entries** an
 
 - **Dataset Entry:** A single input–output pair that the agent is evaluated against. Each entry produces a **binary pass/fail outcome** based on whether the agent meets the specified criterion for that input. Entries themselves are not considered full test cases; they are the atomic units of evaluation.
 
-- **Evaluation Test /Test Case:** A function annotated with `@test:EvalConfig` that receives a dataset entries (via a data provider). The **entire dataset together forms one evaluation test**, and the overall pass/fail of the evaluation is determined by the **cumulative pass rate across all entries**, compared against the configured confidence threshold.
+- **Evaluation Test / Test Case:** A function annotated with `@test:Config` where `runs ≠ 1` or `minPassRate ≠ 1.0`. When a dataset is provided via `dataProvider`, the **entire dataset is treated as a single evaluation test**, and the overall pass/fail result is determined by the **cumulative pass rate across all entries and all runs**, measured against the configured `minPassRate` threshold.
 
 ### Understanding Evaluation vs Testing
 
@@ -71,7 +71,7 @@ While traditional software testing relies on **deterministic behavior** (exact o
 **However, evaluation can be expressed as testing when:**
 
 1. Individual dataset entries produce binary outcomes: Each entry evaluates to pass or fail, even if the underlying decision uses scoring internally
-2. Aggregate performance determines overall pass/fail: A confidence threshold (e.g., 80%) is set for the entire dataset—if 80% or more entries pass, the evaluation passes
+2. Aggregate performance determines overall pass/fail: A minimum pass rate threshold (e.g., 80%) is set for the entire dataset—if 80% or more entries pass, the evaluation passes
 
 This allows **evaluation to be expressed within the test framework** while respecting the probabilistic nature of AI systems.
 
@@ -134,13 +134,13 @@ This approach provides:
 - **Transparency:** The threshold is visible in code, not hidden in framework configuration
 - **Composability:** Binary outcomes from diverse test cases can be aggregated cleanly
 
-### Why Confidence Thresholds for Datasets?
+### Why `minPassRate` Thresholds for Datasets/Runs?
 
-The confidence threshold set for the dataset represents the **minimum acceptable pass rate** across all entries. This approach accounts for the inherent non-determinism of AI systems:
+The `minPassRate` threshold set for the dataset/runs represents the **minimum acceptable pass rate** across all entries over all runs. This approach accounts for the inherent non-determinism of AI systems:
 
-- **Realistic Expectations:** AI agents will not achieve 100% accuracy on every input. Setting a confidence threshold (e.g., 80%) acknowledges this while still enforcing a quality bar.
+- **Realistic Expectations:** AI agents will not achieve 100% accuracy on every input. Setting a minimum pass rate threshold (e.g., 80%) acknowledges this while still enforcing a quality bar.
 - **Aggregate Performance Matters:** A single failure should not cause the entire evaluation to fail. What matters is whether the agent performs reliably across a representative set of inputs.
-- **Prevents Brittle Tests:** Without a confidence threshold, a single flaky LLM response could break the entire test suite. The confidence-based approach makes evaluations more resilient.
+- **Prevents Brittle Tests:** Without a threshold, a single flaky LLM response could break the entire test suite. The minimum pass rate based approach makes evaluations more resilient.
 - **Enables Baseline Tracking:** The calculated pass rate becomes a baseline for future runs. Teams can track whether performance improves or degrades over time.
 
 ## Design
@@ -285,10 +285,10 @@ isolated function evaluateToolCallOrder() returns error? {
         }
     }
 
-    float confidenceThreshold = 0.8;
+    float minPassRate = 0.8;
     float passRate = <float>numberOfPassedEntries / <float>dataset.length();
 
-    if passRate < confidenceThreshold {
+    if passRate < minPassRate {
         test:assertFail(string `Test failed with pass rate of: ${passRate}`);
     }
 }
@@ -300,22 +300,26 @@ However, this approach does not provide a `first-class` experience for writing A
 
 Currently, the test framework allows providing a dataset through the `dataProvider` field in the `@test:Config` annotation. But in the default behavior, the entire `bal test` command fails if **any single entry** fails. For AI evaluation, we usually want the test to fail **only if the overall performance falls below a specified threshold**, not because of one failed case.
 
-To achieve this, the test framework could introduce a new annotation.
+To achieve this, the test framework could introduce the following new fields in the existing `@test:Config` annotation.
 
 ```ballerina
-# Configuration used when running an evaluation.
-public type EvaluationConfig record {|
-    # Minimum pass rate required for the dataset.
-    float confidence;
-
+# Configuration set for test functions.
+public type TestConfig record {
+    // ... other fields omitted for brevity
+    # Minimum pass rate required to pass when the test is an evaluation.
+    float minPassRate = 1.0;
     # Number of times the evaluation should repeat.
-    int iterations = 1;
-|};
+    int runs = 1;
+};
 
-public annotation EvaluationConfig EvalConfig on function;
+# Identifies test function.
+public annotation TestConfig Config on function;
 ```
 
-When the proposed annotation is applied to a test case, the framework treats the whole dataset as one evaluation test. It computes the average outcome and decides whether the test passes or fails based on the configured `confidence` value. The `iteration` field allows the dataset to be evaluated multiple times. If the value is greater than 1, the framework runs the evaluation repeatedly with the same dataset and records the outcome of each run. After completing all runs, it computes the mean of those results. This combined average is then used to decide whether the evaluation meets the required `confidence` level.
+When the proposed fields differ from their default values in a test case, the framework treats the entire dataset as a single evaluation test. It computes the aggregate outcome and determines pass or fail based on the configured `minPassRate`. The `runs` field enables the dataset to be evaluated multiple times. When `runs > 1`, the framework executes the evaluation repeatedly using the same dataset and records the result of each run. After all runs complete, it calculates the mean of these results, and this combined average is used to determine whether the evaluation satisfies the required `minPassRate`.
+
+> **Note:** If no dataset is provided, but `minPassRate` and `runs` differ from their default values, the test case is still executed multiple times. In this scenario, the pass rate is calculated using the outcomes of each run, and the aggregated result is used to determine whether the test meets the configured `minPassRate` threshold.
+
 
 After this enhancement, users can write AI evaluation tests with a much cleaner and intuitive syntax:
 
@@ -327,11 +331,9 @@ After this enhancement, users can write AI evaluation tests with a much cleaner 
 import ballerina/ai;
 import ballerina/test;
 
-@test:EvalConfig {
-    confidence: 0.8 // Confidence Thresholds for Dataset
-}
 @test:Config {
     dataProvider: toolCallOrderDataSet,
+    minPassRate: 0.8 // Minimum pass rate threshold for the dataset
 }
 isolated function evaluateToolCallOrder(ToolCallEvalDataProvider entry) returns error? {
     ai:Trace trace = check agent.run(entry.input);
@@ -359,11 +361,10 @@ isolated function toolCallOrderDataSet() returns ToolCallEvalDataProvider[][] =>
 For cases where strict assertions are insufficient, developers can use LLM-as-a-judge evaluation with threshold logic:
 
 ```ballerina
-@test:EvalConfig {
-    confidence: 0.85 // Confidence Thresholds for Dataset
-}
 @test:Config {
     dataProvider: relevanceDataSet,
+    runs: 2,
+    minPassRate: 0.8 // Minimum pass rate threshold for the dataset across multiple runs (i.e., 2 runs here)
 }
 isolated function evaluateAnswerRelevance(RelevanceTestCase entry) returns error? {
     ai:Trace trace = check agent.run(entry.input);
@@ -379,7 +380,7 @@ isolated function evaluateAnswerRelevance(RelevanceTestCase entry) returns error
 
 With this approach, writing AI evaluation tests feels natural, concise, and they integrate seamlessly with the Ballerina test framework.
 
->**Note:** In addition to the above enhancement, the test report generated via `bal test --test-report` should also be improved to display the confidence score calculated for each evaluation test. This value can then serve as a baseline for future regression testing.
+>**Note:** In addition to the above enhancement, the test report generated via `bal test --test-report` should also be improved to display the pass rate score calculated for each evaluation test. This value can then serve as a baseline for future regression testing.
 
 ## Limitations
 
@@ -401,7 +402,7 @@ For example:
 
 This approach ensures that both **trace-free** and **observability-driven** evaluation workflows remain fully supported.
 
-### Further enhancement to the Ballerina test framework
+### Potential Future Enhancements for the Ballerina Test Framework
 
 To overcome the limitation around storing and tracking past evaluation outputs, the Ballerina test framework can be extended with a set of improvements that make evaluation results easier to retain, organize, and analyze over time.
 
@@ -437,14 +438,14 @@ With these additions, the Ballerina Test framework can serve both immediate regr
 
 ### Changes to the Ballerina test framework
 
-1. **Confidence-based Evaluation**
-   - Add new `@test:EvalConfig` annotation
+1. **Pass Rate based Evaluation**
+   - Introduce new fields `runs` and `minPassRate` in the `@test:Config` annotation.
    - Implement pass/fail logic based on aggregate performance across dataset (`dataProvider`) entries
-   - Calculate pass rate and compare against confidence threshold
+   - Calculate pass rate and compare against `minPassRate` threshold
 
 2. **Enhanced Test Reporting**
-   - Display confidence scores in test reports generated via `bal test --test-report`
-   - Show aggregate metrics for evaluation tests (Caculated confidence score)
+   - Display minimum pass rates in test reports generated via `bal test --test-report`
+   - Show aggregate metrics for evaluation tests (Caculated pass rate)
    - Support `--test-report-dir` flag to specify custom report directory
    - Generate timestamped report files for historical tracking
    - Include `dataProvider` input values in test reports for better traceability
