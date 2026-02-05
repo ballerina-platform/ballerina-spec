@@ -13,7 +13,7 @@
 
 ## Summary
 
-This proposal introduces Java APIs to modify log levels at runtime without application restart. The primary goal is to enable the ICP (Integrated Control Panel) agent to dynamically adjust log levels for the root logger level, module-specific log levels, and custom loggers level created via the `fromConfig` API.
+This proposal introduces Java APIs to modify log levels at runtime without application restart. The primary goal is to enable the WSO2 Integrator: ICP (Integration Control Plane) agent to dynamically adjust log levels for the root logger level, module-specific log levels, and custom loggers level created via the `fromConfig` API.
 
 ## Goals
 
