@@ -3,7 +3,7 @@
 - Authors - @TharmiganK
 - Reviewed by - @daneshk
 - Created date - 2025-12-16
-- Updated date - 2026-02-02
+- Updated date - 2026-01-06
 - Issue - [#1411](https://github.com/ballerina-platform/ballerina-spec/issues/1411)
 - State - Submitted
 
@@ -27,32 +27,89 @@ This limitation hinders developer productivity and creates maintenance challenge
 
 ## Goals
 
-- Enable multiple `.bal` files in the `persist/` directory, with each file representing an independent data model
+- Enable multiple independent data models within a single Ballerina persist project
+- Support subdirectory-based organization for better model separation and domain boundaries
 - Allow each model to connect to different data store types or instances
 - Extend persist CLI commands to support model-specific operations
 - Ensure compiler plugin engagement for all model files
-- Maintain backward compatibility with existing single-model projects
+- Maintain full backward compatibility with existing single-model projects
 
 ## Non-Goals
 
-- Organizing models in subdirectories within the `persist/` directory
-- Enforcing naming conventions for model files
+- Cross-model relationships or foreign key references between models
+- Enforcing specific naming conventions for model files (beyond reserved names)
 - Processing multiple models simultaneously in a single command invocation
+- Supporting models in arbitrary nested subdirectory structures
 
 ## Design
 
 ### Model File Structure
 
-- Any `.bal` file located at the root level of the `persist/` directory is considered a valid model file
-- No specific naming convention is enforced — developers can name model files according to their domain (e.g., `users.bal`, `inventory.bal`, `analytics.bal`)
+The persist tool supports a hybrid approach for organizing multiple models:
+
+#### Root Level Model (Backward Compatibility)
+
+- `persist/model.bal` - The default model file for backward compatibility
+- Only one `.bal` file is allowed at the root level of the `persist/` directory
+- Used when no model name is specified in commands
+
+#### Subdirectory Models (New Multi-Model Support)
+
+- `persist/{modelName}/model.bal` - Model files organized in subdirectories
+- Each subdirectory represents a distinct domain or data model
+- Model name corresponds to the subdirectory name (e.g., `users`, `inventory`, `analytics`)
 - Each model file contains a complete, independent data model with its entity definitions
 - Model files cannot reference entities defined in other model files
+- Model name cannot be `migrations` (reserved for backward compatibility)
 
 ### Default Behavior
 
-- When a model name is not specified in persist commands, the default model file is `model.bal`
-- Projects with only `model.bal` continue to work without any changes
-- For projects with multiple model files, commands require explicit model specification
+- When a model name is not specified in persist commands, the system looks for the default model file `persist/model.bal`
+- If `persist/model.bal` does not exist and no model is specified, commands will return an error
+- Projects with only `persist/model.bal` continue to work without any changes
+- For projects using subdirectory models, commands require explicit model specification via `--model` argument
+
+### Directory Structure Examples
+
+#### Backward Compatible (Root Model Only)
+
+```tree
+project/
+├── persist/
+│   ├── model.bal
+│   └── migrations/
+│       └── 20250203120000_initial/
+│           ├── model.bal
+│           └── script.sql
+├── generated/
+└── Ballerina.toml
+```
+
+#### Multi-Model with Subdirectories
+
+```tree
+project/
+├── persist/
+│   ├── model.bal              # Optional: default model
+│   ├── migrations/             # Migrations for default model
+│   │   └── 20250203120000_initial/
+│   ├── users/
+│   │   ├── model.bal
+│   │   └── migrations/
+│   │       └── 20250203120000_initial/
+│   │           ├── model.bal
+│   │           └── script.sql
+│   └── inventory/
+│       ├── model.bal
+│       └── migrations/
+│           └── 20250203120000_initial/
+│               ├── model.bal
+│               └── script.sql
+├── generated/
+│   ├── users/
+│   └── inventory/
+└── Ballerina.toml
+```
 
 ### CLI Command Extensions
 
@@ -61,49 +118,70 @@ All persist commands are extended to support optional model specification:
 **`bal persist init`**
 
 - New optional argument: `--model <model-name>`
-- Behavior: Initializes persist configuration and creates the specified model file
-- Default: Creates `model.bal` if no model name is provided
+- Behavior without `--model`: Creates `persist/model.bal` (backward compatible)
+- Behavior with `--model`: Creates `persist/{model-name}/model.bal` and associated directory structure
+- Model name validation: Cannot be `migrations`
 
 **`bal persist generate`**
 
-- New optional argument: `--model <model-name>` or `--model <file-path>`
-- Behavior: Generates client code for the specified model
-- Error handling: If multiple models exist and no model is specified, display an error message requesting model specification
-- Default: Uses `model.bal` if it's the only model file present
+- New optional argument: `--model <model-name>`
+- Behavior without `--model`: Uses `persist/model.bal` if it exists, otherwise returns an error
+- Behavior with `--model`: Generates client code for `persist/{model-name}/model.bal`
+- Error handling: Returns error if specified model directory/file does not exist
 
 **`bal persist add`**
 
 - Existing support through `Ballerina.toml` configuration (inherited from default build tool options)
-- New optional argument: `--model <model-name>` or `--model <file-path>`
-- Behavior: Adds entities to the specified model file
+- New optional argument: `--model <model-name>`
+- Behavior without `--model`: Adds entities to `persist/model.bal`
+- Behavior with `--model`: Adds entities to `persist/{model-name}/model.bal`
 
 **`bal persist pull`**
 
 - New optional argument: `--model <model-name>`
-- Behavior: Pulls schema from the database and generates the specified model file
-- Default: Creates or updates `model.bal` if no model name is provided
+- Behavior without `--model`: Creates or updates `persist/model.bal`
+- Behavior with `--model`: Creates or updates `persist/{model-name}/model.bal`
 
 **`bal persist migrate`**
 
 - New optional argument: `--model <model-name>`
-- Behavior: Generates database migration scripts for the specified model
-- Error handling: If multiple models exist and no model is specified, display an error message requesting model specification
-- Default: Uses `model.bal` if it's the only model file present
-- Migration directory structure: Model-specific subdirectories under `persist/migrations/`
-  - New structure: `persist/migrations/{modelName}/{timestamp}_{label}/`
-  - Old structure: `persist/migrations/{timestamp}_{label}/` (maintained for backward compatibility with default model)
+- Behavior without `--model`: Uses `persist/model.bal` and creates migrations in `persist/migrations/`
+- Behavior with `--model`: Uses `persist/{model-name}/model.bal` and creates migrations in `persist/{model-name}/migrations/`
+- Error handling: Returns error if specified model does not exist
 - Each model maintains independent migration history
-- Backward compatibility: Existing migrations for `model.bal` continue to work with the old structure
 
 ### Data Store Configuration
 
 - Each model can be configured to connect to a different data store type or instance
-- Configuration is specified per model in the `Ballerina.toml` file or through environment-specific settings
+- Configuration is specified per model in the `Ballerina.toml` file:
+
+```toml
+# Root model configuration
+[[tool.persist]]
+id = "default-db"
+targetModule = "myapp.db"
+options.datastore = "mysql"
+filePath = "persist/model.bal"
+
+# Subdirectory model configurations
+[[tool.persist]]
+id = "users-db"
+targetModule = "myapp.users_db"
+options.datastore = "mysql"
+filePath = "persist/users/model.bal"
+
+[[tool.persist]]
+id = "analytics-db"
+targetModule = "myapp.analytics_db"
+options.datastore = "postgresql"
+filePath = "persist/analytics/model.bal"
+```
+
 - Supported scenarios include:
-  - Model A → MySQL database
-  - Model B → PostgreSQL database
-  - Model C → Redis cache
-  - Model D → Google Sheets
+  - Root model → MySQL database
+  - Users model → MySQL database (same or different instance)
+  - Analytics model → PostgreSQL database
+  - Cache model → Redis cache
 
 ### Code Generation
 
@@ -116,12 +194,13 @@ All persist commands are extended to support optional model specification:
 
 - Each model maintains its own independent migration history
 - Migration directory structure:
-  - **New projects or custom models**: `persist/migrations/{modelName}/{timestamp}_{label}/`
-  - **Existing projects with `model.bal`**: `persist/migrations/{timestamp}_{label}/` (backward compatible)
+  - **Root model**: `persist/migrations/{timestamp}_{label}/` (backward compatible)
+  - **Subdirectory models**: `persist/{modelName}/migrations/{timestamp}_{label}/`
+- Both migration structures can coexist in the same project
 - Each migration folder contains:
-  - The model file snapshot (`{modelName}.bal`)
+  - The model file snapshot (`model.bal`)
   - The migration SQL script (`script.sql`)
-- Migration detection automatically handles both old and new structures
+- Migration detection automatically handles both structures
 - Validation prevents datastore changes for models with existing migrations
 
 ### Compiler Plugin Behavior
@@ -140,21 +219,117 @@ All persist commands are extended to support optional model specification:
 
 ## Alternatives
 
-### Alternative 1: Enforce Naming Convention
+We conducted a comprehensive analysis of three architectural approaches for multi-model support. The chosen solution represents a hybrid approach that combines the best aspects of the evaluated alternatives.
 
-Require model files to follow a specific pattern (e.g., `model-*.bal`). This was rejected because it adds unnecessary constraints and reduces flexibility for developers to organize their models according to domain-specific conventions.
+### Alternative 1: Flat Multi-File Structure
 
-### Alternative 2: Support Subdirectories
+**Approach**: Multiple `.bal` files at the root level of `persist/` directory (e.g., `persist/users.bal`, `persist/inventory.bal`, `persist/analytics.bal`).
 
-Allow organizing models in subdirectories under `persist/`. This was rejected to maintain simplicity and avoid complexity in model discovery and path resolution.
+**Pros**:
+
+- Minimal implementation effort (already partially implemented)
+- Full backward compatibility with existing projects
+- Simple flat file discovery logic
+- All models visible at once for quick reference
+
+**Cons**:
+
+- No visual separation of domain boundaries
+- Can become cluttered with many models (10+)
+- Hard to organize large teams around specific models
+- All models mixed together at root level
+
+**Decision**: Rejected in favor of subdirectory organization to provide better domain separation, avoid clutter in the persist directory, and enable better team collaboration patterns.
+
+### Alternative 2: Per-Module Persist Directories
+
+**Approach**: Each Ballerina module has its own persist directory (e.g., `modules/users/persist/model.bal`, `modules/inventory/persist/model.bal`).
+
+**Pros**:
+
+- Perfect alignment with Ballerina module system
+- Excellent scalability for large enterprise projects
+- Complete encapsulation per module
+- Natural team ownership boundaries
+- Generated code stays within module boundaries
+
+**Cons**:
+
+- Tight coupling of models to module structure (not all models may fit neatly into modules)
+- Significant implementation effort (major refactoring required)
+- Breaking change for all existing projects
+- Complex multi-location model discovery
+- Steeper learning curve for developers
+- Root persist directory becomes a special case
+
+**Decision**: Rejected due to high implementation cost, breaking changes for all existing users, and added complexity that may not be justified for the initial multi-model support. This approach could be considered for future major versions.
 
 ### Alternative 3: Process All Models by Default
 
-When no model is specified, process all models in the directory. This was rejected because it could lead to unintended side effects, longer execution times, and confusion about which models are being affected by a command.
+**Approach**: When no `--model` is specified, automatically process all models in the project.
+
+**Pros**:
+
+- Convenient for bulk operations
+- Simpler command syntax for multi-model projects
+
+**Cons**:
+
+- Could lead to unintended side effects
+- Longer execution times
+- Confusion about which models are being affected
+- Potential for accidental modifications to unintended models
+- Makes it harder to work on specific models in isolation
+
+**Decision**: Rejected because it could lead to unintended consequences and reduces developer control over which models are affected by operations.
 
 ### Alternative 4: Support Cross-Model Relationships
 
-Allow entities in different models to reference each other. This was rejected due to significant complexity in dependency management, transaction handling, and potential circular dependencies. It would also blur the separation of concerns that multi-model support aims to provide.
+**Approach**: Allow entities in different models to reference each other through foreign keys or relationships.
+
+**Pros**:
+
+- More flexible data modeling
+- Could support complex business domains with interconnected entities
+
+**Cons**:
+
+- Significant complexity in dependency management
+- Transaction handling across multiple data stores becomes complex
+- Potential circular dependencies between models
+- Blurs the separation of concerns that multi-model support aims to provide
+- Complicates migration management and model independence
+- Makes it harder to connect models to different data stores
+
+**Decision**: Rejected to maintain clear separation of concerns and model independence. Each model should represent a distinct domain or data source without dependencies on other models.
+
+### Alternative 5: Enforce Naming Conventions
+
+**Approach**: Require model files to follow a specific pattern (e.g., `model-*.bal`, `*-model.bal`).
+
+**Pros**:
+
+- Consistent naming across projects
+- Easy to identify model files programmatically
+
+**Cons**:
+
+- Adds unnecessary constraints
+- Reduces flexibility for developers to organize models according to domain-specific conventions
+- May not align with team or organization naming standards
+- Creates artificial restrictions without significant benefit
+
+**Decision**: Rejected to maintain flexibility, allowing developers to name models according to their domain requirements (e.g., `users`, `inventory`, `analytics`).
+
+### Chosen Solution: Hybrid Subdirectory Approach
+
+The selected approach combines the strengths of multiple alternatives:
+
+- **Backward Compatibility**: Maintains support for existing `persist/model.bal` projects
+- **Domain Separation**: Uses subdirectories for clear model organization (`persist/{modelName}/model.bal`)
+- **Flexibility**: No enforced naming conventions beyond reserved names
+- **Controlled Operations**: Explicit model specification required for multi-model projects
+- **Independent Models**: No cross-model relationships to maintain separation of concerns
 
 ### Impact of Not Implementing
 
@@ -173,13 +348,15 @@ Without this feature, developers will continue to face limitations when working 
    - All persist commands should function as before when only `model.bal` exists
 
 2. **Multiple Model Creation**
-   - Create multiple model files with `bal persist init --model <name>`
-   - Verify each model file is created correctly
+   - Create subdirectory models with `bal persist init --model <name>`
+   - Verify correct directory structure and model file creation
+   - Verify root model creation without `--model` argument
 
 3. **Model-Specific Generation**
    - Generate clients for specific models using `bal persist generate --model <name>`
    - Verify correct client code is generated for each model
-   - Verify error message when multiple models exist but none is specified
+   - Verify error handling when model directory/file does not exist
+   - Verify backward compatible behavior with root model
 
 4. **Multi-Database Connection**
    - Create models connecting to different database types
@@ -192,21 +369,28 @@ Without this feature, developers will continue to face limitations when working 
    - Verify independent operation of each model
 
 6. **Migration Support**
-   - Test migration generation for individual models
-   - Verify model-specific migration directories are created correctly
+   - Test migration generation for root model (backward compatible structure)
+   - Test migration generation for subdirectory models
+   - Verify both migration structures can coexist in the same project
    - Test migration with multiple models having different schemas
-   - Verify backward compatibility with existing migrations for `model.bal`
    - Test that migrations for different models are independent
    - Verify datastore change validation for models with existing migrations
 
-7. **Compiler Plugin Integration**
-   - Verify compiler plugin processes all model files
+7. **Hybrid Structure Support**
+   - Test projects with both root model and subdirectory models
+   - Verify commands work correctly with mixed model structures
+   - Test migration coexistence and independence
+
+8. **Compiler Plugin Integration**
+   - Verify compiler plugin processes all model files (root and subdirectory)
    - Verify build-time validation for each model
    - Test error reporting for invalid model definitions
 
-8. **Command Error Handling**
-   - Verify appropriate error messages when model specification is missing in multi-model projects
+9. **Command Error Handling**
+   - Verify error when no model specified and root model doesn't exist
+   - Test reserved model name validation (e.g., `migrations`)
    - Test invalid model name/path scenarios
+   - Verify appropriate error messages for missing model directories
 
 ### Test Environments
 
