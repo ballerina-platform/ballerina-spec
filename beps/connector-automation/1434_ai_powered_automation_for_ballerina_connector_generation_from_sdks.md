@@ -50,10 +50,10 @@ The solution\'s foundation is a pair of sequential GitHub Actions workflows enco
 4.  **Connector Generator (Client & Native Adapter):** This module accepts the *approved* (and potentially revised) Specification document to generate the actual connector implementation. This process is bifurcated into two distinct sub-tasks:
     * a.  **Ballerina Client Generator:** Generates the Ballerina client, including Foreign Function Interface (FFI) definitions that align precisely with the established specification.
     * b.  **Native Adapter Generator:** Generates the corresponding language Native Adapter, incorporating the necessary type conversion and error handling logic.
-6.  **Code Fixer:** A supporting utility module invoked during the generation phase. It is responsible for compiling the generated artifacts, analyzing ensuing compiler error messages, and iteratively applying corrections to resolve syntax or type mismatches until a successful build is achieved.
-7.  **Test Generator:** This module analyzes the completed connector to automatically produce a comprehensive test suite. This suite encompasses tests for both successful method execution and various error handling scenarios.
-8.  **Example Generator:** Synthesizes practical, compilable code snippets that clearly demonstrate real-world usage paradigms for the newly developed connector.
-9.  **Document Generator:** Systematically scans the final codebase to generate user-centric Markdown documentation, effectively translating complex technical concepts into explanations centered on Ballerina principles.
+5.  **Code Fixer:** A supporting utility module invoked during the generation phase. It is responsible for compiling the generated artifacts, analyzing ensuing compiler error messages, and iteratively applying corrections to resolve syntax or type mismatches until a successful build is achieved.
+6.  **Test Generator:** This module analyzes the completed connector to automatically produce a comprehensive test suite. This suite encompasses tests for both successful method execution and various error handling scenarios.
+7.  **Example Generator:** Synthesizes practical, compilable code snippets that clearly demonstrate real-world usage paradigms for the newly developed connector.
+8.  **Document Generator:** Systematically scans the final codebase to generate user-centric Markdown documentation, effectively translating complex technical concepts into explanations centered on Ballerina principles.
 
 ### Workflow Architecture
 
