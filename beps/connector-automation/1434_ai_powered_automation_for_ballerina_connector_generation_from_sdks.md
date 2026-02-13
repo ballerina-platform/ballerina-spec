@@ -22,7 +22,7 @@ Interface (FFI) definitions, native interoperability logic,
 comprehensive unit tests, documentation, and practical examples.
 
 While the current implementation focuses on Java SDKs because
-Ballerina's FFI presently supports invoking Java methods the overall
+Ballerina's FFI presently supports invoking Java methods, the overall
 architecture is designed to be extensible, allowing future plugins to
 support additional languages and runtime environments. This approach is
 intended to produce production-ready connectors with minimal human
@@ -31,8 +31,8 @@ intervention.
 ## Motivation
 
 The current process for developing Ballerina connectors from existing
-SDKs is resource-intensive and susceptible to errors.Since Ballerina's
-Foreign function Interface(FFI) Integration is only supported through
+SDKs is resource-intensive and susceptible to errors. Since Ballerina's
+Foreign Function Interface (FFI) integration is only supported through
 Java libraries, developers must manually build complex interoperability
 layers for Java SDKs. This undertaking comprises the bidirectional
 mapping of Java and Ballerina types, the management of memory
@@ -101,7 +101,7 @@ errors are subsequently channeled back into the model for rectification.
 
 1.  **SDK Analyzer:** This module performs a comprehensive analysis of
     the input SDK to extract foundational API structures, method
-    ignatures, and type definitions, serving as the definitive source
+    signatures, and type definitions, serving as the definitive source
     of truth for the integration.
 
 2.  **Additional Information Provider (Optional):** Designed to augment
@@ -120,7 +120,7 @@ errors are subsequently channeled back into the model for rectification.
     implementation-specific details, thereby facilitating a
     streamlined human review process.
 
-4.  **Connector Generator (Client & Native Adaptor):** This module
+4.  **Connector Generator (Client & Native Adapter):** This module
     accepts the *approved* (and potentially revised) Specification
     Document to generate the actual connector implementation. This
     process is bifurcated into two distinct sub-tasks:
@@ -129,7 +129,7 @@ errors are subsequently channeled back into the model for rectification.
         including Foreign Function Interface (FFI) definitions that
         align precisely with the established specification.
 
-    b.  **Native Adaptor Generator:** Generates the corresponding
+    b.  **Native Adapter Generator:** Generates the corresponding
         language Native Adapter, incorporating the necessary type
         conversion and error handling logic.
 
@@ -152,8 +152,6 @@ errors are subsequently channeled back into the model for rectification.
     generate user-centric Markdown documentation, effectively
     translating complex technical concepts into explanations centered
     on Ballerina principles.
-
-### 
 
 ### Workflow Architecture
 
