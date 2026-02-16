@@ -1,10 +1,10 @@
-# Introduce a Build-Time Flag for Service Information Extraction and Specification Generation
+# Introduce a Build-Time Flag for Service Information Extraction and Relevant Specification Generation
 
 - Authors - Niduni Kasige
 - Reviewed by - Bhashinee Nirmali 
 - Created date - 2026-02-11
 - Updated date - 2026-02-14
-- Issue - [#2200](https://github.com/wso2-enterprise/devant/issues/2200)
+- Issue - 
 - State - Submitted
 
 ## Summary
