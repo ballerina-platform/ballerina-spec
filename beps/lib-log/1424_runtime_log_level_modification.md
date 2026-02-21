@@ -26,7 +26,6 @@ This proposal introduces Ballerina-level public APIs to modify log levels at run
 - Child loggers (created via `withContext`) inherit their level from the parent and cannot have independent levels — `setLevel()` returns an unsupported operation error.
 - Child loggers are not registered in the registry.
 - Module-prefix user-provided logger IDs: `<org>/<module>:<user_id>`.
-- Treat each configured module as a separate logger in the unified logger registry, using the module name as the logger ID.
 - Auto-generate readable identifiers for loggers when no explicit ID is provided.
 - Ensure thread-safe operations for concurrent log level modifications.
 
@@ -201,7 +200,6 @@ The log module maintains an internal logger registry that tracks all registered 
 The registry tracks:
 
 - The root logger (registered with the well-known ID `"root"`)
-- Module loggers (each configured module is registered using the module name as its logger ID)
 - All loggers created via `fromConfig` (with module-prefixed or auto-generated IDs)
 
 Child loggers (created via `withContext`) are **not** registered in the registry. They always inherit their level from the parent logger and cannot have independent levels. The ID format is sufficient to differentiate logger types — no separate `LoggerKind` type is needed.
@@ -238,7 +236,7 @@ log:LoggerRegistry registry = log:getLoggerRegistry();
 
 // ICP retrieves all logger IDs
 string[] ids = registry.getIds();
-// Result: ["root", "myorg/payment", "myorg/payment:payment-service", "myorg/payment:init"]
+// Result: ["root", "myorg/payment:payment-service", "myorg/payment:init"]
 ```
 
 **Developer usage — get a logger instance and change its level:**
@@ -262,14 +260,7 @@ public function main() returns error? {
 
 ### Module Loggers
 
-Each module configured in `Config.toml` is automatically registered as a separate logger in the unified logger registry. The module name is used as the logger ID (e.g., `myorg/payment`). Module loggers participate in the same registry as `fromConfig` loggers.
-
-This unified approach means:
-
-- Module log levels can be modified at runtime using the same `setLevel()` / `getLevel()` APIs.
-- Module loggers appear in `registry.getIds()` alongside all other loggers, giving ICP a single, consistent view.
-- `registry.getById("myorg/payment")` returns the module's `Logger` instance for programmatic control.
-- There is no separate module-level configuration path — everything flows through the unified logger registry.
+Module log levels configured in `Config.toml` are applied at startup and filter log statements from each module statically. Module loggers are **not** registered in the logger registry.
 
 **Config.toml:**
 ```toml
@@ -285,24 +276,16 @@ name = "myorg/inventory"
 level = "WARN"
 ```
 
-**Runtime modification:**
+When the root logger receives a log statement from `myorg/payment`, it checks the configured module level (DEBUG) via a lock-free lookup and uses that instead of the root level (INFO). This filtering is purely static — module log levels cannot be changed at runtime via the registry.
+
+`getIds()` does not include module names:
 ```ballerina
-import ballerina/log;
-
 log:LoggerRegistry registry = log:getLoggerRegistry();
-
-// Module loggers are automatically registered — look them up by module name
-log:Logger? paymentLogger = registry.getById("myorg/payment");
-if paymentLogger is log:Logger {
-    check paymentLogger.setLevel(log:ERROR);  // Change at runtime
-}
-
-// getIds() lists all registered loggers
 string[] ids = registry.getIds();
-// ["root", "myorg/payment", "myorg/inventory", "myorg/payment:payment-service"]
+// ["root", "myorg/payment:payment-service"]  — module names are NOT listed
 ```
 
-**ID collision protection:** If a user calls `fromConfig(id = "myorg/payment")` using a name that matches a configured module, the existing duplicate-ID check returns an error, preventing collisions.
+To achieve runtime control over a module's log verbosity, create a dedicated logger via `fromConfig` within that module and control it through the registry.
 
 ### Child Loggers
 
@@ -369,7 +352,6 @@ All set operations validate the log level and return an error for invalid values
 - Retrieve and set log levels programmatically via `getLevel()` / `setLevel()` on root loggers, module loggers, and `fromConfig` loggers
 - Adjust the global root logger's log level
 - Discover all registered loggers via `LoggerRegistry` (`getIds()`, `getById()`)
-- Modify log levels for module loggers (configured in `Config.toml`) via ICP, using the module name as the logger ID
 - Modify log levels for all loggers created via `fromConfig` API (with module-prefixed or auto-generated IDs) via ICP
 - Child loggers automatically inherit level changes from their parent
 
