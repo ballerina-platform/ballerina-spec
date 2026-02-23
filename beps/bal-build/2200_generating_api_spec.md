@@ -3,15 +3,15 @@
 - Authors - Niduni Kasige
 - Reviewed by - Bhashinee Nirmali 
 - Created date - 2026-02-11
-- Updated date - 2026-02-14
+- Updated date - 2026-02-23
 - Issue - [#1437](https://github.com/ballerina-platform/ballerina-spec/issues/1437)
 - State - Submitted
 
 ## Summary
-This proposal introduces a new capability to the `bal build` command that enables cloud platforms, such as Devant, to automatically discover and consume service and endpoint metadata directly from a Ballerina project during the build process.Currently, Devant requires users to manually provide configuration details such as base paths, ports, protocols, and protocol-specific specifications (e.g., GraphQL schemas, gRPC proto definitions) when deploying services. The proposed enhancement adds a new build flag that analyzes project source code and extracts relevant service metadata, including protocol types (HTTP, GraphQL, gRPC, WebSocket, MCP, etc.), exposed ports, and base paths. This information will be generated in YAML format as part of the build output. Additionally, the corresponding protocol specifications will be emitted to the target directory to support service visualization and testing.
+This proposal introduces a new capability to the `bal build` command that enables cloud platforms, such as Devant, to automatically discover and consume service and endpoint metadata directly from a Ballerina project during the build process.Currently, Devant requires users to manually provide configuration details such as base paths, ports, protocol types, and protocol-specific specifications (e.g., GraphQL schemas, gRPC proto definitions) when deploying services. The proposed enhancement adds a new build flag that enables analysing the service information and relevant spec generation from the protocol relevant tool.
 
 ## Motivation
-The current `bal build` command does not provide a mechanism to extract server and service metadata for service types such as GraphQL, gRPC, WebSocket, MCP, and others, forcing developers to manually define endpoint configuration details like base paths, ports, and protocol-specific settings when deploying their services to platforms such as Devant. Additionally, there is no standardized way to programmatically identify and extract information about service methods for these service types such as GraphQL operations, gRPC service definitions, WebSocket resources, or MCP tools, making it difficult for cloud platforms to fully automate service deployment. This manual and repetitive process increases the likelihood of configuration mismatches, adds unnecessary effort during build and deployment, and creates duplication between application code and infrastructure configuration, highlighting the need for a build-time metadata extraction capability to enable seamless automation and a better developer experience. 
+The current `bal build` command does not provide a mechanism to extract server and service metadata for service types such as GraphQL, gRPC, WebSocket, MCP, and others, forcing developers to manually define endpoint configuration details like base paths, ports, and protocol-specific settings when deploying their services to platforms such as Devant. Additionally, there is no standardized way to programmatically identify and extract information about service methods for these service types such as GraphQL operations, gRPC service definitions, WebSocket resources, or MCP tools, making it difficult for cloud platforms to fully automate service deployment. This manual and repetitive process increases the likelihood of configuration mismatches, and adds unnecessary effort during build and deployment, highlighting the need for a build-time metadata extraction capability to enable seamless automation and a better developer experience.
 
 ## Goals
 
@@ -21,60 +21,45 @@ The current `bal build` command does not provide a mechanism to extract server a
 
 - Generate and export the extracted metadata during compile time in a structured and standardized format that can be consumed by external platforms such as Devant.
 
-## Design
-To achieve the above goals, the following build flag is proposed 
 
-```shell 
---export-service-spec
+## Design
+To extract core service details such as base paths, ports, and protocols, this proposal introduces a generic build-time mechanism in Ballerina to automatically extract and export endpoint details for all service types. This approach is conceptually similar to how OpenChoreo requires component endpoint details to describe a workload.
+The proposed enhancement introduces a new CLI flag to bal build command.
+
+```shell
+--export-openapi-spec
 ```
 
-To extract core service details such as base paths, ports, and protocols, this proposal introduces a new compiler plugin along with compile-time specification generation support in the standard libraries of each protocol. These components are activated when the new flag is provided to the bal build command. 
+#### Proposed Build-Time Artifact Generation
 
-The compiler plugin introduced, will analyze the Ballerina syntax tree and semantic model to identify service declarations and listeners. The extraction logic will rely on the ballerina compiler API (for syntax tree nodes and semantic analysis) to ensure accuracy and consistency with the actual compiled program.
+When the flag is enabled, the build process will:
+- Analyze all defined services and listeners.
 
-In addition, protocol-specific standard libraries (e.g., GraphQL, gRPC) will be enhanced to generate the relevant specifications at compile time, such as GraphQL schemas or gRPC proto definitions, so they can be included in the build output. 
+- Extract endpoint metadata (base paths, ports, protocols etc.) and generate protocol-specific schema artifacts using the respective tooling support.
+
+- Produce standardized `endpoint.yaml` files per endpoint.
+
+- Dump all generated schemas and metadata artifacts into the `target/` directory.
 
  ### Endpoint configuration information extraction
 
-When the flag is enabled, endpoint-related information such as base paths, ports, and protocol types will be extracted and dumped into a YAML file (e.g., service-spec.yaml). The newly introduced compiler plugin, will inspect service declarations and associated listener instantiations to derive these information.
+When the flag is enabled, the endpoint details will be extracted and serialized into a .yaml file. This file is generated for each endpoint, which is similar to workload.yaml which is committed in openchoreo. 
 
-Example Ballerina source:
-
-``` ballerina
-import ballerina/websocket;
-import ballerina/io;
-
-int port = 8094;
-
-service /basic/ws on new websocket:Listener(port) {
-  resource function get .() returns websocket:Service|websocket:Error {
-      return new WsService();
-  }
-}
- 
-service class WsService {
-   *websocket:Service;
-  
-   remote function onTextMessage(websocket:Caller caller, string data) returns websocket:Error? {
-       io:println(data);
-       check caller->writeTextMessage(data);
-   }
-}
-```
-
-From the above source, the following server metadata will be extracted:
+A sample `endpoint.yaml` file:
 
 ```yaml
-services:
-- basePath: "/basic/ws"
-  port: 8094
-  type: "websocket"
-
+# Endpoints define the network interfaces that this workload exposes to other services
+endpoints:
+    basePath: "/probes"
+    port: 9090
+    # Allowed values: REST, GraphQL, gRPC, TCP, UDP, HTTP, Websocket
+    type: REST
+    schemaFile: openapi.yaml
 ```
 
  ## Targeted Protocol Specification Extraction
 
- In addition to endpoint metadata, protocol-specific service information will also be extracted and exported in their respective standard formats (GraphQL schema or gRPC proto definitions, etc.) using the ballerina standard library support.
+ In addition to endpoint metadata, protocol-specific schema will also be exported in their respective standard formats (GraphQL schema or gRPC proto definitions, etc.) using the ballerina standard library support of each protocol.
 
 #### GraphQL
 
@@ -148,9 +133,6 @@ A similar approach will be applied to other service types such as WebSocket, etc
 
 
 ## Dependencies
-The implementation of the compiler plugin, is dependent on
-- Jackson YAML - Used to serialize extracted endpoint and service metadata into a structured YAML file format.
-- Google Protocol Buffers Java library (com.google.protobuf) - Used to parse and process the proto descriptor strings.
 
 And the following Ballerina standard libraries will be affected.
 - ballerina/http
@@ -160,5 +142,4 @@ And the following Ballerina standard libraries will be affected.
 
 ## Future Work
 Future work includes,
-- Extending support of the compiler plugin to additional protocol types (e.g., TCP, UDP, and other protocol-based services).
-- Add compile-time specification generation and dumping support to the standard library of each newly supported protocol.
+- ntegrate the new build flag capability into the standard library implementations of all newly supported protocols (in Devant).
