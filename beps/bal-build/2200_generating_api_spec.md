@@ -27,7 +27,7 @@ To extract core service details such as base paths, ports, and protocols, this p
 The proposed enhancement introduces a new CLI flag to bal build command.
 
 ```shell
---export-openapi-spec
+--export-endpoints
 ```
 
 #### Proposed Build-Time Artifact Generation
