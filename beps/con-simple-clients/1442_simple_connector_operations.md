@@ -250,7 +250,7 @@ This approach introduces a dedicated annotation type in `ballerina/lang.annotati
 # Methods annotated with `@operation` are surfaced prominently in low-code environments,
 # workflow step selectors, and IDE action lists. They represent the most common and
 # well-understood actions a connector provides.
-public const annotation Operation on source function;
+public const annotation operation on source function;
 ```
 
 The annotation is a simple marker with no fields. Presentation metadata (`label`, `iconPath`) is provided via the
@@ -549,9 +549,9 @@ guide the selection:
 
 #### Target Count
 
-An operations client SHOULD expose **5 to 15 operations**.
+An operations client SHOULD expose **3 to 15 operations**.
 
-- **Below 5** suggests the connector's API surface is already simple enough that an operations client adds little
+- **Below 3** suggests the connector's API surface is already simple enough that an operations client adds little
   value, or the curation is too aggressive. Consider whether the connector warrants an operations client at all.
 - **Above 15** dilutes the simplification benefit. If more than 15 operations are needed, consider whether some can
   be served by the advanced client, or whether the connector should be split into multiple focused modules.
@@ -691,7 +691,7 @@ public function main() returns error? {
 
 In Ballerina Integrator and Ballerina Workflows, the operations client surfaces as a clean list of operations:
 
-```
+```text
 Gmail Operations:
   - Send Email
   - List Messages
@@ -711,7 +711,7 @@ This is in contrast to the advanced client which would display 32 resource funct
 
 A connector module adopting this pattern will have the following structure:
 
-```
+```text
 ballerina/
   client.bal              # Existing full-API client (generated from OpenAPI)
   operations_client.bal   # New operations client with curated methods
@@ -730,7 +730,7 @@ a separate pipeline -- to generate the operations client.
 
 The updated workflow:
 
-```
+```text
 OpenAPI Spec
     |
     v
