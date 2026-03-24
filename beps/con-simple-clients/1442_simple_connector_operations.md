@@ -9,7 +9,7 @@
 - Created date
   - 2026-03-23
 - Updated date
-  - 2026-03-23
+  - 2026-03-24
 - Issue
   - [1442](https://github.com/ballerina-platform/ballerina-spec/issues/1442)
 - State
@@ -621,7 +621,7 @@ The AI agent in the generation workflow scores candidate operations on three axe
    advantage of the operations client over the advanced client: it encapsulates multi-step API workflows into a
    single, atomic remote method call, hiding the orchestration complexity from the user.
 
-5. **Minimal surface area** -- An operations client should expose only the 5-15 most commonly used operations as
+5. **Minimal surface area** -- An operations client should expose only the 3-15 most commonly used operations as
    defined by the [Operation Selection Criteria](#operation-selection-criteria). The full API remains accessible via
    `advanced()`.
 
@@ -629,7 +629,7 @@ The AI agent in the generation workflow scores candidate operations on three axe
    environments, consistent with existing Ballerina conventions.
 
 7. **Documentation** -- Each operation method should have comprehensive Ballerina doc comments explaining the purpose,
-   parameters, and return values in user-friendly, and low-code friendly language.
+   parameters, and return values in user-friendly and low-code-friendly language.
 
 ### Usage Examples
 
