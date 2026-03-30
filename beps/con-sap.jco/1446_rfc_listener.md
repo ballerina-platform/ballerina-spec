@@ -148,7 +148,7 @@ public type RfcService distinct service object {
     #                                 array values → table parameter list.
     #                  Returning nil sends an empty response (valid for fire-and-forget RFCs).
     #                  Returning Error causes an AbapException to be raised back to the SAP caller.
-    remote function onCall(string functionName, RfcParameters parameters) returns RfcRecord|xml|json|Error?;
+    remote function onCall(string functionName, RfcParameters parameters) returns RfcRecord|xml|json|error?;
 
     # Invoked when a server-level error or gateway connectivity problem occurs.
     # + 'error - The error.
@@ -236,13 +236,13 @@ service jco:RfcService on rfcListener {
 
     // SAP calls ZBAPI_PRICE_CHECK → Ballerina handles it here
     remote function onCall(string functionName, jco:RfcParameters parameters)
-            returns jco:RfcRecord|jco:Error? {
+            returns jco:RfcRecord|error? {
         if functionName == "ZBAPI_PRICE_CHECK" {
             decimal price = check self.calculatePrice(parameters);
             // Scalar fields → export parameter list; arrays → table parameter list
             return {PRICE: price, CURRENCY: "USD"};
         }
-        return error jco:Error("Unsupported function: " + functionName);
+        return error("Unsupported function: " + functionName);
     }
 
     remote function onError(jco:Error 'error) returns error? {
@@ -251,7 +251,11 @@ service jco:RfcService on rfcListener {
 
     function calculatePrice(jco:RfcParameters params) returns decimal|error {
         // Access import params
-        string material = (params.importParameters["MATERIAL"] ?: "").toString();
+        RfcRecord? importParams = params.importParameters;
+        if (importParams == null) {
+            return error("Missing import parameters");
+        }
+        string material = check importParams["MATERIAL"].ensureType(); 
         // ... business logic ...
         return 99.95d;
     }
