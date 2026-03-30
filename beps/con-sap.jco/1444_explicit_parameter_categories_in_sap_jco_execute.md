@@ -131,12 +131,12 @@ isolated remote function execute(
 
 Key changes from the current signature:
 
-| Aspect                     | Before                                     | After                                           |
-|----------------------------|--------------------------------------------|-------------------------------------------------|
-| Input type                 | `record {                                  | FieldType?...;                                  |}` (flat, category-free) | `RfcParameters` (explicit sections) |
-| Input default              | No default — always required               | `= {}` — optional for parameter-free RFCs       |
-| Output typedesc constraint | `record {                                  | FieldType?...;                                  |}` | `RfcRecord` (named alias, same type) |
-| Output parameter name      | `exportParams` (misleading — omits tables) | `returnType` (accurate — export + table merged) |
+| Aspect                     | Before                                                | After                                           |
+|----------------------------|-------------------------------------------------------|-------------------------------------------------|
+| Input type                 | `record {\| FieldType?...; \|}` (flat, category-free) | `RfcParameters` (explicit sections)             |
+| Input default              | No default — always required                          | `= {}` — optional for parameter-free RFCs       |
+| Output typedesc constraint | `record {\| FieldType?...; \|}`                       | `RfcRecord` (named alias, same type)            |
+| Output parameter name      | `exportParams` (misleading — omits tables)            | `returnType` (accurate — export + table merged) |
 
 When `changingParameters` is eventually added to `RfcParameters`, callers using `parameters = {}` or `{importParameters: {...}}` need no change. Callers who need changing params add the new field.
 
