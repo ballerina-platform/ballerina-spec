@@ -3,9 +3,9 @@
 - Authors - @TharmiganK
 - Reviewed by - @daneshk @niveathika
 - Created date - 2026-03-30
-- Updated date - 2026-03-30
+- Updated date - 2026-04-16
 - Issue - [#1444](https://github.com/ballerina-platform/ballerina-spec/issues/1444)
-- State - Draft
+- State - Submitted
 
 ## Summary
 
@@ -115,15 +115,13 @@ public type RfcParameters record {|
 # + parameters   - Input parameters organized by category. Import parameters are scalar/structure
 #                  values; table parameters are named tables containing rows of data.
 #                  Defaults to an empty parameter set (valid for parameter-free RFCs).
-# + returnType   - Typedesc for the expected response. The response record is populated from
-#                  both the SAP export parameter list and the table parameter list. Fields are
-#                  matched by name; unknown fields are skipped unless the record type allows
-#                  rest fields.
-# + return       - The RFC response cast to returnType, or an Error.
+# + returnType   - Expected response type. The response is populated from both the SAP export
+#                  parameter list and the table parameter list.
+# + return       - The RFC response, or an error on failure.
 isolated remote function execute(
     string functionName,
     RfcParameters parameters = {},
-    typedesc<RfcRecord|xml|json?> returnType = <>
+    typedesc<RfcRecord|xml> returnType = <>
 ) returns returnType|Error = @java:Method {
     'class: "io.ballerina.lib.sap.Client"
 } external;
@@ -131,12 +129,12 @@ isolated remote function execute(
 
 Key changes from the current signature:
 
-| Aspect                     | Before                                                | After                                           |
-|----------------------------|-------------------------------------------------------|-------------------------------------------------|
-| Input type                 | `record {\| FieldType?...; \|}` (flat, category-free) | `RfcParameters` (explicit sections)             |
-| Input default              | No default — always required                          | `= {}` — optional for parameter-free RFCs       |
-| Output typedesc constraint | `record {\| FieldType?...; \|}`                       | `RfcRecord` (named alias, same type)            |
-| Output parameter name      | `exportParams` (misleading — omits tables)            | `returnType` (accurate — export + table merged) |
+| Aspect                     | Before                                                | After                                            |
+|----------------------------|-------------------------------------------------------|--------------------------------------------------|
+| Input type                 | `record {\| FieldType?...; \|}` (flat, category-free) | `RfcParameters` (explicit sections)              |
+| Input default              | No default — always required                          | `= {}` — optional for parameter-free RFCs        |
+| Output typedesc constraint | `record {\| FieldType?...; \|}\|xml\|json?`           | `RfcRecord\|xml` (json and nil removed)          |
+| Output parameter name      | `exportParams` (misleading — omits tables)            | `returnType` (accurate — export + table merged)  |
 
 When `changingParameters` is eventually added to `RfcParameters`, callers using `parameters = {}` or `{importParameters: {...}}` need no change. Callers who need changing params add the new field.
 
@@ -209,13 +207,15 @@ type PingResponse record {| string ECHOTEXT; string RESPTEXT; |};
 PingResponse result = check sapClient->execute("STFC_CONNECTION", returnType = PingResponse);
 ```
 
-#### XML/JSON output (unchanged behavior, now includes table data)
+#### XML output (unchanged behavior, now includes table data)
 
 ```ballerina
 xml response = check sapClient->execute("RFC_READ_TABLE", {
     importParameters: {"QUERY_TABLE": "MARA"}
 });
 ```
+
+JSON is not supported as a return type — `RfcRecord` provides typed field access via dot notation, which is strictly better for data originating from JCo's typed parameter lists. If JSON output is needed, convert the `RfcRecord` to JSON after retrieval.
 
 ---
 
