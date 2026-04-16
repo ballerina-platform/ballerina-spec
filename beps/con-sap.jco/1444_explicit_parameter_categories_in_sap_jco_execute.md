@@ -9,7 +9,7 @@
 
 ## Summary
 
-Redesign the `execute()` method to explicitly model all four SAP RFC parameter categories — **import**, **export**, **table**, and **changing** — rather than merging them into a single flat input/output record. The immediate deliverable adds table parameter support. The design is forward-compatible so that changing parameter support can be added later without any API change.
+Redesign the `execute()` method so that input parameters are explicitly categorized by SAP RFC type — **import**, **table**, and (in a future update) **changing** — rather than being merged into a single flat input record. The method intentionally returns a single flat merged output record combining export and table results. The immediate deliverable adds table parameter support. The design is forward-compatible so that changing parameter support can be added later without any API change.
 
 ## Motivation
 
@@ -104,7 +104,7 @@ public type RfcParameters record {|
 
 `RfcRecord` replaces the anonymous `record {|FieldType?...;|}` pattern across the public API, making documentation and type references cleaner without any semantic change.
 
-`map<RfcRecord[]>` for `tableParameters` is the most readable representation of a named mapping from SAP table parameter names to rows. It is equivalent to Ballerina's `record {|RfcRecord[]...;|}` but more idiomatic as a top-level type declaration.
+`map<RfcRecord[]>` for `tableParameters` is a readable representation of a named mapping from SAP table parameter names to rows. It is equally idiomatic and more explicit as a top-level type for `tableParameters`, while `record {|RfcRecord[]...;|}` is also a valid alternative.
 
 #### Updated `execute()` signature (`client.bal`)
 
