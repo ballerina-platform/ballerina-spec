@@ -9,7 +9,7 @@
 - Created date
   - 2026-03-23
 - Updated date
-  - 2026-03-24
+  - 2026-05-27
 - Issue
   - [1442](https://github.com/ballerina-platform/ballerina-spec/issues/1442)
 - State
@@ -17,29 +17,28 @@
 
 ## Summary
 
-This proposal introduces a simplified connector client pattern for Ballerina connectors, alongside a mechanism to
-annotate curated, high-level remote methods for tooling discoverability. The goal is to reduce the cognitive load of
-working with connectors that expose tens to hundreds of auto-generated resource functions, by providing a separate
-operation client with a small set of well-known, commonly-used operations. This pattern directly improves the
-experience in low-code environments (Ballerina Integrator), Ballerina Workflows, and even the traditional code-first
-development.
+This proposal introduces a `Connector` client pattern for Ballerina connectors, alongside a mechanism to annotate
+curated, high-level remote methods for tooling discoverability. The goal is to reduce the cognitive load of working
+with connectors that expose tens to hundreds of auto-generated resource functions, by providing a separate `Connector`
+class with a small set of well-known, commonly-used operations. This pattern directly improves the experience in
+low-code environments (WSO2 Integrator), Ballerina Workflows, and even the traditional code-first development.
 
 ## Motivation
 
-Ballerina currently has approximately 500 connectors, most of which are generated from OpenAPI specifications using the
-Ballerina OpenAPI tool. For each resource defined in the OpenAPI specification, a corresponding Ballerina resource
-(or remote) function is generated in the connector client. While this approach provides comprehensive API coverage, it
+Ballerina currently has approximately 500+ connectors, most of which are generated from OpenAPI specifications using the
+Ballerina OpenAPI tool. For each resource defined in the OpenAPI specification, a corresponding Ballerina `resource`
+(or `remote`) function is generated in the connector client. While this approach provides comprehensive API coverage, it
 introduces significant complexity:
 
 1. **Discoverability** -- Connector clients expose 10-100+ resource functions. Developers must sift through all of them
    to find the operation they need. For example, the Gmail connector exposes 32 resource functions with verbose paths
-   like `/users/[userId]/messages/[id]/modify`, while most users only need a handful of operations such as send, list,
-   read, and reply.
+   like `/users/[userId]/messages/[id]/modify`, while most users only need a handful of operations such as `send`, `list`,
+   `read`, and `reply`.
 
-2. **Low-code experience** -- In Ballerina Integrator, the visual designer presents all resource functions in a flat
-   list. Resource function signatures with embedded path segments (e.g.,
-   `users/[string userId]/messages/[string id]/trash`) render poorly in graphical environments and are difficult to
-   scan or search.
+2. **Low-code experience** -- In WSO2 Integrator, the visual designer presents all resource functions in a flat
+   list. Resource function signatures with embedded path segments
+   (e.g., `users/[string userId]/messages/[string id]/trash`) render poorly in graphical environments and are difficult
+   to scan or search.
 
 3. **Workflow integration** -- Ballerina Workflows require atomic, well-defined operations. A curated set of operations
    with clear names and simplified parameters is far more suitable for workflow steps than raw API endpoints.
@@ -50,57 +49,45 @@ introduces significant complexity:
 5. **AI and tooling** -- AI assistants and IDE tooling perform better when the operation surface is small and
    semantically clear, rather than a flat list of REST-style resource paths.
 
-### How Other Integration Platforms Solve This
+### Common Patterns in Integration Platforms
 
 Leading integration platforms address this problem by curating a finite set of named operations for each connector,
-rather than exposing the full underlying API surface.
+rather than exposing the full underlying API surface. Four recurring patterns have emerged across the industry:
 
-#### MuleSoft (Anypoint Connectors)
+#### Annotation-Based Curated Operations
 
-MuleSoft uses the term **Operations** for outbound actions and **Sources** for inbound/event-driven endpoints.
-Connector developers explicitly define each operation as a Java method registered via the `@Operations` annotation on
-a configuration class. Each operation can carry metadata annotations such as `@DisplayName`, `@Summary`, `@Alias`, and
-`@Throws` to control how it appears in Anypoint Studio.
+Some platforms use **Operations** for outbound actions and **Sources** for inbound/event-driven endpoints. Connector
+developers explicitly define each operation as a Java method registered via a dedicated annotation on a configuration
+class. Each operation can carry metadata annotations to control how it appears in the designer (display name, summary,
+alias, error types, etc.).
 
 Operations are not auto-generated from the full API -- the connector developer curates which API endpoints become
 operations, providing user-friendly names and simplified parameter sets.
 
-- [MuleSoft Operations SDK](https://docs.mulesoft.com/mule-sdk/latest/operations)
-- [MuleSoft Sources SDK](https://docs.mulesoft.com/mule-sdk/latest/sources)
-- [MuleSoft Module Structure](https://docs.mulesoft.com/mule-sdk/latest/getting-started)
+#### Declarative Hash-Structure Actions
 
-#### Workato (Connector SDK)
-
-Workato uses the terms **Actions** (outbound operations) and **Triggers** (inbound events). Each action is defined
-as a structured block with explicit metadata fields: `title`, `subtitle`, `description`, `help`, `input_fields`,
-`output_fields`, `execute`, and `sample_output`. Actions are typically named following a verb-noun pattern
+Some platforms use the terms **Actions** (outbound operations) and **Triggers** (inbound events). Each action is
+defined as a structured block with explicit metadata fields: title, subtitle, description, help text, input fields,
+output fields, execute logic, and sample output. Actions are typically named following a verb-noun pattern
 (e.g., "Create record", "Search records", "Update record").
 
 Connector authors hand-craft which operations to expose, with user-friendly labels, help text, and pick lists.
 There is no automatic import of an entire API surface.
 
-- [Workato Connector SDK](https://docs.workato.com/developing-connectors/sdk.html)
-- [Workato Actions Reference](https://docs.workato.com/developing-connectors/sdk/cli/reference/actions.html)
-- [Workato Triggers Reference](https://docs.workato.com/developing-connectors/sdk/cli/reference/triggers.html)
+#### Fixed Standard Action Verbs
 
-#### Boomi (AtomSphere)
-
-Boomi uses the term **Connector Operation** paired with a standardized **Action** type. Each connector supports a
-subset of a fixed set of action verbs: **Get**, **Send**, **Query**, **Create**, **Update**, **Upsert**, **Delete**,
-and **Execute**. The connector developer implements which of these standard actions are available, constraining the
-operation surface to a predictable, uniform set across all connectors.
+Some platforms use the term **Connector Operation** paired with a standardized **Action** type. Each connector
+supports a subset of a fixed set of action verbs: **Get**, **Send**, **Query**, **Create**, **Update**, **Upsert**,
+**Delete**, and **Execute**. The connector developer implements which of these standard actions are available,
+constraining the operation surface to a predictable, uniform set across all connectors.
 
 Object types are typically discovered dynamically via "Browse" functionality where the user selects an object type
 (e.g., "Account", "Contact") and the connector auto-generates the profile/schema.
 
-- [Boomi Connectors Overview](https://help.boomi.com/docs/atomsphere/integration/connectors/c-atm-connectors_bb305b35-0b8b-4e5b-82e5-3e05011b1557)
-- [Boomi Connector Operations](https://help.boomi.com/docs/atomsphere/integration/connectors/c-atm-connector_operations_e767ada2-537e-4710-9498-06ac6b6e08e7)
+#### Visibility-Based Filtering
 
-#### Microsoft Power Automate (Custom Connectors)
-
-Power Automate uses **Actions** (outbound operations) and **Triggers** (inbound events). Connectors are defined using
-OpenAPI 2.0 specifications. Each action has metadata including `Summary`, `Description`, `Operation ID`, and notably a
-`Visibility` property that controls how the action appears in the designer:
+Some platforms use **Actions** (outbound operations) and **Triggers** (inbound events) defined using OpenAPI
+specifications. Each action has a `Visibility` property that controls how it appears in the designer:
 
 - `important` -- always shown first to the user
 - `none` -- displayed normally
@@ -110,16 +97,13 @@ OpenAPI 2.0 specifications. Each action has metadata including `Summary`, `Descr
 This visibility-based curation mechanism lets connector authors prioritize common operations while still exposing the
 full API surface for advanced users.
 
-- [Power Automate - Create from Blank](https://learn.microsoft.com/en-us/connectors/custom-connectors/define-blank)
-- [Power Automate - Create from OpenAPI](https://learn.microsoft.com/en-us/connectors/custom-connectors/define-openapi-definition)
-
 #### Summary of Industry Approaches
 
-| Aspect                  | MuleSoft                   | Workato                   | Boomi                        | Power Automate      |
+| Aspect                  | Annotation-based           | Declarative hash          | Fixed verb set               | Visibility-based    |
 | ----------------------- | -------------------------- | ------------------------- | ---------------------------- | ------------------- |
 | **Outbound ops term**   | Operations                 | Actions                   | Connector Operations         | Actions             |
 | **Inbound/event term**  | Sources                    | Triggers                  | Scheduled processes          | Triggers            |
-| **Definition approach** | Java annotations           | Ruby hash structure       | Standard action verbs        | OpenAPI + wizard UI |
+| **Definition approach** | Java annotations           | Structured hash/block     | Standard action verbs        | OpenAPI + wizard UI |
 | **Curation mechanism**  | Developer codes operations | Developer defines actions | Fixed verb set per connector | Visibility property |
 | **Metadata**            | `@DisplayName`, `@Summary` | `title:`, `description:`  | Action type enum             | Summary, Visibility |
 
@@ -131,15 +115,15 @@ full API surface for advanced users.
   and low-code environments to filter and prioritize them.
 - Ensure backward compatibility -- existing connectors and their full-API clients remain unchanged and available for
   advanced use cases.
-- Enable AI-driven automated generation of operation clients as an additional step in the existing connector generation
+- Enable AI-driven automated generation of connector clients as an additional step in the existing connector generation
   workflow.
 
 ## Non-Goals
 
 - Replacing or deprecating the existing OpenAPI-generated clients. The full client remains the "advanced" client for
   users who need complete API access.
-- Defining a fixed set of standard operation verbs (unlike Boomi). Operation names are connector-specific and chosen by
-  the connector author to best represent the service's domain.
+- Defining a fixed set of standard operation verbs (as some platforms mandate). Operation names are connector-specific
+  and chosen by the connector author to best represent the service's domain.
 - Introducing triggers or event sources as part of this proposal. This proposal focuses solely on outbound operations.
 
 ## Design
@@ -148,16 +132,16 @@ full API surface for advanced users.
 
 The simple connector operations pattern consists of three parts:
 
-1. **Operations Client** -- A new client class (e.g., `gmail:Operations`) that exposes a curated set of remote methods
+1. **Connector** -- A new client class (e.g., `gmail:Connector`) that exposes a curated set of remote methods
    representing the most commonly used operations.
 2. **Operation Annotation** -- An annotation mechanism applied to each curated remote method, enabling tooling to
    discover and filter operations from regular methods.
-3. **Advanced Client Access** -- The operations client provides an `advanced()` method that returns the underlying
-   full-API client for advanced use cases.
+3. **Underlying Client Access** -- The `Connector` provides a `getClient()` method that returns the underlying
+   full-API `Client` for advanced use cases.
 
 ### Why a Separate Client? (Two-Client Approach)
 
-The decision to introduce a _separate_ operations client alongside the existing generated client is deliberate and
+The decision to introduce a _separate_ `Connector` class alongside the existing generated `Client` is deliberate and
 addresses two fundamental issues that simpler approaches cannot solve. See the [Alternatives](#alternatives) section
 for the rejected approaches and detailed reasoning.
 
@@ -166,15 +150,15 @@ In summary, the two-client approach is chosen because:
 - **Preserves remote-ness** -- Operations are `remote` methods on a client object, maintaining Ballerina's core
   philosophy that network calls are always visible in the code and in diagrams.
 - **Isolates generated code from hand-crafted code** -- The existing `Client` is auto-generated from OpenAPI specs and
-  can be regenerated without risk of overwriting curated operations. The operations client lives in a separate file and
-  is maintained independently.
+  can be regenerated without risk of overwriting curated operations. The `Connector` lives in a separate file and is
+  maintained independently.
 - **Clean separation for tooling** -- The Language Server and other tools do not need special logic to differentiate
-  curated operations from raw API methods. All methods on the operations client are curated; all methods on the
-  advanced client are generated.
+  curated operations from raw API methods. All remote methods on the `Connector` are curated; all methods on the
+  `Client` are generated.
 
 ### Annotating Operations
 
-Curated remote methods on the operations client need to be annotated so that tooling (Ballerina Integrator, Workflows,
+Curated remote methods on the `Connector` need to be annotated so that tooling (WSO2 Integrator, Workflows,
 IDEs, AI assistants) can programmatically identify and surface them. Two approaches were evaluated for this.
 
 #### Approach 1: Extend the `@display` Annotation
@@ -280,8 +264,8 @@ comment.
 - Simple marker annotation (like `@deprecated`) -- no fields to configure, no room for misuse.
 - Naturally extensible: future annotations like `@Trigger` can follow the same pattern without overloading a single
   annotation.
-- Industry alignment: MuleSoft uses `@Operations`, Boomi uses "Connector Operation". The term is well understood in
-  the integration domain.
+- Industry alignment: "Operation" is a well-established term in the integration domain, widely used across integration
+  platforms.
 
 **Disadvantages:**
 
@@ -310,42 +294,43 @@ annotation)** for the following reasons:
 4. **Industry clarity** -- "Operation" is an unambiguous term in the integration domain. It works naturally in UI
    contexts: "Select an operation", "Available operations", "Gmail operations".
 
-### Operations Client Pattern
+### Connector Pattern
 
 Each connector that adopts this pattern provides two client classes:
 
 1. **`Client`** (existing) -- The full-API client generated from the OpenAPI specification. This uses resource functions
    and provides complete coverage of the underlying API.
-2. **`Operations`** (new) -- The simplified client with curated remote methods, each annotated with `@operation`.
+2. **`Connector`** (new) -- The primary interface with curated remote methods, each annotated with `@operation`.
 
-#### Client Structure
+#### Class Structure
 
 ```ballerina
-public isolated client class Operations {
-    private final Client advancedClient;
+public isolated client class Connector {
+    private final Client baseClient;
 
-    # Initializes the operations client.
+    # Initializes the connector.
     #
     # + config - Authentication configuration
     public isolated function init(*AuthConfig config) returns error? {
-        self.advancedClient = check new ({auth: {...config}});
+        self.baseClient = check new ({auth: {...config}});
     }
 
-    # Returns the advanced client for uncommon or complex use cases.
+    # Returns the underlying full-API client for uncommon or complex use cases.
     #
-    # Use this when you need access to the full API surface that is not covered
-    # by the curated operations.
+    # Use this when you need access to API operations not covered by the curated
+    # operations on this Connector.
     #
     # + return - The underlying full-API client
-    @display {label: "Advanced Client"}
-    public isolated function advanced() returns Client {
-        return self.advancedClient;
+    @display {label: "Get Client"}
+    public isolated function getClient() returns Client {
+        return self.baseClient;
     }
 
     # Sends an email message.
     #
     # Use this function to send plain text or HTML emails, with optional CC, BCC, and file attachments.
     # The sender is automatically determined by the authenticated Google account.
+    # --- Parameter and Return type docs are omitted for simplicity ---
     @operation
     @display {label: "Send Email"}
     isolated remote function send(
@@ -358,7 +343,7 @@ public isolated client class Operations {
             @display {label: "HTML Body"}
             string? htmlBody = ()
     ) returns Message|error {
-        // Implementation delegates to self.advancedClient
+        // Implementation delegates to self.baseClient
     }
 
     // ... other curated operations
@@ -367,12 +352,12 @@ public isolated client class Operations {
 
 ### Simplified Configuration
 
-A key benefit of the operations client is a drastically simplified configuration. The existing generated `Client`
+A key benefit of the `Connector` is a drastically simplified configuration. The existing generated `Client`
 typically accepts a `ConnectionConfig` record that exposes the full HTTP client configuration surface -- often 15+
 fields covering HTTP versions, compression, circuit breakers, retry policies, proxy settings, and more. Most users
 never need to configure these.
 
-The operations client accepts only the fields that are absolutely required for authentication and connection:
+The `Connector` accepts only the fields that are absolutely required for authentication and connection:
 
 ```ballerina
 // Full ConnectionConfig for the advanced Client -- 15+ fields
@@ -399,7 +384,7 @@ public type ConnectionConfig record {|
     boolean laxDataBinding = true;
 |};
 
-// Simplified AuthConfig for the Operations client -- only essential fields
+// Simplified AuthConfig for the Connector -- only essential fields; can varyy depending on the connector
 @display {label: "Auth Config"}
 public type AuthConfig record {|
     @display {label: "Client ID"}
@@ -411,12 +396,12 @@ public type AuthConfig record {|
 |};
 ```
 
-The operations client constructs the full `ConnectionConfig` internally from the simplified config, using sensible
-defaults for all other fields. The `advanced()` method returns this internally created `Client` instance -- it does
-not allow reconfiguring the connection parameters after initialization. Users who need to customize HTTP-level settings
-(e.g., timeouts, circuit breakers, proxy configuration) should create a separate `Client` instance directly with the
-full `ConnectionConfig`. The `advanced()` method is intended for accessing API operations not covered by the curated
-set, not for reconfiguring the underlying connection.
+The `Connector` constructs the full `ConnectionConfig` internally from the simplified config, using sensible defaults
+for all other fields. The `getClient()` method returns this internally created `Client` instance -- it does not allow
+reconfiguring the connection parameters after initialization. Users who need to customize HTTP-level settings (e.g.,
+timeouts, circuit breakers, proxy configuration) should create a separate `Client` instance directly with the full
+`ConnectionConfig`. The `getClient()` method is intended for accessing API operations not covered by the curated set,
+not for reconfiguring the underlying connection.
 
 This simplification extends to how the client appears in low-code environments: instead of a form with 15+ fields
 (most of which are irrelevant), the user sees only the 2-4 fields they actually need to fill in.
@@ -544,17 +529,17 @@ established alternative terminology that would be more recognizable to users of 
 
 ### Operation Selection Criteria
 
-Deciding which operations to include in an operations client is a deliberate curation process. The following criteria
+Deciding which operations to include in a `Connector` is a deliberate curation process. The following criteria
 guide the selection:
 
 #### Target Count
 
-An operations client SHOULD expose **3 to 15 operations**.
+A `Connector` SHOULD expose **3 to 15 operations**.
 
-- **Below 3** suggests the connector's API surface is already simple enough that an operations client adds little
-  value, or the curation is too aggressive. Consider whether the connector warrants an operations client at all.
+- **Below 3** suggests the connector's API surface is already simple enough that a `Connector` adds little value, or
+  the curation is too aggressive. Consider whether the connector warrants a `Connector` class at all.
 - **Above 15** dilutes the simplification benefit. If more than 15 operations are needed, consider whether some can
-  be served by the advanced client, or whether the connector should be split into multiple focused modules.
+  be served by the `Client`, or whether the connector should be split into multiple focused modules.
 
 #### Coverage Heuristic
 
@@ -564,10 +549,12 @@ Operations SHOULD cover at least **80% of typical use cases** for the connector'
    API overview pages are strong candidates.
 2. **Community usage patterns** -- Stack Overflow questions, GitHub issues, and forum discussions reveal which
    endpoints users interact with most.
-3. **CRUD coverage** -- The operations client MUST cover the basic create/read/update/delete lifecycle for the
-   connector's primary entity (e.g., messages for Gmail, records for Salesforce).
+3. **CRUD coverage** -- The `Connector` MUST cover the basic create/read/update/delete lifecycle for the connector's
+   primary entity (e.g., messages for Gmail, records for Salesforce).
 4. **Parameter complexity** -- Endpoints with deeply nested request bodies or complex query parameters are high-value
-   targets for simplification, as the operations client can flatten and default them.
+   targets for simplification, as the `Connector` can flatten and default them.
+
+> **Note:** In any case, coverage heuristic should take the precedence over the target count.
 
 #### AI-Assisted Scoring
 
@@ -596,7 +583,7 @@ The AI agent in the generation workflow scores candidate operations on three axe
    | 100+                                | 12-15 (cap)             |
 
    The ratio is intentionally sublinear: a connector with 100 resource methods should not expose 50 operations.
-   The purpose of the operations client is simplification, not proportional coverage. This is not a hard rule but a
+   The purpose of the `Connector` is simplification, not proportional coverage. This is not a hard rule but a
    generic guide on how to pick a number of operations.
 
 3. **Human review** -- The AI-generated candidate list is reviewed and finalized by a connector maintainer.
@@ -618,12 +605,12 @@ The AI agent in the generation workflow scores candidate operations on three axe
 4. **Composite operations** -- A single operation may orchestrate multiple underlying API calls to deliver a
    complete result. For example, the Gmail `list` operation first calls the messages list endpoint to retrieve
    message IDs, then calls the message get endpoint for each ID to return full message content. This is a key
-   advantage of the operations client over the advanced client: it encapsulates multi-step API workflows into a
-   single, atomic remote method call, hiding the orchestration complexity from the user.
+   advantage of the `Connector` over the `Client`: it encapsulates multi-step API workflows into a single, atomic
+   remote method call, hiding the orchestration complexity from the user.
 
-5. **Minimal surface area** -- An operations client should expose only the 3-15 most commonly used operations as
-   defined by the [Operation Selection Criteria](#operation-selection-criteria). The full API remains accessible via
-   `advanced()`.
+5. **Minimal surface area** -- A `Connector` should expose only the 3-15 most commonly used operations as defined by
+   the [Operation Selection Criteria](#operation-selection-criteria). The full API remains accessible via
+   `getClient()`.
 
 6. **`@display` annotations** -- All parameters should carry `@display` annotations for proper rendering in low-code
    environments, consistent with existing Ballerina conventions.
@@ -633,13 +620,13 @@ The AI agent in the generation workflow scores candidate operations on three axe
 
 ### Usage Examples
 
-#### Simple Usage (Operations Client)
+#### Simple Usage (Connector)
 
 ```ballerina
 import ballerinax/googleapis.gmail;
 
 public function main() returns error? {
-    gmail:Operations gmail = check new ({
+    gmail:Connector gmail = check new ({
         clientId: "...",
         clientSecret: "...",
         refreshToken: "..."
@@ -663,13 +650,13 @@ public function main() returns error? {
 }
 ```
 
-#### Advanced Usage (Advanced Client Fallback)
+#### Advanced Usage (Client Fallback)
 
 ```ballerina
 import ballerinax/googleapis.gmail;
 
 public function main() returns error? {
-    gmail:Operations gmail = check new ({
+    gmail:Connector gmail = check new ({
         clientId: "...",
         clientSecret: "...",
         refreshToken: "..."
@@ -678,8 +665,8 @@ public function main() returns error? {
     // Use curated operations for common tasks
     _ = check gmail->send(to = "user@example.com", subject = "Test", textBody = "Hello");
 
-    // Fall back to advanced client for uncommon operations
-    gmail:Client advanced = gmail.advanced();
+    // Fall back to the underlying Client for uncommon operations
+    gmail:Client advanced = gmail.getClient();
     gmail:ListLabelsResponse labels = check advanced->/users/me/labels();
     gmail:ListHistoryResponse history = check advanced->/users/me/history(
         queries = {startHistoryId: "12345"}
@@ -689,10 +676,10 @@ public function main() returns error? {
 
 #### Low-Code / Workflow Usage
 
-In Ballerina Integrator and Ballerina Workflows, the operations client surfaces as a clean list of operations:
+In WSO2 Integrator and Ballerina Workflows, the `Connector` surfaces as a clean list of operations:
 
 ```text
-Gmail Operations:
+Gmail Connector:
   - Send Email
   - List Messages
   - Read Message
@@ -705,7 +692,7 @@ Gmail Operations:
   - Get Attachment
 ```
 
-This is in contrast to the advanced client which would display 32 resource functions with complex path signatures.
+This is in contrast to the `Client` which would display 32 resource functions with complex path signatures.
 
 ### Connector Module Structure
 
@@ -713,20 +700,58 @@ A connector module adopting this pattern will have the following structure:
 
 ```text
 ballerina/
-  client.bal              # Existing full-API client (generated from OpenAPI)
-  operations_client.bal   # New operations client with curated methods
-  types.bal               # Shared types
+  client.bal     # Existing full-API client (generated from OpenAPI)
+  connector.bal  # New Connector with curated methods
+  types.bal      # Shared types
   ...
 ```
 
-Both clients share the same type definitions. The operations client delegates to the advanced client internally.
+Both classes share the same type definitions. The `Connector` delegates to the `Client` internally.
+
+> **Note:** Having a separate module for the `Connector` is considered and rejected because that will introduce
+> additional imports, qualifier mismatches, etc.
+
+### Connector Example Scenarios
+
+Each connector that adopts the `Connector` pattern MUST include at least **2 example scenarios** in the connector
+repository that demonstrate usage of the `Connector` client. These examples are in addition to — not a replacement
+for — any existing examples that showcase the full-API `Client`.
+
+#### Requirements
+
+1. **Minimum count** -- At least 2 example scenarios per connector MUST demonstrate the `Connector` client.
+
+2. **Distinct use cases** -- Each example MUST cover a meaningfully different scenario. Two examples that differ
+   only in which operation is called (e.g., `send` vs `list`) do not count as distinct. Scenarios should reflect
+   real-world integration workflows, such as:
+   - Sending a notification email when a record is created in Salesforce.
+   - Listing unread messages and replying to each one automatically.
+
+3. **Placement** -- Examples MUST live in the connector's `examples/` directory, following the existing structure of
+   the connector repository. Each scenario is a self-contained Ballerina project.
+
+4. **Coverage of `getClient()`** -- At least one of the 2 required examples SHOULD demonstrate the fallback to the
+   underlying `Client` via `getClient()` to show users how to access operations beyond the curated set.
+
+5. **Existing examples remain** -- Existing examples that use the full `Client` MUST NOT be removed or replaced.
+   The new `Connector` examples are additive.
+
+#### Example: Gmail Connector Scenarios
+
+```text
+examples/
+  send-email/           # Existing: demonstrates Client usage
+  list-messages/        # Existing: demonstrates Client usage
+  send-notification/    # New: Connector -- sends an alert email triggered by an event   [required]
+  process-inbox/        # New: Connector -- lists unread messages and replies to each    [required]
+```
 
 ### AI-Driven Operation Generation
 
 The existing connector generation workflow already includes an AI-driven pipeline that processes OpenAPI specifications
 to generate Ballerina connectors. This pipeline currently handles tasks such as type flattening, documentation
 generation, and code quality improvements. This proposal adds an **additional module** to that existing workflow -- not
-a separate pipeline -- to generate the operations client.
+a separate pipeline -- to generate the `Connector`.
 
 The updated workflow:
 
@@ -737,10 +762,10 @@ OpenAPI Spec
 [Existing AI Pipeline]
     |-- [OpenAPI Tool] --> Full Client (client.bal)
     |-- [AI Flattening & Docs] --> Improved types, documentation
-    |-- [AI Operations Module] --> Operations Client (operations_client.bal)   <-- NEW
+    |-- [AI Connector Module] --> Connector (connector.bal)   <-- NEW
 ```
 
-The AI operations module performs the following:
+The AI connector module performs the following:
 
 1. **Analyze the OpenAPI specification** -- Score each endpoint against the
    [Operation Selection Criteria](#operation-selection-criteria) to identify candidates.
@@ -748,28 +773,57 @@ The AI operations module performs the following:
 2. **Curate operations** -- Select 5-15 operations that cover the most common use cases, following the
    [Cross-Connector Operation Patterns](#cross-connector-operation-patterns) for the connector's domain.
 
-3. **Generate the operations client** -- Produce `operations_client.bal` with:
+3. **Generate the `Connector`** -- Produce `connector.bal` with:
    - Simplified remote methods with `@operation` and `@display` annotations
    - Flattened parameters with `@display` annotations
    - Simplified configuration record (authentication-only)
    - Comprehensive doc comments
-   - Delegation to the advanced client
+   - Delegation to the underlying `Client`
 
-4. **Human review** -- The generated operations client is reviewed by a connector maintainer before publishing.
+4. **Human review** -- The generated `Connector` is reviewed by a connector maintainer before publishing.
+
+### Handling OpenAPI Spec Updates
+
+When a vendor updates their OpenAPI specification, the pipeline regenerates `client.bal` automatically. Because
+`connector.bal` is a separate, hand-reviewed file, it is **not** automatically overwritten. However, changes to the
+underlying API can break the `Connector` at compile time -- for example, when an endpoint the `Connector` delegates
+to is removed, renamed, or has its signature changed.
+
+The pipeline handles this by running a compilation check on the full module after regenerating `client.bal`. If
+`connector.bal` fails to compile, the AI Connector Module is invoked to repair it. The repair follows this process:
+
+1. **Detect breakage** -- Compile the module post-regeneration. Compilation errors in `connector.bal` are the signal
+   that the `Connector` requires an update. The pipeline does not proceed to publish until these errors are resolved.
+
+2. **Classify each broken operation** -- The AI Connector Module inspects the diff between the old and new OpenAPI
+   spec to determine the cause of each failure:
+
+   | Change type                     | Action                                                                                                                       |
+   | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+   | Endpoint renamed or moved       | Update the delegation call to point to the new path; preserve the operation's public API.                                    |
+   | Endpoint signature changed      | Remap parameters to the new signature; keep the simplified surface intact where possible.                                    |
+   | Endpoint removed, no equivalent | Remove the operation from the `Connector`; flag for human review with a coverage warning.                                    |
+   | New high-value endpoint added   | Score against [Operation Selection Criteria](#operation-selection-criteria); propose adding a new operation if it qualifies. |
+
+3. **Human review** -- All AI-proposed changes are reviewed by a connector maintainer before publishing, identical
+   to the initial generation review. Removed operations that reduce coverage MUST be explicitly acknowledged.
+
+This approach ensures the `Connector` tracks breaking API changes promptly while keeping the human review gate
+between AI-generated changes and published connector versions.
 
 ### Rollout Strategy
 
-Operation clients will be introduced incrementally rather than all at once:
+`Connector` classes will be introduced incrementally rather than all at once:
 
-1. **Phase 1: High-impact connectors** -- Start with the most-downloaded connectors from Ballerina Central (e.g.,
-   Gmail, Slack, Salesforce, GitHub, Google Sheets, Twilio). These connectors have the largest user base and the
-   most to gain from simplification. Download counts from Ballerina Central are the primary signal for prioritization.
+1. **Phase 1: High-impact connectors** -- Start with the connectors with most importance, based on download count (from
+   Ballerina Central), industry relevance, and business impact. (e.g.: Gmail, Slack, Salesforce, HubSpot, etc.). These
+   connectors have the largest user base and the most to gain from simplification.
 
-2. **Phase 2: Expand based on demand** -- Add operations clients for connectors based on user requests, community
-   feedback, and download trends. Connectors with fewer than 10 resource functions may not need an operations client.
+2. **Phase 2: Expand based on demand** -- Add `Connector` classes for connectors based on user requests, community
+   feedback, and download trends. Connectors with fewer than 10 resource functions may not need a `Connector`.
 
 3. **Phase 3: Community-contributed operations** -- Establish a contribution process for community members to propose
-   and submit operations clients for connectors not yet covered.
+   and submit `Connector` classes for connectors not yet covered.
 
 This incremental approach allows the team to validate the pattern, refine the naming conventions, and iterate on
 tooling support before scaling to the full connector ecosystem.
@@ -840,12 +894,74 @@ The chosen two-client approach solves both problems:
 
 - Operations are `remote` methods on a proper `client class`, preserving Ballerina's remote-ness philosophy and
   diagram support.
-- The operations client lives in a separate file (`operations_client.bal`) from the generated client (`client.bal`),
-  so regeneration of the OpenAPI-based client never touches the curated operations.
+- The `Connector` lives in a separate file (`connector.bal`) from the generated `Client` (`client.bal`), so
+  regeneration of the OpenAPI-based client never touches the curated operations.
+
+### Class Naming Alternatives
+
+The class name for the simplified client was discussed extensively. The following alternatives were evaluated before
+settling on `Connector`.
+
+#### Initial Name: `Operations`
+
+The initial name was `Operations`, derived directly from the `@operation` annotation -- the class is a container for
+`@operation`-annotated methods.
+
+**Why reconsidered:**
+
+- `Operations` is a plural noun describing what the class _contains_, not what it _is_. This makes it grammatically
+  awkward as an instantiatable type: "I have an Operations" does not read naturally.
+- In code, `gmail:Operations gmail = check new ({...})` works, but in prose and documentation the name is stilted.
+
+#### `SimpleClient`
+
+A straightforward compound name: the "simple" version of `Client`.
+
+**Why not chosen:**
+
+- "Simple" conveys ease of use but not primary-ness -- it implies this is a reduced or stripped-down `Client`,
+  rather than the primary interface to the connector.
+- Does not change the user's mental model: they would still think of `Client` as the main thing and `SimpleClient`
+  as the convenience wrapper.
+
+#### `EssentialClient`, `CuratedClient`, `StandardClient`
+
+Variants that describe the _nature_ of the operations (essential, curated, standard).
+
+**Why not chosen:**
+
+- "Essential" and "curated" are accurate but feel editorial or jargon-y from a developer's perspective.
+- "Standard" is neutral but ambiguous -- it can mean "baseline" or "the default", which may imply the `Client` is
+  non-standard rather than just more advanced.
+- None of these convey that this class is the _primary_ entry point to the connector.
+
+#### `Connector` (Chosen)
+
+`Connector` is the term the Ballerina ecosystem already uses when referring to these packages. Even documentation lists
+connector packages as "connectors", and developers naturally say "I'm using the Gmail connector" when writing
+integration code.
+
+**Why chosen:**
+
+- The mental model flip: `Connector` is the primary, integration-level interface that users interact with day-to-day.
+  The `Client` becomes the underlying HTTP/generated layer -- the implementation detail that most users never need to
+  touch directly.
+- In code, `gmail:Connector` vs `gmail:Client` establishes an intuitive contrast: the `Connector` is the friendly
+  entry point; the `Client` is the generated machinery underneath.
+- Aligns with how Ballerina Central and the broader ecosystem already describe these packages.
+
+**Addressing the terminology overlap:**
+
+The concern is that "connector" at the ecosystem/documentation level refers to the whole module (e.g., "the Gmail
+connector package"), and having a class called `Connector` inside that module may seem circular. However, this is the
+same structure that already exists with `Client`: the Gmail connector package contains a class called `Client`, and
+nobody is confused by `gmail:Client`. The qualified form `module:Type` is always unambiguous in Ballerina code. The
+circularity is more apparent than real -- `gmail:Connector` reads as "the primary interface of the Gmail connector",
+which is precisely what it is.
 
 ### Annotation Alternatives
 
-#### Alternative 3: Visibility-Based Filtering (Power Automate Approach)
+#### Alternative 3: Visibility-Based Filtering
 
 Instead of a separate client, mark existing resource functions with visibility levels (e.g., `important`, `advanced`,
 `internal`) and let tooling filter the display.
@@ -858,7 +974,7 @@ Instead of a separate client, mark existing resource functions with visibility l
   environments regardless of visibility.
 - Does not provide a clean, intent-based API for workflows.
 
-#### Alternative 4: Standardized Action Verbs (Boomi Approach)
+#### Alternative 4: Standardized Action Verbs
 
 Define a fixed set of standard operation types (Get, Send, Create, Update, Delete) that all connectors must implement.
 
@@ -871,14 +987,15 @@ Define a fixed set of standard operation types (Get, Send, Create, Update, Delet
 
 #### Alternative 5: Using `@action` Instead of `@operation`
 
-Use `@action` as the annotation name, aligning with Workato and Power Automate terminology.
+Use `@action` as the annotation name, following some integration platforms that use "Actions" as their terminology for
+outbound connector operations.
 
 **Why rejected:**
 
 - Ballerina's language specification already uses "action" to refer to remote method call expressions and resource
   access expressions (e.g., `client->method()` is an "action expression"). Using `@action` as an annotation would
   create terminology confusion between the language-level concept and the connector-level concept.
-- "Operation" is unambiguous in the Ballerina context and aligns with MuleSoft and Boomi.
+- "Operation" is unambiguous in the Ballerina context and is well-established in the integration domain.
 
 #### Alternative 6: Extending `@display` with a `role` Field
 
@@ -895,27 +1012,30 @@ See the [Annotating Operations](#annotating-operations) section for a detailed e
 
 ## Testing
 
-- **Unit tests** -- Each operations client method should have unit tests verifying correct delegation to the advanced
-  client, parameter mapping, and error handling. Each operation should be testable against both the actual endpoint
+- **Unit tests** -- Each `Connector` method should have unit tests verifying correct delegation to the underlying
+  `Client`, parameter mapping, and error handling. Each operation should be testable against both the actual endpoint
   and a mock server.
-- **Low-code rendering tests** -- Verify that operations clients render correctly in Ballerina Integrator's visual
+- **Low-code rendering tests** -- Verify that `Connector` classes render correctly in WSO2 Integrator's visual
   designer, including proper display labels, parameter forms, and operation selection lists.
-- **Backward compatibility tests** -- The existing connector tests should remain intact for testing the
-  advanced client.
+- **Backward compatibility tests** -- The existing connector tests should remain intact for testing the `Client`.
 
 ## Risks and Assumptions
 
-- **Curation subjectivity** -- Deciding which operations to include in the simplified client is inherently subjective.
+- **Curation subjectivity** -- Deciding which operations to include in the `Connector` is inherently subjective.
   Different users may have different expectations of what constitutes a "common" operation. This is mitigated by:
   - Starting with well-known, high-traffic connectors (Gmail, Slack, Salesforce, etc.) where common operations are
     well-established.
   - Using AI-driven analysis of API documentation and usage patterns to inform curation decisions.
-  - Allowing the advanced client as a fallback for any operation not in the curated set.
+  - Allowing the `Client` as a fallback for any operation not in the curated set.
 
-- **Maintenance overhead** -- Each connector now has two clients to maintain. This is mitigated by:
-  - The operations client delegates to the advanced client, so underlying API changes only need to be reflected in the
-    generated advanced client.
-  - AI-assisted generation reduces the manual effort of creating and updating operations clients.
+- **Maintenance overhead** -- Each connector now has two client classes to maintain. Vendor OpenAPI spec updates that
+  remove or rename endpoints can break `connector.bal` even though only `client.bal` is regenerated. This is mitigated
+  by:
+  - The pipeline detects `Connector` breakage via a post-regeneration compilation check and invokes the AI Connector
+    Module to repair affected operations automatically. See
+    [Handling OpenAPI Spec Updates](#handling-openapi-spec-updates) for the full repair process.
+  - Operations that have no equivalent in the updated API are flagged for human review rather than silently removed.
+  - AI-assisted generation and repair reduces the manual effort of creating and updating `Connector` classes.
 
 - **Naming consistency** -- Operation names and parameter names should be consistent across connectors for similar
   functionality (e.g., `send` for email/message sending, `list` for enumeration). The
@@ -923,22 +1043,21 @@ See the [Annotating Operations](#annotating-operations) section for a detailed e
   [Cross-Connector Operation Patterns](#cross-connector-operation-patterns) sections establish guidelines to be
   enforced during review.
 
-- **Annotation adoption** -- The operation annotation (whether `@operation` or `@display` with `role`) should be
-  handled in the tooling including the Language Server.
+- **Annotation adoption** -- The operation annotation should be handled in the tooling including the Language Server.
 
 ## Dependencies
 
-- **`ballerina/lang.annotations`** -- Either a new `@operation` annotation will be added, or the existing `@display`
-  annotation will be extended with a `role` field. Both options require a platform release.
+- **`ballerina/lang.annotations`** -- The new `@operation` annotation will be added which will require a platform release.
 - **Existing AI-based connector generation workflow** -- The current pipeline already handles OpenAPI-to-Ballerina
-  generation, type flattening, and documentation improvements. This proposal adds an operations client generation
-  module to that existing workflow.
-- **Ballerina Integrator** -- The low-code designer needs to be updated to recognize operation-annotated methods
+  generation, type flattening, and documentation improvements. This proposal adds a `Connector ` generation module to
+  that existing workflow.
+- **WSO2 Integrator** -- The low-code designer needs to be updated to recognize operation-annotated methods
   and surface them prominently.
 - **Ballerina Workflows** -- The workflow runtime needs to support operation-annotated methods as workflow steps.
-- **Ballerina Central** -- The operations client (`Operations`) should be displayed with **primary priority** on
-  connector pages and search results. The advanced client (`Client`) should remain accessible but presented as a
-  secondary option for advanced use cases. This ensures new users discover the simplified experience first.
+- **Ballerina Central** -- The `Connector` class should be displayed with **primary priority** on connector pages
+  and search results. The `Client` should remain accessible but presented as a secondary option for advanced use
+  cases. This ensures new users discover the simplified experience first. Same should be applied to the WSO2 Integrator
+  connector store.
 
 ## Future Work
 
@@ -949,19 +1068,16 @@ See the [Annotating Operations](#annotating-operations) section for a detailed e
   straightforward and requires separate analysis.
 - **Operation categories** -- Introduce optional categorization of operations (e.g., "Messaging", "Management",
   "Analytics") for connectors with more than ~15 operations, to support grouping in UI.
-- **Connector quality scoring** -- Develop metrics for operations client quality, such as coverage of common use cases,
+- **Connector quality scoring** -- Develop metrics for `Connector` quality, such as coverage of common use cases,
   parameter simplicity, and documentation completeness.
 - **Auto-generation improvements** -- Evolve the AI agent to learn from user feedback and usage analytics, improving
   operation curation over time.
 
 ## References
 
-- [Ballerina Integrator Documentation](https://bi.docs.wso2.com/)
+- [WSO2 Integrator Documentation](https://wso2.com/integration-platform/docs/guides/overview)
 - [Ballerina Workflows](https://central.ballerina.io/ballerina/workflow/latest)
-- [MuleSoft Operations SDK](https://docs.mulesoft.com/mule-sdk/latest/operations)
-- [Workato Connector SDK](https://docs.workato.com/developing-connectors/sdk.html)
-- [Boomi Connector Operations](https://help.boomi.com/docs/atomsphere/integration/connectors/c-atm-connector_operations_e767ada2-537e-4710-9498-06ac6b6e08e7)
-- [Power Automate Custom Connectors](https://learn.microsoft.com/en-us/connectors/custom-connectors/define-blank)
-- [Gmail Connector - Operations Client (Reference Implementation)](https://github.com/ballerina-platform/module-ballerinax-googleapis.gmail)
+- [Ballerina Library Documentation](https://github.com/ballerina-platform/ballerina-library/tree/main/docs)
+- [Gmail Connector - Connector (Reference Implementation)](https://github.com/ballerina-platform/module-ballerinax-googleapis.gmail)
 
 []: # Please add any comments to issue [#1442](https://github.com/ballerina-platform/ballerina-spec/issues/1442)
