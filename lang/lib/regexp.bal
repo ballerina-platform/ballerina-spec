@@ -144,7 +144,7 @@ public isolated function replace(RegExp re, string str, Replacement replacement,
 public isolated function replaceAll(RegExp re, string str, Replacement replacement, int startIndex = 0) returns string = external;
 
 # Splits a string into substrings separated by matches of a regular expression.
-# This finds the the non-overlapping matches of a regular expression and
+# This finds the non-overlapping matches of a regular expression and
 # returns a list of substrings of `str` that occur before the first match,
 # between matches, or after the last match.  If there are no matches, then
 # `[str]` will be returned.
