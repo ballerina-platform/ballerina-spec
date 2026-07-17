@@ -142,7 +142,7 @@ Design notes:
 - The return type follows the established Ballerina idiom of dependently-typed stream-returning client methods (e.g., `sql:Client->query()` returning `stream<rowType, sql:Error?>`).
 - Each `next` event payload is data-bound to `targetType` using the same rules the `query()` method uses for a single response. A payload that fails to bind terminates the stream with a `graphql:PayloadBindingError`.
 - The user can provide the operation ID via the `id` parameter (useful for tracing and debugging); otherwise, the client generates a UUID. The client validates the uniqueness of a user-provided ID against the active subscriptions locally and returns a `graphql:SubscriptionError` on a duplicate, since sending a duplicate ID would cause the server to close the entire connection (close code `4409`, per the protocol).
-- There is no `headers` parameter: subscriptions do not have a per-operation HTTP request. Headers for the WebSocket upgrade request can be set via the `customHeaders` field of the underlying `websocket:ClientConfiguration`, and connection-scoped parameters (such as authentication tokens) can be sent via the `connectionInitPayload` configuration (both described below).
+- There is no `headers` parameter: subscriptions do not have a per-operation HTTP request. Headers for the WebSocket upgrade request can be set via the `customHeaders` field of the `WebSocketClientConfiguration`, and connection-scoped parameters (such as authentication tokens) can be sent via the `connectionInitPayload` configuration (both described below).
 
 #### Deprecating `execute()` and Removing `executeWithType()`
 
@@ -194,7 +194,13 @@ public type WebSocketConfiguration record {|
     string? serviceUrl = ();
     map<json>? connectionInitPayload = ();
     ReconnectConfig? reconnect = ();
-    websocket:ClientConfiguration websocketConfig = {};
+    WebSocketClientConfiguration websocketConfig = {};
+|};
+
+# Represents the configurations of the underlying WebSocket client used for subscriptions.
+public type WebSocketClientConfiguration record {|
+    // Every field of `websocket:ClientConfiguration` except `subProtocols`,
+    // copied with identical names, types, and defaults
 |};
 ```
 
@@ -202,10 +208,10 @@ Design notes:
 
 - The field is named `subscription` (not `websocket`) since it configures the subscription capability of the client rather than a transport. No transport-abstraction type is introduced for it: the Ballerina `http:Client` supports SSE natively (responses data-bind to `stream<http:SseEvent, error?>`) with no SSE-specific client configurations, so a future `graphql-sse` transport can reuse the GraphQL client's existing HTTP configurations in `ClientConfiguration` as-is. If transport-specific settings turn out to be necessary, the field type can be widened to a union (e.g., `WebSocketConfiguration|SseConfiguration`) at that point.
 - A nil `subscription` field does not disable subscriptions: `subscribe()` works with the default behavior (derived URL, no `connection_init` payload, no reconnection, default WebSocket configurations).
-- The GraphQL module already depends on the `websocket` module for the listener-side subscription support, so exposing `websocket:ClientConfiguration` does not add a new dependency.
-- The `subProtocols` field of the provided `websocket:ClientConfiguration` is always overridden to `["graphql-transport-ws"]`, since the protocol is not user-selectable.
+- The GraphQL module already depends on the `websocket` module for the listener-side subscription support, so using the WebSocket client underneath does not add a new dependency.
+- The subprotocol is not user-configurable: `WebSocketClientConfiguration` mirrors `websocket:ClientConfiguration` without the `subProtocols` field, and the client always sets the subprotocol to `graphql-transport-ws` internally. A dedicated record (instead of exposing `websocket:ClientConfiguration` directly and overriding the field) prevents a user-provided value from being silently ignored.
 - A separate `serviceUrl` override is provided because some GraphQL deployments host subscriptions on a different endpoint than queries and mutations.
-- Custom headers for the WebSocket upgrade request (e.g., an `Authorization` header) are supported via the `customHeaders` field of the underlying `websocket:ClientConfiguration`. For example:
+- Custom headers for the WebSocket upgrade request (e.g., an `Authorization` header) are supported via the `customHeaders` field of the `WebSocketClientConfiguration`. For example:
 
 ```ballerina
 graphql:Client donationsClient = check new ("http://localhost:9090/donations",
