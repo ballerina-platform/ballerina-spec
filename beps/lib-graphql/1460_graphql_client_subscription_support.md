@@ -7,7 +7,7 @@
 - Created date
   - 2026-07-16
 - Updated date
-  - 2026-07-16
+  - 2026-07-17
 - Issue
   - [1460](https://github.com/ballerina-platform/ballerina-spec/issues/1460)
 - State
@@ -167,7 +167,7 @@ The `close()` method handles subscriptions as follows:
 2. The WebSocket connection is closed with a normal closure.
 3. Every active subscription stream is terminated with `()`; consumers blocked on `next()` receive the stream end.
 
-After `close()` returns, the client is closed: any subsequent `query()`, `mutate()`, or `subscribe()` call returns a `graphql:ClientError`. A single `close()` method is provided (rather than a subscriptions-only closing method) since closing only the subscriptions while continuing to use the rest of the client is not a meaningful use case.
+Invoking `close()` also abandons any in-flight reconnection attempts; once closing has begun, no new WebSocket connection is established. After `close()` returns, the client is closed: any subsequent `query()`, `mutate()`, or `subscribe()` call returns a `graphql:ClientError`. A single `close()` method is provided (rather than a subscriptions-only closing method) since closing only the subscriptions while continuing to use the rest of the client is not a meaningful use case.
 
 #### `ClientConfiguration` Changes
 
@@ -237,6 +237,8 @@ public type ReconnectConfig record {|
 |};
 ```
 
+The field types follow the existing retry configurations of the platform (`http:RetryConfig`, `websocket:WebSocketRetryConfig`), which use `decimal` for intervals and `float` for the backoff factor. The reconnection configuration is validated at client initialization: invalid values (e.g., a negative `interval`, a non-positive `backOffFactor`, or a `maxInterval` less than the `interval`) result in a `graphql:ClientError`.
+
 When the WebSocket connection is dropped abnormally and reconnection is configured:
 
 1. The client attempts to re-establish the connection following the configured retry strategy.
@@ -266,7 +268,7 @@ When the server responds to a `subscribe` message with an `error` message (e.g.,
 #### Connection Lifecycle
 
 1. The `graphql:Client` `init` method does not open a WebSocket connection. It only resolves and stores the WebSocket URL and configurations.
-2. On the first `subscribe()` call, the client opens the WebSocket connection with the `graphql-transport-ws` subprotocol, sends `connection_init` (with the configured `connectionInitPayload`, if any), and waits for `connection_ack`. Failure at any of these steps returns a `graphql:SubscriptionError` from `subscribe()`.
+2. On the first `subscribe()` call, the client opens the WebSocket connection with the `graphql-transport-ws` subprotocol, sends `connection_init` (with the configured `connectionInitPayload`, if any), and waits for `connection_ack`. This connection establishment (the WebSocket upgrade and the `connection_init`/`connection_ack` handshake) is bounded by the client's `timeout` configuration: on expiry, the client closes the socket and cleans up the pending handshake state. Failure at any of these steps returns a `graphql:SubscriptionError` from `subscribe()`.
 3. Subsequent `subscribe()` calls reuse the established connection.
 4. If the WebSocket connection drops, the reconnection behavior described above applies.
 
@@ -280,12 +282,13 @@ The `graphql-transport-ws` protocol supports executing multiple operations over 
   - `next` - the payload is data-bound and emitted to the corresponding stream.
   - `error` - the corresponding stream is terminated with a `graphql:SubscriptionError` carrying the GraphQL errors, and the ID is removed from the map.
   - `complete` - the corresponding stream is terminated with `()`, and the ID is removed from the map.
+- Messages received for an ID that is not in the map are ignored. Such messages can occur when the server sends events for an operation the user has already unsubscribed from, before the `complete` message reaches the server.
 - `ping` messages are answered with `pong` messages automatically, independent of any operation.
 
 #### Stream Semantics
 
 - `stream.next()` blocks until the next event, an error, or completion.
-- `stream.close()` sends a `complete` message for the corresponding operation ID, so the server stops sending events for that operation, per the protocol.
+- `stream.close()` removes the operation from the active-subscription map and then sends a `complete` message for the corresponding operation ID, so the server stops sending events for that operation, per the protocol. The removal happens locally before sending the message, since client-to-server `complete` messages are not acknowledged by the server; this guarantees that a user-closed operation is never resubscribed by the reconnection logic.
 - Closing the last active stream does not close the WebSocket connection; the connection is reused for future subscriptions and is closed only by the client's `close()` method.
 
 ### Example
