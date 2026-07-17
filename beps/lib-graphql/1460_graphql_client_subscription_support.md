@@ -189,11 +189,14 @@ public type ClientConfiguration record {|
 # + connectionInitPayload - The payload to be sent with the `connection_init` message,
 #                           commonly used to pass authentication information
 # + reconnect - The reconnection configurations. Nil value disables automatic reconnection
+# + pingMessageHandler - The handler for the `ping` messages received from the server. If not
+#                        provided, the client automatically responds with a `pong` message
 # + websocketConfig - The configurations of the underlying `websocket:Client`
 public type WebSocketConfiguration record {|
     string? serviceUrl = ();
     map<json>? connectionInitPayload = ();
     ReconnectConfig? reconnect = ();
+    PingMessageHandler? pingMessageHandler = ();
     WebSocketClientConfiguration websocketConfig = {};
 |};
 
@@ -202,6 +205,23 @@ public type WebSocketClientConfiguration record {|
     // Every field of `websocket:ClientConfiguration` except `subProtocols`,
     // copied with identical names, types, and defaults
 |};
+
+# Handles the `ping` messages received from the GraphQL server.
+#
+# + caller - The caller to respond to the `ping` message with a `pong` message
+# + payload - The payload of the received `ping` message
+public type PingMessageHandler isolated function (PingMessageCaller caller, map<json>? payload) returns error?;
+
+# The caller for a `ping` message received over a GraphQL subscription connection, used to
+# respond with a `pong` message.
+public isolated client class PingMessageCaller {
+
+    # Sends a `pong` message with the given payload.
+    #
+    # + payload - The payload of the `pong` message
+    # + return - A `graphql:ClientError` if the message could not be sent
+    remote isolated function pong(map<json>? payload = ()) returns ClientError?;
+}
 ```
 
 Design notes:
@@ -211,6 +231,7 @@ Design notes:
 - The GraphQL module already depends on the `websocket` module for the listener-side subscription support, so using the WebSocket client underneath does not add a new dependency.
 - The subprotocol is not user-configurable: `WebSocketClientConfiguration` mirrors `websocket:ClientConfiguration` without the `subProtocols` field, and the client always sets the subprotocol to `graphql-transport-ws` internally. A dedicated record (instead of exposing `websocket:ClientConfiguration` directly and overriding the field) prevents a user-provided value from being silently ignored.
 - A separate `serviceUrl` override is provided because some GraphQL deployments host subscriptions on a different endpoint than queries and mutations.
+- The `pingMessageHandler` configures the handling of the `ping` *messages* of the `graphql-transport-ws` protocol (JSON messages of the form `{"type": "ping"}`), which are distinct from the WebSocket protocol's ping/pong *frames* (the latter are configurable via the `pingPongHandler` field of the `WebSocketClientConfiguration`, as in the `websocket` module). When a `pingMessageHandler` is provided, the client does not respond to `ping` messages automatically; the handler owns the response entirely via the given `PingMessageCaller` — it can respond immediately, respond later (the protocol allows `pong` messages at any time, even unsolicited), or choose not to respond. An `error` returned from the handler is logged and does not affect the connection or the active subscriptions.
 - Custom headers for the WebSocket upgrade request (e.g., an `Authorization` header) are supported via the `customHeaders` field of the `WebSocketClientConfiguration`. For example:
 
 ```ballerina
@@ -289,7 +310,7 @@ The `graphql-transport-ws` protocol supports executing multiple operations over 
   - `error` - the corresponding stream is terminated with a `graphql:SubscriptionError` carrying the GraphQL errors, and the ID is removed from the map.
   - `complete` - the corresponding stream is terminated with `()`, and the ID is removed from the map.
 - Messages received for an ID that is not in the map are ignored. Such messages can occur when the server sends events for an operation the user has already unsubscribed from, before the `complete` message reaches the server.
-- `ping` messages are answered with `pong` messages automatically, independent of any operation.
+- `ping` messages are handled independently of any operation: they are dispatched to the configured `pingMessageHandler` if one is provided, and answered with a `pong` message automatically otherwise.
 
 #### Stream Semantics
 
