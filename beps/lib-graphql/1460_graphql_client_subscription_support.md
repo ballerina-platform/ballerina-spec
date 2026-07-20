@@ -188,6 +188,11 @@ public type ClientConfiguration record {|
 #                from the client's service URL by mapping `http` to `ws` and `https` to `wss`
 # + connectionInitPayload - The payload to be sent with the `connection_init` message,
 #                           commonly used to pass authentication information
+# + connectionInitTimeout - The maximum time (in seconds) to wait for the `connection_ack` message
+#                           after sending the `connection_init` message. Bounds the
+#                           `graphql-transport-ws` handshake only; the WebSocket upgrade is bounded
+#                           separately by `websocketConfig.handShakeTimeout`. Independent of the
+#                           client's HTTP `timeout`
 # + reconnect - The reconnection configurations. Nil value disables automatic reconnection
 # + pingMessageHandler - The handler for the `ping` messages received from the server. If not
 #                        provided, the client automatically responds with a `pong` message
@@ -195,6 +200,7 @@ public type ClientConfiguration record {|
 public type WebSocketConfiguration record {|
     string? serviceUrl = ();
     map<json>? connectionInitPayload = ();
+    decimal connectionInitTimeout = 60;
     ReconnectConfig? reconnect = ();
     PingMessageHandler? pingMessageHandler = ();
     WebSocketClientConfiguration websocketConfig = {};
@@ -295,7 +301,7 @@ When the server responds to a `subscribe` message with an `error` message (e.g.,
 #### Connection Lifecycle
 
 1. The `graphql:Client` `init` method does not open a WebSocket connection. It only resolves and stores the WebSocket URL and configurations.
-2. On the first `subscribe()` call, the client opens the WebSocket connection with the `graphql-transport-ws` subprotocol, sends `connection_init` (with the configured `connectionInitPayload`, if any), and waits for `connection_ack`. This connection establishment (the WebSocket upgrade and the `connection_init`/`connection_ack` handshake) is bounded by the client's `timeout` configuration: on expiry, the client closes the socket and cleans up the pending handshake state. Failure at any of these steps returns a `graphql:SubscriptionError` from `subscribe()`.
+2. On the first `subscribe()` call, the client opens the WebSocket connection with the `graphql-transport-ws` subprotocol, sends `connection_init` (with the configured `connectionInitPayload`, if any), and waits for `connection_ack`. The connection establishment is bounded by WebSocket-scoped configurations, **not** the client's HTTP `timeout`: the WebSocket upgrade is bounded by `websocketConfig.handShakeTimeout`, and the `connection_init`/`connection_ack` handshake is bounded by `connectionInitTimeout` (both under the `subscription` field). On expiry of either bound, the client closes the socket and cleans up the pending handshake state. Failure at any of these steps returns a `graphql:SubscriptionError` from `subscribe()`. The subscription connection and its timeouts are kept independent of the HTTP transport: the WebSocket side is configured entirely through the `subscription` field, and the HTTP `timeout` applies only to the `query()`/`mutate()`/`execute()` HTTP requests.
 3. Subsequent `subscribe()` calls reuse the established connection.
 4. If the WebSocket connection drops, the reconnection behavior described above applies.
 
@@ -389,9 +395,12 @@ Users can continue using a raw `websocket:Client`. This leaves a standard GraphQ
 
 - **Breaking changes**: This proposal includes backward-incompatible changes:
   - Removing the deprecated `executeWithType()` method.
-  - Adding a new field to the closed `ClientConfiguration` record, which breaks binary (BIR) compatibility for dependents compiled against the previous version.
+  - Removing the deprecated `graphql:ServerError` type, which was used only by the removed `executeWithType()` method and is no longer constructed anywhere.
+  - Adding new fields to the closed `ClientConfiguration`/`WebSocketConfiguration` records, which breaks binary (BIR) compatibility for dependents compiled against the previous version.
 
   Therefore, these changes must be shipped in a release where breaking changes are permitted, with the major version bump.
+
+- **Client error handling model**: The client returns the full GraphQL response (data and `errors` together) when the target type carries an `errors` field (a `GenericResponseWithErrors` subtype, the recommended binding type), and returns a `graphql:ClientError` when binding to a type that omits `errors` and the response carries errors. This target-type-driven choice mirrors strongly-typed clients that expose both partial data and errors (rather than discarding partial data). To preserve partial data on the error path as well, `graphql:PayloadBindingError` carries the response `data` and `extensions` in its detail when the binding fails due to a response that contained `errors`.
 
 - **Protocol assumption**: The server is assumed to speak `graphql-transport-ws`. Older servers using the legacy `graphql-ws` (subscriptions-transport-ws) subprotocol are not supported. This matches the Ballerina listener's behavior, which also supports only `graphql-transport-ws`.
 - **Concurrency**: The multiplexing dispatcher and the subscriber map must be safe under concurrent `subscribe()`/`close()` calls; the design confines this state to the client instance and relies on Ballerina isolation to enforce safety.
