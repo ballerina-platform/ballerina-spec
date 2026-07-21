@@ -59,8 +59,9 @@ This proposal formalizes a distribution policy that keeps the core installer lea
 
 This proposal makes two separate classification decisions explicit.
 The first decides which organization a module is published under (`ballerina` vs. `ballerinax`).
-The second, which only applies within `ballerina/*`, decides whether the module ships inside the core distribution or is Central-only.
-The two decisions are independent: a module's org is never decided by whether it ships inside the installer, and its distribution placement is never decided by which org it happens to be published under.
+The second only applies within `ballerina/*`, and decides whether the module ships inside the core distribution or is Central-only.
+Within `ballerina/*`, these two decisions are independent: a module's org is never decided by whether it ships inside the installer, and its distribution placement is never decided merely by org membership, but by the separate foundational/specialized classification in the next section.
+`ballerinax/*` modules remain Central-only unconditionally, exactly as they are today; this proposal does not introduce a bundling decision for them.
 
 ### 1. Defining `ballerina` vs. `ballerinax`
 
@@ -78,7 +79,8 @@ If the module would stop making sense because it only exists to call one vendor'
 
 | Module                         | Org          | Why                                                                                                           |
 | ------------------------------ | ------------ | ------------------------------------------------------------------------------------------------------------- |
-| `http`, `grpc`                 | `ballerina`  | IETF/open RPC protocols, implemented by many independent parties                                              |
+| `http`                         | `ballerina`  | IETF-defined open protocol (RFC 7230+), implemented by many independent parties                               |
+| `grpc`                         | `ballerina`  | Open-source RPC framework over Protocol Buffers and HTTP/2, governed by CNCF, implemented by many independent parties — not an IETF protocol like `http`, but not tied to one vendor either |
 | `smb`                          | `ballerina`  | Open network file-sharing protocol, implemented by Samba, Windows, macOS, and others — not tied to one vendor |
 | `xlsx`                         | `ballerina`  | Office Open XML is an ISO/IEC 29500 file-format standard, not a proprietary API                               |
 | `log`, `io`, `crypto`, `regex` | `ballerina`  | Core, cross-cutting platform utilities, independent of any vendor                                             |
@@ -108,10 +110,11 @@ There is no fixed metric or threshold.
 Promotion is triggered ad hoc by a combination of signals — Ballerina Central download/usage trends and qualitative demand (community requests, partner asks, issue volume) — raised by the Ballerina Connector team or the Architecture Group.
 The same governance as classification applies: the Connector team proposes, the Architect approves.
 
-**No tooling or runtime changes required.**
+**No compiler or resolver changes required, but the release process must enforce the classification.**
 Dependency resolution already falls back to Ballerina Central when a package is not found in the local distribution repository (see [Ballerina Package Specification §5.3.1](../../packages/package-spec.md)).
 A Central-only `ballerina/*` module resolves exactly like a `ballerinax/*` module does today, so no compiler, build tool, or resolution changes are needed.
-The only practical implication is that users depending on a Central-only module need network access to Central at build time, the same constraint that already exists for `ballerinax` connectors today.
+What does need to change is the distribution's release/packaging process itself: whatever manifest or checklist decides which packages are assembled into the installer must be updated to exclude Central-only modules by default, otherwise a new specialized module keeps getting bundled simply because nothing stopped it.
+The only user-facing implication is that users depending on a Central-only module need network access to Central at build time, the same constraint that already exists for `ballerinax` connectors today.
 This should be called out in release notes as a known characteristic, not treated as a regression.
 
 ### Example walk-through
@@ -150,9 +153,9 @@ Validation is behavioral:
   Mitigation: call this out clearly in release notes for any new Central-only module.
 - **Risk:** Without a fixed rubric, classification could feel inconsistent across modules over time.
   Mitigation: centralizing final decision authority with the Lead Architect keeps classification consistent even without a formula.
-- **Risk:** Removing a module identified by the audit might be breaking, but only for users with no network access to Ballerina Central at build time.
+- **Risk:** Removing a module identified by the audit might be breaking, but only for users whose build environment cannot reach Ballerina Central at build time (e.g. no network access, or a firewall/proxy/mirror that hasn't been configured for Central).
   Even users behind a proxy can typically configure Central access, so this is a rare, niche scenario given the kind of integration use cases involved, not a general breaking change.
-  Mitigation: mention the change in release notes and note that the removed packages need network access at build time to resolve.
+  Mitigation: mention the change in release notes and note that the removed packages need Central access at build time to resolve.
 
 ## Dependencies
 
@@ -170,4 +173,4 @@ Validation is behavioral:
 - [Ballerina Package Specification](../../packages/package-spec.md)
 
 []: # (end)
-[]: # Please add any comments to issue [#1462]()
+[]: # Please add any comments to issue [#1462](https://github.com/ballerina-platform/ballerina-spec/issues/1462)
