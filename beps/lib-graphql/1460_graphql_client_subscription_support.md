@@ -7,7 +7,7 @@
 - Created date
   - 2026-07-16
 - Updated date
-  - 2026-07-17
+  - 2026-07-27
 - Issue
   - [1460](https://github.com/ballerina-platform/ballerina-spec/issues/1460)
 - State
@@ -71,6 +71,8 @@ sequenceDiagram
         C-->>U: stream emits data-bound value
         S-->>C: ping
         C-->>S: pong
+        C->>S: ping (keep-alive)
+        S-->>C: pong
     end
     alt Server completes
         S->>C: complete (id: uuid1)
@@ -100,14 +102,14 @@ Two new remote methods are introduced for the request-response operation kinds. 
 # + return - The data-bound response, or a `graphql:ClientError` if the execution fails
 remote isolated function query(string document, map<anydata>? variables = (),
         string? operationName = (), map<string|string[]>? headers = (),
-        typedesc<GenericResponseWithErrors|record {}|json> targetType = <>)
+        typedesc<GenericResponseWithErrors|record {}> targetType = <>)
         returns targetType|ClientError;
 
 # Executes a GraphQL mutation operation and data binds the response.
 # (Parameters and return type are identical to `query()`.)
 remote isolated function mutate(string document, map<anydata>? variables = (),
         string? operationName = (), map<string|string[]>? headers = (),
-        typedesc<GenericResponseWithErrors|record {}|json> targetType = <>)
+        typedesc<GenericResponseWithErrors|record {}> targetType = <>)
         returns targetType|ClientError;
 ```
 
@@ -132,7 +134,7 @@ The client currently performs no client-side parsing of the document; this propo
 #            could not be established
 remote isolated function subscribe(string document, map<anydata>? variables = (),
         string? operationName = (), string? id = (),
-        typedesc<GenericResponseWithErrors|record {}|json> targetType = <>)
+        typedesc<GenericResponseWithErrors|record {}> targetType = <>)
         returns stream<targetType, ClientError?>|ClientError;
 ```
 
@@ -196,6 +198,8 @@ public type ClientConfiguration record {|
 # + reconnect - The reconnection configurations. Nil value disables automatic reconnection
 # + pingMessageHandler - The handler for the `ping` messages received from the server. If not
 #                        provided, the client automatically responds with a `pong` message
+# + keepAlive - The client-side keep-alive configuration. The client periodically pings the server
+#               to detect a silently dropped connection
 # + websocketConfig - The configurations of the underlying `websocket:Client`
 public type WebSocketConfiguration record {|
     string? serviceUrl = ();
@@ -203,7 +207,20 @@ public type WebSocketConfiguration record {|
     decimal connectionInitTimeout = 60;
     ReconnectConfig? reconnect = ();
     PingMessageHandler? pingMessageHandler = ();
+    KeepAliveConfig keepAlive = {};
     WebSocketClientConfiguration websocketConfig = {};
+|};
+
+# Represents the client-side keep-alive configuration for a GraphQL subscription connection.
+#
+# + enabled - Whether the client-side keep-alive is active
+# + pingInterval - The interval (in seconds) at which the client sends `ping` messages
+# + pongTimeout - The maximum time (in seconds) to wait for the `pong` response to each `ping`
+#                 before considering the connection lost
+public type KeepAliveConfig record {|
+    boolean enabled = true;
+    decimal pingInterval = 15;
+    decimal pongTimeout = 15;
 |};
 
 # Represents the configurations of the underlying WebSocket client used for subscriptions.
@@ -318,6 +335,23 @@ The `graphql-transport-ws` protocol supports executing multiple operations over 
 - Messages received for an ID that is not in the map are ignored. Such messages can occur when the server sends events for an operation the user has already unsubscribed from, before the `complete` message reaches the server.
 - `ping` messages are handled independently of any operation: they are dispatched to the configured `pingMessageHandler` if one is provided, and answered with a `pong` message automatically otherwise.
 
+#### Keep-Alive and Dead-Connection Detection
+
+The `graphql-transport-ws` `ping`/`pong` messages are bidirectional; either party may probe the liveness of the connection. The client handles two independent concerns:
+
+- **Responding to server `ping` messages** (described under Multiplexing): the client answers each server `ping` with a `pong` (or delegates to the `pingMessageHandler`), keeping the connection alive from the server's perspective.
+- **Detecting a dead server** (this section): the client also *proactively* pings the server so it can detect a connection that has silently died (for example, a half-open connection left by an abrupt network drop). The background reader reads with no deadline, so that idle subscriptions survive indefinitely; without a proactive liveness check it would block forever on a silently-dead connection, leaking both the connection and the reader.
+
+The client-side keep-alive is configured via the `keepAlive` field (a `KeepAliveConfig`) and is **enabled by default**:
+
+- Every `pingInterval` seconds, the client sends a `ping` message.
+- It then waits up to `pongTimeout` seconds for the corresponding `pong`. Because `pongTimeout` is a per-ping deadline, it may be set shorter than `pingInterval` to detect a dead connection faster.
+- If the `pong` does not arrive within `pongTimeout`, the connection is considered lost. The client closes the underlying WebSocket (which also unblocks the background reader) and then follows the same path as any other connection loss: it reconnects when reconnection is configured, or otherwise terminates every active stream with a `graphql:SubscriptionError`. On the terminate path the error message identifies the keep-alive timeout, distinguishing it from an abrupt connection drop.
+
+Setting `keepAlive.enabled` to `false` disables the proactive pinging; the client still responds to server-initiated `ping` messages. Both `pingInterval` and `pongTimeout` default to 15 seconds, matching the listener's keep-alive cadence.
+
+The keep-alive teardown uses a normal WebSocket closure: the `graphql-transport-ws` protocol does not define a dedicated close code for an unresponsive peer, so abandoning a dead connection is a client-local decision (the reference `graphql-ws` client likewise terminates locally and reconnects).
+
 #### Stream Semantics
 
 - `stream.next()` blocks until the next event, an error, or completion.
@@ -384,7 +418,7 @@ Users can continue using a raw `websocket:Client`. This leaves a standard GraphQ
 - Integration tests running the client against the Ballerina GraphQL listener's subscription support, covering:
   - Single and multiple concurrent subscriptions over one connection
   - User-provided operation IDs, including duplicate ID validation
-  - Data binding to `GenericResponseWithErrors` subtypes, open records, and `json`
+  - Data binding to `GenericResponseWithErrors` subtypes and open records
   - Server-side validation errors surfacing as `graphql:SubscriptionError`
   - Stream closure sending `complete`, and the `close()` method behavior
   - Connection failure, abrupt server disconnect, and reconnection scenarios (with and without `reconnect` configured)
