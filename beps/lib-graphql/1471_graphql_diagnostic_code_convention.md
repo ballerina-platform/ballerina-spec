@@ -52,7 +52,7 @@ Across the compiler plugin's diagnostic definitions, the package emits **58** di
 
 ### 2. The new convention
 
-```
+```text
 GRAPHQL_<S><A><NN>
          │ │  └─ two-digit sequence within the area, in the order the diagnostic was introduced
          │ └──── one-digit area code (what part of the package)
@@ -73,7 +73,7 @@ Area codes:
 | `7`–`8` | Reserved for areas not yet identified                                                                                                   |
 | `9`     | General / misc (doesn't fit a specific area — e.g. schema-generation failure)                                                           |
 
-Each area gets a full `01`–`99` sequence per severity: 100 codes per area per severity, 3,000 codes total across the scheme, against 58 in use today. The headroom is generous on purpose.
+Each area gets a full `01`–`99` sequence per severity: 99 codes per area per severity, 2,970 codes total across the scheme, against 58 in use today. The headroom is generous on purpose.
 
 ### 3. Full mapping
 
