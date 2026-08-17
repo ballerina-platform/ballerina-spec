@@ -1,4 +1,4 @@
-# Compile-Time-Resolved Runtime Dispatch for the GraphQL Engine
+# Attach-Time-Resolved Runtime Dispatch for the GraphQL Engine
 
 - Authors
   - Thisaru Guruge
@@ -21,7 +21,7 @@ The Ballerina GraphQL runtime answers every field resolution by linearly scannin
 
 The runtime maintains two parallel dispatch paths: `getResourceMethod(...)` keyed by accessor and `getRemoteMethod(...)` keyed by name. Each is a linear scan over every resource or remote method on the service. Neither result is cached per listener, so the scan is redone on every request, for every field, and again for the `@graphql:ResourceConfig` lookup that accompanies it. The infrastructure to fix this already exists: the package runs a once-per-service analysis pass that walks the same methods and stores a coordinate-keyed map on the service object. That map does not carry the method reference itself, which is the one piece of information that would let the engine stop re-scanning.
 
-The same structure solves a second problem. Today the federation `_entities` and `_service` resolvers are not engine code at all: they are Ballerina source, synthesised at compile time from template files by placeholder substitution and parsed back into the service. The templating step can fail independently of anything the user wrote. Once a compile-time-resolved dispatch table exists for ordinary fields, the entity resolvers no longer need a source-injection mechanism of their own. An entity type map in the same structure is enough, and the compile-time failure modes disappear with the templating that produced them. Neither change alters behaviour: they change how fast dispatch finds the answer, and where the entity resolvers live, never what a given document resolves to.
+The same structure solves a second problem. Today the federation `_entities` and `_service` resolvers are not engine code at all: they are Ballerina source, synthesised at compile time from template files by placeholder substitution and parsed back into the service. The templating step can fail independently of anything the user wrote. Once a attach-time-resolved dispatch table exists for ordinary fields, the entity resolvers no longer need a source-injection mechanism of their own. An entity type map in the same structure is enough, and the compile-time failure modes disappear with the templating that produced them. Neither change alters behaviour: they change how fast dispatch finds the answer, and where the entity resolvers live, never what a given document resolves to.
 
 ## Goals
 
@@ -66,13 +66,13 @@ flowchart TB
     end
 ```
 
-The three-way dispatch at the bottom of the runtime path (`RD1`/`RD2`/`RD3` in the diagram above) follows from the current resolver model. The engine selects between them based on the document's operation type; the attach-time service analysis walks resource and remote methods as two separate loops. Each of `RD1`/`RD2`/`RD3` is, today, a linear scan over every resource or remote method on the service, run again for every field of every request. [Section 1](#1-compile-time-resolved-runtime-dispatch) has the fix.
+The three-way dispatch at the bottom of the runtime path (`RD1`/`RD2`/`RD3` in the diagram above) follows from the current resolver model. The engine selects between them based on the document's operation type; the attach-time service analysis walks resource and remote methods as two separate loops. Each of `RD1`/`RD2`/`RD3` is, today, a linear scan over every resource or remote method on the service, run again for every field of every request. [Section 1](#1-attach-time-resolved-runtime-dispatch) has the fix.
 
 ### Runtime dispatch performance
 
 Every field resolution is answered today by a linear scan over the service's full set of resource or remote methods, matched by accessor and path. That holds for a `Query`/nested-object field, a `Mutation` field, and a `Subscription` field alike. Each scan is **re-run for every field, on every request**: the answer is fixed for the lifetime of the service, but nothing records it, so the runtime has no per-service method table to consult. A separate scan looks up the `@graphql:ResourceConfig` annotation for the same field, so a single field resolution can trigger a linear scan more than once. None of this is cached per listener; it is redone on every request.
 
-The package already has the infrastructure to fix this, without adding a new one. One analysis pass runs per service, at listener-attach time, walking every resource and remote method once and storing the result in a map keyed by schema coordinate (e.g. `"Query.greeting"`) as native data on the service object. Today that map's entries carry only a complexity value, not a reference to the method itself. See [Section 1](#1-compile-time-resolved-runtime-dispatch).
+The package already has the infrastructure to fix this, without adding a new one. One analysis pass runs per service, at listener-attach time, walking every resource and remote method once and storing the result in a map keyed by schema coordinate (e.g. `"Query.greeting"`) as native data on the service object. Today that map's entries carry only a complexity value, not a reference to the method itself. See [Section 1](#1-attach-time-resolved-runtime-dispatch).
 
 ### Federation / subgraph
 
@@ -82,7 +82,7 @@ The subgraph module contains declarations only, no logic. Supported Federation d
 
 Two design items. The first replaces the runtime's per-request dispatch scans with a structure resolved once per service. The second builds federation entity and service resolution on that same structure, and is the only piece of Federation v2 work this proposal commits to.
 
-### 1. Compile-time-resolved runtime dispatch
+### 1. Attach-time-resolved runtime dispatch
 
 **The problem** ([Current State Analysis](#runtime-dispatch-performance)): the runtime resolves every `Query`/nested-object field, every `Mutation` field, and every `Subscription` field by linearly scanning the service's full set of resource and remote methods, on every field resolution, on every request. The mapping from schema coordinate to resolving method is fixed for the lifetime of the service, yet it is recomputed for every field of every request.
 
@@ -96,7 +96,7 @@ Both are already in hand at that point: the pass holds the live `ResourceMethodT
 
 Full design work for Federation v2 parity is deferred to the Apollo Federation v2 Parity BEP and is not designed here: the directive set, `FieldSet` validation, reference-resolver narrowing, static composition, and cross-module entities. None of it is committed by this proposal, and none of it should be read as if it were. See [Non-Goals](#non-goals).
 
-**The one piece of direction this proposal does commit to**, because it builds on the structure [Section 1](#1-compile-time-resolved-runtime-dispatch) introduces and should not wait on the rest of federation's design: `_entities` and `_service` are resolved **natively by the engine**, not injected as compiled Ballerina source. Today those resolvers are synthesised at compile time by generating Ballerina source from template files with placeholder substitution and parsing the result back in. That templating step can fail (`GRAPHQL_1205`/`GRAPHQL_1206`) independently of anything the user wrote. Once the engine holds a compile-time-resolved dispatch table for ordinary fields anyway, the same structure can hold an entity type map (`__typename` → type symbol + optional `resolveReference`), and no Ballerina source needs synthesising: `_service { sdl }` is answered by the engine from the encoded schema, and `_entities(representations:)` dispatches on `__typename` through the map.
+**The one piece of direction this proposal does commit to**, because it builds on the structure [Section 1](#1-attach-time-resolved-runtime-dispatch) introduces and should not wait on the rest of federation's design: `_entities` and `_service` are resolved **natively by the engine**, not injected as compiled Ballerina source. Today those resolvers are synthesised at compile time by generating Ballerina source from template files with placeholder substitution and parsing the result back in. That templating step can fail (`GRAPHQL_1205`/`GRAPHQL_1206`) independently of anything the user wrote. Once the engine holds a attach-time-resolved dispatch table for ordinary fields anyway, the same structure can hold an entity type map (`__typename` → type symbol + optional `resolveReference`), and no Ballerina source needs synthesising: `_service { sdl }` is answered by the engine from the encoded schema, and `_entities(representations:)` dispatches on `__typename` through the map.
 
 Two points of precision, because this replaces a shipped implementation rather than adding a new one:
 
@@ -113,7 +113,7 @@ The obvious way to stop the per-request scans is to add a cache in front of them
 
 ### Keeping compile-time source injection for `_entities`/`_service`
 
-Leaving federation's entity and service resolvers as generated Ballerina source works today and is the status quo. It is rejected because the mechanism carries a compile-time failure mode of its own (`GRAPHQL_1205`/`GRAPHQL_1206`) that has nothing to do with what the user wrote, and because [Section 1](#1-compile-time-resolved-runtime-dispatch)'s structure removes the need for the mechanism rather than hardening it.
+Leaving federation's entity and service resolvers as generated Ballerina source works today and is the status quo. It is rejected because the mechanism carries a compile-time failure mode of its own (`GRAPHQL_1205`/`GRAPHQL_1206`) that has nothing to do with what the user wrote, and because [Section 1](#1-attach-time-resolved-runtime-dispatch)'s structure removes the need for the mechanism rather than hardening it.
 
 ## Testing
 
