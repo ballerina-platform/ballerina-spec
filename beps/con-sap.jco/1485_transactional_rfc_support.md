@@ -158,13 +158,29 @@ A caller-supplied TID is validated by **length only** — exactly 24 characters.
 
 Unit IDs *are* validated as 32 hexadecimal characters. JCo documents that format and `JCo.createUnitIdentifier` enforces it, but `JCo.createFunctionUnit` accepts any length silently, so an invalid ID would otherwise surface only later when the unit is queried.
 
+### Deriving a TID from a business key
+
+A TID must be exactly 24 characters, so an application deriving one from a business key needs a rule for reaching that length. Truncating the key itself is unsafe: two different operations sharing a prefix would map to the same TID, and SAP would silently discard the second as a duplicate. That loses an update, which is a worse outcome than the duplicate the protocol exists to prevent.
+
+The recommended derivation is a cryptographic hash of the canonical business key, hex-encoded in uppercase, truncated to 24 characters:
+
+```ballerina
+string tid = crypto:hashSha256(businessKey.toBytes()).toBase16().toUpperAscii().substring(0, 24);
+```
+
+This keeps 96 bits of the digest, which makes an accidental collision negligible at any realistic volume, and it is deterministic, so a restarted process derives the same TID from the same key. The business key must be canonicalised first — a fixed field order and encoding — so that the same logical operation always produces the same input.
+
+Applications that have no natural business key should use `createTid` and persist the result, which avoids the derivation question entirely.
+
 ### Confirmation failures after a successful send
 
 If the send succeeds but the subsequent confirmation fails, the failure is logged rather than surfaced. The call has already been delivered and SAP will discard the TID record on its own schedule; returning an error would push the caller into re-posting an update that already completed. This is the one place where the API deliberately does not report a failure, and it is reported in the logs so it remains diagnosable.
 
 ### bgRFC unit configuration
 
-The unit type is selected by `queueNames` rather than by a separate field: supplying one or more queue names produces a type `Q` unit, and an empty list produces type `T`. An invalid queue name fails the call with a `ParameterError`. SAP accepts only names matching `[A-Z]([A-Z]|[0-9])*`, and JCo signals a violation by raising a runtime exception, which the connector converts rather than letting it escape. A duplicate name is a no-op, because the queue is already assigned to the unit.
+The unit type is selected by `queueNames` rather than by a separate field: supplying one or more queue names produces a type `Q` unit, and an empty list produces type `T`. An invalid queue name fails the call with a `ParameterError`. JCo accepts uppercase letters, digits, and underscores, and requires the name to start with a letter; lowercase letters, hyphens, slashes, and a leading digit are rejected. Note that JCo's own diagnostic advertises the pattern `[A-Z]([A-Z]|[0-9])*`, which is narrower than what it actually accepts — underscores are permitted despite not appearing in that expression. JCo signals a violation by raising a runtime exception, which the connector converts rather than letting it escape.
+
+JCo does not enforce a length limit; names longer than 24 characters are accepted client-side. SAP's queue name column (`QNAME`) is 24 characters, so a longer name is a backend concern rather than one the connector can detect. A duplicate name is a no-op, because the queue is already assigned to the unit.
 
 `commitCheck` maps to `JCoBackgroundUnitAttributes.setCommitCheckOn` and defaults to `false`, matching the JCo and SAP default. The check asks the SAP system to verify that the function modules in the unit do not issue their own `COMMIT WORK`, which would end the logical unit of work early. It is a diagnostic for badly behaved function modules; it does not itself provide atomicity, which comes from the unit. Enabling it costs an additional check per unit, so it is left off by default and is worth switching on while developing against unfamiliar function modules.
 
@@ -199,7 +215,7 @@ Verified against a live SAP ECC system (release 750, kernel 753), with outcomes 
 - **bgRFC exactly-once** — committing the same explicit unit ID twice executes once.
 - **Unit lifecycle** — `COMMITTED` → confirm → `CONFIRMED`; an unknown unit reports `NOT_FOUND`.
 - **qRFC ordering** — entries land in `TRFCQIN` in send order with ascending counters.
-- **Queue-name handling** — a duplicate queue name is accepted as a no-op, and an invalid one is rejected with a `ParameterError` rather than escaping as an unhandled error.
+- **Queue-name handling** — a duplicate queue name is accepted as a no-op, and an invalid one is rejected with a `ParameterError` rather than escaping as an unhandled error. The accepted character set, including underscores, and the absence of a client-side length limit were confirmed against JCo directly.
 - **qRFC concurrency** — concurrent sends to one queue confirm that the connector does not impose an order, which is why callers must serialise sends when order matters.
 - **Regression** — an A/B harness compiles the same source against the released connector and the proposed change, covering `execute` (records, tables, XML), `sendIDoc`, multiple clients, `close`, and the listener. All checks behave identically on both, confirming the addition is non-breaking.
 
