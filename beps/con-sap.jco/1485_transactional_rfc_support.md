@@ -119,6 +119,14 @@ public type TransactionError distinct error<TransactionErrorDetail>;
 
 `TransactionError` joins the existing `Error` union.
 
+### qRFC ordering
+
+qRFC preserves the order in which calls reach the queue, not the order in which the application issued them. Two `sendQRfc` calls made concurrently to the same queue therefore have no defined relative order.
+
+Callers that depend on ordering must serialise their sends for a given queue. The connector does not sequence them: doing so would require a per-queue lock across the client and would serialise throughput for every user in order to solve an application-level concern. Callers wanting parallelism should use a distinct queue per business key, which SAP processes independently.
+
+Draining the queue remains a property of the SAP system: entries stay queued until the inbound queue is registered with the QIN scheduler (transaction `SMQR`).
+
 ### The identifier is the guarantee
 
 The exactly-once property does not live in the call; it lives in the identifier SAP remembers until the caller confirms it. The API therefore keeps that identifier reachable at every point where a caller might need it, rather than hiding it behind the operation:
@@ -154,6 +162,12 @@ Unit IDs *are* validated as 32 hexadecimal characters. JCo documents that format
 
 If the send succeeds but the subsequent confirmation fails, the failure is logged rather than surfaced. The call has already been delivered and SAP will discard the TID record on its own schedule; returning an error would push the caller into re-posting an update that already completed. This is the one place where the API deliberately does not report a failure, and it is reported in the logs so it remains diagnosable.
 
+### bgRFC unit configuration
+
+The unit type is selected by `queueNames` rather than by a separate field: supplying one or more queue names produces a type `Q` unit, and an empty list produces type `T`. An invalid queue name fails the call with a `ParameterError`. SAP accepts only names matching `[A-Z]([A-Z]|[0-9])*`, and JCo signals a violation by raising a runtime exception, which the connector converts rather than letting it escape. A duplicate name is a no-op, because the queue is already assigned to the unit.
+
+`commitCheck` maps to `JCoBackgroundUnitAttributes.setCommitCheckOn` and defaults to `false`, matching the JCo and SAP default. The check asks the SAP system to verify that the function modules in the unit do not issue their own `COMMIT WORK`, which would end the logical unit of work early. It is a diagnostic for badly behaved function modules; it does not itself provide atomicity, which comes from the unit. Enabling it costs an additional check per unit, so it is left off by default and is worth switching on while developing against unfamiliar function modules.
+
 ### bgRFC unit lifecycle
 
 `COMMITTED` is the terminal state from the sender's point of view: processing has finished and the unit can be confirmed. `CONFIRMED` occurs only *after* `confirmBgRfcUnit`. Polling for `CONFIRMED` before confirming would never return, so the specification states the order explicitly: commit → poll until `COMMITTED` → confirm.
@@ -185,6 +199,8 @@ Verified against a live SAP ECC system (release 750, kernel 753), with outcomes 
 - **bgRFC exactly-once** — committing the same explicit unit ID twice executes once.
 - **Unit lifecycle** — `COMMITTED` → confirm → `CONFIRMED`; an unknown unit reports `NOT_FOUND`.
 - **qRFC ordering** — entries land in `TRFCQIN` in send order with ascending counters.
+- **Queue-name handling** — a duplicate queue name is accepted as a no-op, and an invalid one is rejected with a `ParameterError` rather than escaping as an unhandled error.
+- **qRFC concurrency** — concurrent sends to one queue confirm that the connector does not impose an order, which is why callers must serialise sends when order matters.
 - **Regression** — an A/B harness compiles the same source against the released connector and the proposed change, covering `execute` (records, tables, XML), `sendIDoc`, multiple clients, `close`, and the listener. All checks behave identically on both, confirming the addition is non-breaking.
 
 ## Risks and Assumptions
@@ -192,6 +208,8 @@ Verified against a live SAP ECC system (release 750, kernel 753), with outcomes 
 - **Queue draining is a backend property.** qRFC entries stay queued until the inbound queue is registered with the QIN scheduler. Users may read a queued entry as a connector failure; the documentation states the boundary.
 - **A confirmed identifier must never be reused.** Reuse silently reintroduces duplicates. The specification and API documentation state this at every relevant operation.
 - **Assumption: SAP tolerates a caller-supplied non-hexadecimal TID.** Verified against ECC 750 and consistent with the `CHAR` storage of the TID components, but it is an observed behaviour rather than a documented JCo contract.
+- **A persisted identifier is scoped to the SAP system that issued it.** A TID is only meaningful on the destination and client that created it. An application that persists a TID and later resumes against a different SAP system or client would find no record of it there, and the call would execute again. Applications must key their identifier store by destination and client. The connector cannot enforce this, since a persistent identifier store is a Non-Goal.
+- **Identifiers derived from business keys should not carry sensitive data.** A caller-supplied TID is transmitted to SAP and stored there, where it is visible in transaction `SM58` and table `ARFCSSTATE`, and it appears in connector logs when a confirmation fails. Applications deriving a TID from an idempotency key should use an opaque or hashed key rather than embedding personal or commercially sensitive values.
 - **Users must not treat `autoConfirm = true` as crash-safe.** The default is convenient, not durable. The distinction is stated wherever the option appears.
 
 ## Dependencies
