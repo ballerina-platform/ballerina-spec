@@ -122,6 +122,7 @@ Occurrence bounds within a run are as follows.
 - A member is offered an input segment only while it can still accept one, so `maxOccurances` is enforced exactly: an occurrence beyond a member's maximum is not assigned to it and falls through to the remaining members.
 - The run is left when a segment with a different code arrives, when a same-code segment matches no member, or when the input ends.
 - On exit, every member declaring `minOccurances > 0` must have at least one occurrence; otherwise parsing fails, naming the member.
+- A same-code segment that matches no member **stays unconsumed**: the input cursor does not advance, the schema cursor moves past the whole run, and the segment is offered to the units that follow. It is never dropped and never retried against the same run. If no later unit accepts it, it is reported by the existing unmatched-segment check, which names the segment and its position.
 
 The exit condition is a **presence** check rather than an exact count, which is how `minOccurances` is already treated everywhere else when reading: a definition declaring `minOccurances` greater than `1` is satisfied by a single occurrence outside a run as well as inside one. Enforcing exact minimum counts while reading is a pre-existing gap that applies to all units, not only to discriminated runs, and is listed under Future Work so that runs do not diverge from the rest of the parser.
 
