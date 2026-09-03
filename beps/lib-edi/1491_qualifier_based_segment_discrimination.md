@@ -115,7 +115,15 @@ An input segment is an instance of a definition when its segment code matches **
 - When a segment matches **no** definition at the current schema position, parsing fails with an error naming the segment. An optional discriminated definition is correctly recognised as absent and skipped.
 - When **several** definitions could match, the first in schema order wins. The schema loader logs a warning when sibling definitions sharing a segment code have overlapping discriminator sets.
 
-A run of **consecutive definitions sharing one segment code, each declaring at least one discriminator**, is matched as an **unordered set**: while input segments carry the run's code, every member that can still accept an occurrence is tried in schema order, so occurrences may arrive in any order and interleave. The run is left when a segment with a different code arrives or matches no member; on exit, every mandatory member must have at least one occurrence. This is required because implementation guides do not fix an order among same-code entries — HIPAA schemas mark such groups as any-order, and EANCOM interleaves `ALC+A` and `ALC+C` occurrences.
+A run of **consecutive definitions sharing one segment code, each declaring at least one discriminator**, is matched as an **unordered set**: while input segments carry the run's code, every member that can still accept an occurrence is tried in schema order, so occurrences may arrive in any order and interleave. This is required because implementation guides do not fix an order among same-code entries — HIPAA schemas mark such groups as any-order, and EANCOM interleaves `ALC+A` and `ALC+C` occurrences.
+
+Occurrence bounds within a run are as follows.
+
+- A member is offered an input segment only while it can still accept one, so `maxOccurances` is enforced exactly: an occurrence beyond a member's maximum is not assigned to it and falls through to the remaining members.
+- The run is left when a segment with a different code arrives, when a same-code segment matches no member, or when the input ends.
+- On exit, every member declaring `minOccurances > 0` must have at least one occurrence; otherwise parsing fails, naming the member.
+
+The exit condition is a **presence** check rather than an exact count, which is how `minOccurances` is already treated everywhere else when reading: a definition declaring `minOccurances` greater than `1` is satisfied by a single occurrence outside a run as well as inside one. Enforcing exact minimum counts while reading is a pre-existing gap that applies to all units, not only to discriminated runs, and is listed under Future Work so that runs do not diverge from the rest of the parser.
 
 ### Rules enforced when a schema is loaded
 
@@ -128,10 +136,23 @@ A run of **consecutive definitions sharing one segment code, each declaring at l
 
 ### Definitions shared across positions
 
-EDIFACT- and ESL-generated schemas define each segment once and reference it from many positions. No new construct is required: because segment references are resolved by cloning the definition when the schema is loaded, a shared definition is **specialized** per meaning and the clone is referenced.
+EDIFACT- and ESL-generated schemas define each segment once and reference it from many positions. A segment reference (`EdiUnitRef`) carries only `ref`, `tag`, `minOccurances`, and `maxOccurances`, and **this proposal adds no constraint override to it**: value constraints belong to a definition, so every position referencing one definition necessarily shares its constraints.
+
+Positions that accept different qualifiers are therefore expressed by referencing **distinct specialized definitions** — a narrowed copy of the shared definition per meaning, which is what the tooling emits and what a schema author writes by hand. Because a reference is resolved by cloning its definition when the schema is loaded, the parser then sees one inline definition per position, and no new construct is required.
 
 ```json
 "segmentDefinitions": {
+    "RFF_SellersReference": {
+        "code": "RFF",
+        "tag": "SellersReference",
+        "fields": [
+            {"tag": "code"},
+            {"tag": "REFERENCE", "required": true, "components": [
+                {"tag": "qualifier", "required": true, "discriminator": ["SS"]},
+                {"tag": "number", "required": true}
+            ]}
+        ]
+    },
     "RFF_VatNumber": {
         "code": "RFF",
         "tag": "VatNumber",
@@ -145,9 +166,14 @@ EDIFACT- and ESL-generated schemas define each segment once and reference it fro
     }
 },
 "segments": [
+    {"ref": "RFF_SellersReference", "minOccurances": 0},
     {"ref": "RFF_VatNumber", "minOccurances": 0}
 ]
 ```
+
+With those two positions, `RFF+SS:1111-000000'` is assigned to `SellersReference` and `RFF+VA:SE556421030901'` to `VatNumber`, in either arrival order; a file carrying only the VAT reference leaves `SellersReference` absent rather than capturing the segment.
+
+Reusing one definition at several positions remains valid where the positions genuinely accept the same codes. What is not expressible — deliberately — is one definition whose constraints differ per position, since that would make a definition's meaning depend on where it is referenced.
 
 ### Tooling
 
@@ -194,6 +220,7 @@ None. The proposal is additive to the EDI schema specification and requires no o
 - Structural matching, so that a definition may match only when earlier mandatory units were satisfied.
 - Reading EDIFACT `UNCL` code lists in the converter so EDIFACT-derived schemas carry `values` as X12-derived ones now do.
 - An option to treat overlapping discriminator sets as an error rather than a warning.
+- Enforcing exact minimum occurrence counts when reading, for all units rather than only discriminated runs, so that a definition declaring `minOccurances` greater than `1` is not satisfied by a single occurrence.
 
 ## References
 
