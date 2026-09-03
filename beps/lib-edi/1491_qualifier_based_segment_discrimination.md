@@ -3,7 +3,7 @@
 - Authors
   - Dilan Perera
 - Reviewed by
-  - Niveathika, Danesh Kuruppu
+  - Niveathika Rajendran, Danesh Kuruppu
 - Created date
   - 2026-09-03
 - Issue
