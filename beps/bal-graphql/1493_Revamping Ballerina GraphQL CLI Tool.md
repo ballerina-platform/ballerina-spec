@@ -1,16 +1,21 @@
-# **\#1493 :** **Revamping Ballerina GraphQL CLI Tool**
+# 1493 : Revamping Ballerina GraphQL CLI Tool
 
-- Authors: Nidula Ekanayake
-- Reviewed by: Thisaru Guruge, Danesh Kuruppu
-- Created date: 01/08/2026
-- Issue: [#1493](https://github.com/ballerina-platform/ballerina-spec/issues/1493)
+- Authors 
+    - Nidula Ekanayake
+- Reviewed by
+    - Thisaru Guruge
+    - Danesh Kuruppu
+- Created date
+    - 01/08/2026
+- Issue
+    - [#1493](https://github.com/ballerina-platform/ballerina-spec/issues/1493)
 - State: Submitted
 
-### **1\. Summary**
+## 1. Summary
 
 The Ballerina GraphQL CLI tool is currently in an [experimental](https://ballerina.io/learn/graphql-tool/#client-generation-experimental) state with limited modularity and incomplete support for key GraphQL capabilities. This proposal outlines a comprehensive revamp of the GraphQL tool to promote client generation to General Availability (GA), introduce a package-aware modular architecture for CLIENT, SERVICE, and SCHEMA generation with a fail-fast approach, and add missing features such as Subscriptions and DataLoader support.
 
-### **2\. Motivation**
+## 2. Motivation
 
 The Ballerina GraphQL tool is currently built around a single command entrypoint with mode and behavior flags, and the ballerina [GraphQL documentation](https://ballerina.io/learn/graphql-tool/) still treats client generation as \[experimental\].
 
@@ -18,23 +23,23 @@ This limits production adoption, makes the architecture harder to evolve, and cr
 
 WSO2 Integrator's Language Server consumes the output of service generation to render diagrams, but because the generated service doesn't compile, the Language Server cannot build a diagram from it directly. It currently injects error("not implemented") resolver bodies on its own side, purely to make the code compile before rendering. That's a workaround for a problem that belongs upstream \- generating compilable code in the tool itself would let the Language Server drop that step entirely.
 
-#### **2.1 Current Problems**
+### 2.1 Current Problems
 
-**2.1.1 Experimental Status Blocks Production Adoption**
+#### 2.1.1 Experimental Status Blocks Production Adoption
 
 * Client generation fails for some basic use cases, which makes the current experience unreliable for common workflows
 * Production users hesitant to adopt unstable APIs
 * No clear path to GA promotion
 * Missing comprehensive test coverage for edge cases
 
-**2.1.2 Missing GraphQL Features**
+#### 2.1.2 Missing GraphQL Features
 
 * Package awareness not implemented (affects multi-project scenarios)
 * Incomplete ID type support
 * No DataLoader pattern support for N+1 query optimization
 * No properly defined error paths \- failures surface as generic, unhelpful messages
 
-**2.1.3 Related GitHub issues**
+#### 2.1.3 Related GitHub issues
 
 * [\#8229](https://github.com/ballerina-platform/ballerina-library/issues/8229) \- NullPointerException in Ballerina GraphQL client code generation during formatting
 * [\#6545](https://github.com/ballerina-platform/ballerina-library/issues/6545) \- Proposal: Expose a Database as a GraphQL API
@@ -64,7 +69,7 @@ The motivation of this proposal is to move the tool toward a package-aware, modu
 
 The main benefit is a more stable and reusable GraphQL toolchain that is easier to maintain, easier to test, and easier to expose through low-code or button-click workflows. It is being driven by the current GraphQL tooling roadmap and related Ballerina library issues, and it aligns the tool more closely with the expectations of modern GraphQL development.
 
-### **3\. Goals**
+## 3. Goals
 
 * Move the tool from an experimental posture to a stable, generally available (GA) Version (1.0.0)
 * Make the Ballerina GraphQL tool package-aware so generation fits Ballerina project and module structure.
@@ -72,14 +77,14 @@ The main benefit is a more stable and reusable GraphQL toolchain that is easier 
 * Add first-class handling for GraphQL ID, subscriptions, and data loading.
 * Preserve backward compatibility where practical while allowing a clear migration path away from the old command design.
 
-### **4\. Non-Goals**
+## 4. Non-Goals
 
 * Federation support including Apollo Federation subgraph scaffolding and federation directives (future)
 * Parser enhancements beyond the current scope (future)
 
-### **5\. Design**
+## 5. Design
 
-#### **5.1 Current Architecture**
+### 5.1 Current Architecture
 
 The current GraphQL CLI tool is built around a single entry point (GraphqlCmd.java) with three generation modes
 
@@ -125,7 +130,7 @@ flowchart TD
 
 Everything goes through one shared entrypoint that routes to three different paths \- but each path works completely differently underneath. Different validation, different logic, nothing shared between them. That's a large part of why things break: a fix in one mode tells you nothing about the others, and changing shared code risks breaking something unrelated.
 
-##### **5.1.1 Overview**
+#### 5.1.1 Overview
 
 Input may be:
 
@@ -141,7 +146,7 @@ The current flow generates:
 * service files such as service.bal and types.bal
 * schema output such as schema.graphql
 
-##### **5.1.2 Limitations**
+#### 5.1.2 Limitations
 
 * Flag logic is scattered across multiple files
 * No package awareness
@@ -152,7 +157,7 @@ The current flow generates:
 * No subscription support
 * No DataLoader support
 
-#### **5.2 Proposed Architecture**
+### 5.2 Proposed Architecture
 
 The proposed architecture aims to evolve the current system into a more modular, package-aware, and Ballerina-native design.
 
@@ -221,9 +226,9 @@ flowchart LR
 
 The architecture should be designed so that each generation mode becomes a first-class concern with its own internal model, parser, validator, and generator pipeline.
 
-**Key Change Areas**
+### Key Change Areas
 
-##### **5.2.1 Service Generation \- Package Awareness**
+### 5.2.1 Service Generation - Package Awareness
 
 **Current State:**
 
@@ -303,7 +308,7 @@ This compiles immediately. The developer then fills in their own logic, and can 
 * Better alignment between service definitions and schema semantics
 * Easier future extension
 
-##### **5.2.2 Schema Generation**
+### 5.2.2 Schema Generation
 
 **Current State:**
 
@@ -351,7 +356,7 @@ ERROR [:(-1:-1,-1:-1)] Given Ballerina file contains compilation error(s).
 * Define and apply a consistent type ordering convention in the generated schema \- Query, Mutation, and Subscription grouped together at the top (in that order), followed by the remaining types
 * Fix enum member ordering to preserve declaration order from the source service
 * Improve error handling to surface actionable diagnostics instead of a generic compilation-error message
-* Validate that the input file is part of a valid, compilable Ballerina project before attempting schema extraction, and fail fast with a clear error if not.
+* Validate that the input compiles before attempting schema extraction, and fail fast with a clear error if not. A standalone `.bal` file is loaded as a single-file project; a file inside a package, or a package directory, is loaded as that package through the Ballerina project API.
 * Migrate schema generation to the new modular architecture.
 
 **Expected Outcome:**
@@ -360,7 +365,7 @@ ERROR [:(-1:-1,-1:-1)] Given Ballerina file contains compilation error(s).
 * Clear, actionable error messages instead of generic compilation failures
 * Consistent behavior aligned with the modular architecture
 
-##### **5.2.3 Client Generation \- Full Redesign**
+### 5.2.3 Client Generation - Full Redesign
 
 **Current state:**
 
@@ -435,7 +440,7 @@ Generate Ballerina Graphql clients using a GraphQL config file (`graphql.config.
 * Configuration is native to the Ballerina ecosystem (TOML-based)
 * Client generation reaches GA quality with broader GraphQL feature coverage
 
-##### **5.2.4 Input Resolution for Service-to-Schema Generation**
+### 5.2.4 Input Resolution for Service-to-Schema Generation
 
 **Current State:**
 
@@ -455,6 +460,7 @@ a GraphQL schema file with .graphql extension.
 **Proposed changes:**
 
 * Support two input forms for schema generation: a direct file path (standalone or inside a package), and a package directory path
+* Resolve each form to the right kind of project before validating: a standalone .bal file is loaded as a single-file project, and a package directory (or a file inside one) is loaded as a package via the Ballerina project API (see 5.2.2)
 * For a directory input, validate it is a valid Ballerina package (via the Ballerina project API) and fail fast with a clear error if not
 * For a valid package input, locate the GraphQL service(s) within it using a GraphQL compiler plugin API, rather than requiring the user to point at the exact file
 
@@ -464,7 +470,7 @@ a GraphQL schema file with .graphql extension.
 * Package inputs are validated up front, with a clear error if the directory isn't a valid Ballerina package
 * Users no longer need to know the exact file a service lives in when generating from a package
 
-##### **5.2.5 Deterministic Output Naming for Duplicate Base Paths**
+### 5.2.5 Deterministic Output Naming for Duplicate Base Paths
 
 **Current State:**
 
@@ -523,11 +529,15 @@ Ballerina has two phases \- compile time and run time. Schema generation is a co
 * The \-s flag can reliably disambiguate between services sharing the same base path
 * Naming behavior is derivable entirely from static analysis, with no dependency on runtime configuration values.
 
-##### **5.2.6 Shape of the balGraphQL.toml**
+### 5.2.6 Shape of the balGraphQL.toml
 
 Schema can come from one of three sources: a local schema file, a hosted schema file URL, or a live introspection endpoint. The latter two involve reaching out to something external over the network, not just reading local content.
 
 A hosted schema URL or introspection endpoint may require specific HTTP headers to be sent with the request. balGraphQL.toml exposes a generic headers table where the user can set any header name and value their endpoint requires.
+
+Requests to url and endpoint require HTTPS - a plain http:// value is rejected with a validation error. Since headers can carry credentials (an Authorization token, for example), allowing cleartext transport would expose them in transit. Headers are not forwarded across a redirect that changes the origin (host, scheme, or port), preventing a compromised or malicious endpoint from redirecting the request elsewhere and capturing configured credentials.
+
+`bal build` only accepts `source = "file"` for a `[[tool.graphql]]` entry (see 5.2.8). Generation at build time never performs a network request. Fetching a remote schema remains a deliberate, one-time `bal graphql` action, whose result the developer commits alongside `balGraphQL.toml`.
 
 **Fields required in balGraphQL.toml:**
 
@@ -557,20 +567,32 @@ A hosted schema URL or introspection endpoint may require specific HTTP headers 
 | ----- | ----- | ----- |
 | dataloaders | A table of GraphQL Field notations mapped to the name of the loader that field should be wired to (e.g. Query.profile \= "profileLoader") | Optional |
 
-**Example:**
+**DataLoader wiring contract**
 
-```
+For each field mapped in dataloaders, the tool generates the resolver and its wiring to a loader declared in the developer's package, using the loader/batch-function pattern from the ballerina/graphql DataLoader API. The generated resolver retrieves the batched value from the named loader; implementing the loader's batch function - including key-to-value mapping, missing-key handling, and error handling - is the developer's responsibility.
+
+**Example (Client Generation)**
+
+```toml
+documents = [
+    "./queries/getUser.graphql",
+    "./mutations/createUser.graphql"
+]
+
 [schema]
 source = "url"
 url = "https://api.example.com/schema.graphql"
 
 [schema.headers]
 Authorization = "Bearer <token>"
+```
 
-documents = [
-    "./queries/getUser.graphql",
-    "./mutations/createUser.graphql"
-]
+**Example (Service Generation)**
+
+```toml
+[schema]
+source = "file"
+path = "./schema.graphql"
 
 [id-types]
 Profile.id = "int"
@@ -592,7 +614,7 @@ Query.profile = "profileLoader"
 * ID overrides apply consistently to fields, arguments, and return types \- @graphql:ID is always generated alongside the configured type, whether that's the default string or an override
 * Only the fields relevant to what's being generated are required \- the same file format works for both directions without forcing irrelevant fields
 
-##### **5.2.7 CLI Interface**
+### 5.2.7 CLI Interface
 
 **Current State:**
 
@@ -645,7 +667,7 @@ bal graphql <ballerina-service-file-or-package-path>
 * Schema generation input covers both a single file and a whole package
 * Generated code can target either the package's default module or a named sub-module, with the module created automatically if it doesn't already exist
 
-##### **5.2.8 Build Tool Integration**
+### 5.2.8 Build Tool Integration
 
 **Current State:**
 
@@ -684,9 +706,9 @@ Multiple \[\[tool.graphql\]\] entries can be declared, each generating into its 
 * Consistent with how other Ballerina tools (bal openapi, bal persist) integrate into the build
 * The standalone bal graphql command remains available for one-off generation
 
-### **6\. Alternatives**
+## 6. Alternatives
 
-##### **6.1 Package Awareness**
+### 6.1 Package Awareness
 
 **Considered:** Automatically generating Ballerina.toml for the user when the output location isn't already a valid Ballerina project.
 
@@ -696,7 +718,7 @@ Multiple \[\[tool.graphql\]\] entries can be declared, each generating into its 
 
 **Impact of not doing this:** The tool keeps generating loose, stale files with no package identity regardless of where it's run \- there's no validation ensuring the output lands inside a proper Ballerina project. The burden falls entirely on the user to manually verify the output directory is already a valid package before running the command, with no safeguard against generating unusable, floating files by mistake.
 
-##### **6.2 Compilable Generated Code**
+### 6.2 Compilable Generated Code
 
 **Considered:** Decoupling the GraphQL service's design (contract) from its implementation, so generated skeletons don't need a resolver body at all (see [ballerina-library\#4620](https://github.com/ballerina-platform/ballerina-library/issues/4620)).
 
@@ -729,7 +751,7 @@ Does not panic \- the service will keep running even if someone calls the unimpl
 
 **Impact of not doing this:** Every generated service continues failing to build out of the box, since resolver methods with non-nilable return types have empty bodies with no return statement. The user must manually add return statements to every resolver before the code runs at all, with no guidance from the tool about what's needed.
 
-##### **6.3 DataLoader Wiring**
+### 6.3 DataLoader Wiring
 
 **Considered:** A custom SDL directive (@dataload(loaderName: ..., batchKey: ...)).
 
@@ -739,7 +761,7 @@ Does not panic \- the service will keep running even if someone calls the unimpl
 
 **Impact of not doing this:** Developers hit N+1 query performance problems in generated resolvers with no first-class tool support to address them. Each user has to hand-roll their own batching/caching logic outside the generated code, inconsistently across projects, with no standard pattern the tool understands or can regenerate correctly if the schema changes.
 
-##### **6.4 Client Configuration Format**
+### 6.4 Client Configuration Format
 
 **Considered:** Keeping graphql.config.yaml for backward compatibility.
 
@@ -749,7 +771,7 @@ Does not panic \- the service will keep running even if someone calls the unimpl
 
 **Impact of not doing this:** Client generation configuration stays tied to a format with no relationship to the rest of the Ballerina toolchain. Users already familiar with Ballerina.toml-based configuration everywhere else in Ballerina have to learn and maintain a second, inconsistent config format just for this one tool, with no path toward unifying it.
 
-##### **6.5 Client Generation Full Redesign**
+### 6.5 Client Generation Full Redesign
 
 **Considered:** Patching the existing client generator incrementally.
 
@@ -759,7 +781,7 @@ Does not panic \- the service will keep running even if someone calls the unimpl
 
 **Impact of not doing this:** Patching around the existing implementation leaves the root causes untouched \- the formatting bug lives inside a ballerina-lang dependency, not this repo's code, so surface-level patches to this tool alone can't fix it. Client generation would remain stuck in its current experimental, unreliable state indefinitely, continuing to reject common cases like mutations with scalar returns no matter how many individual symptoms get patched.
 
-##### **6.6 Schema Type Ordering Convention**
+### 6.6 Schema Type Ordering Convention
 
 **Considered:** Leaving the current arbitrary/insertion-order output as-is, versus alternative conventions (e.g. alphabetical ordering) for arranging types in the generated schema.
 
@@ -769,7 +791,7 @@ Does not panic \- the service will keep running even if someone calls the unimpl
 
 **Impact of not doing this:** Generated schemas would keep coming out in an inconsistent, effectively arbitrary type order (matches issue [\#6441](https://github.com/ballerina-platform/ballerina-library/issues/6441)), making them harder to read, review, and diff as they grow, with no clear standard for contributors to generate against.
 
-### **7\. Dependencies**
+## 7. Dependencies
 
 This proposal depends on a related, still-open BEP in ballerina-platform/ballerina-spec that directly affects the GraphQL client-side validation this tool's client generation relies on:
 
@@ -779,7 +801,7 @@ This proposal depends on a related, still-open BEP in ballerina-platform/balleri
 
 This BEP does not have an open decision pending, so it's not expected to materially change the implementation of this proposal \- it's tracked here as a related dependency for visibility.
 
-### **8\. Future Work**
+## 8. Future Work
 
 * Federation support \- Apollo Federation subgraph scaffolding and federation directives (@key, @external, \_entities, \_service) are explicitly out of scope for this proposal (see Non-Goals), but represent a natural next step once service and client generation reach GA quality \- enabling Ballerina GraphQL services to participate in a distributed, composed graph.
 * Parser enhancements \- this proposal keeps schema and document parsing within its current scope, delegating to existing external libraries (graphql-java) rather than building a unified, Ballerina-native parsing interface. A future effort could revisit this to support more advanced SDL features and give the tool more control over parsing behavior, rather than remaining dependent on the current external library's capabilities.
