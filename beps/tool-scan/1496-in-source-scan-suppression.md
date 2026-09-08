@@ -134,15 +134,43 @@ Because a directive is text rather than a typed construct, a malformed one is a 
 
 ### Relationship to the existing mechanisms
 
-| Mechanism | Granularity | Records why | Use |
-|---|---|---|---|
-| Project-wide rule exclusion | Project | No | The rule does not apply to this project at all |
-| File-level exclusion | File | No | Folded into this proposal, below |
-| In-source directive | Finding | **Yes** | This specific occurrence is accepted |
+The three mechanisms are not variants of one another. Two of them are **rule selection** — deciding which rules apply at all — and one is **finding acceptance**, where the rule applied, found something real, and a person accepted it. That distinction determines how they combine.
+
+| Mechanism | Category | Granularity | Records why | Use |
+|---|---|---|---|---|
+| Project-wide rule inclusion/exclusion | Rule selection | Project | No | The rule does not apply to this project |
+| File-level exclusion | Rule selection | File | No | The rule does not apply to this file — generated code, fixtures |
+| In-source directive | Finding acceptance | Finding | **Yes** | This specific occurrence is accepted |
+
+### Precedence
+
+Rule selection is resolved first, then findings are produced, then directives are applied:
+
+1. **Rule selection** — command-line options and scan configuration decide which rules can produce findings. Command line overrides configuration.
+2. **Analysis** — the selected rules run and produce findings.
+3. **File-level exclusion** — removes findings for a rule within a file.
+4. **In-source directives** — suppress individual remaining findings.
+5. **Gate** — evaluates what is left.
+
+Two consequences follow, and both are deliberate.
+
+**Rule selection wins, because it acts earlier.** A directive naming a rule that is excluded project-wide, or absent from an inclusion list, has nothing to suppress. It is reported as **unmatched** — which is the useful outcome: it tells a team they are carrying a justified exception for a rule that is not even running, usually because someone disabled the rule globally and forgot the directive.
+
+**Exclusion and suppression differ in what reaches the output.** An excluded finding is *absent*: no record, nothing to review. A suppressed finding is *present and marked*, with its justification. This is the whole reason both exist — exclusion says "not applicable", suppression says "applicable, and accepted". A team that wants an auditable trail must suppress rather than exclude, and the documentation should say so plainly.
+
+Between directives, the innermost wins; a directive on an enclosing construct does not override one on a construct inside it.
+
+### Scope of the audit run
+
+`--ignore-suppressions` disregards **directives only**. Rule selection is configuration rather than accepted risk, so an audit run does not re-enable excluded rules.
+
+This leaves an honest gap: a team can dodge findings by excluding a rule project-wide, and the audit run will not reveal it. Rule selection is visible in the checked-in configuration and in its diff, so it is not hidden — but it is not surfaced by the same command. A fuller audit mode that also disregards rule selection is worth considering, and is recorded in Future Work rather than resolved here.
+
+### Migration from file-level exclusion
 
 File-level exclusion overlaps this mechanism, is the newest of the three, and writes to the scan configuration file from the IDE — putting a machine-edited section into a hand-edited file.
 
-**Proposed: the IDE's "suppress this finding" action inserts an in-source directive** rather than a configuration entry. File-level exclusion is retained for the "not applicable to this file" case but stops being the default action. Without this the IDE entrenches a third mechanism and the IDE integration work inherits the ambiguity.
+**Proposed: the IDE's "suppress this finding" action inserts an in-source directive** rather than a configuration entry. File-level exclusion is retained for genuine whole-file cases — generated code, test fixtures — but stops being the default action. Without this the IDE entrenches a third mechanism and the IDE integration work inherits the ambiguity.
 
 ### Consistency across entry points
 
@@ -277,6 +305,7 @@ No language or specification change, and no new published module.
 - **An aggregated suppression report.** A convenience view over data already present in the SARIF output, so nothing is blocked without it.
 - IDE quick fix to insert a directive, and rule-identifier validation as you type.
 - Migration tooling from project-wide and file-level exclusions to in-source directives.
+- A fuller audit mode that also disregards rule selection, closing the gap where a project-wide exclusion hides findings that the suppression audit run cannot reveal.
 
 ## References
 
