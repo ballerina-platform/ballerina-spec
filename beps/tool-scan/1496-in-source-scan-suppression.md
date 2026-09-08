@@ -9,7 +9,7 @@
 
 ## Summary
 
-Allow a developer to suppress an individual `bal scan` finding at the point in the source where it occurs, with a mandatory justification, recorded in the output so suppressions remain auditable rather than invisible.
+Allow a developer to suppress an individual `bal scan` finding at the point in the source where it occurs, with a justification, recorded in the output so suppressions remain auditable rather than invisible. The justification is optional by default and a team can require it, failing the scan when one is missing.
 
 The mechanism is a comment directive placed immediately before, or at the end of, the line that produced the finding. Because it lives in the source, each suppression is reviewed in the diff that introduces it and attributed through version control, and an audit run can disregard suppressions entirely to show the unfiltered picture.
 
@@ -19,19 +19,18 @@ A build gate is only adoptable if there is a sanctioned way to say "this one is 
 
 One mechanism exists today and it is not that. **Project-wide rule exclusion** turns a rule off everywhere: one accepted instance disables the rule for the whole project, including for code written next year. It is configured in the scan configuration file, and it is also what the IDE's exclusion action writes, so the finest exclusion reachable from the editor is still project-wide.
 
-It records no *why*. A reviewer reading an exclusion list cannot distinguish an accepted risk from a false positive from someone silencing a rule to get a build green. For a tool producing compliance evidence, an unexplained suppression is worse than no suppression: it is an audit finding.
+It has nowhere to record *why*. A reviewer reading an exclusion list cannot distinguish an accepted risk from a false positive from someone silencing a rule to get a build green. For a tool producing compliance evidence, an unexplained exception is worse than none: it is an audit finding. What is missing is not only a finer granularity but somewhere to put the reason, and a way for a team that needs one to insist on it.
 
 Without this, a team adopting the gate has two options — fix everything first, or disable the rule globally. Most choose the second, and the gate stops meaning anything.
 
 ## Goals
 
 - Suppress a single finding at the exact construct that produced it, for every rule the tool ships.
-- A justification is **mandatory**, not conventional.
-- A team can escalate that requirement from reported to enforced, so a directive without a justification fails rather than merely reports.
+- Every suppression can carry a justification, and a team that requires one can make the scan fail without it.
 - No runtime footprint.
 - Where a suppression can be placed is governed by where findings occur, not by the constraints of an unrelated language feature.
 - Suppressions are visible in the output without reading the source.
-- Every suppression records **what** was accepted and **why**, in the source.
+- Every suppression records **what** was accepted, and **why** wherever a justification is given.
 - **Who** accepted it and **when** are answerable from version control, without the directive carrying them.
 - The true unsuppressed picture is obtainable on demand, so a security review never has to take suppressions on trust.
 - One coherent story alongside the existing rule exclusion, so it is clear which to reach for.
@@ -48,7 +47,7 @@ Without this, a team adopting the gate has two options — fix everything first,
 ### The directive
 
 ```
-// scan:suppress <rule-id>[,<rule-id>]* reason="<justification>"
+// scan:suppress [<rule-id>[,<rule-id>]*] [reason="<justification>"]
 ```
 
 ```ballerina
@@ -56,24 +55,36 @@ Without this, a team adopting the gate has two options — fix everything first,
 string hashed = check crypto:hashBcrypt(password, 4);
 
 log:printInfo(summary);  // scan:suppress ballerina/log:1 reason="values redacted upstream"
+
+// scan:suppress ballerina:10
+x = x;
+
+// scan:suppress reason="generated block, reviewed once"
+foreach var row in rows {
+    ...
+}
 ```
+
+Everything after the prefix is optional, as the third and fourth examples show: omit the justification, omit the rule list, or omit both. A directive with no rule list suppresses **every** finding in the construct it binds to; a directive with no justification suppresses silently. The Justification section below covers how a team makes either of them required.
 
 The leading form applies to the construct that follows it. The trailing form applies to the construct on its own line.
 
-`reason` is quoted so the justification may contain any character. The rule list is non-empty: a directive naming no rule is rejected, because blanket suppression is how a mechanism becomes a way to disable analysis.
+`reason` is quoted, so the justification may contain any character.
 
 Precisely:
 
 ```
-directive   ::= "//" WS* "scan:suppress" ( WS+ body )?
-body        ::= rule-list WS+ "reason" WS* "=" WS* quoted WS*
+directive   ::= "//" WS* "scan:suppress" ( WS+ body )? WS*
+body        ::= rule-list ( WS+ reason )?
+              | reason
+reason      ::= "reason" WS* "=" WS* quoted
 rule-list   ::= rule-id ( WS* "," WS* rule-id )*
 rule-id     ::= segment ( "/" segment )? ":" DIGIT+
 segment     ::= [A-Za-z0-9_.]+
 quoted      ::= '"' ( [^"\\] | "\\" ["\\] )* '"'
 ```
 
-`rule-id` is the identifier the tool already prints and already accepts in rule inclusion and exclusion — `ballerina:1` for a language rule, `ballerina/crypto:2` for a module rule — so a developer copies it from the finding rather than learning a second form. Within `quoted`, `\"` and `\\` are the two escapes. Repeated identifiers are de-duplicated. The body is optional in the grammar only so that a directive missing it is reported rather than ignored.
+`rule-id` is the identifier the tool already prints and already accepts in rule inclusion and exclusion — `ballerina:1` for a language rule, `ballerina/crypto:2` for a module rule — so a developer copies it from the finding rather than learning a second form. Within `quoted`, `\"` and `\\` are the two escapes. Repeated identifiers are de-duplicated. An absent `rule-list` means every rule.
 
 **More than one directive may apply to the same construct**, and their rule lists combine — necessary rather than incidental, since a directive carries one justification and a construct may need two justifications for two rules.
 
@@ -83,9 +94,9 @@ A directive binds to the **construct** it precedes, not to a line number. Format
 
 The two forms scope differently, and the difference is worth stating because it is not symmetric. The **leading form** binds to the construct that starts on the line below it — a directive above a field binds to that field, one above a declaration binds to that declaration, and one at the top of a file binds to the first declaration rather than to the file. The **trailing form** binds to the construct enclosing everything written on its own line, which is not the same as the construct ending where the comment sits: on `foreach int i in 5...1 {  // scan:suppress …` the finding is in the range expression, and the line's construct is the `foreach`.
 
-A finding is suppressed when it falls **wholly within** the bound construct and its rule appears in the directive's list. Containment rather than overlap is what keeps a directive from reaching a sibling. For nearly every rule the bound construct is the finding's own statement or expression. Placing a directive before a declaration is legal and scopes to the whole body — occasionally useful, and made safe by the rule list being mandatory.
+A finding is suppressed when it falls **wholly within** the bound construct and the directive applies to its rule — because the rule is named, or because the directive names none and so applies to all. Containment rather than overlap is what keeps a directive from reaching a sibling. For nearly every rule the bound construct is the finding's own statement or expression. Placing a directive before a declaration is legal and scopes to the whole body, which is worth being deliberate about: a directive with no rule list, placed on a declaration, silences everything in it, including findings a later author introduces.
 
-Where directives nest, **the innermost directive naming the rule wins**: it supplies the recorded justification and it is the one credited with the match. A directive on an inner construct naming an unrelated rule does not cancel an accepted exception on an enclosing one — the stricter reading would make a declaration-scoped directive stop applying the moment anyone added an unrelated directive inside the body.
+Where directives nest, **the innermost directive that applies to the rule wins**: it supplies the recorded justification and it is the one credited with the match. A directive on an inner construct naming an unrelated rule does not cancel an accepted exception on an enclosing one — the stricter reading would make a declaration-scoped directive stop applying the moment anyone added an unrelated directive inside the body.
 
 ### Coverage
 
@@ -109,18 +120,20 @@ One consequence of matching by containment: a rule reporting a range wider than 
 
 ### Justification
 
-`reason` is required. A directive without one **still suppresses**, and is itself reported as a finding at `LOW` from a built-in rule — were it inert instead, the original finding would simply reappear and the built-in rule would report nothing the output did not already show. That keeps the requirement enforceable without failing the build for it by default, and lets a team gate on it if they choose.
-
-**A team that wants the requirement absolute can have it.** `--require-suppression-reason` makes an unjustified directive inert and raises its finding to `BLOCKER`, so the accepted risk resurfaces and the gate fails on it. The same setting is expressible in the scan configuration file, so it is a property of the project rather than of one invocation:
+**`reason` is optional, and requiring it is opt-in.** By default a directive without one suppresses and nothing is reported about it. A team that wants the justification guaranteed switches the requirement on, and then a directive missing one is reported as an **error** — `bal scan` fails, naming the directive and the file and line it sits on. The requirement is expressed in the scan configuration file, so it is a property of the project rather than of one invocation, with a command-line option to switch it on for a single run:
 
 ```toml
 [suppression]
 requireReason = true
 ```
 
-**The command-line option overrides the configuration file**, matching the direction the gating work takes, so a pipeline can tighten the requirement for a release branch without editing a checked-in file. Default off, because making it the default would break the first project that upgrades with an unjustified directive already written.
+**Requiring the reason does not make the directive inert.** With the requirement on, an unjustified directive still suppresses its finding; what fails the scan is the missing justification, reported at the directive. The alternative — refusing to suppress until a reason is written — means switching the requirement on in an existing project floods the output with the accepted findings *and* the missing-reason errors at once, and a developer cannot tell which they are being asked to fix. Failing on the one thing that is actually wrong is the more useful behaviour.
 
-**This is stricter than the norm, deliberately.** Comparable tools offer a justification but do not insist on one: SpotBugs and .NET analyzers expose an optional justification field, while ESLint and golangci-lint support a reason and enforce it only if a team opts into a meta-rule. Java and Python suppressions carry no reason at all. The enforcement *mechanism* proposed here — a rule that reports a missing justification — is the same one ESLint and golangci-lint use; the difference is that it ships enabled. Given that the motivation for this work is compliance evidence, an optional justification would leave the tool producing exactly the unexplained suppressions it exists to prevent.
+**This is the prevailing shape, not a departure from it.** Suppression mechanisms in comparable analyzers treat the reason as optional and, where they enforce it at all, do so through a setting a team switches on. Some offer a justification field with no enforcement; several carry no reason at all. Keeping the field optional and the requirement configurable means a team with a compliance obligation gets it enforced, and a team without one gets a mechanism they will use rather than route around.
+
+**Naming the rules is requirable on the same terms.** By default a directive with no rule list suppresses every finding in its construct. `--require-suppression-rule-id`, or `requireRuleId` in the same table, reports a directive that names no rule as an error and fails the scan, exactly as the justification requirement does.
+
+The two requirements are independent, so a project can insist on one, both or neither. A team using suppression as compliance evidence will want both on; a team using it to quiet a handful of false positives may want neither, and the audit run tells them what they are carrying either way.
 
 **The directive records what and why; version control supplies who and when.** An audit asks four questions of any accepted risk. For
 
@@ -140,7 +153,7 @@ the answers are:
 
 The directive deliberately does not carry an author or a date. Recording them in the source means two more fields to write, to keep accurate, and to lie in — while version control already answers both, and cannot be edited without leaving a trace. This division is the strongest argument for in-source suppression over an external suppression list, where the last two questions have no answer at all.
 
-Because a directive is text rather than a typed construct, a malformed one is a diagnostic rather than a compile error. A missing `reason` is the exception and is reported as a finding, being the one case a team may want to gate on; the rest are warnings alongside the results, with counts — an empty rule list, an unquoted justification, trailing content, a malformed rule identifier, a directive preceding no construct, and a directive that matched no finding. A comment only becomes a directive if it opens with the prefix, so `// TODO: scan:suppress this later` stays an ordinary comment; once it does, any deviation from the grammar is reported rather than ignored.
+Because a directive is text rather than a typed construct, a malformed one is a diagnostic rather than a compile error. These are reported as warnings alongside the results, with counts: an unquoted justification, trailing content, a malformed rule identifier, a directive preceding no construct, and a directive that matched no finding. An absent justification or rule list is not malformed — both are legal — and becomes an error only when the corresponding requirement is switched on. A comment only becomes a directive if it opens with the prefix, so `// TODO: scan:suppress this later` stays an ordinary comment; once it does, any deviation from the grammar is reported rather than ignored.
 
 ### Reporting
 
@@ -152,7 +165,7 @@ Because a directive is text rather than a typed construct, a malformed one is a 
 
 **Gate.** Suppressed findings do not count toward severity or issue-count thresholds. The gate itself arrives with the gating work, so this becomes observable there rather than here.
 
-**Unmatched directives are reported.** A directive that suppressed nothing is stale — the finding was fixed, the rule was removed, or the rule identifier is misspelled. This count is the mitigation for the absence of compile-time validation, and it is the most important diagnostic in the proposal. It is also an audit control in its own right: accumulated stale suppressions are the clearest signal that a codebase's exceptions are no longer being maintained. The control is well established elsewhere — ESLint, Ruff and golangci-lint all report suppressions that no longer suppress anything.
+**Unmatched directives are reported.** A directive that suppressed nothing is stale — the finding was fixed, the rule was removed, or the rule identifier is misspelled. This count is the mitigation for the absence of compile-time validation, and it is the most important diagnostic in the proposal. It is also an audit control in its own right: accumulated stale suppressions are the clearest signal that a codebase's exceptions are no longer being maintained. The control is well established: comparable analyzers all report suppressions that no longer suppress anything.
 
 **New suppressions appear in code review.** Because a directive is part of the source, adding one shows up in the diff alongside the change that needed it. The exception is scrutinised at the moment it is created, by someone with the context to judge it — which is worth more than any report produced months later. An external suppression file achieves this only if reviewers happen to read it.
 
@@ -218,7 +231,7 @@ The scan runs from two entry points, the command line and the language server, a
 
 **Output shape changes.** SARIF and JSON findings gain an optional suppression entry, present only on a suppressed finding; console output gains a summary count and, where relevant, directive warnings. Existing output fixtures need regenerating.
 
-**New options, both opt-in and both default off.** `--ignore-suppressions` for the audit run, and `--require-suppression-reason` with its `[suppression] requireReason` counterpart. Neither changes the behaviour of an existing invocation, and `[suppression]` is a new table, so no existing scan configuration changes meaning.
+**New options, all opt-in and all default off.** `--ignore-suppressions` for the audit run, and `--require-suppression-reason` and `--require-suppression-rule-id` with their `[suppression] requireReason` and `requireRuleId` counterparts. None changes the behaviour of an existing invocation, and `[suppression]` is a new table, so no existing scan configuration changes meaning. In particular, a project that adopts suppression without switching a requirement on never sees a new failure.
 
 ## Alternatives
 
@@ -266,21 +279,29 @@ Declare a suppression annotation in a published module, using the source-only at
 
 **Assessment:** rejected.
 
-### Enforcing the justification by default
+### Requiring every directive to name a rule
 
-**In favour:** the requirement is either absolute or it is advisory, and an advisory requirement is the failure mode this proposal exists to prevent.
+**In favour:** a directive with no rule list silences everything in its construct, including findings a later author introduces, and unlike a missing justification that cannot be spotted by reading the directive.
 
-**Against:** it breaks the first project that upgrades with an unjustified directive already written, on unchanged code, with no opt-in — the same objection that keeps findings-based gating default-off.
+**Against:** it is the same decision-for-everyone objection as the justification, and it removes the one form that makes the mechanism usable on generated or vendored code where the whole block is accepted. Whether specificity is required is a project's policy, not a property of the mechanism.
 
-**Assessment:** rejected as the default, adopted as the opt-in strict mode described under Justification. A team whose policy demands it turns it on; everyone else gets a reported finding they can gate on when ready.
+**Assessment:** rejected as unconditional, provided as `requireRuleId`. The reporting is the compensating control: a suppression entry records which rules it actually suppressed, so a blanket directive's real effect is visible in the report rather than inferred from the source.
 
-### Optional justification
+### A justification required unconditionally
 
-**In favour:** lower friction, so developers actually use it.
+**In favour:** the requirement is either absolute or it is advisory, and "required by convention" means "absent under deadline". Compliance evidence is the motivation for this work, so an unexplained suppression is the failure mode it exists to prevent.
 
-**Against:** an unexplained suppression is the failure mode this proposal exists to prevent, and "required by convention" means "absent under deadline".
+**Against:** it decides for every project a question only some of them have. It also adds friction exactly where the mechanism most needs adoption — a developer who cannot suppress a false positive without composing a sentence will reach for project-wide exclusion instead, which records nothing at all, and the outcome is worse than an unexplained directive. And no comparable tool does it, so the behaviour would surprise.
 
-**Assessment:** rejected.
+**Assessment:** rejected, in favour of a requirement any project can switch on. The team with the compliance obligation gets enforcement; the team without one gets a mechanism they will actually use instead of routing around.
+
+### Making the directive inert when the justification is required but absent
+
+**In favour:** the strictest reading of "required" — a directive that does not meet the requirement does not take effect.
+
+**Against:** switching the requirement on then republishes every accepted finding alongside the missing-reason errors, and a developer cannot tell which of the two they are being asked to fix. A suppression's validity is also a separate question from whether it is documented, and conflating them makes the requirement expensive to adopt.
+
+**Assessment:** rejected. The missing justification fails the scan; the suppression still applies.
 
 ### Omitting suppressed findings from the output
 
@@ -308,8 +329,9 @@ The check has two halves, because the rules do. For rules shipped in the tool, a
 
 Beyond that:
 
-- Directive parsing: single and multiple rule identifiers, missing justification, empty rule list, unknown rule reported as unmatched, malformed directive reported rather than ignored, and a comment merely mentioning the prefix left alone.
-- Strict mode: an unjustified directive suppresses nothing and its finding is raised; with strict mode off the same directive suppresses and reports; the option overrides the configuration file.
+- Directive parsing: single and multiple rule identifiers, no rule list, no justification, neither, unknown rule reported as unmatched, malformed directive reported rather than ignored, and a comment merely mentioning the prefix left alone.
+- Suppressing without a rule list: every finding in the bound construct is suppressed, and nothing outside it.
+- Each requirement, independently: off, the directive suppresses silently; on, it still suppresses and the scan fails with an error naming the directive's file and line. Both on together. The command-line option overrides the configuration file.
 - Binding: leading form binds to the following construct; trailing form to the construct on its line; a directive with no following construct is reported as dangling.
 - Scoping: a directive on a declaration covers its body and nothing outside it; a nested directive naming the same rule overrides an outer one; a nested directive naming a different rule does not; no leakage to siblings; two directives on one construct combine.
 - Directives inside string literals and templates are ignored.
@@ -324,20 +346,22 @@ Beyond that:
 |---|---|
 | A misspelled rule identifier silently suppresses nothing — the cost of choosing comments over annotations | Unmatched directives are counted and reported on every run; the IDE validates identifiers against the loaded rule set |
 | A future formatter change detaches directives from their constructs | Continuous formatter-stability check, so the regression breaks our build first |
-| Directives proliferate as a way to get builds green | Mandatory justification; each one surfaces in the pull request diff when added; visible counts; suppressed findings present in the output; `--ignore-suppressions` exposes the true picture on demand |
+| Directives proliferate as a way to get builds green | Each one surfaces in the pull request diff when added; visible counts; suppressed findings present in the output; `--ignore-suppressions` exposes the true picture on demand; a team can require the justification and fail the scan without it |
+| A directive with no rule list on a declaration silences findings a later author introduces | The suppression entry in the report names the rules actually suppressed, so the effect is visible rather than inferred; `requireRuleId` forbids the form outright for projects that want it forbidden; the audit run shows total exposure |
 | Suppressions accumulate permanently, since nothing expires them | Stale-directive counts show which have outlived their finding, and the audit run shows total exposure. A real fix needs expiry, which is deferred pending a policy owner — this is the known weakness of the GA scope |
 | A new rule reports where no directive can bind | Standing coverage check; rule review asks "where does this report, and can it be suppressed there?" |
 | Directive syntax diverges from other tooling conventions | The prefix is namespaced `scan:`; confirm against existing conventions before it ships |
 | Suppression built twice across the two entry points | The shared filtering path is extracted as part of this work, and a parity test asserts both entry points agree |
 | The IDE entrenches configuration editing as the way to accept a finding | The IDE action inserts an in-source directive; decided here rather than in the IDE work |
-| Strict mode breaks a project that already carries unjustified directives | Default off, and opt-in per project; the finding it would raise is already reported without it |
+| Requiring the justification breaks a project that already carries unjustified directives | Off by default and switched on per project, so it never fires on upgrade; and it fails on the missing reason only, never by resurfacing the suppressed findings |
+| The justification stays optional in practice, so suppressions go unexplained | The field is there, it appears in the report, and the requirement is one setting away. Enforcing it for everyone was considered and rejected under Alternatives |
 | The console listing and the saved report disagree, and someone reads the console as complete | The summary line states the suppressed count on every run; documented alongside the audit run |
 
 **Assumptions.** That comment placement conventions are stable enough for the trailing form to be unambiguous. That coverage measured against today's rule set holds for the next wave; unlike the annotation design this does not depend on what kind of construct a finding sits in, so the risk is low.
 
 ## Dependencies
 
-- **Rule severity and security standard metadata** — for the severity of the missing-justification rule, at `LOW` by default and `BLOCKER` under strict mode.
+- **Rule severity and security standard metadata** — for the severity carried by the missing-justification error when the requirement is switched on.
 - **Severity and security metadata in SARIF output** — for the suppression output surface.
 - **Build gating and the exit code contract** — not a prerequisite. The shared filtering path is extracted by this work and the gate consumes it. Suppression is what makes the gate adoptable, so the two ship together.
 
@@ -347,6 +371,7 @@ No language or specification change, and no new published module.
 
 - **Expiring suppressions**, with a review date that turns the suppression back into a finding once passed. The highest-value governance addition, and deferred only because it cannot ship until someone owns the policy question of what expiry does — break the build, or report.
 - **Structured justification fields** — a ticket reference, an approver, a review date — replacing free text where a team wants them enforced rather than conventional.
+- **Per-rule exemption from the justification requirement**, for teams that want a reason on security findings but not on maintainability ones.
 - **An aggregated suppression report.** A convenience view over data already present in the SARIF output, so nothing is blocked without it.
 - **Stale directives reported as a finding** rather than a warning, so suppression hygiene can be gated on. Deferred until the gate exists, since a gate is what a team would act on it with.
 - **An option to list suppressed findings on the console**, if the divergence between the console listing and the saved report proves unhelpful in practice.
