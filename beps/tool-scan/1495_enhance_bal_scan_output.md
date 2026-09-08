@@ -31,26 +31,7 @@ The enhancement adds richer rule metadata to the `bal scan` output in both the S
 
 ### Position and Region Semantics
 
-Line and column positions follow these rules in both formats:
-
-- **Origin.** SARIF lines and columns are one-based; Ballerina lines and columns are zero-based. Every line and column field (`startLine`, `endLine`, `startColumn`, `endColumn`) therefore satisfies `Ballerina = SARIF − 1`.
-- **Half-open columns.** Column ranges are half-open (exclusive end) in both formats: `endColumn` points to the position immediately after the last character of the region. Consequently `endColumn − startColumn == length` on each side.
-- **Lines are inclusive endpoints.** `endLine` is the actual last line of the region (not one past it). For a single-line region `startLine == endLine`.
-- **Offsets and length.** `charOffset`/`startOffset` and `charLength`/`length` count characters and are identical across both formats; they are unaffected by the one-based/zero-based origin shift.
-- **Multi-line regions.** When `startLine != endLine`, `startColumn` is the half-open column on `startLine` and `endColumn` is the half-open column on `endLine`; the `− 1` origin shift and half-open column rules apply to each independently.
-- **Insertion points.** A zero-width region is represented with `endColumn == startColumn` (and `length == 0`).
-- **Newline sequences.** A line break is counted as a single character position for the purposes of offsets and lengths.
-
-**Example.** A 6-character region on the first line:
-
-| Field | SARIF | Ballerina |
-|---|---|---|
-| `startLine` | `1` | `0` |
-| `endLine` | `1` | `0` |
-| `startColumn` | `1` | `0` |
-| `endColumn` | `7` | `6` |
-| `charOffset` / `startOffset` | `0` | `0` |
-| `charLength` / `length` | `6` | `6` |
+SARIF lines and columns are one-based; Ballerina lines and columns are zero-based, so every line and column field satisfies `Ballerina = SARIF − 1`. Column ranges are half-open (exclusive end) in both formats. Character offsets (`charOffset`/`startOffset`) and lengths (`charLength`/`length`) count characters and are identical across both formats.
 
 ### Rule Metadata Fields
 
