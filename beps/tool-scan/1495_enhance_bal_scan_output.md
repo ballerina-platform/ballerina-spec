@@ -11,7 +11,7 @@
 
 This proposal enhances the `bal scan` output by enriching the rule metadata reported in both the SARIF and Ballerina JSON formats.
 
-The current output carries only basic rule information. This proposal adds richer metadata — such as a full description, security severity, default configuration level, precision, and CWE/OWASP coverage tags — to both output formats, to provide more useful security findings and improve interoperability with existing code-reporting and security-analysis tools.
+The current output carries only basic rule information. This proposal adds richer metadata — such as a full description, default severity level, structured CWE/OWASP coverage, and rule kind — to both output formats, to provide more useful security findings and improve interoperability with existing code-reporting and security-analysis tools.
 
 The design specifies, field by field, how this enriched rule metadata and the scan-result information are represented in each format, so that the two outputs stay consistent while each retains its format-specific characteristics.
 
@@ -19,7 +19,7 @@ The design specifies, field by field, how this enriched rule metadata and the sc
 
 `bal scan` supports SARIF and Ballerina JSON output formats for reporting static-analysis findings. The goal of this proposal is to make these outputs directly useful in external scan platforms such as SonarQube and CodeQL.
 
-The current output provides only basic information such as the rule identifier, rule description, rule kind, and violation location. Several fields that these platforms rely on to present rich security findings — a detailed description, security severity, default configuration level, precision, and CWE/OWASP coverage — are missing from the output. In particular, important SARIF fields defined by the SARIF schema are not currently populated.
+The current output provides only basic information such as the rule identifier, rule description, rule kind, and violation location. Several fields that these platforms rely on to present rich security findings — a detailed description, default severity level, and CWE/OWASP coverage — are missing from the output. In particular, important SARIF fields defined by the SARIF schema are not currently populated.
 
 This proposal enhances both outputs so consumers can gauge the severity, reliability, and standards coverage of a finding directly from the tool output, and explains how the currently missing fields can be represented by adjusting the output JSON model. It does not attempt to match any single platform's model; instead it adds the fields needed to support a range of platforms.
 
@@ -28,6 +28,29 @@ This proposal enhances both outputs so consumers can gauge the severity, reliabi
 ### Overview
 
 The enhancement adds richer rule metadata to the `bal scan` output in both the SARIF and Ballerina JSON formats. The design specifies how each new and existing field is represented in each format, so that the enriched information is delivered consistently across both outputs while each format keeps its own field naming and structure. The tables below cover both the existing fields and the newly added metadata for each format.
+
+### Position and Region Semantics
+
+Line and column positions follow these rules in both formats:
+
+- **Origin.** SARIF lines and columns are one-based; Ballerina lines and columns are zero-based. Every line and column field (`startLine`, `endLine`, `startColumn`, `endColumn`) therefore satisfies `Ballerina = SARIF − 1`.
+- **Half-open columns.** Column ranges are half-open (exclusive end) in both formats: `endColumn` points to the position immediately after the last character of the region. Consequently `endColumn − startColumn == length` on each side.
+- **Lines are inclusive endpoints.** `endLine` is the actual last line of the region (not one past it). For a single-line region `startLine == endLine`.
+- **Offsets and length.** `charOffset`/`startOffset` and `charLength`/`length` count characters and are identical across both formats; they are unaffected by the one-based/zero-based origin shift.
+- **Multi-line regions.** When `startLine != endLine`, `startColumn` is the half-open column on `startLine` and `endColumn` is the half-open column on `endLine`; the `− 1` origin shift and half-open column rules apply to each independently.
+- **Insertion points.** A zero-width region is represented with `endColumn == startColumn` (and `length == 0`).
+- **Newline sequences.** A line break is counted as a single character position for the purposes of offsets and lengths.
+
+**Example.** A 6-character region on the first line:
+
+| Field | SARIF | Ballerina |
+|---|---|---|
+| `startLine` | `1` | `0` |
+| `endLine` | `1` | `0` |
+| `startColumn` | `1` | `0` |
+| `endColumn` | `7` | `6` |
+| `charOffset` / `startOffset` | `0` | `0` |
+| `charLength` / `length` | `6` | `6` |
 
 ### Rule Metadata Fields
 
@@ -40,15 +63,11 @@ The enhancement adds richer rule metadata to the `bal scan` output in both the S
 | `fullDescription` | `fullDescription.text` | Detailed description of what the rule detects. | `Path injections occur when an application constructs a file path using untrusted data ... where the user typically wouldn't have access.` |
 | `helpUri` | `helpUri` | Link to the rule's documentation. | `https://ballerina.io/learn/scan-rules/#file-function-calls-should-not-be-vulnerable-to-path-injection-attacks` |
 | `severity` | `defaultConfiguration.level` | Severity of the finding. One of: `BLOCKER`, `HIGH`, `MEDIUM`, `LOW`, `INFO`, mapped to the SARIF `level` set (`error`, `error`, `warning`, `note`, `none` respectively). The mapping is many-to-one, so the SARIF → Ballerina direction is not exact. | `MEDIUM` (Ballerina) / `warning` (SARIF) |
-| `enabled` | `defaultConfiguration.enabled` | Whether the rule is enabled by default. | `true` |
 | `tags` | `properties.tags` | Classification tags. In SARIF, this also carries CWE/OWASP coverage via `external/...` entries; in Ballerina JSON that coverage is moved to `standards`, so `tags` holds only general tags. | `["security"]` (Ballerina) / `["security", "external/cwe/cwe-22", "external/owasp/owasp-a01-2025"]` (SARIF) |
 | `standards` | *(via `properties.tags`)* | Structured CWE/OWASP coverage as numbers. `cwe` is a list of weakness numbers; `owasp` is a list of `{ year, categories }` entries where `categories` are numbers. SARIF represents the same coverage through the `external/...` entries in `properties.tags`. | `{"cwe": [22], "owasp": [{"year": 2025, "categories": [1]}]}` |
 | `standards.cwe` | *(from `external/cwe/*` tags)* | CWE weakness numbers the rule maps to. | `[22]` |
 | `standards.owasp` | *(from `external/owasp/*` tags)* | OWASP categories grouped by edition year. | `[{"year": 2025, "categories": [1]}]` |
-| `precision` | `properties.precision` | Confidence in the finding. One of: `low`, `medium`, `high`. | `medium` |
-| `severityScore` | `properties.security-severity` | CVSS-style security severity score (0.0–10.0), represented as a string. | `"7.5"` |
 | `ruleKind` | `properties.ruleKind` | Category of the rule. One of: `VULNERABILITY`, `CODE_SMELL`. No native SARIF field; carried as a custom entry in the SARIF `properties` bag (the schema's extension point). | `VULNERABILITY` |
-| `remediation` | `properties.remediation` | Remediation cost model for the rule. `func` selects the cost function (`constant/issue`, `linear`, or `linear_offset`). No native SARIF field; carried in the SARIF `properties` bag. | `{"func": "Constant/Issue", "constantCost": "5min"}` |
 
 > The CWE and OWASP coverage carried in the SARIF `external/...` tags is derived from the Ballerina `standards` field. SARIF also supports representing this coverage through its `taxonomies` and `relationships` constructs, which model CWE/OWASP as formal taxonomies referenced by each rule. The `external/...` tag convention is used here for simplicity and broad tool compatibility.
 
@@ -68,7 +87,7 @@ The enhancement adds richer rule metadata to the `bal scan` output in both the S
 | `location.startOffset` | `...region.charOffset` | Character offset of the finding's start from the beginning of the file. | `1688` |
 | `location.length` | `...region.charLength` | Length of the finding in characters. | `14` |
 | `location.snippet` | `...region.snippet.text` | The source text at the finding location. Ballerina JSON uses a plain string; SARIF wraps it in a `snippet.text` object. | `let count = 0;` |
-| *(none)* | `partialFingerprints.primaryLocationLineHash` | Stable fingerprint used to track a finding across runs. SARIF-only. | `8b5fadf7b30060f688c7e7a10a39b8a7:1` |
+| *(none)* | `partialFingerprints.primaryLocationLineHash/v1` | Stable fingerprint used to track a finding across runs. SARIF-only. | `8b5fadf7b30060f688c7e7a10a39b8a7:1` |
 | `source` | *(none)* | Origin of the rule (e.g. built-in vs external). Ballerina-only. | `BUILT_IN` |
 | `fileName`, `filePath` | *(none)* | Absolute file name and path of the analyzed file. Ballerina-only; SARIF carries only the relative `uri`. | `<path>\file_io.bal` |
 
@@ -88,8 +107,7 @@ The proposed SARIF rule representation is:
     "text": "Path injections occur when an application constructs a file path using untrusted data without first validating the path. A malicious user can inject specially crafted values, like \"../\", to alter the intended path. This manipulation may lead the path to resolve to a location within the filesystem where the user typically wouldn't have access."
   },
   "defaultConfiguration": {
-    "level": "warning",
-    "enabled": true
+    "level": "warning"
   },
   "properties": {
     "tags": [
@@ -97,13 +115,7 @@ The proposed SARIF rule representation is:
       "external/cwe/cwe-22",
       "external/owasp/owasp-a01-2025"
     ],
-    "precision": "medium",
-    "security-severity": "7.5",
-    "ruleKind": "VULNERABILITY",
-    "remediation": {
-      "func": "Constant/Issue",
-      "constantCost": "5min"
-    }
+    "ruleKind": "VULNERABILITY"
   }
 }
 ```
@@ -139,7 +151,7 @@ The corresponding SARIF result representation is:
     }
   ],
   "partialFingerprints": {
-    "primaryLocationLineHash": "8b5fadf7b30060f688c7e7a10a39b8a7:1"
+    "primaryLocationLineHash/v1": "8b5fadf7b30060f688c7e7a10a39b8a7:1"
   }
 }
 ```
@@ -166,7 +178,6 @@ The relevant Ballerina JSON representation is:
     "fullDescription": "Path injections occur when an application constructs a file path using untrusted data without first validating the path. A malicious user can inject specially crafted values, like \"../\", to alter the intended path. This manipulation may lead the path to resolve to a location within the filesystem where the user typically wouldn't have access.",
     "helpUri": "https://ballerina.io/learn/scan-rules/#file-function-calls-should-not-be-vulnerable-to-path-injection-attacks",
     "severity": "MEDIUM",
-    "enabled": true,
     "tags": [
       "security"
     ],
@@ -176,13 +187,7 @@ The relevant Ballerina JSON representation is:
         { "year": 2025, "categories": [1] }
       ]
     },
-    "precision": "medium",
-    "severityScore": "7.5",
-    "ruleKind": "VULNERABILITY",
-    "remediation": {
-      "func": "Constant/Issue",
-      "constantCost": "5min"
-    }
+    "ruleKind": "VULNERABILITY"
   },
   "source": "BUILT_IN",
   "fileName": "<name>\\file_io.bal",
@@ -196,9 +201,10 @@ The relevant Ballerina JSON representation is:
 
 Testing covers both the tool's core rules and the rule extensions contributed by the standard libraries that depend on this output:
 
-- Verify the enhanced SARIF and Ballerina JSON output for the tool's core library rules — confirming that every new and existing field (full description, security severity, default configuration level, precision, CWE/OWASP tags, and `ruleKind`) is populated and represented correctly in each format.
+- Verify the enhanced SARIF and Ballerina JSON output for the tool's core library rules — confirming that every new and existing field (full description, default severity level, CWE/OWASP coverage, and `ruleKind`) is populated and represented correctly in each format.
 - Verify the output for the rules contributed by the dependent standard libraries — `http`, `file`, `log`, `jwt`, `crypto`, `os`, `io` and `email` — to confirm their rule extensions produce the enriched metadata correctly and that the changes do not break their existing rule reporting.
 - Confirm cross-compatibility with existing Ballerina JSON consumers, ensuring existing fields are preserved and the format remains backward compatible.
+- Verify position and region conversion against the semantics above, with cases for a one-character region, an insertion-point (zero-width) region, and a multi-line region, confirming the origin shift, half-open columns, and offset/length values are correct in both formats.
 
 ## Dependencies
 
