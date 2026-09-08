@@ -3,7 +3,7 @@
 - Authors - Charana Manawathilake
 - Reviewed by - Tharmigan Krishnananthalingam
 - Created date - 2026-09-04
-- Updated date - 2026-09-07
+- Updated date - 2026-09-08
 - Issue - [1495](https://github.com/ballerina-platform/ballerina-spec/issues/1495)
 - State - Submitted
 
