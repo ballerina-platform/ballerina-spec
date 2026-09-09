@@ -3,7 +3,7 @@
 - Authors - Charana Manawathilake
 - Reviewed by - Tharmigan Krishnananthalingam
 - Created date - 2026-09-04
-- Updated date - 2026-09-08
+- Updated date - 2026-09-09
 - Issue - [1495](https://github.com/ballerina-platform/ballerina-spec/issues/1495)
 - State - Submitted
 
@@ -41,7 +41,7 @@ SARIF lines and columns are one-based; Ballerina lines and columns are zero-base
 | `numericId` | *(derived)* | Numeric portion of the rule identifier. Parsed from the numeric suffix of the rule `id`; not a distinct SARIF field. | `2` |
 | `name` | `name` | Human-readable rule name. | `File function calls should not be vulnerable to path injection attacks` |
 | `description` | `shortDescription.text` | Short, one-line description of the rule. | `Path injections occur when an application constructs a file path using untrusted data without first validating the path.` |
-| `fullDescription` | `fullDescription.text` | Detailed description of what the rule detects. | `Path injections occur when an application constructs a file path using untrusted data ... where the user typically wouldn't have access.` |
+| `details` | `fullDescription.text` | Detailed description of what the rule detects. | `Path injections occur when an application constructs a file path using untrusted data ... where the user typically wouldn't have access.` |
 | `helpUri` | `helpUri` | Link to the rule's documentation. | `https://ballerina.io/learn/scan-rules/#file-function-calls-should-not-be-vulnerable-to-path-injection-attacks` |
 | `severity` | `defaultConfiguration.level` | Severity of the finding. One of: `BLOCKER`, `HIGH`, `MEDIUM`, `LOW`, `INFO`, mapped to the SARIF `level` set (`error`, `error`, `warning`, `note`, `none` respectively). The mapping is many-to-one, so the SARIF → Ballerina direction is not exact. | `MEDIUM` (Ballerina) / `warning` (SARIF) |
 | `tags` | `properties.tags` | Classification tags. In SARIF, this also carries CWE/OWASP coverage via `external/...` entries; in Ballerina JSON that coverage is moved to `standards`, so `tags` holds only general tags. | `["security"]` (Ballerina) / `["security", "external/cwe/cwe-22", "external/owasp/owasp-a01-2025"]` (SARIF) |
@@ -156,7 +156,7 @@ The relevant Ballerina JSON representation is:
     "numericId": 2,
     "name": "File function calls should not be vulnerable to path injection attacks",
     "description": "Path injections occur when an application constructs a file path using untrusted data without first validating the path.",
-    "fullDescription": "Path injections occur when an application constructs a file path using untrusted data without first validating the path. A malicious user can inject specially crafted values, like \"../\", to alter the intended path. This manipulation may lead the path to resolve to a location within the filesystem where the user typically wouldn't have access.",
+    "details": "Path injections occur when an application constructs a file path using untrusted data without first validating the path. A malicious user can inject specially crafted values, like \"../\", to alter the intended path. This manipulation may lead the path to resolve to a location within the filesystem where the user typically wouldn't have access.",
     "helpUri": "https://ballerina.io/learn/scan-rules/#file-function-calls-should-not-be-vulnerable-to-path-injection-attacks",
     "severity": "MEDIUM",
     "tags": [
