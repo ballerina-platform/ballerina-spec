@@ -72,11 +72,13 @@ public annotation FunctionConfiguration FunctionConfig on service remote functio
 
 The annotation is valid on `onCreate` and `onModify` only. Attaching it to `onDelete` is a compile-time error. Attaching such a service to a listener at runtime fails with an error.
 
+On one listener, only one service may configure an action for a given remote function. A second service declaring an action for the same remote function on the same listener is a compile-time error. Attaching such a service at runtime fails with an error.
+
 ### 3. Behavior
 
 When the remote function returns `()`, the `afterProcess` action runs. When it returns an error or panics, the error is printed and the `afterError` action runs. At most one action runs per invocation. If the relevant field is not set, the file is left in place.
 
-The action runs as soon as the remote function returns.
+The action runs after the remote function returns. When several services are attached to the listener, it runs after every service has handled the event.
 
 `DELETE` removes the file.
 
@@ -86,7 +88,7 @@ For example, the listener watches `/data/in` with `recursive: true`, and `/data/
 
 The listener's `path`, the event's file path, and `moveTo` are resolved to absolute paths against the working directory, with symbolic links resolved. `moveTo` is not relative to the watched directory.
 
-Attaching a service fails with an error when `moveTo` is empty, when `moveTo` is the watched directory, or when the listener is recursive and `moveTo` is inside the watched directory. With `recursive: false`, a subdirectory of the watched directory such as `in/processed` is a valid destination.
+Attaching a service fails with an error when `moveTo` is empty, when `moveTo` is the watched directory, when the listener is recursive and `moveTo` is inside the watched directory, or when another service on the listener already configures an action for the same remote function. With `recursive: false`, a subdirectory of the watched directory such as `in/processed` is a valid destination.
 
 Only regular files are acted on. A create event for a new subdirectory invokes the remote function but skips the action.
 
@@ -94,7 +96,7 @@ A failure of the action itself is logged and is not reported to the service. The
 
 Moving or deleting the file emits a delete event for the source path. Every service attached to the listener receives it, and `onDelete` is invoked where declared.
 
-When several services are attached to the same listener, a remote function of one service may run after an action of another service has already moved or deleted the file. The first action to run acts on the file and the others are skipped.
+When several services are attached to the same listener, every service handles the event before the action runs, so each remote function sees the file in place.
 
 ### 4. Usage examples
 
@@ -176,10 +178,10 @@ service on fileListener {
 7. A directory create event runs the remote function but skips the action.
 8. The action is skipped without error when the remote function has already moved the file.
 9. `onDelete` is invoked for the delete event caused by an action, both in the service that configured the action and in a second service on the same listener that carries no annotation.
-10. Attach fails for an empty `moveTo`, for `moveTo` equal to the watched directory, and for `moveTo` inside a recursively watched directory. Attach succeeds for a subdirectory of a non-recursive watched directory.
-11. Two services with actions on the same event: the file is acted on once and neither service fails.
+10. Attach fails for an empty `moveTo`, for `moveTo` equal to the watched directory, for `moveTo` inside a recursively watched directory, and for a second service configuring an action for the same remote function on the same listener. Attach succeeds for a subdirectory of a non-recursive watched directory.
+11. Two services on one listener, one with an action on `onCreate` and one without: both remote functions run with the file in place, then the file is acted on once.
 12. A listener whose services carry no annotation behaves as before.
-13. Compiler plugin: the annotation is accepted on `onCreate` and `onModify`, rejected on `onDelete`, recognised through an import alias, and a user-defined annotation with the same name is not flagged.
+13. Compiler plugin: the annotation is accepted on `onCreate` and `onModify`, rejected on `onDelete`, rejected on a second service configuring the same remote function on the same listener, recognised through an import alias, and a user-defined annotation with the same name is not flagged.
 
 ## Risks and Assumptions
 
