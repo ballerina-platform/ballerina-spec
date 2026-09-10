@@ -175,7 +175,7 @@ service on fileListener {
 6. A destination file that already exists causes the move to fail and leaves the source in place.
 7. A directory create event runs the remote function but skips the action.
 8. The action is skipped without error when the remote function has already moved the file.
-9. `onDelete` is invoked for the delete event caused by an action.
+9. `onDelete` is invoked for the delete event caused by an action, both in the service that configured the action and in a second service on the same listener that carries no annotation.
 10. Attach fails for an empty `moveTo`, for `moveTo` equal to the watched directory, and for `moveTo` inside a recursively watched directory. Attach succeeds for a subdirectory of a non-recursive watched directory.
 11. Two services with actions on the same event: the file is acted on once and neither service fails.
 12. A listener whose services carry no annotation behaves as before.
@@ -184,7 +184,7 @@ service on fileListener {
 ## Risks and Assumptions
 
 - A create event is emitted when a file is created, before the writer has finished. An action on `onCreate` or `onModify` can act on an incomplete file. This proposal assumes a single producer that writes each file completely before it is handled. Producers should write to a temporary name and rename on completion.
-- A move across file systems is a copy followed by a delete and is not atomic.
+- A move across file systems is a copy followed by a delete and is not atomic. If the copy fails, no partial destination is left and the source stays in place. On Windows, if the copy succeeds but the source cannot be deleted, both files remain.
 - The process needs permission to move or delete files in the watched directory and to create files in `moveTo`.
 - A listener whose services carry no annotation is unaffected.
 
