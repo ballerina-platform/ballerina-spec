@@ -186,7 +186,7 @@ service on fileListener {
 ## Risks and Assumptions
 
 - A create event arrives when a file is created, before the writer has finished. An action on `onCreate` or `onModify` can act on an incomplete file. This proposal assumes a single producer that writes each file completely before it is handled. Producers should write to a temporary name and rename on completion.
-- A move across file systems is a copy followed by a delete and is not atomic. If the copy fails, no partial destination is left and the source stays in place. On Windows, if the copy succeeds but the source cannot be deleted, both files remain.
+- A move across file systems is a copy followed by a delete and is not atomic. If the copy fails, no partial destination is left and the source stays in place. On Linux and macOS, if the copy succeeds but the source cannot be deleted, the copy is removed and the source stays in place. On Windows, both files remain in that case, and a later action on the same file follows the collision rule: the move fails and the source stays in place.
 - The process needs permission to move or delete files in the watched directory and to create files in `moveTo`.
 - A listener whose services carry no annotation is unaffected.
 
