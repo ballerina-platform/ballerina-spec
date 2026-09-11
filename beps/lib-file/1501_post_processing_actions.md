@@ -84,13 +84,24 @@ Different services on one listener may configure different remote functions. An 
 
 **`DELETE`.** The file is removed.
 
-**`MOVE`.** The file is moved into the `moveTo` directory. With `preserveSubDirs` set to `true`, the default, the file keeps its path relative to the listener's `path`. With `false`, the file is placed directly in `moveTo` under its own name, and files with the same name from different subdirectories collide there. On a non-recursive listener, `preserveSubDirs` has no effect. Directories missing on the destination path are created when the action runs; if they cannot be created, the action fails and is logged. If an entry with the destination name already exists, the move fails, the failure is logged, and the source file stays in place. If the computed destination is inside a recursively watched directory, the move fails and is logged.
+**`MOVE`.** The file is moved into the `moveTo` directory.
+- With `preserveSubDirs` set to `true`, the default, the file keeps its path relative to the listener's `path`. On a non-recursive listener the flag has no effect.
+- With `false`, the file is placed directly in `moveTo` under its own name; files with the same name from different subdirectories collide there.
+- Directories missing on the destination path are created when the action runs. If they cannot be created, the action fails and is logged.
+- If an entry with the destination name already exists, the move fails, the failure is logged, and the source file stays in place.
+- If the computed destination is inside a recursively watched directory, the move fails and is logged.
 
 For example, the listener watches `/data/in` with `recursive: true`, and `/data/in/orders/2026/a.csv` is handled with `afterProcess: {moveTo: "/data/archive"}`. With `preserveSubDirs: true` the file ends at `/data/archive/orders/2026/a.csv`. With `preserveSubDirs: false` it ends at `/data/archive/a.csv`.
 
 **Paths.** The listener's `path`, the event's file path, and `moveTo` are resolved to absolute paths against the working directory. `moveTo` is not relative to the watched directory. For the attach-time checks, symbolic links in the listener's `path` and in `moveTo` are resolved first. The action uses the event's file path as delivered: links in parent directories are traversed, and a link as the final path component is skipped.
 
-**Attach-time checks.** Attaching a service fails with an error when the annotation is present on `onDelete`, when `moveTo` is empty, when `moveTo` exists and is not a directory, when `moveTo` is the watched directory, when the listener is recursive and `moveTo` is inside the watched directory, or when another service on the listener already configures an action for the same remote function. With `recursive: false`, a subdirectory of the watched directory such as `/data/in/processed` is a valid destination; creating it produces a create event for the directory, which invokes the remote function and skips the action.
+**Attach-time checks.** Attaching a service fails with an error when:
+- the annotation is present on `onDelete`;
+- `moveTo` is empty, or exists and is not a directory;
+- `moveTo` is the watched directory, or the listener is recursive and `moveTo` is inside it;
+- another service on the listener already configures an action for the same remote function.
+
+With `recursive: false`, a subdirectory of the watched directory such as `/data/in/processed` is a valid destination. Creating it produces a create event for the directory, which invokes the remote function and skips the action.
 
 **What is acted on.** Only regular files are acted on. Directories and symbolic links are skipped: a create event for a new subdirectory or for a link invokes the remote function but skips the action. The action acts on the regular file at the path when it runs, whether or not it is the file that produced the event.
 
@@ -177,34 +188,23 @@ service on fileListener {
 
 ## Testing
 
-1. `DELETE` after a successful `onCreate` removes the file.
-2. `MOVE` after a successful `onCreate` places the file under `moveTo`, creating missing directories.
-3. `MOVE` with `preserveSubDirs: true` on a recursive listener keeps the subdirectory path; with `false` it does not.
-4. `DELETE` and `MOVE` after `onCreate` returns an error, and after it panics.
-5. `DELETE` and `MOVE` on `onModify` after success, after an error, and after a panic.
-6. Only one of `afterProcess` and `afterError` runs when both are set.
-7. An entry that already exists at the destination causes the move to fail and leaves the source in place.
-8. A create event for a directory or for a symbolic link runs the remote function but skips the action.
-9. The action is skipped without error when the remote function has already moved the file.
-10. `onDelete` is invoked for the delete event caused by an action, both in the service that configured the action and in a second service on the same listener that carries no annotation.
-11. Attach fails for the annotation on `onDelete`, for an empty `moveTo`, for a `moveTo` that exists and is not a directory, for `moveTo` equal to the watched directory, for `moveTo` inside a recursively watched directory, for a `moveTo` symbolic link that points into a recursively watched directory, and for a second service configuring the same remote function on the same listener.
-12. Attach succeeds for a subdirectory of a non-recursive watched directory. The first move creates it; the directory create event runs the remote function and skips the action.
-13. A relative `moveTo` resolves against the working directory.
-14. A computed destination inside a recursively watched directory fails and is logged.
-15. An action failure other than a collision, such as `DELETE` in a directory without write permission, is logged and leaves the file in place.
-16. A file that produces a create event and a modify event, both with actions: the first action removes the file and the second is skipped.
-17. Two services on one listener, one with an action on `onCreate` and one without: both remote functions run with the file in place, then the file is acted on once.
-18. An annotation with neither field set is accepted and configures nothing.
-19. After a service is detached, another service can configure the same remote function.
-20. A listener whose services carry no annotation behaves as before.
-21. Compiler plugin: the annotation is accepted on `onCreate` and `onModify`, rejected on `onDelete`, rejected on a second service configuring the same remote function on the same listener, recognized through an import alias, and a user-defined annotation with the same name is not flagged.
+1. `DELETE` and `MOVE` after success, after an error, and after a panic, on `onCreate` and on `onModify`; only one of the two actions runs when both are set.
+2. `preserveSubDirs` `true` and `false` on a recursive listener; no effect on a non-recursive listener.
+3. Missing destination directories are created; an existing entry at the destination fails the move; a computed destination inside a recursively watched directory fails the move.
+4. Directory and symbolic-link events skip the action; a file already moved by the remote function skips the action; an action failure such as `DELETE` without write permission is logged and leaves the file in place.
+5. The delete event caused by an action reaches every attached service, including one with no annotation.
+6. Each attach-time rejection listed under Behavior, and success for a subdirectory of a non-recursive watched directory, including the create event for that directory.
+7. Two services on one listener, one with an action and one without; a create followed by a modify event on one file; two listeners on one directory.
+8. An annotation with neither field set; detach and re-attach of the configuring service; a relative `moveTo`.
+9. A listener whose services carry no annotation behaves as before.
+10. Compiler plugin: accepted on `onCreate` and `onModify`, rejected on `onDelete` and on a second service configuring the same remote function on the same listener, recognized through an import alias, and a user-defined annotation with the same name is not flagged.
 
 Moves across file systems are not covered by automated tests.
 
 ## Risks and Assumptions
 
 - A create event may arrive before the writer has finished, and each write may produce a further modify event. This proposal assumes each file is complete when its event is delivered. Producers write the file outside the watched directory, on the same file system, and move it into the watched directory when complete.
-- A move across file systems is a copy followed by a delete and is not atomic. On Linux and macOS, if the copy fails, no partial destination is left and the source stays in place; if the copy succeeds but the source cannot be deleted, the copy is removed and the source stays in place. On Windows, if the copy succeeds but the source cannot be deleted, both files remain, and a later action on the same file follows the collision rule.
+- A move across file systems is a copy followed by a delete and is not atomic. On Linux and macOS, a failed copy leaves no partial destination. A failed source delete after a successful copy removes the copy. The source stays in place in both cases. On Windows, if the copy succeeds but the source cannot be deleted, both files remain, and a later action on the same file follows the collision rule.
 - The process needs write permission on the directory containing the file, on `moveTo`, and on any directory it creates under `moveTo`.
 - A listener whose services carry no annotation is unaffected.
 
