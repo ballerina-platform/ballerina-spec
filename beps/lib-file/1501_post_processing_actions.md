@@ -86,15 +86,15 @@ The action runs after the remote function returns. When several services are att
 
 For example, the listener watches `/data/in` with `recursive: true`, and `/data/in/orders/2026/a.csv` is handled with `afterProcess: {moveTo: "/data/archive"}`. With `preserveSubDirs: true` the file ends at `/data/archive/orders/2026/a.csv`. With `preserveSubDirs: false` it ends at `/data/archive/a.csv`.
 
-The listener's `path`, the event's file path, and `moveTo` are resolved to absolute paths against the working directory, with symbolic links resolved. `moveTo` is not relative to the watched directory.
+The listener's `path`, the event's file path, and `moveTo` are resolved to absolute paths against the working directory. `moveTo` is not relative to the watched directory. For the attach-time checks below, symbolic links in the listener's `path` and in `moveTo` are resolved first. The action operates on the event's file path as delivered and does not follow symbolic links.
 
 Attaching a service fails with an error when `moveTo` is empty, when `moveTo` is the watched directory, when the listener is recursive and `moveTo` is inside the watched directory, or when another service on the listener already configures an action for the same remote function. With `recursive: false`, a subdirectory of the watched directory such as `in/processed` is a valid destination.
 
-Only regular files are acted on. A create event for a new subdirectory invokes the remote function but skips the action.
+Only regular files are acted on. Directories and symbolic links are skipped: a create event for a new subdirectory or for a link invokes the remote function but skips the action.
 
 A failure of the action itself is logged and is not reported to the service. The file stays in place. If the file is no longer present when the action runs, the action is skipped.
 
-Moving or deleting the file emits a delete event for the source path. Every service attached to the listener receives it, and `onDelete` is invoked where declared.
+Removing the file from the watched directory, by `DELETE` or by `MOVE`, produces a delete event from the file system like any other removal. The listener generates no events of its own. Every service attached to the listener receives that event, and `onDelete` is invoked where declared. If the source file remains, no delete event occurs.
 
 When several services are attached to the same listener, every service handles the event before the action runs, so each remote function sees the file in place.
 
@@ -175,7 +175,7 @@ service on fileListener {
 4. `DELETE` and `MOVE` after `onCreate` returns an error, and after it panics.
 5. Only one of `afterProcess` and `afterError` runs when both are set.
 6. A destination file that already exists causes the move to fail and leaves the source in place.
-7. A directory create event runs the remote function but skips the action.
+7. A create event for a directory or for a symbolic link runs the remote function but skips the action.
 8. The action is skipped without error when the remote function has already moved the file.
 9. `onDelete` is invoked for the delete event caused by an action, both in the service that configured the action and in a second service on the same listener that carries no annotation.
 10. Attach fails for an empty `moveTo`, for `moveTo` equal to the watched directory, for `moveTo` inside a recursively watched directory, and for a second service configuring an action for the same remote function on the same listener. Attach succeeds for a subdirectory of a non-recursive watched directory.
@@ -185,7 +185,7 @@ service on fileListener {
 
 ## Risks and Assumptions
 
-- A create event is emitted when a file is created, before the writer has finished. An action on `onCreate` or `onModify` can act on an incomplete file. This proposal assumes a single producer that writes each file completely before it is handled. Producers should write to a temporary name and rename on completion.
+- A create event arrives when a file is created, before the writer has finished. An action on `onCreate` or `onModify` can act on an incomplete file. This proposal assumes a single producer that writes each file completely before it is handled. Producers should write to a temporary name and rename on completion.
 - A move across file systems is a copy followed by a delete and is not atomic. If the copy fails, no partial destination is left and the source stays in place. On Windows, if the copy succeeds but the source cannot be deleted, both files remain.
 - The process needs permission to move or delete files in the watched directory and to create files in `moveTo`.
 - A listener whose services carry no annotation is unaffected.
