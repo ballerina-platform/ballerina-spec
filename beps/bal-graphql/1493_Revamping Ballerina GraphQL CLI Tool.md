@@ -167,7 +167,7 @@ flowchart TD
 
     FACTORY --> CG["ClientGenerator<br/>balGraphql.toml<br/>schema + documents"]
     FACTORY --> SG["ServiceGenerator<br/>balGraphql.toml<br/>schema source"]
-    FACTORY --> HG["SchemaGenerator<br/>Ballerina source<br/>.bal file or package"]
+    FACTORY --> HG["SchemaGenerator<br/>Ballerina source<br/>service file, package, or module"]
 
     CG --> ENGINE
     SG --> ENGINE
@@ -204,7 +204,7 @@ Every generator follows the same contract \- validate, generate, write. A genera
 flowchart LR
     CIN["balGraphql.toml<br/>schema: file, URL, or introspection endpoint<br/>GraphQL documents"] --> CGEN["ClientGenerator"] --> COUT["client.bal<br/>types.bal"]
     SIN["balGraphql.toml<br/>schema: file, URL, or introspection endpoint"] --> SGEN["ServiceGenerator"] --> SOUT["service.bal<br/>types.bal"]
-    HIN["Ballerina source<br/>service file or package path"] --> HGEN["SchemaGenerator"] --> HOUT["schema.graphql"]
+    HIN["Ballerina source<br/>service file, package, or module"] --> HGEN["SchemaGenerator"] --> HOUT["schema.graphql"]
 
     classDef in fill:#e3eefd,stroke:#4a83d4,color:#12315e
     classDef gen fill:#e6e2fc,stroke:#7a5cf0,color:#1e1b4b
@@ -356,7 +356,8 @@ ERROR [:(-1:-1,-1:-1)] Given Ballerina file contains compilation error(s).
 * Define and apply a consistent type ordering convention in the generated schema \- Query, Mutation, and Subscription grouped together at the top (in that order), followed by the remaining types
 * Fix enum member ordering to preserve declaration order from the source service
 * Improve error handling to surface actionable diagnostics instead of a generic compilation-error message
-* Validate that the input compiles before attempting schema extraction, and fail fast with a clear error if not. A standalone `.bal` file is loaded as a single-file project; a file inside a package, or a package directory, is loaded as that package through the Ballerina project API.
+* Validate that the input compiles before attempting schema extraction, and fail fast with a clear error if not. A standalone .bal file is loaded as a single-file project. A package directory is loaded as that package through the Ballerina project API. A .bal file that sits inside a package is rejected - the same restriction bal run applies, since a file cannot be compiled independently of the package it belongs to.
+
 * Migrate schema generation to the new modular architecture.
 
 **Expected Outcome:**
@@ -459,14 +460,14 @@ a GraphQL schema file with .graphql extension.
 
 **Proposed changes:**
 
-* Support two input forms for schema generation: a direct file path (standalone or inside a package), and a package directory path
-* Resolve each form to the right kind of project before validating: a standalone .bal file is loaded as a single-file project, and a package directory (or a file inside one) is loaded as a package via the Ballerina project API (see 5.2.2)
+* Support three input forms for schema generation: a standalone .bal file, a package directory path, and a module path within a package.
+* Resolve each form to the right kind of project before validating: a standalone .bal file is loaded as a single-file project; a package directory is loaded as that package via the Ballerina project API, targeting the default module; a module path targets that module specifically (see 5.2.2). A .bal file that sits inside a package, given directly, is rejected with a clear error, consistent with how bal command treats the same case.
 * For a directory input, validate it is a valid Ballerina package (via the Ballerina project API) and fail fast with a clear error if not
 * For a valid package input, locate the GraphQL service(s) within it using a GraphQL compiler plugin API, rather than requiring the user to point at the exact file
 
 **Expected Outcome:**
 
-* Schema generation works correctly whether given a file path or a package path
+* Schema generation works correctly whether given a standalone file, a package path, or a module path, and rejects a package-internal file path with a clear error rather than attempting to resolve it
 * Package inputs are validated up front, with a clear error if the directory isn't a valid Ballerina package
 * Users no longer need to know the exact file a service lives in when generating from a package
 
@@ -525,8 +526,7 @@ Ballerina has two phases \- compile time and run time. Schema generation is a co
 
 **Expected Outcome:**
 
-* Output file names for duplicate-base-path services are stable and deterministic, independent of declaration order or unrelated edits to the source file
-* The \-s flag can reliably disambiguate between services sharing the same base path
+* Output file names for duplicate-base-path services are stable and deterministic, independent of declaration order, unrelated edits to the source file, or how common duplicate-base-path services are in practice
 * Naming behavior is derivable entirely from static analysis, with no dependency on runtime configuration values.
 
 ### 5.2.6 Shape of the balGraphQL.toml
@@ -646,28 +646,60 @@ bal graphql <balGraphQL.toml-path>
             [-m | --mode] <client|service>
             [--module] <module-name>
             [-r | --use-records-for-objects]
+            [--force]
+            [--dry-run]
 
-bal graphql <ballerina-service-file-or-package-path>
+
+bal graphql <ballerina-service-file-or-package-or-module-path>
             [-o | --output] <output-location>
             [-s | --service] <service-base-path>
+            [--force]
+            [--dry-run]
+
 ```
 
 | Flag | Change |
 | :---- | :---- |
-| \<input\> | Now a positional argument instead of the \-i flag, since it's always mandatory. For client/service generation it takes balGraphQL.toml; for schema generation it takes a Ballerina service file or package directory path (see 5.2.4) |
-| \-m | Narrowed to client\|service. Only needed when the TOML is ambiguous \- schema is no longer a mode value, since that path is determined by the input being Ballerina source |
+| \<input\> | Now a positional argument instead of the -i flag, since it's always mandatory. For client/service generation it takes balGraphQL.toml; for schema generation it takes a standalone Ballerina service file, a package directory path, or a module path within a package (see 5.2.4) |
+| \-m | Narrowed to client\|service. When omitted, the mode is inferred from the TOML's shape \- presence of `documents` means client, absence means service. When passed, the tool validates that the TOML matches the declared mode and errors on mismatch. Schema is no longer a mode value, since that path is determined by the input being Ballerina source |
 | \--module | New flag (no short form). Specifies which module within the package the generated files are written into. If omitted, files are generated into the package's default module. If the named module doesn't exist yet, it is created |
 | \-s | Unchanged \- scoped to schema generation |
 | \-r | Unchanged \- scoped to service generation |
+| \--force | Allow overwriting existing generated files. Without it, generation that would modify an existing file is skipped with a warning (see 5.2.8) |
+| \--dry-run | Report what would be generated or overwritten, without writing anything |
 
 **Expected Outcome:**
 
 * Fewer command forms to learn \- client and service generation share one consistent entry shape
 * Mode is derived from config contents rather than file extension, with \-m available as an explicit override
-* Schema generation input covers both a single file and a whole package
+* Schema generation input covers a standalone file, a whole package, or a specific module, with a package-internal file path rejected explicitly
 * Generated code can target either the package's default module or a named sub-module, with the module created automatically if it doesn't already exist
 
-### 5.2.8 Build Tool Integration
+### 5.2.8 Regeneration Safety
+
+**Current State:**
+
+Regeneration always overwrites existing output unconditionally. Any manual edit made to a previously generated file \- a fix, a comment, a temporary breakpoint \- is silently discarded the next time the tool runs. There is no way to preview what a run would produce before committing to it (matches issue \#6382).
+
+**Proposed changes:**
+
+Regeneration is non-destructive by default. If generation would modify a file that already exists, the tool skips writing it and emits a warning naming the file and pointing to \--force.
+
+\--force permits the overwrite.
+
+\--dry-run reports what would be generated or overwritten without writing anything, so the effect of a run can be previewed first.
+
+Where feasible, regeneration is incremental rather than all-or-nothing: using the compiler APIs, the tool reads the existing file and, for each resource or remote method already present with an unchanged signature, leaves it untouched rather than regenerating it. Only methods that are new, or whose corresponding schema field changed, are regenerated. A user-written method body is never modified as long as its signature still matches the schema.
+
+Where a method's signature has changed, the existing body cannot be preserved safely, since it was written against different parameters or a different return type. Under \--force, the tool regenerates that method without a body, exactly as newly generated methods are handled (see 5.2.1). Without \--force, the method is left as-is and a warning is issued.
+
+**Expected Outcome:**
+
+* Hand-written code survives regeneration by default
+* Users can preview a run's effect with \--dry-run before committing to it
+* Regeneration only touches what actually changed, rather than replacing entire files
+
+### 5.2.9 Build Tool Integration
 
 **Current State:**
 
@@ -692,11 +724,13 @@ The \[\[tool.graphql\]\] entry mirrors the CLI \- every option available as a fl
 | Field | CLI equivalent | Description |
 | :---- | :---- | :---- |
 | id | \- | Identifier for this tool entry |
-| input | positional argument | The input driving generation. Either a balGraphQL.toml config path (for client/service generation), or a Ballerina service file or package directory path (for schema generation) |
+| input | positional argument | The input driving generation. Either a balGraphQL.toml config path (for client/service generation), or a standalone Ballerina service file, package directory path, or module path (for schema generation) |
 | mode | \-m | client or service. Only needed when the config could mean either |
 | targetModule | \--module | The module within the package that generated files are written into |
 | serviceBasePath | \-s | Schema generation only. Selects one service by base path |
 | useRecordsForObjects | \-r | Service generation only. Generate record types instead of service classes where possible |
+| force | \--force | Allow overwriting existing generated files during a build |
+| dryRun | \--dry-run | Report what would be generated without writing anything |
 
 Multiple \[\[tool.graphql\]\] entries can be declared, each generating into its own target module.
 
