@@ -3,20 +3,20 @@
 - Author: @niveathika
 - Reviewers: 
 - Created: 2026-09-18
-- Updated: 2026-10-07
+- Updated: 2026-10-12
 - Issue: [#1503](https://github.com/ballerina-platform/ballerina-spec/issues/1503)
 - Status: Submitted
 
 ## Summary
 
 This proposal lets `bal persist` generate a data service over an existing persist model. The
-user adds one options group to the existing `[[tool.persist]]` entry, naming the protocol and,
-optionally, the entities and operations to expose. The tool then generates a listener and a
-service alongside the persist client.
+user adds one options group to the existing `[[tool.persist]]` entry, naming the protocol, and
+marks each entity to expose with `@dataservice:Expose` in the model. The tool then generates a
+listener and a service alongside the persist client.
 
 ```
-bal persist add --datastore postgresql --dataservice http --entities Employee,Department
-# write persist/model.bal, or bal persist pull
+bal persist add --datastore postgresql --dataservice http
+# write persist/model.bal and annotate the entities to expose, or bal persist pull
 bal build                     # client and data service are generated
 ```
 
@@ -36,8 +36,8 @@ Please add any comments to issue [#1503](https://github.com/ballerina-platform/b
 - Define one protocol-neutral CRUD shape that every protocol renders.
 - Configure the service through the existing `[[tool.persist]]` entry and existing commands. No
   new `bal persist` command.
-- Let the model restrict what each entity allows, using annotations that are checked at
-  compile time.
+- Let the model choose which entities are exposed and what each allows, using annotations that
+  are checked at compile time.
 - Leave persist's behaviour unchanged when no data service is configured.
 - Fix the parts of the contract that later features (query options, auth, relations) would
   otherwise break: the response envelope, the action names, the addressing scheme, the write
@@ -100,8 +100,8 @@ depend on the persist client first.
 
 | Piece | Owner | Contents |
 |---|---|---|
-| `Ballerina.toml` | user | Whether a data service exists, its protocol, base path, entities and default operations |
-| `persist/model.bal` | user | The entities, plus optional `@dataservice:Expose` annotations restricting an entity |
+| `Ballerina.toml` | user | Whether a data service exists, its protocol and its base path |
+| `persist/model.bal` | user | The entities, and a `@dataservice:Expose` annotation on each entity to expose, naming its operations |
 | `ballerina/dataservice` | new library | The annotations, their compiler-plugin validation, and the runtime types generated services share |
 | `generated/` | persist tool | The persist client, as today, plus the data service |
 
@@ -117,19 +117,18 @@ filePath = "persist/model.bal"
 options.datastore = "postgresql"
 options.dataservice.protocol = "http"
 options.dataservice.basePath = "/api"
-options.dataservice.entities = ["Employee", "Department"]
-options.dataservice.operations = ["read", "create", "update", "delete"]
 ```
 
 | Key | Required | Default | Meaning |
 |---|---|---|---|
 | `options.dataservice.protocol` | yes | — | The protocol the service is generated for: `http`, `graphql` or `mcp` |
 | `options.dataservice.basePath` | no | `/api` for `http`, `/graphql` for `graphql`, `/mcp` for `mcp` | The service's base path |
-| `options.dataservice.entities` | no | All entities in the model | The entities to expose, by entity name |
-| `options.dataservice.operations` | no | `["read", "create", "update", "delete"]` | The actions every exposed entity allows, unless its annotation narrows them |
 
 When `options.dataservice` is absent, no service is generated and persist behaves exactly as it
 does today. When it is present, `protocol` must be set.
+
+`Ballerina.toml` says how and where the service is served. Which entities it exposes, and what
+each allows, is said in the model with [`@dataservice:Expose`](#dataserviceexpose).
 
 #### Protocol values
 
@@ -151,34 +150,21 @@ the supported values.
 `protocol` takes a single string. A later proposal may also accept an array, generating one
 service per protocol on a shared listener. A string stays valid when that happens.
 
-#### Entities
-
-`entities` is an include list. When omitted, every entity in the model is exposed, and the tool
-reports which entities it exposed on each generation so that an entity added to the model is
-not exposed unnoticed.
-
-An empty list is an error. A name that is not an entity in the model is an error.
-
-Persist does not generate a client API for an entity whose fields include an unsupported data
-type. Such an entity cannot be exposed: naming it in `entities` is an error, and when `entities`
-is omitted it is left out with a warning.
-
 ### CLI
 
-No new command is added. Two flags are added to `add` and `pull`.
+No new command is added. Two flags are added.
 
-| Flag | Writes | Meaning |
+| Flag | Commands | Meaning |
 |---|---|---|
-| `--dataservice <protocol>` | `options.dataservice.protocol` | Enables the data service for the given protocol |
-| `--entities <Entity,...>` | `options.dataservice.entities` | The entities to expose. Requires `--dataservice` |
+| `--dataservice <protocol>` | `add`, `pull` | Enables the data service for the given protocol, by writing `options.dataservice.protocol` |
+| `--expose-tables <table,...>` | `pull` | The tables whose entities are exposed. Requires `--dataservice` |
 
-`basePath` and `operations` have no flags. They have defaults and are edited in
-`Ballerina.toml`.
+`basePath` has no flag. It has a default and is edited in `Ballerina.toml`.
 
 | Command | Behaviour with `--dataservice` |
 |---|---|
-| `bal persist add` | Writes the `[[tool.persist]]` entry as today, and adds the `options.dataservice` keys to it. `--entities` is not checked against the model here, because `add` writes an empty model |
-| `bal persist pull` | Introspects the database and writes the model as today. Then records the `options.dataservice` keys in the existing `[[tool.persist]]` entry, creating the entry as `add` would if none exists. Without `--entities`, every pulled entity is exposed; `--tables` already selects which tables are pulled. With `--entities`, the names are checked against the pulled model |
+| `bal persist add` | Writes the `[[tool.persist]]` entry as today, and adds the `options.dataservice` keys to it. The model it writes is empty, so the user annotates each entity to expose as they write it |
+| `bal persist pull` | Introspects the database and writes the model as today, with `@dataservice:Expose` on each entity to expose and the `ballerina/dataservice` import. Then records the `options.dataservice` keys in the existing `[[tool.persist]]` entry, creating the entry as `add` would if none exists |
 | `bal build` | Generates the client and, when `options.dataservice` is present, the data service |
 
 `init`, `generate`, `migrate` and `push` are unchanged. `init` and `generate` are the one-time
@@ -186,14 +172,19 @@ generation path that predates `add`: they do not read `[[tool.persist]]` and do 
 data service. The data service is generated only through the `[[tool.persist]]` entry, at build
 time.
 
-`pull --entities` names model entities, not database tables. `pull --tables` keeps its current
-meaning, so a user can pull more tables than they expose.
+`pull` takes table names because that is what a user knows before the model exists. Without
+`--expose-tables`, every pulled entity is annotated. With it, only the entities of the named
+tables are annotated, and each name must be a pulled table. `--tables` keeps its current
+meaning, so a user can pull more tables than they expose. When an entity's name differs from
+its table's, `pull` prints the mapping. From then on the model is the source of truth: the
+annotations can be edited like the rest of it, and a later `pull` replaces them along with the
+model.
 
 ### The `ballerina/dataservice` module
 
 The module holds:
 
-- the annotations a model uses to restrict an entity,
+- the annotations a model uses to expose an entity and restrict what it allows,
 - a compiler plugin that validates them, and
 - the protocol-neutral runtime types that generated services share: the error body and its
   error codes.
@@ -203,11 +194,18 @@ stays thin, and fixes ship as library updates without regeneration. The library 
 on any protocol module. Types that are specific to an entity, such as the `<Entity>List`
 envelope, or to a protocol, such as an HTTP status code record, are generated.
 
-A model that uses the annotations imports the module with a prefix:
+A model with a data service imports the module with a prefix:
 
 ```ballerina
 import ballerina/persist as _;
 import ballerina/dataservice;
+
+@dataservice:Expose
+type Employee record {|
+    readonly int id;
+    string name;
+    string email;
+|};
 
 @dataservice:Expose {operations: [dataservice:READ]}
 type Department record {|
@@ -215,16 +213,17 @@ type Department record {|
     string name;
 |};
 
-type Employee record {|
+type AuditLog record {|
     readonly int id;
-    string name;
-    string email;
+    string entry;
 |};
 ```
 
-The import is needed only when the model uses an annotation. It is not a switch: whether a
-service is generated is decided by `options.dataservice` in `Ballerina.toml`. The persist
-tool's model validation accepts this import alongside the ones it accepts today.
+Here `Employee` allows every action, `Department` only reads, and `AuditLog` is not exposed.
+
+Whether a service is generated is decided by `options.dataservice` in `Ballerina.toml`; the
+annotations only select what it exposes. The persist tool's model validation accepts this
+import alongside the ones it accepts today.
 
 #### `@dataservice:Expose`
 
@@ -237,38 +236,41 @@ public enum Operation {
 }
 
 public type ExposeConfig record {|
-    Operation[] operations;
+    Operation[] operations = [READ, CREATE, UPDATE, DELETE];
 |};
 
 public annotation ExposeConfig Expose on type;
 ```
 
-The annotation narrows what an entity allows. An entity's effective operations are those listed
-in both `options.dataservice.operations` and its annotation. An annotation never widens what
-`Ballerina.toml` grants.
+Exposure is opt-in. An entity is exposed only when it has the annotation, and it allows exactly
+the actions in `operations`:
 
-| `Ballerina.toml` operations | Annotation | Effective |
+| Annotation | Exposed | Actions |
 |---|---|---|
-| `read, create, update, delete` | none | `read, create, update, delete` |
-| `read, create, update, delete` | `[READ]` | `read` |
-| `read` | `[READ, UPDATE]` | `read` |
+| none | no | — |
+| `@dataservice:Expose` | yes | `read, create, update, delete` |
+| `@dataservice:Expose {operations: [dataservice:READ]}` | yes | `read` |
 
-An entity whose effective operations are empty is an error.
+An empty `operations` list is an error: an entity that allows nothing is left unannotated. A
+service that exposes no entity is an error, and the error lists the model's entities so that a
+user enabling a service on an existing model sees what to annotate.
 
-The member values match the strings `Ballerina.toml` uses. `EXECUTE` is reserved for custom
-operations in a later proposal.
+Persist does not generate a client API for an entity whose fields include an unsupported data
+type. Annotating such an entity is an error.
+
+`EXECUTE` is reserved for custom operations in a later proposal.
 
 #### Validation
 
-The compiler plugin checks the annotation where it is written. The persist tool checks it
-against `Ballerina.toml` when it generates.
+The compiler plugin checks the annotation where it is written. The persist tool checks what
+needs the whole model when it generates.
 
 | Check | Where | Severity |
 |---|---|---|
 | `@dataservice:Expose` is on a record type that is a persist entity | compiler plugin | error |
 | `operations` is non-empty and has no duplicates | compiler plugin | error |
-| The annotated entity is not in `options.dataservice.entities` | persist tool | warning |
-| An entity's effective operations are empty | persist tool | error |
+| An annotated entity has no unsupported data types | persist tool | error |
+| At least one entity is annotated | persist tool | error |
 
 Diagnostic codes and messages are left to the implementation.
 
@@ -444,7 +446,8 @@ proposals. For example, persist's `time:*` record types and `byte[]` need a Grap
   behave as today.
 - `persist-options-schema.json` currently sets `additionalProperties: false`. It gains a
   `dataservice` object; existing entries still validate.
-- Models that do not import `ballerina/dataservice` are unaffected.
+- Models that do not import `ballerina/dataservice` are unaffected. Without
+  `options.dataservice`, `@dataservice:Expose` annotations in a model have no effect.
 
 ## Alternatives
 
@@ -458,12 +461,34 @@ It is not adopted for this proposal because it adds a second hand-maintained art
 command to deliver a CRUD shape the model already determines. It remains an option for later
 features that cannot be expressed as annotations.
 
-### Per-entity configuration in `Ballerina.toml`
+### Selecting entities in `Ballerina.toml`
 
-For example, `options.dataservice.entities.Department = ["read"]`. This splits what the data
-allows across two files, and cannot express field-level rules such as a hidden field.
-`Ballerina.toml` is kept for how and where the service is served; the model holds what the data
-allows.
+For example, `options.dataservice.entities = ["Employee", "Department"]`, with every entity
+exposed when the list is omitted, plus `options.dataservice.operations` as the actions every
+entity allows unless an annotation narrows them. This splits what the data allows across two
+files, and a misspelled entity name is caught only when the tool runs, while an annotation sits
+on the type it exposes and is checked by the compiler plugin as it is written. Exposing every
+entity by default also exposes an entity added to the model later without anyone choosing to.
+
+Per-entity operations in `Ballerina.toml`, such as `options.dataservice.entities.Department =
+["read"]`, have the same split and cannot express field-level rules such as a hidden field.
+`Ballerina.toml` is kept for how and where the service is served; the model holds what is
+exposed and what the data allows.
+
+### Exposing every entity by default with a switch
+
+For example, `options.dataservice.exposeAll = true`, under which an unannotated entity is
+exposed with every action. It saves annotating each entity when a service is added to an
+existing model.
+
+It is not adopted because it makes exposure depend on two places and three states. Excluding an
+entity under the switch needs a second annotation, such as `@dataservice:Hidden`, because
+`@dataservice:Expose` only names actions. Whether an entity is exposed then depends on the
+switch, on which of the two annotations it carries, and on how they combine, and every
+combination has to be specified, validated and kept consistent across protocols. An entity
+added to the model later is also exposed without anyone choosing to. With opt-in, the
+annotation on the entity is the whole answer. The cost is annotating each entity once, which
+`pull --dataservice` does for a database-backed model.
 
 ### A `readOnly` flag, or one switch per operation
 
@@ -486,11 +511,12 @@ array.
 ## Testing
 
 - **Options schema:** `options.dataservice` with valid and invalid values; required
-  `protocol`; reserved protocol values; empty and unknown `entities`.
-- **CLI:** `add` and `pull` with and without `--dataservice` and `--entities`;
-  `pull` into a project with and without an existing `[[tool.persist]]` entry.
-- **Annotation validation:** each compiler-plugin rule, and the effective-operations
-  intersection, including the empty case.
+  `protocol`; reserved protocol values.
+- **CLI:** `add` and `pull` with and without `--dataservice`; `pull` with and without
+  `--expose-tables`, including unknown tables; `pull` into a project with and without an
+  existing `[[tool.persist]]` entry.
+- **Annotation validation:** each compiler-plugin rule; the bare annotation and its default
+  operations; a model with no annotated entity.
 - **Code generation:** expected-output tests for each protocol, with single and composite keys,
   every action combination, and the default and custom base path.
 - **Compilation:** the generated package compiles on every persist datastore.
@@ -505,8 +531,9 @@ array.
   this is slow and memory-heavy. The envelope lets paging be added without breaking clients,
   but until then the risk stays with the user.
 - **Exposure without auth.** Until auth is added, every caller can perform every enabled
-  action, and the default enables all four, including delete. Users must restrict exposure
-  with `operations` and annotations, or protect the listener themselves.
+  action, and a bare `@dataservice:Expose` enables all four, including delete. `pull
+  --dataservice` annotates every pulled entity this way. Users must narrow `operations` in the
+  annotations, or protect the listener themselves.
 - **Creates are not atomic with their read-back.** A create is followed by a separate read. A
   concurrent delete between the two can return a not-found error for a record that was
   created.

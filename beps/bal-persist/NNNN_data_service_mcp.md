@@ -81,7 +81,8 @@ For an entity `Employee` with key `id`:
 - **Composite keys:** one argument per key field, in declaration order.
 - **Disabled operations** are not generated, so the tool does not appear in `tools/list`.
 - **Tool count:** up to six tools per entity. A model with many entities gives an agent a long
-  tool list; `options.dataservice.entities` and `operations` are the way to keep it short.
+  tool list; annotating only the entities and actions an agent needs is the way to keep it
+  short.
 
 #### Generated service
 
