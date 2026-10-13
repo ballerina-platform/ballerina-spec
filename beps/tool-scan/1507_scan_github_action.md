@@ -29,7 +29,7 @@ Platforms differ in how they take results. GitHub code scanning imports SARIF. A
 
 - Run `bal scan` in GitHub Actions in one step, with about five lines of YAML for the common case.
 - Route findings to a preferred platform, such as GitHub code scanning or SonarQube.
-- Produce a normalized SARIF 2.1.0 file on every successful run that GitHub code scanning accepts as is, and that other SARIF consumers can use.
+- Produce a normalized SARIF 2.1.0 file on every successful run that scans at least one package, which GitHub code scanning accepts as is and other SARIF consumers can use. A run that finds no package passes as `skipped` without a SARIF file.
 - Hide the toolchain setup for Ballerina and the scan tool.
 - Pass SonarQube settings and credentials to the scan without changing any committed file.
 - Provide an opt-in gate and a job summary, and expose the result and counts as outputs.
@@ -95,12 +95,12 @@ steps:
 
 1. **Validate inputs** and fail with a message naming the input and its accepted values. These checks need only the inputs themselves. Every path in `paths` must exist. `platform-config` must parse as a mapping that matches the [schema](#platform-configuration). A platform or field the action does not know fails the step, so a typo such as `tokn` is caught. Settings for a platform that is not in `platforms` are ignored with a warning. With `sonarqube` selected:
     - If the run is a pull request from a fork or from Dependabot and any SonarQube `token` is empty, skip `sonarqube` with a warning and continue without it. Secrets are not available to these runs.
-    - Otherwise check that every `token` that is set is not empty, that every `host-url` set at the platform level or under `packages` is a valid `http` or `https` URL, and that every `packages` item that sets `host-url` also sets `token`.
+    - Otherwise check that every `token` that is set is not empty, that every `host-url` set at the platform level or under `packages` is a valid `https` URL, since every URL is used with a token, and that every `packages` item that sets `host-url` also sets `token`.
 2. **Find packages.** Each entry in `paths` is a package or a directory searched for `Ballerina.toml`, skipping `target`, `build` and `.git`. Packages matching `exclude-paths` are dropped and overlapping paths are deduplicated, so each package is scanned once. When no package is found, the result is `skipped`, a warning is written and the step passes.
 3. **Resolve SonarQube settings** (`sonarqube` only). For each package, read its properties file and combine it with `platform-config` in the order given in [Platform configuration](#platform-configuration). Fail with a message naming the package, the missing setting and how to provide it, when:
     - the resolved plugin path is absolute, or is neither an existing file nor an `https` URL,
     - a properties file path is set and the file does not exist,
-    - a package has no server URL, or its URL is not a valid `http` or `https` URL,
+    - a package has no server URL, or its URL is not a valid `https` URL, including a URL from the properties file, since the token is sent to it,
     - a package has no token, from its `packages` item or the platform level,
     - an item under `packages` matches no package found in step 2, or two items have the same `path`.
 
@@ -109,7 +109,7 @@ steps:
 5. **Install the scan tool.** Use `tool-version` if given, otherwise the version pinned by the action release. The tool is pulled only when it is missing or a different version is active, so the action can run more than once in a job. With `sonarqube`, also download the platform plugin when it is resolved to a version, and the SonarScanner CLI. See [SonarQube](#sonarqube).
 6. **Scan each package** from the package directory with `bal scan --format=sarif`, plus `--platforms=sonarqube` when selected, and `--include-rules` and `--exclude-rules` when set. Any old report is deleted first, so a report from an earlier run is never read. With `sonarqube`, the findings are sent to SonarQube during this step, with the package's resolved settings. See [SonarQube](#sonarqube). If `bal scan` fails for a package, for example on compilation errors or because SonarQube rejects the analysis, the remaining packages are still scanned so that every failure is reported, and the step then fails without producing a SARIF file.
 7. **Normalize and merge** the package reports into one SARIF file, and set the outputs.
-8. **Upload to code scanning** (`github-code-scanning` only) with `github/codeql-action/upload-sarif` under `category`. SonarQube already received its findings in step 6. Both happen before the gate, so findings reach the platforms even when the gate fails.
+8. **Upload to code scanning** (`github-code-scanning` only) with `github/codeql-action/upload-sarif` under `category`. On a pull request from a fork or from Dependabot, the default `GITHUB_TOKEN` is read-only and cannot have `security-events: write`, so the action skips the upload with a warning and keeps the SARIF file as the `sarif-file` output. The workflow can save it with `actions/upload-artifact` and upload it from a trusted `workflow_run` workflow. SonarQube already received its findings in step 6. Both happen before the gate, so findings reach the platforms even when the gate fails.
 9. **Report.** Write annotations, when enabled, and the job summary.
 10. **Apply the gate** and fail the step if it fails.
 
@@ -226,7 +226,7 @@ With `platforms: sonarqube`, the action reports the findings to a SonarQube serv
 1. **Platform plugin.** `plugin-path` or `plugin-version` from `platform-config`. Otherwise the `path` of the `sonarqube` `[[platform]]` entry in `Scan.toml`, which must be a relative path or an `https` URL. Otherwise the plugin version pinned by the action release, which the action downloads. An absolute path fails, since it points to a developer's machine.
 2. **Properties file.** `properties-file` from `platform-config`. Otherwise `sonarProjectPropertiesPath` from `Scan.toml`. Otherwise `sonar-project.properties` in the package root, if it exists. A path that is set but does not exist fails.
 3. **Settings.** Each setting is taken from the package's `packages` item if set, then from the platform level of `platform-config`, and from the properties file otherwise.
-4. **Validation.** The step fails if the host URL, project key or token is missing, or a URL is not valid. The token always comes from `platform-config`, never from a file.
+4. **Validation.** The step fails if the host URL, project key or token is missing, or a URL is not a valid `https` URL. The token always comes from `platform-config`, never from a file.
 
 **SonarScanner.** The platform plugin runs the `sonar-scanner` command, so the action installs the SonarScanner CLI at the version pinned by the action release and puts it on the path of the scan process. It uses the scanner distribution for the runner's operating system, which bundles its own Java runtime, so the job needs no Java or scanner setup step. The scanner is downloaded only once per job, so the action can run more than once.
 
@@ -257,6 +257,7 @@ Findings never fail the step unless the user asks. Problems with the setup or th
 | Findings with `fail-on-severity: none` | Pass, with counts in the job summary |
 | Findings over the gate | Fail, after the SARIF file is written and uploaded |
 | Fork or Dependabot pull request with no SonarQube token | Skip `sonarqube` with a warning, and still produce the SARIF file |
+| Fork or Dependabot pull request with `github-code-scanning` | Skip the upload with a warning, and keep the SARIF file as the `sarif-file` output for a trusted follow-up upload |
 
 ### Security
 
@@ -266,7 +267,7 @@ A security scanning action is itself part of the supply chain.
 - **Least privilege.** The action needs only `contents: read`. With `github-code-scanning`, it also needs `security-events: write`, and `actions: read` on private repositories.
 - **Secrets.** Credentials in `platform-config` should come from secrets, which GitHub masks in logs. The action also masks every credential field, such as `token` at the platform level and under each `packages` item, with `::add-mask::`, never prints `platform-config`, and hands each package's SonarQube token to that package's scan only, never on the command line. A `packages` item that sets its own `host-url` must set its own `token`, so a token is never sent to a server it was not configured for.
 - **Input injection.** Inputs reach the scripts as environment variables, never interpolated into `run:` blocks.
-- **Fork pull requests.** Secrets are not available to `pull_request` runs from forks or Dependabot. The action skips `sonarqube` with a warning rather than failing, and does not recommend `pull_request_target`.
+- **Fork pull requests.** Secrets are not available to `pull_request` runs from forks or Dependabot. Their `GITHUB_TOKEN` is also read-only. The action skips `sonarqube` and the code scanning upload with a warning rather than failing, and does not recommend `pull_request_target`.
 
 ### Multiple scans in a workflow
 
