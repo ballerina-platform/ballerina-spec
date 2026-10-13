@@ -19,8 +19,8 @@ The action hides the setup that blocks adoption today: installing Ballerina and 
 
 Wiring Ballerina static analysis into CI today takes a lot of hand-maintained YAML per repository and knowledge of several toolchains. The friction falls into three areas.
 
-- **Toolchain setup.** A runner needs Ballerina and the scan tool from Ballerina Central (`bal tool pull scan`), and the workflow has to keep their versions compatible as each one is released independently.
-- **Configuration.** A SonarQube run needs a token, and the SonarScanner properties `sonar.host.url`, `sonar.projectKey` and `sonar.projectName`, usually set in the package's `sonar-project.properties`. In a workflow these differ from a developer's machine: the URL and token come from secrets, and a repository with several packages needs a project key per package. Teams need a simple way to set them per workflow without editing committed files.
+- **Toolchain setup.** A runner needs Ballerina and the scan tool from Ballerina Central (`bal tool pull scan`), plus Java and the SonarScanner CLI for SonarQube, and the workflow has to keep their versions compatible as each one is released independently.
+- **Configuration.** A SonarQube run needs a token, and the SonarScanner properties `sonar.host.url`, `sonar.projectKey` and `sonar.projectName`, usually set in the package's `sonar-project.properties`. Teams need a simple way to set them per workflow without editing committed files.
 - **SARIF fixes.** `bal scan` writes one report per package, with file URIs relative to that package. GitHub code scanning accepts one run per category and maps results to files relative to the repository root, so in a repository with several packages, or a package outside the root, the reports must be rewritten and merged before upload.
 
 Platforms differ in how they take results. GitHub code scanning imports SARIF. A SonarQube server with the Ballerina language plugin takes results through the scan tool's platform plugin, which keeps the rules manageable in quality profiles. DefectDojo and JFrog each have their own upload tooling. An action that tries to upload everywhere has to track every one of these APIs, permission models and outages. An action that produces a correct SARIF file, and passes settings to the scan tool's own SonarQube support, covers all of them with far less to maintain.
@@ -38,7 +38,6 @@ Platforms differ in how they take results. GitHub code scanning imports SARIF. A
 ## Non-Goals
 
 - **Managing the SonarQube server.** Installing or upgrading the Ballerina language plugin on the server is for its administrators.
-- **Installing Java and SonarScanner.** Java and the SonarScanner CLI on the runner are prerequisites the team provides. See [SonarQube](#sonarqube).
 - **Other CI systems.** GitLab and Bitbucket integrations are future work. The scan and SARIF normalization are kept in scripts that those integrations can reuse.
 - **New rules.** The action uses whatever rules `bal scan` and its plugins provide.
 
@@ -64,18 +63,11 @@ steps:
 
 The job needs `security-events: write`, and `actions: read` on private repositories.
 
-**SonarQube server with the Ballerina plugin.** The runner has Java and SonarScanner. The action passes the server URL, token and project key to the scan.
+**SonarQube server with the Ballerina plugin.** The action installs SonarScanner and passes the server URL, token and project key to the scan.
 
 ```yaml
 steps:
   - uses: actions/checkout@v4
-    with:
-      fetch-depth: 0   # SonarQube needs history for blame and new-code detection
-  - uses: actions/setup-java@v4
-    with:
-      distribution: temurin
-      java-version: '21'
-  # ... a step that puts the SonarScanner CLI on the path
   - uses: ballerina-platform/scan-ballerina@v1
     with:
       platforms: sonarqube
@@ -102,21 +94,20 @@ steps:
 
 
 1. **Validate inputs** and fail with a message naming the input and its accepted values. These checks need only the inputs themselves. Every path in `paths` must exist. `platform-config` must parse as a mapping that matches the [schema](#platform-configuration). A platform or field the action does not know fails the step, so a typo such as `tokn` is caught. Settings for a platform that is not in `platforms` are ignored with a warning. With `sonarqube` selected:
-    - If the run is a pull request from a fork or from Dependabot and the SonarQube token is empty, skip `sonarqube` with a warning and continue without it. Secrets are not available to these runs.
-    - Otherwise check that the token is not empty, and that `host-url`, when set in `platform-config`, is a valid `http` or `https` URL.
+    - If the run is a pull request from a fork or from Dependabot and any SonarQube `token` is empty, skip `sonarqube` with a warning and continue without it. Secrets are not available to these runs.
+    - Otherwise check that every `token` that is set is not empty, that every `host-url` set at the platform level or under `packages` is a valid `http` or `https` URL, and that every `packages` item that sets `host-url` also sets `token`.
 2. **Find packages.** Each entry in `paths` is a package or a directory searched for `Ballerina.toml`, skipping `target`, `build` and `.git`. Packages matching `exclude-paths` are dropped and overlapping paths are deduplicated, so each package is scanned once. When no package is found, the result is `skipped`, a warning is written and the step passes.
-3. **Check SonarQube prerequisites and resolve settings** (`sonarqube` only). Check that `java` and `sonar-scanner` are on the path. For each package, read its properties file and combine it with `platform-config` in the order given in [Platform configuration](#platform-configuration). Fail with a message naming the package, the missing setting or prerequisite and how to provide it, when:
-    - `java` or `sonar-scanner` is not on the path,
+3. **Resolve SonarQube settings** (`sonarqube` only). For each package, read its properties file and combine it with `platform-config` in the order given in [Platform configuration](#platform-configuration). Fail with a message naming the package, the missing setting and how to provide it, when:
     - the resolved plugin path is absolute, or is neither an existing file nor an `https` URL,
     - a properties file path is set and the file does not exist,
     - a package has no server URL, or its URL is not a valid `http` or `https` URL,
-    - a package has no project key, or two packages resolve to the same key,
-    - an item under `packages` matches no package found in step 2.
+    - a package has no token, from its `packages` item or the platform level,
+    - an item under `packages` matches no package found in step 2, or two items have the same `path`.
 
    See [SonarQube](#sonarqube).
 4. **Set up Ballerina.** If `bal` is already on the path, for example from an earlier `setup-ballerina` step, use it. Otherwise install `ballerina-version` with `setup-ballerina`. Each action release records the minimum Ballerina version its pinned scan tool needs. If the Ballerina in use is older, fail with a message naming both versions.
-5. **Install the scan tool.** Use `tool-version` if given, otherwise the version pinned by the action release. The tool is pulled only when it is missing or a different version is active, so the action can run more than once in a job. With `sonarqube`, also download the platform plugin when it is resolved to a version.
-6. **Scan each package** from the package directory with `bal scan --format=sarif`, plus `--platforms=sonarqube` when selected, and `--include-rules` and `--exclude-rules` when set. Any old report is deleted first, so a report from an earlier run is never read. With `sonarqube`, the findings are sent to SonarQube during this step, with the package's resolved settings passed as environment variables. See [SonarQube](#sonarqube). If `bal scan` fails for a package, for example on compilation errors or because SonarQube rejects the analysis, the remaining packages are still scanned so that every failure is reported, and the step then fails without producing a SARIF file.
+5. **Install the scan tool.** Use `tool-version` if given, otherwise the version pinned by the action release. The tool is pulled only when it is missing or a different version is active, so the action can run more than once in a job. With `sonarqube`, also download the platform plugin when it is resolved to a version, and the SonarScanner CLI. See [SonarQube](#sonarqube).
+6. **Scan each package** from the package directory with `bal scan --format=sarif`, plus `--platforms=sonarqube` when selected, and `--include-rules` and `--exclude-rules` when set. Any old report is deleted first, so a report from an earlier run is never read. With `sonarqube`, the findings are sent to SonarQube during this step, with the package's resolved settings. See [SonarQube](#sonarqube). If `bal scan` fails for a package, for example on compilation errors or because SonarQube rejects the analysis, the remaining packages are still scanned so that every failure is reported, and the step then fails without producing a SARIF file.
 7. **Normalize and merge** the package reports into one SARIF file, and set the outputs.
 8. **Upload to code scanning** (`github-code-scanning` only) with `github/codeql-action/upload-sarif` under `category`. SonarQube already received its findings in step 6. Both happen before the gate, so findings reach the platforms even when the gate fails.
 9. **Report.** Write annotations, when enabled, and the job summary.
@@ -142,8 +133,6 @@ steps:
 | `platform-config` | empty | YAML mapping, keyed by platform, with the settings and credentials each selected platform needs. JSON is accepted, since it is valid YAML. See [Platform configuration](#platform-configuration). |
 | `github-token` | `github.token` | Token for installing Ballerina and uploading to code scanning. |
 
-`fail-on-severity` defaults to `none`, so adding the action never breaks a build until a team chooses to gate. `annotations` defaults to `false` because GitHub limits annotations per step, and code scanning already annotates the diff once the SARIF is uploaded.
-
 ### Platform configuration
 
 `platform-config` holds the settings of every platform in one structured input, so a new platform adds fields to it rather than new inputs. GitHub passes inputs as strings, so the value is a YAML block that the action parses with `yq`. Each top-level key is a platform from `platforms`, and its value is that platform's settings:
@@ -158,25 +147,35 @@ platform-config: |
         project-key: orders
         project-name: Orders Service
       - path: services/payments
+        host-url: https://sonar.payments.example.com
+        token: ${{ secrets.PAYMENTS_SONAR_TOKEN }}
         project-key: payments
 ```
 
-`github-code-scanning` takes no settings today. It uses `github-token` and `category`.
+`github-code-scanning` takes no settings.
 
 **`sonarqube` fields**
 
+The fields at the platform level are the defaults for every scanned package. A repository can hold unrelated packages that report to different SonarQube servers or organizations, so an item under `packages` can set any of these fields for one package, including its own `host-url` and `token`. A package that has no item under `packages` uses the platform-level fields only.
+
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
-| `host-url` | string | Yes, unless set in the properties file | SonarQube server URL. Overrides `sonar.host.url`. |
-| `token` | string | Yes | Token for submitting analyses. Pass it from a secret. |
-| `project-key` | string | Yes, unless set in the properties file or under `packages` | Project key. Overrides `sonar.projectKey`. Can be used only when one package is scanned. |
-| `project-name` | string | No | Project name. Overrides `sonar.projectName`. Can be used only when one package is scanned. |
 | `plugin-path` | string | No | Platform plugin JAR, as a path relative to the repository root or an `https` URL. Overrides `path` in `Scan.toml`. Cannot be used with `plugin-version`. |
 | `plugin-version` | string | No | Platform plugin version to download, or `latest`. Overrides `path` in `Scan.toml`. `latest` warns, since it may not match the pinned scan tool. |
-| `properties-file` | string | No | Properties file, relative to the repository root. Overrides `sonarProjectPropertiesPath` in `Scan.toml`. Can be used only when one package is scanned. |
-| `packages` | list | No | Per-package settings for repositories with several packages. Each item has a `path`, relative to the repository root, and a `project-key`, and may have a `project-name` and `properties-file`. A `path` that matches no scanned package fails the step. |
+| `properties-file` | string | No | Properties file, relative to the repository root. Overrides `sonarProjectPropertiesPath` in `Scan.toml`. |
+| `host-url` | string | Yes, unless set under `packages` or in the properties file | SonarQube server URL. Overrides `sonar.host.url`. |
+| `token` | string | Yes, unless set under `packages` | Token for submitting analyses. Pass it from a secret. |
+| `project-key` | string | Yes, unless set under `packages` or in the properties file | Project key. Overrides `sonar.projectKey`. Since project keys must be unique, at the platform level it can be used only when one package has no `project-key` of its own. |
+| `project-name` | string | No | Project name. Overrides `sonar.projectName`. Like `project-key`, at the platform level it can be used only when one package has no `project-key` of its own. |
+| `packages` | list | No | Per-package settings. Each item has a `path`, relative to the repository root, and any of the fields above. Platform level only. |
 
-A field under a `packages` item overrides the same field at the platform level, which overrides `Scan.toml` and the properties file. See [SonarQube](#sonarqube) for how each setting is resolved.
+Each setting of a package is resolved field by field: the field in the package's `packages` item, then the platform-level field, then `Scan.toml` and the properties file. The validation rules are:
+
+- A `path` that matches no scanned package, or that is listed twice, fails the step.
+- An item that sets `host-url` must also set `token`. A token is never sent to a server other than the one it was configured with, so a package on another server does not inherit the platform-level token.
+- `plugin-path` and `plugin-version` cannot both apply to one package. A `plugin-path` or `plugin-version` in an item replaces both platform-level fields for that package.
+
+See [SonarQube](#sonarqube) for how each setting is resolved.
 
 ### Outputs
 
@@ -218,28 +217,18 @@ As SARIF defines, a result without a `level` takes its rule's `defaultConfigurat
 
 With `platforms: sonarqube`, the action reports the findings to a SonarQube server that has the Ballerina language plugin installed. `bal scan --platforms=sonarqube` sends them through the scan tool's SonarQube platform plugin, so the rules can be managed and activated per project in quality profiles.
 
-**One project per package.** Each package is a separate SonarQube analysis, so each package needs its own project key. In a repository with several packages, each package sets its key under `packages` in `platform-config`, or as `sonar.projectKey` in its own `sonar-project.properties`. The platform-level `project-key` and `project-name` fields can be used only when one package is scanned. Validation fails if a package has no project key, or if two packages resolve to the same key, since each analysis would replace the previous one.
+**One project per package.** Each package is a separate SonarQube analysis, so each package needs its own project key. In a repository with several packages, each package sets its key under `packages` in `platform-config`, or as `sonar.projectKey` in its own `sonar-project.properties`. The platform-level `project-key` and `project-name` fields can be used only when one package has no key of its own. Validation fails if a package has no project key, or if two packages on the same server resolve to the same key, since each analysis would replace the previous one.
+
+**Packages on different servers.** Unrelated packages in one repository can report to different SonarQube servers, or to the same server with different tokens. Each such package sets `host-url` and `token` in its `packages` item. Packages without an item, or whose item sets neither field, use the platform-level `host-url` and `token`. Each package is analysed with its own resolved server and token, so one action step covers all of them.
 
 **Resolving settings.** `platform-config` overrides the package's `Scan.toml` and properties file, which stay the defaults so that local runs and CI share them. Paths in `platform-config` are relative to the repository root, and paths in `Scan.toml` are relative to the package. For each package:
 
 1. **Platform plugin.** `plugin-path` or `plugin-version` from `platform-config`. Otherwise the `path` of the `sonarqube` `[[platform]]` entry in `Scan.toml`, which must be a relative path or an `https` URL. Otherwise the plugin version pinned by the action release, which the action downloads. An absolute path fails, since it points to a developer's machine.
 2. **Properties file.** `properties-file` from `platform-config`. Otherwise `sonarProjectPropertiesPath` from `Scan.toml`. Otherwise `sonar-project.properties` in the package root, if it exists. A path that is set but does not exist fails.
-3. **Settings.** Each setting is taken from `platform-config` if set, and from the properties file otherwise. Settings that only the file sets, such as `sonar.exclusions`, are kept.
+3. **Settings.** Each setting is taken from the package's `packages` item if set, then from the platform level of `platform-config`, and from the properties file otherwise.
 4. **Validation.** The step fails if the host URL, project key or token is missing, or a URL is not valid. The token always comes from `platform-config`, never from a file.
 
-**Prerequisites.** The platform plugin runs the `sonar-scanner` command, so Java and the SonarScanner CLI must be on the path, for example from `actions/setup-java` and a scanner setup step earlier in the job. The action checks for them but does not install them.
-
-**How the settings reach the scan.** The action never edits `Scan.toml` or the properties file. SonarScanner reads its settings from its own environment variables, and the scan process passes its environment to SonarScanner. For each package, the action sets these variables on that package's `bal scan` process only:
-
-| Variable | Value |
-| --- | --- |
-| `SONAR_HOST_URL` | The resolved server URL. |
-| `SONAR_TOKEN` | The token. |
-| `SONAR_SCANNER_JSON_PARAMS` | A JSON object with `sonar.projectKey` and, when set, `sonar.projectName`, from `platform-config`. |
-
-Settings that `platform-config` does not set are left to the properties file. Credentials are never passed as command-line arguments.
-
-This relies on two behaviours of the scan tool, to be confirmed: it accepts a platform plugin path without `Scan.toml` being edited, and its platform plugin does not pass the properties file's values to SonarScanner as `-D` arguments, which would take precedence over the environment variables.
+**SonarScanner.** The platform plugin runs the `sonar-scanner` command, so the action installs the SonarScanner CLI at the version pinned by the action release and puts it on the path of the scan process. It uses the scanner distribution for the runner's operating system, which bundles its own Java runtime, so the job needs no Java or scanner setup step. The scanner is downloaded only once per job, so the action can run more than once.
 
 ### Gate
 
@@ -260,7 +249,7 @@ Findings never fail the step unless the user asks. Problems with the setup or th
 | Situation | Result |
 | --- | --- |
 | Invalid or unknown input, a `platform-config` that does not match the schema, or a path that does not exist | Fail before packages are searched or anything is downloaded |
-| Missing SonarQube prerequisites, missing or invalid SonarQube settings, missing or duplicate project keys, or a `packages` item that matches no package | Fail after packages are found, before anything is downloaded |
+| Missing or invalid SonarQube settings, missing or duplicate project keys, or a `packages` item that matches no package or repeats a path | Fail after packages are found, before anything is downloaded |
 | Ballerina older than the pinned scan tool needs | Fail before the scan tool is installed |
 | No package found | Pass with a warning, result `skipped` |
 | `bal scan` fails for a package, including when SonarQube is unreachable or rejects the analysis | Scan the remaining packages, then fail without a SARIF file |
@@ -273,9 +262,9 @@ Findings never fail the step unless the user asks. Problems with the setup or th
 
 A security scanning action is itself part of the supply chain.
 
-- **Pinned dependencies.** The scan tool is pulled from Ballerina Central at the pinned version, and its integrity relies on Central. Ballerina is installed by `setup-ballerina`, at `latest` unless `ballerina-version` is set, so teams that need reproducible runs should pin it. Actions the composite action uses, such as `setup-ballerina` and `github/codeql-action/upload-sarif`, are pinned by commit SHA. The SonarQube platform plugin is downloaded at the version pinned by the action release unless the team overrides it. Java and SonarScanner are provided by the team, which is responsible for pinning and verifying them.
+- **Pinned dependencies.** The scan tool is pulled from Ballerina Central at the pinned version, and its integrity relies on Central. Ballerina is installed by `setup-ballerina`, at `latest` unless `ballerina-version` is set, so teams that need reproducible runs should pin it. Actions the composite action uses, such as `setup-ballerina` and `github/codeql-action/upload-sarif`, are pinned by commit SHA. The SonarQube platform plugin is downloaded at the version pinned by the action release unless the team overrides it. The SonarScanner CLI is downloaded from SonarSource at the version pinned by the action release, and its checksum is verified.
 - **Least privilege.** The action needs only `contents: read`. With `github-code-scanning`, it also needs `security-events: write`, and `actions: read` on private repositories.
-- **Secrets.** Credentials in `platform-config` should come from secrets, which GitHub masks in logs. The action also masks every credential field, such as `token`, with `::add-mask::`, never prints `platform-config`, and hands the SonarQube token to SonarScanner as the `SONAR_TOKEN` environment variable of the scan process only, never on the command line.
+- **Secrets.** Credentials in `platform-config` should come from secrets, which GitHub masks in logs. The action also masks every credential field, such as `token` at the platform level and under each `packages` item, with `::add-mask::`, never prints `platform-config`, and hands each package's SonarQube token to that package's scan only, never on the command line. A `packages` item that sets its own `host-url` must set its own `token`, so a token is never sent to a server it was not configured for.
 - **Input injection.** Inputs reach the scripts as environment variables, never interpolated into `run:` blocks.
 - **Fork pull requests.** Secrets are not available to `pull_request` runs from forks or Dependabot. The action skips `sonarqube` with a warning rather than failing, and does not recommend `pull_request_target`.
 
@@ -295,7 +284,7 @@ The action repository has a test workflow that runs the action against sample Ba
 
 - `bal scan` with SARIF output (scan tool 0.12.1 or later, from the production Central) and its SonarQube platform plugin.
 - [`ballerina-platform/setup-ballerina`](https://github.com/ballerina-platform/setup-ballerina).
-- For SonarQube: the scan tool's SonarQube platform plugin, support in the scan tool for setting the plugin path without editing `Scan.toml`, Java and a SonarScanner CLI that reads `SONAR_SCANNER_JSON_PARAMS` on the runner, all provided by the team, and the Ballerina language plugin on the server.
+- For SonarQube: the scan tool's SonarQube platform plugin, support in the scan tool for setting the plugin path without editing `Scan.toml`, the SonarScanner CLI pinned by the action release, and the Ballerina language plugin on the server.
 
 ## Future Work
 
