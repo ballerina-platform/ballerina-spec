@@ -444,7 +444,7 @@ final ai:Agent agent = check new (
 
 - **Script execution**: Files in a skill's `scripts/` folder are not executed or exposed.
 - **Remote skill sources**: Only local file system and inline skills are supported. Loading skills from Git repositories or URLs can be added later as new members of the `SkillSource` union.
-- **Binary resources**: Resources are returned as text. Binary files are listed but cannot be read.
+- **Binary resources**: Resources are returned as text. Binary files are listed but cannot be read (see [Future Work](#future-work)).
 - **Changes after initialization**: Skills are loaded once at agent initialization. Changes to skill files on disk are not picked up until the agent is re-created (resource contents, however, are read at request time).
 
 ## Alternatives Considered
@@ -482,8 +482,13 @@ The following choices were made in this proposal. They are listed here, with the
 5. **Missing paths fail; empty directories warn.** A source path that does not exist fails agent initialization, as it almost always indicates a misconfiguration. A parent directory that exists but contains no skills only logs a warning.
 6. **Specification constraints are checked leniently.** Only the rules the agent needs in order to work are enforced: valid frontmatter, a non-empty `name` and `description`, and unique names. The other constraints of the Agent Skills specification (name format, matching the directory name, and description length) only log a warning. Skills found in the wild do not always follow these rules exactly, and rejecting them would make a usable skill disappear with only a log line to explain why. The warning still tells skill authors what to fix.
 7. **The catalog is a separate section of the system prompt.** It is added as its own `Skills` section rather than being appended to `instructions`, so that user-written and generated text stay clearly separated in the prompt and in observability data.
-8. **Resources are text only.** Tool results reach the model as text, so binary resources are listed but return an error when read. Returning images or PDFs would need tool results that can carry documents.
+8. **Resources are text only in the first version.** Tool results reach the model as text, so binary resources are listed but return an error when read. Support for images and PDFs is planned (see [Future Work](#future-work)).
 9. **Skills are part of the agent metadata.** The compiler plugin records the skill entries of a custom agent in `ai:AgentMetadataConfig`, so tools such as WSO2 Integrator can show that an agent has skills configured.
+
+## Future Work
+
+- **Multimodal resources**: The model providers already accept multimodal input, mostly images and PDFs, as `ai:ImageDocument` and `ai:FileDocument`. A later version can return binary skill resources, such as diagrams, scanned forms, or reference PDFs in `assets/`, as documents instead of rejecting them. This needs tool results that can carry documents, or a way for the agent to attach the document to the conversation after a `__read_skill_resource__` call.
+- **Remote skill sources**: Loading skills from Git repositories or URLs, added as new members of the `SkillSource` union.
 
 ## Summary of changes required
 
