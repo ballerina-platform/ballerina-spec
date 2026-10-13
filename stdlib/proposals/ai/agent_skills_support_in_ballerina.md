@@ -57,7 +57,7 @@ A tool or toolkit can only contribute the second part; it cannot change the syst
 - **Resources**: Supporting files stored next to `SKILL.md`, in the `references/` folder (documentation the model may read) and the `assets/` folder (templates, sample data, and similar files).
 - **Skill source**: Where skills come from. This is either a path on the local file system or a skill defined inline in Ballerina code.
 - **Skill catalog**: The list of available skills (name and description only) that the agent adds to the system prompt.
-- **Activation**: The model loading a skill's full instructions by calling the built-in `activate_skill` tool.
+- **Activation**: The model loading a skill's full instructions by calling the built-in `__activate_skill__` tool.
 
 A typical skill folder looks like this:
 
@@ -139,6 +139,37 @@ public type AgentConfiguration record {|
 
 `SkillSource` is a union so that new kinds of sources (for example, remote skill repositories) can be added later without changing the field.
 
+The agent metadata that the compiler plugin records for custom agents (`ai:AgentMetadataConfig`) gets a `skills` field, so that tools such as WSO2 Integrator can show which skills an agent uses:
+
+```ballerina
+# Represents the kind of a skill entry available to an agent.
+public enum SkillKind {
+    # A skill directory, or a directory of skills, on the local file system
+    LOCAL_SKILL_SOURCE,
+    # A skill defined inline in code
+    INLINE_SKILL
+}
+
+# Provides metadata about a single skill entry available to a custom agent.
+public type SkillMetadata record {|
+    # The kind of skill entry
+    SkillKind kind;
+    # The path of a local skill source, when it is written as a literal
+    string path?;
+    # The name of an inline skill when it is written as a literal, or otherwise the variable name used in the
+    # agent for the skill entry
+    string name?;
+|};
+
+public type AgentMetadataConfig record {|
+    // ... existing fields omitted for brevity
+    # The skills available to the agent
+    SkillMetadata[] skills = [];
+|};
+```
+
+For example, an agent configured with `skills = [{path: "./skills"}, toneSkill]` is recorded as `skills: [{kind: ai:LOCAL_SKILL_SOURCE, path: "./skills"}, {kind: ai:INLINE_SKILL, name: "toneSkill"}]`. Entries that cannot be resolved at compile time, such as a path computed by a function call, are skipped.
+
 ### 2. Skill discovery and loading
 
 If `skills` is not set, or is an empty array, nothing is loaded and the agent behaves exactly as it does without this feature (see [When no skills are configured](#when-no-skills-are-configured)). Otherwise, skills are loaded once, when the agent is initialized. Any error is returned from `ai:Agent`'s `init` as an `ai:Error`.
@@ -181,8 +212,8 @@ Progressive disclosure is the core of this design. Skill content is loaded in th
 | Level | What is loaded | When it is loaded | Where it goes | Approximate cost |
 |---|---|---|---|---|
 | 1. Metadata | `name` and `description` of every skill | Always, at agent initialization | System prompt (skill catalog) | A short line per skill |
-| 2. Instructions | The `SKILL.md` body and the list of its resources | When the model calls `activate_skill` | Tool result in the conversation | The size of the body (typically hundreds to a few thousand tokens) |
-| 3. Resources | A single file from `references/` or `assets/` | When the model calls `read_skill_resource` | Tool result in the conversation | The size of the file |
+| 2. Instructions | The `SKILL.md` body and the list of its resources | When the model calls `__activate_skill__` | Tool result in the conversation | The size of the body (typically hundreds to a few thousand tokens) |
+| 3. Resources | A single file from `references/` or `assets/` | When the model calls `__read_skill_resource__` | Tool result in the conversation | The size of the file |
 
 #### Why this works
 
@@ -194,7 +225,7 @@ Progressive disclosure is the core of this design. Skill content is loaded in th
 
 The `description` in the catalog is the only signal the model has for choosing a skill. Skill authors should therefore write descriptions that state both **what** the skill does and **when** it should be used (for example, *"Prepares and validates employee expense reports. Use when the user asks to file, check, or summarize expenses."*).
 
-The catalog text instructs the model to activate a skill before following it, and to read resources only when the skill's instructions refer to them.
+The catalog text directs the model to activate a matching skill before answering or making any decision, instead of relying on its own assumptions, and to read resources only when the skill's instructions refer to them. Testing showed that softer wording ("call the tool when a request matches") is often ignored by smaller models, which then answer from their own assumptions.
 
 #### Level 1: Skill catalog in the system prompt
 
@@ -208,10 +239,9 @@ When at least one skill is configured, the agent appends a `Skills` section to t
 <instructions>
 
 # Skills
-You have access to the following skills. Each skill provides specialized instructions for a specific task.
-When a user's request matches a skill's description, call the `activate_skill` tool with the skill's name
-to load its full instructions before proceeding. Only read a skill's resources with `read_skill_resource`
-when the skill's instructions refer to them.
+Skills contain the policies and procedures you must follow. If a request relates to any skill listed below, you MUST call the `__activate_skill__` tool with that skill's name
+before answering or making any decision, and follow its instructions exactly. Do not rely on your own assumptions in place of a skill.
+Read a skill's resources with the `__read_skill_resource__` tool when its instructions refer to them.
 
 <available_skills>
   <skill>
@@ -229,7 +259,7 @@ The catalog is generated as XML, so names and descriptions are XML-escaped and c
 
 #### Level 2: Activating a skill
 
-When the model calls `activate_skill` with `name = "expense-report"`, the tool returns:
+When the model calls `__activate_skill__` with `name = "expense-report"`, the tool returns:
 
 ```
 <skill_content name="expense-report">
@@ -250,7 +280,9 @@ The body is returned exactly as written (it is not XML-escaped), so the Markdown
 
 #### Level 3: Reading a resource
 
-When the model calls `read_skill_resource` with `skillName = "expense-report"` and `resourcePath = "references/policy.md"`, the tool returns the content of that file as text.
+When the model calls `__read_skill_resource__` with `skillName = "expense-report"` and `resourcePath = "references/policy.md"`, the tool returns the content of that file as text.
+
+Resources are returned as text, because tool results reach the model as text. A binary resource, such as an image or a PDF in `assets/`, is still listed when the skill is activated, so the model can mention or refer the user to it. Reading it returns an error stating that the file is binary and cannot be returned as text.
 
 #### End-to-end walkthrough
 
@@ -260,9 +292,9 @@ The following shows how a single request flows through the three levels. Each st
 |---|---|---|
 | — | System | Role, instructions, and the skill catalog (Level 1) |
 | — | User | "File my expenses for the Colombo trip: taxi 2500 LKR, hotel 120 USD." |
-| 1 | Assistant | Tool call: `activate_skill(name = "expense-report")` |
+| 1 | Assistant | Tool call: `__activate_skill__(name = "expense-report")` |
 | 1 | Function | `<skill_content ...>` with the instructions and resource list (Level 2) |
-| 2 | Assistant | Tool call: `read_skill_resource(skillName = "expense-report", resourcePath = "references/policy.md")` |
+| 2 | Assistant | Tool call: `__read_skill_resource__(skillName = "expense-report", resourcePath = "references/policy.md")` |
 | 2 | Function | The content of `policy.md` (Level 3) |
 | 3 | Assistant | The final answer: a validated expense report |
 
@@ -287,7 +319,7 @@ Progressive disclosure adds an LLM round trip for each activation or resource re
 
 When at least one skill is configured, the agent registers two built-in tools. They are internal to the agent and are not part of the public API.
 
-#### `activate_skill`
+#### `__activate_skill__`
 
 | Parameter | Type | Description |
 |---|---|---|
@@ -295,7 +327,7 @@ When at least one skill is configured, the agent registers two built-in tools. T
 
 Returns the skill's instructions and resource list (see [Level 2](#level-2-activating-a-skill)). If no skill has that name, an error message listing the available skill names is returned to the model, so it can correct itself.
 
-#### `read_skill_resource`
+#### `__read_skill_resource__`
 
 | Parameter | Type | Description |
 |---|---|---|
@@ -312,7 +344,7 @@ Returns the content of the resource. The request is rejected, with an error mess
 
 For inline skills, resources are served from the `resources` map in memory.
 
-The tools use snake_case names (`activate_skill`, `read_skill_resource`) to reduce the chance of clashing with user-defined tools, which are conventionally named in camelCase in Ballerina.
+The tools are named `__activate_skill__` and `__read_skill_resource__`. The double-underscore form follows the convention used for the agent's other built-in tool (the structured-output tool) and keeps the names clearly reserved, which reduces the chance of clashing with user-defined tools. The names don't mention Ballerina, since the model doesn't need to know which language the agent is written in. If a user tool still has the same name, agent initialization fails.
 
 ### 6. Integration with the agent
 
@@ -321,13 +353,14 @@ The tools use snake_case names (`activate_skill`, `read_skill_resource`) to redu
 - **Maximum iterations**: When `maxIter` is inferred from the number of tools, the two skill tools are included in the count.
 - **Human-in-the-loop**: Skill tools only read data, so they never require approval and do not affect the human-in-the-loop approval flow.
 - **Observability**: The skill tools are listed with the agent's tools on the create-agent span. In addition, the names of the loaded skills are recorded as a `skills` attribute on that span.
+- **Agent metadata**: For custom agents, the compiler plugin records the statically identifiable skill entries in the `skills` field of `ai:AgentMetadataConfig` (see [Public API](#1-public-api)).
 
 #### When no skills are configured
 
 If `skills` is not set, is an empty array, or no valid skill is found in the given sources, the agent adds nothing related to skills:
 
 - No `Skills` section is added to the system prompt; the prompt is identical to the one built today.
-- The `activate_skill` and `read_skill_resource` tools are not registered, so they do not appear in the tool list sent to the model, do not count toward the inferred `maxIter`, and cannot clash with user tool names.
+- The `__activate_skill__` and `__read_skill_resource__` tools are not registered, so they do not appear in the tool list sent to the model, do not count toward the inferred `maxIter`, and cannot clash with user tool names.
 - No `skills` attribute is added to the create-agent span.
 
 This guarantees that existing agents are unaffected by this feature, in behaviour, in token usage, and in observability data.
@@ -335,7 +368,7 @@ This guarantees that existing agents are unaffected by this feature, in behaviou
 ### 7. Skills, sessions, and memory
 
 - **Skills belong to the agent, not to a session.** Like `tools`, `skills` is configuration. Skills are loaded once during agent initialization and kept in read-only fields of the `ai:Agent` object. Every session handled by the agent sees the same catalog.
-- **No new state is stored.** The agent does not keep a record of which skills are active. An activation is simply an `activate_skill` tool call and its result in the session's conversation history, stored in `ai:Memory` like any other tool call. No changes to `ai:Memory` or memory stores are needed.
+- **No new state is stored.** The agent does not keep a record of which skills are active. An activation is simply an `__activate_skill__` tool call and its result in the session's conversation history, stored in `ai:Memory` like any other tool call. No changes to `ai:Memory` or memory stores are needed.
 - **Deployment**: Because skills are loaded from the local file system at initialization and resources are read from disk on demand, every instance of a horizontally scaled application must be deployed with the same skill files.
 
 ### 8. Usage examples
@@ -383,7 +416,7 @@ final ai:Agent supportAgent = check new (
 
 Skills do not replace tools; an agent can have both. Tools let the agent *act* (call APIs, query systems), while skills tell it *how* to carry out a kind of task, often including which tools to call and in what order. For example, an `incident-response` skill can describe the steps for handling an outage, and those steps can instruct the model to call the agent's `createTicket` and `getOrderStatus` tools.
 
-The example below also shows that `skills` can mix source kinds: a single skill directory, a parent directory containing several skills, and an inline skill. The built-in skill tools are added alongside the user's tools, so the model sees `createTicket`, `getOrderStatus`, `activate_skill`, and `read_skill_resource`.
+The example below also shows that `skills` can mix source kinds: a single skill directory, a parent directory containing several skills, and an inline skill. The built-in skill tools are added alongside the user's tools, so the model sees `createTicket`, `getOrderStatus`, `__activate_skill__`, and `__read_skill_resource__`.
 
 ```ballerina
 final ai:Agent agent = check new (
@@ -402,7 +435,7 @@ final ai:Agent agent = check new (
 ## Security Considerations
 
 - **Read-only access**: The skill tools can only read files; they cannot write, delete, or execute anything.
-- **Allow-listed files only**: `read_skill_resource` can only return files that were discovered as resources of a skill during loading. Arbitrary paths are rejected.
+- **Allow-listed files only**: `__read_skill_resource__` can only return files that were discovered as resources of a skill during loading. Arbitrary paths are rejected.
 - **Path traversal protection**: Paths containing `..` are rejected, and for local skills the resolved absolute path must be inside the skill's directory, which also blocks escapes through symbolic links.
 - **No script execution**: The Agent Skills format allows a `scripts/` folder. This proposal does not execute scripts and does not expose `scripts/` contents.
 - **Trust in skill content**: Skill instructions become part of the model's context, so skills should be treated with the same trust as the agent's own instructions. Developers should only load skills from sources they control.
@@ -411,6 +444,7 @@ final ai:Agent agent = check new (
 
 - **Script execution**: Files in a skill's `scripts/` folder are not executed or exposed.
 - **Remote skill sources**: Only local file system and inline skills are supported. Loading skills from Git repositories or URLs can be added later as new members of the `SkillSource` union.
+- **Binary resources**: Resources are returned as text. Binary files are listed but cannot be read.
 - **Changes after initialization**: Skills are loaded once at agent initialization. Changes to skill files on disk are not picked up until the agent is re-created (resource contents, however, are read at request time).
 
 ## Alternatives Considered
@@ -427,9 +461,9 @@ Skills could be offered as a public `ai:SkillsToolKit` that developers add to `t
 
 The catalog could be appended to the user's `instructions` text. It was rejected in favour of a separate `Skills` section, which keeps user-written text and generated text clearly separated in both the prompt and the observability data.
 
-### camelCase tool names
+### Plain tool names
 
-The tools could be named `activateSkill` and `readSkillResource`, following Ballerina naming conventions. snake_case names were preferred to reduce clashes with user-defined tools (see [Design choices and considerations](#design-choices-and-considerations)).
+The tools could use plain names such as `activate_skill` or `activateSkill`. Reserved double-underscore names were preferred, to match the agent's other built-in tool and to reduce clashes with user-defined tools (see [Design choices and considerations](#design-choices-and-considerations)).
 
 ### Note on the AFM implementation
 
@@ -443,11 +477,13 @@ The following choices were made in this proposal. They are listed here, with the
 
 1. **`skills` is optional.** It is an optional field of `ai:AgentConfiguration`, and when it is absent or empty the agent adds nothing related to skills. This keeps the feature fully opt-in and leaves existing agents unchanged.
 2. **Both file-based and inline skills are supported.** `LocalSkillSource` covers the standard Agent Skills format, while inline `ai:Skill` records are useful for tests, for small skills that live with the code, and for environments without a writable or bundled file system.
-3. **Tool names use snake_case.** `activate_skill` and `read_skill_resource` are used instead of `activateSkill` and `readSkillResource`, to reduce the chance of clashing with user-defined tools, which are conventionally camelCase in Ballerina.
+3. **Tool names are reserved.** `__activate_skill__` and `__read_skill_resource__` follow the double-underscore convention of the agent's structured-output tool, to reduce the chance of clashing with user-defined tools. They don't mention Ballerina, since the model doesn't need to know the implementation language. A clash with a user tool fails agent initialization.
 4. **Relative paths resolve against the current working directory.** This is consistent with how other file-based APIs in Ballerina resolve relative paths. Developers who need a fixed location should use an absolute path or a configurable variable.
 5. **Missing paths fail; empty directories warn.** A source path that does not exist fails agent initialization, as it almost always indicates a misconfiguration. A parent directory that exists but contains no skills only logs a warning.
 6. **Specification constraints are checked leniently.** Only the rules the agent needs in order to work are enforced: valid frontmatter, a non-empty `name` and `description`, and unique names. The other constraints of the Agent Skills specification (name format, matching the directory name, and description length) only log a warning. Skills found in the wild do not always follow these rules exactly, and rejecting them would make a usable skill disappear with only a log line to explain why. The warning still tells skill authors what to fix.
 7. **The catalog is a separate section of the system prompt.** It is added as its own `Skills` section rather than being appended to `instructions`, so that user-written and generated text stay clearly separated in the prompt and in observability data.
+8. **Resources are text only.** Tool results reach the model as text, so binary resources are listed but return an error when read. Returning images or PDFs would need tool results that can carry documents.
+9. **Skills are part of the agent metadata.** The compiler plugin records the skill entries of a custom agent in `ai:AgentMetadataConfig`, so tools such as WSO2 Integrator can show that an agent has skills configured.
 
 ## Summary of changes required
 
@@ -455,16 +491,18 @@ The following choices were made in this proposal. They are listed here, with the
 
 - Add the public types `ai:LocalSkillSource`, `ai:Skill`, and `ai:SkillSource`.
 - Add the `skills` field to `ai:AgentConfiguration`.
-- Add internal logic to discover and validate skills, parse `SKILL.md` frontmatter (using `ballerina/yaml`), and list resources (using `ballerina/file` and `ballerina/io`).
-- Add an internal toolkit providing the `activate_skill` and `read_skill_resource` tools, and register it with the agent's tool store when skills are configured.
+- Add internal logic to discover and validate skills, parse `SKILL.md` frontmatter (using `ballerina/data.yaml`), and list resources (using `ballerina/file` and `ballerina/io`).
+- Add an internal toolkit providing the `__activate_skill__` and `__read_skill_resource__` tools, and register it with the agent's tool store when skills are configured.
 - Add the skill catalog to the system prompt built by the agent, and record skill names on the create-agent span.
+- Add `ai:SkillKind` and `ai:SkillMetadata`, and a `skills` field to `ai:AgentMetadataConfig`. Extend the compiler plugin to record the skill entries of custom agents.
 
 ### Tests
 
 - Discovery: single skill directory, parent directory with multiple skills (with `references/` and `assets/`), duplicate names, invalid skill in a single-skill directory, partially invalid parent directory, missing frontmatter, empty directory, and the warnings for names and descriptions that break the specification's constraints.
 - Catalog: content and XML escaping.
-- Tools: successful activation and resource read, unknown skill, path traversal, unlisted resource, inline skills.
-- Agent level: using a mock model provider, verify that the system message contains the catalog, that the tool list contains the skill tools, and that a scripted `activate_skill` call returns the skill body in the next iteration.
+- Tools: successful activation and resource read, unknown skill, path traversal, unlisted resource, binary resource, inline skills.
+- Compiler plugin: the skill entries recorded in the agent metadata of a custom agent, including skipped entries that can't be resolved statically.
+- Agent level: using a mock model provider, verify that the system message contains the catalog, that the tool list contains the skill tools, and that a scripted `__activate_skill__` call returns the skill body in the next iteration.
 
 ### Documentation
 
