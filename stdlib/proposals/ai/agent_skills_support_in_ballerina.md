@@ -151,18 +151,28 @@ For each `LocalSkillSource`:
 - A relative `path` is resolved against the **current working directory of the running program**, not against the Ballerina source file or the project root. For example, if the program is started with `bal run` from `/home/user/finance-agent`, then `{path: "./skills"}` refers to `/home/user/finance-agent/skills`. Use an absolute path, or a path from a configurable variable, when the program may be started from a different directory.
 - Paths *inside* a skill are a separate matter: resource paths such as `references/policy.md` are always relative to that skill's own directory (the directory that contains its `SKILL.md`).
 
-For each inline `Skill`, the record is used as-is after the same `name` and `description` validation.
+For each inline `Skill`, the record is used as-is after the same `name` and `description` validation (see [`SKILL.md` format and validation](#3-skillmd-format-and-validation)); the directory-name check does not apply.
 
 Across all sources, skill names must be unique. If two skills have the same name, the first one (in the order of `skills`) is kept and a warning is logged for the duplicate.
 
 ### 3. `SKILL.md` format and validation
 
 - The file must begin with YAML frontmatter delimited by `---` lines.
-- The frontmatter must contain `name` and `description`, both non-empty strings. Other frontmatter keys are ignored.
+- The frontmatter must contain `name` and `description`, both non-empty strings. Other frontmatter keys (such as `license`, `compatibility`, `metadata`, and `allowed-tools`) are ignored.
 - Everything after the frontmatter is the skill's instructions (the body).
 - The skill's **resources** are the files located directly inside its `references/` and `assets/` folders. The list of resources is computed when the skill is loaded; the file contents are read only when requested.
 
 A `SKILL.md` without frontmatter, with malformed YAML, or with a missing or empty `name` or `description` is invalid.
+
+The [Agent Skills specification](https://github.com/agentskills/agentskills/blob/main/docs/specification.mdx) also defines the following constraints. They are checked **leniently**: a skill that violates any of them is still loaded, and a warning is logged that names the skill and the rule it breaks.
+
+| Field | Constraint in the specification |
+|---|---|
+| `name` | 1–64 characters; only lowercase letters (`a-z`), digits (`0-9`), and hyphens (`-`); must not start or end with a hyphen; must not contain consecutive hyphens (`--`) |
+| `name` | For local skills, must match the name of the directory that contains the `SKILL.md` |
+| `description` | At most 1,024 characters |
+
+The skill is always registered under the `name` from its frontmatter, even if it does not match the directory name. Skill names are matched exactly when the model calls the skill tools.
 
 ### 4. Progressive disclosure
 
@@ -436,7 +446,8 @@ The following choices were made in this proposal. They are listed here, with the
 3. **Tool names use snake_case.** `activate_skill` and `read_skill_resource` are used instead of `activateSkill` and `readSkillResource`, to reduce the chance of clashing with user-defined tools, which are conventionally camelCase in Ballerina.
 4. **Relative paths resolve against the current working directory.** This is consistent with how other file-based APIs in Ballerina resolve relative paths. Developers who need a fixed location should use an absolute path or a configurable variable.
 5. **Missing paths fail; empty directories warn.** A source path that does not exist fails agent initialization, as it almost always indicates a misconfiguration. A parent directory that exists but contains no skills only logs a warning.
-6. **The catalog is a separate section of the system prompt.** It is added as its own `Skills` section rather than being appended to `instructions`, so that user-written and generated text stay clearly separated in the prompt and in observability data.
+6. **Specification constraints are checked leniently.** Only the rules the agent needs in order to work are enforced: valid frontmatter, a non-empty `name` and `description`, and unique names. The other constraints of the Agent Skills specification (name format, matching the directory name, and description length) only log a warning. Skills found in the wild do not always follow these rules exactly, and rejecting them would make a usable skill disappear with only a log line to explain why. The warning still tells skill authors what to fix.
+7. **The catalog is a separate section of the system prompt.** It is added as its own `Skills` section rather than being appended to `instructions`, so that user-written and generated text stay clearly separated in the prompt and in observability data.
 
 ## Summary of changes required
 
@@ -450,7 +461,7 @@ The following choices were made in this proposal. They are listed here, with the
 
 ### Tests
 
-- Discovery: single skill directory, parent directory with multiple skills (with `references/` and `assets/`), duplicate names, invalid skill in a single-skill directory, partially invalid parent directory, missing frontmatter, empty directory.
+- Discovery: single skill directory, parent directory with multiple skills (with `references/` and `assets/`), duplicate names, invalid skill in a single-skill directory, partially invalid parent directory, missing frontmatter, empty directory, and the warnings for names and descriptions that break the specification's constraints.
 - Catalog: content and XML escaping.
 - Tools: successful activation and resource read, unknown skill, path traversal, unlisted resource, inline skills.
 - Agent level: using a mock model provider, verify that the system message contains the catalog, that the tool list contains the skill tools, and that a scripted `activate_skill` call returns the skill body in the next iteration.
