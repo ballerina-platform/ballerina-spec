@@ -214,14 +214,12 @@ public type TransportConfig record {|
 |};
 
 public type ConnectionPoolConfig record {|
-    int maxConnections = 50;
-    decimal idleTimeoutSeconds = 60;
     decimal connectTimeoutSeconds = 10;
     decimal readTimeoutSeconds = 60;
 |};
 ```
 
-`proxy` routes traffic through an HTTP, SOCKS4, or SOCKS5 proxy with optional credentials and a bypass list. `secureSocket` configures TLS: trust material, a client identity for mutual TLS, offered versions and cipher suites, host-name verification, session reuse, revocation checking, an SNI host name, and handshake and session timeouts. The pool values above apply to every client unless overridden. `ProxyConfig`, `SecureSocket`, and `CertKey` are defined in 8.7.
+`proxy` routes traffic through an HTTP proxy with optional credentials and a bypass list. `secureSocket` configures TLS: trust material, a client identity for mutual TLS, offered versions and cipher suites, revocation checking, an SNI host name for endpoints addressed by IP, and the session timeout; the server's host name is always verified. The timeouts above apply to every client unless overridden. `ProxyConfig`, `SecureSocket`, and `CertKey` are defined in 8.7. The transport is the Java platform's HTTP client, so the connector carries no networking library of its own.
 
 ### 3. The `AdminClient`
 
@@ -672,16 +670,6 @@ public enum RetryPolicyType {
     EXPONENTIAL = "exponential",
     # The delay is the same before every try
     FIXED_INTERVAL = "fixed"
-}
-
-# The proxy protocol.
-public enum ProxyType {
-    # An HTTP proxy
-    HTTP,
-    # A SOCKS4 proxy
-    SOCKS4,
-    # A SOCKS5 proxy
-    SOCKS5
 }
 
 # The access tiers this module sets on a blob. The tier a blob reports is a plain `string`,
@@ -1471,10 +1459,8 @@ public type UploadOptions record {|
 #### 8.7 Transport types
 
 ```ballerina
-# Proxy settings for the connector's traffic.
+# Settings of the HTTP proxy the connector's traffic goes through.
 public type ProxyConfig record {|
-    # The proxy protocol
-    ProxyType proxyType = HTTP;
     # The proxy host name or address
     string host;
     # The proxy port
@@ -1506,16 +1492,11 @@ public type SecureSocket record {|
     string[] protocolVersions?;
     # The cipher suites offered during the handshake
     string[] ciphers?;
-    # Whether the server's host name is verified against its certificate
-    boolean verifyHostName = true;
-    # Whether TLS sessions may be resumed
-    boolean sessionResumption?;
     # Whether the server certificate's revocation status is checked
     boolean validateRevocation?;
-    # The Server Name Indication host name sent during the handshake
+    # The Server Name Indication host name sent during the handshake when the endpoint is an IP
+    # address; for a host name endpoint, that host name is sent
     string sniHostName?;
-    # The TLS handshake timeout, in seconds
-    decimal handshakeTimeoutSeconds?;
     # The TLS session timeout, in seconds
     decimal sessionTimeoutSeconds?;
 |};
@@ -1524,7 +1505,7 @@ public type SecureSocket record {|
 public type CertKey record {|
     # Path to the client certificate file
     string certFile;
-    # Path to the client private key file
+    # Path to the client private key file, in PKCS#8 form (plain or encrypted)
     string keyFile;
     # The password protecting the private key, when it is encrypted
     string keyPassword?;
@@ -1549,7 +1530,8 @@ public type CertKey record {|
 * **One container listing operation returning an array and one returning a page.** Rejected: the two justified themselves contradictorily. One operation carries the marker in and out. Blobs keep `listBlobsPage` beside the stream because a stream cannot carry a marker.
 * **`ContainerPage` / `BlobPage`, or s3's `ListObjectsResponse` / `nextContinuationToken`, as the paged-return names.** Rejected: `<Resource>List` with the service's own token name (`nextMarker`) describes both the whole-list and the partial-list case, without importing another service's vocabulary.
 * **Two Entra chain records with singleton `kind` types.** Rejected in review: one record with an `EntraIdKind` enum selects structurally just as well, and `clientId` is meaningful under both kinds.
-* **`transportConfig?`**, absent meaning the SDK's stock client. Rejected in review: the documented pool values then applied only when some other transport field was set.
+* **`transportConfig?`**, absent meaning the SDK's stock client. Rejected in review: the documented timeout values then applied only when some other transport field was set.
+* **The SDK's default Netty transport.** Rejected: its Netty line collides with the one the `http` module ships on newer distributions, and a Ballerina program keeps one copy of each library, so a program importing both hangs on every request. The JDK HTTP client transport brings no networking library; the pool-size, idle-timeout, SOCKS, handshake-timeout, and session-resumption settings it cannot honour are not offered.
 * **One access-policy operation with both halves optional.** Rejected: one verb for two concepts. Two operations, each reading the current list and resending the other half.
 * **A typed tag-filter record for `findBlobsByTags`.** Rejected: the SDK and the ecosystem take the expression string, and local validation gives the same guarantee.
 * **An `overwrite` option on the uploads.** Rejected: the deprecated module's `putBlob` replaced unconditionally, the sibling and `aws.s3` replace without one, and the type rule already refuses the destructive cases.
