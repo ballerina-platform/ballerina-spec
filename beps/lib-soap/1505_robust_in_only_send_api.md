@@ -3,22 +3,24 @@
 - Authors - @Nuvindu
 - Reviewed by -
 - Created date - 2026/09/29
-- Updated date - 2026/09/29
+- Updated date - 2026/10/14
 - Issue - [#1505](https://github.com/ballerina-platform/ballerina-spec/issues/1505)
 - State - Submitted
 
 ## Summary
 
-Add a `send()` remote function to the SOAP 1.1 and SOAP 1.2 clients in the `ballerina/soap` module. The function implements the WSDL 2.0 Robust In-Only Message Exchange Pattern: it sends a SOAP envelope without expecting a response body, but checks the HTTP status code and returns SOAP fault information on failure.
+Add a `sendRobust()` remote function to the SOAP 1.1 and SOAP 1.2 clients in the `ballerina/soap` module. The function implements the WSDL 2.0 Robust In-Only Message Exchange Pattern: it sends a SOAP envelope without expecting a response body, but checks the HTTP status code and returns SOAP fault information on failure.
 
 ## Motivation
 
-The SOAP module currently provides two remote functions for sending messages:
+The SOAP module today provides two remote functions for sending messages:
 
-- `sendReceive()` sends a SOAP envelope and returns the response body. It maps to the WSDL Request-Response Message Exchange Pattern.
-- `sendOnly()` sends a SOAP envelope and ignores the response entirely, including any SOAP fault. It maps to the WSDL One-Way Message Exchange Pattern.
+- **`sendReceive()`** sends a SOAP envelope and returns the parsed response body. It maps to the WSDL Request-Response Message Exchange Pattern.
+- **`sendOnly()`** sends a SOAP envelope and ignores the response entirely — including any SOAP fault. It maps to the WSDL One-Way Message Exchange Pattern.
 
-There is no way to send a one-way message while still detecting server-side failures. The WSDL 2.0 Robust In-Only MEP fills this gap: no response body is expected on success, but if the server returns a non-success HTTP status (such as 500 with a SOAP fault), the client reports the error. Users who call web services with one-way operations today must choose between losing fault information (`sendOnly`) or unnecessarily parsing a response body (`sendReceive`).
+There is no way to send a one-way message while still detecting server-side failures. The [WSDL 2.0 Robust In-Only MEP](https://www.w3.org/TR/wsdl20-adjuncts/#in-only) fills this gap. Here no response body is expected on success, but if the server returns a non-success HTTP status (such as 500 with a SOAP fault), the client reports the error.
+
+Currently when encountering this type of scenario, users have to either choose between losing fault information (`sendOnly`) or unnecessarily parsing a response body (`sendReceive`).
 
 ## Goals
 
@@ -26,14 +28,15 @@ There is no way to send a one-way message while still detecting server-side fail
 - Detect non-2xx HTTP responses and return an error that includes the HTTP status code and any SOAP fault XML from the response.
 - Support all existing client capabilities: custom HTTP headers, resource path suffixes, SOAP attachments via `mime:Entity[]`, and outbound security policies.
 - Match the parameter style of `sendReceive()` and `sendOnly()` so users can switch between the three functions with minimal changes.
+- Provide distinct error subtypes (`SoapFaultError`, `NetworkError`) so callers can pattern-match on failure modes.
 
 ## Design
 
 ### 1. SOAP 1.1 Client
 
 ```ballerina
-remote isolated function send(xml|mime:Entity[] body, string action,
-                              map<string|string[]> headers = {}, string path = "") returns Error?
+remote isolated function sendRobust(xml|mime:Entity[] body, string action,
+                                    map<string|string[]> headers = {}, string path = "") returns Error?
 ```
 
 The `action` parameter is mandatory because SOAP 1.1 requires the `SOAPAction` HTTP header.
@@ -41,8 +44,8 @@ The `action` parameter is mandatory because SOAP 1.1 requires the `SOAPAction` H
 ### 2. SOAP 1.2 Client
 
 ```ballerina
-remote isolated function send(xml|mime:Entity[] body, string? action = (),
-                              map<string|string[]> headers = {}, string path = "") returns Error?
+remote isolated function sendRobust(xml|mime:Entity[] body, string? action = (),
+                                    map<string|string[]> headers = {}, string path = "") returns Error?
 ```
 
 The `action` parameter is optional because SOAP 1.2 carries the action in the `Content-Type` header and it is not always required.
@@ -61,31 +64,62 @@ The `action` parameter is optional because SOAP 1.2 carries the action in the `C
 1. Outbound security policies configured on the client are applied to the SOAP envelope.
 2. An HTTP POST request is created with the appropriate content type and action placement: `text/xml` with a separate `SOAPAction` HTTP header for SOAP 1.1, or `application/soap+xml` with the action as a `Content-Type` parameter for SOAP 1.2. Any custom headers are also included.
 3. The request is sent to the server.
-4. If the HTTP client returns an error (connection failure, timeout, etc.), an `Error` is returned with the client error message.
+4. If the HTTP client returns an error (connection failure, timeout, etc.), a `NetworkError` is returned with the client error message.
 5. If the HTTP response status code is outside the 2xx range:
    - The function attempts to read the response body as XML (which may contain a SOAP fault).
-   - An `Error` is returned with the HTTP status code and, if available, the SOAP fault XML in the error detail.
+   - If the body contains a SOAP fault, a `SoapFaultError` is returned with the HTTP status code and the fault XML in the error detail.
+   - Otherwise, a `NetworkError` is returned with the HTTP status code.
 6. If the HTTP response status code is in the 2xx range, `()` is returned. The response body is not read.
 
-### 5. Error detail
+### 5. Error types
 
-When a non-2xx response is received, the returned `Error` includes:
+The module introduces two distinct error subtypes under the existing `Error` type to let callers differentiate between failure modes:
 
-- **Message**: `"Failed to create SOAP response: HTTP <status code>"`
-- **`httpStatusCode`**: The HTTP status code from the response.
-- **`detail`**: The SOAP fault XML as a string, if the response body could be read as XML. Absent otherwise.
+```ballerina
+# Defines the common error type for the module.
+public type Error distinct error;
+
+# Represents a SOAP fault returned by the server.
+public type SoapFaultError distinct Error;
+
+# Represents a network-level error that occurs during SOAP communication.
+public type NetworkError distinct Error;
+```
+
+- **`SoapFaultError`** — Returned when the server responds with a non-2xx HTTP status and the response body contains a SOAP fault XML. Includes `httpStatusCode` and `detail` (the fault XML as a string) in the error detail record.
+- **`NetworkError`** — Returned for HTTP client errors (connection failures, invalid URLs) or non-2xx responses without an XML payload. Includes `httpStatusCode` in the error detail record when available.
+
+Callers can pattern-match on these subtypes:
+
+```ballerina
+Error? result = soapClient->sendRobust(envelope, "http://tempuri.org/Add");
+if result is SoapFaultError {
+    // Server returned a SOAP fault — inspect detail for fault XML
+} else if result is NetworkError {
+    // Connection or HTTP-level failure
+} else if result is Error {
+    // Other errors (e.g., security policy failures)
+}
+```
 
 ### 6. Comparison with existing functions
 
-| Aspect | `sendReceive()` | `sendOnly()` | `send()` |
-|--------|-----------------|--------------|----------|
+| Aspect | `sendReceive()` | `sendOnly()` | `sendRobust()` |
+|--------|-----------------|--------------|----------------|
 | Expects response body | Yes | No | No |
-| Checks HTTP status | Yes | No | Yes |
-| Returns SOAP fault details | Yes (in response) | No | Yes (as error) |
+| Checks HTTP status | No | No | Yes |
+| Returns SOAP fault details | As XML | No | As `SoapFaultError` |
 | Return type | `xml\|mime:Entity[]\|Error` | `Error?` | `Error?` |
 | WSDL MEP | Request-Response | One-Way | Robust In-Only |
 
-### 7. Usage examples
+### 7. Why `sendRobust()` instead of reusing `sendReceive()`?
+
+- **Return type mismatch**: `sendReceive` returns `T|Error` (actual response data). In robust-in-only, there is no response body to return. Forcing the caller to handle a response they will never use would be misleading.
+- **Different response handling**: `sendReceive` always extracts and returns the response body. `sendRobust` checks the HTTP status code — 2xx means success (return nil), non-2xx means it reads any SOAP fault XML and wraps it into a typed error.
+- **Type safety**: `Error?` makes the "no response body" contract explicit. Callers cannot accidentally try to process a non-existent response.
+- **WSDL compliance**: Maps 1:1 to the WSDL 2.0 Robust In-Only MEP (§2.3.2) with the "Message Triggers Fault" propagation rule.
+
+### 8. Usage examples
 
 #### SOAP 1.1: Send a one-way message with fault detection
 
@@ -104,7 +138,7 @@ public function main() returns error? {
                               </quer:Add>
                             </soap:Body>
                         </soap:Envelope>`;
-    check soapClient->send(envelope, "http://tempuri.org/Add");
+    check soapClient->sendRobust(envelope, "http://tempuri.org/Add");
 }
 ```
 
@@ -125,7 +159,7 @@ public function main() returns error? {
                               </quer:Add>
                             </soap:Body>
                         </soap:Envelope>`;
-    check soapClient->send(envelope);
+    check soapClient->sendRobust(envelope);
 }
 ```
 
@@ -145,8 +179,12 @@ public function main() returns error? {
                               </m:GetPrice>
                             </soap:Body>
                         </soap:Envelope>`;
-    soap11:Error? result = soapClient->send(envelope, "https://www.example.com/prices/GetPrice");
-    if result is soap11:Error {
+    soap11:Error? result = soapClient->sendRobust(envelope, "https://www.example.com/prices/GetPrice");
+    if result is soap11:SoapFaultError {
+        io:println("SOAP fault: ", result.message());
+    } else if result is soap11:NetworkError {
+        io:println("Network error: ", result.message());
+    } else if result is soap11:Error {
         io:println("SOAP call failed: ", result.message());
     }
 }
@@ -157,15 +195,17 @@ public function main() returns error? {
 - **Use `sendReceive()` and discard the response.** This works but forces the client to read and parse a response body that is not expected, adding unnecessary overhead. It also misrepresents the intent of the operation.
 - **Use `sendOnly()` and add error checking.** Not possible because `sendOnly()` does not inspect the HTTP response at all.
 - **Add an optional parameter to `sendOnly()` to enable fault detection.** Rejected because it changes the semantics of an existing function and the two behaviors (ignore response vs. check status) are distinct enough to warrant separate functions.
+- **Name the function `send()` instead of `sendRobust()`.** Rejected because `sendRobust` clearly communicates the WSDL Robust In-Only MEP semantics and is consistent with the naming convention of the other functions (`sendReceive`, `sendOnly`).
 
 ## Testing
 
-1. Successful `send()` call with a 2xx response, for both SOAP 1.1 and SOAP 1.2 clients.
-2. `send()` with a non-2xx response containing a SOAP fault, verifying the error includes the HTTP status code and the fault XML.
-3. `send()` with a connection error (unreachable host), verifying the error is propagated.
-4. `send()` with custom headers and a non-empty path.
-5. `send()` with `mime:Entity[]` body (SOAP attachments).
-6. `send()` with outbound security policies applied to the envelope.
+1. Successful `sendRobust()` call with a 2xx response, for both SOAP 1.1 and SOAP 1.2 clients.
+2. `sendRobust()` with a non-2xx response containing a SOAP fault, verifying the returned `SoapFaultError` includes the HTTP status code and the fault XML.
+3. `sendRobust()` with a connection error (unreachable host), verifying a `NetworkError` is returned.
+4. `sendRobust()` with a non-2xx response without an XML payload, verifying a `NetworkError` is returned.
+5. `sendRobust()` with custom headers and a non-empty path.
+6. `sendRobust()` with `mime:Entity[]` body (SOAP attachments).
+7. `sendRobust()` with outbound security policies applied to the envelope.
 
 ## Risks and Assumptions
 
