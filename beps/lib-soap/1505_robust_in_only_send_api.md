@@ -79,23 +79,37 @@ The module introduces two distinct error subtypes under the existing `Error` typ
 # Defines the common error type for the module.
 public type Error distinct error;
 
+# Detail record for SOAP fault errors.
+public type SoapFaultErrorDetail record {|
+    int httpStatusCode;
+    string detail;
+|};
+
 # Represents a SOAP fault returned by the server.
-public type SoapFaultError distinct Error;
+public type SoapFaultError distinct (Error & error<SoapFaultErrorDetail>);
+
+# Detail record for network-level errors.
+public type NetworkErrorDetail record {|
+    int httpStatusCode?;
+|};
 
 # Represents a network-level error that occurs during SOAP communication.
-public type NetworkError distinct Error;
+public type NetworkError distinct (Error & error<NetworkErrorDetail>);
 ```
 
-- **`SoapFaultError`** — Returned when the server responds with a non-2xx HTTP status and the response body contains a SOAP fault XML. Includes `httpStatusCode` and `detail` (the fault XML as a string) in the error detail record.
-- **`NetworkError`** — Returned for HTTP client errors (connection failures, invalid URLs) or non-2xx responses without an XML payload. Includes `httpStatusCode` in the error detail record when available.
+- **`SoapFaultError`** — Returned when the server responds with a non-2xx HTTP status and the response body contains a SOAP fault XML. Its detail record includes `httpStatusCode` (the HTTP status code) and `detail` (the fault XML as a string).
+- **`NetworkError`** — Returned for HTTP client errors (connection failures, invalid URLs) or non-2xx responses without an XML payload. Its detail record includes an optional `httpStatusCode` (present when the error originates from an HTTP response, absent for connection-level failures).
 
 Callers can pattern-match on these subtypes:
 
 ```ballerina
 Error? result = soapClient->sendRobust(envelope, "http://tempuri.org/Add");
 if result is SoapFaultError {
+    int statusCode = result.detail().httpStatusCode;
+    string faultXml = result.detail().detail;
     // Server returned a SOAP fault — inspect detail for fault XML
 } else if result is NetworkError {
+    int? statusCode = result.detail().httpStatusCode;
     // Connection or HTTP-level failure
 } else if result is Error {
     // Other errors (e.g., security policy failures)
@@ -181,7 +195,7 @@ public function main() returns error? {
                         </soap:Envelope>`;
     soap11:Error? result = soapClient->sendRobust(envelope, "https://www.example.com/prices/GetPrice");
     if result is soap11:SoapFaultError {
-        io:println("SOAP fault: ", result.message());
+        io:println("SOAP fault (HTTP ", result.detail().httpStatusCode, "): ", result.detail().detail);
     } else if result is soap11:NetworkError {
         io:println("Network error: ", result.message());
     } else if result is soap11:Error {
