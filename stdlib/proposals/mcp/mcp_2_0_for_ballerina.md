@@ -72,28 +72,41 @@ MCP servers are increasingly protected with OAuth. The 1.x client accepts only a
 
 ### Protocol versions and modes
 
-The module supports MCP `2026-07-28` and the legacy revisions listed above:
+The supported versions are split by lifecycle. Modern versions use per-request negotiation, and legacy versions use the `initialize` handshake:
 
 ```ballerina
-public const MODERN_PROTOCOL_VERSION = "2026-07-28";
-public const LATEST_LEGACY_PROTOCOL_VERSION = "2025-11-25";
-public const LATEST_PROTOCOL_VERSION = MODERN_PROTOCOL_VERSION;
+# Revisions that use per-request negotiation, newest first.
+public const MODERN_PROTOCOL_VERSIONS = ["2026-07-28"];
+# Revisions that use the `initialize` handshake, newest first.
+public const LEGACY_PROTOCOL_VERSIONS = ["2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05", "2024-10-07"];
+# The union of the modern and legacy revisions.
 public const SUPPORTED_PROTOCOL_VERSIONS = [
     "2026-07-28", "2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05", "2024-10-07"
 ];
+
+# The newest modern revision, sent by the client.
+public const LATEST_PROTOCOL_VERSION = "2026-07-28";
+# The newest legacy revision, offered in `initialize`.
+public const LATEST_LEGACY_PROTOCOL_VERSION = "2025-11-25";
 ```
 
-Whether a request is modern or legacy is decided by its lifecycle, not by comparing versions. An `initialize` request is always legacy. A request whose `_meta` carries `io.modelcontextprotocol/protocolVersion` is modern. For any other request, an absent `MCP-Protocol-Version` header or a legacy version in it means legacy. Any other value is handled as a modern request, and is rejected unless it carries the required metadata.
+`MODERN_PROTOCOL_VERSION`, which duplicates `LATEST_PROTOCOL_VERSION`, is removed. There is only one modern revision today. A list lets the next one be added as a membership change, instead of replacing every comparison against a single constant.
 
-The legacy versions are used where the initialize-based lifecycle negotiates or validates a version:
+Whether a request is modern or legacy is decided by its lifecycle, not by comparing versions. An `initialize` request is always legacy. A request whose `_meta` carries `io.modelcontextprotocol/protocolVersion` is modern. For any other request, an absent `MCP-Protocol-Version` header or a version in `LEGACY_PROTOCOL_VERSIONS` means legacy. Any other value is handled as a modern request, and is rejected unless it carries the required metadata.
 
-- for `initialize`, the server echoes the requested version if it supports it, and otherwise answers with `LATEST_LEGACY_PROTOCOL_VERSION`;
-- the server rejects a legacy request whose `MCP-Protocol-Version` header holds an unsupported version;
-- the client rejects an `InitializeResult` whose version it does not support;
-- the client uses the `supported` list of an `UNSUPPORTED_PROTOCOL_VERSION` error to decide whether to fall back (see [Protocol selection](#protocol-selection));
-- the server lists its versions in `server/discover` and in `UNSUPPORTED_PROTOCOL_VERSION` errors.
+Each list is used where its lifecycle negotiates or validates a version:
 
-A modern request must carry `MODERN_PROTOCOL_VERSION`.
+| Check | List |
+|---|---|
+| The server accepts a modern request's version | `MODERN_PROTOCOL_VERSIONS` |
+| The client selects the modern protocol: the newest of its modern versions that `server/discover` lists | `MODERN_PROTOCOL_VERSIONS` |
+| For `initialize`, the server echoes the requested version, or answers with `LATEST_LEGACY_PROTOCOL_VERSION` if the version is not supported | `LEGACY_PROTOCOL_VERSIONS` |
+| The server accepts the `MCP-Protocol-Version` header of a legacy request | `LEGACY_PROTOCOL_VERSIONS` |
+| The client accepts the version in an `InitializeResult` | `LEGACY_PROTOCOL_VERSIONS` |
+| The client falls back to `initialize` when an `UNSUPPORTED_PROTOCOL_VERSION` error's `supported` list names a legacy version and no modern one (see [Protocol selection](#protocol-selection)) | Both |
+| The server lists its versions in `server/discover` and in `UNSUPPORTED_PROTOCOL_VERSION` errors | `MODERN_PROTOCOL_VERSIONS` in `"modern"` mode, `LEGACY_PROTOCOL_VERSIONS` in `"legacy"` mode, `SUPPORTED_PROTOCOL_VERSIONS` in `"auto"` mode |
+
+> **Implementation note:** the current implementation has a single `MODERN_PROTOCOL_VERSION` constant and compares against it directly. The request classifier also keeps its own hardcoded copy of the legacy versions instead of deriving them from `SUPPORTED_PROTOCOL_VERSIONS`. The legacy header check uses `SUPPORTED_PROTOCOL_VERSIONS`, which includes the modern version. These will be changed to use the lists above once this proposal is approved, with no change in behavior for the versions supported today.
 
 A protocol mode selects which of these a client or service uses. It is independent of HTTP session management.
 
