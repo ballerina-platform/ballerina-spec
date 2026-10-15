@@ -391,6 +391,55 @@ public type ConnectionInfo record {|
 |};
 ```
 
+#### Client configuration
+
+```ballerina
+public type StreamableHttpClientConfig record {|
+    # Protocol selection
+    ProtocolMode protocolMode = "auto";
+    # HTTP transport settings, including authorization
+    HttpClientConfig httpConfig = {};
+    # Reuse of modern results; `()` disables it
+    ResultCacheConfig? resultCache = {};
+    # Callback for input-required continuations
+    InputHandler inputHandler?;
+    # Maximum number of input-required continuations per call
+    int maxInputRounds = 8;
+    # Legacy session to resume; cannot be combined with `"modern"`
+    string sessionId?;
+|};
+```
+
+HTTP settings are grouped under `httpConfig`, as on the service side. `HttpClientConfig` has the fields of `http:ClientConfiguration`, in the same order and with the same defaults, except that `auth` also accepts `mcp:OAuthConfig` (see [Authorization](#authorization)):
+
+```ballerina
+public type HttpClientConfig record {|
+    http:HttpVersion httpVersion = http:HTTP_2_0;
+    http:ClientHttp1Settings http1Settings = {};
+    http:ClientHttp2Settings http2Settings = {};
+    decimal timeout = 30;
+    string forwarded = "disable";
+    http:FollowRedirects? followRedirects = ();
+    http:PoolConfiguration? poolConfig = ();
+    http:CacheConfig cache = {};
+    http:Compression compression = http:COMPRESSION_AUTO;
+    # An existing credential, or MCP authorization through OAuth
+    (http:ClientAuthConfig|OAuthConfig)? auth = ();
+    http:CircuitBreakerConfig? circuitBreaker = ();
+    http:RetryConfig? retryConfig = ();
+    http:CookieConfig? cookieConfig = ();
+    http:ResponseLimitConfigs responseLimits = {};
+    http:ProxyConfig? proxy = ();
+    boolean validation = true;
+    http:ClientSocketConfig socketConfig = {};
+    boolean laxDataBinding = false;
+    http:ClientSecureSocket? secureSocket = ();
+|};
+```
+
+- Redirects are followed by default. With `mcp:OAuthConfig`, they are always disabled, whatever `followRedirects` says: the client attaches the token itself, so a redirect could send it to another host or hide the authorization challenge.
+- The OAuth metadata and token endpoint requests reuse `secureSocket` and `proxy`.
+
 #### Protocol selection
 
 In `"auto"` mode, `connect()` sends `server/discover`. If the result lists `2026-07-28`, the client uses the modern protocol. If the request fails, the client falls back to `initialize` only when the failure shows a legacy server:
@@ -421,18 +470,9 @@ On the modern protocol, the client:
 
 The client reuses modern `tools/list` results while their `ttlMs` keeps them fresh. Each page is cached under its cursor.
 
-```ballerina
-public type StreamableHttpClientConfig record {|
-    // HTTP client fields of http:ClientConfiguration ...
-    (http:ClientAuthConfig|OAuthConfig)? auth = ();
-    string sessionId?;
-    ProtocolMode protocolMode = "auto";
-    int maxInputRounds = 8;
-    InputHandler inputHandler?;
-    # `()` disables reuse
-    ResultCacheConfig? resultCache = {};
-|};
+Caching is configured through `resultCache`:
 
+```ballerina
 public type ResultCacheConfig record {|
     # Upper bound, in milliseconds, on how long a result is treated as fresh
     int maxTtlMs = 86400000;
@@ -448,14 +488,14 @@ public type CacheMode "use"|"refresh"|"bypass";
 
 - Cached results are dropped when `listen()` delivers `notifications/tools/list_changed`, when the server rejects a cursor with `INVALID_PARAMS` (all pages are dropped), when a call fails with `HEADER_MISMATCH`, and on `close()`. A request that is already running cannot put back a result that was dropped while it ran.
 - A negative `ttlMs` from a server is treated as `0`.
-- Each client has its own cache and is treated as one authorization context. Credentials belong in `auth`, with a separate client for each user. Per-call headers are not part of the cache key.
+- Each client has its own cache and is treated as one authorization context. Credentials belong in `httpConfig.auth`, with a separate client for each user. Per-call headers are not part of the cache key.
 - The tool schemas used for argument headers are kept in the same cache, and are merged across pages.
 
 Servers default to `ttlMs: 0`, so caching changes nothing until a server opts in.
 
 #### Authorization
 
-`auth` accepts either an existing credential (`http:ClientAuthConfig`) or an `mcp:OAuthConfig`. With `mcp:OAuthConfig`, the client implements MCP authorization (OAuth 2.1). On a `401` it reads the `WWW-Authenticate` challenge, fetches the protected resource metadata (RFC 9728) and the authorization server metadata (RFC 8414), runs the configured grant, attaches the access token, and refreshes or requests a new token when it expires. An `insufficient_scope` challenge triggers a step-up token request for the challenged scopes together with the scopes already granted.
+`httpConfig.auth` accepts either an existing credential (`http:ClientAuthConfig`) or an `mcp:OAuthConfig`. With `mcp:OAuthConfig`, the client implements MCP authorization (OAuth 2.1). On a `401` it reads the `WWW-Authenticate` challenge, fetches the protected resource metadata (RFC 9728) and the authorization server metadata (RFC 8414), runs the configured grant, attaches the access token, and refreshes or requests a new token when it expires. An `insufficient_scope` challenge triggers a step-up token request for the challenged scopes together with the scopes already granted.
 
 ```ballerina
 public type OAuthConfig record {|
@@ -580,12 +620,14 @@ A client that obtains its own token with the client credentials grant:
 configurable string clientSecret = ?;
 
 mcp:StreamableHttpClient mcpClient = check new ("https://tools.example.com/mcp",
-    auth = {
-        grant: {
-            clientConfig: {
-                clientId: "reporting-agent",
-                issuer: "https://auth.example.com",
-                clientAuth: {clientSecret}
+    httpConfig = {
+        auth: {
+            grant: {
+                clientConfig: {
+                    clientId: "reporting-agent",
+                    issuer: "https://auth.example.com",
+                    clientAuth: {clientSecret}
+                }
             }
         }
     }
@@ -610,6 +652,7 @@ Version 2.0 is a major release with breaking API changes. Wire compatibility wit
 | `subscribeToServerMessages()` | `listen()` |
 
 - `mcp:HttpSession` can be declared at any position, so existing tools that declare it first keep compiling.
+- HTTP client settings move from the top level of the client configuration into `httpConfig`, for example `timeout = 60` becomes `httpConfig = {timeout: 60}`.
 - Most migrations are renames. The client must now call `connect()` before other operations; 1.x did not enforce `initialize()`.
 - Services that use `mcp:HttpSession` keep working for legacy clients in the default `"auto"` mode, and the compiler warns that modern clients cannot use them. To serve modern clients, move the state into the application.
 - A legacy client keeps receiving the legacy wire shapes from a 2.0 server.
