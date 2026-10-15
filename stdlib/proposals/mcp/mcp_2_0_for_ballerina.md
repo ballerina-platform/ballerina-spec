@@ -90,7 +90,7 @@ public const LATEST_PROTOCOL_VERSION = "2026-07-28";
 public const LATEST_LEGACY_PROTOCOL_VERSION = "2025-11-25";
 ```
 
-`MODERN_PROTOCOL_VERSION`, which duplicates `LATEST_PROTOCOL_VERSION`, is removed. There is only one modern revision today. A list lets the next one be added as a membership change, instead of replacing every comparison against a single constant.
+Modern revisions are kept in a list even though there is only one, so that a future revision can be added without changing how versions are checked.
 
 Whether a request is modern or legacy is decided by its lifecycle, not by comparing versions. An `initialize` request is always legacy. A request whose `_meta` carries `io.modelcontextprotocol/protocolVersion` is modern. For any other request, an absent `MCP-Protocol-Version` header or a version in `LEGACY_PROTOCOL_VERSIONS` means legacy. Any other value is handled as a modern request, and is rejected unless it carries the required metadata.
 
@@ -105,8 +105,6 @@ Each list is used where its lifecycle negotiates or validates a version:
 | The client accepts the version in an `InitializeResult` | `LEGACY_PROTOCOL_VERSIONS` |
 | The client falls back to `initialize` when an `UNSUPPORTED_PROTOCOL_VERSION` error's `supported` list names a legacy version and no modern one (see [Protocol selection](#protocol-selection)) | Both |
 | The server lists its versions in `server/discover` and in `UNSUPPORTED_PROTOCOL_VERSION` errors | `MODERN_PROTOCOL_VERSIONS` in `"modern"` mode, `LEGACY_PROTOCOL_VERSIONS` in `"legacy"` mode, `SUPPORTED_PROTOCOL_VERSIONS` in `"auto"` mode |
-
-> **Implementation note:** the current implementation has a single `MODERN_PROTOCOL_VERSION` constant and compares against it directly. The request classifier also keeps its own hardcoded copy of the legacy versions instead of deriving them from `SUPPORTED_PROTOCOL_VERSIONS`. The legacy header check uses `SUPPORTED_PROTOCOL_VERSIONS`, which includes the modern version. These will be changed to use the lists above once this proposal is approved, with no change in behavior for the versions supported today.
 
 A protocol mode selects which of these a client or service uses. It is independent of HTTP session management.
 
