@@ -65,7 +65,7 @@ MCP servers are increasingly protected with OAuth. The 1.x client accepts only a
 - `mcp:Listener` (deprecated) and `mcp:StreamableHttpListener` serve `mcp:Service`, `mcp:AdvancedService`, `mcp:StreamableHttpService` and `mcp:StreamableHttpAdvancedService`.
 - `@mcp:ServiceConfig` and `@mcp:StreamableHttpServiceConfig` configure a service, and `sessionMode` selects `STATEFUL`, `STATELESS` or `AUTO` session handling.
 - A tool can bind `mcp:Session` (first parameter) and `mcp:Meta?`. Streamable HTTP tools can also bind `@http:Header` parameters, `http:Headers` and `http:Request`.
-- `mcp:StreamableHttpClient` connects implicitly with `initialize()` and offers `listTools()`, `callTool()`, `callToolWithResult()` and `subscribeToServerMessages()`.
+- `mcp:StreamableHttpClient` offers `initialize()`, `listTools()`, `callTool()`, `subscribeToServerMessages()` and `close()`. `initialize()` always performs the `initialize` handshake, and the other methods do not check that it was called.
 - The supported protocol versions are `2025-11-25`, `2025-06-18`, `2025-03-26`, `2024-11-05` and `2024-10-07`.
 
 ## Design
@@ -82,6 +82,18 @@ public const SUPPORTED_PROTOCOL_VERSIONS = [
     "2026-07-28", "2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05", "2024-10-07"
 ];
 ```
+
+Whether a request is modern or legacy is decided by its lifecycle, not by comparing versions. An `initialize` request is always legacy. A request whose `_meta` carries `io.modelcontextprotocol/protocolVersion` is modern. For any other request, an absent `MCP-Protocol-Version` header or a legacy version in it means legacy. Any other value is handled as a modern request, and is rejected unless it carries the required metadata.
+
+The legacy versions are used where the initialize-based lifecycle negotiates or validates a version:
+
+- for `initialize`, the server echoes the requested version if it supports it, and otherwise answers with `LATEST_LEGACY_PROTOCOL_VERSION`;
+- the server rejects a legacy request whose `MCP-Protocol-Version` header holds an unsupported version;
+- the client rejects an `InitializeResult` whose version it does not support;
+- the client uses the `supported` list of an `UNSUPPORTED_PROTOCOL_VERSION` error to decide whether to fall back (see [Protocol selection](#protocol-selection));
+- the server lists its versions in `server/discover` and in `UNSUPPORTED_PROTOCOL_VERSION` errors.
+
+A modern request must carry `MODERN_PROTOCOL_VERSION`.
 
 A protocol mode selects which of these a client or service uses. It is independent of HTTP session management.
 
@@ -331,7 +343,7 @@ public distinct isolated client class StreamableHttpClient {
 }
 ```
 
-`init` only configures the transport. The 1.x client connected implicitly on its first call. In 2.0, `connect()` selects the protocol and must be called before `listTools()`, `callTool()`, `callToolOnce()` or `listen()`, which return an error otherwise. It returns what was negotiated:
+`init` only configures the transport. In 1.x, `initialize()` always ran the legacy handshake, and nothing stopped an application from calling `listTools()` or `callTool()` without it. In 2.0, `connect()` selects the protocol and must be called before `listTools()`, `callTool()`, `callToolOnce()` or `listen()`, which return an error otherwise. It returns what was negotiated:
 
 ```ballerina
 public type ConnectionInfo record {|
@@ -556,11 +568,10 @@ Version 2.0 is a major release with breaking API changes. Wire compatibility wit
 | `mcp:SessionMode` | `mcp:HttpSessionMode` |
 | `mcp:Meta` | `mcp:RequestMetaObject` |
 | `mcp:StreamableHttpClientTransportConfig` | `mcp:StreamableHttpClientConfig` |
-| `initialize()` (implicit on first call) | `connect()`, or `initializeLegacy()` |
-| `callToolWithResult()` | `callToolOnce()` |
+| `initialize()` | `connect()`, or `initializeLegacy()` |
 | `subscribeToServerMessages()` | `listen()` |
 
-- Most migrations are renames. The client must also call `connect()` before other operations.
+- Most migrations are renames. The client must now call `connect()` before other operations; 1.x did not enforce `initialize()`.
 - Services that use `mcp:HttpSession` keep working for legacy clients in the default `"auto"` mode, and the compiler warns that modern clients cannot use them. To serve modern clients, move the state into the application.
 - A legacy client keeps receiving the legacy wire shapes from a 2.0 server.
 - A 2.0 client connects to a 1.x server through the `"auto"` fallback.
