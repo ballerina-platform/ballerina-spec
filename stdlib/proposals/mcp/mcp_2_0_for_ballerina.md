@@ -202,11 +202,29 @@ Modern requests have no session. `sessionMode` applies only to legacy requests, 
 
 In addition to `anydata` arguments, a basic tool can bind:
 
-- `mcp:HttpSession` or `mcp:HttpSession?`, as the first parameter, for legacy session state;
-- `mcp:RequestMetaObject?` (renamed from `mcp:Meta`), at any position, for the request's `_meta`. It must be nilable, because clients may omit `_meta`;
+- `mcp:HttpSession` or `mcp:HttpSession?`, at any position, for legacy session state. Unlike 1.x, it no longer has to be the first parameter;
+- `mcp:RequestMeta?` (renamed from `mcp:Meta`), at any position, for the request's `_meta`. It must be nilable, because clients may omit `_meta`;
 - `@http:Header` parameters, `http:Headers` and `http:Request`, as defined in the transport-specific service types proposal.
 
 Runtime parameters are not part of the generated input schema. An omitted defaultable argument takes its default value.
+
+The `_meta` objects of requests, results and notifications are typed as `mcp:RequestMeta`, `mcp:ResultMeta` and `mcp:NotificationMeta`. Each is an open record that declares the keys this module uses:
+
+```ballerina
+public type RequestMeta record {
+    ProgressToken progressToken?;
+};
+
+public type ResultMeta record {
+    # Server implementation that produced the response
+    Implementation serverInfo?;
+};
+
+public type NotificationMeta record {
+    # Request identifier of the subscription that delivered the notification
+    RequestId subscriptionId?;
+};
+```
 
 #### Structured output
 
@@ -228,7 +246,14 @@ public type McpToolConfig record {|
 The library always creates a text content block from the return value. The rest of the result depends on the protocol:
 
 - **Modern:** `tools/list` advertises `outputSchema`, and `structuredContent` carries the return value with any JSON root, including `null`.
-- **Legacy:** the 1.x wire shape is kept. `outputSchema` is not advertised. An object-root value is returned in `structuredContent`. Scalars and arrays are returned only as the text content block, because the legacy schema requires an object.
+- **Legacy:** the 1.x behavior is kept. `outputSchema` is not advertised, and the result contains only the text content block, without `structuredContent`.
+
+Setting `structuredOutput: false` marks a tool's output as unstructured, whatever its return type:
+
+- the compiler does not generate an `outputSchema`, so a return type that cannot be mapped to a JSON Schema does not cause a compilation error;
+- `tools/list` does not advertise an `outputSchema`, and `tools/call` returns only the text content block, without `structuredContent`, on both protocols.
+
+`structuredOutput: false` cannot be combined with an explicit `outputSchema`; the compiler reports an error, since the tool would advertise a schema for output it never sends.
 
 #### Argument headers
 
@@ -269,6 +294,7 @@ remote isolated function onSubscribe(SubscriptionFilter notifications)
 ```
 
 - These methods can bind the same HTTP request values as basic tools. `onCallTool` reads request metadata from `params._meta`.
+- For a legacy request, the library keeps results within the legacy schema. It removes an `outputSchema` or `structuredContent` whose root is not an object, and rejects an `InputRequiredResult`.
 - `onCallTool` may return `InputRequiredResult` to a modern request. The input-request design is out of scope for this proposal (see [Non-Goals](#non-goals)).
 - `onSubscribe` is invoked for `subscriptions/listen`. The library sends `notifications/subscriptions/acknowledged` with the accepted filter, forwards matching notifications tagged with the subscription ID, and sends the final `complete` result when the stream ends. Only `toolsListChanged` is accepted in this version.
 
@@ -491,8 +517,9 @@ In addition to the 1.x checks, the compiler plugin reports:
 | Error | `@mcp:Argument` on a parameter that is not a non-nilable `string`, `int`, `float`, `decimal` or `boolean` tool argument. |
 | Error | An invalid or duplicate `@mcp:Argument` header name in a tool. |
 | Error | `@mcp:Argument` combined with an explicit `@mcp:Tool.schema`, since the schema would not contain the header declaration. |
+| Error | `@mcp:Tool` with `structuredOutput: false` and an explicit `outputSchema`. |
 
-The 1.x diagnostics that named `mcp:Session` and `mcp:Meta` now name `mcp:HttpSession` and `mcp:RequestMetaObject`. The diagnostic for transport-specific parameters on `mcp:Service` is removed together with that type.
+The 1.x diagnostics that named `mcp:Session` and `mcp:Meta` now name `mcp:HttpSession` and `mcp:RequestMeta`. The diagnostic requiring the session parameter to be first is removed, since `mcp:HttpSession` can be declared at any position. The diagnostic for transport-specific parameters on `mcp:Service` is removed together with that type.
 
 ## Example Usage
 
@@ -516,7 +543,7 @@ service mcp:StreamableHttpService /mcp on mcpListener {
 
     # Returns the forecast for a region.
     remote isolated function forecast(@mcp:Argument {headerName: "Region"} string region,
-            mcp:RequestMetaObject? meta) returns Forecast {
+            mcp:RequestMeta? meta) returns Forecast {
         return {region, temperature: 24.5d};
     }
 }
@@ -577,11 +604,12 @@ Version 2.0 is a major release with breaking API changes. Wire compatibility wit
 | `@mcp:ServiceConfig`, `@mcp:StreamableHttpServiceConfig` | `@mcp:StreamableHttpConfig` |
 | `mcp:Session`, `mcp:SessionEntry` | `mcp:HttpSession`, `mcp:HttpSessionEntry` |
 | `mcp:SessionMode` | `mcp:HttpSessionMode` |
-| `mcp:Meta` | `mcp:RequestMetaObject` |
+| `mcp:Meta` | `mcp:RequestMeta` |
 | `mcp:StreamableHttpClientTransportConfig` | `mcp:StreamableHttpClientConfig` |
 | `initialize()` | `connect()`, or `initializeLegacy()` |
 | `subscribeToServerMessages()` | `listen()` |
 
+- `mcp:HttpSession` can be declared at any position, so existing tools that declare it first keep compiling.
 - Most migrations are renames. The client must now call `connect()` before other operations; 1.x did not enforce `initialize()`.
 - Services that use `mcp:HttpSession` keep working for legacy clients in the default `"auto"` mode, and the compiler warns that modern clients cannot use them. To serve modern clients, move the state into the application.
 - A legacy client keeps receiving the legacy wire shapes from a 2.0 server.
