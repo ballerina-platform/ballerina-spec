@@ -90,37 +90,40 @@ steps:
   - run: ./upload-to-defectdojo.sh "${{ steps.scan.outputs.sarif-file }}"
 ```
 
-**Saving the reports.** With `artifacts`, the action saves the merged SARIF file, the JSON report `bal scan` writes for each package, or both, as a workflow artifact named after `category`.
+**Saving the SARIF file.** With `artifacts: true`, the action saves the merged SARIF file as a workflow artifact named after `category`. It is the same file as the `sarif-file` output, so saving it takes no extra `bal scan` run.
 
 ```yaml
 steps:
   - uses: actions/checkout@v4
   - uses: ballerina-platform/scan-ballerina@v1
     with:
-      artifacts: sarif,ballerina
+      artifacts: true
 ```
 
 ### Execution flow
 
 
 1. **Validate inputs** and fail with a message naming the input and its accepted values. These checks need only the inputs themselves. Every path in `paths` must exist. `platform-config` must parse as a mapping that matches the [schema](#platform-configuration). A platform or field the action does not know fails the step, so a typo such as `tokn` is caught. Settings for a platform that is not in `platforms` are ignored with a warning. `include-rules` and `exclude-rules` cannot both be set. With `sonarqube` selected:
-    - If the run is a pull request from a fork or from Dependabot and any SonarQube `token` is empty, skip `sonarqube` with a warning and continue without it. Secrets are not available to these runs.
+    - If the run is a `pull_request` run from a fork or from Dependabot and any SonarQube `token` is empty, skip `sonarqube` with a warning and continue without it. Secrets are not available to these runs.
     - Otherwise check that every `token` that is set is not empty, that every `host-url` set at the platform level or under `packages` is a valid `https` URL, since every URL is used with a token, and that every `packages` item that sets `host-url` also sets `token`.
-2. **Find packages.** Each entry in `paths` is a package or a directory searched for `Ballerina.toml`, skipping `target`, `build` and `.git`. A workspace is scanned once from its root. Packages matching `exclude-paths` are dropped and overlapping paths are deduplicated, so each package is scanned once. When no package is found, the result is `skipped`, a warning is written and the step passes. A package whose `Ballerina.toml` sets `[scan] configPath` to a remote URL fails the step, since the action can change only a local `Scan.toml`. See [SonarQube](#sonarqube).
+2. **Find packages.** Each entry in `paths` is a package or a directory searched for `Ballerina.toml`, skipping `target`, `build` and `.git`. A workspace is scanned once from its root. Packages matching `exclude-paths` are dropped and overlapping paths are deduplicated, so each package is scanned once. When no package is found, the result is `skipped`, a warning is written and the step passes.
 3. **Resolve SonarQube settings** (`sonarqube` only). For each package, read its properties file and combine it with `platform-config` in the order given in [Platform configuration](#platform-configuration). Fail with a message naming the package, the missing setting and how to provide it, when:
     - the resolved plugin path is absolute, or is neither an existing file nor an `https` URL,
+    - a package reads a remote `Scan.toml` that has no `sonarqube` `[[platform]]` entry, and `platform-config` sets neither `plugin-path` nor `plugin-version`,
     - a properties file path is set and the file does not exist,
     - a package has no server URL, or its URL is not a valid `https` URL, including a URL from the properties file, since the token is sent to it,
     - a package has no token, from its `packages` item or the platform level,
-    - an item under `packages` matches no package found in step 2, or two items have the same `path`.
+    - a package has no project key, two packages on the same server resolve to the same key, or the platform-level `project-key` or `project-name` is set when more than one package is scanned, or is also set in the one package's item,
+    - an item under `packages` matches no package found in step 2, or two items have the same `path`,
+    - a workspace was found, since SonarQube is not supported for workspaces yet.
 
    See [SonarQube](#sonarqube).
 4. **Set up Ballerina.** If `bal` is already on the path, for example from an earlier `setup-ballerina` step, use it. Otherwise install `ballerina-version` with `setup-ballerina`. Each action release records the minimum Ballerina version its pinned scan tool needs. If the Ballerina in use is older, fail with a message naming both versions.
 5. **Install the scan tool.** Use `tool-version` if given, otherwise the version pinned by the action release. The tool is pulled only when it is missing or a different version is active, so the action can run more than once in a job. With `sonarqube`, also download the platform plugin when it is resolved to a version, from GitHub Packages, and the SonarScanner CLI. See [SonarQube](#sonarqube).
-6. **Scan each package** from the package directory with `bal scan --format=sarif`, and `--include-rules` and `--exclude-rules` when set. Any old report is deleted first, so a report from an earlier run is never read. The scan tool writes no SARIF report while any `[[platform]]` entry in `Scan.toml` is active, so the action hides those entries during this run and restores the file byte for byte as soon as it ends, including when it fails. With `ballerina` in `artifacts`, a second run with `--format=json` writes the package's JSON report. With `sonarqube`, a further run with `--platforms=sonarqube` sends the findings to SonarQube with the package's resolved settings. See [SonarQube](#sonarqube). If `bal scan` fails for a package, for example on compilation errors or because SonarQube rejects the analysis, the remaining packages are still scanned so that every failure is reported, and the step then fails without producing a SARIF file.
+6. **Scan each package** from the package directory with `bal scan --format=sarif`, and `--include-rules` and `--exclude-rules` when set. Any old report is deleted first, so a report from an earlier run is never read. The scan tool writes no SARIF report while any `[[platform]]` entry in `Scan.toml` is active, so the action hides those entries, with their sub-tables, during this run and restores the file byte for byte as soon as it ends, including when it fails. The entries of a remote `Scan.toml` cannot be hidden, so the action warns, and the package's scan fails for want of a report. With `sonarqube`, a second run with `--platforms=sonarqube` sends the findings to SonarQube with the package's resolved settings. See [SonarQube](#sonarqube). If `bal scan` fails for a package, for example on compilation errors or because SonarQube rejects the analysis, the remaining packages are still scanned so that every failure is reported, and the step then fails without producing a SARIF file.
 7. **Normalize and merge** the package reports into one SARIF file, and set the outputs.
-8. **Upload to code scanning** (`github-code-scanning` only) with `github/codeql-action/upload-sarif` under `category`. On a pull request from a fork or from Dependabot, the default `GITHUB_TOKEN` is read-only and cannot have `security-events: write`, so the action skips the upload with a warning and keeps the SARIF file as the `sarif-file` output. The workflow can save it with `artifacts: sarif` and upload it from a trusted `workflow_run` workflow. SonarQube already received its findings in step 6. Both happen before the gate, so findings reach the platforms even when the gate fails.
-9. **Save the reports** listed in `artifacts` as one workflow artifact named after `category`, with `actions/upload-artifact`. This step runs even when an earlier step failed, so the reports that were written are still saved.
+8. **Upload to code scanning** (`github-code-scanning` only) with `github/codeql-action/upload-sarif` under `category`. On a `pull_request` run from a fork or from Dependabot, the default `GITHUB_TOKEN` is read-only and cannot have `security-events: write`, so the action skips the upload with a warning and keeps the SARIF file as the `sarif-file` output. The workflow can save it with `artifacts: true` and upload it from a trusted `workflow_run` workflow. SonarQube already received its findings in step 6. Both happen before the gate, so findings reach the platforms even when the gate fails.
+9. **Save the SARIF file** (`artifacts: true` only) as a workflow artifact named after `category`, with `actions/upload-artifact`. This step runs even when the upload to code scanning failed, so the SARIF file is still saved. When a scan failed, there is no SARIF file and nothing is saved.
 10. **Report.** Write annotations, when enabled, and the job summary.
 11. **Apply the gate** and fail the step if it fails.
 
@@ -139,9 +142,9 @@ steps:
 | `exclude-rules` | empty | Comma separated rule IDs to leave out, such as `ballerina:1,ballerina:10`. Passed to `bal scan --exclude-rules`. Cannot be combined with `include-rules`. |
 | `fail-on-severity` | `none` | Fail when findings are at or above `low`, `medium` or `high`. `none` turns the gate off. |
 | `max-findings` | `0` | Findings at or above `fail-on-severity` allowed before the step fails. |
-| `annotations` | `false` | Show each counted finding as a file and line annotation. |
+| `annotations` | `false` | Show each counted finding as a file and line annotation, up to GitHub's limit. See [Annotations and job summary](#annotations-and-job-summary). |
 | `job-summary` | `true` | Write the result and the high, medium and low counts to the job summary. |
-| `artifacts` | empty | Comma separated reports to save as a workflow artifact named after `category`: `sarif` for the merged SARIF file, `ballerina` for the JSON report `bal scan` writes for each package. The JSON reports are as `bal scan` wrote them, so `exclude-tests` and the file globs in `exclude-paths` are not applied to them. Empty saves nothing. |
+| `artifacts` | `false` | `true` saves the merged SARIF file as a workflow artifact named after `category`, holding `<category>.sarif`. Characters that artifact names cannot hold, such as `/` and `:`, are replaced with `_`. |
 | `platform-config` | empty | YAML mapping, keyed by platform, with the settings and credentials each selected platform needs. JSON is accepted, since it is valid YAML. See [Platform configuration](#platform-configuration). |
 | `github-token` | `github.token` | Token for installing Ballerina, downloading the SonarQube platform plugin from GitHub Packages and uploading to code scanning. |
 
@@ -177,13 +180,14 @@ The fields at the platform level are the defaults for every scanned package. A r
 | `properties-file` | string | No | Properties file, relative to the repository root. Overrides `sonarProjectPropertiesPath` in `Scan.toml`. |
 | `host-url` | string | Yes, unless set under `packages` or in the properties file | SonarQube server URL. Overrides `sonar.host.url`. |
 | `token` | string | Yes, unless set under `packages` | Token for submitting analyses. Pass it from a secret. |
-| `project-key` | string | Yes, unless set under `packages` or in the properties file | Project key. Overrides `sonar.projectKey`. Since project keys must be unique, at the platform level it can be used only when one package has no `project-key` of its own. |
-| `project-name` | string | No | Project name. Overrides `sonar.projectName`. Like `project-key`, at the platform level it can be used only when one package has no `project-key` of its own. |
+| `project-key` | string | Yes, unless set under `packages` or in the properties file | Project key. Overrides `sonar.projectKey`. Since project keys must be unique, at the platform level it can be used only when one package is scanned, counted after `exclude-paths`, and not also in that package's item. |
+| `project-name` | string | No | Project name. Overrides `sonar.projectName`. Like `project-key`, at the platform level it can be used only when one package is scanned, and not also in that package's item. |
 | `packages` | list | No | Per-package settings. Each item has a `path`, relative to the repository root, and any of the fields above. Platform level only. |
 
 Each setting of a package is resolved field by field: the field in the package's `packages` item, then the platform-level field, then `Scan.toml` and the properties file. The validation rules are:
 
 - A `path` that matches no scanned package, or that is listed twice, fails the step.
+- A platform-level `project-key` or `project-name` fails the step when more than one package is scanned, since it would name one project for all of them, and when the one scanned package also sets the same field in its item.
 - An item that sets `host-url` must also set `token`. A token is never sent to a server other than the one it was configured with, so a package on another server does not inherit the platform-level token.
 - `plugin-path` and `plugin-version` cannot both apply to one package. A `plugin-path` or `plugin-version` in an item replaces both platform-level fields for that package.
 
@@ -195,9 +199,9 @@ See [SonarQube](#sonarqube) for how each setting is resolved.
 | --- | --- |
 | `result` | `passed` or `failed` from the gate, `skipped` when no package was found, or `error` when the step failed before the gate, for example on invalid input or a failed scan or upload. |
 | `sarif-file` | The merged, normalized SARIF file. Empty when no package was found or a scan failed. |
-| `high-count`, `medium-count`, `low-count`, `total-count` | Counted findings, after the test and path filters. `total-count` is the sum of the other three and does not include `INFO` findings. |
-| `packages-scanned` | Number of packages scanned. |
-| `uploads` | JSON object with one entry per platform the findings were sent to, and an `artifact` entry when reports were saved as an artifact, such as `{"github-code-scanning": {"sarif-id": "…"}, "sonarqube": [{"package": "…", "project-key": "…", "dashboard-url": "…", "task-id": "…"}], "artifact": {"name": "…", "id": "…", "url": "…"}}`. `sonarqube` holds one item per package. A platform that was not selected or failed to upload has no entry; `{}` when nothing was uploaded. Read a value with `fromJSON(steps.scan.outputs.uploads)['github-code-scanning']['sarif-id']`. |
+| `high-count`, `medium-count`, `low-count`, `total-count` | Counted findings, after the test and path filters. `total-count` is the sum of the other three and does not include `INFO` findings. `0` when no package was found, and empty when the findings were not counted, such as when a scan failed. |
+| `packages-scanned` | Number of packages scanned, with each member of a workspace counted. Set once every package was scanned: `0` when no package was found, and empty when a scan failed or did not run. |
+| `uploads` | JSON object with one entry per platform the findings were sent to, and an `artifact` entry when the SARIF file was saved as an artifact, such as `{"github-code-scanning": {"sarif-id": "…"}, "sonarqube": [{"package": "…", "project-key": "…", "dashboard-url": "…", "task-id": "…"}], "artifact": {"name": "…", "id": "…", "url": "…"}}`. `sonarqube` holds one item per package. A platform that was not selected or failed to upload has no entry; `{}` when nothing was uploaded. Read a value with `fromJSON(steps.scan.outputs.uploads)['github-code-scanning']['sarif-id']`. |
 
 ### SARIF output
 
@@ -229,7 +233,9 @@ As SARIF defines, a result without a `level` takes its rule's `defaultConfigurat
 
 With `platforms: sonarqube`, the action reports the findings to a SonarQube server that has the Ballerina language plugin installed. `bal scan --platforms=sonarqube` sends them through the scan tool's SonarQube platform plugin, so the rules can be managed and activated per project in quality profiles.
 
-**One project per package.** Each package is a separate SonarQube analysis, so each package needs its own project key. In a repository with several packages, each package sets its key under `packages` in `platform-config`, or as `sonar.projectKey` in its own `sonar-project.properties`. The platform-level `project-key` and `project-name` fields can be used only when one package has no key of its own. Validation fails if a package has no project key, or if two packages on the same server resolve to the same key, since each analysis would replace the previous one.
+**One project per package.** Each package is a separate SonarQube analysis, so each package needs its own project key. In a repository with several packages, each package sets its key under `packages` in `platform-config`, or as `sonar.projectKey` in its own `sonar-project.properties`. The platform-level `project-key` and `project-name` fields can be used only when one package is scanned. Validation fails if a package has no project key, or if two packages on the same server resolve to the same key, since each analysis would replace the previous one.
+
+**Workspaces.** SonarQube is not supported for workspaces yet, and a workspace found in step 2 fails the step when `sonarqube` is selected. `bal scan` runs a workspace's members one by one, each with its own `Scan.toml`, and the platform plugin runs SonarScanner once per member. The action passes one set of settings to the `bal scan` process, so every member would report to the same project key and each analysis would replace the previous one, leaving only the last member's findings in SonarQube. The action also changes only the `Scan.toml` at the root, which the members do not read. A team lists the member packages in `paths` and leaves the workspace out with `exclude-paths`. The SARIF file is not affected: `bal scan` merges the findings of every member into one report.
 
 **Packages on different servers.** Unrelated packages in one repository can report to different SonarQube servers, or to the same server with different tokens. Each such package sets `host-url` and `token` in its `packages` item. Packages without an item, or whose item sets neither field, use the platform-level `host-url` and `token`. Each package is analysed with its own resolved server and token, so one action step covers all of them.
 
@@ -240,7 +246,11 @@ With `platforms: sonarqube`, the action reports the findings to a SonarQube serv
 3. **Settings.** Each setting is taken from the package's `packages` item if set, then from the platform level of `platform-config`, and from the properties file otherwise.
 4. **Validation.** The step fails if the host URL, project key or token is missing, or a URL is not a valid `https` URL. The token always comes from `platform-config`, never from a file.
 
-**Passing settings.** The resolved settings reach SonarScanner through the `SONAR_HOST_URL`, `SONAR_TOKEN` and `SONAR_SCANNER_JSON_PARAMS` environment variables of each package's `bal scan` process, which SonarScanner gives precedence over the properties file. The scan tool reads the platform plugin only from `Scan.toml`, so for the SonarQube run the action points the package's `sonarqube` `[[platform]]` entry to the resolved plugin, keeping the rest of the file, or creates a `Scan.toml` when the package has none. The file is restored, or deleted, as soon as that run ends. When `[scan] configPath` in `Ballerina.toml` points to a local file, the action changes that file instead. A remote `Scan.toml`, set with a URL in `configPath`, cannot be changed, so the action could neither hide its `[[platform]]` entries for the SARIF run nor apply the resolved plugin for the SonarQube run. Such a package fails the step when packages are found, whatever platforms are selected, with a message asking for a local `Scan.toml`.
+**Passing settings.** The resolved settings reach SonarScanner through the `SONAR_HOST_URL`, `SONAR_TOKEN` and `SONAR_SCANNER_JSON_PARAMS` environment variables of each package's `bal scan` process, which SonarScanner gives precedence over the properties file. The scan tool reads the platform plugin only from `Scan.toml`, so for the SonarQube run the action points the package's `sonarqube` `[[platform]]` entry to the resolved plugin, keeping the rest of the file, or creates a `Scan.toml` when the package has none. The file is restored, or deleted, as soon as that run ends. So are the results file the platform plugin writes in the package directory and the `.scannerwork` directory of SonarScanner, unless they were there before the run. When `[scan] configPath` in `Ballerina.toml` points to a local file, the action changes that file instead.
+
+**Remote `Scan.toml`.** A `Scan.toml` set with a URL in `configPath` cannot be changed, so its `sonarqube` `[[platform]]` entry is used as is. Without such an entry, `plugin-path` or `plugin-version` is required. The action also cannot hide the remote file's `[[platform]]` entries for the SARIF run, so it warns, `bal scan` writes no SARIF report for the package, and its scan fails. Teams that need both SonarQube and the SARIF file use a local `Scan.toml`.
+
+**Detecting the outcome.** The platform plugin does not fail `bal scan` when SonarScanner fails. The action counts a package's SonarQube run as successful only when `bal scan` succeeds and SonarScanner writes `report-task.txt`, which it does once the server has accepted the analysis. The file also gives the dashboard URL and task ID for the `uploads` output.
 
 **SonarScanner.** The platform plugin runs the `sonar-scanner` command, so the action installs the SonarScanner CLI at the version pinned by the action release and puts it on the path of the scan process. It uses the scanner distribution for the runner's operating system, which bundles its own Java runtime, so the job needs no Java or scanner setup step. The scanner is downloaded only once per job, so the action can run more than once.
 
@@ -254,6 +264,8 @@ The defaults are `none` and `0`, so the gate is off until a team sets `fail-on-s
 
 With `annotations`, each counted finding becomes an `error`, `warning` or `notice` annotation for `high`, `medium` and `low`, on its file and start line, titled with the rule ID.
 
+GitHub shows at most 10 annotations of each level per step and 50 per job, and drops the rest without notice. So the action annotates at most the first 10 findings of each severity, fewer where the gate's error takes a slot, and when findings are left out it writes a warning, and a line in the job summary, saying how many of them were annotated. The SARIF file and the platforms it was sent to always have every finding.
+
 With `job-summary`, the action writes the result, any failure reasons and the number of findings at each severity: high, medium and low. This keeps results visible where a team has no code scanning platform, such as a private repository without GitHub Code Security.
 
 ### Failure behaviour
@@ -263,8 +275,8 @@ Findings never fail the step unless the user asks. Problems with the setup or th
 | Situation | Result |
 | --- | --- |
 | Invalid or unknown input, a `platform-config` that does not match the schema, or a path that does not exist | Fail before packages are searched or anything is downloaded |
-| A package that uses a remote `Scan.toml` | Fail after packages are found, before anything is downloaded |
-| Missing or invalid SonarQube settings, missing or duplicate project keys, or a `packages` item that matches no package or repeats a path | Fail after packages are found, before anything is downloaded |
+| Missing or invalid SonarQube settings, missing or duplicate project keys, a `packages` item that matches no package or repeats a path, or a workspace with `sonarqube` | Fail after packages are found, before anything is downloaded |
+| A package that reads a remote `Scan.toml` with `[[platform]]` entries | Warn that the entries cannot be hidden. `bal scan` writes no SARIF report for the package, so its scan fails as below |
 | Ballerina older than the pinned scan tool needs | Fail before the scan tool is installed |
 | No package found | Pass with a warning, result `skipped` |
 | `bal scan` fails for a package, including when SonarQube is unreachable or rejects the analysis | Scan the remaining packages, then fail without a SARIF file |
@@ -272,8 +284,8 @@ Findings never fail the step unless the user asks. Problems with the setup or th
 | Saving the artifact fails, such as when another scan in the run used the same `category` | Fail, after the findings are uploaded |
 | Findings with `fail-on-severity: none` | Pass, with counts in the job summary |
 | Findings over the gate | Fail, after the SARIF file is written and uploaded |
-| Fork or Dependabot pull request with no SonarQube token | Skip `sonarqube` with a warning, and still produce the SARIF file |
-| Fork or Dependabot pull request with `github-code-scanning` | Skip the upload with a warning, and keep the SARIF file as the `sarif-file` output, and in the artifact when `artifacts` has `sarif`, for a trusted follow-up upload |
+| `pull_request` run from a fork or Dependabot with no SonarQube token | Skip `sonarqube` with a warning, and still produce the SARIF file |
+| `pull_request` run from a fork or Dependabot with `github-code-scanning` | Skip the upload with a warning, and keep the SARIF file as the `sarif-file` output, and in the artifact when `artifacts` is `true`, for a trusted follow-up upload |
 
 ### Security
 
@@ -283,7 +295,7 @@ A security scanning action is itself part of the supply chain.
 - **Least privilege.** The action needs only `contents: read`. With `github-code-scanning`, it also needs `security-events: write`, and `actions: read` on private repositories. With `sonarqube` and the default platform plugin, it also needs `packages: read`. Saving an artifact needs no extra permissions.
 - **Secrets.** Credentials in `platform-config` should come from secrets, which GitHub masks in logs. The action also masks every credential field, such as `token` at the platform level and under each `packages` item, with `::add-mask::`, never prints `platform-config`, and hands each package's SonarQube token to that package's scan only, never on the command line. A `packages` item that sets its own `host-url` must set its own `token`, so a token is never sent to a server it was not configured for.
 - **Input injection.** Inputs reach the scripts as environment variables, never interpolated into `run:` blocks.
-- **Fork pull requests.** Secrets are not available to `pull_request` runs from forks or Dependabot. Their `GITHUB_TOKEN` is also read-only. The action skips `sonarqube` and the code scanning upload with a warning rather than failing, and does not recommend `pull_request_target`.
+- **Fork pull requests.** Secrets are not available to `pull_request` runs from forks or Dependabot. Their `GITHUB_TOKEN` is also read-only. The action skips `sonarqube` and the code scanning upload with a warning rather than failing. `pull_request_target` runs in the base repository with its secrets and a writable token, so the action treats it as a trusted run, but does not recommend it, since it would scan code from the fork with those credentials.
 
 ### Multiple scans in a workflow
 
