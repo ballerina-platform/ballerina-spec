@@ -110,6 +110,7 @@ steps:
 3. **Resolve SonarQube settings** (`sonarqube` only). For each package, read its properties file and combine it with `platform-config` in the order given in [Platform configuration](#platform-configuration). Fail with a message naming the package, the missing setting and how to provide it, when:
     - the resolved plugin path is absolute, or is neither an existing file nor an `https` URL,
     - a package reads a remote `Scan.toml` that has no `sonarqube` `[[platform]]` entry, and `platform-config` sets neither `plugin-path` nor `plugin-version`,
+    - a package reads a remote `Scan.toml` that has a `sonarqube` `[[platform]]` entry, and `plugin-path` or `plugin-version` applies to it, since the remote entry cannot be replaced,
     - a properties file path is set and the file does not exist,
     - a package has no server URL, or its URL is not a valid `https` URL, including a URL from the properties file, since the token is sent to it,
     - a package has no token, from its `packages` item or the platform level,
@@ -241,14 +242,14 @@ With `platforms: sonarqube`, the action reports the findings to a SonarQube serv
 
 **Resolving settings.** `platform-config` overrides the package's `Scan.toml` and properties file, which stay the defaults so that local runs and CI share them. Paths in `platform-config` are relative to the repository root, and paths in `Scan.toml` are relative to the package. For each package:
 
-1. **Platform plugin.** `plugin-path` or `plugin-version` from `platform-config`. Otherwise the `path` of the `sonarqube` `[[platform]]` entry in `Scan.toml`, which must be a relative path or an `https` URL. Otherwise the plugin version pinned by the action release, which the action downloads from GitHub Packages. GitHub Packages needs a token with `read:packages` even for public packages, so the job needs `packages: read` unless the plugin is set with `plugin-path` or `Scan.toml`. An absolute path fails, since it points to a developer's machine.
+1. **Platform plugin.** `plugin-path` or `plugin-version` from `platform-config`, except with a remote `Scan.toml` that has a `sonarqube` entry. See [Remote `Scan.toml`](#sonarqube). Otherwise the `path` of the `sonarqube` `[[platform]]` entry in `Scan.toml`, which must be a relative path or an `https` URL. Otherwise the plugin version pinned by the action release, which the action downloads from GitHub Packages. GitHub Packages needs a token with `read:packages` even for public packages, so the job needs `packages: read` unless the plugin is set with `plugin-path` or `Scan.toml`. An absolute path fails, since it points to a developer's machine.
 2. **Properties file.** `properties-file` from `platform-config`. Otherwise `sonarProjectPropertiesPath` from `Scan.toml`. Otherwise `sonar-project.properties` in the package root, if it exists. A path that is set but does not exist fails.
 3. **Settings.** Each setting is taken from the package's `packages` item if set, then from the platform level of `platform-config`, and from the properties file otherwise.
 4. **Validation.** The step fails if the host URL, project key or token is missing, or a URL is not a valid `https` URL. The token always comes from `platform-config`, never from a file.
 
 **Passing settings.** The resolved settings reach SonarScanner through the `SONAR_HOST_URL`, `SONAR_TOKEN` and `SONAR_SCANNER_JSON_PARAMS` environment variables of each package's `bal scan` process, which SonarScanner gives precedence over the properties file. The scan tool reads the platform plugin only from `Scan.toml`, so for the SonarQube run the action points the package's `sonarqube` `[[platform]]` entry to the resolved plugin, keeping the rest of the file, or creates a `Scan.toml` when the package has none. The file is restored, or deleted, as soon as that run ends. So are the results file the platform plugin writes in the package directory and the `.scannerwork` directory of SonarScanner, unless they were there before the run. When `[scan] configPath` in `Ballerina.toml` points to a local file, the action changes that file instead.
 
-**Remote `Scan.toml`.** A `Scan.toml` set with a URL in `configPath` cannot be changed, so its `sonarqube` `[[platform]]` entry is used as is. Without such an entry, `plugin-path` or `plugin-version` is required. The action also cannot hide the remote file's `[[platform]]` entries for the SARIF run, so it warns, `bal scan` writes no SARIF report for the package, and its scan fails. Teams that need both SonarQube and the SARIF file use a local `Scan.toml`.
+**Remote `Scan.toml`.** A `Scan.toml` set with a URL in `configPath` cannot be changed, so its `sonarqube` `[[platform]]` entry is used as is. A `plugin-path` or `plugin-version` that applies to such a package fails the step, rather than being ignored. Without such an entry, `plugin-path` or `plugin-version` is required. The action also cannot hide the remote file's `[[platform]]` entries for the SARIF run, so it warns, `bal scan` writes no SARIF report for the package, and its scan fails. Teams that need both SonarQube and the SARIF file use a local `Scan.toml`.
 
 **Detecting the outcome.** The platform plugin does not fail `bal scan` when SonarScanner fails. The action counts a package's SonarQube run as successful only when `bal scan` succeeds and SonarScanner writes `report-task.txt`, which it does once the server has accepted the analysis. The file also gives the dashboard URL and task ID for the `uploads` output.
 
@@ -275,7 +276,7 @@ Findings never fail the step unless the user asks. Problems with the setup or th
 | Situation | Result |
 | --- | --- |
 | Invalid or unknown input, a `platform-config` that does not match the schema, or a path that does not exist | Fail before packages are searched or anything is downloaded |
-| Missing or invalid SonarQube settings, missing or duplicate project keys, a `packages` item that matches no package or repeats a path, or a workspace with `sonarqube` | Fail after packages are found, before anything is downloaded |
+| Missing or invalid SonarQube settings, missing or duplicate project keys, a `packages` item that matches no package or repeats a path, a plugin override for a remote `Scan.toml` that has a `sonarqube` entry, or a workspace with `sonarqube` | Fail after packages are found, before anything is downloaded |
 | A package that reads a remote `Scan.toml` with `[[platform]]` entries | Warn that the entries cannot be hidden. `bal scan` writes no SARIF report for the package, so its scan fails as below |
 | Ballerina older than the pinned scan tool needs | Fail before the scan tool is installed |
 | No package found | Pass with a warning, result `skipped` |
