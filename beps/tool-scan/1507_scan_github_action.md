@@ -220,11 +220,12 @@ The gate, counts and annotations read the severity of each result from its SARIF
 
 | Ballerina severity | SARIF `level` | Action severity |
 | --- | --- | --- |
-| `BLOCKER` | `error` | `high` |
 | `HIGH` | `error` | `high` |
 | `MEDIUM` | `warning` | `medium` |
 | `LOW` | `note` | `low` |
 | `INFO` | `none` | Not counted |
+
+The SARIF output does not currently distinguish `BLOCKER` from `HIGH`, so a `BLOCKER` finding is read as `high`. The distinction will be introduced in the future. Until then, the action gates on `high`, `medium` and `low`, following the Ballerina severities above.
 
 As SARIF defines, a result without a `level` takes its rule's `defaultConfiguration.level`, and is treated as `warning` when the rule has none either.
 
@@ -312,7 +313,7 @@ Findings never fail the step unless the user asks. Problems with the setup or th
 
 A security scanning action is itself part of the supply chain.
 
-- **Pinned dependencies.** The scan tool is pulled from Ballerina Central at the pinned version, and its integrity relies on Central. Ballerina is installed by `setup-ballerina`, at `latest` unless `ballerina-version` is set, so teams that need reproducible runs should pin it. Actions the composite action uses, such as `setup-ballerina`, `github/codeql-action/upload-sarif` and `actions/upload-artifact`, are pinned by commit SHA. The SonarQube platform plugin is downloaded at the version pinned by the action release unless the team overrides it. The SonarScanner CLI is downloaded from SonarSource at the version pinned by the action release, and its checksum is verified.
+- **Pinned dependencies.** The scan tool is pulled from Ballerina Central at the pinned version, and its integrity relies on Central. Ballerina is installed by `setup-ballerina`, at `latest` unless `ballerina-version` is set, so teams that need reproducible runs should pin it. Actions the composite action uses, such as `setup-ballerina`, `github/codeql-action/upload-sarif` and `actions/upload-artifact`, are pinned by release tag. The SonarQube platform plugin is downloaded at the version pinned by the action release unless the team overrides it. The SonarScanner CLI is downloaded from SonarSource at the version pinned by the action release, and its checksum is verified.
 - **Least privilege.** The action needs only `contents: read`. With `github-code-scanning`, it also needs `security-events: write`, and `actions: read` on private repositories. With `sonarqube` and the default platform plugin, it also needs `packages: read`. Saving an artifact needs no extra permissions.
 - **Secrets.** Credentials in `platform-config` should come from secrets, which GitHub masks in logs. The action also masks every credential field, such as `token` at the platform level and under each `packages` item, with `::add-mask::`, never prints `platform-config`, and hands each package's SonarQube token to that package's scan only, never on the command line. A `packages` item that sets its own `host-url` must set its own `token`, so a token is never sent to a server it was not configured for.
 - **Input injection.** Inputs reach the scripts as environment variables, never interpolated into `run:` blocks.
