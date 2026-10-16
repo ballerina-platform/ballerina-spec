@@ -225,7 +225,15 @@ Progressive disclosure is the core of this design. Skill content is loaded in th
 
 The `description` in the catalog is the only signal the model has for choosing a skill. Skill authors should therefore write descriptions that state both **what** the skill does and **when** it should be used (for example, *"Prepares and validates employee expense reports. Use when the user asks to file, check, or summarize expenses."*).
 
-The catalog text directs the model to activate a matching skill before answering or making any decision, instead of relying on its own assumptions, and to read resources only when the skill's instructions refer to them. Testing showed that softer wording ("call the tool when a request matches") is often ignored by smaller models, which then answer from their own assumptions.
+The catalog text gives the model a short set of rules:
+
+- Activate a matching skill before acting on the request, instead of answering or deciding from its own assumptions.
+- Follow the loaded instructions exactly, completing every step in order.
+- Keep going after activation: activating a skill does not finish the turn.
+- Activate every skill that applies, without reactivating a skill whose instructions are still in the conversation.
+- Read only the resources an activated skill lists, with the exact path, and don't try other paths after an error.
+- Let the agent's own instructions take precedence over a skill.
+- Answer normally when no skill applies.
 
 #### Level 1: Skill catalog in the system prompt
 
@@ -239,9 +247,15 @@ When at least one skill is configured, the agent appends a `Skills` section to t
 <instructions>
 
 # Skills
-Skills contain the policies and procedures you must follow. If a request relates to any skill listed below, you MUST call the `__activate_skill__` tool with that skill's name
-before answering or making any decision, and follow its instructions exactly. Do not rely on your own assumptions in place of a skill.
-Read a skill's resources with the `__read_skill_resource__` tool when its instructions refer to them.
+Skills contain the procedures and policies to follow for specific tasks. Each skill below has a description of when it applies.
+
+1. Before acting on a request that a skill's description covers, call `__activate_skill__` with the skill's exact name to load its instructions. Do not answer or decide from your own assumptions first.
+2. Follow the loaded instructions exactly, completing every step in order before you reply.
+3. Activating a skill does not finish your turn. After `__activate_skill__` returns, continue with the steps and tools the skill requires, then reply.
+4. If more than one skill applies, activate each of them. You don't need to activate a skill again while its instructions are still in the conversation.
+5. Use `__read_skill_resource__` only for resources an activated skill lists, with the path exactly as listed, and only when its instructions refer to them. If it returns an error, do not try other paths; continue without the resource and tell the user if it matters.
+6. If the instructions above conflict with a skill, the instructions above take precedence.
+7. If no skill applies, answer normally.
 
 <available_skills>
   <skill>
@@ -438,7 +452,7 @@ final ai:Agent agent = check new (
 - **Allow-listed files only**: `__read_skill_resource__` can only return files that were discovered as resources of a skill during loading. Arbitrary paths are rejected.
 - **Path traversal protection**: Paths containing `..` are rejected, and for local skills the resolved absolute path must be inside the skill's directory, which also blocks escapes through symbolic links.
 - **No script execution**: The Agent Skills format allows a `scripts/` folder. This proposal does not execute scripts and does not expose `scripts/` contents.
-- **Trust in skill content**: Skill instructions become part of the model's context, so skills should be treated with the same trust as the agent's own instructions. Developers should only load skills from sources they control.
+- **Trust in skill content**: Skill instructions become part of the model's context, so skills should be treated with the same trust as the agent's own instructions. Developers should only load skills from sources they control. The catalog instructions also tell the model that the agent's own instructions take precedence over a skill.
 
 ## Limitations and Out of Scope
 
