@@ -269,7 +269,7 @@ remote function setContainerAccessPolicy(SignedIdentifier[] identifiers, AccessP
 
 Metadata is free-form annotation stored and returned verbatim; `setContainerMetadata` replaces the complete set, and it is read back through `getContainerProperties`.
 
-The anonymous access level and the stored access policies are read together and written separately. `setPublicAccess` changes the level and leaves the policies as they are; `setContainerAccessPolicy` replaces the policies (at most five; `[]` removes them all) and leaves the level as it is. Each of the two reads the current access control list first and resends the half it does not own, so each call is two requests.
+The anonymous access level and the stored access policies are read together and written separately. `setPublicAccess` changes the level and leaves the policies as they are; `setContainerAccessPolicy` replaces the policies (at most five; `[]` removes them all) and leaves the level as it is. Each of the two reads the current access control list first and resends the half it does not own, so each call is two requests, and two processes updating the two halves at the same time can overwrite each other: the last writer wins, and an application that changes both concurrently serialises its own calls.
 
 #### 4.2 Blob operations
 
@@ -328,7 +328,7 @@ The value transfers use identical unions in both directions, so anything written
 | XML | `XML` or `.xml` | `xml`, `record {}` (one element; a record array has no wrapper name) | `xml`, a record |
 | CSV | `CSV` or `.csv` | `record {}[]`, `stream<record {}>` | a record array, a record stream |
 
-`byte[]`, byte streams and `string` pass through untouched under every format. Under XML a record becomes a single-element document whose root element is named `root`; `@xmldata:Name` renames member elements, not the root. Under CSV a record array is written with a header row that is the union of every record's field names in first-seen order, with nil or absent members as empty cells; a record stream is written row by row as it is pulled, so its header is the first record's field names. An empty array or an exhausted stream writes an empty blob with no header row.
+`byte[]`, byte streams and `string` pass through untouched under every format. Under XML a record becomes a single-element document whose root element is named `root`; `@xmldata:Name` renames member elements, not the root. Under CSV a record array is written with a header row that is the union of every record's field names in first-seen order, with nil or absent members as empty cells; a record stream is written row by row as it is pulled, so its header is the first record's field names, and a later record's extra field is not added to a header already written. An empty array or an exhausted stream writes an empty blob with no header row.
 
 | Destination | `upload` / `uploadFromFile` |
 |---|---|
@@ -363,7 +363,7 @@ remote function createSnapshot(string path, CreateSnapshotOptions? options = ())
 
 `setAccessTier` changes the tier and, for an archived blob, starts rehydration with the priority the options carry. An archived blob's content can be neither read nor replaced until rehydration completes, which takes hours; its properties, metadata, and tags stay available, and copying it to an online-tier destination rehydrates without disturbing the original.
 
-Index tags differ from metadata: the service indexes them, so they answer queries without a listing, and they carry their own SAS permission (`t`, and `f` for queries). Tags are set and read whole. The index is eventually consistent, so `findBlobsByTags` may briefly lag a `setTags` write; `getTags` always reads the blob's current tags.
+Index tags differ from metadata: the service indexes them, so they answer queries without a listing, and they carry their own SAS permission (`t`, and `f` for queries). Tags are set and read whole. The service refuses index tags on an account with a hierarchical namespace, so the tag operations fail there with the service's error. The index is eventually consistent, so `findBlobsByTags` may briefly lag a `setTags` write; `getTags` always reads the blob's current tags.
 
 | Tag rule | Value |
 |---|---|
@@ -1600,7 +1600,7 @@ public type CertKey record {|
 
 ## Testing
 
-One suite runs against one backend: [Azurite](https://github.com/Azure/Azurite), emulating the Blob and Queue services, by default and on every pull request, or a live storage account when `liveAccountName` and `liveAccountKey` are configured, never silently falling back to the emulator.
+One suite runs against one backend: [Azurite](https://github.com/Azure/Azurite), emulating the Blob and Queue services, by default and on every pull request, or a live storage account when `liveAccountName` and `liveAccountKey` are configured, never silently falling back to the emulator. The user-delegation tests also need `liveEntraTenantId`, `liveEntraClientId`, and `liveEntraClientSecret` for an identity holding Storage Blob Data Contributor and Storage Blob Delegator on the account; without them those tests are skipped.
 
 Azurite covers the surface under Shared Key over HTTP, including leases, snapshots, same-instance copies, index tags and tag queries, access tiers, append blobs, and the block operations. The Azurite version is pinned, with its API-version check bypassed. Four behaviours run only live: soft delete and undelete of blobs and containers, the two from-URL block operations (which Azurite answers with 501), the queue endpoint a listener derives from a SAS URL, and user-delegation SAS, the last because Azurite accepts a bearer token without checking it. The Event Grid subscription is verified by a manual live probe outside the suite. The listener's queue half is tested on Azurite with synthetic Event Grid-shaped messages.
 
