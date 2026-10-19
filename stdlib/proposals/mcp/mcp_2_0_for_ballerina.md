@@ -3,7 +3,7 @@
 - Author: @RadCod3
 - Reviewers:
 - Created: 2026-10-15
-- Updated: 2026-10-15
+- Updated: 2026-10-19
 - Issue: [#1511](https://github.com/ballerina-platform/ballerina-spec/issues/1511)
 - Status: Submitted
 
@@ -31,7 +31,8 @@ This proposal defines version 2.0 of `ballerina/mcp`. It:
 ## Non-Goals
 
 - Server-to-client requests through multi round-trip requests, such as elicitation. The `InputRequiredResult` continuation types described in this proposal are the minimal surface that the `tools/call` result shape needs. How a server asks for input and how a client answers it will be covered by a separate proposal, which may change the client's input handler API.
-- Prompts, resources, completions, logging and task-augmented execution. The module implements tools only, and these capabilities are not advertised.
+- Prompts, resources, completions and logging. The module implements tools only, and these capabilities are not advertised.
+- Tasks. Neither the task-augmented requests of `2025-11-25` nor the `io.modelcontextprotocol/tasks` extension of `2026-07-28` is supported, and the `2025-11-25` task fields are removed from the client and server types.
 - Transports other than Streamable HTTP, such as stdio.
 - Authorization enforcement on the server. Services continue to use the `ballerina/http` auth configuration and the HTTP request access introduced by the [transport-specific service types proposal](https://github.com/ballerina-platform/ballerina-spec/pull/1452).
 
@@ -104,7 +105,7 @@ Each list is used where its lifecycle negotiates or validates a version:
 | The server accepts the `MCP-Protocol-Version` header of a legacy request | `LEGACY_PROTOCOL_VERSIONS` |
 | The client accepts the version in an `InitializeResult` | `LEGACY_PROTOCOL_VERSIONS` |
 | The client falls back to `initialize` when an `UNSUPPORTED_PROTOCOL_VERSION` error's `supported` list names a legacy version and no modern one (see [Protocol selection](#protocol-selection)) | Both |
-| The server lists its versions in `server/discover` and in `UNSUPPORTED_PROTOCOL_VERSION` errors | `MODERN_PROTOCOL_VERSIONS` in `"modern"` mode, `LEGACY_PROTOCOL_VERSIONS` in `"legacy"` mode, `SUPPORTED_PROTOCOL_VERSIONS` in `"auto"` mode |
+| The server lists its versions in `server/discover` and in `UNSUPPORTED_PROTOCOL_VERSION` errors | `MODERN_PROTOCOL_VERSIONS` in `"modern"` mode, `SUPPORTED_PROTOCOL_VERSIONS` in `"auto"` mode, and `LEGACY_PROTOCOL_VERSIONS` in the error a `"legacy"` mode server returns to modern requests |
 
 A protocol mode selects which of these a client or service uses. It is independent of HTTP session management.
 
@@ -115,8 +116,8 @@ public type ProtocolMode "legacy"|"auto"|"modern";
 | Mode | Client | Server |
 |---|---|---|
 | `"auto"` (default) | Tries modern discovery. Falls back to `initialize` only when the response shows a legacy server. | Accepts modern requests and initialize-based requests. Each request follows the lifecycle of its own form. |
-| `"modern"` | Requires `2026-07-28`. | Accepts modern requests only. `server/discover` advertises only `2026-07-28`. |
-| `"legacy"` | Uses `initialize`. | Accepts initialize-based requests only. |
+| `"modern"` | Requires a version in `MODERN_PROTOCOL_VERSIONS`. | Accepts modern requests only. `server/discover` advertises only `MODERN_PROTOCOL_VERSIONS`, and `initialize` is rejected with `UNSUPPORTED_PROTOCOL_VERSION`, listing those versions. |
+| `"legacy"` | Uses `initialize`. | Accepts initialize-based requests only. A modern request, including `server/discover`, is rejected with `UNSUPPORTED_PROTOCOL_VERSION`, listing `LEGACY_PROTOCOL_VERSIONS`, so that an `"auto"` client falls back. |
 
 Because `"auto"` is the default on both sides, existing clients can connect to an upgraded Ballerina server, and an upgraded Ballerina client can connect to an existing server.
 
@@ -144,14 +145,14 @@ public type StreamableHttpAdvancedService distinct service object {
 };
 ```
 
-`mcp:Service` and `mcp:AdvancedService` are removed. With the modern protocol, more of the service contract depends on HTTP: routing headers, mirrored argument headers, subscriptions delivered as SSE responses to `POST`, and HTTP status codes for protocol errors. Only one transport is implemented, so a transport-agnostic tier would only be a second name for the same types. The split described in the transport-specific service types proposal stays the model for future transports. Transport-agnostic types will be reintroduced together with a second transport, once the shared contract can be defined against two real implementations.
+`mcp:Service` and `mcp:AdvancedService` are removed. The [transport-specific service types proposal](https://github.com/ballerina-platform/ballerina-spec/pull/1452) added the Streamable HTTP service types so that tools could access HTTP headers and requests without giving a transport-agnostic name an HTTP-only feature. It kept `mcp:Service` for backward compatibility, and for transport-agnostic services once another transport, such as stdio, is supported. A major version no longer needs that compatibility, and while Streamable HTTP is the only transport, keeping `mcp:Service` would leave two service types for the same transport, one of them without HTTP access. The transport-agnostic types can be reintroduced together with a second transport without breaking existing services.
 
 #### Service configuration
 
-A single annotation, `@mcp:StreamableHttpConfig`, replaces both `@mcp:ServiceConfig` and `@mcp:StreamableHttpServiceConfig`:
+`@mcp:StreamableHttpServiceConfig`, introduced in 1.2.0, is the only service annotation. The deprecated `@mcp:ServiceConfig` is removed:
 
 ```ballerina
-public type StreamableHttpConfiguration record {|
+public type StreamableHttpServiceConfiguration record {|
     # Server implementation information
     Implementation info;
     # Protocol selection
@@ -166,19 +167,19 @@ public type StreamableHttpConfiguration record {|
     CacheHints cacheHints = {};
 |};
 
-public annotation StreamableHttpConfiguration StreamableHttpConfig on service;
+public annotation StreamableHttpServiceConfiguration StreamableHttpServiceConfig on service;
 ```
 
 - `info` is returned in `InitializeResult.serverInfo` for legacy requests, and in `_meta` of every modern result under `io.modelcontextprotocol/serverInfo`.
 - `options.instructions` is returned by `initialize` and by `server/discover`.
-- The server advertises the `tools` capability only. It removes `tasks`, `logging`, `prompts`, `resources` and `completions` from `options.capabilities`, because the module has no runtime for them. `tools.listChanged` is `true` only for an advanced service that implements `onSubscribe`.
-- The CORS `allowOrigins` list in `httpConfig` is also used for the `Origin` validation required by the Streamable HTTP transport.
+- The server advertises the `tools` capability only. It removes `logging`, `prompts`, `resources` and `completions` from `options.capabilities`, because the module has no runtime for them. `tools.listChanged` is `true` only for an advanced service that implements `onSubscribe`.
+- The CORS `allowOrigins` list in `httpConfig` is also used for the `Origin` validation required by the Streamable HTTP transport, on both modern and legacy requests. A request without an `Origin` header is accepted, since clients other than browsers do not send one. A request whose `Origin` is not listed, and is not matched by `*`, is rejected with `403 Forbidden`. The list is empty by default, so a service that browser clients call must list their origins.
 
 #### Modern request handling
 
 For a modern request, the dispatcher:
 
-1. Reads the protocol version from `_meta["io.modelcontextprotocol/protocolVersion"]` and the `MCP-Protocol-Version` header. A version the service does not accept is rejected with `UNSUPPORTED_PROTOCOL_VERSION` (`-32022`). The error `data` lists the supported and requested versions, so that the client can select another version.
+1. Reads the protocol version from `_meta["io.modelcontextprotocol/protocolVersion"]` and the `MCP-Protocol-Version` header. A version the service does not accept is rejected with `UNSUPPORTED_PROTOCOL_VERSION` (`-32022`) and HTTP status `400`. The error `data` lists the supported and requested versions, so that the client can select another version.
 2. Validates the routing headers. `MCP-Protocol-Version` must match the request metadata, `Mcp-Method` must match the JSON-RPC method, and for `tools/call`, `Mcp-Name` must match the tool name. A mirrored argument header (see [Argument headers](#argument-headers)) must be present once and match the decoded argument. A mismatch is rejected with `HEADER_MISMATCH` (`-32020`) before the service is invoked.
 3. Dispatches `server/discover`, `tools/list`, `tools/call`, and `subscriptions/listen` for an advanced service with `onSubscribe`. Any other method gets `METHOD_NOT_FOUND`.
 
@@ -243,15 +244,17 @@ public type McpToolConfig record {|
 
 `InputSchema` requires an object root. `OutputSchema` allows any root. Both are open records, so they accept JSON Schema keywords the module does not declare. Ballerina has no runtime JSON Schema evaluation yet, so the schemas are carried as metadata, and Ballerina type binding continues to validate arguments.
 
-The library always creates a text content block from the return value. The rest of the result depends on the protocol:
+The library always builds the result's content from the return value. A `string` becomes a text content block as is. Any other value except `()` becomes a text content block holding its JSON serialization, as the specification recommends for structured results. `()` produces no content block. The rest of the result depends on the protocol:
 
-- **Modern:** `tools/list` advertises `outputSchema`, and `structuredContent` carries the return value with any JSON root, including `null`.
+- **Modern:** `tools/list` advertises `outputSchema`, and `structuredContent` carries the return value with any JSON root, including `null` for a nilable return type such as `string?`.
 - **Legacy:** the 1.x behavior is kept. `outputSchema` is not advertised, and the result contains only the text content block, without `structuredContent`.
 
 Setting `structuredOutput: false` marks a tool's output as unstructured, whatever its return type:
 
 - the compiler does not generate an `outputSchema`, so a return type that cannot be mapped to a JSON Schema does not cause a compilation error;
 - `tools/list` does not advertise an `outputSchema`, and `tools/call` returns only the text content block, without `structuredContent`, on both protocols.
+
+A tool that declares no return type, or whose return type allows only `()` apart from `error`, such as `error?`, is unstructured in the same way. It has no output to describe, so it advertises no `outputSchema` and returns no `structuredContent`.
 
 `structuredOutput: false` cannot be combined with an explicit `outputSchema`; the compiler reports an error, since the tool would advertise a schema for output it never sends.
 
@@ -278,12 +281,14 @@ remote isolated function weather(@mcp:Argument {headerName: "Region"} string reg
 
 The generated schema contains `"region": {"type": "string", "x-mcp-header": "Region"}`. The argument stays in `params.arguments`, and the dispatcher checks that the header matches it. In contrast, `@http:Header` binds a value that comes only from an HTTP header and is never a tool argument.
 
+`@mcp:Argument` applies to a non-nilable `string`, `int` or `boolean` argument, the types that the specification allows in argument headers. Header names are compared case-insensitively, so two arguments of a tool cannot use names that differ only in case. The specification also limits integers in headers to ±(2<sup>53</sup>−1), so the client rejects a call whose `int` argument header is outside that range.
+
 #### Advanced services
 
 An advanced service owns tool discovery and dispatch. Its methods are validated by the compiler plugin:
 
 ```ballerina
-remote isolated function onListTools() returns ListToolsResult|ServerError;
+remote isolated function onListTools(Cursor? cursor) returns ListToolsResult|ServerError;
 
 remote isolated function onCallTool(CallToolParams params)
         returns CallToolResult|InputRequiredResult|ServerError;
@@ -294,9 +299,11 @@ remote isolated function onSubscribe(SubscriptionFilter notifications)
 ```
 
 - These methods can bind the same HTTP request values as basic tools. `onCallTool` reads request metadata from `params._meta`.
+- The `cursor` parameter of `onListTools` is optional. A service that declares it receives the request's cursor, and can return the tools in pages by setting `nextCursor`. A basic service always returns all of its tools in one page.
 - For a legacy request, the library keeps results within the legacy schema. It removes an `outputSchema` or `structuredContent` whose root is not an object, and rejects an `InputRequiredResult`.
 - `onCallTool` may return `InputRequiredResult` to a modern request. The input-request design is out of scope for this proposal (see [Non-Goals](#non-goals)).
 - `onSubscribe` is invoked for `subscriptions/listen`. The library sends `notifications/subscriptions/acknowledged` with the accepted filter, forwards matching notifications tagged with the subscription ID, and sends the final `complete` result when the stream ends. Only `toolsListChanged` is accepted in this version.
+- When the client disconnects, the library treats it as cancellation and closes the stream that `onSubscribe` returned. While a subscription is open, the library sends an SSE comment line at a fixed interval, so that proxies do not close an idle connection. `gracefulStop` ends every open subscription with the `complete` result.
 
 ```ballerina
 public type SubscriptionFilter record {|
@@ -306,6 +313,20 @@ public type SubscriptionFilter record {|
     string[] resourceSubscriptions = [];
 |};
 ```
+
+#### Tool errors
+
+The specification separates tool execution errors, which are returned in the tool result so that the model can see them, from protocol errors, which are JSON-RPC errors. The library maps failures the same way on both protocols:
+
+| Failure | Response |
+|---|---|
+| A basic tool returns an `error` | A `CallToolResult` with `isError: true`, whose text is the error message |
+| A basic tool panics | A `CallToolResult` with `isError: true` and a generic message |
+| An HTTP request value cannot be bound to a parameter | A JSON-RPC `INVALID_PARAMS` error |
+| An advanced service method returns a `ServerError` | A JSON-RPC error with the `ServerError` message |
+| An advanced service method returns another error, or panics | A JSON-RPC `INTERNAL_ERROR` with a generic message |
+
+Only an `error` returned by a basic tool, or a `ServerError`, reaches the client with its own message, so that internal details of other failures are not exposed. An advanced service reports a tool execution error by returning a `CallToolResult` with `isError: true`.
 
 #### Result caching hints
 
@@ -328,7 +349,7 @@ public type CacheHints record {|
 ```
 
 ```ballerina
-@mcp:StreamableHttpConfig {
+@mcp:StreamableHttpServiceConfig {
     info: {name: "weather", version: "2.0.0"},
     cacheHints: {
         discover: {ttlMs: 300000, cacheScope: "public"},
@@ -391,6 +412,8 @@ public type ConnectionInfo record {|
 |};
 ```
 
+Calling `connect()` on a connected client returns the existing `ConnectionInfo` without another request. `initializeLegacy()` and `adoptDiscovery()` return an error on a connected client. `close()` ends a legacy session, clears the result cache and resets the connection, even when the server cannot be reached, so the same client can call `connect()` again.
+
 #### Client configuration
 
 ```ballerina
@@ -410,7 +433,7 @@ public type StreamableHttpClientConfig record {|
 |};
 ```
 
-HTTP settings are grouped under `httpConfig`, as on the service side. `HttpClientConfig` has the fields of `http:ClientConfiguration`, in the same order and with the same defaults, except that `auth` also accepts `mcp:OAuthConfig` (see [Authorization](#authorization)):
+HTTP settings are grouped under `httpConfig`, as on the service side. `HttpClientConfig` has the fields of `http:ClientConfiguration`, in the same order and with the same defaults, with two exceptions: `auth` also accepts `mcp:OAuthConfig` (see [Authorization](#authorization)), and `followRedirects` is decided by the module when it is `()`:
 
 ```ballerina
 public type HttpClientConfig record {|
@@ -437,17 +460,18 @@ public type HttpClientConfig record {|
 |};
 ```
 
-- Redirects are followed by default. With `mcp:OAuthConfig`, they are always disabled, whatever `followRedirects` says: the client attaches the token itself, so a redirect could send it to another host or hide the authorization challenge.
+- When `followRedirects` is `()`, redirects are followed, except with `mcp:OAuthConfig`. An explicit `followRedirects` is used as given.
+- With `mcp:OAuthConfig`, redirects are never followed: the client attaches the token itself, so a redirect could send it to another host or hide the authorization challenge. `init` returns an error if `followRedirects` enables them.
 - The OAuth metadata and token endpoint requests reuse `secureSocket` and `proxy`.
 
 #### Protocol selection
 
-In `"auto"` mode, `connect()` sends `server/discover`. If the result lists `2026-07-28`, the client uses the modern protocol. If the request fails, the client falls back to `initialize` only when the failure shows a legacy server:
+In `"auto"` mode, `connect()` sends `server/discover`. If the result lists a version in `MODERN_PROTOCOL_VERSIONS`, the client uses the newest one. If it lists none of them but lists a version in `LEGACY_PROTOCOL_VERSIONS`, the client falls back to `initialize`. Otherwise, `connect()` returns an error. If the request fails, the client falls back to `initialize` only when the failure shows a legacy server:
 
 - HTTP `400`, `404` or `405`, or a response that cannot be parsed as a modern result;
 - `UNSUPPORTED_PROTOCOL_VERSION` whose `data.supported` lists only legacy versions this module supports.
 
-It does not fall back on `401`, `403` or `5xx`, on `HEADER_MISMATCH` or `MISSING_REQUIRED_CLIENT_CAPABILITY`, or when `data.supported` includes `2026-07-28`. A server that is modern but unavailable or unauthorized therefore returns an error instead of being treated as legacy. A configured `sessionId` implies a resumed legacy session, and cannot be combined with `"modern"`.
+It does not fall back on `401`, `403` or `5xx`, on `HEADER_MISMATCH` or `MISSING_REQUIRED_CLIENT_CAPABILITY`, or when `data.supported` includes a version in `MODERN_PROTOCOL_VERSIONS`. A server that is modern but unavailable or unauthorized therefore returns an error instead of being treated as legacy. A configured `sessionId` implies a resumed legacy session, and cannot be combined with `"modern"`.
 
 A modern `server/discover` result may omit `resultType`, `ttlMs` and `cacheScope`. Such a result is treated as `complete`, `0` and `"private"`, so `"auto"` mode does not fall back for a modern server that leaves them out.
 
@@ -511,10 +535,67 @@ public type OAuthConfig record {|
 | `AuthorizationCodeGrant` | Access on behalf of a user, with PKCE `S256`. The application provides `redirectHandler` to send the user to the authorization URL, and `callbackHandler` to return the redirect parameters. RFC 9207 `iss` is checked when the server supports it. |
 | `IdentityAssertionGrant` | Enterprise-Managed Authorization. An `assertionProvider` callback returns an Identity Assertion JWT Authorization Grant (ID-JAG) from the enterprise identity provider, and the client exchanges it at the MCP server's authorization server. Advertises the `io.modelcontextprotocol/enterprise-managed-authorization` extension. |
 
-A client is either registered with one authorization server (`PreRegisteredClientConfig`, whose `issuer` must be listed in the protected resource metadata) or identified by a Client ID Metadata Document (`CimdClientConfig`). Client authentication at the token endpoint is one of:
+```ballerina
+public type ClientCredentialsGrant record {|
+    ClientCredentialsClientConfig clientConfig;
+|};
+
+public type AuthorizationCodeGrant record {|
+    OAuthClientConfig clientConfig;
+    string redirectUri;
+    AuthorizationRedirectHandler redirectHandler;
+    AuthorizationCallbackHandler callbackHandler;
+|};
+
+public type IdentityAssertionGrant record {|
+    OAuthClientConfig clientConfig;
+    IdentityAssertionProvider assertionProvider;
+|};
+```
+
+The grant records are closed and have no discriminator field. The grant is selected by the fields that are set: a `grant` with only `clientConfig` is a client credentials grant.
+
+A client is either registered with one authorization server (`PreRegisteredClientConfig`, whose `issuer` must be listed in the protected resource metadata) or identified by a Client ID Metadata Document (`CimdClientConfig`):
+
+```ballerina
+public type PreRegisteredClientConfig record {|
+    string clientId;
+    # Issuer identifier of the authorization server that registered the client
+    string issuer;
+    # Omit for a public client
+    ClientAuth clientAuth?;
+|};
+
+public type CimdClientConfig record {|
+    # HTTPS URL of the Client ID Metadata Document
+    string url;
+    # Omit for a public client
+    CimdClientAuth clientAuth?;
+|};
+
+public type OAuthClientConfig PreRegisteredClientConfig|CimdClientConfig;
+
+# The client credentials grant requires client authentication
+public type PreRegisteredClientCredentialsConfig record {|
+    *PreRegisteredClientConfig;
+    ClientAuth clientAuth;
+|};
+
+public type CimdClientCredentialsConfig record {|
+    *CimdClientConfig;
+    CimdClientAuth clientAuth;
+|};
+
+public type ClientCredentialsClientConfig PreRegisteredClientCredentialsConfig|CimdClientCredentialsConfig;
+```
+
+Client authentication at the token endpoint is one of:
 
 ```ballerina
 public type ClientAuth ClientSecretConfig|PrivateKeyJwtConfig|MutualTlsConfig;
+
+# A shared secret cannot be established through a metadata document
+public type CimdClientAuth PrivateKeyJwtConfig|MutualTlsConfig;
 ```
 
 - `ClientSecretConfig`: `client_secret_basic` or `client_secret_post`.
@@ -543,7 +624,9 @@ Error
 └── OAuthTokenError
 ```
 
-`ToolCallError` carries the last `InputRequiredResult` in its detail when the continuation limit is reached. The modern error codes are public constants: `HEADER_MISMATCH` (`-32020`), `MISSING_REQUIRED_CLIENT_CAPABILITY` (`-32021`) and `UNSUPPORTED_PROTOCOL_VERSION` (`-32022`).
+`ToolCallError` means the client could not complete or accept a tool call: the continuation limit is reached (the detail carries the last `InputRequiredResult`), the tool is not in the cached tool list, an argument cannot be copied into its header, a result is malformed, or a declared `outputSchema` comes back without `structuredContent`. A tool execution error is not a `ClientError`: it arrives as a `CallToolResult` with `isError: true`. A JSON-RPC error response is a `ProtocolError`, including a `HEADER_MISMATCH` that remains after the retry described in [Modern requests](#modern-requests).
+
+The modern error codes are public constants: `HEADER_MISMATCH` (`-32020`), `MISSING_REQUIRED_CLIENT_CAPABILITY` (`-32021`) and `UNSUPPORTED_PROTOCOL_VERSION` (`-32022`).
 
 ## Compile-Time Validation
 
@@ -554,8 +637,8 @@ In addition to the 1.x checks, the compiler plugin reports:
 | Error | A required `mcp:HttpSession` parameter in a `"modern"` service. |
 | Warning | A required `mcp:HttpSession` parameter in an `"auto"` service, which can then serve legacy requests only. |
 | Warning | A nilable `mcp:HttpSession?` parameter in an `"auto"` service (may be `()`) or a `"modern"` service (always `()`). |
-| Error | `@mcp:Argument` on a parameter that is not a non-nilable `string`, `int`, `float`, `decimal` or `boolean` tool argument. |
-| Error | An invalid or duplicate `@mcp:Argument` header name in a tool. |
+| Error | `@mcp:Argument` on a parameter that is not a non-nilable `string`, `int` or `boolean` tool argument. |
+| Error | An invalid `@mcp:Argument` header name, or a header name used twice in a tool, compared case-insensitively. |
 | Error | `@mcp:Argument` combined with an explicit `@mcp:Tool.schema`, since the schema would not contain the header declaration. |
 | Error | `@mcp:Tool` with `structuredOutput: false` and an explicit `outputSchema`. |
 
@@ -575,7 +658,7 @@ type Forecast record {|
     decimal temperature;
 |};
 
-@mcp:StreamableHttpConfig {
+@mcp:StreamableHttpServiceConfig {
     info: {name: "weather", version: "2.0.0"},
     cacheHints: {listTools: {ttlMs: 60000, cacheScope: "public"}}
 }
@@ -643,7 +726,7 @@ Version 2.0 is a major release with breaking API changes. Wire compatibility wit
 | `mcp:Listener` | `mcp:StreamableHttpListener` |
 | `mcp:Service` | `mcp:StreamableHttpService` |
 | `mcp:AdvancedService` | `mcp:StreamableHttpAdvancedService` |
-| `@mcp:ServiceConfig`, `@mcp:StreamableHttpServiceConfig` | `@mcp:StreamableHttpConfig` |
+| `@mcp:ServiceConfig` | `@mcp:StreamableHttpServiceConfig` |
 | `mcp:Session`, `mcp:SessionEntry` | `mcp:HttpSession`, `mcp:HttpSessionEntry` |
 | `mcp:SessionMode` | `mcp:HttpSessionMode` |
 | `mcp:Meta` | `mcp:RequestMeta` |
@@ -655,7 +738,9 @@ Version 2.0 is a major release with breaking API changes. Wire compatibility wit
 - HTTP client settings move from the top level of the client configuration into `httpConfig`, for example `timeout = 60` becomes `httpConfig = {timeout: 60}`.
 - Most migrations are renames. The client must now call `connect()` before other operations; 1.x did not enforce `initialize()`.
 - Services that use `mcp:HttpSession` keep working for legacy clients in the default `"auto"` mode, and the compiler warns that modern clients cannot use them. To serve modern clients, move the state into the application.
-- A legacy client keeps receiving the legacy wire shapes from a 2.0 server.
+- A legacy client keeps receiving the legacy wire shapes from a 2.0 server. The text content of a tool that returns a structured value is now its JSON serialization.
+- 1.x did not validate `Origin`. A 2.0 service rejects browser requests from origins that are not listed in `httpConfig.cors.allowOrigins`.
+- The `2025-11-25` task fields are removed: `CallToolParams.task`, `ToolDefinition.execution` and the `tasks` client and server capabilities. A client still connects to a server that advertises tasks.
 - A 2.0 client connects to a 1.x server through the `"auto"` fallback.
 
 ## Future Plans
