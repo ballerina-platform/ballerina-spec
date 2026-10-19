@@ -16,7 +16,7 @@ This proposal defines version 2.0 of `ballerina/mcp`. It:
 - adds support for MCP `2026-07-28` (the "modern" protocol) to the client and the server, while keeping interoperability with every initialize-based revision up to `2025-11-25` (the "legacy" protocol) through a configurable protocol mode;
 - revises the public API around the Streamable HTTP transport, removing the aliases deprecated in 1.x and making the client connect explicitly;
 - adds result caching on both sides;
-- adds MCP authorization (OAuth 2.1) to the client, including Enterprise-Managed Authorization.
+- adds MCP authorization (OAuth 2.1) to the client, including Enterprise-Managed Authorization, and to services, which act as OAuth protected resources.
 
 ## Goals
 
@@ -27,6 +27,7 @@ This proposal defines version 2.0 of `ballerina/mcp`. It:
 - Make protocol selection an explicit client step whose result is visible to the application.
 - Support the caching hints defined in `2026-07-28`, so that servers can mark results as reusable and clients reuse them.
 - Let a client obtain its own access tokens from an MCP server's authorization server.
+- Let a service enforce MCP authorization: publish protected resource metadata, challenge requests without a valid token, accept only tokens issued for it, and require scopes per tool.
 
 ## Non-Goals
 
@@ -34,7 +35,7 @@ This proposal defines version 2.0 of `ballerina/mcp`. It:
 - Prompts, resources, completions and logging. The module implements tools only, and these capabilities are not advertised.
 - Tasks. Neither the task-augmented requests of `2025-11-25` nor the `io.modelcontextprotocol/tasks` extension of `2026-07-28` is supported, and the `2025-11-25` task fields are removed from the client and server types.
 - Transports other than Streamable HTTP, such as stdio.
-- Authorization enforcement on the server. Services continue to use the `ballerina/http` auth configuration and the HTTP request access introduced by the [transport-specific service types proposal](https://github.com/ballerina-platform/ballerina-spec/pull/1452).
+- Acting as an authorization server. A service validates tokens issued by external authorization servers, and does not issue tokens or register clients.
 
 ## Motivation
 
@@ -57,15 +58,18 @@ Clients and servers will support both protocols for some time. A Ballerina serve
 
 Version 1.2.0 added `mcp:StreamableHttpListener`, `mcp:StreamableHttpService` and `@mcp:StreamableHttpServiceConfig`, and deprecated `mcp:Listener` and the transport fields of `@mcp:ServiceConfig`. Version 1.x therefore has two names for most concepts. Some 1.x names also describe the legacy protocol only. `mcp:Session` is an HTTP session that the modern protocol does not have, and `initialize()` names a handshake that the modern protocol removes. A major version is the point to remove the aliases and rename these concepts.
 
-### Clients need authorization
+### Clients and servers need authorization
 
 MCP servers are increasingly protected with OAuth. The 1.x client accepts only an existing credential through `http:ClientAuthConfig`. It cannot discover the authorization server from protected resource metadata, run an OAuth grant, or refresh tokens, so each application implements MCP authorization itself.
+
+On the server side, a 1.x service can use `ballerina/http` listener authentication, which validates a bearer token but does not implement the MCP authorization specification. It publishes no protected resource metadata and sends no `WWW-Authenticate` challenge that points to it, so an MCP client cannot discover where to obtain a token. It does not check that a token was issued for this server, and it cannot require scopes per tool or ask a client to obtain more scopes.
 
 ## Background: Current State (1.x)
 
 - `mcp:Listener` (deprecated) and `mcp:StreamableHttpListener` serve `mcp:Service`, `mcp:AdvancedService`, `mcp:StreamableHttpService` and `mcp:StreamableHttpAdvancedService`.
 - `@mcp:ServiceConfig` and `@mcp:StreamableHttpServiceConfig` configure a service, and `sessionMode` selects `STATEFUL`, `STATELESS` or `AUTO` session handling.
 - A tool can bind `mcp:Session` (first parameter) and `mcp:Meta?`. Streamable HTTP tools can also bind `@http:Header` parameters, `http:Headers` and `http:Request`.
+- A Streamable HTTP service is authenticated through `auth` in its `http:HttpServiceConfig`, with `http:ListenerAuthConfig[]`.
 - `mcp:StreamableHttpClient` offers `initialize()`, `listTools()`, `callTool()`, `subscribeToServerMessages()` and `close()`. `initialize()` always performs the `initialize` handshake, and the other methods do not check that it was called.
 - The supported protocol versions are `2025-11-25`, `2025-06-18`, `2025-03-26`, `2024-11-05` and `2024-10-07`.
 
@@ -159,8 +163,8 @@ public type StreamableHttpServiceConfiguration record {|
     ProtocolMode protocolMode = "auto";
     # Optional server configuration options
     ServerOptions options?;
-    # HTTP service configuration for the underlying transport
-    http:HttpServiceConfig httpConfig = {};
+    # HTTP service configuration for the underlying transport, including authorization
+    HttpServiceConfig httpConfig = {};
     # Session management for legacy requests
     HttpSessionMode sessionMode = AUTO;
     # Caching hints sent to modern clients on cacheable results
@@ -173,7 +177,7 @@ public annotation StreamableHttpServiceConfiguration StreamableHttpServiceConfig
 - `info` is returned in `InitializeResult.serverInfo` for legacy requests, and in `_meta` of every modern result under `io.modelcontextprotocol/serverInfo`.
 - `options.instructions` is returned by `initialize` and by `server/discover`.
 - The server advertises the `tools` capability only. It removes `logging`, `prompts`, `resources` and `completions` from `options.capabilities`, because the module has no runtime for them. `tools.listChanged` is `true` only for an advanced service that implements `onSubscribe`.
-- The CORS `allowOrigins` list in `httpConfig` is also used for the `Origin` validation required by the Streamable HTTP transport, on both modern and legacy requests. A request without an `Origin` header is accepted, since clients other than browsers do not send one. A request whose `Origin` is not listed, and is not matched by `*`, is rejected with `403 Forbidden`. The list is empty by default, so a service that browser clients call must list their origins.
+- The CORS `allowOrigins` list in `httpConfig` is also used for the `Origin` validation required by the Streamable HTTP transport, on both modern and legacy requests. A request without an `Origin` header is accepted, since clients other than browsers do not send one. A request whose `Origin` is not listed, and is not matched by `*`, is rejected with `403 Forbidden`. The list is empty by default, so a service that browser clients call must list their origins. `Origin` is checked before authentication (see [Service authorization](#service-authorization)).
 
 #### Modern request handling
 
@@ -205,7 +209,8 @@ In addition to `anydata` arguments, a basic tool can bind:
 
 - `mcp:HttpSession` or `mcp:HttpSession?`, at any position, for legacy session state. Unlike 1.x, it no longer has to be the first parameter;
 - `mcp:RequestMeta?` (renamed from `mcp:Meta`), at any position, for the request's `_meta`. It must be nilable, because clients may omit `_meta`;
-- `@http:Header` parameters, `http:Headers` and `http:Request`, as defined in the transport-specific service types proposal.
+- `@http:Header` parameters, `http:Headers` and `http:Request`, as defined in the transport-specific service types proposal;
+- `mcp:AuthContext` or `mcp:AuthContext?`, at any position, for the authenticated caller (see [Service authorization](#service-authorization)).
 
 Runtime parameters are not part of the generated input schema. An omitted defaultable argument takes its default value.
 
@@ -322,6 +327,7 @@ The specification separates tool execution errors, which are returned in the too
 |---|---|
 | A basic tool returns an `error` | A `CallToolResult` with `isError: true`, whose text is the error message |
 | A basic tool panics | A `CallToolResult` with `isError: true` and a generic message |
+| A tool or an advanced service method returns an `mcp:InsufficientScopeError` | HTTP `403` with an `insufficient_scope` challenge (see [Service authorization](#service-authorization)) |
 | An HTTP request value cannot be bound to a parameter | A JSON-RPC `INVALID_PARAMS` error |
 | An advanced service method returns a `ServerError` | A JSON-RPC error with the `ServerError` message |
 | An advanced service method returns another error, or panics | A JSON-RPC `INTERNAL_ERROR` with a generic message |
@@ -362,6 +368,142 @@ service mcp:StreamableHttpService /mcp on mcpListener {
 ```
 
 Each field is resolved separately. A value set by `onListTools` wins, then the configured hint, then the default (`ttlMs: 0`, `cacheScope: "private"`), so results are not reused unless the service opts in. `attach` rejects a negative configured `ttlMs`. Legacy responses never carry these fields.
+
+#### Service authorization
+
+A service implements MCP authorization by acting as an OAuth protected resource. `httpConfig` is an `mcp:HttpServiceConfig`. It has the fields of `http:HttpServiceConfig`, in the same order and with the same defaults, except that `auth` also accepts `mcp:OAuthProtectedResourceConfig`. As on the client, the fields are copied because Ballerina cannot widen an included field.
+
+```ballerina
+public type HttpServiceConfig record {|
+    string host = "b7a.default";
+    http:CompressionConfig compression = {};
+    http:Chunking chunking = http:CHUNKING_AUTO;
+    http:CorsConfig cors = {};
+    # MCP authorization, or HTTP listener authentication without discovery
+    OAuthProtectedResourceConfig|http:ListenerAuthConfig[] auth?;
+    string mediaTypeSubtypePrefix?;
+    boolean treatNilableAsOptional = true;
+    byte[] openApiDefinition = [];
+    boolean validation = true;
+    typedesc<http:ServiceContract> serviceType?;
+    string basePath?;
+    boolean laxDataBinding = false;
+|};
+
+public type OAuthProtectedResourceConfig record {|
+    # Canonical URI of the service as clients address it, such as `https://mcp.example.com/mcp`
+    string 'resource;
+    # Authorization servers whose access tokens are accepted
+    AuthorizationServer[] authorizationServers;
+    # Scopes every request must carry
+    string[] requiredScopes = [];
+    # Scopes that a broader scope grants, keyed by the broader scope
+    map<string[]> scopeHierarchy = {};
+    # Published as `scopes_supported`; defaults to `requiredScopes`
+    string[] scopesSupported?;
+    string resourceName?;
+    string resourceDocumentation?;
+    string resourcePolicyUri?;
+    string resourceTosUri?;
+|};
+
+public type AuthorizationServer record {|
+    # Issuer identifier, advertised in the metadata and required as `iss` in JWT access tokens
+    string issuer;
+    # Audience of this server's tokens for the service; defaults to `resource`
+    string|string[] audience?;
+    JwtTokenValidator|IntrospectionTokenValidator validator;
+|};
+
+public type JwtTokenValidator record {|
+    http:JwtValidatorConfig jwtValidatorConfig;
+|};
+
+public type IntrospectionTokenValidator record {|
+    http:OAuth2IntrospectionConfig oauth2IntrospectionConfig;
+|};
+```
+
+With an `mcp:OAuthProtectedResourceConfig`, the service:
+
+- publishes protected resource metadata (RFC 9728) at `<origin>/.well-known/oauth-protected-resource<path>`, where the origin and path come from `resource`. The document lists `resource`, the issuers as `authorization_servers`, `bearer_methods_supported: ["header"]`, `scopes_supported` and the optional resource fields. It is served without authentication, with CORS open to any origin.
+- authenticates every request, on both protocols, including `initialize`, `server/discover`, `subscriptions/listen` and session `DELETE`. A request without a bearer token gets `401` with a `WWW-Authenticate: Bearer` challenge carrying `resource_metadata` and the `requiredScopes` as `scope`. An invalid or expired token gets the same challenge with `error="invalid_token"`.
+- accepts a token only from the authorization server that issued it. A JWT is validated by the server named in its `iss`, and a JWT that names no configured issuer is rejected. An opaque token names no issuer, so at most one authorization server can use introspection.
+- accepts a token only when it was issued for this service: its audience must match the server's `audience`, or `resource` by default. The expected issuer and audience are set on `AuthorizationServer`, not in `jwtValidatorConfig`.
+- answers a request whose token lacks a required scope with `403` and `error="insufficient_scope"`. The challenge's `scope` lists every scope the operation needs, not only the missing ones, so that the client can obtain a sufficient token and retry.
+- answers `503` when the introspection endpoint cannot be reached, so that the client keeps its token and retries. JWT validation does not distinguish a failure to fetch the authorization server's keys from an invalid token, so such a failure is answered as `invalid_token`.
+- exposes `WWW-Authenticate` through its CORS configuration, so that browser clients can read challenges.
+
+Scopes apply at three levels:
+
+- `requiredScopes` apply to every request. They are local policy, not a metadata field.
+- `scopes` on `@mcp:Tool` apply to calls of that tool, in addition to `requiredScopes`. They are never sent to clients: `tools/list` lists every tool, and a call without the scopes gets the `403` challenge.
+- A tool or an advanced service method that decides at run time that more scopes are needed returns `mcp:InsufficientScopeError`, whose detail names them. The service answers with the `403` challenge instead of a tool result.
+
+```ballerina
+public type InsufficientScopeErrorDetail record {|
+    # Scopes the operation needs, in addition to `requiredScopes`
+    string[] scopes;
+|};
+
+public type InsufficientScopeError distinct ServerError & error<InsufficientScopeErrorDetail>;
+```
+
+When an authorization server issues hierarchical scopes, `scopeHierarchy` declares which scopes a broader scope grants. A token holding a key satisfies every scope listed for it, transitively. Challenges still name the exact scopes an operation needs. Scopes must be valid OAuth scope tokens, and `offline_access` cannot be required, because it asks the authorization server for a refresh token rather than granting access to the service.
+
+A tool, `onListTools`, `onCallTool` and `onSubscribe` can declare `mcp:AuthContext` to receive the authenticated caller:
+
+```ballerina
+public type AuthContext record {|
+    # `sub` claim
+    string? subject;
+    # `client_id` or `azp` claim
+    string? clientId;
+    string? issuer;
+    # Granted scopes, together with the scopes they imply through `scopeHierarchy`
+    string[] scopes;
+    # All claims of the token, or the introspection response
+    map<json> claims;
+    # The raw token, for token exchange only; it must not be passed through to upstream APIs
+    string token;
+|};
+```
+
+A legacy HTTP session belongs to the issuer, client and subject of the token that created it. A request with a token that differs in any of them gets `404`, as for an unknown session, so the same user signed in through two clients cannot share a session. A token that names neither a subject nor a client gets no session: `initialize` succeeds without a session ID, unless the service requires sessions.
+
+`attach` returns an error for a configuration that cannot be enforced: no authorization servers, a `resource` that is not a canonical absolute HTTP(S) URI, a duplicate issuer, more than one introspection server, an invalid scope, an empty `scopeHierarchy` entry, two services on one host with the same metadata path, or a non-nilable `mcp:AuthContext` parameter or `@mcp:Tool` scopes on a service without an `mcp:OAuthProtectedResourceConfig`.
+
+`auth` still accepts `http:ListenerAuthConfig[]`, HTTP listener authentication as in 1.x. Such a service publishes no metadata, answers failures with `401` or `403` without a challenge, and gives a nilable `mcp:AuthContext?` the value `()`.
+
+```ballerina
+@mcp:StreamableHttpServiceConfig {
+    info: {name: "files", version: "2.0.0"},
+    httpConfig: {
+        auth: {
+            'resource: "https://mcp.example.com/files",
+            authorizationServers: [
+                {
+                    issuer: "https://login.example.com",
+                    validator: {
+                        jwtValidatorConfig: {
+                            signatureConfig: {jwksConfig: {url: "https://login.example.com/oauth2/jwks"}}
+                        }
+                    }
+                }
+            ],
+            requiredScopes: ["files:read"],
+            scopeHierarchy: {"files:write": ["files:read"]}
+        }
+    }
+}
+service mcp:StreamableHttpService /files on mcpListener {
+
+    @mcp:Tool {scopes: ["files:write"]}
+    remote isolated function deleteFile(mcp:AuthContext auth, string path) returns string|error {
+        return string `deleted ${path} for ${auth.subject ?: "unknown"}`;
+    }
+}
+```
 
 ### Client
 
@@ -621,6 +763,7 @@ Error
 │   ├── StreamError
 │   └── ToolCallError
 ├── ServerError
+│   └── InsufficientScopeError
 └── OAuthTokenError
 ```
 
@@ -731,6 +874,7 @@ Version 2.0 is a major release with breaking API changes. Wire compatibility wit
 | `mcp:SessionMode` | `mcp:HttpSessionMode` |
 | `mcp:Meta` | `mcp:RequestMeta` |
 | `mcp:StreamableHttpClientTransportConfig` | `mcp:StreamableHttpClientConfig` |
+| `http:HttpServiceConfig` in `httpConfig` | `mcp:HttpServiceConfig`, with the same fields |
 | `initialize()` | `connect()`, or `initializeLegacy()` |
 | `subscribeToServerMessages()` | `listen()` |
 
@@ -739,6 +883,7 @@ Version 2.0 is a major release with breaking API changes. Wire compatibility wit
 - Most migrations are renames. The client must now call `connect()` before other operations; 1.x did not enforce `initialize()`.
 - Services that use `mcp:HttpSession` keep working for legacy clients in the default `"auto"` mode, and the compiler warns that modern clients cannot use them. To serve modern clients, move the state into the application.
 - A legacy client keeps receiving the legacy wire shapes from a 2.0 server. The text content of a tool that returns a structured value is now its JSON serialization.
+- Services that set `httpConfig.auth` to `http:ListenerAuthConfig[]` keep working unchanged. To implement MCP authorization, replace it with an `mcp:OAuthProtectedResourceConfig`.
 - 1.x did not validate `Origin`. A 2.0 service rejects browser requests from origins that are not listed in `httpConfig.cors.allowOrigins`.
 - The `2025-11-25` task fields are removed: `CallToolParams.task`, `ToolDefinition.execution` and the `tasks` client and server capabilities. A client still connects to a server that advertises tasks.
 - A 2.0 client connects to a 1.x server through the `"auto"` fallback.
