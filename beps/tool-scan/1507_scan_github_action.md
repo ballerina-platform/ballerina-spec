@@ -1,11 +1,11 @@
 # Introduce a GitHub Action to Run `bal scan` in CI/CD Pipelines
 
 - Authors - Charana Manawathilake
-- Reviewed by - TBD
+- Reviewed by - TharmiganK
 - Created date - 2026-10-12
 - Updated date - 2026-10-16
 - Issue - [1507](https://github.com/ballerina-platform/ballerina-spec/issues/1507)
-- State - Submitted
+- State - Reviewed
 
 ## Summary
 
