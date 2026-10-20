@@ -225,7 +225,7 @@ In addition to `anydata` arguments, a basic tool can bind:
 - `mcp:RequestMeta?` (renamed from `mcp:Meta`), at any position, for the request's `_meta`. It must be nilable, because clients may omit `_meta`;
 - `@http:Header` parameters, `http:Headers` and `http:Request`, as defined in the transport-specific service types proposal;
 - `mcp:AuthContext` or `mcp:AuthContext?`, at any position, for the authenticated caller (see [Service authorization](#service-authorization));
-- `mcp:Context`, at any position, for the input responses and request state of a continuation (see [Multi round-trip requests](#multi-round-trip-requests)).
+- `mcp:Context`, at any position, for the input responses and request state of a continuation (see [Multi round-trip requests](#multi-round-trip-requests)). It cannot be nilable, because every call receives a context: a first round and a legacy call receive an empty one.
 
 Runtime parameters are not part of the generated input schema. An omitted defaultable argument takes its default value.
 
@@ -951,6 +951,7 @@ In addition to the 1.x checks, the compiler plugin reports:
 | Error | A required `mcp:HttpSession` parameter in a `"modern"` service. |
 | Warning | A required `mcp:HttpSession` parameter in an `"auto"` service, which can then serve legacy requests only. |
 | Warning | A nilable `mcp:HttpSession?` parameter in an `"auto"` service (may be `()`) or a `"modern"` service (always `()`). |
+| Error | A nilable `mcp:Context?` parameter, since every call receives a context. |
 | Error | `@mcp:Argument` on a parameter that is not a non-nilable `string`, `int` or `boolean` tool argument. |
 | Error | An invalid `@mcp:Argument` header name, or a header name used twice in a tool, compared case-insensitively. |
 | Error | `@mcp:Argument` combined with an explicit `@mcp:Tool.schema`, since the schema would not contain the header declaration. |
