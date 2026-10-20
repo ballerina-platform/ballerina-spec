@@ -33,6 +33,7 @@ This proposal defines version 2.0 of `ballerina/mcp`. It:
 
 - Server-to-client requests through multi round-trip requests, such as elicitation. The `InputRequiredResult` continuation types described in this proposal are the minimal surface that the `tools/call` result shape needs. How a server asks for input and how a client answers it will be covered by a separate proposal, which may change the client's input handler API.
 - Prompts, resources, completions and logging. The module implements tools only, and these capabilities are not advertised.
+- Change notifications. `subscriptions/listen` is not supported, and `tools.listChanged` is always `false`. Change notification subscriptions will be added in a later minor release (see [Future Plans](#future-plans)).
 - Tasks. Neither the task-augmented requests of `2025-11-25` nor the `io.modelcontextprotocol/tasks` extension of `2026-07-28` is supported, and the `2025-11-25` task fields are removed from the client and server types.
 - Transports other than Streamable HTTP, such as stdio.
 - Acting as an authorization server. A service validates tokens issued by external authorization servers, and does not issue tokens or register clients.
@@ -176,7 +177,7 @@ public annotation StreamableHttpServiceConfiguration StreamableHttpServiceConfig
 
 - `info` is returned in `InitializeResult.serverInfo` for legacy requests, and in `_meta` of every modern result under `io.modelcontextprotocol/serverInfo`.
 - `options.instructions` is returned by `initialize` and by `server/discover`.
-- The server advertises the `tools` capability only. It removes `logging`, `prompts`, `resources` and `completions` from `options.capabilities`, because the module has no runtime for them. `tools.listChanged` is `true` only for an advanced service that implements `onSubscribe`.
+- The server advertises the `tools` capability only. It removes `logging`, `prompts`, `resources` and `completions` from `options.capabilities`, because the module has no runtime for them. `tools.listChanged` is always `false`.
 - The CORS `allowOrigins` list in `httpConfig` is also used for the `Origin` validation required by the Streamable HTTP transport, on both modern and legacy requests. A request without an `Origin` header is accepted, since clients other than browsers do not send one. A request whose `Origin` is not listed, and is not matched by `*`, is rejected with `403 Forbidden`. The list is empty by default, so a service that browser clients call must list their origins. `Origin` is checked before authentication (see [Service authorization](#service-authorization)).
 
 #### Modern request handling
@@ -185,7 +186,7 @@ For a modern request, the dispatcher:
 
 1. Reads the protocol version from `_meta["io.modelcontextprotocol/protocolVersion"]` and the `MCP-Protocol-Version` header. A version the service does not accept is rejected with `UNSUPPORTED_PROTOCOL_VERSION` (`-32022`) and HTTP status `400`. The error `data` lists the supported and requested versions, so that the client can select another version.
 2. Validates the routing headers. `MCP-Protocol-Version` must match the request metadata, `Mcp-Method` must match the JSON-RPC method, and for `tools/call`, `Mcp-Name` must match the tool name. A mirrored argument header (see [Argument headers](#argument-headers)) must be present once and match the decoded argument. A mismatch is rejected with `HEADER_MISMATCH` (`-32020`) before the service is invoked.
-3. Dispatches `server/discover`, `tools/list`, `tools/call`, and `subscriptions/listen` for an advanced service with `onSubscribe`. Any other method gets `METHOD_NOT_FOUND`.
+3. Dispatches `server/discover`, `tools/list` and `tools/call`. Any other method, including `subscriptions/listen`, gets `METHOD_NOT_FOUND`.
 
 Header values use the canonical encoding defined by the specification, and the dispatcher rejects values that are not encoded canonically.
 
@@ -214,7 +215,7 @@ In addition to `anydata` arguments, a basic tool can bind:
 
 Runtime parameters are not part of the generated input schema. An omitted defaultable argument takes its default value.
 
-The `_meta` objects of requests, results and notifications are typed as `mcp:RequestMeta`, `mcp:ResultMeta` and `mcp:NotificationMeta`. Each is an open record that declares the keys this module uses:
+The `_meta` objects of requests and results are typed as `mcp:RequestMeta` and `mcp:ResultMeta`. Each is an open record that declares the keys this module uses:
 
 ```ballerina
 public type RequestMeta record {
@@ -224,11 +225,6 @@ public type RequestMeta record {
 public type ResultMeta record {
     # Server implementation that produced the response
     Implementation serverInfo?;
-};
-
-public type NotificationMeta record {
-    # Request identifier of the subscription that delivered the notification
-    RequestId subscriptionId?;
 };
 ```
 
@@ -297,29 +293,12 @@ remote isolated function onListTools(Cursor? cursor) returns ListToolsResult|Ser
 
 remote isolated function onCallTool(CallToolParams params)
         returns CallToolResult|InputRequiredResult|ServerError;
-
-# Optional. Publishes change notifications to modern subscribers.
-remote isolated function onSubscribe(SubscriptionFilter notifications)
-        returns stream<JsonRpcNotification, error?>|ServerError;
 ```
 
 - These methods can bind the same HTTP request values as basic tools. `onCallTool` reads request metadata from `params._meta`.
 - The `cursor` parameter of `onListTools` is optional. A service that declares it receives the request's cursor, and can return the tools in pages by setting `nextCursor`. A basic service always returns all of its tools in one page.
 - For a legacy request, the library keeps results within the legacy schema. It removes an `outputSchema` or `structuredContent` whose root is not an object, and rejects an `InputRequiredResult`.
 - `onCallTool` may return `InputRequiredResult` to a modern request. The input-request design is out of scope for this proposal (see [Non-Goals](#non-goals)).
-- `onSubscribe` is invoked for `subscriptions/listen`. The library sends `notifications/subscriptions/acknowledged` with the accepted filter, forwards matching notifications tagged with the subscription ID, and sends the final `complete` result when the stream ends. Only `toolsListChanged` is accepted in this version.
-- While a subscription is open, the library sends an SSE comment line every 15 seconds, so that proxies and idle timeouts do not close a quiet connection.
-- When the client disconnects, the library treats it as cancellation and closes the stream that `onSubscribe` returned. The disconnect is detected within one keep-alive interval. The library may call `close()` while a `next()` call on that stream is still pending.
-- `gracefulStop` ends every open subscription with the `complete` result, waiting at most 5 seconds for them before it stops the listener. `immediateStop` sends no `complete`.
-
-```ballerina
-public type SubscriptionFilter record {|
-    boolean toolsListChanged = false;
-    boolean promptsListChanged = false;
-    boolean resourcesListChanged = false;
-    string[] resourceSubscriptions = [];
-|};
-```
 
 #### Tool errors
 
@@ -429,7 +408,7 @@ public type IntrospectionTokenValidator record {|
 With an `mcp:OAuthProtectedResourceConfig`, the service:
 
 - publishes protected resource metadata (RFC 9728) at `<origin>/.well-known/oauth-protected-resource<path>`, where the origin and path come from `resource`. The document lists `resource`, the issuers as `authorization_servers`, `bearer_methods_supported: ["header"]`, `scopes_supported` and the optional resource fields. It is served without authentication, with CORS open to any origin.
-- authenticates every request, on both protocols, including `initialize`, `server/discover`, `subscriptions/listen` and session `DELETE`. A request without a bearer token gets `401` with a `WWW-Authenticate: Bearer` challenge carrying `resource_metadata` and the `requiredScopes` as `scope`. An invalid or expired token gets the same challenge with `error="invalid_token"`.
+- authenticates every request, on both protocols, including `initialize`, `server/discover` and session `DELETE`. A request without a bearer token gets `401` with a `WWW-Authenticate: Bearer` challenge carrying `resource_metadata` and the `requiredScopes` as `scope`. An invalid or expired token gets the same challenge with `error="invalid_token"`.
 - accepts a token only from the authorization server that issued it. A JWT is validated by the server named in its `iss`, and a JWT that names no configured issuer is rejected. An opaque token names no issuer, so at most one authorization server can use introspection.
 - accepts a token only when it was issued for this service: its audience must match the server's `audience`, or `resource` by default. The expected issuer and audience are set on `AuthorizationServer`, not in `jwtValidatorConfig`.
 - answers a request whose token lacks a required scope with `403` and `error="insufficient_scope"`. The challenge's `scope` lists every scope the operation needs, not only the missing ones, so that the client can obtain a sufficient token and retry.
@@ -453,7 +432,7 @@ public type InsufficientScopeError distinct ServerError & error<InsufficientScop
 
 When an authorization server issues hierarchical scopes, `scopeHierarchy` declares which scopes a broader scope grants. A token holding a key satisfies every scope listed for it, transitively. Challenges still name the exact scopes an operation needs. Scopes must be valid OAuth scope tokens, and `offline_access` cannot be required, because it asks the authorization server for a refresh token rather than granting access to the service.
 
-A tool, `onListTools`, `onCallTool` and `onSubscribe` can declare `mcp:AuthContext` to receive the authenticated caller:
+A tool, `onListTools` and `onCallTool` can declare `mcp:AuthContext` to receive the authenticated caller:
 
 ```ballerina
 public type AuthContext record {|
@@ -528,9 +507,6 @@ public distinct isolated client class StreamableHttpClient {
     remote isolated function callToolOnce(CallToolParams params, map<string|string[]> headers = {})
             returns CallToolResult|InputRequiredResult|ClientError;
 
-    remote isolated function listen(SubscriptionFilter notifications = {toolsListChanged: true},
-            map<string|string[]> headers = {}) returns stream<JsonRpcMessage, StreamError?>|ClientError;
-
     remote isolated function discover(map<string|string[]> headers = {}) returns DiscoverResult|ClientError;
 
     public isolated function adoptDiscovery(DiscoverResult discovered,
@@ -545,7 +521,7 @@ public distinct isolated client class StreamableHttpClient {
 }
 ```
 
-`init` only configures the transport. In 1.x, `initialize()` always ran the legacy handshake, and nothing stopped an application from calling `listTools()` or `callTool()` without it. In 2.0, `connect()` selects the protocol and must be called before `listTools()`, `callTool()`, `callToolOnce()` or `listen()`, which return an error otherwise. It returns what was negotiated:
+`init` only configures the transport. In 1.x, `initialize()` always ran the legacy handshake, and nothing stopped an application from calling `listTools()` or `callTool()` without it. In 2.0, `connect()` selects the protocol and must be called before `listTools()`, `callTool()` or `callToolOnce()`, which return an error otherwise. It returns what was negotiated:
 
 ```ballerina
 public type ConnectionInfo record {|
@@ -632,8 +608,6 @@ On the modern protocol, the client:
 
 `callTool()` returns when the call completes. If a modern server returns `InputRequiredResult`, it calls the configured `inputHandler`, echoes `requestState` unchanged, and retries, up to `maxInputRounds`. `callToolOnce()` performs one request and returns `CallToolResult|InputRequiredResult`, so that the application can handle continuations itself. On a legacy connection it behaves like `callTool()`. As noted in [Non-Goals](#non-goals), the input handler API will be revisited in a separate proposal.
 
-`listen()` opens a `subscriptions/listen` stream on the modern protocol, and the session's `GET` event stream on the legacy protocol. Closing the stream cancels the subscription.
-
 #### Result caching
 
 The client reuses modern `tools/list` results while their `ttlMs` keeps them fresh. Each page is cached under its cursor. `server/discover` results are not cached, and `cacheMode` has no effect on a legacy connection.
@@ -654,7 +628,7 @@ public type ResultCacheConfig record {|
 public type CacheMode "use"|"refresh"|"bypass";
 ```
 
-- Cached results are dropped when the application reads `notifications/tools/list_changed` from `listen()`, when the server rejects a cursor with `INVALID_PARAMS` (all pages are dropped), when a call fails with `HEADER_MISMATCH`, when a `401` or `insufficient_scope` challenge yields a different token (a step-up can change the tool list), and on `close()`. A token refreshed on expiry does not drop them. A request that is already running cannot put back a result that was dropped while it ran.
+- Cached results are dropped when the server rejects a cursor with `INVALID_PARAMS` (all pages are dropped), when a call fails with `HEADER_MISMATCH`, when a `401` or `insufficient_scope` challenge yields a different token (a step-up can change the tool list), and on `close()`. A token refreshed on expiry does not drop them. A request that is already running cannot put back a result that was dropped while it ran.
 - A negative `ttlMs` from a server is treated as `0`.
 - `init` returns an error for a negative `maxTtlMs` or `maxEntries`. A value of `0` for either disables storing results.
 - Each client has its own cache and is treated as one authorization context, so `cacheScope` does not change how the client caches. Credentials belong in `httpConfig.auth`, with a separate client for each user. Per-call headers are not part of the cache key, so a call whose headers carry `Authorization` bypasses the cache: `listTools()` fetches without storing, and `callTool()` lists the tools again instead of using the kept schemas.
@@ -879,7 +853,7 @@ Version 2.0 is a major release with breaking API changes. Wire compatibility wit
 | `mcp:StreamableHttpClientTransportConfig` | `mcp:StreamableHttpClientConfig` |
 | `http:HttpServiceConfig` in `httpConfig` | `mcp:HttpServiceConfig`, with the same fields |
 | `initialize()` | `connect()`, or `initializeLegacy()` |
-| `subscribeToServerMessages()` | `listen()` |
+| `subscribeToServerMessages()` | Removed, without a replacement |
 
 - `mcp:HttpSession` can be declared at any position, so existing tools that declare it first keep compiling.
 - HTTP client settings move from the top level of the client configuration into `httpConfig`, for example `timeout = 60` becomes `httpConfig = {timeout: 60}`.
@@ -895,7 +869,8 @@ Version 2.0 is a major release with breaking API changes. Wire compatibility wit
 
 - **Multi round-trip requests.** Elicitation from tools through `InputRequiredResult`, with a typed client handler and signed `requestState`, will be proposed separately.
 - **Additional transports.** A stdio transport, with transport-agnostic service types reintroduced alongside it.
-- **Prompts and resources.** Server and client support for the remaining primitives, including the list-changed and resource subscriptions that `SubscriptionFilter` already models.
+- **Change notifications.** `subscriptions/listen` on the client and on advanced services, starting with `notifications/tools/list_changed`, with cached tool lists dropped when it arrives. It can be added in a minor release, since it only adds an optional service method, a client method and new types.
+- **Prompts and resources.** Server and client support for the remaining primitives, including their list-changed notifications and resource subscriptions.
 - **Native JSON Schema validation**, once the language provides it, so that `InputSchema` and `OutputSchema` can be enforced at runtime.
 
 ## Conclusion
