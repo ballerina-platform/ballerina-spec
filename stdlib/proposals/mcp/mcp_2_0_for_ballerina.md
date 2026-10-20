@@ -308,7 +308,9 @@ remote isolated function onSubscribe(SubscriptionFilter notifications)
 - For a legacy request, the library keeps results within the legacy schema. It removes an `outputSchema` or `structuredContent` whose root is not an object, and rejects an `InputRequiredResult`.
 - `onCallTool` may return `InputRequiredResult` to a modern request. The input-request design is out of scope for this proposal (see [Non-Goals](#non-goals)).
 - `onSubscribe` is invoked for `subscriptions/listen`. The library sends `notifications/subscriptions/acknowledged` with the accepted filter, forwards matching notifications tagged with the subscription ID, and sends the final `complete` result when the stream ends. Only `toolsListChanged` is accepted in this version.
-- When the client disconnects, the library treats it as cancellation and closes the stream that `onSubscribe` returned. While a subscription is open, the library sends an SSE comment line at a fixed interval, so that proxies do not close an idle connection. `gracefulStop` ends every open subscription with the `complete` result.
+- While a subscription is open, the library sends an SSE comment line every 15 seconds, so that proxies and idle timeouts do not close a quiet connection.
+- When the client disconnects, the library treats it as cancellation and closes the stream that `onSubscribe` returned. The disconnect is detected within one keep-alive interval. The library may call `close()` while a `next()` call on that stream is still pending.
+- `gracefulStop` ends every open subscription with the `complete` result, waiting at most 5 seconds for them before it stops the listener. `immediateStop` sends no `complete`.
 
 ```ballerina
 public type SubscriptionFilter record {|
@@ -367,7 +369,7 @@ service mcp:StreamableHttpService /mcp on mcpListener {
 }
 ```
 
-Each field is resolved separately. A value set by `onListTools` wins, then the configured hint, then the default (`ttlMs: 0`, `cacheScope: "private"`), so results are not reused unless the service opts in. `attach` rejects a negative configured `ttlMs`. Legacy responses never carry these fields.
+Each field is resolved separately. A value set by `onListTools` wins, then the configured hint, then the default (`ttlMs: 0`, `cacheScope: "private"`), so results are not reused unless the service opts in. `attach` rejects a negative configured `ttlMs`. A negative `ttlMs` set by `onListTools` is treated as `0`, and the library logs an error. Legacy responses never carry these fields.
 
 #### Service authorization
 
@@ -634,7 +636,7 @@ On the modern protocol, the client:
 
 #### Result caching
 
-The client reuses modern `tools/list` results while their `ttlMs` keeps them fresh. Each page is cached under its cursor.
+The client reuses modern `tools/list` results while their `ttlMs` keeps them fresh. Each page is cached under its cursor. `server/discover` results are not cached, and `cacheMode` has no effect on a legacy connection.
 
 Caching is configured through `resultCache`:
 
@@ -652,10 +654,11 @@ public type ResultCacheConfig record {|
 public type CacheMode "use"|"refresh"|"bypass";
 ```
 
-- Cached results are dropped when `listen()` delivers `notifications/tools/list_changed`, when the server rejects a cursor with `INVALID_PARAMS` (all pages are dropped), when a call fails with `HEADER_MISMATCH`, and on `close()`. A request that is already running cannot put back a result that was dropped while it ran.
+- Cached results are dropped when the application reads `notifications/tools/list_changed` from `listen()`, when the server rejects a cursor with `INVALID_PARAMS` (all pages are dropped), when a call fails with `HEADER_MISMATCH`, when a `401` or `insufficient_scope` challenge yields a different token (a step-up can change the tool list), and on `close()`. A token refreshed on expiry does not drop them. A request that is already running cannot put back a result that was dropped while it ran.
 - A negative `ttlMs` from a server is treated as `0`.
-- Each client has its own cache and is treated as one authorization context. Credentials belong in `httpConfig.auth`, with a separate client for each user. Per-call headers are not part of the cache key.
-- The tool schemas used for argument headers are kept in the same cache, and are merged across pages.
+- `init` returns an error for a negative `maxTtlMs` or `maxEntries`. A value of `0` for either disables storing results.
+- Each client has its own cache and is treated as one authorization context, so `cacheScope` does not change how the client caches. Credentials belong in `httpConfig.auth`, with a separate client for each user. Per-call headers are not part of the cache key, so a call whose headers carry `Authorization` bypasses the cache: `listTools()` fetches without storing, and `callTool()` lists the tools again instead of using the kept schemas.
+- The tool schemas used for argument headers are kept even when `resultCache` is `()` or `ttlMs` is `0`, and are merged across pages. Only the drops listed above remove them; a `bypass` listing does not record them.
 
 Servers default to `ttlMs: 0`, so caching changes nothing until a server opts in.
 
