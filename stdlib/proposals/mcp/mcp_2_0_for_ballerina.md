@@ -3,19 +3,20 @@
 - Author: @RadCod3
 - Reviewers:
 - Created: 2026-10-15
-- Updated: 2026-10-19
+- Updated: 2026-10-21
 - Issue: [#1511](https://github.com/ballerina-platform/ballerina-spec/issues/1511)
 - Status: Submitted
 
 ## Summary
 
-MCP `2026-07-28` replaces the `initialize` handshake and HTTP sessions with per-request negotiation. Every request carries its protocol version, client information and capabilities, and a server describes itself through `server/discover`. The revision also adds standard routing headers, tool argument headers, change notification subscriptions over `POST`, structured output with any JSON root, and caching hints on cacheable results.
+MCP `2026-07-28` replaces the `initialize` handshake and HTTP sessions with per-request negotiation. Every request carries its protocol version, client information and capabilities, and a server describes itself through `server/discover`. It also replaces server-initiated requests, such as elicitation, with multi round-trip requests (MRTR): a tool returns an input-required result, and the client retries the call with the user's answers. The revision also adds standard routing headers, tool argument headers, change notification subscriptions over `POST`, structured output with any JSON root, and caching hints on cacheable results.
 
 This proposal defines version 2.0 of `ballerina/mcp`. It:
 
 - adds support for MCP `2026-07-28` (the "modern" protocol) to the client and the server, while keeping interoperability with every initialize-based revision up to `2025-11-25` (the "legacy" protocol) through a configurable protocol mode;
 - revises the public API around the Streamable HTTP transport, removing the aliases deprecated in 1.x and making the client connect explicitly;
 - adds result caching on both sides;
+- adds multi round-trip requests with elicitation, so that tools can ask the user for input, with request state signed by the module;
 - adds MCP authorization (OAuth 2.1) to the client, including Enterprise-Managed Authorization, and to services, which act as OAuth protected resources.
 
 ## Goals
@@ -26,12 +27,16 @@ This proposal defines version 2.0 of `ballerina/mcp`. It:
 - Give Streamable HTTP concepts explicit names, and remove the deprecated 1.x aliases.
 - Make protocol selection an explicit client step whose result is visible to the application.
 - Support the caching hints defined in `2026-07-28`, so that servers can mark results as reusable and clients reuse them.
+- Let tools ask the user for input during a call through multi round-trip requests, with typed elicitation in both service styles and a typed handler on the client.
+- Protect request state for every service by default, so that a client cannot forge, replay or reuse it.
 - Let a client obtain its own access tokens from an MCP server's authorization server.
 - Let a service enforce MCP authorization: publish protected resource metadata, challenge requests without a valid token, accept only tokens issued for it, and require scopes per tool.
 
 ## Non-Goals
 
-- Server-to-client requests through multi round-trip requests, such as elicitation. The `InputRequiredResult` continuation types described in this proposal are the minimal surface that the `tools/call` result shape needs. How a server asks for input and how a client answers it will be covered by a separate proposal, which may change the client's input handler API.
+- Server-initiated requests on the legacy protocol. A service does not replay input requests to legacy clients as `elicitation/create` requests, and the client does not answer elicitations sent by legacy servers.
+- Sampling and roots input requests, which `2026-07-28` deprecates, and input-required results on methods other than `tools/call`.
+- Encryption of request state. It is signed only (see [Request state](#request-state)).
 - Prompts, resources, completions and logging. The module implements tools only, and these capabilities are not advertised.
 - Change notifications. `subscriptions/listen` is not supported, and `tools.listChanged` is always `false`. Change notification subscriptions will be added in a later minor release (see [Future Plans](#future-plans)).
 - Tasks. Neither the task-augmented requests of `2025-11-25` nor the `io.modelcontextprotocol/tasks` extension of `2026-07-28` is supported, and the `2025-11-25` task fields are removed from the client and server types.
@@ -50,6 +55,12 @@ The modern protocol also changes several message shapes that the 1.x types canno
 - `structuredContent` may be any JSON value, not only an object, and `outputSchema` may have any root;
 - `tools/list` and `server/discover` results carry `ttlMs` and `cacheScope`;
 - change notifications are delivered through a `subscriptions/listen` request instead of the session's `GET` stream.
+
+### Tools need to ask the user for input
+
+A tool often needs something from the user partway through a call: a confirmation before a destructive action, a missing value, or an out-of-band step such as connecting a third-party account. The 1.x module has no way to ask. On the legacy protocol, a server would send an `elicitation/create` request to the client over the session's streams. The modern protocol has no session and no server-initiated requests, so the request cannot stay open while the user answers. Instead, the tool ends the request with an input-required result, and the client sends a new request, a continuation, with the answers.
+
+The server keeps nothing between rounds. Whatever it needs to resume travels through the client as opaque request state, which the specification requires the server to protect whenever it affects behavior. Left to each tool, that protection would be easy to omit, and state could be forged, replayed on another call, or reused by another user.
 
 ### The ecosystem moves at different speeds
 
@@ -170,6 +181,8 @@ public type StreamableHttpServiceConfiguration record {|
     HttpSessionMode sessionMode = AUTO;
     # Caching hints sent to modern clients on cacheable results
     CacheHints cacheHints = {};
+    # Signing of the request state returned in input-required results
+    RequestStateConfig requestState = {};
 |};
 
 public annotation StreamableHttpServiceConfiguration StreamableHttpServiceConfig on service;
@@ -211,7 +224,8 @@ In addition to `anydata` arguments, a basic tool can bind:
 - `mcp:HttpSession` or `mcp:HttpSession?`, at any position, for legacy session state. Unlike 1.x, it no longer has to be the first parameter;
 - `mcp:RequestMeta?` (renamed from `mcp:Meta`), at any position, for the request's `_meta`. It must be nilable, because clients may omit `_meta`;
 - `@http:Header` parameters, `http:Headers` and `http:Request`, as defined in the transport-specific service types proposal;
-- `mcp:AuthContext` or `mcp:AuthContext?`, at any position, for the authenticated caller (see [Service authorization](#service-authorization)).
+- `mcp:AuthContext` or `mcp:AuthContext?`, at any position, for the authenticated caller (see [Service authorization](#service-authorization));
+- `mcp:Context`, at any position, for the input responses and request state of a continuation (see [Multi round-trip requests](#multi-round-trip-requests)).
 
 Runtime parameters are not part of the generated input schema. An omitted defaultable argument takes its default value.
 
@@ -230,7 +244,7 @@ public type ResultMeta record {
 
 #### Structured output
 
-A basic tool may return any `anydata` value. The compiler generates an `outputSchema` from the return type, and `@mcp:Tool` can override it:
+A basic tool may return any `anydata` value. The compiler generates an `outputSchema` from the return type, and `@mcp:Tool` can override it. An `mcp:InputRequiredResult` in the return type is not part of the generated schema:
 
 ```ballerina
 public type McpToolConfig record {|
@@ -298,7 +312,7 @@ remote isolated function onCallTool(CallToolParams params)
 - These methods can bind the same HTTP request values as basic tools. `onCallTool` reads request metadata from `params._meta`.
 - The `cursor` parameter of `onListTools` is optional. A service that declares it receives the request's cursor, and can return the tools in pages by setting `nextCursor`. A basic service always returns all of its tools in one page.
 - For a legacy request, the library keeps results within the legacy schema. It removes an `outputSchema` or `structuredContent` whose root is not an object, and rejects an `InputRequiredResult`.
-- `onCallTool` may return `InputRequiredResult` to a modern request. The input-request design is out of scope for this proposal (see [Non-Goals](#non-goals)).
+- `onCallTool` may return `InputRequiredResult` to a modern request, and receives the input responses and verified request state of a continuation in `params` (see [Multi round-trip requests](#multi-round-trip-requests)).
 
 #### Tool errors
 
@@ -310,6 +324,8 @@ The specification separates tool execution errors, which are returned in the too
 | A basic tool panics | A `CallToolResult` with `isError: true` and a generic message |
 | A tool or an advanced service method returns an `mcp:InsufficientScopeError` | HTTP `403` with an `insufficient_scope` challenge (see [Service authorization](#service-authorization)) |
 | An HTTP request value cannot be bound to a parameter | A JSON-RPC `INVALID_PARAMS` error |
+| A continuation's request state fails verification | A JSON-RPC `INVALID_PARAMS` error, before the tool runs (see [Request state](#request-state)) |
+| A tool or `onCallTool` returns an invalid `InputRequiredResult` | A JSON-RPC `INTERNAL_ERROR`, or `MISSING_REQUIRED_CLIENT_CAPABILITY` for an undeclared elicitation mode (see [Validation](#validation)) |
 | An advanced service method returns a `ServerError` | A JSON-RPC error with the `ServerError` message |
 | An advanced service method returns another error, or panics | A JSON-RPC `INTERNAL_ERROR` with a generic message |
 
@@ -544,10 +560,10 @@ public type StreamableHttpClientConfig record {|
     HttpClientConfig httpConfig = {};
     # Reuse of modern results; `()` disables it
     ResultCacheConfig? resultCache = {};
-    # Callback for input-required continuations
-    InputHandler inputHandler?;
+    # Answers elicitations in input-required results, and advertises the elicitation capability
+    ElicitationHandler elicitationHandler?;
     # Maximum number of input-required continuations per call
-    int maxInputRounds = 8;
+    int maxInputRounds = 10;
     # Legacy session to resume; cannot be combined with `"modern"`
     string sessionId?;
 |};
@@ -606,7 +622,7 @@ On the modern protocol, the client:
 - refetches the tool list and retries the call once when a call fails with `HEADER_MISMATCH`, which usually means the cached schema is out of date;
 - requires `resultType`, `ttlMs` and `cacheScope` on `tools/list` results.
 
-`callTool()` returns when the call completes. If a modern server returns `InputRequiredResult`, it calls the configured `inputHandler`, echoes `requestState` unchanged, and retries, up to `maxInputRounds`. `callToolOnce()` performs one request and returns `CallToolResult|InputRequiredResult`, so that the application can handle continuations itself. On a legacy connection it behaves like `callTool()`. As noted in [Non-Goals](#non-goals), the input handler API will be revisited in a separate proposal.
+`callTool()` returns when the call completes. If a modern server returns `InputRequiredResult`, it answers the input requests through `elicitationHandler` and sends continuations until the call completes, up to `maxInputRounds` (see [Client handling](#client-handling)). `callToolOnce()` performs one request and returns `CallToolResult|InputRequiredResult`, so that the application can handle continuations itself. On a legacy connection it behaves like `callTool()`.
 
 #### Result caching
 
@@ -727,6 +743,184 @@ For the ID-JAG flow, `exchangeIdTokenForIdJag(idToken, context, IdentityProvider
 
 OAuth failures are returned as `mcp:AuthorizationError`. When a token endpoint rejects a request, the cause chain contains an `mcp:OAuthTokenError`, whose `detail()` carries the OAuth `error`, `error_description`, `error_uri`, the HTTP status and, for `insufficient_user_authentication`, `max_age`.
 
+### Multi round-trip requests
+
+On the modern protocol, a server cannot send a request to the client during a tool call. A tool that needs input returns an input-required result instead of its result. The result lists the input requests the client must answer, keyed by names the server chooses, and may carry request state. The client answers them and retries the call as a continuation: a new `tools/call` request, with a new JSON-RPC ID, that carries the answers in `inputResponses` and echoes `requestState` unchanged. Rounds repeat until the tool completes.
+
+The module supports multi round-trip requests on the modern protocol, for `tools/call`, with elicitation as the only kind of input request. An elicitation asks the user, either through a form that the client renders or through a URL that the user opens. A result may also carry request state without input requests, which asks the client to retry later, for example while the server sheds load.
+
+#### Input-required results
+
+```ballerina
+public type InputRequiredResult record {
+    *ResultFields;
+    "input_required" resultType = "input_required";
+    # Input requests keyed by server-assigned names
+    map<InputRequest> inputRequests?;
+    # Opaque server state that clients must echo without modification
+    string requestState?;
+};
+
+# Elicitation is the only kind of input request
+public type InputRequest ElicitRequest;
+public type InputResponse ElicitResult;
+
+public type ElicitRequest record {|
+    "elicitation/create" method = "elicitation/create";
+    FormElicitationParams|UrlElicitationParams params;
+|};
+
+public type FormElicitationParams record {|
+    "form" mode = "form";
+    string message;
+    FormSchema requestedSchema;
+|};
+
+public type UrlElicitationParams record {|
+    "url" mode;
+    string message;
+    # Absolute URL of the out-of-band page
+    string url;
+|};
+
+public type ElicitResult record {
+    *ResultFields;
+    "accept"|"decline"|"cancel" action;
+    # Submitted form values, keyed by field name
+    map<ElicitationValue> content?;
+};
+
+public type ElicitationValue string|int|float|decimal|boolean|string[];
+```
+
+`CallToolParams` carries `inputResponses` (`map<InputResponse>`) and `requestState` on a continuation.
+
+`FormSchema` is the restricted JSON Schema of an elicitation form: a flat object whose `properties` are a closed union of string, number or integer, boolean, single-select enum (`enum`, or `oneOf` with titles) and multi-select enum (`items.enum`, or `items.anyOf` with titles) field schemas, each with the attributes the specification allows. Nested objects and other JSON Schema keywords cannot be expressed. The older single-select shape with labels in `enumNames` is typed as `LegacyTitledEnumFieldSchema`, so that the client accepts it from other servers, but a service cannot send it.
+
+Two builders create elicitations:
+
+```ballerina
+public isolated function elicitForm(string message, FormSchema|typedesc<record {}> schema)
+        returns ElicitRequest;
+
+public isolated function elicitUrl(string message, string url) returns ElicitRequest;
+```
+
+`elicitForm` accepts a form schema value or a named record type. For a record type, the compiler plugin generates the form schema at compile time: each field becomes a form field, its doc comment becomes the field's description, and optional fields and fields with defaults are left out of `required`. A field must be a `string`, `int`, `float`, `decimal` or `boolean`, a union of string constants or an `enum`, or an array of a union of string constants. Any other field type, and a record type that is not named at the call site, is a compile error.
+
+#### Asking from a basic tool
+
+A basic tool asks for input by returning `mcp:InputRequiredResult` instead of its result. It reads the answers on the continuation through an `mcp:Context` parameter:
+
+```ballerina
+public isolated readonly class Context {
+    # The request state the tool returned in the previous round, as the plain text it wrote
+    public isolated function requestState() returns string?;
+
+    # The raw answer to an input request, or `()` if it was not answered
+    public isolated function elicitResult(string key) returns ElicitResult?;
+
+    # The submitted content as `contentType`, or `()` if the answer is missing, was not
+    # accepted, or does not convert to `contentType`
+    public isolated function acceptedContent(string key, typedesc<map<anydata>> contentType = <>)
+            returns contentType?;
+}
+```
+
+```ballerina
+type TableBooking record {|
+    # Who the table is for
+    string name;
+    # How many people are coming
+    int guests;
+    # Anything the kitchen should know
+    string notes?;
+|};
+
+remote isolated function bookTable(mcp:Context context) returns string|mcp:InputRequiredResult {
+    TableBooking? booking = context.acceptedContent("booking");
+    if booking is () {
+        return {inputRequests: {"booking": mcp:elicitForm("Book a table", TableBooking)}};
+    }
+    return string `Booked for ${booking.name}`;
+}
+```
+
+- `acceptedContent` returns `()` for a missing, declined, cancelled or mismatched answer, so a tool can treat `()` as "ask again". `elicitResult` tells a decline from a cancel.
+- `mcp:Context` covers one round and is read-only. State that must survive between rounds goes in the request state.
+- The tool runs again from the top on every continuation, with no pause and resume, because a continuation may reach another replica. This matches the TypeScript, Python and FastMCP SDKs. Work done before the tool decides to ask is repeated on every round, so it must be safe to repeat.
+- On a legacy call, `mcp:Context` is empty, so a tool that does not need input still serves legacy clients. A tool that returns `mcp:InputRequiredResult` to a legacy request gets a JSON-RPC error.
+
+An `accept` answer to a URL elicitation means only that the user agreed to open the URL, not that the out-of-band step is done. The service learns of completion out of band and returns the URL elicitation again on each continuation until the step is done. Since anyone can open the URL, the page must check that the user who opens it is the user the elicitation was issued to, for example by recording the `mcp:AuthContext` subject when the link is issued.
+
+#### Asking from an advanced service
+
+`onCallTool` returns `InputRequiredResult` in the same way, and can use the same builders. On a continuation, `params.inputResponses` holds the answers and `params.requestState` holds the verified plain text that the method returned in the previous round. On a legacy call, `params` carries neither field.
+
+#### Validation
+
+Before sending an input-required result, the dispatcher checks it:
+
+- A result with neither `inputRequests` nor `requestState` is rejected with `INTERNAL_ERROR`.
+- A form elicitation with a blank message or an inconsistent form schema, such as a `required` field missing from `properties`, inverted or negative bounds, an empty enum or a default outside the enum, is rejected with `INTERNAL_ERROR`.
+- A URL elicitation with a blank message, or a URL without a scheme and a host, is rejected with `INTERNAL_ERROR`. `http` URLs are allowed, for development.
+- An elicitation in a mode the client did not declare is rejected with `MISSING_REQUIRED_CLIENT_CAPABILITY`, whose `requiredCapabilities` names the mode. An empty `elicitation` capability declares form mode.
+
+#### Request state
+
+The module protects request state for every service. When a tool or `onCallTool` returns request state, the dispatcher signs it with HMAC-SHA256. On the continuation, it verifies the state before the handler runs, and passes the handler the plain text it wrote. The signature binds the state to:
+
+- the tool name and a digest of the call's arguments, independent of key order;
+- the caller's `mcp:AuthContext` (issuer, client and subject), or to having no auth context;
+- an expiry, renewed on every round, which bounds the idle time of each round rather than the length of a flow.
+
+A continuation whose request state is malformed, tampered with, expired, or issued for another call or caller is rejected with `INVALID_PARAMS`, the message `Invalid or expired requestState` and `data.reason` set to `invalid_request_state`, as in the TypeScript and Python SDKs. The specific reason is logged on the server only.
+
+Request state is signed, not encrypted. The client can read it, so handlers must not put secrets in it. The signed format is versioned, so that encryption can be added as an option without changing what handlers see.
+
+Signing is configured through `requestState`:
+
+```ballerina
+public type RequestStateConfig record {|
+    # Signing secrets, each at least 32 bytes. The first signs and all verify.
+    string[] keys = [];
+    # Seconds a request state stays valid, renewed on every round. Must be positive.
+    decimal ttl = 600;
+|};
+```
+
+- A key is rotated by putting its replacement first, and removing the old key once its state has expired.
+- Without keys, each service generates a random key when it is attached. Its state does not survive a restart and is not accepted by other services or replicas, so a service with several replicas must configure the same keys on each.
+- `attach` returns an error for a key shorter than 32 bytes or a `ttl` that is not positive.
+
+#### Client handling
+
+The client answers elicitations through a typed handler, configured as `elicitationHandler`:
+
+```ballerina
+public type ElicitationHandler isolated function (ElicitRequest elicitRequest)
+        returns ElicitResult|ClientError;
+```
+
+- Configuring the handler advertises the `elicitation` capability with form and URL modes on every modern request, merged with the capabilities passed to `connect()`.
+- `callTool()` calls the handler once for each input request, one at a time, in the order the server listed them. It removes `content` from decline, cancel and URL-mode answers, so that only an accepted form sends what the user submitted.
+- The continuation echoes `requestState` byte for byte, or leaves it out when the server sent none, and leaves out `inputResponses` when nothing was asked.
+- A result with request state and no input requests is retried after a backoff that starts at 50 ms and doubles up to 250 ms.
+- After `maxInputRounds` continuations, `callTool()` returns a `ToolCallError` whose detail carries the last `InputRequiredResult`. It returns the same error when the server asks for input and no handler is configured. An error returned by the handler is returned as is, and no continuation is sent.
+- The client does not validate answers against the form schema, and never opens or fetches the URL of a URL elicitation. The handler presents the URL, and returns `accept` once the user agrees to open it.
+
+```ballerina
+mcp:StreamableHttpClient mcpClient = check new ("http://localhost:9090/mcp",
+    elicitationHandler = isolated function (mcp:ElicitRequest request)
+            returns mcp:ElicitResult|mcp:ClientError {
+        if request.params is mcp:UrlElicitationParams {
+            return {action: "decline"};
+        }
+        return {action: "accept", content: {name: "Ann", guests: 2}};
+    }
+);
+```
+
 ### Errors
 
 The public error hierarchy is reduced to the types applications act on. Transport and decoder errors become module-private subtypes.
@@ -744,7 +938,7 @@ Error
 └── OAuthTokenError
 ```
 
-`ToolCallError` means the client could not complete or accept a tool call: the continuation limit is reached (the detail carries the last `InputRequiredResult`), the tool is not in the cached tool list, an argument cannot be copied into its header, a result is malformed, or a declared `outputSchema` comes back without `structuredContent`. A tool execution error is not a `ClientError`: it arrives as a `CallToolResult` with `isError: true`. A JSON-RPC error response is a `ProtocolError`, including a `HEADER_MISMATCH` that remains after the retry described in [Modern requests](#modern-requests).
+`ToolCallError` means the client could not complete or accept a tool call: the continuation limit is reached or a server asks for input without an `elicitationHandler` (the detail carries the last `InputRequiredResult`), the tool is not in the cached tool list, an argument cannot be copied into its header, a result is malformed, or a declared `outputSchema` comes back without `structuredContent`. A tool execution error is not a `ClientError`: it arrives as a `CallToolResult` with `isError: true`. A JSON-RPC error response is a `ProtocolError`, including a `HEADER_MISMATCH` that remains after the retry described in [Modern requests](#modern-requests).
 
 The modern error codes are public constants: `HEADER_MISMATCH` (`-32020`), `MISSING_REQUIRED_CLIENT_CAPABILITY` (`-32021`) and `UNSUPPORTED_PROTOCOL_VERSION` (`-32022`).
 
@@ -761,6 +955,8 @@ In addition to the 1.x checks, the compiler plugin reports:
 | Error | An invalid `@mcp:Argument` header name, or a header name used twice in a tool, compared case-insensitively. |
 | Error | `@mcp:Argument` combined with an explicit `@mcp:Tool.schema`, since the schema would not contain the header declaration. |
 | Error | `@mcp:Tool` with `structuredOutput: false` and an explicit `outputSchema`. |
+| Error | A record type passed to `mcp:elicitForm` with a field that cannot be a form field. |
+| Error | A schema passed to `mcp:elicitForm` that is neither a form schema value nor a named record type. |
 
 The 1.x diagnostics that named `mcp:Session` and `mcp:Meta` now name `mcp:HttpSession` and `mcp:RequestMeta`. The diagnostic requiring the session parameter to be first is removed, since `mcp:HttpSession` can be declared at any position. The diagnostic for transport-specific parameters on `mcp:Service` is removed together with that type.
 
@@ -867,12 +1063,12 @@ Version 2.0 is a major release with breaking API changes. Wire compatibility wit
 
 ## Future Plans
 
-- **Multi round-trip requests.** Elicitation from tools through `InputRequiredResult`, with a typed client handler and signed `requestState`, will be proposed separately.
+- **Encrypted request state**, as an option for handlers that must keep request state confidential.
 - **Additional transports.** A stdio transport, with transport-agnostic service types reintroduced alongside it.
 - **Change notifications.** `subscriptions/listen` on the client and on advanced services, starting with `notifications/tools/list_changed`, with cached tool lists dropped when it arrives. It can be added in a minor release, since it only adds an optional service method, a client method and new types.
-- **Prompts and resources.** Server and client support for the remaining primitives, including their list-changed notifications and resource subscriptions.
+- **Prompts and resources.** Server and client support for the remaining primitives, including their list-changed notifications, resource subscriptions and input-required results.
 - **Native JSON Schema validation**, once the language provides it, so that `InputSchema` and `OutputSchema` can be enforced at runtime.
 
 ## Conclusion
 
-Version 2.0 lets Ballerina clients and services use MCP `2026-07-28` without breaking communication with the existing ecosystem. Protocol selection is explicit on the client and per request on the server. Session-dependent designs are reported at compile time, and caching is opt-in on the server and automatic on the client. The client handles MCP authorization itself. The release also completes the move to explicit Streamable HTTP names, which leaves a single, consistent API to build further protocol features on.
+Version 2.0 lets Ballerina clients and services use MCP `2026-07-28` without breaking communication with the existing ecosystem. Protocol selection is explicit on the client and per request on the server. Session-dependent designs are reported at compile time, and caching is opt-in on the server and automatic on the client. Tools ask the user for input through multi round-trip requests, with request state protected by the module. The client handles MCP authorization and elicitation continuations itself. The release also completes the move to explicit Streamable HTTP names, which leaves a single, consistent API to build further protocol features on.
