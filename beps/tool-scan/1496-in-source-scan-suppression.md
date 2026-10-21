@@ -136,6 +136,8 @@ A finding is suppressed when its reported location falls **wholly within** the a
 
 Where annotations nest, **the innermost annotation that applies to the rule wins**: it supplies the recorded justification and it is the one credited with the match. An annotation on an inner construct naming an unrelated rule does not cancel an accepted exception on an enclosing one — the stricter reading would make a declaration-scoped suppression stop applying the moment anyone added an unrelated annotation inside the body.
 
+On one construct, when more than one annotation applies to the rule, **the annotation that names the rule wins over one that names none**, and among equally specific annotations the first in source order wins. A blanket annotation beside a rule-specific one therefore never takes the rule-specific one's justification or match: it is credited only with the findings no named annotation claims, and reported as unmatched when there are none.
+
 ### Placement
 
 Of the 42 rules in `bal scan` 0.12.0, 40 are suppressed at the declaration that produces the finding or at the statement that contains it. The other two fall back to the enclosing function or resource.
@@ -238,10 +240,10 @@ the answers are:
 |---|---|---|
 | What was accepted | `ballerina/crypto:2`, in this declaration, in this file | the annotation's rule list and the construct it is attached to |
 | Why | a legacy hash kept for a migration window, tracked as SEC-1042 | the `reason` field |
-| By whom | the author of the line, and the reviewer who approved the change | version control |
+| By whom | the author of the line | version control |
 | When | the commit date | version control |
 
-The annotation deliberately does not carry an author or a date. Recording them in the source means two more fields to write, to keep accurate, and to lie in — while version control already answers both, and cannot be edited without leaving a trace. This division is the strongest argument for in-source suppression over an external suppression list, where the last two questions have no answer at all.
+The annotation deliberately does not carry an author or a date. Recording them in the source means two more fields to write, to keep accurate, and to lie in — while version control already answers both, and cannot be edited without leaving a trace. This division is the strongest argument for in-source suppression over an external suppression list, where the last two questions have no answer at all. Version control records who wrote and committed the change, not who approved it; approval lives in the code-review record of the hosting platform, and an audit that treats it as evidence relies on that platform's records, which this proposal does not define.
 
 ### Configuration
 
@@ -329,7 +331,7 @@ Two consequences follow, and both are deliberate.
 
 **Exclusion and suppression differ in what reaches the output.** An excluded finding is *absent*: no record, nothing to review. A suppressed finding is *present and marked*, with its justification. This is the whole reason both exist — exclusion says "not applicable", suppression says "applicable, and accepted". A team that wants an auditable trail must suppress rather than exclude, and the documentation should say so plainly.
 
-Between annotations, the innermost one naming the rule wins, as described under Binding.
+Between annotations, the innermost one applying to the rule wins, and on one construct the one naming the rule, as described under Binding.
 
 ### Scope of the audit run
 
@@ -503,7 +505,7 @@ Beyond that:
 - Each requirement, independently: off, the annotation suppresses silently; on, it still suppresses and the scan fails with an error naming the annotation's file and line. Both on together. A command-line option switches a requirement on, and cannot switch off one the configuration file sets.
 - `enabled = false`: every finding is reported from both entry points, and requirement violations are still reported.
 - Binding: a finding inside the annotated construct is suppressed; a finding outside it is not; a service, class or object-type annotation does not cover findings inside its members.
-- Scoping: a nested annotation naming the same rule overrides an outer one; a nested annotation naming a different rule does not; no leakage to siblings; two annotations on one construct combine, each with its own justification.
+- Scoping: a nested annotation naming the same rule overrides an outer one; a nested annotation naming a different rule does not; no leakage to siblings; two annotations on one construct combine, each with its own justification; a rule-specific annotation beside a blanket one on the same construct supplies the justification and the match, whichever comes first.
 - Restructuring patterns: each pattern keeps the finding inside the annotated declaration.
 - Regression tests for both known compiler defects once fixed.
 - Reporting: SARIF suppression entries carry `kind`, `status` and the justification; once a run has a suppressed result every other result carries an empty array, and a run without one carries none; JSON mirrors SARIF; console summary and unmatched diagnostics are correct; the HTML report and platform plugins receive unsuppressed findings only.
