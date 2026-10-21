@@ -195,14 +195,14 @@ The configuration is an included record parameter on both clients' `init`, so ca
 public type RetryConfig record {|
     RetryPolicyType retryPolicyType = EXPONENTIAL;   // EXPONENTIAL | FIXED_INTERVAL
     int maxTries = 4;
-    decimal tryTimeoutSeconds = 60;
-    decimal retryDelaySeconds = 4;
-    decimal maxRetryDelaySeconds = 120;
+    decimal tryTimeout = 60;
+    decimal retryDelay = 4;
+    decimal maxRetryDelay = 120;
     string secondaryHostUrl?;                        // geo-redundant read retries
 |};
 ```
 
-The defaults are shared with the sibling connector. Each try is bounded by `tryTimeoutSeconds`, so a stalled request fails rather than hanging a strand, and `retryDelaySeconds` is the base delay under both policy types.
+The defaults are shared with the sibling connector. Each try is bounded by `tryTimeout`, so a stalled request fails rather than hanging a strand, and `retryDelay` is the base delay under both policy types.
 
 #### 2.6 Transport configuration
 
@@ -215,9 +215,9 @@ public type TransportConfig record {|
 
 public type ConnectionPoolConfig record {|
     int maxConnections = 50;
-    decimal idleTimeoutSeconds = 60;
-    decimal connectTimeoutSeconds = 10;
-    decimal readTimeoutSeconds = 60;
+    decimal idleTimeout = 60;
+    decimal connectTimeout = 10;
+    decimal readTimeout = 60;
 |};
 ```
 
@@ -459,8 +459,8 @@ public type ServiceConfiguration record {|
     string poisonQueueName?;                 // default "{queueName}-poison"
     int batchSize = 16;                      // messages per receive, 1 to 32
     int newBatchThreshold?;                  // refill trigger, 0 to batchSize; default half, rounded down
-    decimal maxPollingIntervalSeconds = 60;  // ceiling of the empty-queue backoff; above 0
-    decimal redeliveryDelaySeconds = 0;      // invisibility after a handler failure; 0 to 604,800
+    decimal maxPollingInterval = 60;  // ceiling of the empty-queue backoff; above 0
+    decimal redeliveryDelay = 0;      // invisibility after a handler failure; 0 to 604,800
     int maxDeliveryCount = 5;                // deliveries before the poison queue; at least 1;
                                              // 1 poisons any unsettled delivery, routine shutdowns
                                              // and redeploys included, on its next receipt
@@ -491,7 +491,7 @@ public isolated function parseEvent(anydata message) returns BlobEvent|Error?;
 isolated service on blobListener {
     isolated remote function onBlobJson(Invoice invoice, blob:BlobEvent event, blob:Caller caller)
             returns blob:DeadLetterError|blob:RetryError|error?;
-    isolated remote function onBlobDeleted(blob:BlobEvent event, blob:Caller caller) returns error?;
+    isolated remote function onBlobDelete(blob:BlobEvent event, blob:Caller caller) returns error?;
     isolated remote function onError(blob:Error err, blob:BlobEvent? event, blob:Caller? caller) returns error?;
 }
 ```
@@ -520,10 +520,10 @@ The checks, and the setting ranges commented above, run at `attach`, and at comp
 | `onBlobJson` | `json`, or a record | a created `.json` blob |
 | `onBlobXml` | `xml`, or a record | a created `.xml` blob |
 | `onBlobCsv` | `string[][]`, a record array, `stream<string[], error?>`, or `stream<record {}, error?>` | a created `.csv` blob |
-| `onBlobDeleted` | `BlobEvent` | a deleted blob |
+| `onBlobDelete` | `BlobEvent` | a deleted blob |
 | `onError` | `Error` | a failed receive, an unparseable message, a message past `maxDeliveryCount`, a fetch, binding or `Caller` build failure, or a failed or transiently skipped poison move |
 
-A content handler takes `(content, BlobEvent?, Caller?)` and `onBlobDeleted` takes `(BlobEvent, Caller?)`; the listener passes only what is declared. A service declares at least one of the six event handlers. An event handler returns `error?`, optionally listing `blob:DeadLetterError` and `blob:RetryError` (5.4). The compiler plugin validates handlers, parameters and returns.
+A content handler takes `(content, BlobEvent?, Caller?)` and `onBlobDelete` takes `(BlobEvent, Caller?)`; the listener passes only what is declared. A service declares at least one of the six event handlers. An event handler returns `error?`, optionally listing `blob:DeadLetterError` and `blob:RetryError` (5.4). The compiler plugin validates handlers, parameters and returns.
 
 | `onError` form | Receives |
 |---|---|
@@ -552,7 +552,7 @@ public annotation FunctionConfiguration FunctionConfig on object function;
 | an event type the listener does not dispatch (5.3) | `includedEventTypes` |
 | a created blob whose routing finds no declared handler and no `onBlob` | an advanced `StringNotEndsWith` on `subject` with that extension, or `StringEndsWith` with the handled ones (or `subjectEndsWith`, one suffix) |
 | a no-content created event (5.3) | `StringNotIn` on `data.api` with `CreateFile`, `SftpCreate`, `SftpWrite`; for append and page creates, on `data.blobType` with `AppendBlob`, `PageBlob`, also dropping their copies and deletes |
-| a deleted blob on a service without `onBlobDeleted` | `includedEventTypes` |
+| a deleted blob on a service without `onBlobDelete` | `includedEventTypes` |
 
 Microsoft documents that a missing key fails `StringNotEndsWith` and `StringNotBeginsWith` and passes `StringNotIn`; a live probe (custom topic, 2026-10-17) observed missing and null keys and empty data passing both `StringNotIn` and `StringNotEndsWith`; the advice relies only on `StringNotIn` for keys that can be absent. The first time each kind is seen on a queue, a WARNING names the queue and the filter, and an unrouted blob's extension; repeats log at debug with a count.
 
@@ -573,7 +573,7 @@ When a listener-produced stream fails to bind an item, a returned `DeadLetterErr
 | Event Grid type | Dispatched to | Note |
 |---|---|---|
 | `Microsoft.Storage.BlobCreated` | the content handlers | fires for creation **and** replacement, indistinguishably; a no-content created event, from an operation committing no content (`CreateFile`, `SftpCreate`, `SftpWrite`) or a `PutBlob` whose `blobType` is `AppendBlob` or `PageBlob` (no written content; a `CopyBlob` of one dispatches), is never handled; an absent or unknown `blobType` dispatches |
-| `Microsoft.Storage.BlobDeleted` | `onBlobDeleted` | |
+| `Microsoft.Storage.BlobDeleted` | `onBlobDelete` | |
 | `BlobTierChanged`, `AsyncOperationInitiated`, `BlobRenamed`, `DirectoryCreated`, `DirectoryRenamed`, `DirectoryDeleted`, `BlobInventoryPolicyCompleted`, `LifecyclePolicyCompleted` | not dispatched; acknowledged with a warning | the first two are Future Work |
 
 Content is committed by a block blob's PutBlob, PutBlockList, CopyBlob, FlushWithClose and SftpCommit; `AsyncOperationInitiated` marks archive rehydration (Set Blob Tier, or Copy Blob from an archived blob) on any account, and on a hierarchical-namespace account a copy that does not finish at once, before its `BlobCreated` on commit. Metadata, property, and index-tag changes fire nothing, and on a flat-namespace account neither does an append. Event Grid and CloudEvents schemas are both accepted, detected per message.
@@ -626,13 +626,13 @@ Delivery is at-least-once, so handlers are idempotent. A handler writing into a 
 | Handler outcome | The message |
 |---|---|
 | returns `()` | deleted |
-| returns any other error, or panics | visible again after `redeliveryDelaySeconds`; at `maxDeliveryCount` deliveries, moved to the poison queue |
+| returns any other error, or panics | visible again after `redeliveryDelay`; at `maxDeliveryCount` deliveries, moved to the poison queue |
 | returns `DeadLetterError` | moved to the poison queue now |
-| returns `RetryError` | visible again after its `delaySeconds`; the retry counts toward `maxDeliveryCount` |
+| returns `RetryError` | visible again after its `delay`; the retry counts toward `maxDeliveryCount` |
 | returns `RetryError` on the final delivery | moved to the poison queue; the delay is ignored |
 | any redelivery delay that would land at or within one hold window of the message's expiry | moved to the poison queue now; never under an infinite message time to live |
 
-`delaySeconds` and `redeliveryDelaySeconds` are rounded up to whole seconds; `delaySeconds` is a requested minimum (negative is 0, capped at 604,800), while `redeliveryDelaySeconds` must lie in 0 to 604,800. The two errors count only when returned unwrapped, in any event handler; a panic is always an ordinary failure.
+`delay` and `redeliveryDelay` are rounded up to whole seconds; `delay` is a requested minimum (negative is 0, capped at 604,800), while `redeliveryDelay` must lie in 0 to 604,800. The two errors count only when returned unwrapped, in any event handler; a panic is always an ordinary failure.
 
 A poison move first checks the hold with a retry-free update, timed out at the lesser of 30 seconds and the hold remaining; its visibility is a renewal's: the ten-minute window, clamped to end 60 seconds before the message's expiry. A pop-receipt mismatch or not found skips the move, only logged; a transient failure skips it and notifies `onError`, under renewal, after which renewal stops and the message returns at its window's end. Only inside the last minute does it send unchecked, risking a rare duplicate. After the check it sends a verbatim copy, creating a missing poison queue, and deletes the original. Poison messages never expire; the dequeue count restarts there.
 
@@ -647,7 +647,7 @@ A failed settlement step is logged at ERROR with the message id; a failed or tra
 
 A received message is hidden for 10 minutes and renewed every 5 minutes while its handler or `onError` runs; a hung one keeps the message and a concurrency slot, warning at each full hold window. Each renewal call times out at the lesser of 30 seconds and the hold remaining, without SDK retries, and is scheduled from the previous attempt's start. After a transient failure (server, network, timeout) the interval halves, to a floor of 1 minute, with a warning, and resets after a success; one hung renewal never delays another. Renewal and settlement of a message are serialised; settlement uses the newest pop receipt and, the hold check aside, keeps `retryConfig`. Renewal is clamped to 60 seconds before expiry and stops when the message is no longer ours (a pop-receipt mismatch, a message or queue not found, a queue being deleted, a refused visibility past expiry), when the expiry margin is reached (logged at ERROR), or on disposal, including after a failed or skipped settlement step. A renewal succeeding on the server but timing out on the client leaves no usable receipt; the message returns after the hold.
 
-An empty queue is re-polled on a randomized exponential backoff rising to `maxPollingIntervalSeconds`. A receive fetches `batchSize` messages, and the next is fetched once the events in hand fall to `newBatchThreshold`. Up to `batchSize + newBatchThreshold` events are in flight: an `isolated service` with isolated handlers runs them fully in parallel, a non-isolated one in turn at the runtime's lock, interleaving while one waits on I/O (every connector call), so only its Ballerina code is serialised; declare it isolated or lower its `batchSize`. A failed receive reaches only the owning service's `onError`, naming the queue, and the queue keeps retrying.
+An empty queue is re-polled on a randomized exponential backoff rising to `maxPollingInterval`. A receive fetches `batchSize` messages, and the next is fetched once the events in hand fall to `newBatchThreshold`. Up to `batchSize + newBatchThreshold` events are in flight: an `isolated service` with isolated handlers runs them fully in parallel, a non-isolated one in turn at the runtime's lock, interleaving while one waits on I/O (every connector call), so only its Ballerina code is serialised; declare it isolated or lower its `batchSize`. A failed receive reaches only the owning service's `onError`, naming the queue, and the queue keeps retrying.
 
 **Attaching, detaching and stopping never discard in-flight work.**
 
@@ -681,11 +681,11 @@ An Event Grid subscription already filters by path and event type, and an accoun
 
 #### Why settlement follows the return value
 
-The runtime marks a service method's trace span as an error when it returns one, so settling through the return keeps spans truthful, which "settle, then return `()`" would not. It needs no per-event state on `Caller`, and it ports to SQS and Pub/Sub, whose deadlines take a delay the same way; hence `delaySeconds` is a requested minimum. `DeadLetterError` saves `maxDeliveryCount − 1` blob fetches on a permanent failure; `RetryError` honours a retry-after hint.
+The runtime marks a service method's trace span as an error when it returns one, so settling through the return keeps spans truthful, which "settle, then return `()`" would not. It needs no per-event state on `Caller`, and it ports to SQS and Pub/Sub, whose deadlines take a delay the same way; hence `delay` is a requested minimum. `DeadLetterError` saves `maxDeliveryCount − 1` blob fetches on a permanent failure; `RetryError` honours a retry-after hint.
 
 #### Why content is bound by handler type only
 
-A files listener has already read the file to detect it; this listener has read nothing, and a fetch is a download per event. An archived blob cannot be read at all. Declaring a content handler is therefore the request for content, and `onBlobDeleted` never carries any.
+A files listener has already read the file to detect it; this listener has read nothing, and a fetch is a download per event. An archived blob cannot be read at all. Declaring a content handler is therefore the request for content, and `onBlobDelete` never carries any.
 
 ### 6. Errors
 
@@ -706,7 +706,7 @@ public type InvalidBlobTypeError distinct ServiceError;
 public type ContentBindingErrorDetail record {| string containerName; string path; byte[] content?; |};
 public type ContentBindingError distinct (Error & error<ContentBindingErrorDetail>);
 public type DeadLetterError distinct Error;
-public type RetryErrorDetail record {| decimal delaySeconds; |};
+public type RetryErrorDetail record {| decimal delay; |};
 public type RetryError distinct (Error & error<RetryErrorDetail>);
 ```
 
@@ -728,7 +728,7 @@ A write other than `createSnapshot` against a leased blob without its lease id (
 |---|---|---|
 | `ContentBindingError` | a blob's content fails to bind to the handler's parameter type | `containerName`, `path`, and `content` when it was already read into memory |
 | `DeadLetterError` | a handler returns it, to move the message to the poison queue now | none |
-| `RetryError` | a handler returns it, to retry after `delaySeconds` | `delaySeconds`, a requested minimum |
+| `RetryError` | a handler returns it, to retry after `delay` | `delay`, a requested minimum |
 
 ### 7. Usage
 
@@ -782,7 +782,7 @@ isolated service on blobListener {
         check caller->setTags(event.path, {status: "processed"});
     }
 
-    isolated remote function onBlobDeleted(blob:BlobEvent event) returns error? {
+    isolated remote function onBlobDelete(blob:BlobEvent event) returns error? {
         io:println(string `${event.path} deleted`);
     }
 
@@ -1546,8 +1546,8 @@ public type SecureSocket record {|
     boolean sessionResumption?;
     boolean validateRevocation?;
     string sniHostName?;
-    decimal handshakeTimeoutSeconds?;
-    decimal sessionTimeoutSeconds?;
+    decimal handshakeTimeout?;
+    decimal sessionTimeout?;
 |};
 
 # A certificate and private key pair identifying the client for mutual TLS.
