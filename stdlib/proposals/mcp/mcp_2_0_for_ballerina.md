@@ -28,7 +28,7 @@ This proposal defines version 2.0 of `ballerina/mcp`. It:
 - Make protocol selection an explicit client step whose result is visible to the application.
 - Support the caching hints defined in `2026-07-28`, so that servers can mark results as reusable and clients reuse them.
 - Let tools ask the user for input during a call through multi round-trip requests, with typed elicitation in both service styles and a typed handler on the client.
-- Protect request state for every service by default, so that a client cannot forge it, reuse it on another call or by another caller, or present it after it expires.
+- Protect request state for every service by default, so that a client cannot forge it, use it with a different tool, arguments or auth context, or present it after it expires.
 - Let a client obtain its own access tokens from an MCP server's authorization server.
 - Let a service enforce MCP authorization: publish protected resource metadata, challenge requests without a valid token, accept only tokens issued for it, and require scopes per tool.
 
@@ -734,11 +734,38 @@ public type ClientAuth ClientSecretConfig|PrivateKeyJwtConfig|MutualTlsConfig;
 
 # A shared secret cannot be established through a metadata document
 public type CimdClientAuth PrivateKeyJwtConfig|MutualTlsConfig;
+
+public enum ClientSecretAuthMethod {
+    CLIENT_SECRET_BASIC = "client_secret_basic",
+    CLIENT_SECRET_POST = "client_secret_post"
+}
+
+public type ClientSecretConfig record {|
+    string clientSecret;
+    ClientSecretAuthMethod authMethod = CLIENT_SECRET_BASIC;
+|};
+
+# `private_key_jwt` client assertion (RFC 7523)
+public type PrivateKeyJwtConfig record {|
+    jwt:IssuerSignatureConfig signatureConfig;
+    # `kid` header of the assertion
+    string keyId?;
+|};
+
+# Certificate binding methods from RFC 8705
+public enum MutualTlsAuthMethod {
+    TLS_CLIENT_AUTH = "tls_client_auth",
+    SELF_SIGNED_TLS_CLIENT_AUTH = "self_signed_tls_client_auth"
+}
+
+# Client certificate, presented only on connections to the token endpoint
+public type MutualTlsConfig record {|
+    crypto:KeyStore|http:CertKey key;
+    MutualTlsAuthMethod authMethod;
+|};
 ```
 
-- `ClientSecretConfig`: `client_secret_basic` or `client_secret_post`.
-- `PrivateKeyJwtConfig`: `private_key_jwt` (RFC 7523).
-- `MutualTlsConfig`: `tls_client_auth` or `self_signed_tls_client_auth` (RFC 8705). The token endpoint alias in `mtls_endpoint_aliases` is used when published.
+With mutual TLS, the token endpoint alias in `mtls_endpoint_aliases` is used when published.
 
 A CIMD client cannot use a shared secret. `clientAuth` can be omitted for a public client, except with the client credentials grant.
 
@@ -1013,7 +1040,7 @@ public function main() returns error? {
         name: "forecast",
         arguments: {"region": "Colombo"}
     });
-    io:println(result.structuredContent);
+    io:println(result?.structuredContent);
 
     check mcpClient->close();
 }
