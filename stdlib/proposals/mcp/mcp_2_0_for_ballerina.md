@@ -569,7 +569,7 @@ public type StreamableHttpClientConfig record {|
 |};
 ```
 
-HTTP settings are grouped under `httpConfig`, as on the service side. `HttpClientConfig` has the fields of `http:ClientConfiguration`, in the same order and with the same defaults, with two exceptions: `auth` also accepts `mcp:OAuthConfig` (see [Authorization](#authorization)), and `followRedirects` is decided by the module when it is `()`:
+HTTP settings are grouped under `httpConfig`, as on the service side. `HttpClientConfig` has the fields of `http:ClientConfiguration`, in the same order and with the same defaults, with two exceptions: `auth` also accepts `mcp:OAuth2DiscoveryConfig` (see [Authorization](#authorization)), and `followRedirects` is decided by the module when it is `()`:
 
 ```ballerina
 public type HttpClientConfig record {|
@@ -583,7 +583,7 @@ public type HttpClientConfig record {|
     http:CacheConfig cache = {};
     http:Compression compression = http:COMPRESSION_AUTO;
     # An existing credential, or MCP authorization through OAuth
-    (http:ClientAuthConfig|OAuthConfig)? auth = ();
+    (http:ClientAuthConfig|OAuth2DiscoveryConfig)? auth = ();
     http:CircuitBreakerConfig? circuitBreaker = ();
     http:RetryConfig? retryConfig = ();
     http:CookieConfig? cookieConfig = ();
@@ -596,8 +596,8 @@ public type HttpClientConfig record {|
 |};
 ```
 
-- When `followRedirects` is `()`, redirects are followed, except with `mcp:OAuthConfig`. An explicit `followRedirects` is used as given.
-- With `mcp:OAuthConfig`, redirects are never followed: the client attaches the token itself, so a redirect could send it to another host or hide the authorization challenge. `init` returns an error if `followRedirects` enables them.
+- When `followRedirects` is `()`, redirects are followed, except with `mcp:OAuth2DiscoveryConfig`. An explicit `followRedirects` is used as given.
+- With `mcp:OAuth2DiscoveryConfig`, redirects are never followed: the client attaches the token itself, so a redirect could send it to another host or hide the authorization challenge. `init` returns an error if `followRedirects` enables them.
 - The OAuth metadata and token endpoint requests reuse `secureSocket` and `proxy`.
 
 #### Protocol selection
@@ -654,10 +654,12 @@ Servers default to `ttlMs: 0`, so caching changes nothing until a server opts in
 
 #### Authorization
 
-`httpConfig.auth` accepts either an existing credential (`http:ClientAuthConfig`) or an `mcp:OAuthConfig`. With `mcp:OAuthConfig`, the client implements MCP authorization (OAuth 2.1). On a `401` it reads the `WWW-Authenticate` challenge, fetches the protected resource metadata (RFC 9728) and the authorization server metadata (RFC 8414), runs the configured grant, attaches the access token, and refreshes or requests a new token when it expires. An `insufficient_scope` challenge triggers a step-up token request for the challenged scopes together with the scopes already granted.
+`httpConfig.auth` accepts either an existing credential (`http:ClientAuthConfig`) or an `mcp:OAuth2DiscoveryConfig`. With `mcp:OAuth2DiscoveryConfig`, the client implements MCP authorization (OAuth 2.1). On a `401` it reads the `WWW-Authenticate` challenge, fetches the protected resource metadata (RFC 9728) and the authorization server metadata (RFC 8414), runs the configured grant, attaches the access token, and refreshes or requests a new token when it expires. An `insufficient_scope` challenge triggers a step-up token request for the challenged scopes together with the scopes already granted.
 
 ```ballerina
-public type OAuthConfig record {|
+# OAuth 2.0 client authentication where the authorization server and token endpoint
+# are discovered from the target server (RFC 9728, RFC 8414)
+public type OAuth2DiscoveryConfig record {|
     ClientCredentialsGrant|AuthorizationCodeGrant|IdentityAssertionGrant grant;
     # Used only when the challenge and the protected resource metadata give no scopes
     string[] scopes?;
@@ -672,7 +674,7 @@ public type OAuthConfig record {|
 
 ```ballerina
 public type ClientCredentialsGrant record {|
-    ClientCredentialsClientConfig clientConfig;
+    ConfidentialClientConfig clientConfig;
 |};
 
 public type AuthorizationCodeGrant record {|
@@ -703,25 +705,26 @@ public type PreRegisteredClientConfig record {|
 
 public type CimdClientConfig record {|
     # HTTPS URL of the Client ID Metadata Document
-    string url;
+    string clientMetadataUrl;
     # Omit for a public client
     CimdClientAuth clientAuth?;
 |};
 
+# A public or confidential client
 public type OAuthClientConfig PreRegisteredClientConfig|CimdClientConfig;
 
-# The client credentials grant requires client authentication
-public type PreRegisteredClientCredentialsConfig record {|
+# A confidential client: the client credentials grant requires client authentication
+public type PreRegisteredConfidentialClientConfig record {|
     *PreRegisteredClientConfig;
     ClientAuth clientAuth;
 |};
 
-public type CimdClientCredentialsConfig record {|
+public type CimdConfidentialClientConfig record {|
     *CimdClientConfig;
     CimdClientAuth clientAuth;
 |};
 
-public type ClientCredentialsClientConfig PreRegisteredClientCredentialsConfig|CimdClientCredentialsConfig;
+public type ConfidentialClientConfig PreRegisteredConfidentialClientConfig|CimdConfidentialClientConfig;
 ```
 
 Client authentication at the token endpoint is one of:
