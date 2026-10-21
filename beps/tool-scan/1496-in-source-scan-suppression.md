@@ -108,7 +108,7 @@ jwt:Payload payload = check jwt:validate(token, {
 
 `ballerina/scan` ships a compiler plugin. Because it is a compiler plugin of a direct dependency, it runs on every package that imports `scan`, during `bal build`, `bal scan` and in the language server alike. For each `@scan:Suppress` annotation it resolves the identifiers against a rule catalog built the same way `bal scan` builds its own:
 
-- **Core rules** (`ballerina:<number>`) come from the tool's core rule list, bundled into the plugin when the package is built. The package is released with the tool, so the two lists cannot drift.
+- **Core rules** (`ballerina:<number>`) ship with the scan tool, not with the package. The plugin checks only their format; the running tool checks them against its own rule list, under `bal scan` and in the language server, and an unknown one is an error that fails the scan. A core rule added to the tool therefore needs no release of `ballerina/scan`.
 - **Analyzer rules** (`<org>/<package>:<number>`) come from the `rules.json` inside the compiler plugin of each direct dependency — exactly where `bal scan` reads them from. A rule added to `ballerina/http` is accepted as soon as the project depends on the version that defines it, with no change to `ballerina/scan`.
 - **Analyzers declared only in the scan configuration file** are not dependencies during an ordinary build, because `bal scan` adds them as imports only when it runs. The plugin cannot see their rules during `bal build`, so it reports a warning rather than an error. Under `bal scan` they are dependencies, and the same identifiers are checked strictly: an unknown one is a compile error, and the scan does not run.
 
@@ -353,6 +353,8 @@ The scan runs from two entry points, the command line and the language server, a
 
 **Additive.** No existing configuration changes meaning, and there are no suppressions in the field to migrate.
 
+**`ballerina/scan` is versioned on its own, starting at 1.0.0.** The package only declares the annotation and validates its rule identifiers, and neither depends on which rules exist: library rules are read from each dependency, and core rules are checked by the tool. It is therefore released as a stable 1.0.0 while the tool continues through prerelease versions, and is released again only when the annotation or its validation changes. Adding a field or an attach point is backward compatible and would be a minor release.
+
 **One import.** A project that suppresses anything imports `ballerina/scan`. Its compiler plugin runs at compile time only.
 
 **No runtime impact.** Every attach point is `source`, so the annotation is not retained in the compiled program.
@@ -500,7 +502,7 @@ Beyond that:
 
 - Rule identifier validation: a malformed identifier, an unknown core rule, an unknown rule of a direct dependency (literal or constant) and an empty rule list are compile errors; a duplicate identifier, a blank reason and an identifier of a provider that is not a dependency are warnings; valid core, dependency and constant identifiers, and a constant rule list, produce nothing; an identifier that does not resolve suppresses nothing and is reported by `bal scan`.
 - Analyzers declared only in the scan configuration file: an identifier is a warning under `bal build`, accepted under `bal scan` when the analyzer defines it, and a compile error under `bal scan` when it does not.
-- Catalog freshness: the core rule list bundled into the plugin equals the tool's core rule list for the release.
+- Core rules: a well-formed core identifier passes the plugin; under `bal scan` and in the language server, one the tool does not define is an error that fails the scan, and is not also reported as unmatched.
 - Suppressing without a rule list: every finding in the annotated construct is suppressed, and nothing outside it.
 - Each requirement, independently: off, the annotation suppresses silently; on, it still suppresses and the scan fails with an error naming the annotation's file and line. Both on together. A command-line option switches a requirement on, and cannot switch off one the configuration file sets.
 - `enabled = false`: every finding is reported from both entry points, and requirement violations are still reported.
@@ -518,7 +520,7 @@ Beyond that:
 | Risk | Mitigation |
 |---|---|
 | An annotation before a call or assignment statement is dropped silently, so the developer believes the finding is suppressed | Compiler fix (Known defect 1) is a release blocker; until then the IDE quick fix only ever inserts the restructured form |
-| The core rule list bundled into the plugin drifts from the tool | `ballerina/scan` is released with the tool and its plugin is built from the tool's core rule list; a release check compares the two |
+| A project names a core rule its installed scan tool does not define, for example one added in a later tool release | Core identifiers are checked by the running tool, so `bal scan` reports an error naming the rule; `bal build` accepts any well-formed core identifier |
 | An analyzer declared only in the scan configuration file cannot be checked during `bal build` | Warning at build; strict check under `bal scan`, which is where the gate runs |
 | Annotations proliferate as a way to get builds green | Each one surfaces in the pull request diff when added; visible counts; suppressed findings present in the output; `--ignore-suppressions` exposes the true picture on demand; a team can require the justification and fail the scan without it |
 | An annotation with no rule list on a declaration silences findings a later author introduces | The suppression entry in the report names the rules actually suppressed, so the effect is visible rather than inferred; `requireRuleId` forbids the form outright for projects that want it forbidden; the audit run shows total exposure |
@@ -540,14 +542,13 @@ Beyond that:
 - **Severity and security metadata in SARIF output** — for the suppression output surface.
 - **Build gating and the exit code contract** — not a prerequisite. The shared filtering path is extracted by this work and the gate consumes it. Suppression is what makes the gate adoptable, so the two ship together.
 - **Compiler fix for Known defect 1** — a release blocker.
-- **Publishing `ballerina/scan`**, with its compiler plugin, in step with each scan tool release.
+- **Publishing `ballerina/scan` 1.0.0**, with its compiler plugin, once. Later tool releases do not republish it.
 
 No change to the language grammar.
 
 ## Open questions
 
-1. **Should the core rule list be bundled or discovered?** Bundling ties `ballerina/scan` to a tool release. The plugin could instead read the core rule list from the scan tool installed for the active distribution, falling back to the bundled list when none is installed.
-2. **Is a warning the right severity for analyzers declared only in the scan configuration file?** The alternative is for the plugin to read that file and resolve those analyzers itself during `bal build`, which duplicates the tool's resolution logic.
+1. **Is a warning the right severity for analyzers declared only in the scan configuration file?** The alternative is for the plugin to read that file and resolve those analyzers itself during `bal build`, which duplicates the tool's resolution logic.
 
 ## Future Work
 
