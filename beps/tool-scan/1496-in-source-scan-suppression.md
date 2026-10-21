@@ -112,7 +112,7 @@ jwt:Payload payload = check jwt:validate(token, {
 - **Analyzer rules** (`<org>/<package>:<number>`) come from the `rules.json` inside the compiler plugin of each direct dependency — exactly where `bal scan` reads them from. A rule added to `ballerina/http` is accepted as soon as the project depends on the version that defines it, with no change to `ballerina/scan`.
 - **Analyzers declared only in the scan configuration file** are not dependencies during an ordinary build, because `bal scan` adds them as imports only when it runs. The plugin cannot see their rules during `bal build`, so it reports a warning rather than an error. Under `bal scan` they are dependencies, and the same identifiers are checked strictly: an unknown one is a compile error, and the scan does not run.
 
-Identifiers may be string literals or references to string constants; any other expression is reported as unverifiable.
+The rule list may hold string literals and references to string constants, or be a reference to a constant list. Any other expression, such as a string template, is reported as unverifiable, and it suppresses nothing: an identifier that does not resolve never turns the annotation into one that applies to every rule, and `bal scan` warns about it when it runs.
 
 | Code | Severity | Diagnostic |
 |---|---|---|
@@ -498,7 +498,7 @@ The check has two halves, because the rules do. For rules shipped in the tool, a
 
 Beyond that:
 
-- Rule identifier validation: a malformed identifier, an unknown core rule, an unknown rule of a direct dependency (literal or constant) and an empty rule list are compile errors; a duplicate identifier, a blank reason and an identifier of a provider that is not a dependency are warnings; valid core, dependency and constant identifiers produce nothing.
+- Rule identifier validation: a malformed identifier, an unknown core rule, an unknown rule of a direct dependency (literal or constant) and an empty rule list are compile errors; a duplicate identifier, a blank reason and an identifier of a provider that is not a dependency are warnings; valid core, dependency and constant identifiers, and a constant rule list, produce nothing; an identifier that does not resolve suppresses nothing and is reported by `bal scan`.
 - Analyzers declared only in the scan configuration file: an identifier is a warning under `bal build`, accepted under `bal scan` when the analyzer defines it, and a compile error under `bal scan` when it does not.
 - Catalog freshness: the core rule list bundled into the plugin equals the tool's core rule list for the release.
 - Suppressing without a rule list: every finding in the annotated construct is suppressed, and nothing outside it.
