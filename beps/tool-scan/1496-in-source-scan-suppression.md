@@ -3,7 +3,7 @@
 - Authors - @TharmiganK
 - Reviewed by - TBD
 - Created date - 2026-09-04
-- Updated date - 2026-10-20
+- Updated date - 2026-10-21
 - Issue - [#1496](https://github.com/ballerina-platform/ballerina-spec/issues/1496)
 - State - Draft
 
@@ -243,13 +243,53 @@ the answers are:
 
 The annotation deliberately does not carry an author or a date. Recording them in the source means two more fields to write, to keep accurate, and to lie in — while version control already answers both, and cannot be edited without leaving a trace. This division is the strongest argument for in-source suppression over an external suppression list, where the last two questions have no answer at all.
 
+### Configuration
+
+Suppression is controlled from the `[suppression]` table of the scan configuration file and from `bal scan` options. Every setting is opt-in, so a project that configures nothing gets suppressions applied, with no requirement enforced.
+
+```toml
+[suppression]
+enabled = true        # false: disregard every annotation, as --ignore-suppressions does
+requireReason = false # true: fail the scan when an annotation gives no reason
+requireRuleId = false # true: fail the scan when an annotation names no rule
+```
+
+| `Scan.toml` key | `bal scan` option | Default | Effect |
+|---|---|---|---|
+| `enabled` | `--ignore-suppressions` (sets it to `false` for one run) | `true` | When `false`, every annotation is disregarded and every finding is reported, as in the audit run |
+| `requireReason` | `--require-suppression-reason` | `false` | An annotation without a reason fails the scan |
+| `requireRuleId` | `--require-suppression-rule-id` | `false` | An annotation that names no rule fails the scan |
+
+**The command line can tighten the configuration for a run, but not loosen it.** An option can disable suppressions or switch a requirement on for a single invocation; it cannot re-enable suppressions or switch a requirement off when the configuration file sets them. A team that needs a guarantee therefore puts it in the configuration file, which is checked in and reviewed. Because the configuration file can be loaded from a URL through `[scan] configPath`, an organization can publish one file that every project's CI uses, for example to require reasons everywhere, or to set `enabled = false` so that a security pipeline always reports the unsuppressed results without depending on each pipeline passing a flag.
+
+**`enabled = false` is the audit run made persistent.** It disregards annotations only: rule selection still applies, requirement violations are still reported, and unmatched suppressions are not, exactly as with `--ignore-suppressions`.
+
+The language server reads the same table, so the editor shows the same active and suppressed findings as `bal scan`. It does not take command-line options.
+
 ### Reporting
 
-**SARIF.** Suppressed findings appear with a `suppressions` entry of kind `inSource` carrying the justification. They are present and marked, not omitted — that is what makes them auditable, and what the SARIF specification intends.
+**SARIF.** Each suppressed result carries a `suppressions` array (SARIF 2.1.0, §3.27.23) with one `suppression` object (§3.35):
 
-**Console.** A summary line: `12 issues, 3 suppressed`. Suppressed findings are not listed by default, so the console listing and the saved report no longer hold the same set — the report keeps them, the console does not.
+```json
+"suppressions": [
+  {"kind": "inSource", "status": "accepted", "justification": "Legacy hash kept for migration window, SEC-1042"}
+]
+```
 
-**JSON.** A suppression object mirroring the SARIF shape.
+- `kind` is `inSource`, the value SARIF defines for a suppression expressed by a construct of the programming language, such as an attribute or annotation.
+- `status` is `accepted`, because consumers that need a result's suppression state are required to read it from `status`.
+- `justification` is the annotation's `reason`, omitted when the annotation gives none.
+- SARIF requires the `suppressions` values of all results in a run to be either all present or all absent. Once any result of a run is suppressed, every other result therefore carries an empty array, which SARIF defines as "not suppressed". A run with no suppressed result omits the property everywhere, so its output is unchanged.
+
+Suppressed results are present and marked, not omitted — that is what makes them auditable, and what the SARIF specification intends.
+
+**JSON.** The same `suppressions` array, on suppressed findings only.
+
+**Console.** Suppressed findings are not listed, so the console listing and the saved report no longer hold the same set — the report keeps them, the console does not. When anything is suppressed, a summary line follows the listing, for example `3 issue(s), 2 suppressed`. Diagnostics about the annotations themselves — unmatched suppressions, and unmet requirements — are printed with their location, for example `WARNING [main.bal:(23:5,23:71)] suppression of 'ballerina:7' did not match any issue`.
+
+**HTML report and platforms.** The HTML report and the issues passed to static code analysis platform plugins contain unsuppressed findings only. Neither has a representation for a suppressed finding, and passing suppressed findings to a platform that does not understand them would report them as ordinary issues.
+
+**Language server.** The response gains a `suppressedIssues` array, each entry carrying the issue, the rules the annotation named and the justification, and a `suppressionDiagnostics` array with the same diagnostics the console prints. `activeIssues` holds unsuppressed findings only.
 
 **Gate.** Suppressed findings do not count toward severity or issue-count thresholds. The gate itself arrives with the gating work, so this becomes observable there rather than here.
 
@@ -257,7 +297,7 @@ The annotation deliberately does not carry an author or a date. Recording them i
 
 **New suppressions appear in code review.** Because an annotation is part of the source, adding one shows up in the diff alongside the change that needed it. The exception is scrutinised at the moment it is created, by someone with the context to judge it — which is worth more than any report produced months later. An external suppression file achieves this only if reviewers happen to read it.
 
-**An audit run reports the unsuppressed picture.** `--ignore-suppressions` runs the scan with every annotation disregarded, so the full set of findings is reported and gated as though no suppression existed. A security review's first question is what the codebase looks like without them, and "trust our suppressions" is not an answer. The flag changes nothing about the scan itself, only whether the suppression filter is applied.
+**An audit run reports the unsuppressed picture.** `--ignore-suppressions`, or `enabled = false` in the configuration file, runs the scan with every annotation disregarded, so the full set of findings is reported and gated as though no suppression existed. A security review's first question is what the codebase looks like without them, and "trust our suppressions" is not an answer. The flag changes nothing about the scan itself, only whether the suppression filter is applied.
 
 The flag also silences the unmatched report, which would otherwise name every annotation in the project. Findings and warnings about the annotations themselves, an absent justification among them, describe the source rather than the suppression and are still reported.
 
@@ -317,9 +357,11 @@ The scan runs from two entry points, the command line and the language server, a
 
 **Formatting is safe by construction**, because the binding is a syntax node rather than the position of a comment.
 
-**Output shape changes.** SARIF and JSON findings gain an optional suppression entry, present only on a suppressed finding; console output gains a summary count and, where relevant, suppression warnings. Existing output fixtures need regenerating.
+**Output shape changes only where suppression is used.** A project that does not depend on `ballerina/scan` produces exactly the output it does today. Where suppression is used, SARIF and JSON findings gain `suppressions` entries, the console gains a summary line and suppression diagnostics, and the language-server response gains `suppressedIssues` and `suppressionDiagnostics`.
 
-**New options, all opt-in and all default off.** `--ignore-suppressions` for the audit run, and `--require-suppression-reason` and `--require-suppression-rule-id` with their `[suppression] requireReason` and `requireRuleId` counterparts. None changes the behaviour of an existing invocation, and `[suppression]` is a new table, so no existing scan configuration changes meaning. In particular, a project that adopts suppression without switching a requirement on never sees a new failure.
+**New options, all opt-in.** `--ignore-suppressions`, `--require-suppression-reason` and `--require-suppression-rule-id`, with their `[suppression]` counterparts `enabled`, `requireReason` and `requireRuleId` (see [Configuration](#configuration)). None changes the behaviour of an existing invocation, and `[suppression]` is a new table, so no existing scan configuration changes meaning. In particular, a project that adopts suppression without switching a requirement on never sees a new failure.
+
+**Additive API.** For platform plugins and other consumers of the scan tool's Java API, the changes are additions: a `SuppressedIssue` type, a `ScanResult` constructor and accessor for suppressed issues, and accessors on the scan configuration for the `[suppression]` settings.
 
 ## Known defects
 
@@ -458,12 +500,13 @@ Beyond that:
 - Analyzers declared only in the scan configuration file: an identifier is a warning under `bal build`, accepted under `bal scan` when the analyzer defines it, and a compile error under `bal scan` when it does not.
 - Catalog freshness: the core rule list bundled into the plugin equals the tool's core rule list for the release.
 - Suppressing without a rule list: every finding in the annotated construct is suppressed, and nothing outside it.
-- Each requirement, independently: off, the annotation suppresses silently; on, it still suppresses and the scan fails with an error naming the annotation's file and line. Both on together. The command-line option overrides the configuration file.
+- Each requirement, independently: off, the annotation suppresses silently; on, it still suppresses and the scan fails with an error naming the annotation's file and line. Both on together. A command-line option switches a requirement on, and cannot switch off one the configuration file sets.
+- `enabled = false`: every finding is reported from both entry points, and requirement violations are still reported.
 - Binding: a finding inside the annotated construct is suppressed; a finding outside it is not; a service, class or object-type annotation does not cover findings inside its members.
 - Scoping: a nested annotation naming the same rule overrides an outer one; a nested annotation naming a different rule does not; no leakage to siblings; two annotations on one construct combine, each with its own justification.
 - Restructuring patterns: each pattern keeps the finding inside the annotated declaration.
 - Regression tests for both known compiler defects once fixed.
-- Reporting: suppression entries present in SARIF with the justification; console and unmatched counts correct; JSON mirrors SARIF.
+- Reporting: SARIF suppression entries carry `kind`, `status` and the justification; once a run has a suppressed result every other result carries an empty array, and a run without one carries none; JSON mirrors SARIF; console summary and unmatched diagnostics are correct; the HTML report and platform plugins receive unsuppressed findings only.
 - Gate interaction: deferred with the gate itself.
 - Audit mode: with `--ignore-suppressions`, every suppressed finding is reported. Findings from every other rule match a run with the annotations deleted; the annotations' own warnings do not, because deleting an annotation also deletes what there was to report about it.
 - Identical behaviour from both entry points, asserted by shared fixtures.
@@ -515,11 +558,13 @@ No change to the language grammar.
 - IDE quick fix to insert an annotation, including the restructuring rewrite.
 - Migration tooling from project-wide exclusions to annotations, for the case where a rule was disabled globally because of a handful of accepted findings.
 - A fuller audit mode that also disregards rule selection, closing the gap where a project-wide exclusion hides findings that the suppression audit run cannot reveal.
+- **Rule selection in SARIF.** SARIF records a rule that is switched off for a run as a rule configuration (`invocations[].ruleConfigurationOverrides`, §3.20.5) rather than as a suppression. Emitting it would make project-wide exclusions visible in the same report as suppressions.
+- **Suppressed findings in the HTML report**, shown with their justification, once the report has a view for them.
 
 ## References
 
 - [Ballerina Language Specification §9.1 — Annotations](https://ballerina.io/spec/lang/master/#section_9.1) — attachment points and `source` annotations
 - [bal scan rules](https://ballerina.io/learn/scan-rules/) — the rules shipped in 0.12.0
-- [SARIF 2.1.0](https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html) — `suppression` object, `kind: "inSource"`
+- [SARIF 2.1.0](https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html) — `result.suppressions` (§3.27.23), `suppression` object (§3.35), `ruleConfigurationOverrides` (§3.20.5)
 - [JLS §9.6.4.5 — `@SuppressWarnings`](https://docs.oracle.com/javase/specs/jls/se21/html/jls-9.html#jls-9.6.4.5) — declaration-scoped suppression, including local variables
 - NIST SP 500-268 SCSA-RO-2 — suppression as an analyzer capability requirement
