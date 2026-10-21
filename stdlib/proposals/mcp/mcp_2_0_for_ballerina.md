@@ -28,7 +28,7 @@ This proposal defines version 2.0 of `ballerina/mcp`. It:
 - Make protocol selection an explicit client step whose result is visible to the application.
 - Support the caching hints defined in `2026-07-28`, so that servers can mark results as reusable and clients reuse them.
 - Let tools ask the user for input during a call through multi round-trip requests, with typed elicitation in both service styles and a typed handler on the client.
-- Protect request state for every service by default, so that a client cannot forge, replay or reuse it.
+- Protect request state for every service by default, so that a client cannot forge it, reuse it on another call or by another caller, or present it after it expires.
 - Let a client obtain its own access tokens from an MCP server's authorization server.
 - Let a service enforce MCP authorization: publish protected resource metadata, challenge requests without a valid token, accept only tokens issued for it, and require scopes per tool.
 
@@ -198,7 +198,7 @@ public annotation StreamableHttpServiceConfiguration StreamableHttpServiceConfig
 For a modern request, the dispatcher:
 
 1. Reads the protocol version from `_meta["io.modelcontextprotocol/protocolVersion"]` and the `MCP-Protocol-Version` header. A version the service does not accept is rejected with `UNSUPPORTED_PROTOCOL_VERSION` (`-32022`) and HTTP status `400`. The error `data` lists the supported and requested versions, so that the client can select another version.
-2. Validates the routing headers. `MCP-Protocol-Version` must match the request metadata, `Mcp-Method` must match the JSON-RPC method, and for `tools/call`, `Mcp-Name` must match the tool name. A mirrored argument header (see [Argument headers](#argument-headers)) must be present once and match the decoded argument. A mismatch is rejected with `HEADER_MISMATCH` (`-32020`) before the service is invoked.
+2. Validates the routing headers. `MCP-Protocol-Version` must match the request metadata, `Mcp-Method` must match the JSON-RPC method, and for `tools/call`, `Mcp-Name` must match the tool name. When a mirrored argument (see [Argument headers](#argument-headers)) is present in the call, its header must appear once and match the decoded argument. An omitted defaultable argument needs no header. A mismatch is rejected with `HEADER_MISMATCH` (`-32020`) before the service is invoked.
 3. Dispatches `server/discover`, `tools/list` and `tools/call`. Any other method, including `subscriptions/listen`, gets `METHOD_NOT_FOUND`.
 
 Header values use the canonical encoding defined by the specification, and the dispatcher rejects values that are not encoded canonically.
@@ -864,8 +864,8 @@ An `accept` answer to a URL elicitation means only that the user agreed to open 
 
 Before sending an input-required result, the dispatcher checks it:
 
-- A result with neither `inputRequests` nor `requestState` is rejected with `INTERNAL_ERROR`.
-- A form elicitation with a blank message or an inconsistent form schema, such as a `required` field missing from `properties`, inverted or negative bounds, an empty enum or a default outside the enum, is rejected with `INTERNAL_ERROR`.
+- A result without `requestState` whose `inputRequests` is missing or empty is rejected with `INTERNAL_ERROR`.
+- A form elicitation with a blank message or an inconsistent form schema, such as a `required` field missing from `properties`, inverted bounds, a negative length or item count, an empty enum or a default outside the enum, is rejected with `INTERNAL_ERROR`.
 - A URL elicitation with a blank message, or a URL without a scheme and a host, is rejected with `INTERNAL_ERROR`. `http` URLs are allowed, for development.
 - An elicitation in a mode the client did not declare is rejected with `MISSING_REQUIRED_CLIENT_CAPABILITY`, whose `requiredCapabilities` names the mode. An empty `elicitation` capability declares form mode.
 
@@ -878,6 +878,8 @@ The module protects request state for every service. When a tool or `onCallTool`
 - an expiry, renewed on every round, which bounds the idle time of each round rather than the length of a flow.
 
 A continuation whose request state is malformed, tampered with, expired, or issued for another call or caller is rejected with `INVALID_PARAMS`, the message `Invalid or expired requestState` and `data.reason` set to `invalid_request_state`, as in the TypeScript and Python SDKs. The specific reason is logged on the server only.
+
+These bindings do not make request state single-use. Until it expires, the same continuation can be sent again, and the handler runs again. A tool whose side effect must happen at most once enforces that itself, for example by recording an idempotency key from its request state in its own store.
 
 Request state is signed, not encrypted. The client can read it, so handlers must not put secrets in it. The signed format is versioned, so that encryption can be added as an option without changing what handlers see.
 
