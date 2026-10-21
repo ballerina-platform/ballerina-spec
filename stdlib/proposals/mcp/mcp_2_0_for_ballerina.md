@@ -765,7 +765,8 @@ public type MutualTlsConfig record {|
 |};
 ```
 
-With mutual TLS, the token endpoint alias in `mtls_endpoint_aliases` is used when published.
+- `PrivateKeyJwtConfig` requires `RS256`, `RS384` or `RS512` and a private key or key store. A shared key or any other algorithm is rejected as an invalid configuration, as is an algorithm missing from the server's `token_endpoint_auth_signing_alg_values_supported` when that list is published.
+- With mutual TLS, the token endpoint alias in `mtls_endpoint_aliases` is used when published. The certificate is presented only to the token endpoint. If the authorization server binds access tokens to it (RFC 8705), the same key must also be set in `httpConfig.secureSocket`, so that MCP requests present it.
 
 A CIMD client cannot use a shared secret. `clientAuth` can be omitted for a public client, except with the client credentials grant.
 
