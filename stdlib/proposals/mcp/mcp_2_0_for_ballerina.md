@@ -1009,7 +1009,7 @@ public function main() returns error? {
     mcp:ListToolsResult tools = check mcpClient->listTools();
     mcp:CallToolResult result = check mcpClient->callTool({
         name: "forecast",
-        arguments: {region: "Colombo"}
+        arguments: {"region": "Colombo"}
     });
     io:println(result.structuredContent);
 
