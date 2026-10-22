@@ -384,9 +384,11 @@ These are reserved for later proposals and are not used for anything else:
 
 #### Types
 
-The shape is defined in terms of the types persist already generates. The HTTP and MCP services
-use them directly; the GraphQL service generates equivalent input and output types, because
-`ballerina/graphql` does not accept the persist types as they are (see the GraphQL proposal).
+The shape is defined in terms of the types persist already generates. A protocol uses them
+directly where their JSON form suits a client, and generates wire types where it does not. The
+HTTP proposal does this for entities with date, time or `byte[]` fields, which it sends as
+ISO 8601 and base64 strings. The conversions are functions in `ballerina/dataservice`, so
+every protocol uses the same formats.
 
 | Type | Used as |
 |---|---|
@@ -448,7 +450,7 @@ the GraphQL `errors` array, or an MCP tool result with `isError` set.
 | Not found | `NOT_FOUND` | No record has the given key | `persist:NotFoundError` |
 | Conflict | `CONFLICT` | A record with the key or a unique value already exists | `persist:AlreadyExistsError` |
 | Constraint violation | `CONSTRAINT_VIOLATION` | A write violates a foreign key | `persist:ConstraintViolationError` |
-| Invalid input | `INVALID_INPUT` | The input cannot be bound to the operation's type | The protocol module's binding error |
+| Invalid input | `INVALID_INPUT` | The input cannot be bound to the operation's type, or a value is not in its format | The protocol module's binding error, or a `ballerina/dataservice` conversion |
 | Internal | `INTERNAL` | Any other failure | `persist:Error` and others |
 
 The message is written by `ballerina/dataservice`, not taken from the persist error, because the
