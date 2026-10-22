@@ -329,8 +329,29 @@ Each exposed entity gets up to six operations, enabled in four groups called act
 | `update` | Patch one | `put <entities>/[key](value)` |
 | `delete` | Delete one | `delete <entities>/[key]()` |
 
-The two operations in an action expose the same data, so they are enabled together. Splitting
-them would not restrict what a caller can see or change.
+##### Why four actions and not a switch per operation
+
+An action is a capability: what a caller may see or change. An operation is one way to use that
+capability. The model enables capabilities, and every operation that uses an enabled capability
+is generated.
+
+- **A switch must protect something.** Get many and get one return the same rows: a caller who
+  can get one record by key can find the keys by trying them, and one who can list records has
+  every key. Create one and create many write the same records: many is one repeated. Turning
+  one of a pair off would look like a restriction without being one.
+- **Operations grow; capabilities do not.** Later proposals add query options, related reads,
+  replace and bulk writes, each inside one of the four actions. With a switch per operation,
+  every addition would add a switch, and a v1 model would not say whether it allows the new
+  operation. With actions, it already does.
+- **Protocols render operations differently.** HTTP serves both creates from one `POST`, GraphQL
+  and MCP have a field or tool for each, and OData writes many records in a batch. Actions mean
+  the same in every protocol; operations do not.
+- **Authorization is granted per action.** SQL privileges (`SELECT`, `INSERT`, `UPDATE`,
+  `DELETE`), Data API builder and ZenStack's access policies use the same four, so scopes per
+  action can be added later without remapping.
+
+A new action is added only for a capability that none of the four grants. `EXECUTE` is reserved
+for custom operations for that reason.
 
 The persist client's `put` is a partial update: fields left out of the value are not changed.
 It is exposed as a patch.
@@ -542,10 +563,9 @@ annotation on the entity is the whole answer. The cost is annotating each entity
 
 ### A `readOnly` flag, or one switch per operation
 
-A `readOnly` flag cannot express a common case such as "create and update, but not delete".
-Six switches separate operations that expose the same data, adding configuration without
-adding control. The four actions match the access models of Data API builder, ZenStack's access
-policies and PostgreSQL's privileges.
+A `readOnly` flag cannot express a common case such as "create and update, but not delete". A
+switch per operation adds configuration without adding control; see
+[Why four actions and not a switch per operation](#why-four-actions-and-not-a-switch-per-operation).
 
 ### `rest` as the protocol value
 
