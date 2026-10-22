@@ -3,7 +3,7 @@
 - Authors - @TharmiganK
 - Reviewed by - TBD
 - Created date - 2026-09-04
-- Updated date - 2026-10-21
+- Updated date - 2026-10-22
 - Issue - [#1496](https://github.com/ballerina-platform/ballerina-spec/issues/1496)
 - State - Draft
 
@@ -11,7 +11,7 @@
 
 Allow a developer to suppress an individual `bal scan` finding at the point in the source where it occurs, with a justification, recorded in the output so suppressions remain auditable rather than invisible. The justification is optional by default and a team can require it, failing the scan when one is missing.
 
-The mechanism is a source-only annotation, `@scan:Suppress`, attached to the construct that contains the finding. Because it lives in the source, each suppression is reviewed in the diff that introduces it and attributed through version control, and an audit run can disregard suppressions entirely to show the unfiltered picture. Because it is an annotation, its attachment is defined by the grammar and comments keep meaning nothing; and the package that defines it ships a compiler plugin that checks every rule identifier against the rules `bal scan` can actually report, so the rule set can grow without the annotation changing.
+The mechanism is a source-only annotation, `@scan:Suppress`, attached to the construct that contains the finding. Because it lives in the source, each suppression is reviewed in the diff that introduces it and attributed through version control, and an audit run can disregard suppressions entirely to show the unfiltered picture. Because it is an annotation, its attachment is defined by the grammar and comments keep meaning nothing. Every rule identifier is checked twice: its form by the compiler plugin of the package that defines the annotation, as the code is written, and its existence by `bal scan`, against the rules it can actually report. The rule set can therefore grow without the annotation or its package changing.
 
 ## Motivation
 
@@ -27,7 +27,7 @@ Without this, a team adopting the gate has two options — fix everything first,
 
 - Suppress a single finding at the construct that contains it, for every rule the tool ships.
 - Every suppression can carry a justification, and a team that requires one can make the scan fail without it.
-- Rule identifiers are validated at compile time against the rules available to the package, including rules added later and rules from third-party analyzers.
+- Rule identifiers are validated: their form at compile time, and their existence when `bal scan` runs, against the rules it actually reports, including rules added later and rules from third-party analyzers.
 - No runtime footprint.
 - No new meaning given to comments, and no change to the language grammar.
 - Suppressions are visible in the output without reading the source.
@@ -91,7 +91,7 @@ Both fields are optional, as the third and fourth examples show: omit the justif
 
 Every attach point is `source`, so the annotation is not present at runtime. `function` covers functions, methods, resource methods and remote methods.
 
-`RuleId` is the identifier the tool already prints and already accepts in rule inclusion and exclusion — `ballerina:1` for a language rule, `ballerina/crypto:2` for a module rule — so a developer copies it from the finding rather than learning a second form. It is deliberately a `string` rather than a union of the known identifiers: the tool adds rules in every release and any package can contribute rules through its analyzer, so a closed type would have to change with every rule and could never list a third-party analyzer's rules. The content of each identifier is checked by the compiler plugin instead (see [Rule identifier validation](#rule-identifier-validation)).
+`RuleId` is the identifier the tool already prints and already accepts in rule inclusion and exclusion — `ballerina:1` for a language rule, `ballerina/crypto:2` for a module rule — so a developer copies it from the finding rather than learning a second form. It is deliberately a `string` rather than a union of the known identifiers: the tool adds rules in every release and any package can contribute rules through its analyzer, so a closed type would have to change with every rule and could never list a third-party analyzer's rules. Each identifier is checked instead (see [Rule identifier validation](#rule-identifier-validation)).
 
 **The annotation may be attached more than once to the same construct**, which is why its type is `SuppressConfig[]`, and the rule lists combine — necessary rather than incidental, since an annotation carries one justification and a construct may need two justifications for two rules:
 
@@ -106,23 +106,31 @@ jwt:Payload payload = check jwt:validate(token, {
 
 ### Rule identifier validation
 
-`ballerina/scan` ships a compiler plugin. Because it is a compiler plugin of a direct dependency, it runs on every package that imports `scan`, during `bal build`, `bal scan` and in the language server alike. For each `@scan:Suppress` annotation it resolves the identifiers against a rule catalog built the same way `bal scan` builds its own:
+An identifier is checked in two places, each where the information that check needs exists.
 
-- **Core rules** (`ballerina:<number>`) ship with the scan tool, not with the package. The plugin checks only their format; the running tool checks them against its own rule list, under `bal scan` and in the language server, and an unknown one is an error that fails the scan. A core rule added to the tool therefore needs no release of `ballerina/scan`.
-- **Analyzer rules** (`<org>/<package>:<number>`) come from the `rules.json` inside the compiler plugin of each direct dependency — exactly where `bal scan` reads them from. A rule added to `ballerina/http` is accepted as soon as the project depends on the version that defines it, with no change to `ballerina/scan`.
-- **Analyzers declared only in the scan configuration file** are not dependencies during an ordinary build, because `bal scan` adds them as imports only when it runs. The plugin cannot see their rules during `bal build`, so it reports a warning rather than an error. Under `bal scan` they are dependencies, and the same identifiers are checked strictly: an unknown one is a compile error, and the scan does not run.
-
-The rule list may hold string literals and references to string constants, or be a reference to a constant list. Any other expression, such as a string template, is reported as unverifiable, and it suppresses nothing: an identifier that does not resolve never turns the annotation into one that applies to every rule, and `bal scan` warns about it when it runs.
+**The `ballerina/scan` compiler plugin checks the form.** Because it is a compiler plugin of a direct dependency, it runs on every package that imports `scan`, during `bal build`, `bal scan` and in the language server alike. Its checks hold whichever rules exist and whichever version of the tool is installed:
 
 | Code | Severity | Diagnostic |
 |---|---|---|
 | `SCAN_SUPPRESS_101` | Error | `invalid rule ID 'http:1': expected 'ballerina:<number>' or '<org>/<package>:<number>'` |
-| `SCAN_SUPPRESS_102` | Error | `unknown rule 'ballerina/http:9': 'ballerina/http' does not define this rule` |
-| `SCAN_SUPPRESS_103` | Warning | `cannot verify rule 'acme/lint:1': 'acme/lint' is not a direct dependency with scan rules; it is checked again when 'bal scan' runs` |
 | `SCAN_SUPPRESS_104` | Warning | `blank suppression reason; it is treated as absent` |
 | `SCAN_SUPPRESS_105` | Warning | `rule 'ballerina:13' is listed more than once` |
 | `SCAN_SUPPRESS_106` | Warning | `cannot verify rule '<expression>': use a string literal or a constant` |
 | `SCAN_SUPPRESS_107` | Error | `empty rule list; omit 'rules' to suppress every rule` |
+
+**`bal scan` checks that the rule exists.** Only the scan knows every rule it can report: the core rules of the tool in use, and the rules of every analyzer it engages, whether a direct dependency or one declared in the scan configuration file. It checks each identifier against that set before rule selection is applied, so an identifier of an excluded rule still exists. The check runs from both entry points, the command line and the language server:
+
+| Code | Severity | Diagnostic |
+|---|---|---|
+| `STATIC_ANALYSIS_ERROR_024` | Error | `unknown rule 'ballerina/http:9': 'ballerina/http' does not define this rule` |
+| `STATIC_ANALYSIS_WARNING_006` | Warning | `cannot verify rule 'acme/lint:1': 'acme/lint' provides no scan rules to this project; add its analyzer as a direct dependency or in the [[analyzer]] table of Scan.toml` |
+| `STATIC_ANALYSIS_WARNING_005` | Warning | ``suppression rule 'string `ballerina:1`' does not resolve to a rule ID; use a string literal or a constant`` |
+
+An unknown rule of an engaged provider fails the scan. A rule of a provider the scan does not engage cannot be verified, so it is a warning. Neither matches a finding, and neither is also reported as unmatched.
+
+**Splitting the checks keeps the package independent of the rule set.** The plugin could only see the analyzers of direct dependencies, not the core rules of the installed tool nor analyzers declared in the scan configuration file, so checking existence there would treat core and library rules differently and make the result depend on which version of the package a project resolves. A rule added to the tool or to `ballerina/http` needs no release of `ballerina/scan`. The cost is that a misspelled but well-formed identifier is reported when the scan runs, from the command line or the language server, rather than as a compile error.
+
+The rule list may hold string literals and references to string constants, or be a reference to a constant list, and the fields may be written in any form a mapping constructor allows, including a shorthand field (`{rules, reason}`) or a quoted field name. Any other expression in the rule list, such as a string template, is reported as unverifiable, and it suppresses nothing: an identifier that does not resolve never turns the annotation into one that applies to every rule.
 
 The empty-list check is needed in the plugin rather than the type: a list constructor `[]` against `[RuleId, RuleId...]` is completed with the `string` filler value and compiles. Beyond the plugin, the types reject a misspelled field and an annotation on a construct that is not an attach point, for every construct the parser keeps (see [Known defects](#known-defects)).
 
@@ -225,7 +233,7 @@ requireReason = true
 
 The two requirements are independent, so a project can insist on one, both or neither. A team using suppression as compliance evidence will want both on; a team using it to quiet a handful of false positives may want neither, and the audit run tells them what they are carrying either way.
 
-The requirements are checked by `bal scan` rather than by the compiler plugin, because they are scan configuration and a command-line option can switch them on for one run. The plugin's checks are the ones that hold regardless of configuration: an identifier that is given must exist.
+The requirements are checked by `bal scan` rather than by the compiler plugin, because they are scan configuration and a command-line option can switch them on for one run. The plugin's checks are the ones that hold regardless of configuration and of the installed tool: an identifier that is given must be well formed.
 
 **The annotation records what and why; version control supplies who and when.** An audit asks four questions of any accepted risk. For
 
@@ -264,7 +272,9 @@ requireRuleId = false # true: fail the scan when an annotation names no rule
 
 **The command line can tighten the configuration for a run, but not loosen it.** An option can disable suppressions or switch a requirement on for a single invocation; it cannot re-enable suppressions or switch a requirement off when the configuration file sets them. A team that needs a guarantee therefore puts it in the configuration file, which is checked in and reviewed. Because the configuration file can be loaded from a URL through `[scan] configPath`, an organization can publish one file that every project's CI uses, for example to require reasons everywhere, or to set `enabled = false` so that a security pipeline always reports the unsuppressed results without depending on each pipeline passing a flag.
 
-**`enabled = false` is the audit run made persistent.** It disregards annotations only: rule selection still applies, requirement violations are still reported, and unmatched suppressions are not, exactly as with `--ignore-suppressions`.
+**`enabled = false` is the audit run made persistent.** It disregards annotations only: rule selection still applies, and no diagnostic about the annotations is reported, exactly as with `--ignore-suppressions` (see [Reporting](#reporting)).
+
+**Each setting must be a TOML boolean.** A quoted value such as `requireReason = "true"` would otherwise read as unset and silently switch a requirement off, so it stops the scan with `STATIC_ANALYSIS_ERROR_025`.
 
 The language server reads the same table, so the editor shows the same active and suppressed findings as `bal scan`. It does not take command-line options.
 
@@ -287,7 +297,7 @@ Suppressed results are present and marked, not omitted — that is what makes th
 
 **JSON.** The same `suppressions` array, on suppressed findings only.
 
-**Console.** Suppressed findings are not listed, so the console listing and the saved report no longer hold the same set — the report keeps them, the console does not. When anything is suppressed, a summary line follows the listing, for example `3 issue(s), 2 suppressed`. Diagnostics about the annotations themselves — unmatched suppressions, and unmet requirements — are printed with their location, for example `WARNING [main.bal:(23:5,23:71)] suppression of 'ballerina:7' did not match any issue`.
+**Console.** Suppressed findings are not listed, so the console listing and the saved report no longer hold the same set — the report keeps them, the console does not. When anything is suppressed, a summary line follows the listing, for example `3 issue(s), 2 suppressed`. Diagnostics about the annotations themselves — unknown and unverifiable rules, unmatched suppressions, and unmet requirements — are printed with their location, for example `WARNING [main.bal:(23:5,23:71)] suppression of 'ballerina:7' did not match any issue`.
 
 **HTML report and platforms.** The HTML report and the issues passed to static code analysis platform plugins contain unsuppressed findings only. Neither has a representation for a suppressed finding, and passing suppressed findings to a platform that does not understand them would report them as ordinary issues.
 
@@ -295,13 +305,13 @@ Suppressed results are present and marked, not omitted — that is what makes th
 
 **Gate.** Suppressed findings do not count toward severity or issue-count thresholds. The gate itself arrives with the gating work, so this becomes observable there rather than here.
 
-**Unmatched suppressions are reported.** An annotation, or a rule in its list, that suppressed nothing is stale — the finding was fixed, the rule stopped firing after a rewrite, or the annotation is on the wrong construct. The compiler plugin catches misspelled identifiers, so this report is about placement and staleness rather than typos. It is also an audit control in its own right: accumulated stale suppressions are the clearest signal that a codebase's exceptions are no longer being maintained. The control is well established: comparable analyzers all report suppressions that no longer suppress anything.
+**Unmatched suppressions are reported.** An annotation, or a rule in its list, that suppressed nothing is stale — the finding was fixed, the rule stopped firing after a rewrite, or the annotation is on the wrong construct. An identifier that names no rule is reported separately, as an unknown rule, so this report is about placement and staleness rather than typos. It is also an audit control in its own right: accumulated stale suppressions are the clearest signal that a codebase's exceptions are no longer being maintained. The control is well established: comparable analyzers all report suppressions that no longer suppress anything.
 
 **New suppressions appear in code review.** Because an annotation is part of the source, adding one shows up in the diff alongside the change that needed it. The exception is scrutinised at the moment it is created, by someone with the context to judge it — which is worth more than any report produced months later. An external suppression file achieves this only if reviewers happen to read it.
 
 **An audit run reports the unsuppressed picture.** `--ignore-suppressions`, or `enabled = false` in the configuration file, runs the scan with every annotation disregarded, so the full set of findings is reported and gated as though no suppression existed. A security review's first question is what the codebase looks like without them, and "trust our suppressions" is not an answer. The flag changes nothing about the scan itself, only whether the suppression filter is applied.
 
-The flag also silences the unmatched report, which would otherwise name every annotation in the project. Findings and warnings about the annotations themselves, an absent justification among them, describe the source rather than the suppression and are still reported.
+The flag also silences every diagnostic about the annotations — unknown rules, unmatched suppressions and unmet requirements. They describe suppressions the run is disregarding, the unmatched report would otherwise name every annotation in the project, and an audit run must report the findings rather than fail on the state of the annotations. The compiler plugin's checks on the form of an identifier are compile diagnostics and still apply.
 
 ### Relationship to the existing mechanisms
 
@@ -353,7 +363,7 @@ The scan runs from two entry points, the command line and the language server, a
 
 **Additive.** No existing configuration changes meaning, and there are no suppressions in the field to migrate.
 
-**`ballerina/scan` is versioned on its own, starting at 1.0.0.** The package only declares the annotation and validates its rule identifiers, and neither depends on which rules exist: library rules are read from each dependency, and core rules are checked by the tool. It is therefore released as a stable 1.0.0 while the tool continues through prerelease versions, and is released again only when the annotation or its validation changes. Adding a field or an attach point is backward compatible and would be a minor release.
+**`ballerina/scan` is versioned on its own, starting at 1.0.0.** The package only declares the annotation and checks the form of its rule identifiers, and neither depends on which rules exist: whether a rule exists is checked by `bal scan`. It is therefore released as a stable 1.0.0 while the tool continues through prerelease versions, and is released again only when the annotation or its validation changes. Adding a field or an attach point is backward compatible and would be a minor release.
 
 **One import.** A project that suppresses anything imports `ballerina/scan`. Its compiler plugin runs at compile time only.
 
@@ -369,15 +379,15 @@ The scan runs from two entry points, the command line and the language server, a
 
 ## Known defects
 
-Found while verifying this design against Ballerina 2201.14.1. Both need to be raised against the compiler.
+Found while verifying this design against Ballerina 2201.14.1, and raised against the compiler.
 
-1. **The parser silently drops an annotation placed before a call statement or an assignment statement.** `@scan:Suppress {...} log:printInfo(x);` and `@scan:Suppress {...} _ = f();` compile with no diagnostic, even when the annotation does not exist. The text is removed from the syntax tree, so the scan cannot see the annotation; every finding later in the same file is then reported at a shifted location; and `bal format` deletes the annotation from the source file. A developer would believe a finding was suppressed when it was not. The same construct with a `check` expression (`@a check f();`) is correctly rejected with "annotation not attached to a construct"; the call and assignment forms must produce the same error. **This must be fixed before the feature ships.**
-2. **The compiler crashes on an annotated local variable declaration with a typed wildcard binding**, such as `@a () _ = f();` or `@a int _ = 1;` (`NullPointerException` in `BVarSymbol.addAnnotation`). `var _ = ...` is not affected, which is why the restructuring pattern uses it.
+1. **The parser silently drops an annotation placed before a call statement or an assignment statement.** `@scan:Suppress {...} log:printInfo(x);` and `@scan:Suppress {...} _ = f();` compile with no diagnostic, even when the annotation does not exist. The text is removed from the syntax tree, so the scan cannot see the annotation; every finding later in the same file is then reported at a shifted location; and `bal format` deletes the annotation from the source file. A developer would believe a finding was suppressed when it was not. The same construct with a `check` expression (`@a check f();`) is correctly rejected with "annotation not attached to a construct"; the call and assignment forms must produce the same error. **This must be fixed before the feature ships.** Raised as [ballerina-lang#44811](https://github.com/ballerina-platform/ballerina-lang/issues/44811).
+2. **The compiler crashes on an annotated local variable declaration with a typed wildcard binding**, such as `@a () _ = f();` or `@a int _ = 1;` (`NullPointerException` in `BVarSymbol.addAnnotation`). `var _ = ...` is not affected, which is why the restructuring pattern uses it. Raised as [ballerina-lang#44812](https://github.com/ballerina-platform/ballerina-lang/issues/44812).
 
-Rule defects observed in 0.12.0 that affect where suppressions go, to be raised against the rules:
+Rule defects observed in 0.12.0 that affect where suppressions go:
 
-- **`ballerina/http:4`** fires only when the redirect literal is returned directly. Assigning it to a typed variable first, or building the headers map separately, produces no finding.
-- **`ballerina/os:1`** and **`ballerina/os:2`** do not treat resource method parameters as user input; they fire for public function parameters only.
+- **`ballerina/http:4`** fires only when the redirect literal is returned directly. Assigning it to a typed variable first, or building the headers map separately, produces no finding. Raised as [ballerina-library#9336](https://github.com/ballerina-platform/ballerina-library/issues/9336).
+- **`ballerina/os:1`** and **`ballerina/os:2`** do not treat resource method parameters as user input; they fire for public function parameters only. Raised as [ballerina-library#9337](https://github.com/ballerina-platform/ballerina-library/issues/9337).
 - **`ballerina:9`**'s documented example, `x % 1`, does not trigger the rule. The rule fires for `a && true`, `a || false`, `a & -1` and `a | 0`.
 - **`ballerina/file:1`** reports at the `os:getEnv("TMP")` call that produces the path, while **`ballerina/file:2`** reports the call that uses it; the rule documentation should say where each one reports.
 
@@ -418,7 +428,7 @@ Declare `RuleId` as a union of the known identifiers, so that the type checker a
 
 **Against:** the type must change whenever any rule is added, an older `ballerina/scan` cannot name a newer rule, and a third-party analyzer's rules can never be listed.
 
-**Assessment:** rejected, in favour of an open `string` checked by the plugin against the rules actually available.
+**Assessment:** rejected, in favour of an open `string` whose form the plugin checks and whose existence `bal scan` checks against the rules it actually reports.
 
 ### Widening the annotation attach points to statements
 
@@ -432,7 +442,7 @@ Declare `RuleId` as a union of the known identifiers, so that the type checker a
 
 **In favour:** available without an import, alongside `@deprecated` and `@display`.
 
-**Against:** lang-lib modules are built into the distribution rather than resolved as packages with compiler plugins, so rule identifiers could only be checked when `bal scan` runs, and the core rule list would version with the distribution rather than with the tool. It also needs a lang-lib change.
+**Against:** lang-lib modules are built into the distribution rather than resolved as packages with compiler plugins, so nothing would check an identifier's form as the code is written, and any change to the annotation would wait for a distribution release. It also needs a lang-lib change.
 
 **Assessment:** rejected.
 
@@ -500,19 +510,18 @@ The check has two halves, because the rules do. For rules shipped in the tool, a
 
 Beyond that:
 
-- Rule identifier validation: a malformed identifier, an unknown core rule, an unknown rule of a direct dependency (literal or constant) and an empty rule list are compile errors; a duplicate identifier, a blank reason and an identifier of a provider that is not a dependency are warnings; valid core, dependency and constant identifiers, and a constant rule list, produce nothing; an identifier that does not resolve suppresses nothing and is reported by `bal scan`.
-- Analyzers declared only in the scan configuration file: an identifier is a warning under `bal build`, accepted under `bal scan` when the analyzer defines it, and a compile error under `bal scan` when it does not.
-- Core rules: a well-formed core identifier passes the plugin; under `bal scan` and in the language server, one the tool does not define is an error that fails the scan, and is not also reported as unmatched.
+- Identifier form, in the plugin: a malformed identifier and an empty rule list are compile errors; a duplicate identifier, a blank reason and an identifier that is not a literal or constant are warnings; well-formed literal and constant identifiers, a constant rule list, and shorthand or quoted fields produce nothing, whether or not the rules exist.
+- Identifier existence, in `bal scan` and the language server: an identifier of a core rule, a direct dependency's analyzer or an analyzer declared in the scan configuration file is accepted when the provider defines it, including when rule selection excludes it; one the provider does not define is an error that fails the scan; one of a provider the scan does not engage is a warning; none of these is also reported as unmatched; an identifier that does not resolve suppresses nothing and is reported.
 - Suppressing without a rule list: every finding in the annotated construct is suppressed, and nothing outside it.
 - Each requirement, independently: off, the annotation suppresses silently; on, it still suppresses and the scan fails with an error naming the annotation's file and line. Both on together. A command-line option switches a requirement on, and cannot switch off one the configuration file sets.
-- `enabled = false`: every finding is reported from both entry points, and requirement violations are still reported.
+- `enabled = false`: every finding is reported from both entry points, and no suppression diagnostic is reported. A `[suppression]` value that is not a boolean stops the scan.
 - Binding: a finding inside the annotated construct is suppressed; a finding outside it is not; a service, class or object-type annotation does not cover findings inside its members.
 - Scoping: a nested annotation naming the same rule overrides an outer one; a nested annotation naming a different rule does not; no leakage to siblings; two annotations on one construct combine, each with its own justification; a rule-specific annotation beside a blanket one on the same construct supplies the justification and the match, whichever comes first.
 - Restructuring patterns: each pattern keeps the finding inside the annotated declaration.
 - Regression tests for both known compiler defects once fixed.
 - Reporting: SARIF suppression entries carry `kind`, `status` and the justification; once a run has a suppressed result every other result carries an empty array, and a run without one carries none; JSON mirrors SARIF; console summary and unmatched diagnostics are correct; the HTML report and platform plugins receive unsuppressed findings only.
 - Gate interaction: deferred with the gate itself.
-- Audit mode: with `--ignore-suppressions`, every suppressed finding is reported. Findings from every other rule match a run with the annotations deleted; the annotations' own warnings do not, because deleting an annotation also deletes what there was to report about it.
+- Audit mode: with `--ignore-suppressions`, every suppressed finding is reported, no suppression diagnostic is reported, and an unknown rule or an unmet requirement does not fail the run.
 - Identical behaviour from both entry points, asserted by shared fixtures.
 
 ## Risks and Assumptions
@@ -520,8 +529,8 @@ Beyond that:
 | Risk | Mitigation |
 |---|---|
 | An annotation before a call or assignment statement is dropped silently, so the developer believes the finding is suppressed | Compiler fix (Known defect 1) is a release blocker; until then the IDE quick fix only ever inserts the restructured form |
-| A project names a core rule its installed scan tool does not define, for example one added in a later tool release | Core identifiers are checked by the running tool, so `bal scan` reports an error naming the rule; `bal build` accepts any well-formed core identifier |
-| An analyzer declared only in the scan configuration file cannot be checked during `bal build` | Warning at build; strict check under `bal scan`, which is where the gate runs |
+| A well-formed identifier names a rule that does not exist, and `bal build` accepts it | `bal scan`, which is where the gate runs, checks every identifier against the rules it can report and fails on an unknown one; the language server reports it with the scan results |
+| A project names a rule its installed scan tool or analyzer does not define yet, for example one added in a later release | The same check reports it as unknown, naming the rule and its provider, so the fix — upgrading the tool or the analyzer — is evident |
 | Annotations proliferate as a way to get builds green | Each one surfaces in the pull request diff when added; visible counts; suppressed findings present in the output; `--ignore-suppressions` exposes the true picture on demand; a team can require the justification and fail the scan without it |
 | An annotation with no rule list on a declaration silences findings a later author introduces | The suppression entry in the report names the rules actually suppressed, so the effect is visible rather than inferred; `requireRuleId` forbids the form outright for projects that want it forbidden; the audit run shows total exposure |
 | A restructuring rewrite stops a rule from firing, hiding the finding instead of suppressing it | The annotation is then reported as unmatched; rule defects of this kind are fixed in the rule |
@@ -548,7 +557,10 @@ No change to the language grammar.
 
 ## Open questions
 
-1. **Is a warning the right severity for analyzers declared only in the scan configuration file?** The alternative is for the plugin to read that file and resolve those analyzers itself during `bal build`, which duplicates the tool's resolution logic.
+None. The questions raised during review are resolved in the design:
+
+- **Whether the core rule list is bundled into the package or discovered.** Neither: the plugin checks only the form of an identifier, and `bal scan` checks its existence against the rules of the tool in use (see [Rule identifier validation](#rule-identifier-validation)).
+- **The severity for analyzers declared only in the scan configuration file.** No build-time severity is needed, because the plugin no longer checks existence. `bal scan` engages those analyzers and checks their identifiers like any other.
 
 ## Future Work
 
