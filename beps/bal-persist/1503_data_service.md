@@ -102,7 +102,7 @@ depend on the persist client first.
 |---|---|---|
 | `Ballerina.toml` | user | Whether a data service exists, its protocol and its base path |
 | `persist/model.bal` | user | The entities, and a `@dataservice:Expose` annotation on each entity to expose, naming its operations |
-| `ballerina/dataservice` | new library | The annotations, their compiler-plugin validation, and the runtime types generated services share |
+| `ballerina/dataservice` and `ballerina/dataservice.<protocol>` | new libraries | The annotations and their compiler-plugin validation, and the runtime that generated services call |
 | `generated/` | persist tool | The persist client, as today, plus the data service |
 
 #### Where a setting goes
@@ -149,8 +149,26 @@ options.dataservice.basePath = "/api"
 
 | Key | Required | Default | Meaning |
 |---|---|---|---|
-| `options.dataservice.protocol` | yes | — | The protocol the service is generated for: `http`, `graphql` or `mcp` |
+| `options.dataservice.protocol` | yes | — | The protocol the service is generated for; see [Protocol values](#protocol-values) |
 | `options.dataservice.basePath` | no | `/api` for `http`, `/graphql` for `graphql`, `/mcp` for `mcp` | The service's base path |
+
+`basePath` must start with `/`. A trailing `/` is removed, and `/` alone serves the service at
+the root. Each segment must be non-empty and contain only letters, digits, `_`, `-` and `.`.
+Any other value is an error that names it.
+
+`persist-options-schema.json` gains the group's keys. The values are checked by the tool rather
+than the schema, so that its errors can list the supported values:
+
+```json
+"dataservice": {
+  "type": "object",
+  "properties": {
+    "protocol": {"type": "string"},
+    "basePath": {"type": "string"}
+  },
+  "additionalProperties": false
+}
+```
 
 Whether a service is generated depends on `Ballerina.toml` and the model together:
 
@@ -180,8 +198,10 @@ Each value names the Ballerina module that implements the service:
 names a design style. GraphQL and MCP are also carried over HTTP; the value selects the service
 type, not the transport.
 
-`odata` and `soap` are reserved for later proposals. Passing them now is an error that lists
-the supported values.
+Only `http` is implemented with this proposal, through #1513. `graphql` and `mcp` are listed
+for their own proposals; until those are implemented, passing one is an error saying that the
+protocol is not supported yet and listing the supported values. `odata` and `soap` are reserved
+for later proposals, and passing them is the same error.
 
 `protocol` takes a single string. A later proposal may also accept an array, generating one
 service per protocol on a shared listener. A string stays valid when that happens.
@@ -217,8 +237,9 @@ with it. Without `--dataservice`, an annotated model generates only the client, 
 says that `--dataservice` would also generate a service.
 
 `pull` takes table names because that is what a user knows before the model exists. Without
-`--expose-tables`, every pulled entity is annotated. With it, only the entities of the named
-tables are annotated, and each name must be a pulled table. `--tables` keeps its current
+`--expose-tables`, every pulled entity is annotated, except an entity with an unsupported data
+type, which `pull` names in a warning. With it, only the entities of the named tables are
+annotated, and each name must be a pulled table whose entity has no unsupported data type. `--tables` keeps its current
 meaning, so a user can pull more tables than they expose. When an entity's name differs from
 its table's, `pull` prints the mapping. From then on the model is the source of truth: the
 annotations can be edited like the rest of it, and a later `pull` replaces them along with the
@@ -314,16 +335,28 @@ type. Annotating such an entity is an error.
 
 #### Validation
 
-The compiler plugin checks the annotation where it is written. The persist tool checks what
-needs the whole model when it generates.
+`persist/model.bal` is not compiled with the package: `bal build` reads it through the persist
+tool, and the compiler sees it only when the file is compiled on its own, as the IDE does. Each
+check therefore runs in two places. The compiler plugin reports it in the IDE while the model
+is edited, and the persist tool repeats it every time it generates, from `bal build` or `bal
+persist generate`. A tool error fails the build.
 
-| Check | Where | Severity |
-|---|---|---|
-| `@dataservice:Expose` is on a record type that is a persist entity | compiler plugin | error |
-| `operations` is non-empty and has only `Operation` values | compiler, through the type | error |
-| `operations` has no duplicates | compiler plugin | error |
-| An annotated entity has no unsupported data types | persist tool | error |
-| At least one entity is annotated | persist tool | error |
+The compiler plugin acts only on a single-file project whose file is in the package's
+`persist` directory, and does nothing in any other source.
+
+| Check | In the IDE | On generation | Severity |
+|---|---|---|---|
+| `@dataservice:Expose` is on a record type in the model | compiler plugin | persist tool | error |
+| `operations` is non-empty and has only `Operation` values | compiler, through the type | persist tool | error |
+| `operations` has no duplicates | compiler plugin | persist tool | error |
+| An annotated entity has no unsupported data types | — | persist tool | error |
+| At least one entity is annotated | — | persist tool | error |
+
+The persist tool reads the annotation from the model's syntax tree, not from compiled values.
+`operations` is a list literal whose members are `Operation` members, such as
+`dataservice:READ`, or their string values, such as `"read"`. No other form can reach the
+tool: persist accepts only record and enum definitions in a model, so a model cannot declare a
+constant to use instead.
 
 Diagnostic codes and messages are left to the implementation.
 
@@ -482,6 +515,11 @@ a validation error for GraphQL, an unknown tool for MCP.
   and `persist_dataservice_config.bal`. From the `[[tool.persist]]` entry, they go into
   `generated/` and, like the client, are regenerated on every build and must not be edited. From
   `generate`, they go into the package root, where the client also goes, and are the user's.
+- **Regeneration:** in `generated/`, the service files are rewritten whenever the client is.
+  The tool's check that skips generation for an unchanged model also covers
+  `options.dataservice`, so changing the protocol or base path regenerates the service. When
+  `options.dataservice` is removed, the tool deletes both service files from `generated/`.
+  Files that `generate` wrote into the package root are the user's and are never deleted.
 - **Names:** generated module-level names share the default module's namespace with the user's
   own code, as the persist client's generated names already do. The service follows the same
   convention: type names are derived from entity names, such as `<Entity>List`, and other
@@ -526,6 +564,19 @@ proposals. For example, persist's `time:*` record types and `byte[]` need a Grap
   `dataservice` object; existing entries still validate.
 - Models that do not import `ballerina/dataservice` are unaffected. Without
   `options.dataservice`, `@dataservice:Expose` annotations in a model have no effect.
+
+### Implementation scope
+
+| Implemented with this proposal and #1513 | Designed, not implemented |
+|---|---|
+| `ballerina/dataservice`: `Operation`, `ExposeConfig`, `Expose`, `ErrorCode`, `DataserviceError`, the persist error mapping, the date, time and `byte[]` conversions, and the compiler plugin | [Field rules](#field-rules): `ReadOnly`, `Immutable` and `Internal` |
+| `ballerina/dataservice.http`, as #1513 defines it | `EXECUTE`, which is not a member of `Operation` until custom operations are proposed |
+| persist-tools: `options.dataservice` with `protocol = "http"`, the CLI flags, validation, and generation of the HTTP service | The `graphql`, `mcp`, `odata` and `soap` protocol values, which are errors |
+| | Everything in the [Roadmap](#roadmap) |
+
+End-to-end behaviour tests live in persist-tools, which generates the service. The libraries
+test their own functions and the compiler plugin. Each library is released before the
+persist-tools release whose generated code calls it.
 
 ## Alternatives
 
