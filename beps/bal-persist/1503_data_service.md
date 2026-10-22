@@ -152,8 +152,15 @@ options.dataservice.basePath = "/api"
 | `options.dataservice.protocol` | yes | — | The protocol the service is generated for: `http`, `graphql` or `mcp` |
 | `options.dataservice.basePath` | no | `/api` for `http`, `/graphql` for `graphql`, `/mcp` for `mcp` | The service's base path |
 
-When `options.dataservice` is absent, no service is generated and persist behaves exactly as it
-does today. When it is present, `protocol` must be set.
+Whether a service is generated depends on `Ballerina.toml` and the model together:
+
+| `options.dataservice` | `protocol` | Annotated entities | Result |
+|---|---|---|---|
+| absent | — | none | No service; persist behaves exactly as it does today |
+| absent | — | some | No service. The annotations have no effect, and the tool warns that `protocol` is not set |
+| present | absent | any | Error: `protocol` is required |
+| present | set | none | Error listing the entities that can be annotated |
+| present | set | some | The service is generated over the annotated entities |
 
 Which entities are exposed, and what each allows, is said in the model with
 [`@dataservice:Expose`](#dataserviceexpose), as [Where a setting goes](#where-a-setting-goes)
