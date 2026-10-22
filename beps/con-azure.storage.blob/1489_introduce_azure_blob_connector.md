@@ -6,7 +6,7 @@
 - Created date
   - 2026-08-20
 - Updated date
-  - 2026-10-17
+  - 2026-10-22
 - Issue
   - [#1489](https://github.com/ballerina-platform/ballerina-spec/issues/1489)
 - State
@@ -182,7 +182,7 @@ An Entra identity authorizes through Azure RBAC:
 ```ballerina
 public type ClientConfiguration record {|
     AuthConfig auth;
-    RetryConfig retryConfig?;
+    RetryConfig retryConfig = {};
     TransportConfig transportConfig = {};
 |};
 ```
@@ -269,7 +269,7 @@ remote function setContainerAccessPolicy(SignedIdentifier[] identifiers, AccessP
 
 Metadata is free-form annotation stored and returned verbatim; `setContainerMetadata` replaces the complete set, and it is read back through `getContainerProperties`.
 
-The anonymous access level and the stored access policies are read together and written separately. `setPublicAccess` changes the level and leaves the policies as they are; `setContainerAccessPolicy` replaces the policies (at most five; `[]` removes them all) and leaves the level as it is. Each of the two reads the current access control list first and resends the half it does not own, so each call is two requests, and two processes updating the two halves at the same time can overwrite each other: the last writer wins, and an application that changes both concurrently serialises its own calls.
+The anonymous access level and the stored access policies are read together and written separately. `setPublicAccess` changes the level and leaves the policies as they are; `setContainerAccessPolicy` replaces the policies (at most five; `[]` removes them all) and leaves the level as it is. Each of the two reads the current access control list first and resends the half it does not own, so each call is two requests; the second is conditioned on the container being unmodified since the read, so a concurrent change of the other half fails it with a `PreconditionFailedError` instead of being overwritten, and the caller repeats the call.
 
 #### 4.2 Blob operations
 
@@ -349,7 +349,7 @@ remote function copyBlobFromUrl(string sourceUrl, string destinationPath, CopyOp
 remote function abortCopy(string path, string copyId, AbortCopyOptions? options = ()) returns Error?;
 ```
 
-Copies are asynchronous: `CopyInfo` reports its identifier and status at acceptance. A pending copy is watched through `getBlobProperties`, whose result carries the state of the blob's most recent copy, and cancelled with `abortCopy`. `copyBlob` copies within the bound container under the client's credentials. `copyBlobFromUrl` copies from any Azure Storage URL the service can read: a source in the same account is authorized by the client's credential; a source that is not publicly readable elsewhere carries its own authorization in the URL.
+Copies are asynchronous: `CopyInfo` reports its identifier and status at acceptance. A pending copy is watched through `getBlobProperties`, whose result carries the state of the blob's most recent copy, and cancelled with `abortCopy`. `copyBlob` copies within the bound container under the client's credentials. `copyBlobFromUrl` copies from any Azure Storage URL the service can read: a source in the same account is authorized by the client's credential, a SAS-authenticated client attaching its SAS to a blob source that carries none, since the service authorizes the source separately from the request; a source that is not publicly readable elsewhere carries its own authorization in the URL.
 
 #### 4.5 Access tiers, index tags, and snapshots
 
@@ -449,7 +449,7 @@ Azure Blob Storage publishes lifecycle events through Azure Event Grid to Azure 
 public type ListenerConfiguration record {|
     AuthConfig auth;                         // must span the queue and blob services
     boolean laxDataBinding = false;
-    RetryConfig retryConfig?;
+    RetryConfig retryConfig = {};
     TransportConfig transportConfig = {};
     string queueServiceUrl?;                 // overrides the derived queue endpoint
 |};
@@ -459,8 +459,8 @@ public type ServiceConfiguration record {|
     string poisonQueueName?;                 // default "{queueName}-poison"
     int batchSize = 16;                      // messages per receive, 1 to 32
     int newBatchThreshold?;                  // refill trigger, 0 to batchSize; default half, rounded down
-    decimal maxPollingInterval = 60;  // ceiling of the empty-queue backoff; above 0
-    decimal redeliveryDelay = 0;      // invisibility after a handler failure; 0 to 604,800
+    decimal maxPollingInterval = 60;         // ceiling of the empty-queue backoff; above 0
+    decimal redeliveryDelay = 0;             // invisibility after a handler failure; 0 to 604,800
     int maxDeliveryCount = 5;                // deliveries before the poison queue; at least 1;
                                              // 1 poisons any unsettled delivery, routine shutdowns
                                              // and redeploys included, on its next receipt
@@ -489,8 +489,7 @@ public isolated function parseEvent(anydata message) returns BlobEvent|Error?;
 ```ballerina
 @blob:ServiceConfig {queueName: "invoice-events"}
 isolated service on blobListener {
-    isolated remote function onBlobJson(Invoice invoice, blob:BlobEvent event, blob:Caller caller)
-            returns blob:DeadLetterError|blob:RetryError|error?;
+    isolated remote function onBlobJson(Invoice invoice, blob:BlobEvent event, blob:Caller caller) returns error?;
     isolated remote function onBlobDelete(blob:BlobEvent event, blob:Caller caller) returns error?;
     isolated remote function onError(blob:Error err, blob:BlobEvent? event, blob:Caller? caller) returns error?;
 }
@@ -523,7 +522,7 @@ The checks, and the setting ranges commented above, run at `attach`, and at comp
 | `onBlobDelete` | `BlobEvent` | a deleted blob |
 | `onError` | `Error` | a failed receive, an unparseable message, a message past `maxDeliveryCount`, a fetch, binding or `Caller` build failure, or a failed or transiently skipped poison move |
 
-A content handler takes `(content, BlobEvent?, Caller?)` and `onBlobDelete` takes `(BlobEvent, Caller?)`; the listener passes only what is declared. A service declares at least one of the six event handlers. An event handler returns `error?`, optionally listing `blob:DeadLetterError` and `blob:RetryError` (5.4). The compiler plugin validates handlers, parameters and returns.
+A content handler takes `(content, BlobEvent?, Caller?)` and `onBlobDelete` takes `(BlobEvent, Caller?)`; the listener passes only what is declared. A service declares at least one of the six event handlers. An event handler declares `error?` and constructs `blob:DeadLetterError` or `blob:RetryError` explicitly (5.4); listing them in the return type would make a bare `error(...)` a `DeadLetterError`. The compiler plugin validates handlers, parameters and returns.
 
 | `onError` form | Receives |
 |---|---|
@@ -773,8 +772,7 @@ listener blob:Listener blobListener = check new (
 // This queue's subscription admits the readings container's .csv blobs.
 @blob:ServiceConfig {queueName: "reading-events"}
 isolated service on blobListener {
-    isolated remote function onBlobCsv(Reading[] rows, blob:BlobEvent event, blob:Caller caller)
-            returns blob:DeadLetterError|error? {
+    isolated remote function onBlobCsv(Reading[] rows, blob:BlobEvent event, blob:Caller caller) returns error? {
         if rows.length() == 0 {
             return error blob:DeadLetterError(string `${event.path} holds no readings`);
         }
