@@ -41,6 +41,7 @@ Without this, a team adopting the gate has two options — fix everything first,
 - **Removing project-wide rule exclusion.** It remains legitimate: a project with no HTTP services does not need HTTP rules.
 - **Expiring suppressions.** Time-boxed suppressions need a policy owner before they need a syntax.
 - **Bulk acceptance of an existing backlog.** Suppression handles individually reviewed exceptions, one at a time, each with a reason. Grandfathering in everything a codebase already has is the job of the [baseline work](https://github.com/ballerina-platform/ballerina-spec/issues/1498), and using suppression for it means hundreds of annotations carrying invented justifications — which destroys the value of requiring one.
+- **The editor code action.** This proposal decides what the editor's suppress action inserts (see [The IDE's exclusion action](#the-ides-exclusion-action)), not the action itself, which needs the scan tool's VS Code integration and is listed in [Future Work](#future-work).
 - **Annotations on statements.** Widening the annotation attach points so that any statement can be annotated is not proposed. The two rules that cannot be suppressed at their own statement (see [Placement](#placement)) do not justify a language change driven by a lint concern.
 
 ## Design
@@ -570,7 +571,7 @@ None. The questions raised during review are resolved in the design:
 - **An aggregated suppression report.** A convenience view over data already present in the SARIF output, so nothing is blocked without it.
 - **Stale suppressions reported as a finding** rather than a warning, so suppression hygiene can be gated on. Deferred until the gate exists, since a gate is what a team would act on it with.
 - **An option to list suppressed findings on the console**, if the divergence between the console listing and the saved report proves unhelpful in practice.
-- IDE quick fix to insert an annotation, including the restructuring rewrite.
+- **A code action to suppress a finding**, which adds the `@scan:Suppress` annotation for it, applying the restructuring rewrite where needed and adding the import. It needs the scan tool's integration with VS Code and is provided by the scan tool, which produces the findings.
 - Migration tooling from project-wide exclusions to annotations, for the case where a rule was disabled globally because of a handful of accepted findings.
 - A fuller audit mode that also disregards rule selection, closing the gap where a project-wide exclusion hides findings that the suppression audit run cannot reveal.
 - **Rule selection in SARIF.** SARIF records a rule that is switched off for a run as a rule configuration (`invocations[].ruleConfigurationOverrides`, §3.20.5) rather than as a suppression. Emitting it would make project-wide exclusions visible in the same report as suppressions.
