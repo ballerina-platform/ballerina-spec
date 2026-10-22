@@ -245,6 +245,20 @@ its table's, `pull` prints the mapping. From then on the model is the source of 
 annotations can be edited like the rest of it, and a later `pull` replaces them along with the
 model.
 
+#### Flag combinations
+
+| Case | Result |
+|---|---|
+| `add` or `generate` with `--dataservice` and `--module`, `--model` or `--with-init-params` | Error, with the message for the matching `Ballerina.toml` case in [Messages](#messages) |
+| `--dataservice` with a value other than `http` | The protocol error in [Messages](#messages) |
+| `--expose-tables` without `--dataservice` | Error |
+| `--expose-tables` naming a table that was not pulled, or one whose entity has an unsupported data type | Error naming the table. Names match as `--tables` matches them, exactly |
+| `pull --dataservice` when the entry already has `options.dataservice` | `protocol` is set to the flag's value; `basePath` is kept |
+| `pull --dataservice` when the entry has another `targetModule` or `withInitParams = true` | Error, as for the same `Ballerina.toml`, and nothing is written |
+| `pull --dataservice` with several `[[tool.persist]]` entries | The entry whose `filePath` is `persist/model.bal` is used, and created if none is |
+
+A command that ends in an error leaves the model and `Ballerina.toml` unchanged.
+
 ### Libraries
 
 A data service uses two library packages:
@@ -358,7 +372,33 @@ The persist tool reads the annotation from the model's syntax tree, not from com
 tool: persist accepts only record and enum definitions in a model, so a model cannot declare a
 constant to use instead.
 
-Diagnostic codes and messages are left to the implementation.
+#### Messages
+
+Errors are printed with persist's `ERROR:` prefix and fail the command or `bal build`. Warnings
+are printed with `WARNING:` and do not. The compiler plugin reports the same text for the
+checks it shares with the tool; its diagnostic codes are left to the implementation.
+
+| Case | Severity | Message |
+|---|---|---|
+| `protocol` missing | error | `'options.dataservice.protocol' is required. Supported values: http.` |
+| `protocol` is `graphql`, `mcp`, `odata` or `soap` | error | `the protocol '<value>' is not supported yet. Supported values: http.` |
+| `protocol` is any other value | error | `invalid 'options.dataservice.protocol' '<value>'. Supported values: http.` |
+| `basePath` without a leading `/` | error | `invalid 'options.dataservice.basePath' '<value>': the base path must start with '/'.` |
+| `basePath` with an empty or invalid segment | error | `invalid 'options.dataservice.basePath' '<value>': each path segment must be non-empty and contain only letters, digits, '_', '-' and '.'.` |
+| `targetModule` is not the package | error | `a data service is generated only into the default module '<package>'. Remove 'targetModule' or set it to '<package>'.` |
+| `withInitParams = true` | error | `a data service cannot be generated with 'options.withInitParams', because the service creates the client without arguments.` |
+| A named model | error | `a data service is not supported for a named persist model. Use 'persist/model.bal' or remove 'options.dataservice'.` |
+| No annotated entity | error | `the data service exposes no entity. Add the @dataservice:Expose annotation to the entities to expose: <Entity>, <Entity>.` |
+| An annotated entity with an unsupported data type | error | `the entity '<Entity>' has an unsupported data type and cannot be exposed. Remove its @dataservice:Expose annotation.` |
+| `Expose` on something other than a record type in the model | error | `the @dataservice:Expose annotation is allowed only on a record type in the persist model.` |
+| `operations` empty | error | `'operations' in the @dataservice:Expose annotation of the entity '<Entity>' cannot be empty.` |
+| `operations` not a list literal | error | `'operations' in the @dataservice:Expose annotation of the entity '<Entity>' must be a list of operations.` |
+| An unknown operation | error | `invalid operation '<value>' in the @dataservice:Expose annotation of the entity '<Entity>'. Supported values: dataservice:READ, dataservice:CREATE, dataservice:UPDATE, dataservice:DELETE.` |
+| A duplicate operation | error | `duplicate operation '<value>' in the @dataservice:Expose annotation of the entity '<Entity>'.` |
+| Annotations without `options.dataservice` | warning | `the model has @dataservice:Expose annotations, but no data service is generated. Set 'options.dataservice.protocol' in the [[tool.persist]] entry to generate one.` |
+| `pull` skips an entity | warning | `the table '<table>' has an unsupported data type, so its entity '<Entity>' is not exposed.` |
+| `pull` annotates entities | info | `The exposed entities allow every action. Set 'operations' in their @dataservice:Expose annotations to restrict them.` |
+| `generate` without `--dataservice` on an annotated model | info | `the model has @dataservice:Expose annotations. Use the '--dataservice' option to also generate a data service.` |
 
 ### The service shape
 
