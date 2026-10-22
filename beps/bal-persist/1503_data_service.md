@@ -638,9 +638,9 @@ listener configuration.
 
 | Proposal | Scope |
 |---|---|
-| 2. [HTTP](NNNN_data_service_http.md) | `http:Service`: collection and key paths, methods, status codes, request and response bodies |
-| 3. [GraphQL](NNNN_data_service_graphql.md) | `graphql:Service`: queries and mutations, input and output types, type mappings for persist's time types and `byte[]`, error mapping |
-| 4. [MCP](NNNN_data_service_mcp.md) | `mcp:StreamableHttpService`: tool names, input and output schemas, descriptions from doc comments, tool annotations such as read-only hints, error results |
+| 2. HTTP, [#1513](https://github.com/ballerina-platform/ballerina-spec/issues/1513) | `http:Service`: collection and key paths, methods, status codes, request and response bodies |
+| 3. GraphQL, later | `graphql:Service`: queries and mutations, input and output types, type mappings for persist's time types and `byte[]`, error mapping |
+| 4. MCP, later | `mcp:StreamableHttpService`: tool names, input and output schemas, descriptions from doc comments, tool annotations such as read-only hints, error results |
 
 ### Roadmap
 
