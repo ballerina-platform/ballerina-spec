@@ -648,10 +648,103 @@ listener configuration.
 |---|---|---|
 | Query options | Filtering, sorting, paging, field selection, count | The `read` action; fields added to the `<Entity>List` envelope; the reserved `$` names |
 | Auth | Authentication at the listener; scopes per action in `@dataservice:Expose`; later, row-level rules | The action names; annotations that only narrow |
-| Relations | Embedded reads, relation routes, nested writes. A relation is offered when both entities allow `read`, with no annotation of its own | The reserved path segment after an entity's full key; the `read` action |
-| Field rules | Hidden fields and read-only fields, as field annotations | The model holding what the data allows |
+| Relations | Embedded reads, relation routes, nested writes. A relation is offered when both entities allow `read`, unless its field is `Internal` | The reserved path segment after an entity's full key; the `read` action |
+| Field rules | Read-only, immutable and internal fields, as field annotations; see [Field rules](#field-rules) | The model holding what the data allows |
 | More write operations | Upsert, full replace, update or delete by filter, once the persist client supports them | The `create`, `update` and `delete` actions |
 | Custom operations | Named queries exposed as operations | The reserved `EXECUTE` action |
 | Several protocols | Several services from one entry, on a shared listener | `protocol` also accepting an array |
 | More protocols | OData, SOAP | The reserved `odata` and `soap` values |
 | API descriptions | OpenAPI, GraphQL schema, MCP tool descriptions | Generated alongside the service |
+
+### Field rules
+
+Designed for a later proposal. Three annotations say what the API does with one field. A field
+without any of them is returned, and accepted on create and update.
+
+| Annotation | Returned | Accepted on create | Accepted on update | For example |
+|---|:-:|:-:|:-:|---|
+| `@dataservice:ReadOnly` | yes | no | no | `Order.status` set by a workflow, `Invoice.total`, `Account.balance` |
+| `@dataservice:Immutable` | yes | yes | no | `Order.customerId`, `Invoice.number`, `Product.sku` |
+| `@dataservice:Internal` | no | no | no | `tenantId`, `deletedAt`, `Product.costPrice` |
+
+```ballerina
+type Order record {|
+    readonly int id;
+    @dataservice:Immutable
+    int customerId;
+    @dataservice:ReadOnly {value: "pending"}
+    string status;
+    @dataservice:Internal
+    string? internalNotes;
+|};
+```
+
+The names follow the field behaviours of [Google AIP-203](https://google.aip.dev/203)
+(`OUTPUT_ONLY`, `IMMUTABLE`) and OpenAPI's `readOnly`.
+
+#### Values on create
+
+A `ReadOnly` or `Internal` field is never sent by the caller, so the service sets it on create:
+to `value` when the annotation gives one, and otherwise to `()`. A field that is neither
+nullable nor `@sql:Generated` must give `value`, because the insert fails without it. Persist
+does not accept default values on model fields, so the value is given in the annotation. It
+must be a constant of the field's type.
+
+#### A field sent anyway
+
+| Annotation | Sent on create | Sent on update |
+|---|---|---|
+| `ReadOnly` | Ignored | Ignored |
+| `Immutable` | Accepted | Rejected with `INVALID_INPUT` |
+| `Internal` | Rejected with `INVALID_INPUT` | Rejected with `INVALID_INPUT` |
+
+Ignoring a read-only field lets a client send back a record it has read, as AIP-203 requires.
+AIP-203 also accepts an immutable field whose value is unchanged; that needs the record to be
+read before every update, so it is left out, and can be added later without breaking callers.
+
+#### Fields that are not returned
+
+An `Internal` field is left out of every response, of `select`, filtering and sorting, of
+`expand`, and of error messages. Filtering or sorting on it would reveal its value without
+returning it.
+
+#### Relation fields
+
+The owning side of a relation holds the foreign key, so the annotation on its relation field
+governs both the foreign key fields and the relation. The other side has no foreign key, so
+only `Internal` applies to it.
+
+| Annotation | Owning side, such as `Employee.department` | Other side, such as `Department.employees` |
+|---|---|---|
+| none | Relation route and `expand`; foreign key returned and written | Relation route and `expand` |
+| `ReadOnly` | Relation route and `expand`; foreign key returned, never written | Compile error |
+| `Immutable` | Foreign key set on create, never changed | Compile error |
+| `Internal` | No relation route or `expand`; foreign key neither returned nor written | No relation route or `expand` from this side |
+
+The `value` of a relation field is the related entity's key: one value for a single key, or a
+tuple in key order for a composite key. When the foreign key fields are declared in the model
+with `@sql:Relation`, `ReadOnly` and `Immutable` go on those fields, and only `Internal` goes on
+the relation field.
+
+#### Validation
+
+| Check | Where | Severity |
+|---|---|---|
+| At most one of `ReadOnly`, `Immutable` and `Internal` on a field | compiler plugin | error |
+| None of them on a key field, except `ReadOnly` on a `@sql:Generated` key | compiler plugin | error |
+| `value` on a `ReadOnly` or `Internal` field that is neither nullable nor generated | compiler plugin | error |
+| `value` matches the field's type | compiler plugin | error |
+| `ReadOnly` or `Immutable` on a relation field without a foreign key | compiler plugin | error |
+| A field rule that the entity's actions make meaningless, such as `Immutable` on an entity without `update` | persist tool | warning |
+
+#### Not field rules
+
+- **Write-only fields,** such as AIP-203's `INPUT_ONLY`. Their usual purpose is a secret such as
+  a password, which needs hashing, and the data service runs no user code. The service would
+  store the value as sent.
+- **Masked values,** such as returning `"password": ""`. The type then misdescribes the
+  response, there is no masked value for most types, and a client that sends a read record back
+  overwrites the real value. A field that must not be returned is `Internal`.
+- **One annotation listing a field's actions,** such as `@dataservice:Field {operations:
+  [dataservice:READ, dataservice:CREATE]}`. It covers the same cases, but each use has to be
+  decoded; the named annotations say what they do.
