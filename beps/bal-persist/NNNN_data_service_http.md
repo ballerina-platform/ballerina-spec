@@ -147,7 +147,9 @@ own:
 
 - **Single key:** one path segment, `/employees/{id}`, typed as the key field's type.
 - **Composite key:** one segment per key field, in declaration order, for example
-  `/assignments/{employeeId}/{projectCode}`. ✅
+  `/assignments/{employeeId}/{projectCode}`. ✅ There is no common convention for composite keys
+  (see [Alternatives](#alternatives)); positional segments are the conventional REST form for a
+  single key, extend it without new syntax, and match the persist client's resource paths.
 - **Key types:** `int`, `string`, `float`, `decimal` and `boolean` keys bind as path
   parameters. A segment that does not convert to the key's type is answered with `400` by
   `ballerina/http`. ✅
@@ -246,6 +248,12 @@ keyFile = "/path/to/private.key"
   the other protocols, and costs nothing.
 - **A bare array for get many.** Rejected in #1503: paging and count need room in the
   envelope.
+- **Other composite key forms.** Named pairs, as Data API builder uses
+  (`/assignments/employeeId/4/projectCode/P1`), say which value is which key but make single
+  keys unusual (`/employees/id/4`). OData's `/assignments(employeeId=4,projectCode='P1')` has no
+  form in a Ballerina resource path. A delimiter in one segment (`/assignments/4,P1`) needs
+  escaping and cannot be typed. Query parameters (`/assignments?employeeId=4&projectCode=P1`)
+  address the collection, where filters belong.
 
 ## Testing
 
@@ -281,3 +289,28 @@ keyFile = "/path/to/private.key"
 - OpenAPI generation for the generated service.
 - An error interceptor so invalid-input errors use `DataserviceError`.
 - Query parameters for filter, sort, page and count, under the `read` action.
+- Relations, under the `read` action, as follows.
+
+### Relations
+
+| Form | Example | Returns |
+|---|---|---|
+| Relation route, to-many | `GET /api/employees/4/assignments` | `AssignmentList`, with the query parameters of get many |
+| Relation route, to-one | `GET /api/employees/4/department` | `Department`, or `404` |
+| `expand` | `GET /api/employees/4?expand=department,assignments` | The record with the related records embedded |
+
+- **Segment:** the relation field's name in the model, unchanged, after the entity's full key:
+  `/assignments/4/P1/employee` for a composite key. Every entity has a fixed number of key
+  segments, so a relation route never matches the same path as get one.
+- **`expand`:** works on to-one and to-many relations, as OData `$expand`, PostgREST embedding
+  and Data API builder's nested GraphQL fields do. An expanded to-many list holds at most one
+  page and has no cursor; the relation route pages through all of it.
+- **Exposure:** a relation is offered only when both entities allow `read`. It needs no
+  annotation of its own: a caller who can read both entities can already reach the related
+  records through the foreign key, so a separate switch would protect nothing. Without the
+  related entity's `read`, the foreign key field is still returned as a field of the record.
+- **Writes:** a relation is set by writing its foreign key fields under the owning entity's
+  `create` or `update`. Nested writes are later work.
+- **Persist prerequisites:** the persist SQL client loads to-many relations with one query per
+  parent record and without a limit. Expanding a to-many relation on get many needs batched,
+  limited loading in the client first.

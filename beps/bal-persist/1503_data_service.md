@@ -373,7 +373,7 @@ It is exposed as a patch.
 
 These are reserved for later proposals and are not used for anything else:
 
-- a third path segment after an entity's key (`<entities>/[key]/<relation>`), for relations;
+- the path segment after an entity's full key (`<entities>/[key]/<relation>`), for relations;
 - names starting with `$`, for query and metadata operations such as count.
 
 #### Types
@@ -648,7 +648,7 @@ listener configuration.
 |---|---|---|
 | Query options | Filtering, sorting, paging, field selection, count | The `read` action; fields added to the `<Entity>List` envelope; the reserved `$` names |
 | Auth | Authentication at the listener; scopes per action in `@dataservice:Expose`; later, row-level rules | The action names; annotations that only narrow |
-| Relations | Embedded reads, relation routes, nested writes | The reserved path segment after an entity's key |
+| Relations | Embedded reads, relation routes, nested writes. A relation is offered when both entities allow `read`, with no annotation of its own | The reserved path segment after an entity's full key; the `read` action |
 | Field rules | Hidden fields and read-only fields, as field annotations | The model holding what the data allows |
 | More write operations | Upsert, full replace, update or delete by filter, once the persist client supports them | The `create`, `update` and `delete` actions |
 | Custom operations | Named queries exposed as operations | The reserved `EXECUTE` action |
