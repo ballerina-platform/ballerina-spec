@@ -23,7 +23,8 @@ and a generated persist in-memory client.
 ## Goals
 
 - Define the URL, method, request body, response body and status code of every operation.
-- Use the persist-generated types as the request and response bodies, without wrapper types.
+- Use the persist-generated types as the request and response bodies, except where a field's
+  JSON form must differ: date and time values and `byte[]`.
 - Use plain REST conventions: the key in the path, `201` with `Location` on create, `PATCH`
   for a partial update.
 
@@ -112,7 +113,7 @@ service /api on dataserviceListener {
 ```
 
 - **Return types:** get many returns only `dsHttp:InternalError` on failure. Every other operation
-  returns `dsHttp:ErrorResponse`, the union of the four error records in [Errors](#errors),
+  returns `dsHttp:ErrorResponse`, the union of the error records in [Errors](#errors),
   because a write can fail with any of them.
 - **Library calls:** the generated service imports `ballerina/dataservice.http` as `dsHttp`
   and passes the entity name and key values to its functions, which build the error response,
@@ -158,22 +159,57 @@ own:
 ### Types and JSON
 
 The resources use the persist-generated types directly: `Employee` in responses,
-`EmployeeInsert` and `EmployeeUpdate` in requests. The only generated types are the list
-envelope and the status code records above.
+`EmployeeInsert` and `EmployeeUpdate` in requests.
 
 | Ballerina type | JSON |
 |---|---|
 | `int`, `float`, `decimal` | number |
 | `string`, `boolean` | string, boolean |
 | `T?` | the value or `null` |
-| `byte[]` | an array of numbers |
-| `time:Date`, `time:TimeOfDay`, `time:Civil`, `time:Utc` | the record form, for example `{"year": 2024, "month": 1, "day": 2}` ✅ |
 | enum | string |
+| `byte[]` | a base64 string (RFC 4648, standard alphabet, padded) |
+| `time:Date` | an ISO 8601 date, `2024-01-02` |
+| `time:TimeOfDay` | an ISO 8601 time, `10:15:30` or `10:15:30.5` |
+| `time:Civil` | an ISO 8601 date-time without an offset, `2024-01-02T10:15:30` |
+| `time:Utc` | an ISO 8601 date-time in UTC, `2024-01-02T10:15:30Z` |
 
-Time values use the record form that Ballerina's JSON conversion gives the `time:*` types, so
-the persist types are used without conversion code. ISO 8601 strings would need separate input
-and output types for every entity with a time field, which the goals rule out for this
-proposal.
+Ballerina's own JSON form of these types does not suit a client: `time:Utc` is a tuple and
+becomes an array such as `[1704189330, 0.5]`, the other `time:*` types become records, and
+`byte[]` becomes an array of numbers.
+
+#### Wire types
+
+An entity with a `time:*` or `byte[]` field gets generated wire types that hold those fields as
+`string`. The other entities use the persist types as they are.
+
+| Persist type | Wire type |
+|---|---|
+| `Employee` | `EmployeeRecord` |
+| `EmployeeInsert` | `EmployeeInsertRecord` |
+| `EmployeeUpdate` | `EmployeeUpdateRecord` |
+
+```ballerina
+public type EmployeeRecord record {|
+    readonly int id;
+    string name;
+    string hiredOn;
+|};
+```
+
+The `<Entity>List` envelope and the status code records of such an entity hold the wire type.
+The generated service converts between the two with functions from `ballerina/dataservice`,
+so a fix to a format is released without regeneration:
+
+| Type | To JSON | From JSON |
+|---|---|---|
+| `byte[]` | `dataservice:bytesToString` | `dataservice:bytesFromString` |
+| `time:Date` | `dataservice:dateToString` | `dataservice:dateFromString` |
+| `time:TimeOfDay` | `dataservice:timeOfDayToString` | `dataservice:timeOfDayFromString` |
+| `time:Civil` | `dataservice:civilToString` | `dataservice:civilFromString` |
+| `time:Utc` | `dataservice:utcToString` | `dataservice:utcFromString` |
+
+A request value that does not parse is answered with `400` and `INVALID_INPUT`; see
+[Errors](#errors).
 
 ### Errors
 
@@ -185,6 +221,7 @@ from `ballerina/dataservice`, with the code and message #1503 defines for the ca
 | Not found | `404` | `NOT_FOUND` | `persist:NotFoundError` ✅ |
 | Conflict | `409` | `CONFLICT` | `persist:AlreadyExistsError` ✅ |
 | Constraint violation | `409` | `CONSTRAINT_VIOLATION` | `persist:ConstraintViolationError`, raised only by an update today; see [Risks](#risks-and-assumptions) ✅ |
+| Invalid input | `400` | `INVALID_INPUT` | a date, time or `byte[]` value that does not parse |
 | Invalid input | `400` | — | `ballerina/http` payload or path binding ✅ |
 | Internal | `500` | `INTERNAL` | any other error |
 
@@ -198,11 +235,15 @@ public type NotFound record {|
 |};
 ```
 
-`Conflict`, `ConstraintViolation` and `InternalError` follow the same form, and `ErrorResponse`
-is the union of the four.
+`InvalidInput`, `Conflict`, `ConstraintViolation` and `InternalError` follow the same form,
+and `ErrorResponse` is the union of the five.
 
-Invalid input is answered by `ballerina/http` before the resource runs, so its body is the
-module's default error body, not `DataserviceError`. It names every missing or mistyped field.
+The message for a value that does not parse is
+`The field '<field>' of the entity '<Entity>' is not <format>.`, where `<format>` is
+`an ISO 8601 date`, `an ISO 8601 time`, `an ISO 8601 date-time` or `a base64 string`.
+
+Other invalid input is answered by `ballerina/http` before the resource runs, so its body is
+the module's default error body, not `DataserviceError`. It names every missing or mistyped field.
 ✅
 
 Example responses: ✅
@@ -262,15 +303,15 @@ keyFile = "/path/to/private.key"
   combination, and a custom base path.
 - Behaviour, against the in-memory and H2 datastores: every row of the operations and errors
   tables, including `405` for a disabled method and `400` for a mistyped key.
+- A round trip of every `time:*` type and `byte[]` through create and get one, and `400` with
+  `INVALID_INPUT` for a value in the wrong format.
 - A user-written service attached to `dataserviceListener` is served on the same port.
 
 ## Risks and Assumptions
 
-- **Two error body shapes.** Invalid-input errors use the `ballerina/http` default body, the
-  others use `DataserviceError`. Aligning them needs an error interceptor on the generated
+- **Two error body shapes.** Invalid input that `ballerina/http` rejects uses its default
+  body, the others use `DataserviceError`. Aligning them needs an error interceptor on the generated
   service.
-- **Time values are not ISO 8601.** Clients that expect ISO 8601 strings must convert the
-  record form. Changing the wire form later is a breaking change.
 - **Foreign key violations on create and delete are internal errors.** The persist SQL client
   raises `persist:ConstraintViolationError` only from an update. A create or delete that violates a
   foreign key raises a plain `persist:Error`, so the service answers `500` until the persist SQL
