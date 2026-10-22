@@ -224,19 +224,25 @@ its table's, `pull` prints the mapping. From then on the model is the source of 
 annotations can be edited like the rest of it, and a later `pull` replaces them along with the
 model.
 
-### The `ballerina/dataservice` module
+### Libraries
 
-The module holds:
+A data service uses two library packages:
 
-- the annotations a model uses to expose an entity and restrict what it allows,
-- a compiler plugin that validates them, and
-- the protocol-neutral runtime types that generated services share: the error body and its
-  error codes.
+| Package | Holds | Depends on | Imported by |
+|---|---|---|---|
+| `ballerina/dataservice` | The annotations and the compiler plugin that validates them. The protocol-neutral runtime: the error body and codes, the mapping from persist errors to them, and value conversions every protocol shares | `ballerina/persist` | The model and the generated service |
+| `ballerina/dataservice.<protocol>`, such as `ballerina/dataservice.http` | The protocol runtime, defined by each protocol proposal | `ballerina/dataservice` and the protocol module | The generated service |
 
-Keeping the runtime types in a library rather than in generated code means the generated code
-stays thin, and fixes ship as library updates without regeneration. The library does not depend
-on any protocol module. Types that are specific to an entity, such as the `<Entity>List`
-envelope, or to a protocol, such as an HTTP status code record, are generated.
+Each protocol package is a separate package with its own release cycle, as persist's datastore
+packages such as `ballerinax/persist.sql` are. A service over one protocol does not depend on
+the others' modules, and a fix for one protocol is released without the core.
+
+The generated service holds only what must be fixed at compile time: the resource or remote
+function signatures, the types that are specific to an entity, and the typed persist client
+calls. Everything else is a call to a library function, so a fix inside a library function is
+released as a library update without regeneration. Changing the signature of such a function
+needs regeneration, so the functions that generated code calls are a stable API: new behaviour
+is added through new functions or optional parameters.
 
 A model with a data service imports the module with a prefix:
 
@@ -445,7 +451,7 @@ the GraphQL `errors` array, or an MCP tool result with `isError` set.
 | Invalid input | `INVALID_INPUT` | The input cannot be bound to the operation's type | The protocol module's binding error |
 | Internal | `INTERNAL` | Any other failure | `persist:Error` and others |
 
-The message is written by the generated service, not taken from the persist error, because the
+The message is written by `ballerina/dataservice`, not taken from the persist error, because the
 SQL datastores put driver text, such as table and constraint names, in their error messages:
 
 | Category | Message |
@@ -624,7 +630,7 @@ array.
 
 - `persist-tools`: options schema, CLI flags, model validation, code generation.
 - `ballerina/persist` and the persist datastore clients.
-- `ballerina/dataservice`: a new library.
+- `ballerina/dataservice` and `ballerina/dataservice.<protocol>`: new libraries.
 - `ballerina/http`, `ballerina/graphql` and `ballerina/mcp`, through the protocol proposals.
 
 ## Future work
