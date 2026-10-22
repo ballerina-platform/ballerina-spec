@@ -18,7 +18,8 @@ six operations map to `GET`, `POST`, `PATCH` and `DELETE`, results are JSON, and
 categories map to status codes.
 
 Everything marked ✅ was compiled and run on Ballerina 2201.13.3 with `ballerina/http` 2.17.3
-and a generated persist in-memory client.
+and a generated persist in-memory client. The implementation targets Ballerina 2201.14.0, and
+its tests cover every ✅ row again.
 
 ## Goals
 
@@ -77,6 +78,14 @@ For an entity `Employee` whose persist resource name is `employees`, with key `i
   is set to `null` when the field is nullable.
 - **Delete returns the deleted record**, as the persist client does. A client that does not
   need it can ignore the body.
+- **An empty array creates nothing.** `POST` with `[]` is answered with `201` and
+  `{"items": []}`, without calling the persist client.
+- **An empty patch changes nothing.** `PATCH` with `{}` is answered as get one, without calling
+  the persist client's update, which has no columns to set.
+- **Key fields cannot be patched.** `EmployeeUpdate` is a closed record without the key fields,
+  so a body that sets one is answered with `400` by `ballerina/http`.
+- **Get many returns records in the persist client's order**, which is not specified until
+  sorting is added.
 
 #### Generated resources
 
@@ -136,6 +145,18 @@ public type EmployeeListCreated record {|
 |};
 ```
 
+#### Generated source
+
+- **Header:** `persist_dataservice.bal` starts with the header of persist's generated files,
+  saying that it is generated and must not be edited. A service written by `generate` has the
+  same header without the instruction not to edit it.
+- **Order:** the listener and client come first, then one service with the resources of each
+  exposed entity in model order. Within an entity the order is get many, get one, create,
+  patch, delete. The generated types follow, per entity in model order: the wire types, the
+  `<Entity>List` envelope, then the status code records.
+- **Doc comments:** every resource and every generated public type has a one-line doc comment,
+  for example `# Gets an employee by its key.`
+
 #### Disabled operations
 
 An operation whose action is not enabled is not generated. `ballerina/http` then answers on its
@@ -153,9 +174,12 @@ own:
   `/assignments/{employeeId}/{projectCode}`. ✅ There is no common convention for composite keys
   (see [Alternatives](#alternatives)); positional segments are the conventional REST form for a
   single key, extend it without new syntax, and match the persist client's resource paths.
-- **Key types:** `int`, `string`, `float`, `decimal` and `boolean` keys bind as path
-  parameters. A segment that does not convert to the key's type is answered with `400` by
-  `ballerina/http`. ✅
+- **Key types:** persist allows only `int`, `string`, `float`, `decimal` and `boolean` key
+  fields, and each binds as a path parameter. A segment that does not convert to the key's type
+  is answered with `400` by `ballerina/http`. ✅
+- **Key text:** in `Location` and in error messages, a key value is written with Ballerina's
+  `toString`, so `1.5` stays `1.5` and a `decimal` keeps its scale. In `Location`, each value
+  is then percent-encoded as a path segment.
 
 ### Types and JSON
 
