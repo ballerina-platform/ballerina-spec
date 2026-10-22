@@ -120,6 +120,7 @@ service /api on dataserviceListener {
   log the detail and build `Location`.
 - **Location:** each key value is percent-encoded as a path segment, so a key such as `P 1/a`
   gives `/api/assignments/P%201%2Fa/1`. ✅
+  With the base path `/`, `Location` starts at the entity, as in `/employees/1`.
 
 The status code types are records that include the `ballerina/http` status code records:
 
