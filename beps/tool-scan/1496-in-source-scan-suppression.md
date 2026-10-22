@@ -30,7 +30,7 @@ Without this, a team adopting the gate has two options — fix everything first,
 - Rule identifiers are validated: their form at compile time, and their existence when `bal scan` runs, against the rules it actually reports, including rules added later and rules from third-party analyzers.
 - No runtime footprint.
 - No new meaning given to comments, and no change to the language grammar.
-- Suppressions are visible in the output without reading the source.
+- Suppressed findings can be reviewed without reading the source: they stay in the SARIF and JSON reports and the language-server response, marked with their justification. The console reports how many were suppressed, and the HTML report and platform plugins receive unsuppressed findings only (see [Reporting](#reporting)).
 - Every suppression records **what** was accepted, and **why** wherever a justification is given.
 - **Who** accepted it and **when** are answerable from version control, without the annotation carrying them.
 - The true unsuppressed picture is obtainable on demand, so a security review never has to take suppressions on trust.
@@ -383,7 +383,7 @@ The scan runs from two entry points, the command line and the language server, a
 Found while verifying this design against Ballerina 2201.14.1, and raised against the compiler.
 
 1. **The parser silently drops an annotation placed before a call statement or an assignment statement.** `@scan:Suppress {...} log:printInfo(x);` and `@scan:Suppress {...} _ = f();` compile with no diagnostic, even when the annotation does not exist. The text is removed from the syntax tree, so the scan cannot see the annotation; every finding later in the same file is then reported at a shifted location; and `bal format` deletes the annotation from the source file. A developer would believe a finding was suppressed when it was not. The same construct with a `check` expression (`@a check f();`) is correctly rejected with "annotation not attached to a construct"; the call and assignment forms must produce the same error. **This must be fixed before the feature ships.** Raised as [ballerina-lang#44811](https://github.com/ballerina-platform/ballerina-lang/issues/44811).
-2. **The compiler crashes on an annotated local variable declaration with a typed wildcard binding**, such as `@a () _ = f();` or `@a int _ = 1;` (`NullPointerException` in `BVarSymbol.addAnnotation`). `var _ = ...` is not affected, which is why the restructuring pattern uses it. Raised as [ballerina-lang#44812](https://github.com/ballerina-platform/ballerina-lang/issues/44812).
+2. **The compiler crashes on an annotated local variable declaration with a typed wildcard binding**, such as `@a () _ = f();` or `@a int _ = 1;` (`NullPointerException` in `BVarSymbol.addAnnotation`). `var _ = ...` is not affected, which is why the restructuring pattern uses it. Unlike defect 1, it fails loudly: compilation stops, so it cannot leave a developer believing a finding is suppressed when it is not. It is therefore not a release blocker, and nothing in the scan tool or the compiler plugin can reject the form earlier, because the crash happens before plugins run. Raised as [ballerina-lang#44812](https://github.com/ballerina-platform/ballerina-lang/issues/44812).
 
 Rule defects observed in 0.12.0 that affect where suppressions go:
 
