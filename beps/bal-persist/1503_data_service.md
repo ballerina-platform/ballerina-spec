@@ -135,7 +135,8 @@ still an annotation field, grouped under the protocol's name.
 
 ### `Ballerina.toml`
 
-The data service is an options group on the existing `[[tool.persist]]` entry.
+The data service is an options group on the existing `[[tool.persist]]` entry; `pull` without `--dataservice` into an entry with and
+  without `options.dataservice`.
 
 ```toml
 [[tool.persist]]
@@ -213,7 +214,7 @@ No new command is added. Two flags are added.
 | Flag | Commands | Meaning |
 |---|---|---|
 | `--dataservice <protocol>` | `add`, `pull`, `generate` | Enables the data service for the given protocol. `add` and `pull` write `options.dataservice.protocol`; `generate` generates the service once |
-| `--expose-tables <table,...>` | `pull` | The tables whose entities are exposed. Requires `--dataservice` |
+| `--expose-tables <table,...>` | `pull` | The tables whose entities are exposed. Requires `--dataservice`, unless the entry already enables a data service |
 
 `basePath` has no flag. It has a default and is edited in `Ballerina.toml`, or in the generated
 source after `generate`.
@@ -245,13 +246,19 @@ its table's, `pull` prints the mapping. From then on the model is the source of 
 annotations can be edited like the rest of it, and a later `pull` replaces them along with the
 model.
 
+When the `[[tool.persist]]` entry already has `options.dataservice`, `pull` without
+`--dataservice` annotates the pulled entities in the same way, using the entry's protocol, and
+leaves the entry unchanged. A later `pull` therefore keeps the service, rather than writing a
+model with no annotated entity, which would fail the next build. When the entry has no
+`options.dataservice` and the flag is not passed, `pull` behaves exactly as it does today.
+
 #### Flag combinations
 
 | Case | Result |
 |---|---|
 | `add` or `generate` with `--dataservice` and `--module`, `--model` or `--with-init-params` | Error, with the message for the matching `Ballerina.toml` case in [Messages](#messages) |
 | `--dataservice` with a value other than `http` | The protocol error in [Messages](#messages) |
-| `--expose-tables` without `--dataservice` | Error |
+| `--expose-tables` without `--dataservice` | Error, unless the entry already enables a data service |
 | `--expose-tables` naming a table that was not pulled, or one whose entity has an unsupported data type | Error naming the table. Names match as `--tables` matches them, exactly |
 | `pull --dataservice` when the entry already has `options.dataservice` | `protocol` is set to the flag's value; `basePath` is kept |
 | `pull --dataservice` when the entry has another `targetModule` or `withInitParams = true` | Error, as for the same `Ballerina.toml`, and nothing is written |
@@ -690,7 +697,8 @@ array.
   `protocol`; reserved protocol values.
 - **CLI:** `add`, `pull` and `generate` with and without `--dataservice`; `pull` with and without
   `--expose-tables`, including unknown tables; `pull` into a project with and without an
-  existing `[[tool.persist]]` entry.
+  existing `[[tool.persist]]` entry; `pull` without `--dataservice` into an entry with and
+  without `options.dataservice`.
 - **Annotation validation:** each compiler-plugin rule; the bare annotation and its default
   operations; a model with no annotated entity.
 - **Code generation:** expected-output tests for each protocol, with single and composite keys,
