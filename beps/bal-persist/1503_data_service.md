@@ -315,7 +315,7 @@ needs the whole model when it generates.
 |---|---|---|
 | `@dataservice:Expose` is on a record type that is a persist entity | compiler plugin | error |
 | `operations` is non-empty and has only `Operation` values | compiler, through the type | error |
-| `operations` has no duplicates, including through a constant | compiler plugin | error |
+| `operations` has no duplicates | compiler plugin | error |
 | An annotated entity has no unsupported data types | persist tool | error |
 | At least one entity is annotated | persist tool | error |
 
