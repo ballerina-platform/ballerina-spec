@@ -82,40 +82,43 @@ For an entity `Employee` whose persist resource name is `employees`, with key `i
 ```ballerina
 service /api on dataserviceListener {
 
-    resource function get employees() returns EmployeeList|DataserviceInternalError {
+    resource function get employees() returns EmployeeList|dsHttp:InternalError {
         Employee[]|persist:Error items = from Employee item in dataserviceClient->/employees(Employee)
             select item;
         if items is persist:Error {
-            return dataserviceInternalError(items);
+            return dsHttp:internalError(items);
         }
         return {items};
     }
 
-    resource function get employees/[int id]() returns Employee|DataserviceErrorResponse {
+    resource function get employees/[int id]() returns Employee|dsHttp:ErrorResponse {
         Employee|persist:Error item = dataserviceClient->/employees/[id];
         if item is persist:Error {
-            return dataserviceErrorResponse(item, "Employee", string `${id}`);
+            return dsHttp:errorResponse(item, "Employee", [id]);
         }
         return item;
     }
 
     resource function post employees(EmployeeInsert|EmployeeInsert[] payload)
-            returns EmployeeCreated|EmployeeListCreated|DataserviceErrorResponse {
+            returns EmployeeCreated|EmployeeListCreated|dsHttp:ErrorResponse {
         // Posts the records as an array, then reads back each created record by its returned key.
     }
 
     resource function patch employees/[int id](EmployeeUpdate payload)
-            returns Employee|DataserviceErrorResponse { ... }
+            returns Employee|dsHttp:ErrorResponse { ... }
 
-    resource function delete employees/[int id]() returns Employee|DataserviceErrorResponse { ... }
+    resource function delete employees/[int id]() returns Employee|dsHttp:ErrorResponse { ... }
 }
 ```
 
-- **Return types:** get many returns only `DataserviceInternalError` on failure. Every other operation
-  returns `DataserviceErrorResponse`, the union of the four error records in [Errors](#errors),
+- **Return types:** get many returns only `dsHttp:InternalError` on failure. Every other operation
+  returns `dsHttp:ErrorResponse`, the union of the four error records in [Errors](#errors),
   because a write can fail with any of them.
-- **Location:** a `string` key is percent-encoded as a path segment, so a key such as `P 1/a` gives
-  `/api/assignments/P%201%2Fa/1`. ✅
+- **Library calls:** the generated service imports `ballerina/dataservice.http` as `dsHttp`
+  and passes the entity name and key values to its functions, which build the error response,
+  log the detail and build `Location`.
+- **Location:** each key value is percent-encoded as a path segment, so a key such as `P 1/a`
+  gives `/api/assignments/P%201%2Fa/1`. ✅
 
 The status code types are records that include the `ballerina/http` status code records:
 
@@ -185,18 +188,18 @@ from `ballerina/dataservice`, with the code and message #1503 defines for the ca
 | Invalid input | `400` | — | `ballerina/http` payload or path binding ✅ |
 | Internal | `500` | `INTERNAL` | any other error |
 
-The status code records are generated alongside the service, so `ballerina/dataservice` does
-not depend on `ballerina/http`:
+The status code records are not specific to an entity, so they are defined in
+`ballerina/dataservice.http`, which keeps `ballerina/dataservice` free of `ballerina/http`:
 
 ```ballerina
-type DataserviceNotFound record {|
+public type NotFound record {|
     *http:NotFound;
     dataservice:DataserviceError body;
 |};
 ```
 
-`DataserviceConflict`, `DataserviceConstraintViolation` and `DataserviceInternalError` follow
-the same form, and `DataserviceErrorResponse` is the union of the four.
+`Conflict`, `ConstraintViolation` and `InternalError` follow the same form, and `ErrorResponse`
+is the union of the four.
 
 Invalid input is answered by `ballerina/http` before the resource runs, so its body is the
 module's default error body, not `DataserviceError`. It names every missing or mistyped field.
@@ -280,7 +283,8 @@ keyFile = "/path/to/private.key"
 
 - [Data service generation for bal persist](https://github.com/ballerina-platform/ballerina-spec/issues/1503)
 - `ballerina/http`
-- `ballerina/dataservice`, for `DataserviceError`
+- `ballerina/dataservice`
+- `ballerina/dataservice.http`: a new library, released separately from `ballerina/dataservice`
 
 ## Future work
 
