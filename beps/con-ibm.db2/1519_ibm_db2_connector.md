@@ -1,10 +1,10 @@
-# 1518: IBM Db2 connector (`ballerinax/ibm.db2`)
+# 1519: IBM Db2 connector (`ballerinax/ibm.db2`)
 
 - Authors - Dilan Perera
-- Reviewed by - TBD
+- Reviewed by - Danesh Kuruppu
 - Created date - 2026-11-10
 - Updated date - 2026-11-10
-- Issue - [#1518](https://github.com/ballerina-platform/ballerina-spec/pull/1518)
+- Issue - [#1519](https://github.com/ballerina-platform/ballerina-spec/issues/1519)
 - State - Submitted
 
 ## Summary
@@ -253,4 +253,4 @@ public function main() returns error? {
 - [`ballerinax/ibm.ibmmq`](https://central.ballerina.io/ballerinax/ibm.ibmmq/latest), the precedent for the `provided` driver dependency
 
 []: # (end)
-[]: # Please add any comments to [#1518](https://github.com/ballerina-platform/ballerina-spec/pull/1518)
+[]: # Please add any comments to [#1519](https://github.com/ballerina-platform/ballerina-spec/issues/1519)
