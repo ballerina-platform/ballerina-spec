@@ -3,7 +3,7 @@
 - Authors - Dilan Perera
 - Reviewed by - Danesh Kuruppu
 - Created date - 2026-11-10
-- Updated date - 2026-11-10
+- Updated date - 2026-11-11
 - Issue - [#1519](https://github.com/ballerina-platform/ballerina-spec/issues/1519)
 - State - Submitted
 
@@ -39,7 +39,7 @@ A dedicated connector removes these problems and gives Db2 users the same progra
 - A change data capture listener for Db2. It can follow as a `ballerinax/ibm.db2.cdc.driver` package once the connector is released.
 - Bundling or redistributing the IBM JDBC driver (see [Driver distribution](#driver-distribution)).
 - Db2 specific APIs beyond SQL, such as the administrative API or `LOAD`.
-- Verified support for Db2 for z/OS and Db2 for i. The driver supports them and nothing in the design excludes them, but the first release is tested against Db2 for Linux, UNIX and Windows only.
+- Verified support for Db2 for z/OS and Db2 for i, and a mapping for the z/OS `TIMESTAMP WITH TIME ZONE` type. The driver supports both platforms and nothing in the design excludes them, but the first release is tested against Db2 for Linux, UNIX and Windows only.
 
 ## Design
 
@@ -114,6 +114,7 @@ public enum SecurityMechanism {
 ```
 
 - `secureSocket` turns TLS on. The host name of the server certificate is verified by default.
+- `securityMechanism` selects how the user ID and password are sent. When it is not set, the connector does not choose one and the driver negotiates with the server, which can end in credentials sent in clear text over a plain connection. Production configurations should therefore either set `secureSocket`, so that the whole session is encrypted, or set one of the encrypted mechanisms. `CLEAR_TEXT_PASSWORD` should only be combined with `secureSocket`. The connector documentation states this, and the usage example below uses TLS.
 - `currentSchema` sets the `CURRENT SCHEMA` special register.
 - The timeouts are in seconds and are rounded up to whole seconds, which is the resolution of the driver.
 - `clientProgramName` is the application name the server shows in its monitoring views.
@@ -131,16 +132,17 @@ public enum SecurityMechanism {
 | `BINARY`, `VARBINARY`, `BLOB`, `CHAR`/`VARCHAR FOR BIT DATA` | `byte[]` |
 | `DATE` | `time:Date` or `string` |
 | `TIME` | `time:TimeOfDay` or `string` |
-| `TIMESTAMP(p)` | `time:Civil`, `time:Utc`, `string` or `int` |
+| `TIMESTAMP(p)` | `time:Civil`, `time:Utc`, `string` or `int` (at most nine fractional digits, see below) |
 | `BOOLEAN` | `boolean` |
 | `XML` | `xml` |
 
 Rules that differ from the `sql` defaults, each forced by Db2 or its driver:
 
 - **Nulls.** A nil parameter is sent as a typed null, because the driver rejects the JDBC `NULL` type.
-- **Instants.** Db2 has no time zone types. A `time:Utc` value and a `time:Civil` value with a `utcOffset` are stored as the UTC wall clock time, and a `TIMESTAMP` read as `time:Utc` is interpreted as UTC, so instants round-trip. A `time:TimeOfDay` with a `utcOffset` is rejected.
+- **Instants.** Db2 for Linux, UNIX and Windows and Db2 for i have no time zone types. A `time:Utc` value and a `time:Civil` value with a `utcOffset` are stored as the UTC wall clock time, and a `TIMESTAMP` read as `time:Utc` is interpreted as UTC, so instants round-trip. A `time:TimeOfDay` with a `utcOffset` is rejected. Db2 for z/OS has a `TIMESTAMP WITH TIME ZONE` type; mapping it to offset aware Ballerina values is out of scope for the first release (see [Non-Goals](#non-goals)).
+- **Timestamp precision.** A value round-trips only when the column can hold it. `TIMESTAMP` without a precision is `TIMESTAMP(6)`, so a value with nanoseconds needs `TIMESTAMP(9)` or more. Db2 truncates extra fractional digits on assignment without an error, and the connector does not reject such values. Reading goes through `java.sql.Timestamp`, which holds nine fractional digits, so the tenth to twelfth digits of a `TIMESTAMP(10)` to `TIMESTAMP(12)` column are lost even when read as `string`. To read all twelve digits, cast the column in the query, `SELECT VARCHAR(TS) AS TS ...`, and read it as `string`.
 - **`NaN` and `Infinity`.** A non-finite `float` parameter is rejected with an `sql:DataError`, because `DOUBLE` and `REAL` have no such values and the driver cannot bind them for `DECFLOAT`. The SQL literal `DECFLOAT('NaN')` stores such a value.
-- **Arrays.** The driver cannot bind arrays, so array parameters and the `sql:*ArrayValue` types are rejected with an `sql:DataError`.
+- **Arrays.** The driver cannot bind SQL arrays, so array parameters such as `int[]` or `string[]` and the `sql:*ArrayValue` types are rejected with an `sql:DataError`. A `byte[]` is not an SQL array; it is bound as a binary value.
 - **National character types.** `sql:NClobValue` is sent as a `CLOB`, because the driver has no `createNClob`.
 
 ### OUT parameters
@@ -158,7 +160,9 @@ Passing the `sql` class for one of these types returns an `sql:DataError` that n
 
 ### Batches
 
-Db2 keeps executing a batch after a failed command. The `sql:BatchExecuteError` holds one result for every command, with an `affectedRowCount` of `-3` for a failed one. The driver does not report the generated keys of a batch, so `lastInsertId` is nil for batched inserts.
+By default Db2 keeps executing a batch after a failed command. The `sql:BatchExecuteError` holds one result for every command, with an `affectedRowCount` of `-3` for a failed one. The driver does not report the generated keys of a batch, so `lastInsertId` is nil for batched inserts.
+
+The driver property `atomicMultiRowInsert` (set through `properties`) changes this for batches of `INSERT` statements: the batch then succeeds or fails as a whole, and on a failure every command reports `-3` and no row is inserted. The connector does not set or block this property.
 
 ### Errors
 
@@ -191,7 +195,11 @@ configurable string user = ?;
 configurable string password = ?;
 configurable string database = ?;
 
-final db2:Client dbClient = check new (host, user, password, database);
+configurable string serverCertFile = ?;
+
+// TLS encrypts the whole session, including the credentials.
+final db2:Client dbClient = check new (host, user, password, database, port = 50001,
+    options = {secureSocket: {certFile: serverCertFile}});
 
 type Employee record {|
     int id;
@@ -241,7 +249,7 @@ public function main() returns error? {
 ## Future Work
 
 - A Db2 change data capture listener.
-- Verification against Db2 for z/OS, Db2 for i and Db2 on Cloud with IAM authentication.
+- Verification against Db2 for z/OS, Db2 for i and Db2 on Cloud with IAM authentication, and support for the z/OS `TIMESTAMP WITH TIME ZONE` type.
 - Fixes in `ballerina/sql` for the defects found while building the connector: XML OUT values, the conversion of OUT parameters by the vendor processor, chained batch exceptions and a nil boolean OUT value.
 - A page for the connector in the WSO2 Integrator documentation.
 
