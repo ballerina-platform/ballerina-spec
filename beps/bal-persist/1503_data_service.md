@@ -671,13 +671,21 @@ must be a constant of the field's type.
 
 | Annotation | Sent on create | Sent on update |
 |---|---|---|
-| `ReadOnly` | Ignored | Ignored |
+| `ReadOnly` | Ignored, or rejected as invalid input; see below | Ignored, or rejected as invalid input; see below |
 | `Immutable` | Accepted | Rejected as invalid input |
 | `Internal` | Rejected as invalid input | Rejected as invalid input |
 
 The protocol proposal gives the response for a rejected field.
 
-Ignoring a read-only field lets a client send back a record it has read, as AIP-203 requires.
+A `ReadOnly` field is ignored where a protocol's request and response types are the same shape,
+as in HTTP, and rejected where its input types are separate from its output types, as in
+GraphQL:
+
+- **Ignored:** a client can send back a record it has read, as AIP-203 requires.
+- **Rejected:** a GraphQL client cannot send back an object it has read, because the output and
+  input types differ, and it writes each input field itself. The input types leave the field
+  out, so the schema lists only what a caller can write, and a document that sets it is
+  rejected when it is validated.
 AIP-203 also accepts an immutable field whose value is unchanged; that needs the record to be
 read before every update, so it is not done; accepting it later does not break callers.
 
