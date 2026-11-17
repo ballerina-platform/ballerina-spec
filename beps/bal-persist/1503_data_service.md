@@ -222,7 +222,8 @@ Each value names the Ballerina module that implements the service:
 names a design style. GraphQL and MCP are also carried over HTTP; the value selects the service
 type, not the transport.
 
-`http` is specified by #1513 and `graphql` by its own proposal. `mcp` is listed for its own
+`http` is specified by #1513 and `graphql` by
+[#1520](https://github.com/ballerina-platform/ballerina-spec/issues/1520). `mcp` is listed for its own
 proposal; until it is implemented, passing it is an error saying that the protocol is not
 supported yet and listing the supported values. `odata` and `soap` are reserved
 for later proposals, and passing them is the same error.
@@ -1554,7 +1555,7 @@ listener configuration.
 | Proposal | Scope |
 |---|---|
 | 2. HTTP, [#1513](https://github.com/ballerina-platform/ballerina-spec/issues/1513) | `http:Service`: collection and key paths, methods, status codes, request and response bodies |
-| 3. GraphQL, later | `graphql:Service`: queries and mutations, input and output types, type mappings for persist's time types and `byte[]`, error mapping |
+| 3. GraphQL, [#1520](https://github.com/ballerina-platform/ballerina-spec/issues/1520) | `graphql:Service`: queries and mutations, input and output types, type mappings for persist's time types and `byte[]`, error mapping |
 | 4. MCP, later | `mcp:StreamableHttpService`: tool names, input and output schemas, descriptions from doc comments, tool annotations such as read-only hints, error results |
 
 ### Roadmap
