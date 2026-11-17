@@ -222,9 +222,9 @@ Each value names the Ballerina module that implements the service:
 names a design style. GraphQL and MCP are also carried over HTTP; the value selects the service
 type, not the transport.
 
-Only `http` is implemented with this proposal, through #1513. `graphql` and `mcp` are listed
-for their own proposals; until those are implemented, passing one is an error saying that the
-protocol is not supported yet and listing the supported values. `odata` and `soap` are reserved
+`http` is specified by #1513 and `graphql` by its own proposal. `mcp` is listed for its own
+proposal; until it is implemented, passing it is an error saying that the protocol is not
+supported yet and listing the supported values. `odata` and `soap` are reserved
 for later proposals, and passing them is the same error.
 
 `protocol` takes a single string. A later proposal may also accept an array, generating one
@@ -431,6 +431,11 @@ and does nothing in any other source.
 | No two annotated entities have the same collection name | persist tool | error |
 | At least one entity is annotated | persist tool | error |
 | `scopes` is set only when `options.dataservice.auth` is `true` | persist tool | warning |
+| For `graphql`: at least one annotated entity allows `read`, since a GraphQL schema needs a query field | persist tool | error |
+| For `graphql`: no two entities map to the same root field | persist tool | error |
+| For `graphql`: no exposed field's name starts with `_`, which the GraphQL proposal reserves | persist tool | error |
+| For `graphql`: every exposed entity and field name is a valid GraphQL name | persist tool | error |
+| For `graphql`: no entity or enum has the name of a type that the GraphQL service generates or its library defines | persist tool | error |
 
 The persist tool reads the annotation from the model's syntax tree, not from compiled values.
 `operations` is a list literal whose members are `Operation` members, such as
@@ -447,9 +452,9 @@ their position in the model; their diagnostic codes are left to the implementati
 
 | Case | Severity | Message |
 |---|---|---|
-| `protocol` missing | error | `'options.dataservice.protocol' is required. Supported values: http.` |
-| `protocol` is `graphql`, `mcp`, `odata` or `soap` | error | `the protocol '<value>' is not supported yet. Supported values: http.` |
-| `protocol` is any other value | error | `invalid 'options.dataservice.protocol' '<value>'. Supported values: http.` |
+| `protocol` missing | error | `'options.dataservice.protocol' is required. Supported values: http, graphql.` |
+| `protocol` is `mcp`, `odata` or `soap` | error | `the protocol '<value>' is not supported yet. Supported values: http, graphql.` |
+| `protocol` is any other value | error | `invalid 'options.dataservice.protocol' '<value>'. Supported values: http, graphql.` |
 | `basePath` without a leading `/` | error | `invalid 'options.dataservice.basePath' '<value>': the base path must start with '/'.` |
 | `basePath` with an empty or invalid segment | error | `invalid 'options.dataservice.basePath' '<value>': each path segment must be non-empty and contain only letters, digits, '_', '-' and '.'.` |
 | `targetModule` is not the package | error | `a data service is generated only into the default module '<package>'. Remove 'targetModule' or set it to '<package>'.` |
@@ -469,6 +474,11 @@ their position in the model; their diagnostic codes are left to the implementati
 | Scopes for an action that is not enabled | error | `the @dataservice:Expose annotation of the entity '<Entity>' sets scopes for '<action>', which is not in 'operations'. Add it to 'operations', or remove its scopes.` |
 | `scopes` set while `options.dataservice.auth` is not `true` | warning | `the @dataservice:Expose annotation of the entity '<Entity>' sets scopes, but 'options.dataservice.auth' is not true. Set it to true, or remove the scopes.` |
 | Annotations without `options.dataservice` | warning | `the model has @dataservice:Expose annotations, but no data service is generated. Set 'options.dataservice.protocol' in the [[tool.persist]] entry to generate one.` |
+| `protocol = "graphql"` and no exposed entity allows `read` | error | `a GraphQL data service needs at least one entity that allows 'read'. Add dataservice:READ to the 'operations' of an entity.` |
+| `protocol = "graphql"` and two root fields with one name | error | `the entities '<Entity>' and '<Entity>' map to the same GraphQL field '<field>'. Rename one of them, or remove its @dataservice:Expose annotation.` |
+| `protocol = "graphql"` and a field whose name starts with `_` | error | `the field '<field>' of the entity '<Entity>' starts with '_', which the GraphQL data service reserves. Rename the field, or mark it @dataservice:Internal.` |
+| `protocol = "graphql"` and a name that is not a GraphQL name | error | `the name '<name>' of the entity '<Entity>' is not a valid GraphQL name. Rename it, or mark the field @dataservice:Internal.` |
+| `protocol = "graphql"` and a type name clash | error | `the type '<name>' clashes with a type of the GraphQL data service. Rename it.` |
 | `pull` skips an entity | warning | `the table '<table>' has an unsupported data type, so its entity '<Entity>' is not exposed.` |
 | `generate` without `--dataservice` on an annotated model | info | `the model has @dataservice:Expose annotations. Use the '--dataservice' option to also generate a data service.` |
 | `add --dataservice` succeeds | info | The next steps ``2. Add the @dataservice:Expose annotation to each entity to expose.`` and ``3. Execute `bal build` to generate the persist client and the <PROTOCOL> data service during package build.`` |
@@ -573,21 +583,13 @@ such as a total, does not break a client; see
 [Compatibility of the generated API](#compatibility-of-the-generated-api). MCP also requires a tool's structured result to be an object, so a
 bare array cannot be used there in any case.
 
-The service generates these types per exposed entity, each where an operation uses it:
-
-| Type | Holds |
-|---|---|
-| `<Entity>List` | A page of `<Entity>` records, as above |
-| `<Entity>Partial` | A record narrowed by `fields`; see [Fields](#fields) |
-| `<Entity>PartialList` | A page of `<Entity>Partial` records, as an open record |
-| `<Entity>RelatedPartial` | A related record in `fields`: the entity's own fields and no relation fields |
-| `<Entity>RelatedPartialList` | A to-many relation in `fields`: `<Entity>RelatedPartial` records and `hasMore`, as an open record |
-| `<Entity>Filter` | The `filter` option |
-| `<Entity>Payload`, `<Entity>InsertPayload`, `<Entity>UpdatePayload` | The wire types of `<Entity>`, `<Entity>Insert` and `<Entity>Update`, where a protocol needs them |
-| `<Entity>Created`, `<Entity>ListCreated` | The protocol's result of create one and create many, where the protocol needs one |
-
-These names share the default module's namespace with the user's own code; see
-[Generated code](#generated-code).
+Besides the envelope, a service generates per exposed entity the types its protocol needs, each
+where an operation uses it: a record narrowed by `fields`, a related record in `fields`, the
+`filter` option, and wire types where the persist types do not suit the protocol. Each protocol
+proposal names these types, because what a name can be depends on the protocol: GraphQL names a
+schema type after its Ballerina type, so its types cannot reuse the names of persist's types in
+the same module. The names are derived from the entity name, and share the default module's
+namespace with the user's own code; see [Generated code](#generated-code).
 
 #### Results
 
@@ -831,7 +833,7 @@ ISO 8601 date:
 
 `fields` names the fields to return; the others are left out of each record. The key fields
 are always returned, so that every record can be addressed, and are required fields of every
-`<Entity>Partial` and `<Entity>RelatedPartial` type. Without `fields`, every field is returned.
+narrowed and related record type. Without `fields`, every field is returned.
 
 - **Repeats:** a field named twice counts once.
 - **Empty:** an empty `fields` is invalid input.
@@ -871,8 +873,8 @@ Persist models these kinds of relation, and each is read with the rules below:
 - **One hop:** `fields` on get many or get one can name the entity's relations and their own
   fields, such as `department.name`, but not a relation of a related entity, such as
   `department.employees`. `fields` on get related names only the related entity's own fields.
-- **Related type:** an included related record is a `<Target>RelatedPartial`, which has the
-  related entity's own fields and no relation fields. Its key fields are always returned.
+- **Related type:** an included related record has the related entity's own fields and no
+  relation fields. Its key fields are always returned.
 - **To-one in `fields`:** a to-one relation with no related record is included as `null`. This
   happens on the side of a one to one relation that does not hold the foreign key, and when a
   foreign key points at a missing record. A foreign key is never null: persist rejects a
@@ -1219,8 +1221,7 @@ no other field, and a client generated from it may reject one. ✅ On Ballerina 
 `Payload binding failed: undefined field 'extra'`. Adding a field to an entity is therefore a
 breaking change for such clients.
 
-The list envelopes, `<Entity>List`, `<Entity>PartialList` and `<Entity>RelatedPartialList`,
-are open, so a field added to them later, such as a total count, does not break a client.
+The list envelopes are open, so a field added to them later, such as a total count, does not break a client.
 Clients must ignore unknown fields in them.
 
 `DataserviceError` stays closed. As an open record, it would stop Ballerina from narrowing the
@@ -1263,10 +1264,9 @@ within a major version of the libraries, apart from additions to the list envelo
   Files that `generate` wrote into the package root are the user's and are never deleted.
 - **Names:** generated module-level names share the default module's namespace with the user's
   own code, as the persist client's generated names already do. The service follows the same
-  convention: type names are derived from entity names, as listed in [Types](#types), the
-  functions that convert to and from a protocol's wire types are named `transform<Entity>ToPayload`,
-  `transformPayloadTo<Entity>Insert` and `transformPayloadTo<Entity>Update`, and other
-  module-level names start with `dataservice`.
+  convention: the names of the types and conversion functions that a protocol generates are
+  derived from entity names, as its proposal gives, and other module-level names start with
+  `dataservice`.
 - **Client construction:** the service creates the persist client with `new ()`, so
   `options.withInitParams = true` cannot be used together with `options.dataservice`.
 - **One service per package:** a package has one persist model and at most one data service.
