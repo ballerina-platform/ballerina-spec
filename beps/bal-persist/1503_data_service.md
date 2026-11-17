@@ -1167,11 +1167,6 @@ pageSize = 50
 - **Library types:** a setting added to a library type, in a minor version, is available
   without regenerating, and a generated name cannot clash with the user's types.
 
-✅ On Ballerina 2201.14.0, a field left out of `[dataserviceConfig]` kept its default, an
-unknown field stopped the program with
-`undefined field 'pagesize' provided for closed record`, and a record type that includes
-`Config` and gives `pageSize` another default used that default.
-
 The values are checked at startup by `dataservice:toPageConfig` in the service's `init`. The
 service does not start, and the program stops with a message, when a value is out of range:
 
@@ -1216,17 +1211,15 @@ The generated API follows the model, so a change to the model can break callers:
 | Removing an action | |
 
 An entity's types are closed records, so the protocol's definition says that a record holds
-no other field, and a client generated from it may reject one. ✅ On Ballerina 2201.14.0, an
-`http:Client` reading a response into a closed record failed with
-`Payload binding failed: undefined field 'extra'`. Adding a field to an entity is therefore a
-breaking change for such clients.
+no other field, and a client generated from it may reject one. Adding a field to an entity is
+therefore a breaking change for such clients.
 
 The list envelopes are open, so a field added to them later, such as a total count, does not break a client.
 Clients must ignore unknown fields in them.
 
 `DataserviceError` stays closed. As an open record, it would stop Ballerina from narrowing the
 unions that the library functions return, such as `Query|DataserviceError|ConversionError`:
-✅ on Ballerina 2201.14.0, `if query !is Query { return query; }` left `query` typed with
+on Ballerina 2201.14.0, `if query !is Query { return query; }` left `query` typed with
 `Query` when `DataserviceError` was open, and compiled when it was closed. A new error code or
 field, such as one for a failed precondition, is therefore added in a new major version of the
 libraries, and the services are regenerated.
@@ -1521,8 +1514,7 @@ regeneration, and every protocol would generate the same paging fields.
   `EmployeeList`, fails to compile alongside the generated one.
 - **No single-value overrides.** `-C` command-line arguments and `BAL_CONFIG_VAR_`
   environment variables take only simple types, so they cannot set one field of
-  `dataserviceConfig`, such as the port. ✅ On Ballerina 2201.14.0,
-  `-CdataserviceConfig.port=8080` was rejected as an unused command line argument. A deployment
+  `dataserviceConfig`, such as the port. A deployment
   sets the table in `Config.toml`, in a file named by `BAL_CONFIG_FILES`, or in
   `BAL_CONFIG_DATA`.
 - **Assumption:** the persist client's resource names, keys and generated types are stable
