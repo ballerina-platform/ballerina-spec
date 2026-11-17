@@ -200,6 +200,22 @@ Ballerina's own JSON form of these types does not suit a client: `time:Utc` is a
 becomes an array such as `[1704189330, 0.5]`, the other `time:*` types become records, and
 `byte[]` becomes an array of numbers.
 
+#### Type names
+
+#1503 leaves the names of the types a protocol generates to its proposal. The HTTP service
+generates these per exposed entity, each where an operation uses it:
+
+| Type | Holds |
+|---|---|
+| `<Entity>List` | A page of records, with `hasMore` |
+| `<Entity>Partial` | A record narrowed by `fields` |
+| `<Entity>PartialList` | A page of `<Entity>Partial` records, as an open record |
+| `<Entity>RelatedPartial` | A related record in `fields`: the entity's own fields and no relation fields |
+| `<Entity>RelatedPartialList` | A to-many relation in `fields`: `<Entity>RelatedPartial` records and `hasMore`, as an open record |
+| `<Entity>Filter` | The `filter` query parameter |
+| `<Entity>Payload`, `<Entity>InsertPayload`, `<Entity>UpdatePayload` | The wire types of `<Entity>`, `<Entity>Insert` and `<Entity>Update`; see [Wire types](#wire-types) |
+| `<Entity>Created`, `<Entity>ListCreated` | The `201` responses of create one and create many; see [Generated resources](#generated-resources) |
+
 #### Wire types
 
 An entity gets wire types when it has a `time:*` or `byte[]` field, which the wire types hold as
