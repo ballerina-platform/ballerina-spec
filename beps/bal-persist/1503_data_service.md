@@ -283,7 +283,7 @@ does today.
 |---|---|
 | `add` or `generate` with `--dataservice` and `--module`, `--model` or `--with-init-params` | Error, with the message for the matching `Ballerina.toml` case in [Messages](#messages) |
 | `pull` with `--dataservice` and `--model` | Error, with the message for a named model in [Messages](#messages) |
-| `--dataservice` with a value other than `http` | The protocol error in [Messages](#messages) |
+| `--dataservice` with a value other than `http` or `graphql` | The protocol error in [Messages](#messages) |
 | `--expose-tables` without `--dataservice` | Error, unless the entry already enables a data service |
 | `--expose-tables` naming a table that was not pulled, or one whose entity has an unsupported data type | Error naming the table. Names match as `--tables` matches them, exactly |
 | `pull --dataservice` when the entry already has `options.dataservice` | Error, before the database is read: the user removes the entry's `options.dataservice` keys and runs the command again, or runs `pull` without `--dataservice` to keep them. `--dataservice` adds a group and never changes one the user has written |
@@ -1279,7 +1279,7 @@ within a major version of the libraries, apart from additions to the list envelo
 |---|---|
 | `ballerina/dataservice`: `Operation`, `ExposeConfig`, `Expose`, `ErrorCode`, `DataserviceError`, the persist error mapping, the date, time and `byte[]` conversions, the [query options](#query-options), relation reads, `Scopes`, the [field rules](#field-rules) `ReadOnly`, `Immutable` and `Internal`, and the compiler plugin | |
 | `ballerina/dataservice.http`, as #1513 defines it | `EXECUTE`, which is not a member of `Operation` until custom operations are proposed |
-| persist-tools: `options.dataservice` with `protocol = "http"` and `auth`, the CLI flags, validation, and generation of the HTTP service with its documentation | The `graphql`, `mcp`, `odata` and `soap` protocol values, which are errors |
+| persist-tools: `options.dataservice` with `protocol = "http"` or `"graphql"` and `auth`, the CLI flags, validation, and generation of the HTTP and GraphQL services with their documentation | The `mcp`, `odata` and `soap` protocol values, which are errors |
 | | Everything in the [Roadmap](#roadmap) |
 
 End-to-end behaviour tests live in persist-tools, which generates the service. The libraries
