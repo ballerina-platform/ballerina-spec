@@ -1310,7 +1310,11 @@ The duplicated provider handling uses the same `ballerina/http` listener auth ha
 - [Data service generation for bal persist: HTTP](https://github.com/ballerina-platform/ballerina-spec/issues/1513),
   for the formats, messages and configuration layout this proposal reuses.
 - `ballerina/graphql`, with `graphql:ServiceError`
-  ([module-ballerina-graphql#2610](https://github.com/ballerina-platform/module-ballerina-graphql/pull/2610)).
+  ([module-ballerina-graphql#2610](https://github.com/ballerina-platform/module-ballerina-graphql/pull/2610)), and
+  a listener whose port is a field of a configurable record: on 1.19.1 and master, the compiler plugin rejects
+  `new (dataserviceConfig.port, dataserviceConfig.listenerConfig)` with `http:Listener and
+  graphql:ListenerConfiguration are mutually exclusive`, because it checks the symbol of the port expression, the
+  record variable, rather than its type.
 - `ballerina/dataservice`.
 - `ballerina/dataservice.graphql`: a new library, released separately from
   `ballerina/dataservice`, as `ballerina/dataservice.http` is.
