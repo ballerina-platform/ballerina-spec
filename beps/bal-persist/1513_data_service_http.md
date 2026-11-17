@@ -18,10 +18,7 @@ a resource per relation under the key. The operations map to `GET`, `POST`, `PAT
 `DELETE`, the query options map to query parameters, results are JSON, and the error categories
 map to status codes.
 
-Each case marked ✅ has been compiled and run. Unless its text names another setup, it ran on
-Ballerina 2201.13.3 with `ballerina/http` 2.17.3 and a generated persist in-memory client, and
-the implementation's tests recheck it on H2 with Ballerina 2201.14.0. The implementation
-targets Ballerina 2201.14.0 and the SQL datastores.
+The implementation targets Ballerina 2201.14.0 and the SQL datastores.
 
 The examples use the `Employee` and `Department` entities of #1503.
 
@@ -82,17 +79,16 @@ isolated service class DataserviceErrorInterceptor {
 
 - **Base path:** the service's base path is `options.dataservice.basePath`, `/api` by default.
 - **Trailing slash:** a path with a trailing slash, such as `/api/employees/`, addresses the
-  same resource as without it, as `ballerina/http` matches paths. ✅
+  same resource as without it, as `ballerina/http` matches paths.
 - **CORS:** the service takes its CORS settings from `dataserviceConfig.serviceConfig.cors`,
-  and allows no cross-origin request by default. ✅ On Ballerina 2201.14.0, a preflight request
-  was answered with the origins and methods set in `Config.toml`.
+  and allows no cross-origin request by default.
 - **Error interceptor:** `DataserviceErrorInterceptor` gives the errors that `ballerina/http`
   raises before a resource runs the `DataserviceError` body, through `dsHttp:setErrorBody`;
   see [Errors](#errors). It is generated in the service's package rather than defined in
   `ballerina/dataservice.http`, because the OpenAPI definition leaves out an interceptor class
   from another package
   ([ballerina-library#9633](https://github.com/ballerina-platform/ballerina-library/issues/9633)).
-  ✅ On Ballerina 2201.14.0, with the class from a dependency, every `400` of the definition was
+  On Ballerina 2201.14.0, with the class from a dependency, every `400` of the definition was
   `oneOf` the declared body and `ballerina/http`'s `ErrorPayload`; with the class in the
   service's package, it was the declared body alone.
 - **Auth interceptor:** with `auth = true`, `DataserviceAuthInterceptor` checks the credential
@@ -115,9 +111,9 @@ For an entity `Employee` whose collection name is `employees`, with key `id`:
 
 - **Create one and create many share one route.** The payload parameter is typed
   `EmployeeInsert|EmployeeInsert[]`; `ballerina/http` binds a JSON object to the first type and
-  an array to the second. ✅
+  an array to the second.
 - **Creates are atomic.** Create one and create many run the insert and the read-back in one
-  transaction, so a batch with one failing record creates none. ✅ On H2 with
+  transaction, so a batch with one failing record creates none. On H2 with
   `ballerinax/persist.sql` 1.7.4, a batch with a duplicate key in the middle saved the other
   records without a transaction, and saved none inside a Ballerina `transaction`.
 - **Create many has no `Location` header**, because it creates several resources.
@@ -147,20 +143,20 @@ request for it on its own:
 
 | Situation | Response |
 |---|---|
-| A method that exists on no resource of the path, for example `PATCH` on a read-only entity | `405 Method Not Allowed` ✅ |
+| A method that exists on no resource of the path, for example `PATCH` on a read-only entity | `405 Method Not Allowed` |
 | A path that matches no resource, for example an entity that is not exposed, or a relation whose direction is `Internal` | `404 Not Found` |
 
 ### Keys
 
 - **Single key:** one path segment, `/employees/{id}`, typed as the key field's type.
 - **Composite key:** one segment per key field, in declaration order, for example
-  `/assignments/{employeeId}/{projectCode}`. ✅ There is no common convention for composite keys
+  `/assignments/{employeeId}/{projectCode}`. There is no common convention for composite keys
   (see [Alternatives](#alternatives)). Positional segments are the conventional REST form for a
   single key, extend that form without new syntax, and match the persist client's resource
   paths.
 - **Key types:** persist allows only `int`, `string`, `float`, `decimal` and `boolean` key
   fields, and each binds as a path parameter. A segment that does not convert to the key's type
-  is answered with `400` by `ballerina/http`. ✅ A `float` key of `NaN` or `Infinity` is answered
+  is answered with `400` by `ballerina/http`. A `float` key of `NaN` or `Infinity` is answered
   with `400` and `INVALID_INPUT`, with the message #1503 gives.
 - **Key text:** in `Location` and in error messages, a key value is written with Ballerina's
   `toString`, so `1.5` stays `1.5` and a `decimal` keeps its scale. In `Location`, each value
@@ -172,7 +168,7 @@ request for it on its own:
   `itemPayload`, `items`, `key`, `keyValues`, `keys`, `next`, `offset`, `partial`, `partials`,
   `payload`, `query`, `readable`, `related`, `row`, `rows`, `size`, `sort`, `sources`, `stored`,
   `tooMany`, `value` and `values`. The persist tool reports such a key as an error, as #1503
-  gives. ✅
+  gives.
 - **Reserved names:** path segments starting with `$`, such as `$count`, are reserved for later
   query and metadata operations, and are not used for anything else.
 
@@ -194,7 +190,7 @@ The resources use the persist-generated types directly: `Employee` in responses,
 | `time:Utc` | an ISO 8601 date-time in UTC, `2024-01-02T10:15:30Z`. In a request, any offset is accepted and converted to UTC |
 
 A `decimal` read from the database keeps the column's scale, so `1.5` in a `DECIMAL(10,2)`
-column is returned as `1.50`. ✅
+column is returned as `1.50`.
 
 Ballerina's own JSON form of these types does not suit a client: `time:Utc` is a tuple and
 becomes an array such as `[1704189330, 0.5]`, the other `time:*` types become records, and
@@ -289,10 +285,10 @@ relation; get one and get related on a to-one relation take only `fields`:
 | `offset` | an integer, the number of records to skip | `offset=40` |
 | `fields` | field names, repeated or comma-separated | `fields=name,email` |
 
-Repeated and comma-separated forms bind to the same `string[]`. ✅ Values in the URL are
+Repeated and comma-separated forms bind to the same `string[]`. Values in the URL are
 percent-encoded as usual. A query parameter that the operation does not take, such as `limit`,
 is ignored, and a repeated `filter`, `size` or `offset` uses its first value, as
-`ballerina/http` binds query parameters. ✅
+`ballerina/http` binds query parameters.
 
 #### Filter
 
@@ -317,12 +313,12 @@ public type EmployeeFilter record {|
 - **Several operators on one field** all apply, so `{"id":{"gte":2,"lt":10}}` is a range.
 - **Strict binding:** the records are closed, so `ballerina/http` answers an unknown field, an
   operator the type does not allow, a value of the wrong type or an unknown enum value with
-  `400` before the resource runs. ✅
+  `400` before the resource runs.
 - **Dates and times** are strings in the filter, as in the body, and are parsed by
   `ballerina/dataservice`; a value that does not parse is answered with `INVALID_INPUT`.
 - **Reserved keys:** keys starting with `$`, such as `$and`, `$or` and `$not`, are reserved for
   joining conditions in a later proposal, and `<Entity>Filter` holds no field with such a name.
-  Adding them leaves every existing filter valid. ✅ `ballerina/http` binds a recursive filter
+  Adding them leaves every existing filter valid. `ballerina/http` binds a recursive filter
   record with `$or` keys from the query parameter.
 
 #### Sort, page and fields
@@ -376,7 +372,7 @@ public type EmployeeRelatedPartialList record {
 
 `fields=` with no value is answered with `400` and `INVALID_INPUT`. An empty entry in a list
 is dropped, so `fields=name,` is `fields=name`, and `sort=` sorts by key. `sort=-` names an
-empty field and is answered with `400` and `INVALID_INPUT`. ✅
+empty field and is answered with `400` and `INVALID_INPUT`.
 
 ### Relations
 
@@ -412,7 +408,7 @@ GET /api/departments/2?fields=name,employees.name
   exist, or when a to-one relation has no related record, with the messages #1503 gives.
 - **Scopes before existence:** with `auth = true`, a relation's scope check runs before the
   record is read, so a caller without a `read` scope of the related entity gets `403` whether
-  or not the record exists, and does not learn which records exist. ✅
+  or not the record exists, and does not learn which records exist.
 
 ```ballerina
 resource function get employees/[int id]/department(http:RequestContext ctx, string[]? fields = ())
@@ -436,16 +432,16 @@ from `ballerina/dataservice`, with the code and message #1503 defines for the ca
 
 | Category | Status | `code` | Raised from |
 |---|---|---|---|
-| Not found | `404` | `NOT_FOUND` | `persist:NotFoundError` ✅ |
-| Conflict | `409` | `CONFLICT` | `persist:AlreadyExistsError` ✅ |
+| Not found | `404` | `NOT_FOUND` | `persist:NotFoundError` |
+| Conflict | `409` | `CONFLICT` | `persist:AlreadyExistsError` |
 | Constraint violation | `409` | `CONSTRAINT_VIOLATION` | `persist:ConstraintViolationError` |
 | Invalid input | `400` | `INVALID_INPUT` | a date, time or `byte[]` value that does not parse; a constraint broken on a field of a wire type; an unusable `sort` or `fields` name, a field named twice in `sort`, an empty `fields`, `size` below 1, `offset` below 0 or too large for the `size`; a create above `dataserviceConfig.maxPageSize` records; a `float` key that is not finite |
-| Invalid input | `400` | `INVALID_INPUT` | `ballerina/http` payload, path or query binding ✅, including a body whose `Content-Type` is XML, text, form or binary, which `ballerina/http` binds only to `xml`, `string`, `map<string>` or `byte[]` ✅; a constraint broken on an entity without wire types |
-| Invalid input | `405`, or another `4xx` status of `ballerina/http` | `INVALID_INPUT` | a method that the path has no resource for ✅ |
-| Not found | `404` | `NOT_FOUND` | a path that matches no resource ✅ |
+| Invalid input | `400` | `INVALID_INPUT` | `ballerina/http` payload, path or query binding, including a body whose `Content-Type` is XML, text, form or binary, which `ballerina/http` binds only to `xml`, `string`, `map<string>` or `byte[]`; a constraint broken on an entity without wire types |
+| Invalid input | `405`, or another `4xx` status of `ballerina/http` | `INVALID_INPUT` | a method that the path has no resource for |
+| Not found | `404` | `NOT_FOUND` | a path that matches no resource |
 | Internal | `500` | `INTERNAL` | any other error |
-| Unauthenticated | `401` | `UNAUTHENTICATED` | `DataserviceAuthInterceptor`, before the request is dispatched ✅ |
-| Forbidden | `403` | `FORBIDDEN` | `DataserviceAuthInterceptor`, when the caller holds no scope of the operation, before the request is dispatched ✅ |
+| Unauthenticated | `401` | `UNAUTHENTICATED` | `DataserviceAuthInterceptor`, before the request is dispatched |
+| Forbidden | `403` | `FORBIDDEN` | `DataserviceAuthInterceptor`, when the caller holds no scope of the operation, before the request is dispatched |
 | Forbidden | `403` | `FORBIDDEN` | get related or a relation in `fields`, when `auth` is `true` and the caller holds no `read` scope of the related entity |
 
 The status code records are not specific to an entity, so they are defined in
@@ -473,20 +469,18 @@ Other errors are raised by `ballerina/http` before the resource runs. The servic
 answers each of them with the same status and a `DataserviceError` body: the code in the
 table above and `ballerina/http`'s message. It sets the body on the response in place and
 returns the next service, so its return type adds no response to the OpenAPI definition. For a
-request body, the message names every missing or mistyped field. ✅ For `filter`, it does not;
-see [Risks and assumptions](#risks-and-assumptions). ✅ On Ballerina 2201.14.0, the interceptor
-received the `400` of payload, path and query binding and the `404` and `405` of dispatching,
-each with its status code on the response, and the response was sent as `application/json`.
+request body, the message names every missing or mistyped field. For `filter`, it does not;
+see [Risks and assumptions](#risks-and-assumptions).
 
 The OpenAPI definition lists what each resource declares, and what the interceptors' return
-types declare; see [Generated resources](#generated-resources). ✅ On Ballerina 2201.14.0, an
+types declare; see [Generated resources](#generated-resources). On Ballerina 2201.14.0, an
 `http:InterceptableService` with a `ResponseErrorInterceptor` from its own package exported a
 resource's `400` with only its declared body, while a plain service also listed
 `ballerina/http`'s default `ErrorPayload`. An interceptor that returned `http:Response` added a
 `default` response to every operation, and one that returned `error` added a `500` with
 `ErrorPayload`; one that returned `http:NextService?` added none.
 
-Example responses: ✅
+Example responses:
 
 ```
 POST /api/employees  {"id":1, ...}            → 201  Location: /api/employees/1
@@ -548,44 +542,43 @@ isolated service class DataserviceAuthInterceptor {
   `@http:ResourceConfig {auth}` with a call that the compiler inserts as the first statement of
   each resource, so a request is dispatched and its parameters are bound before auth runs
   ([ballerina-library#9632](https://github.com/ballerina-platform/ballerina-library/issues/9632)).
-  ✅ On Ballerina 2201.14.0, with declarative auth, a request without credentials was answered
+  On Ballerina 2201.14.0, with declarative auth, a request without credentials was answered
   with `400` for a mistyped query parameter or a body missing a field, naming the payload type
   and the field, `404` for an unknown path and `405` for an unknown method. A request
-  interceptor runs before dispatching and binding, so each of them is answered with `401`. ✅
+  interceptor runs before dispatching and binding, so each of them is answered with `401`.
 - **Scopes:** `dataserviceScopes` maps each collection to the scopes of each HTTP method: `GET`
   for get many, get one and get related, which use the `read` scopes, `POST` for create,
   `PATCH` for patch and `DELETE` for delete. An action with an empty scope list has no entry.
   An operation without scopes, and a path that is not a collection, such as the OpenAPI
   definition, take the `scopes` of the provider that authenticated the caller, as
   `ballerina/http` applies a service's scopes to a resource without scopes of its own. Without
-  those, they need only a credential. ✅
+  those, they need only a credential.
 - **Checking:** `authorize` tries the listener auth handler of each provider that takes the
   `Authorization` header's scheme, in the order of the list, as `ballerina/http` does:
   `http:ListenerFileUserStoreBasicAuthHandler` and `http:ListenerLdapUserStoreBasicAuthHandler`
   for `Basic`, and `http:ListenerJwtAuthHandler` and `http:ListenerOAuth2Handler` for `Bearer`,
-  so a user's password is never sent to an OAuth2 introspection endpoint. ✅ The first that
+  so a user's password is never sent to an OAuth2 introspection endpoint. The first that
   authenticates the credential decides, and its
   `authorize` checks the scopes, so a caller holds the same scopes as with declarative auth. For
   OAuth2, the scopes are the space-separated values of the introspection response's `scopeKey`
   claim, which is what `http:ListenerOAuth2Handler` checks. `authorize` keeps the caller in the
   request context for the checks below, and passes an `OPTIONS` request, such as a CORS
-  preflight, without a credential. ✅
+  preflight, without a credential.
 - **Required providers:** with `auth = true`, `dataserviceConfig` is a `dsHttp:AuthConfig`,
   whose `serviceConfig.auth` is required without a default, so the program does not start when
-  `Config.toml` does not set it. ✅ On Ballerina 2201.14.0, it stopped with `value not provided
-  for required configurable variable 'dataserviceConfig'`. An empty list also stops it at
+  `Config.toml` does not set it. An empty list also stops it at
   startup, through the module-level `check` on creating `dsHttp:Authenticator`, with the
-  message `The configurable value 'dataserviceConfig.serviceConfig.auth' must hold at least one authentication provider.` ✅
+  message `The configurable value 'dataserviceConfig.serviceConfig.auth' must hold at least one authentication provider.`
 - **Responses:** `authorize` answers a missing or invalid credential with `401` and
   `UNAUTHENTICATED`, and a caller without a scope of the operation with `403` and `FORBIDDEN`,
-  with the messages #1503 gives. ✅
+  with the messages #1503 gives.
 - **Headers:** the `401` carries one `WWW-Authenticate` challenge per kind of configured
   provider: `Basic realm="dataservice"` for a user store, and `Bearer realm="dataservice"` for
   JWT or OAuth2. `ballerina/http` adds CORS headers only to the responses of a resource, so
   `authorize` adds them to its `401` and `403` from `dataserviceConfig.serviceConfig.cors`, as
   `ballerina/http` does for a simple cross-origin request: `Access-Control-Allow-Origin` for an
   allowed origin, and `Access-Control-Allow-Credentials` and `Access-Control-Expose-Headers`
-  when set. ✅ The `404` and `405` of dispatching carry no CORS headers, because no resource
+  when set. The `404` and `405` of dispatching carry no CORS headers, because no resource
   matches them.
 - **Get related** and a relation in `fields` require the entity's `read` scopes, as `GET` on
   the entity's collection. With `auth = true`, a resource that reads a relation takes the
@@ -638,7 +631,7 @@ record, and answers a failure with `400`, `INVALID_INPUT` and the message #1503 
 Unless `options.dataservice.introspection` is `false`, the service carries
 `@openapi:ServiceInfo {embed: true, title: "<package>"}`. The compiler then embeds an OpenAPI
 definition built from the service and its doc comments, and `ballerina/http` serves it with
-Swagger UI: ✅
+Swagger UI:
 
 | Request | Response |
 |---|---|
@@ -655,12 +648,11 @@ Swagger UI: ✅
   `DataserviceAuthInterceptor`, so a request without a valid credential is answered with `401`,
   and an authenticated caller can read them when it holds one of the deciding provider's
   `scopes`, or always when the provider sets none; see [Auth](#auth). The `OPTIONS` `Link`
-  header stays public. ✅ The
-  definition lists `401` and `403` on every operation, from the interceptor's return type. ✅
+  header stays public. The
+  definition lists `401` and `403` on every operation, from the interceptor's return type.
 - **Open and closed schemas:** an entity's types and `DataserviceError` are closed, so their
   schemas carry `additionalProperties: false`. The list envelopes are open, as #1503 defines,
-  so theirs do not. ✅ On Ballerina 2201.14.0, an open record in a resource's return type was
-  exported without `additionalProperties: false`.
+  so theirs do not.
 - **Swagger UI with a token:** a browser sends no bearer token when Swagger UI loads the
   definition, so with JWT or OAuth2 the page cannot load it unless the browser adds the token.
   The definition stays available to clients and tools that send one.
@@ -720,9 +712,8 @@ The service checks the values in its `init`. With `auth = true`, `dataservice.ba
 
 - **Two types for auth:** `AuthConfig` does not include `Config`, because a closed
   `AuthServiceConfig` is not a subtype of `ServiceConfig`, so it cannot override that field.
-  ✅ On Ballerina 2201.14.0, with `Config`, an `auth` entry in `Config.toml` stopped the program
-  with `undefined field 'auth' provided for closed record`, and with `AuthConfig`, a missing
-  one stopped it with the message above.
+  On Ballerina 2201.14.0, with `Config`, an `auth` entry in `Config.toml` stopped the program
+  with `undefined field 'auth' provided for closed record`.
 - **Field names:** `listenerConfig` and `serviceConfig`, not `listener` and `service`, because
   those are keywords.
 - **Not configurable:** other settings of `@http:ServiceConfig`, such as `validation` and
@@ -815,7 +806,7 @@ service http:InterceptableService /api on dataserviceListener {
   and passes the entity name and key values to its functions, which build the error response,
   log the error detail, build the `Location` header and check a relation's scopes.
 - **Location:** each key value is percent-encoded as a path segment, so a key such as `P 1/a`
-  gives `/api/assignments/4/P%201%2Fa`. ✅ With the base path `/`, `Location` starts at the
+  gives `/api/assignments/4/P%201%2Fa`. With the base path `/`, `Location` starts at the
   entity, as in `/employees/1`.
 
 The status code records of an entity include the `ballerina/http` status code records:
@@ -931,11 +922,11 @@ public type EmployeeListCreated record {|
 
 - **Binding messages come from `ballerina/http`.** The message of an error raised before the
   resource runs is `ballerina/http`'s. For `filter`, it says only
-  `error in casting query param : 'filter'`, without naming the field or operator. ✅
+  `error in casting query param : 'filter'`, without naming the field or operator.
 - **Binding messages show Ballerina names.** The message of a binding error names the
   Ballerina type and holds the conversion error's text, such as
   `{ballerina}ConversionError` and module-qualified type names. It reaches only authenticated
-  callers when `auth` is `true`. ✅
+  callers when `auth` is `true`.
 - **Auth outside `ballerina/http`.** The service checks auth in its own request interceptor
   until `ballerina/http` checks declarative auth before dispatching and binding
   ([ballerina-library#9632](https://github.com/ballerina-platform/ballerina-library/issues/9632)).
