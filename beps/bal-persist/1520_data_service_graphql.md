@@ -396,7 +396,7 @@ input types. #1503 leaves type names to each protocol proposal.
 |---|---|---|
 | `int` | `Int` | A number. `ballerina/graphql` accepts and returns values beyond GraphQL's 32-bit `Int`, such as `9007199254740993`, unchanged |
 | `float` | `Float` | A number. A value that is not finite is answered with an error; see below |
-| `decimal` | `Decimal` | A number, the custom scalar that `ballerina/graphql` defines. A response keeps the scale, so `1.50` is returned as `1.50` |
+| `decimal` | `Decimal` | A number, the custom scalar that `ballerina/graphql` defines. A response holds the value at its column's scale, as the database returns it: persist's `DECIMAL(65,30)` gives `1.500000000000000000000000000000` for `1.50` |
 | `string`, `boolean` | `String`, `Boolean` | |
 | an enum | the enum, with the member names as its values | The member name, such as `ACTIVE` |
 | `byte[]` | `String` | A base64 string (RFC 4648, standard alphabet, padded) |
@@ -460,10 +460,7 @@ message, ``The field '<field>' of the entity '<Entity>' is not <format>.``
   hold one is answered with `INVALID_INPUT`, `The field '<field>' of the entity '<Entity>' cannot
   be null.`
 - **Not `T field?`:** `ballerina/graphql` publishes an optional non-nullable field as the
-  nullable `T` too, and cannot bind the `null` a client may then send: on 1.19.1, `null` for
-  such a field of a nested input object stopped the program with
-  ``incompatible types: '()' cannot be cast to 'int'``, and for such a field of an argument's own
-  input object it bound `()` to a field typed `string`
+  nullable `T` too, and cannot bind the `null` a client may then send
   ([ballerina-library#9740](https://github.com/ballerina-platform/ballerina-library/issues/9740)).
 
 #### Field rules
@@ -651,10 +648,13 @@ These are the costs that #1503 gives for a relation in `fields`.
 
 - **Dataloader:** `dataserviceInitContext` registers a `dataloader:DefaultDataLoader` per
   to-one relation for each request. The relation field's prefetch method adds the record's
-  foreign key to it, and the field reads the related record from it once the keys of every
-  record are collected. The batch function reads every related record with one query, whose
-  filter is `anyOf` the keys, and returns them in the order of the keys, with `null` for a key
-  that has no record.
+  link to it: a record of the fields that link the relation, such as `{employeeId: 1}`. The
+  field reads the related record from it once the links of every record are collected. The
+  batch function reads every related record with one query, `dataservice:toIncludeQuery`, which
+  matches the related entity's linked fields, and returns them in the order of the links, with
+  `null` for a link that has no record. A link, rather than the related record's key, also
+  serves the side of a one-to-one relation that does not hold the foreign key, and a composite
+  foreign key.
 - **No dataloader for to-many:** each record reads its own page of related records, ordered and
   limited, which one query for every record cannot do without a limit per group. The number of
   such queries is bounded by the page size and by the query complexity; see [Limits](#limits).
@@ -673,38 +673,40 @@ public isolated service class AssignmentObject {
     isolated resource function get hours() returns decimal => self.row.hours;
 
     isolated function prefetchEmployee(graphql:Context ctx) {
-        ctx.getDataLoader("Assignment.employee").add(self.row.employeeId);
+        ctx.getDataLoader("Assignment.employee").add({employeeId: self.row.employeeId});
     }
 
     # Gets the employee of the assignment.
     @graphql:ResourceConfig {prefetchMethodName: "prefetchEmployee"}
     isolated resource function get employee(graphql:Context ctx) returns EmployeeRelatedObject?|error {
-        Employee? row = check ctx.getDataLoader("Assignment.employee").get(self.row.employeeId);
+        Employee? row = check ctx.getDataLoader("Assignment.employee").get({employeeId: self.row.employeeId});
         return row is Employee ? new (row) : ();
     }
 
     // the other fields
 }
 
-isolated function dataserviceLoadAssignmentEmployee(readonly & anydata[] keys) returns Employee?[]|error {
-    dataservice:KeyValue[][] keyValues = from anydata key in keys
-        select [<int>key];
-    dataservice:Query query = dataservice:toKeysQuery(dataserviceEmployeeEntity, keyValues);
+isolated function dataserviceLoadAssignmentEmployee(readonly & anydata[] keys) returns anydata[]|error {
+    map<anydata>[] links = from anydata key in keys
+        select check key.ensureType();
+    dataservice:Query query = dataservice:toIncludeQuery(dataserviceAssignmentEntity, "employee", links,
+            dataservicePageConfig);
     stream<Employee, persist:Error?> rows = dataserviceClient->/employees(Employee,
-        whereClause = query.whereClause
+        whereClause = query.whereClause, orderByClause = query.orderByClause
     );
     Employee[]|persist:Error found = from Employee row in rows
         select row;
     if found is persist:Error {
         return dsGraphql:toListError(found, "Assignment", "get related");
     }
-    return dsGraphql:toKeyOrder(found, dataserviceEmployeeEntity, keyValues);
+    return dsGraphql:toKeyOrder(found, dataserviceAssignmentEntity, "employee", links);
 }
 ```
 
 The batch function returns persist records, because a dataloader holds `anydata` and a service
-object is not. The field wraps the record in its object type. A composite foreign key is a tuple
-key of the dataloader.
+object is not, as `anydata[]`, the type of `dataloader:BatchLoadFunction`. The field reads its
+record back as the persist type, which the dataloader's `get` converts to, and wraps it in its
+object type.
 
 ### Errors
 
@@ -893,13 +895,8 @@ configured as in #1513.
   checked for it, unlike #1513's OpenAPI definition.
 - **GraphiQL's page** is served without a credential. It is a static page, and holds nothing
   but the service's URL.
-- **GraphiQL's requests** carry no credential on `ballerina/graphql` 1.19.1 and on its master
-  branch: its fetcher sends only `Content-Type` and `Accept`, and drops the headers set in
-  GraphiQL's Headers tab, so with `auth = true` GraphiQL cannot load the schema or run a
-  document. Passing those headers is a change to `ballerina/graphql`
-  ([ballerina-library#9748](https://github.com/ballerina-platform/ballerina-library/issues/9748)).
-  Until it is released, a service with auth is tried with another GraphQL client. With the
-  change, a user sets the credential in the Headers tab and re-fetches the schema.
+- **GraphiQL's requests** send the headers set in GraphiQL's Headers tab, so a user sets the
+  credential there and re-fetches the schema.
 
 ### Limits
 
@@ -1178,7 +1175,7 @@ named by what each function returns:
 | `checkLimits(ServiceConfig config) returns error?` | function | Checks the limits at startup |
 | `toQuery(dataservice:Entity entity, dataservice:PageConfig config, record {}? filter, record {}[]? sort, int? size, int? offset) returns dataservice:Query\|Error` | function | Checks the filter and sort arguments and builds the query of get many and of a to-many relation, through `dataservice:toQuery` |
 | `toRelatedQuery(...) returns dataservice:Query\|Error` | function | The same, for a to-many relation of one record, through `dataservice:toRelatedQuery` |
-| `toKeyOrder(map<anydata>[] rows, dataservice:Entity entity, dataservice:KeyValue[][] keys) returns (map<anydata>?)[]`, typed to the persist record by its inferred return type | function | The rows of a dataloader batch in the order of its keys, `()` for a missing key |
+| `toKeyOrder(map<anydata>[] rows, dataservice:Entity entity, string relation, map<anydata>[] links) returns (map<anydata>?)[]` | function | The related rows of a dataloader batch in the order of its links, `()` for a link without a record |
 | `toListError`, `toGetError`, `toCreateError`, `toUpdateError`, `toDeleteError` | functions | The `Error` for a persist error of each operation, or `()` from `toUpdateError` for an update that cannot be read back |
 | `toInvalidInput(dataservice:ConversionError err, string entity, string field) returns Error` | function | The `Error` for a value that does not parse |
 | `toNullError(string entity, string field) returns Error` | function | The `Error` for `null` on a field that cannot hold it |
@@ -1310,11 +1307,7 @@ The duplicated provider handling uses the same `ballerina/http` listener auth ha
 - [Data service generation for bal persist: HTTP](https://github.com/ballerina-platform/ballerina-spec/issues/1513),
   for the formats, messages and configuration layout this proposal reuses.
 - `ballerina/graphql`, with `graphql:ServiceError`
-  ([module-ballerina-graphql#2610](https://github.com/ballerina-platform/module-ballerina-graphql/pull/2610)), and
-  a listener whose port is a field of a configurable record: on 1.19.1 and master, the compiler plugin rejects
-  `new (dataserviceConfig.port, dataserviceConfig.listenerConfig)` with `http:Listener and
-  graphql:ListenerConfiguration are mutually exclusive`, because it checks the symbol of the port expression, the
-  record variable, rather than its type.
+  ([module-ballerina-graphql#2610](https://github.com/ballerina-platform/module-ballerina-graphql/pull/2610)).
 - `ballerina/dataservice`.
 - `ballerina/dataservice.graphql`: a new library, released separately from
   `ballerina/dataservice`, as `ballerina/dataservice.http` is.
