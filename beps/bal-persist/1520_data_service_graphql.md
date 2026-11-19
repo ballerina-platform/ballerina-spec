@@ -302,7 +302,8 @@ For an entity `Employee` whose collection name is `employees`, with key `id`:
   without calling the persist client.
 - **Create without `read`:** create one and create many return the created records whether or
   not the entity allows `read`, as #1503 defines, so the object type is generated for an entity
-  that allows `create`.
+  that allows `create`. With `read` allowed, they return `null`, with no entry in `errors`, to a
+  caller who may not read the entity; see [Auth](#auth).
 - **Patch is partial.** A field left out of `input` is not changed. A field set to `null` is
   set to `null` when the entity's field is nullable, and is answered with `INVALID_INPUT`
   otherwise.
@@ -348,7 +349,8 @@ A schema whose entities allow no `create`, `update` or `delete` has no mutation 
 - **Key names:** a key field is a parameter of the resolvers that take a key, so it cannot be
   named `input`, which is the argument of patch, or as a parameter or variable of the generated
   resolvers. The implementation lists the names, as #1513 does, and the persist tool reports
-  such a key as an error, as #1503 gives.
+  such a key as an error, as #1503 gives. `pull` leaves such an entity unannotated, with
+  #1503's warning.
 
 ### Types
 
@@ -460,8 +462,7 @@ message, ``The field '<field>' of the entity '<Entity>' is not <format>.``
   hold one is answered with `INVALID_INPUT`, `The field '<field>' of the entity '<Entity>' cannot
   be null.`
 - **Not `T field?`:** `ballerina/graphql` publishes an optional non-nullable field as the
-  nullable `T` too, and cannot bind the `null` a client may then send
-  ([ballerina-library#9740](https://github.com/ballerina-platform/ballerina-library/issues/9740)).
+  nullable `T` too, and cannot bind the `null` a client may then send.
 
 #### Field rules
 
@@ -853,9 +854,10 @@ service graphql:Service /graphql on dataserviceListener {
   response has one error, not one per record. A mutation that returns a record checks the
   entity's own `read` scopes for a selected relation too, since a caller with `create` alone
   reads no relation.
-- **Patch and delete results:** with `read` allowed, patch and delete call `dsGraphql:hasScope`
-  with the entity's `read` scopes, and return `null`, with no entry in `errors`, to a caller
-  without one. An empty patch by such a caller does not read.
+- **Create, patch and delete results:** with `read` allowed, create, patch and delete call
+  `dsGraphql:hasScope` with the entity's `read` scopes, and return `null`, with no entry in
+  `errors`, to a caller without one, as #1503 gives. Create still creates the records, and an
+  empty patch by such a caller does not read.
 - **Required providers:** `dataserviceConfig` is a `dsGraphql:AuthConfig`, whose
   `serviceConfig.auth` is required, so the program does not start without it, and an empty list
   stops it with #1513's message,
@@ -1060,6 +1062,8 @@ GraphQL names allow only letters, digits and `_`, so #1503's `$` reservation bec
 - **Names GraphQL cannot hold:** a Ballerina field name with characters other than ASCII letters,
   digits and `_`, written as a quoted identifier with escapes, cannot be a GraphQL name, and the
   persist tool reports it. A quoted identifier of a keyword, such as `'type`, is the name `type`.
+- **Generated type names:** a model entity named like a type generated for another exposed
+  entity, such as `OrderObject` or `OrderList` next to `Order`, is reported with #1503's message.
 - **Library type names:** the input types and enums of `ballerina/dataservice.graphql`, such as
   `IntFilter` and `SortDirection`, are schema types of every service, so a model entity or enum
   with one of their names is reported by the persist tool, as is a model enum whose generated
@@ -1183,7 +1187,7 @@ named by what each function returns:
 | `toFinite(float value, string entity, string field) returns float\|Error` | function | Returns a stored `float`, or the error for one that is not finite |
 | `Authenticator` | class | `init(graphql:ListenerAuthConfig[] providers)` and `authenticate(graphql:Context ctx, http:Request request) returns graphql:AuthnError\|graphql:AuthzError?` |
 | `checkScopes(graphql:Context ctx, string[] scopes) returns Error?` | function | The scope check of a root field's action |
-| `hasScope(graphql:Context ctx, string[] scopes) returns boolean` | function | Whether patch and delete return the record |
+| `hasScope(graphql:Context ctx, string[] scopes) returns boolean` | function | Whether create, patch and delete return the record |
 | `checkRelationScopes(graphql:Context ctx, graphql:Field field, string entity, map<RelationScopes> relations, string[]? entityScopes = ()) returns Error?` | function | The relation check of a root field's selection; `RelationScopes` holds the related entity's name and `read` scopes |
 
 The exact signatures are settled in the implementation and listed in the module's
@@ -1282,8 +1286,8 @@ The duplicated provider handling uses the same `ballerina/http` listener auth ha
   request error without `data`, and the log lines.
 - **Auth:** no credential and a bad one, for a valid document, an invalid one and introspection;
   a credential without a scope, with a default scope, with a scope from `scopes`, and with an
-  empty list; relation scopes under a query and under a mutation; patch and delete for a caller
-  without a `read` scope; `GET` refused; a missing and an empty `auth` list stopping the program;
+  empty list; relation scopes under a query and under a mutation; create, patch and delete for a
+  caller without a `read` scope; `GET` refused; a missing and an empty `auth` list stopping the program;
   CORS headers on an auth error.
 - **Limits:** the depth and complexity limits, GraphiQL's introspection query within the
   defaults, and each limit below 1 stopping the program.
@@ -1306,8 +1310,7 @@ The duplicated provider handling uses the same `ballerina/http` listener auth ha
 - [Data service generation for bal persist](https://github.com/ballerina-platform/ballerina-spec/issues/1503).
 - [Data service generation for bal persist: HTTP](https://github.com/ballerina-platform/ballerina-spec/issues/1513),
   for the formats, messages and configuration layout this proposal reuses.
-- `ballerina/graphql`, with `graphql:ServiceError`
-  ([module-ballerina-graphql#2610](https://github.com/ballerina-platform/module-ballerina-graphql/pull/2610)).
+- `ballerina/graphql` 1.19.2, for `graphql:ServiceError`.
 - `ballerina/dataservice`.
 - `ballerina/dataservice.graphql`: a new library, released separately from
   `ballerina/dataservice`, as `ballerina/dataservice.http` is.
