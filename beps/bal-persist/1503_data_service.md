@@ -427,6 +427,7 @@ and does nothing in any other source.
 | `operations` has no duplicates | compiler plugin | error |
 | Each scope is non-empty and has no whitespace | compiler plugin | error |
 | `scopes` names only actions in `operations` | compiler plugin | error |
+| `operations` and `scopes` are written inline, not through a constant | compiler plugin | error |
 | An annotated entity has no unsupported data types | persist tool | error |
 | An annotated entity's key fields avoid the names the protocol's generated code uses | persist tool | error |
 | No two annotated entities have the same collection name | persist tool | error |
@@ -467,12 +468,10 @@ their position in the model; their diagnostic codes are left to the implementati
 | A key field named as a parameter or variable of the generated code | error | `the key field '<field>' of the entity '<Entity>' uses a name reserved by the data service. Rename the field, or remove the entity's @dataservice:Expose annotation.` |
 | Two annotated entities with the same collection name | error | `the entities '<Entity>' and '<Entity>' map to the same collection '<collection>' in the data service. Rename one of them, or remove its @dataservice:Expose annotation.` |
 | `Expose` on something other than a record type in the model | error | `the @dataservice:Expose annotation is allowed only on a record type in the persist model.` |
-| `operations` empty | error | `'operations' in the @dataservice:Expose annotation of the entity '<Entity>' cannot be empty.` |
-| `operations` not a list literal | error | `'operations' in the @dataservice:Expose annotation of the entity '<Entity>' must be a list of operations.` |
-| An unknown operation | error | `invalid operation '<value>' in the @dataservice:Expose annotation of the entity '<Entity>'. Supported values: dataservice:READ, dataservice:CREATE, dataservice:UPDATE, dataservice:DELETE.` |
 | A duplicate operation | error | `duplicate operation '<value>' in the @dataservice:Expose annotation of the entity '<Entity>'. Remove the duplicate.` |
-| An empty scope or one with whitespace | error | `invalid scope '<value>' in the @dataservice:Expose annotation of the entity '<Entity>'. A scope must be a non-empty string without whitespace.` |
+| An empty scope or one with whitespace, counting an escape such as `\t` | error | `invalid scope '<value>' in the @dataservice:Expose annotation of the entity '<Entity>'. A scope must be a non-empty string without whitespace.` |
 | Scopes for an action that is not enabled | error | `the @dataservice:Expose annotation of the entity '<Entity>' sets scopes for '<action>', which is not in 'operations'. Add it to 'operations', or remove its scopes.` |
+| `operations` or `scopes` not written inline, such as a constant | error | `'<operations|scopes>' in the @dataservice:Expose annotation of the entity '<Entity>' must list its values inline. Replace '<value>' with the values it stands for.` |
 | `scopes` set while `options.dataservice.auth` is not `true` | warning | `the @dataservice:Expose annotation of the entity '<Entity>' sets scopes, but 'options.dataservice.auth' is not true. Set it to true, or remove the scopes.` |
 | Annotations without `options.dataservice` | warning | `the model has @dataservice:Expose annotations, but no data service is generated. Set 'options.dataservice.protocol' in the [[tool.persist]] entry to generate one.` |
 | `protocol = "graphql"` and no exposed entity allows `read` | error | `a GraphQL data service needs at least one entity that allows 'read'. Add dataservice:READ to the 'operations' of an entity.` |
@@ -614,6 +613,10 @@ clients.
   the record at each position was created from the input at that position.
 - **Batch size:** create many accepts at most `dataserviceConfig.maxPageSize` records. More is
   invalid input.
+- **Key matching:** created and related records are matched to their keys by exact value. A
+  string key or foreign key must therefore be stored as the database returns it, so a column
+  whose collation ignores case, or a `CHAR` column that pads its values, is not supported as a key
+  or a foreign key.
 - **Patch and delete with `read`:** when the entity allows `read`, patch and delete return the
   record only to a caller who is also allowed to read the entity, and no record to any other
   caller. So `update` or `delete` alone does not reveal a record, for example through a patch
@@ -748,6 +751,11 @@ when the persist tool compiles the model.
 | No `ReadOnly` or `Internal` on the foreign key of a one-to-one relation when the entity allows `create`: the key is unique, so every create after the first would fail | error | `@dataservice:<rule> cannot be used on the field '<field>' of the entity '<Entity>', the foreign key of a one-to-one relation. Remove it.` |
 | A field rule that the entity's actions make meaningless: `Immutable` without `update`, `ReadOnly` without `create` and `update`, `Internal` without `read`, `create` and `update`, and `Internal` on a relation field without `read` | warning | `@dataservice:<rule> on the field '<field>' of the entity '<Entity>' has no effect. Remove it, or add '<actions>' to 'operations'.`, where `<actions>` names each of those actions, joined by `' or '` |
 
+A field is nullable when its type includes nil, as `string?` and `string|()` do. A string `value` on
+a field whose type is an enum, or a union of string singletons, must be one of its member values.
+The relation fields of an entity to itself pair the owning fields, which declare their foreign
+keys, in order with the others.
+
 ##### Not field rules
 
 - **Write-only fields,** such as AIP-203's `INPUT_ONLY`. Their usual purpose is a secret such as
@@ -807,6 +815,7 @@ ISO 8601 date:
 - **Nulls:** `ne` does not match a record whose field is null, as in SQL. Such records are
   matched with `isNull`.
 - **Empty lists:** `anyOf` with an empty list matches no record.
+- **Long lists:** `anyOf` holds at most `dataserviceConfig.maxPageSize` values.
 - **Dates and times:** compare as the values they denote. A `time:Civil` value has no offset
   and compares as stored, so a filter value with an offset is invalid input. A `time:Utc` value
   may carry any offset, and is converted to UTC.
@@ -947,6 +956,8 @@ persist client is called, with `INVALID_INPUT` unless the row says otherwise:
 | An offset below 0 | `The offset must be at least 0.` |
 | An offset for which `offset + size` exceeds the largest integer | `The offset and the page size together exceed the largest integer.` |
 | A create with more than `dataserviceConfig.maxPageSize` records | `A create can hold at most <max> records.` |
+| An `anyOf` list longer than `dataserviceConfig.maxPageSize` | `'anyOf' on the field '<field>' can hold at most <max> values.` |
+| A `float` filter value that is `NaN` or infinite | The value message in the protocol proposal |
 | A `float` key that is `NaN` or infinite | `The key '<key>' of the entity '<Entity>' is not a finite number.` |
 
 #### Errors
