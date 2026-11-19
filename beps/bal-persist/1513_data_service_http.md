@@ -104,8 +104,8 @@ For an entity `Employee` whose collection name is `employees`, with key `id`:
 | Get one | `read` | `GET /api/employees/{id}`, optionally with `fields` | `200`, `Employee` |
 | Get related, to-one | `read` | `GET /api/employees/{id}/department`, optionally with `fields` | `200`, `Department` |
 | Get related, to-many | `read` | `GET /api/departments/{id}/employees` with the query parameters | `200`, `{"items": [Employee, ...], "hasMore": false}` |
-| Create one | `create` | `POST /api/employees` with an `EmployeeInsert` object | `201`, `Location: /api/employees/{id}`, the created `Employee` |
-| Create many | `create` | `POST /api/employees` with an array of `EmployeeInsert` | `201`, `{"items": [Employee, ...], "hasMore": false}` |
+| Create one | `create` | `POST /api/employees` with an `EmployeeInsert` object | `201`, `Location: /api/employees/{id}`, the created `Employee`; no body when the caller may not read it |
+| Create many | `create` | `POST /api/employees` with an array of `EmployeeInsert` | `201`, `{"items": [Employee, ...], "hasMore": false}`; no body when the caller may not read them |
 | Patch one | `update` | `PATCH /api/employees/{id}` with an `EmployeeUpdate` object | `200`, the updated `Employee`; `204` when the entity does not allow `read`, the caller may not read it, or the update cannot be read back |
 | Delete one | `delete` | `DELETE /api/employees/{id}` | `200`, the deleted `Employee`; `204` when the entity does not allow `read` or the caller may not read it |
 
@@ -596,10 +596,12 @@ isolated service class DataserviceAuthInterceptor {
   }
   ```
 
-- **Patch and delete results:** with `auth = true` and `read` allowed, patch and delete call
-  `dsHttp:hasScope` with the entity's `read` scopes, as #1503 defines, which returns `true` when
-  the caller holds one of them, or, for an empty list, the deciding provider's `scopes`. Without one,
-  they answer `204` and, for an empty patch, do not read:
+- **Create, patch and delete results:** with `auth = true` and `read` allowed, create, patch and
+  delete call `dsHttp:hasScope` with the entity's `read` scopes, as #1503 defines, which returns
+  `true` when the caller holds one of them, or, for an empty list, the deciding provider's
+  `scopes`. Without one, create answers `201` with no body, as `http:Created`, keeping the
+  `Location` header of a single record, and patch and delete answer `204` and, for an empty
+  patch, do not read:
 
   ```ballerina
   if !dsHttp:hasScope(ctx, ["employees:read"]) {
@@ -778,7 +780,8 @@ service http:InterceptableService /api on dataserviceListener {
   `byte[]` field, such as `Employee` with `hiredOn`, uses its wire types in their place, such
   as `EmployeePayload`; see [Wire types](#wire-types).
 - **Without `read`:** patch and delete return `http:NoContent` in place of the record.
-- **Patch and delete with `read`:** with `auth = true`, patch and delete take the
+- **Create, patch and delete with `read`:** with `auth = true`, create also takes the
+  `http:RequestContext` and adds `http:Created` to its return type, and patch and delete take the
   `http:RequestContext` and return `Employee|http:NoContent`. Without auth they take no
   request context, delete returns `Employee` alone,
   and patch returns `Employee|http:NoContent` for an update that cannot be read back.
