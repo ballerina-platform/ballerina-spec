@@ -263,8 +263,9 @@ says that `--dataservice` would also generate a service.
 
 `pull` takes table names because that is what a user knows before the model exists. Without
 `--expose-tables`, every pulled entity is annotated, except an entity with an unsupported data
-type, which `pull` names in a warning. With it, only the entities of the named tables are
-annotated, and each name must be a pulled table whose entity has no unsupported data type.
+type, a key field whose name the data service reserves, or a collection that an earlier entity
+takes, which `pull` names in a warning. With it, only the entities of the named tables are
+annotated, and each name must be a pulled table whose entity can be exposed.
 `--tables` keeps its current meaning, so a user can pull more tables than they expose. From then
 on, the model is the source of truth: the annotations can be edited like the rest of it, and a
 later `pull` replaces them along with the model.
@@ -282,14 +283,15 @@ does today.
 
 | Case | Result |
 |---|---|
-| `add` or `generate` with `--dataservice` and `--module`, `--model` or `--with-init-params` | Error, with the message for the matching `Ballerina.toml` case in [Messages](#messages) |
-| `pull` with `--dataservice` and `--model` | Error, with the message for a named model in [Messages](#messages) |
-| `--dataservice` with a value other than `http` or `graphql` | The protocol error in [Messages](#messages) |
+| `add` or `generate` with `--dataservice` and `--module`, `--model` or `--with-init-params` | Error naming the flag; see [Messages](#messages) |
+| `pull` with `--dataservice` and `--model` | Error naming the flag; see [Messages](#messages) |
+| `--dataservice` with a value other than `http` or `graphql` | Error naming the value; see [Messages](#messages) |
 | `--expose-tables` without `--dataservice` | Error, unless the entry already enables a data service |
-| `--expose-tables` naming a table that was not pulled, or one whose entity has an unsupported data type | Error naming the table. Names match as `--tables` matches them, exactly |
+| `--expose-tables` naming a table that was not pulled, or one whose entity has an unsupported data type, a reserved key name or a collection another named table takes | Error naming the table. Names match as `--tables` matches them, exactly |
+| `--expose-tables` that names no table, such as `,` | Error |
 | `pull --dataservice` when the entry already has `options.dataservice` | Error, before the database is read: the user removes the entry's `options.dataservice` keys and runs the command again, or runs `pull` without `--dataservice` to keep them. `--dataservice` adds a group and never changes one the user has written |
-| `pull --dataservice` when the entry has another `targetModule` or `withInitParams = true` | Error, as for the same `Ballerina.toml`, and nothing is written |
-| `pull --dataservice` with several `[[tool.persist]]` entries | The entry whose `filePath` is `persist/model.bal` is used, and created if none is |
+| `pull --dataservice` when the entry has another `targetModule`, `withInitParams = true` or a datastore that is not SQL | Error, as for the same `Ballerina.toml`, before the database is read, and nothing is written |
+| `pull --dataservice` with several `[[tool.persist]]` entries | The entry whose `filePath` is `persist/model.bal`, written with or without a leading `./`, is used, and created if none is. The `Ballerina.toml` update is checked before the model is written |
 
 A command that ends in an error leaves the model and `Ballerina.toml` unchanged.
 
@@ -467,6 +469,7 @@ their position in the model; their diagnostic codes are left to the implementati
 | An annotated entity with an unsupported data type | error | `the entity '<Entity>' has an unsupported data type and cannot be exposed. Remove its @dataservice:Expose annotation.` |
 | A key field named as a parameter or variable of the generated code | error | `the key field '<field>' of the entity '<Entity>' uses a name reserved by the data service. Rename the field, or remove the entity's @dataservice:Expose annotation.` |
 | Two annotated entities with the same collection name | error | `the entities '<Entity>' and '<Entity>' map to the same collection '<collection>' in the data service. Rename one of them, or remove its @dataservice:Expose annotation.` |
+| An annotated entity named like a type the protocol generates for another, such as `Order` and `OrderList` | error | `the entity '<Entity>' has the name of a type that the data service generates for the entity '<Entity>'. Rename one of them, or remove the @dataservice:Expose annotation of '<Entity>'.` |
 | `Expose` on something other than a record type in the model | error | `the @dataservice:Expose annotation is allowed only on a record type in the persist model.` |
 | A duplicate operation | error | `duplicate operation '<value>' in the @dataservice:Expose annotation of the entity '<Entity>'. Remove the duplicate.` |
 | An empty scope or one with whitespace, counting an escape such as `\t` | error | `invalid scope '<value>' in the @dataservice:Expose annotation of the entity '<Entity>'. A scope must be a non-empty string without whitespace.` |
@@ -482,6 +485,13 @@ their position in the model; their diagnostic codes are left to the implementati
 | `pull` skips an entity | warning | `the table '<table>' has an unsupported data type, so its entity '<Entity>' is not exposed.` |
 | `generate` without `--dataservice` on an annotated model | info | `the model has @dataservice:Expose annotations. Use the '--dataservice' option to also generate a data service.` |
 | `add --dataservice` succeeds | info | The next steps ``2. Add the @dataservice:Expose annotation to each entity to expose.`` and ``3. Execute `bal build` to generate the persist client and the <PROTOCOL> data service during package build.`` |
+| `add`, `generate` or `pull` with `--dataservice` and `--module`, `--model` or `--with-init-params` | error | `'<flag>' cannot be used with '--dataservice'. Remove '<flag>'.` |
+| `--dataservice` with an unknown value | error | `invalid '--dataservice' value '<value>'. Supported values: http, graphql.` |
+| `pull` skips an entity with a reserved key name | warning | `the key field '<field>' of the table '<table>' uses a name reserved by the data service, so its entity '<Entity>' is not exposed.` |
+| `pull` skips an entity whose collection is taken | warning | `the entity '<Entity>' of the table '<table>' maps to the collection '<collection>' of the entity '<Entity>', so it is not exposed.` |
+| `--expose-tables` names no table | error | `'--expose-tables' names no table. Give the tables to expose, separated by commas.` |
+| `--expose-tables` names a table with a reserved key name | error | `the table '<table>' in '--expose-tables' has the key field '<field>', whose name the data service reserves, so its entity '<Entity>' cannot be exposed.` |
+| `--expose-tables` names two tables with one collection | error | `the table '<table>' in '--expose-tables' maps to the collection '<collection>' of the table '<table>'. Expose only one of them.` |
 | `pull --dataservice` when the entry already has `options.dataservice` | error | `the [[tool.persist]] entry of persist/model.bal already has an 'options.dataservice' group. Remove it from Ballerina.toml and run the command again, or run 'bal persist pull' without '--dataservice'.` |
 | `pull --dataservice` succeeds | info | `enabled the <PROTOCOL> data service in the [[tool.persist]] entry of persist/model.bal in Ballerina.toml.` |
 
@@ -617,10 +627,11 @@ clients.
   string key or foreign key must therefore be stored as the database returns it, so a column
   whose collation ignores case, or a `CHAR` column that pads its values, is not supported as a key
   or a foreign key.
-- **Patch and delete with `read`:** when the entity allows `read`, patch and delete return the
-  record only to a caller who is also allowed to read the entity, and no record to any other
-  caller. So `update` or `delete` alone does not reveal a record, for example through a patch
-  that sets no field. [Auth](#auth) says how the caller is checked.
+- **Create, patch and delete with `read`:** when the entity allows `read`, create, patch and
+  delete return the record only to a caller who is also allowed to read the entity, and no
+  record to any other caller. So `create`, `update` or `delete` alone does not reveal a record,
+  such as a generated key or a value the service sets, or a record read through a patch that
+  sets no field. [Auth](#auth) says how the caller is checked.
 - **Patch and delete without `read`:** when the entity does not allow `read`, patch and delete
   return no record.
 - **Update not read back:** when the persist client saves an update but cannot read the record
@@ -1049,8 +1060,8 @@ generated only when `options.dataservice.auth` is `true`:
   `projectAssignments:create`.
 - **Authentication only:** an empty list, as in `read: []`, requires an authenticated caller
   and no scope.
-- **Patch and delete results:** with `auth = true`, patch and delete return the record only
-  when the caller is also allowed to read the entity. The service checks the caller against the
+- **Create, patch and delete results:** with `auth = true`, create, patch and delete return the
+  record only when the caller is also allowed to read the entity. The service checks the caller against the
   `read` scopes when the request runs, and returns no record when the caller is not allowed to
   read.
 - **Get related** and **a relation in `fields`** require the entity's own `read` scopes, like
