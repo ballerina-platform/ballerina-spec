@@ -160,7 +160,8 @@ request for it on its own:
   with `400` and `INVALID_INPUT`, with the message #1503 gives.
 - **Key text:** in `Location` and in error messages, a key value is written with Ballerina's
   `toString`, so `1.5` stays `1.5` and a `decimal` keeps its scale. In `Location`, each value
-  is then percent-encoded as a path segment.
+  is then percent-encoded as a path segment, and a value of `.` or `..` is written as `%2E` or
+  `%2E%2E`, so it is not a dot-segment.
 - **Key names:** a key field is a path parameter of the resources that take a key, so it cannot
   be named as one of their parameters or variables: `broken`, `converted`, `created`, `ctx`,
   `entries`, `entry`, `err`, `fields`, `filter`, `forbidden`, `hasMore`, `i`, `include`,
@@ -560,7 +561,7 @@ isolated service class DataserviceAuthInterceptor {
   so a user's password is never sent to an OAuth2 introspection endpoint. The first that
   authenticates the credential decides, and its
   `authorize` checks the scopes, so a caller holds the same scopes as with declarative auth. For
-  OAuth2, the scopes are the space-separated values of the introspection response's `scopeKey`
+  OAuth2, the scopes are the whitespace-separated values of the introspection response's `scopeKey`
   claim, which is what `http:ListenerOAuth2Handler` checks. `authorize` keeps the caller in the
   request context for the checks below, and passes an `OPTIONS` request, such as a CORS
   preflight, without a credential.
