@@ -471,9 +471,9 @@ their position in the model; their diagnostic codes are left to the implementati
 | An annotated entity with an unsupported data type | error | `the entity '<Entity>' has an unsupported data type and cannot be exposed. Remove its @dataservice:Expose annotation.` |
 | A key field named as a parameter or variable of the generated code | error | `the key field '<field>' of the entity '<Entity>' uses a name reserved by the data service. Rename the field, or remove the entity's @dataservice:Expose annotation.` |
 | Two annotated entities with the same collection name | error | `the entities '<Entity>' and '<Entity>' map to the same collection '<collection>' in the data service. Rename one of them, or remove its @dataservice:Expose annotation.` |
-| An entity named like a type the protocol generates for an annotated entity, such as `OrderList` next to an `Order` that allows `read` or `create`; only the types the protocol generates are reserved | error | `the entity '<Entity>' has the name of a type that the data service generates for the entity '<Entity>'. Rename one of them, or remove the @dataservice:Expose annotation of '<Entity>'.` |
-| An enum named like a type the protocol generates for an annotated entity, such as `OrderFilter` next to an `Order` that allows `read` | error | `the enum '<Enum>' has the name of a type that the data service generates for the entity '<Entity>'. Rename one of them, or remove the @dataservice:Expose annotation of '<Entity>'.` |
-| Two annotated entities for which the protocol generates one type, such as `OrderRelatedPartial` for `Order` as a relation target and for `OrderRelated` | error | `the data service generates the type '<Type>' for both the entity '<Entity>' and the entity '<Entity>'. Rename one of them, or remove its @dataservice:Expose annotation.` |
+| An entity named like a type the protocol generates for an annotated entity; see [Reserved type names](#types) | error | `the entity '<Entity>' has the name of a type that the data service generates for the entity '<Entity>'. Rename one of them, or remove the @dataservice:Expose annotation of '<Entity>'.` |
+| An enum named like a type the protocol generates for an annotated entity | error | `the enum '<Enum>' has the name of a type that the data service generates for the entity '<Entity>'. Rename one of them, or remove the @dataservice:Expose annotation of '<Entity>'.` |
+| Two annotated entities for which the protocol generates one type | error | `the data service generates the type '<Type>' for both the entity '<Entity>' and the entity '<Entity>'. Rename one of them, or remove its @dataservice:Expose annotation.` |
 | `persist/model.bal` has more than one `[[tool.persist]]` entry and one enables a data service | error | `the persist model persist/model.bal has more than one [[tool.persist]] entry, and a data service needs one. Remove the other entries, or remove 'options.dataservice'.` |
 | `add` of a second entry of `persist/model.bal` when a data service is involved | error | `a data service needs the only [[tool.persist]] entry of persist/model.bal, and Ballerina.toml already has one. Change that entry instead of adding another.` |
 | `Expose` on something other than a record type in the model | error | `the @dataservice:Expose annotation is allowed only on a record type in the persist model.` |
@@ -610,6 +610,14 @@ proposal names these types, because what a name can be depends on the protocol: 
 schema type after its Ballerina type, so its types cannot reuse the names of persist's types in
 the same module. The names are derived from the entity name, and share the default module's
 namespace with the user's own code; see [Generated code](#generated-code).
+
+- **Reserved type names:** only the types a protocol generates for an entity, as its actions and
+  the relations that reach it decide, are reserved. The persist tool rejects a model entity or
+  enum named as one of them, and two exposed entities for which the protocol would generate the
+  same type, with the messages in [Messages](#messages). `pull` leaves such entities
+  unannotated; it selects entities before their relations are resolved, so it compares every type
+  the protocol can generate for an entity. Each protocol proposal lists its types and when each
+  is generated.
 
 #### Results
 
