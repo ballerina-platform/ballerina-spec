@@ -292,6 +292,8 @@ does today.
 | `pull --dataservice` when the entry already has `options.dataservice` | Error, before the database is read: the user removes the entry's `options.dataservice` keys and runs the command again, or runs `pull` without `--dataservice` to keep them. `--dataservice` adds a group and never changes one the user has written |
 | `pull --dataservice` when the entry has another `targetModule`, `withInitParams = true` or a datastore that is not SQL | Error, as for the same `Ballerina.toml`, before the database is read, and nothing is written |
 | `pull --dataservice` with several `[[tool.persist]]` entries | The entry whose `filePath` is `persist/model.bal`, written with or without a leading `./`, is used, and created if none is. The `Ballerina.toml` update is checked before the model is written |
+| `add` of a second entry of `persist/model.bal`, when it or an existing entry enables a data service | Error, and nothing is written; see [Messages](#messages) |
+| `pull` when `persist/model.bal` has more than one entry and one enables a data service, or `--dataservice` is passed | Error, before the database is read |
 
 A command that ends in an error leaves the model and `Ballerina.toml` unchanged.
 
@@ -469,7 +471,10 @@ their position in the model; their diagnostic codes are left to the implementati
 | An annotated entity with an unsupported data type | error | `the entity '<Entity>' has an unsupported data type and cannot be exposed. Remove its @dataservice:Expose annotation.` |
 | A key field named as a parameter or variable of the generated code | error | `the key field '<field>' of the entity '<Entity>' uses a name reserved by the data service. Rename the field, or remove the entity's @dataservice:Expose annotation.` |
 | Two annotated entities with the same collection name | error | `the entities '<Entity>' and '<Entity>' map to the same collection '<collection>' in the data service. Rename one of them, or remove its @dataservice:Expose annotation.` |
-| An annotated entity named like a type the protocol generates for another, such as `Order` and `OrderList` | error | `the entity '<Entity>' has the name of a type that the data service generates for the entity '<Entity>'. Rename one of them, or remove the @dataservice:Expose annotation of '<Entity>'.` |
+| An entity named like a type the protocol generates for an annotated entity, such as `OrderList` next to an `Order` that allows `read` or `create`; only the types the protocol generates are reserved | error | `the entity '<Entity>' has the name of a type that the data service generates for the entity '<Entity>'. Rename one of them, or remove the @dataservice:Expose annotation of '<Entity>'.` |
+| Two annotated entities for which the protocol generates one type, such as `OrderRelatedPartial` for `Order` as a relation target and for `OrderRelated` | error | `the data service generates the type '<Type>' for both the entity '<Entity>' and the entity '<Entity>'. Rename one of them, or remove its @dataservice:Expose annotation.` |
+| `persist/model.bal` has more than one `[[tool.persist]]` entry and one enables a data service | error | `the persist model persist/model.bal has more than one [[tool.persist]] entry, and a data service needs one. Remove the other entries, or remove 'options.dataservice'.` |
+| `add` of a second entry of `persist/model.bal` when a data service is involved | error | `a data service needs the only [[tool.persist]] entry of persist/model.bal, and Ballerina.toml already has one. Change that entry instead of adding another.` |
 | `Expose` on something other than a record type in the model | error | `the @dataservice:Expose annotation is allowed only on a record type in the persist model.` |
 | A duplicate operation | error | `duplicate operation '<value>' in the @dataservice:Expose annotation of the entity '<Entity>'. Remove the duplicate.` |
 | An empty scope or one with whitespace, counting an escape such as `\t` | error | `invalid scope '<value>' in the @dataservice:Expose annotation of the entity '<Entity>'. A scope must be a non-empty string without whitespace.` |
@@ -492,6 +497,8 @@ their position in the model; their diagnostic codes are left to the implementati
 | `--expose-tables` names no table | error | `'--expose-tables' names no table. Give the tables to expose, separated by commas.` |
 | `--expose-tables` names a table with a reserved key name | error | `the table '<table>' in '--expose-tables' has the key field '<field>', whose name the data service reserves, so its entity '<Entity>' cannot be exposed.` |
 | `--expose-tables` names two tables with one collection | error | `the table '<table>' in '--expose-tables' maps to the collection '<collection>' of the table '<table>'. Expose only one of them.` |
+| `pull` skips an entity that would generate the type of another pulled entity | warning | `the entity '<Entity>' of the table '<table>' would generate the type '<Type>', which is the entity of the table '<table>', so it is not exposed.` |
+| `--expose-tables` names a table that would generate the type of another pulled entity | error | `the table '<table>' in '--expose-tables' would generate the type '<Type>' for its entity '<Entity>', which is the entity of the table '<table>'. Remove the table from '--expose-tables'.` |
 | `pull --dataservice` when the entry already has `options.dataservice` | error | `the [[tool.persist]] entry of persist/model.bal already has an 'options.dataservice' group. Remove it from Ballerina.toml and run the command again, or run 'bal persist pull' without '--dataservice'.` |
 | `pull --dataservice` succeeds | info | `enabled the <PROTOCOL> data service in the [[tool.persist]] entry of persist/model.bal in Ballerina.toml.` |
 
@@ -1286,6 +1293,9 @@ within a major version of the libraries, apart from additions to the list envelo
 - **Client construction:** the service creates the persist client with `new ()`, so
   `options.withInitParams = true` cannot be used together with `options.dataservice`.
 - **One service per package:** a package has one persist model and at most one data service.
+  When an entry of `persist/model.bal` enables a data service, it is the model's only
+  `[[tool.persist]]` entry: another entry of the same model, such as one that writes a second client
+  into a submodule, would delete the service, so it is an error.
   Persist's `--model` option for several models is not supported together with
   `options.dataservice`.
 
