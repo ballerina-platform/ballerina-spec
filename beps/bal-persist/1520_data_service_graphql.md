@@ -361,16 +361,16 @@ rename one. The default module already holds persist's `Employee`, `EmployeeInse
 `EmployeeUpdate`, so the GraphQL types have names of their own, with GraphQL's `Input` suffix on
 input types. #1503 leaves type names to each protocol proposal.
 
-| GraphQL type | Kind | Ballerina type | Holds |
-|---|---|---|---|
-| `EmployeeObject` | object | service class | The returned fields of `Employee`, and a field per offered relation |
-| `EmployeeRelatedObject` | object | service class | The returned fields of `Employee`, without relation fields, as a related record; see [Relations](#relations) |
-| `EmployeeList` | object | open record | A page of `EmployeeObject`, with `hasMore` |
-| `EmployeeRelatedList` | object | open record | A page of `EmployeeRelatedObject`, with `hasMore` |
-| `EmployeeInsertInput` | input | closed record | The fields that create one and create many accept |
-| `EmployeeUpdateInput` | input | closed record | The fields that patch accepts, all optional |
-| `EmployeeFilter` | input | closed record | One optional field per filterable field |
-| `EmployeeSort` | input | closed record | One optional field per sortable field |
+| GraphQL type | Kind | Ballerina type | Holds | Generated when the entity |
+|---|---|---|---|---|
+| `EmployeeObject` | object | service class | The returned fields of `Employee`, and a field per offered relation | allows `read` or `create` |
+| `EmployeeRelatedObject` | object | service class | The returned fields of `Employee`, without relation fields, as a related record; see [Relations](#relations) | allows `read` and is the target of a readable relation |
+| `EmployeeList` | object | open record | A page of `EmployeeObject`, with `hasMore` | allows `read` or `create` |
+| `EmployeeRelatedList` | object | open record | A page of `EmployeeRelatedObject`, with `hasMore` | allows `read` and is the target of a readable to-many relation |
+| `EmployeeInsertInput` | input | closed record | The fields that create one and create many accept | allows `create` |
+| `EmployeeUpdateInput` | input | closed record | The fields that patch accepts, all optional | allows `update` |
+| `EmployeeFilter` | input | closed record | One optional field per filterable field | allows `read` |
+| `EmployeeSort` | input | closed record | One optional field per sortable field | allows `read` |
 
 - **Always generated:** unlike #1513's wire types, these types are generated for every exposed
   entity, each when an operation uses it. GraphQL needs input types separate from output types,
@@ -1062,8 +1062,12 @@ GraphQL names allow only letters, digits and `_`, so #1503's `$` reservation bec
 - **Names GraphQL cannot hold:** a Ballerina field name with characters other than ASCII letters,
   digits and `_`, written as a quoted identifier with escapes, cannot be a GraphQL name, and the
   persist tool reports it. A quoted identifier of a keyword, such as `'type`, is the name `type`.
-- **Generated type names:** a model entity named like a type generated for another exposed
-  entity, such as `OrderObject` or `OrderList` next to `Order`, is reported with #1503's message.
+- **Generated type names:** the types in [Type names](#type-names) are the names #1503's
+  generated-type rule reserves for GraphQL, each only when it is generated. `OrderObject` is
+  reserved next to an `Order` that allows `read` or `create`, and free next to an `Order` that
+  only allows `update`. `OrderRelatedObject` is generated for `Order` as a relation target and is
+  also the `<Entity>Object` of an entity `OrderRelated`, so the two entities cannot both be
+  exposed. `pull` compares every name in the table.
 - **Library type names:** the input types and enums of `ballerina/dataservice.graphql`, such as
   `IntFilter` and `SortDirection`, are schema types of every service, so a model entity or enum
   with one of their names is reported by the persist tool, as is a model enum whose generated
@@ -1078,6 +1082,10 @@ function, the payload classes and the dataloader batch functions; `dataservice_t
 holds, per entity in model order, the related, list, input, filter and sort types, the entity
 description of #1513, and the conversion functions; `dataservice_config.bal` holds
 `dataserviceConfig`, the page configuration and, with `auth = true`, the authenticator.
+
+The samples below read through streams. With `options.eagerLoading = true`, the client's
+collection resources return arrays, and each read takes the array in place of the stream, as
+#1503 gives.
 
 Each generated public type, class and resolver has a short doc comment: a one-line summary and
 one-line `+ param` and `+ return` lines, with the descriptions in [Documentation](#documentation).
