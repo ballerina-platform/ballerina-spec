@@ -472,6 +472,7 @@ their position in the model; their diagnostic codes are left to the implementati
 | A key field named as a parameter or variable of the generated code | error | `the key field '<field>' of the entity '<Entity>' uses a name reserved by the data service. Rename the field, or remove the entity's @dataservice:Expose annotation.` |
 | Two annotated entities with the same collection name | error | `the entities '<Entity>' and '<Entity>' map to the same collection '<collection>' in the data service. Rename one of them, or remove its @dataservice:Expose annotation.` |
 | An entity named like a type the protocol generates for an annotated entity, such as `OrderList` next to an `Order` that allows `read` or `create`; only the types the protocol generates are reserved | error | `the entity '<Entity>' has the name of a type that the data service generates for the entity '<Entity>'. Rename one of them, or remove the @dataservice:Expose annotation of '<Entity>'.` |
+| An enum named like a type the protocol generates for an annotated entity, such as `OrderFilter` next to an `Order` that allows `read` | error | `the enum '<Enum>' has the name of a type that the data service generates for the entity '<Entity>'. Rename one of them, or remove the @dataservice:Expose annotation of '<Entity>'.` |
 | Two annotated entities for which the protocol generates one type, such as `OrderRelatedPartial` for `Order` as a relation target and for `OrderRelated` | error | `the data service generates the type '<Type>' for both the entity '<Entity>' and the entity '<Entity>'. Rename one of them, or remove its @dataservice:Expose annotation.` |
 | `persist/model.bal` has more than one `[[tool.persist]]` entry and one enables a data service | error | `the persist model persist/model.bal has more than one [[tool.persist]] entry, and a data service needs one. Remove the other entries, or remove 'options.dataservice'.` |
 | `add` of a second entry of `persist/model.bal` when a data service is involved | error | `a data service needs the only [[tool.persist]] entry of persist/model.bal, and Ballerina.toml already has one. Change that entry instead of adding another.` |
@@ -498,7 +499,9 @@ their position in the model; their diagnostic codes are left to the implementati
 | `--expose-tables` names a table with a reserved key name | error | `the table '<table>' in '--expose-tables' has the key field '<field>', whose name the data service reserves, so its entity '<Entity>' cannot be exposed.` |
 | `--expose-tables` names two tables with one collection | error | `the table '<table>' in '--expose-tables' maps to the collection '<collection>' of the table '<table>'. Expose only one of them.` |
 | `pull` skips an entity that would generate the type of another pulled entity | warning | `the entity '<Entity>' of the table '<table>' would generate the type '<Type>', which is the entity of the table '<table>', so it is not exposed.` |
+| `pull` skips an entity that would generate a type that another selected entity also generates | warning | `the entity '<Entity>' of the table '<table>' would generate the type '<Type>', which the data service also generates for the entity '<Entity>', so it is not exposed.` |
 | `--expose-tables` names a table that would generate the type of another pulled entity | error | `the table '<table>' in '--expose-tables' would generate the type '<Type>' for its entity '<Entity>', which is the entity of the table '<table>'. Remove the table from '--expose-tables'.` |
+| `--expose-tables` names two tables that would generate one type | error | `the table '<table>' in '--expose-tables' would generate the type '<Type>', which the data service also generates for the table '<table>'. Expose only one of them.` |
 | `pull --dataservice` when the entry already has `options.dataservice` | error | `the [[tool.persist]] entry of persist/model.bal already has an 'options.dataservice' group. Remove it from Ballerina.toml and run the command again, or run 'bal persist pull' without '--dataservice'.` |
 | `pull --dataservice` succeeds | info | `enabled the <PROTOCOL> data service in the [[tool.persist]] entry of persist/model.bal in Ballerina.toml.` |
 
@@ -1281,8 +1284,9 @@ within a major version of the libraries, apart from additions to the list envelo
   From `generate`, they go into the package root, where the client also goes, and are the
   user's.
 - **Regeneration:** in `generated/`, the service files are rewritten whenever the client is.
-  The tool's check that skips generation for an unchanged model also covers
-  `options.dataservice`, so changing any of its keys regenerates the service. When
+  The tool's check that skips generation covers the model, every option of the entry,
+  `options.dataservice` included, and the build of the tool, so changing any of them, or
+  installing another build of the tool, regenerates the client and the service. When
   `options.dataservice` is removed, the tool deletes the service files from `generated/`.
   Files that `generate` wrote into the package root are the user's and are never deleted.
 - **Names:** generated module-level names share the default module's namespace with the user's
@@ -1292,6 +1296,8 @@ within a major version of the libraries, apart from additions to the list envelo
   `dataservice`.
 - **Client construction:** the service creates the persist client with `new ()`, so
   `options.withInitParams = true` cannot be used together with `options.dataservice`.
+- **Eager loading:** with `options.eagerLoading = true`, the client's collection resources
+  return arrays, and the generated service reads them in place of streams.
 - **One service per package:** a package has one persist model and at most one data service.
   When an entry of `persist/model.bal` enables a data service, it is the model's only
   `[[tool.persist]]` entry: another entry of the same model, such as one that writes a second client
