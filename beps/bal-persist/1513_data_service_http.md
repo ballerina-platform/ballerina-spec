@@ -202,16 +202,23 @@ becomes an array such as `[1704189330, 0.5]`, the other `time:*` types become re
 #1503 leaves the names of the types a protocol generates to its proposal. The HTTP service
 generates these per exposed entity, each where an operation uses it:
 
-| Type | Holds |
-|---|---|
-| `<Entity>List` | A page of records, with `hasMore` |
-| `<Entity>Partial` | A record narrowed by `fields` |
-| `<Entity>PartialList` | A page of `<Entity>Partial` records, as an open record |
-| `<Entity>RelatedPartial` | A related record in `fields`: the entity's own fields and no relation fields |
-| `<Entity>RelatedPartialList` | A to-many relation in `fields`: `<Entity>RelatedPartial` records and `hasMore`, as an open record |
-| `<Entity>Filter` | The `filter` query parameter |
-| `<Entity>Payload`, `<Entity>InsertPayload`, `<Entity>UpdatePayload` | The wire types of `<Entity>`, `<Entity>Insert` and `<Entity>Update`; see [Wire types](#wire-types) |
-| `<Entity>Created`, `<Entity>ListCreated` | The `201` responses of create one and create many; see [Generated resources](#generated-resources) |
+| Type | Holds | Generated when the entity |
+|---|---|---|
+| `<Entity>List` | A page of records, with `hasMore` | allows `read` or `create` |
+| `<Entity>Partial` | A record narrowed by `fields` | allows `read` |
+| `<Entity>PartialList` | A page of `<Entity>Partial` records, as an open record | allows `read` |
+| `<Entity>RelatedPartial` | A related record in `fields`: the entity's own fields and no relation fields | allows `read` and is the target of a readable relation |
+| `<Entity>RelatedPartialList` | A to-many relation in `fields`: `<Entity>RelatedPartial` records and `hasMore`, as an open record | allows `read` and is the target of a readable to-many relation |
+| `<Entity>Filter` | The `filter` query parameter | allows `read` |
+| `<Entity>Payload`, `<Entity>InsertPayload`, `<Entity>UpdatePayload` | The wire types of `<Entity>`, `<Entity>Insert` and `<Entity>Update`; see [Wire types](#wire-types) | has wire types, as [Wire types](#wire-types) gives; the insert and update types also need `create` and `update` |
+| `<Entity>Created`, `<Entity>ListCreated` | The `201` responses of create one and create many; see [Generated resources](#generated-resources) | allows `create` |
+
+These are the names #1503's generated-type rule reserves for HTTP, each only when it is
+generated. `OrderList` is reserved next to an `Order` that allows `read` or `create`, and free
+next to an `Order` that only allows `update`. `OrderRelatedPartial` is generated for `Order` as a
+relation target and is also the `<Entity>Partial` of an entity `OrderRelated`, so the two
+entities cannot both be exposed. `pull` compares every name in the table, since it selects
+entities before their relations are resolved.
 
 #### Wire types
 
