@@ -679,6 +679,20 @@ bal graphql <service.bal | package-directory | module-directory>
             [-n | --dry-run]
 ```
 
+The existing graphql.config.yaml is still accepted for client generation through a third, deprecated form:
+
+```
+bal graphql <graphql.config.yaml-path>
+            [-o | --output <output-location>]
+            [--force]
+            [-n | --dry-run]
+```
+
+* It accepts a .yaml or .yml file, and always runs client generation, the same as today.
+* Every run prints a deprecation warning that names the file and points to balGraphQL.toml.
+* The options added in this proposal (\--mode, \--module, \--license and the service generation options) need a balGraphQL.toml file, and are a usage error (exit code 2) with a YAML file.
+* The form is removed, together with YAML support, in a later major release.
+
 | Flag | Change |
 | :---- | :---- |
 | \<input\> | Now a positional argument instead of the -i flag. It is mandatory, and there is no default (see 5.2.10). For client/service generation it takes balGraphQL.toml; for schema generation it takes a standalone Ballerina file, a package directory, or a module directory (see 5.2.4) |
@@ -902,7 +916,7 @@ Does not panic \- the service will keep running even if someone calls the unimpl
 
 **Rejected because:** It originates from the VS Code GraphQL plugin ecosystem, not Ballerina itself, and is inconsistent with Ballerina.toml being the standard configuration format across the rest of the toolchain.
 
-**Proposed instead:** Migrate to TOML, with a transition period supporting both formats, a deprecation notice, and a conversion tool.
+**Proposed instead:** Replace graphql.config.yaml with balGraphQL.toml. YAML support is removed as part of the client generation redesign (see 5.2.3), so the tool reads only balGraphQL.toml for client and service generation. A graphql.config.yaml input fails with a clear error that points to balGraphQL.toml.
 
 **Impact of not doing this:** Client generation configuration stays tied to a format with no relationship to the rest of the Ballerina toolchain. Users already familiar with Ballerina.toml-based configuration everywhere else in Ballerina have to learn and maintain a second, inconsistent config format just for this one tool, with no path toward unifying it.
 
