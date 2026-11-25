@@ -331,7 +331,7 @@ enum Episode {
 }
 ```
 
-Declared order NEWHOPE, EMPIRE, JEDI comes out reversed as JEDI, EMPIRE, NEWHOPE \- (which matches the GitHub issue [\#6441](https://github.com/ballerina-platform/ballerina-library/issues/6441).)
+Declared order NEWHOPE, EMPIRE, JEDI comes out reversed as JEDI, EMPIRE, NEWHOPE.
 
 * **No proper defined error paths**
 
@@ -353,17 +353,16 @@ ERROR [:(-1:-1,-1:-1)] Given Ballerina file contains compilation error(s).
 
 **Proposed changes:**
 
-* Define and apply a consistent type ordering convention in the generated schema \- Query, Mutation, and Subscription grouped together at the top (in that order), followed by the remaining types
-* Fix enum member ordering to preserve declaration order from the source service
-* Improve error handling to surface actionable diagnostics instead of a generic compilation-error message
-* Validate that the input compiles before attempting schema extraction, and fail fast with a clear error if not. A standalone .bal file is loaded as a single-file project. A package directory is loaded as that package through the Ballerina project API. A .bal file that sits inside a package is rejected - the same restriction bal run applies, since a file cannot be compiled independently of the package it belongs to.
-
+* Define and apply a consistent type ordering convention in the generated schema \- Query, Mutation, and Subscription grouped together at the top (in that order), followed by the remaining types grouped by kind: interfaces, objects, inputs, enums, unions, then scalars (issue [\#6441](https://github.com/ballerina-platform/ballerina-library/issues/6441))
+* Preserve enum member declaration order. The order is reversed in the schema that the ballerina/graphql compiler plugin builds, and the same list is used for runtime introspection, so the fix belongs in the ballerina/graphql package. The tool needs no change of its own, and picks the fix up once it moves to a ballerina/graphql version that has it.
+* Keep the compilation error message as it is (issue [\#6020](https://github.com/ballerina-platform/ballerina-library/issues/6020)). A compilation error is a problem in the developer's code, not in the tool, so the tool reports that the input does not compile, and `bal build` shows the details.
+* Validate the input before attempting schema extraction, and fail fast with a clear error if it is not valid (see 5.2.4). A .bal file that sits inside a package is rejected, since compiling it on its own would miss the rest of the package.
 * Migrate schema generation to the new modular architecture.
 
 **Expected Outcome:**
 
 * Generated schema accurately reflects the declared service structure, including type ordering
-* Clear, actionable error messages instead of generic compilation failures
+* Invalid input is rejected with a clear error and exit code 3 before any compilation work
 * Consistent behavior aligned with the modular architecture
 
 ### 5.2.3 Client Generation - Full Redesign
@@ -460,15 +459,34 @@ a GraphQL schema file with .graphql extension.
 
 **Proposed changes:**
 
-* Support three input forms for schema generation: a standalone .bal file, a package directory path, and a module path within a package.
-* Resolve each form to the right kind of project before validating: a standalone .bal file is loaded as a single-file project; a package directory is loaded as that package via the Ballerina project API, targeting the default module; a module path targets that module specifically (see 5.2.2). A .bal file that sits inside a package, given directly, is rejected with a clear error, consistent with how bal command treats the same case.
-* For a directory input, validate it is a valid Ballerina package (via the Ballerina project API) and fail fast with a clear error if not
-* For a valid package input, locate the GraphQL service(s) within it using a GraphQL compiler plugin API, rather than requiring the user to point at the exact file
+* Support three input forms for schema generation: a standalone .bal file, a package directory, and a module directory within a package (`<package>/modules/<name>`).
+* Load the input with the Ballerina project API (`ProjectLoader.load`) and decide what it is from the loaded project's kind and root, instead of the tool's own checks (CLI tool design guide TGT-2):
+
+| Input | Result |
+| :---- | :---- |
+| A standalone .bal file | Loaded as a single-file project |
+| A package directory | The default module of the package. Other modules are not included |
+| A module directory (`<package>/modules/<name>`) | That module only |
+| A package that belongs to a workspace | The package is taken from the workspace, so the sibling packages it imports are resolved (TGT-7, TGT-10) |
+| A .bal file inside a package | Rejected with exit code 3, naming the package root to pass instead (TGT-5) |
+| A file under a package's `tests` directory | Rejected with exit code 3: test services are not supported |
+| A workspace root | Rejected with exit code 3, asking for the directory of one of its packages |
+| A Ballerina.toml without a `[package]` table, a module directory that is a symbolic link (the compiler does not read its files), or any other directory | Rejected with exit code 3 (TGT-6) |
+
+* Compile packages and modules with locked dependencies (CMP-1 to CMP-4):
+  * The project is loaded with the HARD locking mode, so the versions in Dependencies.toml are used as they are.
+  * If the package has no Dependencies.toml, generation fails with exit code 1 and asks the developer to run `bal build` first, since the result could otherwise differ between runs.
+  * Dependencies.toml is never created or changed.
+  * Warnings about the dependencies, such as a Dependencies.toml written by an older distribution, are passed on.
+  * A standalone .bal file has no Dependencies.toml, so it uses the packages available in the distribution.
+* Test services are not supported. The test sources are removed from the loaded package (in memory only, the files are not changed) before compiling, so an error in a test file does not block the generation, and services in test files are never generated.
+* Find the GraphQL services in every file of the selected module, and read the schema the ballerina/graphql compiler plugin encodes on each service while compiling. The plugin's annotation is identified by its module, so a file that imports ballerina/graphql with another prefix (`import ballerina/graphql as gql;`) works.
 
 **Expected Outcome:**
 
-* Schema generation works correctly whether given a standalone file, a package path, or a module path, and rejects a package-internal file path with a clear error rather than attempting to resolve it
-* Package inputs are validated up front, with a clear error if the directory isn't a valid Ballerina package
+* Schema generation works whether given a standalone file, a package directory, or a module directory, including a package that belongs to a workspace
+* Invalid input is rejected up front with a clear error and exit code 3, instead of being partly read
+* The same package always gives the same schema, since its dependencies are locked
 * Users no longer need to know the exact file a service lives in when generating from a package
 
 ### 5.2.5 Deterministic Output Naming for Duplicate Base Paths
@@ -495,7 +513,7 @@ SDL Schema(s) generated successfully and copied to :
 
 The second file is named schema\_gql\_1.graphql purely because it's the second /gql service encountered while scanning the file top to bottom \- not because of anything unique about that service itself. If a service is reordered, or a new one is inserted earlier in the file, a previously-generated file can end up mapped to a different service than before, even though nothing about that specific service changed. Port is not considered anywhere in this logic.
 
-This also affects the \-s flag \- since matching is done against the base path alone, \-s /gql in this scenario matches both services instead of narrowing to one.
+This also affects the \--service flag \- since matching is done against the base path alone, \--service /gql in this scenario matches both services instead of narrowing to one.
 
 **Proposed changes:**
 
@@ -524,6 +542,8 @@ service /api on gql { }                                // api_gql.graphql
 
 Ballerina has two phases \- compile time and run time. Schema generation is a compile-time, static-analysis process; it never runs the service, which is why this always falls back to names and literals rather than resolved runtime values.
 
+* Different services can still end up with the same file name, e.g. a root (/) service in main.bal, which is named after its file, and a /main service in another file. Names can also differ only in case, which is the same file on some file systems. The final file names are compared ignoring case before writing, and a number is added to a name that is already taken, so a schema is never overwritten.
+
 **Expected Outcome:**
 
 * Output file names for duplicate-base-path services are stable and deterministic, independent of declaration order, unrelated edits to the source file, or how common duplicate-base-path services are in practice
@@ -535,9 +555,9 @@ Schema can come from one of three sources: a local schema file, a hosted schema 
 
 A hosted schema URL or introspection endpoint may require specific HTTP headers to be sent with the request. balGraphQL.toml exposes a generic headers table where the user can set any header name and value their endpoint requires.
 
-Requests to url and endpoint require HTTPS - a plain http:// value is rejected with a validation error. Since headers can carry credentials (an Authorization token, for example), allowing cleartext transport would expose them in transit. Headers are not forwarded across a redirect that changes the origin (host, scheme, or port), preventing a compromised or malicious endpoint from redirecting the request elsewhere and capturing configured credentials.
+Using HTTPS for url and endpoint is strongly recommended, since headers can carry credentials (an Authorization token, for example) and cleartext transport would expose them in transit. A plain http:// value is accepted - using an insecure endpoint is the responsibility of whoever configures it - but the tool prints a warning naming the field and the risk. Headers are not forwarded across a redirect that changes the origin (host, scheme, or port), preventing a compromised or malicious endpoint from redirecting the request elsewhere and capturing configured credentials.
 
-`bal build` only accepts `source = "file"` for a `[[tool.graphql]]` entry (see 5.2.8). Generation at build time never performs a network request. Fetching a remote schema remains a deliberate, one-time `bal graphql` action, whose result the developer commits alongside `balGraphQL.toml`.
+`bal build` only accepts `source = "file"` for a `[[tool.graphql]]` entry (see 5.2.9). Generation at build time never performs a network request. Fetching a remote schema remains a deliberate, one-time `bal graphql` action, whose result the developer commits alongside `balGraphQL.toml`.
 
 **Fields required in balGraphQL.toml:**
 
@@ -642,38 +662,54 @@ Collapse to two command forms. Client and service generation share the same balG
 
 ```
 bal graphql <balGraphQL.toml-path>
-            [-o | --output] <output-location>
-            [-m | --mode] <client|service>
-            [--module] <module-name>
-            [-r | --use-records-for-objects]
+            [-o | --output <output-location>]
+            [--mode <client|service>]
+            [--module <module-name>]
+            [--object-type <service|record>]
+            [--service-name <service-name>]
+            [--merge]
+            [--license <license-file-path>]
             [--force]
-            [--dry-run]
+            [-n | --dry-run]
 
-
-bal graphql <ballerina-service-file-or-package-or-module-path>
-            [-o | --output] <output-location>
-            [-s | --service] <service-base-path>
+bal graphql <service.bal | package-directory | module-directory>
+            [-o | --output <output-location>]
+            [--service <service-base-path>]
             [--force]
-            [--dry-run]
-
+            [-n | --dry-run]
 ```
 
 | Flag | Change |
 | :---- | :---- |
-| \<input\> | Now a positional argument instead of the -i flag, since it's always mandatory. For client/service generation it takes balGraphQL.toml; for schema generation it takes a standalone Ballerina service file, a package directory path, or a module path within a package (see 5.2.4) |
-| \-m | Narrowed to client\|service. When omitted, the mode is inferred from the TOML's shape \- presence of `documents` means client, absence means service. When passed, the tool validates that the TOML matches the declared mode and errors on mismatch. Schema is no longer a mode value, since that path is determined by the input being Ballerina source |
-| \--module | New flag (no short form). Specifies which module within the package the generated files are written into. If omitted, files are generated into the package's default module. If the named module doesn't exist yet, it is created |
-| \-s | Unchanged \- scoped to schema generation |
-| \-r | Unchanged \- scoped to service generation |
-| \--force | Allow overwriting existing generated files. Without it, generation that would modify an existing file is skipped with a warning (see 5.2.8) |
-| \--dry-run | Report what would be generated or overwritten, without writing anything |
+| \<input\> | Now a positional argument instead of the -i flag. It is mandatory, and there is no default (see 5.2.10). For client/service generation it takes balGraphQL.toml; for schema generation it takes a standalone Ballerina file, a package directory, or a module directory (see 5.2.4) |
+| \--mode | Replaces `-m`, with no short form. Narrowed to `client\|service`. When omitted, the mode is inferred from the TOML's shape - presence of `documents` means client, absence means service. When passed, the declared mode takes precedence over the TOML's contents - for example, `--mode service` on a TOML with `documents` configured still generates a service from `[schema]`, ignoring `documents`. Note that `--mode client` on a TOML with no `documents` still fails, since there is nothing to build client operations from regardless of the declared mode. Schema is no longer a mode value, since that path is determined by the input being Ballerina source |
+| \--module | New flag (no short form). Specifies which module within the package the generated client or service is written into. If omitted, files are generated into the package's default module. If the named module doesn't exist yet, it is created. Not used for schema generation, which takes the module directory as its input instead (see 5.2.10) |
+| \--service | Replaces `-s`; the short form is removed. Scoped to schema generation. Selects one service by its base path |
+| \--object-type | Replaces `-r` / `--use-records-for-objects`. Takes a value: `service` (default) generates service classes for GraphQL object types; `record` generates record types where possible. Scoped to service generation. No short form, since `-r` conventionally means "recursive" and this option is rarely used |
+| \--service-name | New flag (no short form). Base name for the generated service, e.g. `orders` gives `OrdersService`. Defaults to the schema file name in PascalCase followed by `Service` (`book-api.graphql` gives `BookApiService`), or, for a url or introspection schema, the module or package name. Scoped to service generation |
+| \--merge | New flag (no short form). Merges the generated service into the files that already exist instead of overwriting them, keeping the developer's code (see 5.2.8). Scoped to service generation |
+| \--license | New flag (no short form). Path to a file whose content is added at the top of every generated .bal file, followed by one blank line, such as a copyright notice. The file can only contain comment lines and blank lines, so the generated code always compiles. Scoped to client and service generation, and cannot be used with \--merge |
+| \--force | Overwrite or merge existing files without asking (see 5.2.8) |
+| \-n, \--dry-run | Report what would be created, overwritten, or merged, without writing anything |
+
+**Exit codes:**
+
+| Code | Meaning |
+| :---- | :---- |
+| 0 | Generation succeeded |
+| 1 | Generation failed (e.g. an invalid schema, a Ballerina input that does not compile, or a package whose dependencies are not locked) |
+| 2 | Invalid usage (e.g. an unknown flag, a missing input, or a flag used with the wrong mode, such as `--merge` with client generation) |
+| 3 | Invalid target (e.g. the output location is not a Ballerina package, or the schema generation input is a .bal file inside a package or a workspace root) |
+| 4 | Existing files were not written (the user answered no, or the run was non-interactive without `--force`) |
+| 130 | Interrupted by the user (Ctrl+C) |
 
 **Expected Outcome:**
 
 * Fewer command forms to learn \- client and service generation share one consistent entry shape
-* Mode is derived from config contents rather than file extension, with \-m available as an explicit override
+* Mode is derived from config contents rather than file extension, with \--mode available as an explicit override
 * Schema generation input covers a standalone file, a whole package, or a specific module, with a package-internal file path rejected explicitly
 * Generated code can target either the package's default module or a named sub-module, with the module created automatically if it doesn't already exist
+* Scripts and CI can tell why a run failed from its exit code
 
 ### 5.2.8 Regeneration Safety
 
@@ -683,21 +719,73 @@ Regeneration always overwrites existing output unconditionally. Any manual edit 
 
 **Proposed changes:**
 
-Regeneration is non-destructive by default. If generation would modify a file that already exists, the tool skips writing it and emits a warning naming the file and pointing to \--force.
+Regeneration is non-destructive by default. Files that don't exist yet are created. If any output file already exists, the tool lists them and asks before writing anything:
 
-\--force permits the overwrite.
+```
+$ bal graphql balGraphQL.toml --mode service
+The following file(s) already exist.
+  service.bal
+  types.bal
+Use --merge to keep the code in these file(s).
+Overwrite these file(s)? [y/N]
+```
 
-\--dry-run reports what would be generated or overwritten without writing anything, so the effect of a run can be previewed first.
+* Answering `y` overwrites the files. Any other answer writes nothing and exits with code 4 (`No files were written.`).
+* In a non-interactive run (e.g. CI), the tool cannot ask, so it writes nothing and exits with code 4, pointing to \--force.
+* \--force overwrites without asking.
+* \--dry-run lists each file as create, overwrite, or merge, with a summary, and writes nothing.
 
-Where feasible, regeneration is incremental rather than all-or-nothing: using the compiler APIs, the tool reads the existing file and, for each resource or remote method already present with an unchanged signature, leaves it untouched rather than regenerating it. Only methods that are new, or whose corresponding schema field changed, are regenerated. A user-written method body is never modified as long as its signature still matches the schema.
+**Merging with \--merge (service generation only)**
 
-Where a method's signature has changed, the existing body cannot be preserved safely, since it was written against different parameters or a different return type. Under \--force, the tool regenerates that method without a body, exactly as newly generated methods are handled (see 5.2.1). Without \--force, the method is left as-is and a warning is issued.
+Overwriting replaces the developer's resolver code. \--merge keeps it: using the Ballerina syntax tree, the tool reads the existing service.bal and types.bal and merges the newly generated code into them. The developer's code is never removed or replaced:
+
+| In the existing file | What happens |
+| :---- | :---- |
+| A resolver that is still in the schema | Kept exactly as written |
+| A resolver whose signature no longer matches the schema | Kept as written, and reported as a warning so the developer can update it |
+| A field that is new in the schema | Its resolver is added with `return error("Not implemented");` |
+| A resolver, service class or type that is no longer in the schema | Kept, and reported as a warning so the developer can delete it |
+| Records, enums and unions that are still in the schema | Regenerated from the schema, since they are owned by the tool. Edits to them are lost, and the \--merge help says so |
+| The developer's own code (the listener port, imports, initContext and batch functions, helper functions, constants, and fields or init methods in service classes) | Kept. New DataLoader registrations are added to initContext |
+
+The existing service is found by its service type name, and \--service-name picks the one to merge into.
+
+For example, after `pages` changes from `Int` to `Int!` and `isbn` is added to the schema:
+
+```
+// Before
+resource function get title() returns string|error {
+    return self.title;
+}
+
+resource function get pages() returns int?|error {
+    return 10;
+}
+
+// After bal graphql balGraphQL.toml --mode service --merge
+resource function get title() returns string|error {
+    return self.title;                    // kept
+}
+
+resource function get pages() returns int?|error {
+    return 10;                            // kept, reported: the schema now returns int
+}
+
+resource function get isbn() returns string|error {
+    return error("Not implemented");      // added
+}
+```
+
+Before writing, the tool shows the merge plan: the resolvers it adds and keeps, and the warnings. \--merge then asks `Merge these file(s)? [y/N]`, like an overwrite. \--force skips the question, so \--merge can run in CI. \--dry-run shows the same plan without writing. Using \--merge with client or schema generation is a usage error (exit code 2).
+
+The generated files are written to a staging directory first and then moved into place.
 
 **Expected Outcome:**
 
-* Hand-written code survives regeneration by default
+* Existing files are never overwritten without the developer agreeing to it
 * Users can preview a run's effect with \--dry-run before committing to it
-* Regeneration only touches what actually changed, rather than replacing entire files
+* With \--merge, hand-written code survives regeneration, and only what is new in the schema is added
+* Code that no longer matches the schema is reported instead of being silently removed or replaced
 
 ### 5.2.9 Build Tool Integration
 
@@ -707,38 +795,51 @@ Generation is only available as a standalone command. The user must run bal grap
 
 **Proposed changes:**
 
-Add support for declaring the tool in Ballerina.toml, so generation runs automatically as part of bal build:
+Add support for declaring the tool in Ballerina.toml, so client generation runs automatically as part of bal build:
 
-```
+```toml
 [[tool.graphql]]
 id = "books"
-input = "balGraphQL.toml"
-mode = "client"
+filePath = "balGraphQL.toml"
 targetModule = "books"
+options.mode = "client"
 ```
 
-This follows the same build-tool pattern already used by bal openapi and bal persist, so it's consistent with how other Ballerina tools integrate into the build.
+This follows the same build-tool pattern already used by bal openapi and bal persist. Ballerina reads `id`, `filePath`, and `targetModule` itself and passes only those and the `options` table to a build tool, so every other option goes under `options.*`, the same as `options.mode` in `[[tool.openapi]]` and `options.datastore` in `[[tool.persist]]`.
 
-The \[\[tool.graphql\]\] entry mirrors the CLI \- every option available as a flag has an equivalent field here:
+| Field | CLI equivalent | Description | Mandatory/Optional |
+| :---- | :---- | :---- | :---- |
+| id | \- | Identifier for this tool entry. Must be unique | Mandatory |
+| filePath | positional argument | Path to the balGraphQL.toml file. Its schema must use `source = "file"` (see 5.2.6) | Mandatory |
+| targetModule | \--module | The module the generated client is written into. Must be unique across entries | Optional |
+| options.mode | \--mode | Only `client` is supported | Optional |
 
-| Field | CLI equivalent | Description |
-| :---- | :---- | :---- |
-| id | \- | Identifier for this tool entry |
-| input | positional argument | The input driving generation. Either a balGraphQL.toml config path (for client/service generation), or a standalone Ballerina service file, package directory path, or module path (for schema generation) |
-| mode | \-m | client or service. Only needed when the config could mean either |
-| targetModule | \--module | The module within the package that generated files are written into |
-| serviceBasePath | \-s | Schema generation only. Selects one service by base path |
-| useRecordsForObjects | \-r | Service generation only. Generate record types instead of service classes where possible |
-| force | \--force | Allow overwriting existing generated files during a build |
-| dryRun | \--dry-run | Report what would be generated without writing anything |
+The build tool supports client generation only. The code is regenerated on every bal build, which suits a client, since the developer uses it but never edits it. A service is different: the developer writes the resolvers, so regenerating it on every build would replace their code. Schema generation needs the compiled service, but build tools run before compilation. An entry with `options.mode = "service"`, or a schema `source` other than `file`, fails the build with a clear error. The same applies to bal openapi, which supports only client mode in builds.
+
+Since the generated client is always regenerated and never edited, the build never asks before writing, so \--force, \--merge, and \--dry-run have no build-tool equivalent.
 
 Multiple \[\[tool.graphql\]\] entries can be declared, each generating into its own target module.
 
 **Expected Outcome:**
 
-* Generation runs as part of bal build, with no separate command needed
+* Client generation runs as part of bal build, with no separate command needed
 * Consistent with how other Ballerina tools (bal openapi, bal persist) integrate into the build
-* The standalone bal graphql command remains available for one-off generation
+* The standalone bal graphql command remains available for one-off generation, and for service and schema generation
+
+### 5.2.10 Alignment with the CLI Tool Design Guide
+
+The tool follows the Ballerina CLI Tool Design Guide. Where this proposal differs from the guide, or where the guide changed the earlier design of this proposal, the decision is listed here:
+
+| Topic | Guide | Decision in this proposal |
+| :---- | :---- | :---- |
+| \--module (MOD-1) | Every command that generates from or exports a package accepts \--module | Client and service generation accept \--module to select the module they write into. Schema generation takes the module directory as its input instead (`bal graphql shop/modules/orders`), so \--module with schema generation is a usage error (exit code 2). The input already names the module, so there is only one way to select it |
+| Default input (TGT-3) | The default target is the current directory | The input is mandatory, and a missing input is a usage error (exit code 2). The same positional argument takes either a balGraphQL.toml file or Ballerina source, and the generation mode is chosen from it, so a default directory cannot tell which generation is meant |
+| Workspaces (TGT-7, TGT-10) | Supported through the package API | Schema generation accepts a package that belongs to a workspace, loaded through the workspace. A workspace root is rejected with a clear error (exit code 3), and \--help says to give the directory of one of its packages. Processing every member of a workspace is future work (see 8) |
+| Overwrite handling | Ask before overwriting, and exit with code 4 when the run is non-interactive | Follows the guide (see 5.2.8). The earlier design, which skipped existing files with a warning unless \--force was given, is dropped |
+| Short flags | Short forms only for the most common flags | Only \--service is supported for selecting a service; `-s` is removed. `-n` is kept as the short form of \--dry-run |
+| Test services | \- | Not supported. A file under `tests` is rejected, and test sources are left out of the compilation (see 5.2.4) |
+| Dependencies (CMP-1 to CMP-4) | HARD locking, Dependencies.toml must exist, never changed, dependency warnings passed on | Followed for packages and modules. Standalone files have no Dependencies.toml, so they use the packages available in the distribution |
+| Target checks (TGT-2, TGT-5, TGT-6) | Use the package API, and exit with code 3 for an invalid target | Followed (see 5.2.4) |
 
 ## 6. Alternatives
 
@@ -821,9 +922,29 @@ Does not panic \- the service will keep running even if someone calls the unimpl
 
 **Rejected because:** An undefined or arbitrary order makes generated schemas harder to read and review as they grow, and doesn't match how comparable GraphQL codegen tools typically structure output \- putting the operation root types front and center.
 
-**Proposed instead:** A finalized ordering convention \- Query, Mutation, and Subscription grouped together at the top (in that order), followed by the remaining types.
+**Proposed instead:** A finalized ordering convention \- Query, Mutation, and Subscription grouped together at the top (in that order), followed by the remaining types grouped by kind.
 
 **Impact of not doing this:** Generated schemas would keep coming out in an inconsistent, effectively arbitrary type order (matches issue [\#6441](https://github.com/ballerina-platform/ballerina-library/issues/6441)), making them harder to read, review, and diff as they grow, with no clear standard for contributors to generate against.
+
+### 6.7 Build Tool Generation Modes
+
+**Considered:** Supporting all three generation modes (client, service, and schema) in `[[tool.graphql]]`, with the CLI options as top-level fields (`input`, `mode`).
+
+**Rejected because:** Ballerina passes only `id`, `filePath`, `targetModule`, and the `options` table to a build tool, so top-level fields such as `input` or `mode` would never reach the tool. Service generation would replace the developer's resolvers on every build, and schema generation needs a compiled service, which doesn't exist yet when build tools run.
+
+**Proposed instead:** Client generation only, with every option other than `id`, `filePath`, and `targetModule` under `options.*` (see 5.2.9).
+
+**Impact of not doing this:** Options in the build tool entry would be silently ignored, and every bal build would wipe the developer's resolver code.
+
+### 6.8 Merge Strategies
+
+**Considered:** Letting the schema always win during a merge, where a resolver whose signature changed is replaced, and code that is no longer in the schema fails the merge. Also considered: letting the developer choose how each conflict is resolved (e.g. keep the existing resolver, take the generated one, or decide per resolver through a prompt).
+
+**Rejected because:** Replacing a resolver throws away code the developer wrote, even when only a small part of the signature changed. Per-conflict choices make the result depend on decisions that aren't recorded anywhere, so the same schema can produce different code, and per-resolver prompts don't work in CI.
+
+**Proposed instead:** A single \--merge flag that never removes or replaces the developer's code: existing resolvers and types are kept, new resolvers are added, and anything that no longer matches the schema is reported as a warning. Records, enums and unions in the schema are owned by the tool and regenerated (see 5.2.8).
+
+**Impact of not doing this:** Regeneration would either lose the developer's code or give results that are hard to predict and review, and it could not run unattended.
 
 ## 7. Dependencies
 
@@ -839,5 +960,5 @@ This BEP does not have an open decision pending, so it's not expected to materia
 
 * Federation support \- Apollo Federation subgraph scaffolding and federation directives (@key, @external, \_entities, \_service) are explicitly out of scope for this proposal (see Non-Goals), but represent a natural next step once service and client generation reach GA quality \- enabling Ballerina GraphQL services to participate in a distributed, composed graph.
 * Parser enhancements \- this proposal keeps schema and document parsing within its current scope, delegating to existing external libraries (graphql-java) rather than building a unified, Ballerina-native parsing interface. A future effort could revisit this to support more advanced SDL features and give the tool more control over parsing behavior, rather than remaining dependent on the current external library's capabilities.
-* Workspace-awareness \- mode derivation and input resolution in this proposal are scoped to a single package or standalone file, with mode inferred by inspecting a single balGraphQL.toml. Extending this to Ballerina workspaces, where multiple packages, each potentially with their own submodules, live together, would first require detecting whether the given input sits inside a workspace at all, then resolving which package(s) and module(s) within it to target \- a meaningfully larger scope than a single config file can reason about. A concrete use case would be a single GraphQL schema used to generate both the client and the service as two different Ballerina packages inside the same workspace. This is intentionally left out of this proposal and deferred to future work.
+* Workspace-awareness \- schema generation accepts a package that belongs to a Ballerina workspace, and rejects a workspace root (see 5.2.10). Processing every package of a workspace in one run, in dependency order, and generating into workspace packages from a single balGraphQL.toml are left for future work. A concrete use case would be a single GraphQL schema used to generate both the client and the service as two different Ballerina packages inside the same workspace.
 * Specific auth mechanism \- balGraphQL.toml currently exposes a generic headers table, letting users supply whatever headers their endpoint requires by hand. A future effort could add first-class support for specific, named authentication mechanisms (e.g. Basic Auth, OAuth2 client credentials) as structured config fields, rather than requiring the user to construct the correct headers manually.
