@@ -300,7 +300,8 @@ For an entity `Employee` whose collection name is `employees`, with key `id`:
   transaction, as #1503 and #1513 define, so a batch with one failing record creates none.
 - **Create many takes at most `dataserviceConfig.maxPageSize` records.** A larger list is
   answered with `INVALID_INPUT`. An empty list is answered with `{items: [], hasMore: false}`
-  without calling the persist client.
+  without calling the persist client. An entity without a field that a client gives, such as
+  one with only a generated key, has no create, because GraphQL has no empty input type.
 - **Create without `read`:** create one and create many return the created records whether or
   not the entity allows `read`, as #1503 defines, so the object type is generated for an entity
   that allows `create`. With `read` allowed, they return `null`, with no entry in `errors`, to a
