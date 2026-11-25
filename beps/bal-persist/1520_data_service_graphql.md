@@ -168,7 +168,8 @@ input EmployeeSort {
 
 input DepartmentInsertInput { name: String! }
 input EmployeeInsertInput { id: Int!  name: String!  email: String  hiredOn: String!  departmentId: Int! }
-input EmployeeUpdateInput { name: String  email: String  hiredOn: String  departmentId: Int }
+input EmployeeUpdateInput { name: String  email: String  hiredOn: String  departmentId: Int  unset: EmployeeUnset }
+input EmployeeUnset { email: Boolean }
 input AssignmentInsertInput { projectCode: String!  seq: Int!  hours: Decimal!  employeeId: Int! }
 input AssignmentUpdateInput { hours: Decimal  employeeId: Int }
 
@@ -304,9 +305,12 @@ For an entity `Employee` whose collection name is `employees`, with key `id`:
   not the entity allows `read`, as #1503 defines, so the object type is generated for an entity
   that allows `create`. With `read` allowed, they return `null`, with no entry in `errors`, to a
   caller who may not read the entity; see [Auth](#auth).
-- **Patch is partial.** A field left out of `input` is not changed. A field set to `null` is
-  set to `null` when the entity's field is nullable, and is answered with `INVALID_INPUT`
-  otherwise.
+- **Patch is partial.** A field left out of `input` or set to `null` is not changed. `unset`
+  names the nullable fields to set to `null`, such as `unset: {email: true}`, and a field both
+  set and named in `unset` is answered with `INVALID_INPUT`. `ballerina/graphql` binds a field
+  left out of a variable as `null`, so `null` cannot also mean "set to `null`"; see
+  [Alternatives](#alternatives). An entity without a field that a patch can change, such as one
+  with only key fields, has no patch, because GraphQL has no empty input type.
 - **Patch and delete with `read`** return the record, as #1503 defines. They return `null`,
   with no entry in `errors`, when the caller may not read the entity, see [Auth](#auth), or when
   the update is saved but cannot be read back, which is logged.
@@ -368,7 +372,8 @@ input types. #1503 leaves type names to each protocol proposal.
 | `EmployeeList` | object | open record | A page of `EmployeeObject`, with `hasMore` | allows `read` or `create` |
 | `EmployeeRelatedList` | object | open record | A page of `EmployeeRelatedObject`, with `hasMore` | allows `read` and is the target of a readable to-many relation |
 | `EmployeeInsertInput` | input | closed record | The fields that create one and create many accept | allows `create` |
-| `EmployeeUpdateInput` | input | closed record | The fields that patch accepts, all optional | allows `update` |
+| `EmployeeUpdateInput` | input | closed record | The fields that patch accepts, all optional, and `unset` | allows `update` and has a field that a patch can change |
+| `EmployeeUnset` | input | closed record | A `boolean? field;` per nullable field that patch accepts | has `EmployeeUpdateInput` and a nullable field in it |
 | `EmployeeFilter` | input | closed record | One optional field per filterable field | allows `read` |
 | `EmployeeSort` | input | closed record | One optional field per sortable field | allows `read` |
 
@@ -457,10 +462,9 @@ message, ``The field '<field>' of the entity '<Entity>' is not <format>.``
   to `null`, so every input field that is not required is nullable, and the Ballerina field is
   nullable too. Filter operators, filter fields and sort fields are `T? field;`, where a field
   left out and a field set to `null` both bind as `()` and mean no condition. Fields of
-  `<Entity>UpdateInput` are `T? field?;`, where a field left out is absent and one set to `null`
-  is `()`, so a patch can tell "not changed" from "set to null"; a `null` on a field that cannot
-  hold one is answered with `INVALID_INPUT`, `The field '<field>' of the entity '<Entity>' cannot
-  be null.`
+  `<Entity>UpdateInput` and `<Entity>Unset` are `T? field;` too, where both mean no change. A
+  field both set and named in `unset` is answered with `INVALID_INPUT`, `The field '<field>' of
+  the entity '<Entity>' cannot be both set and unset.`
 - **Not `T field?`:** `ballerina/graphql` publishes an optional non-nullable field as the
   nullable `T` too, and cannot bind the `null` a client may then send.
 
@@ -1070,8 +1074,10 @@ GraphQL names allow only letters, digits and `_`, so #1503's `$` reservation bec
   exposed. `pull` compares every name in the table.
 - **Library type names:** the input types and enums of `ballerina/dataservice.graphql`, such as
   `IntFilter` and `SortDirection`, are schema types of every service, so a model entity or enum
-  with one of their names is reported by the persist tool, as is a model enum whose generated
-  `<Enum>Filter` would clash with another type.
+  with one of their names, or an exposed entity for which one of their names would be
+  generated, such as `IntFilter` for `Int`, is reported by the persist tool, as is a model enum
+  whose generated `<Enum>Filter` would clash with another type, and two enums with one filter
+  name. `pull` does not expose an entity for which one of their names would be generated.
 
 ### Generated code
 
@@ -1190,7 +1196,7 @@ named by what each function returns:
 | `toKeyOrder(map<anydata>[] rows, dataservice:Entity entity, string relation, map<anydata>[] links) returns (map<anydata>?)[]` | function | The related rows of a dataloader batch in the order of its links, `()` for a link without a record |
 | `toListError`, `toGetError`, `toCreateError`, `toUpdateError`, `toDeleteError` | functions | The `Error` for a persist error of each operation, or `()` from `toUpdateError` for an update that cannot be read back |
 | `toInvalidInput(dataservice:ConversionError err, string entity, string field) returns Error` | function | The `Error` for a value that does not parse |
-| `toNullError(string entity, string field) returns Error` | function | The `Error` for `null` on a field that cannot hold it |
+| `toSetAndUnsetError(string entity, string field) returns Error` | function | The `Error` for a patch that both sets a field and names it in `unset` |
 | `checkFinite(float value, string entity, string field) returns Error?` | function | Rejects an input `float` that is not finite |
 | `toFinite(float value, string entity, string field) returns float\|Error` | function | Returns a stored `float`, or the error for one that is not finite |
 | `Authenticator` | class | `init(graphql:ListenerAuthConfig[] providers)` and `authenticate(graphql:Context ctx, http:Request request) returns graphql:AuthnError\|graphql:AuthzError?` |
@@ -1237,6 +1243,12 @@ The duplicated provider handling uses the same `ballerina/http` listener auth ha
   to the power of the depth in queries with no limit able to see it. `<Target>RelatedObject`
   keeps #1503's one hop in the schema. Allowing more hops later adds relation fields to it,
   which does not break a client.
+- **`null` sets a nullable field to `null` in a patch,** as a field left out leaves it
+  unchanged. `ballerina/graphql` binds a field left out of a variable as `null`, so a patch sent
+  as a variable could not tell the two apart and would clear every nullable field it leaves out.
+  A list of field names in `unset` would need an enum of the fields per entity, whose members
+  `ballerina/graphql` names after the Ballerina members, which are constants of the module and
+  so clash across entities; `<Entity>Unset` has one `Boolean` per field instead.
 - **Sort as a list of enum values,** such as PostGraphile's `[EMPLOYEES_NAME_DESC]`. Enum members
   are module-level constants in Ballerina, so the values of two entities, such as `ID_ASC`,
   would clash with each other and with the model's enums.
@@ -1277,8 +1289,8 @@ The duplicated provider handling uses the same `ballerina/http` listener auth ha
   disabled operations and hidden directions.
 - **Persist tool checks:** each GraphQL check of #1503.
 - **Behaviour,** against H2 and every other SQL datastore available to the test run: every
-  operation and argument; patch with fields left out, set to `null` on a nullable field and on
-  one that is not; an empty patch with and without `read`; patch and delete without `read`
+  operation and argument; patch with fields left out, set to `null`, and named in `unset`, the
+  same patch inline and as a variable, and a field both set and unset; an empty patch with and without `read`; patch and delete without `read`
   returning `true`; create many above the maximum, empty, and with a duplicate key; several
   mutations in one document with one failing.
 - **Types:** a round trip of every `time:*` type, `byte[]`, `decimal` as a variable, an `int`
