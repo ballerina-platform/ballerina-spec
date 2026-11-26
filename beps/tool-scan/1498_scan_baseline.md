@@ -99,7 +99,7 @@ A fingerprint input is worth adding when two findings that differ in it are diff
 | File path | The same code in two files is two findings | A moved or renamed file makes its findings new | Included, relative to the package root |
 | Package organization and name | Two packages of a workspace with a `main.bal` each don't collide, since the path is relative to the package | A renamed package makes all its findings new | Included |
 | Package version | Nothing a finding depends on | A version bump would make every finding new | Rejected |
-| Text of the tokens on the first flagged line, without their minutiae | Identifies the code. Indentation, spacing, line endings and a comment at the end of the line don't change it. String contents stay as written. The text of the tokens doesn't depend on how the parser splits them or attaches minutiae | Needs the syntax tree of the file at report time, which the scan tool already holds. Any edit of the code on the flagged line makes the finding new, which is intended: the changed code is reviewed again. Identical lines in one file get the same hash | Included |
+| Text of the tokens on the first flagged line, without their minutiae | Identifies the code. Indentation, spacing, line endings and a comment at the end of the line don't change it. String contents stay as written. The value doesn't depend on which token the parser attaches minutiae to | Needs the syntax tree of the file at report time, which the scan tool already holds. Any edit of the code on the flagged line makes the finding new, which is intended: the changed code is reviewed again. Depends on how the parser splits the line into tokens. Identical lines in one file get the same hash | Included |
 | Raw text of the first flagged line | Identifies the code | Re-indenting or reformatting makes the finding new | Rejected in favour of the tokens |
 | Text of the first flagged line, with whitespace removed | Ignores whitespace without the syntax tree | A comment added at the end of the flagged line makes the finding new. Removing whitespace inside string contents makes `"admin 123"` and `"admin123"` the same. Removing `//` comments from the text instead can't be done reliably without the tokens, since `//` also appears inside strings | Rejected in favour of the tokens |
 | Enclosing construct | The same line in two functions of one file is two findings | Needs a definition of the construct for every kind of declaration. A renamed function, class, service or resource makes its findings new. The occurrence number already keeps identical lines in one file apart | Rejected |
@@ -126,22 +126,20 @@ The fingerprint hashes four inputs.
 | Rule ID | The ID of the rule, as reported | `ballerina:13` |
 | Package | The organization and name of the package in `Ballerina.toml` | `myorg/orders` |
 | File path | The path of the file relative to the package root, with `/` separators | `modules/db/client.bal` |
-| Flagged line | The text of the tokens on the first flagged line, as defined below | `stringpassword="admin123";` |
+| Flagged line | The text of the tokens on the first flagged line, as defined below | `string password = "admin123" ;` |
 
 The path is relative to the package root, not to the project as in the SARIF report, so a package scanned alone and the same package scanned as part of a workspace give the same fingerprints.
 
 The rule ID and the path are also in every SARIF result, so a result management system that combines the fingerprint with them, as §3.27.17 allows, gets them twice. That is harmless. Keeping them in the value lets the scan tool match on the value alone.
 
-**Flagged line.** Take the tokens of the file's syntax tree that start on the line on which the flagged range starts, in source order, and join their text with nothing between them. The text of a token doesn't include its minutiae, so whitespace, comments and a byte order mark are left out. The text of the tokens is used as written, so string contents keep their spaces.
+**Flagged line.** Take the tokens of the file's syntax tree whose text overlaps the line on which the flagged range starts, in source order, and join their text with one space (U+0020) between them. The text of a token doesn't include its minutiae, so the source's whitespace, comments and a byte order mark are left out. The text of the tokens is used as written, so string contents keep their spaces.
 
 - All the tokens of the line are used, even when the range starts in the middle of it, so the value doesn't depend on columns.
 - A zero-length range uses the line that holds its offset.
-- A token that starts on the line and continues onto the next lines, such as a multi-line string template, is included in full. Every CRLF in its text is replaced by LF, so CRLF and LF checkouts give the same value.
+- A token that spans several lines, such as a multi-line string template, is included in full when any of its lines is the flagged line, whether it starts on that line or on an earlier one. So a finding on a continuation line of a token changes when the token is edited. Every CRLF in its text is replaced by LF, so CRLF and LF checkouts give the same value.
 - A line with no token, such as an empty line or a line that holds only a comment, is hashed as the empty string.
 
-Only the text of the tokens is hashed, not their kinds, and nothing is put between them, so the value doesn't depend on how the parser splits tokens: `>>` read as one token or as two gives the same text. Since every minutia is left out, it doesn't depend on whether the parser attaches a comment to the token before it or the one after it either. A compiler release changes the value only if it changes which characters of the line belong to tokens.
-
-Joining the tokens with nothing between them makes `string password` and `stringpassword` the same, which is harmless, since they are on the same line of the same file with the same rule.
+Only the text of the tokens is hashed, not their kinds, and every minutia is left out, so the value doesn't depend on the source's spacing or on which token the parser attaches a comment to. It does depend on how the parser splits a line into tokens, such as `>>` read as one token or as two, which only a compiler release can change, as described in [risks](#risks-and-assumptions).
 
 **Hash.** Join the version `1` and the four inputs, in the order above, with the character U+001F between them, encode the result as UTF-8, and hash it with SHA-256. The fingerprint is the first 32 hexadecimal characters of the hash, in lowercase.
 
@@ -161,7 +159,7 @@ The name starts with the tool, so the key can't collide with another tool's key 
 
 Two identical findings in one file, such as two calls of a deprecated function on one line, or the same line in two functions, get the same hash. Findings with the same hash are ordered by their start offset in the file and numbered from `1`, and the value carries the number after a colon, such as `9f2c51d0a4b87e13c6f0e2d9b1a47c58:2`. So each value is unique in a run.
 
-The baseline stores the complete value, number included, and matches it as is, as described in [matching](#matching). The number follows source order, so a new identical finding added above a baselined one takes over its number, and the last one in source order is reported as new.
+The baseline stores the complete value, number included, so a finding in a report can be looked up in it. Matching uses the hash and the number of entries with it, not the number itself, as described in [matching](#matching), so a finding added, removed or suppressed among identical ones doesn't make an unchanged one new. A new identical finding added above a baselined one makes the last one in source order new.
 
 #### What changes the fingerprint
 
@@ -235,14 +233,25 @@ path = "scan-baseline.json"   # relative to this Scan.toml
 The rules are as follows.
 
 1. **Configured, never discovered.** The baseline is used only when `[baseline] path` or `--baseline-path` names it. A file named `scan-baseline.json` that appears in the repository doesn't change what the gate counts.
-2. **Accepting is explicit.** Only `--create-baseline` adds entries. It writes every current unsuppressed finding and replaces an existing file, so accepting new findings shows up as a diff in review. It never trips the gate, but errors still exit with a non-zero code.
-3. **Pruning only removes.** `--prune-baseline` removes the stale entries, as defined in [matching](#matching). It rewrites the matched entries with the current fingerprint version, so it also migrates a baseline to a new version without accepting anything new. It reports the gate on new findings as a normal scan does.
+2. **Accepting is explicit.** Only `--create-baseline` adds entries. It writes every current unsuppressed finding and replaces the entries in the [scope](#scope-of-a-run) of the run, so accepting new findings shows up as a diff in review. It never trips the gate, but errors still exit with a non-zero code.
+3. **Pruning only removes.** `--prune-baseline` removes the stale entries in the scope of the run, as defined in [matching](#matching). It rewrites the matched entries with the current fingerprint version, so it also migrates a baseline to a new version without accepting anything new. It reports the gate on new findings as a normal scan does.
 4. **No path.** `--create-baseline` or `--prune-baseline` without `[baseline] path` or `--baseline-path` is a usage error (exit code `2`) that says how to set one.
 5. **Missing file.** A configured baseline file that doesn't exist is a configuration error (exit code `1`), so a typo in the path doesn't turn the baseline off. A `--baseline-path` file that doesn't exist is a usage error (exit code `2`). With `--create-baseline`, neither is an error: the file is created, at either path.
 6. **Conflicting options.** `--create-baseline`, `--prune-baseline` and `--ignore-baseline` can't be combined. Each pair is a usage error (exit code `2`). `--baseline-path` can be combined with any one of them.
 7. **Ignoring reads nothing.** `--ignore-baseline` doesn't read or validate the file, so a missing or broken baseline can't block a run that is meant to ignore it.
 8. **Platform-triggered scans.** With `--platform-triggered`, the baseline is ignored without a warning, since the platform tracks new code itself.
 9. **Severity.** Findings of every severity can be baselined. The summary counts the baselined findings by severity, so they stay visible. A severity above which findings can't be baselined is [future work](#future-work).
+10. **Writes keep what wasn't scanned.** `--create-baseline` and `--prune-baseline` change only the entries in the [scope](#scope-of-a-run) of the run, and keep every other entry as it is.
+
+#### Scope of a run
+
+The scope of a run is the packages it scans and the rules it selects with `--include-rules`, `--exclude-rules` and the `[rule]` table. An entry is in the scope when its `package` is scanned and its `ruleId` is selected for that package. A run filtered to some rules, or a package scanned alone against a workspace baseline, can't see the findings outside its scope, so it treats their entries as unknown, not as stale.
+
+- `--create-baseline` replaces the entries in the scope with the current unsuppressed findings, and keeps the entries outside it.
+- `--prune-baseline` removes only the stale entries in the scope.
+- The stale-entry warning counts only entries in the scope.
+
+So `bal scan --create-baseline --include-rules=ballerina:13` accepts the findings of that rule without dropping the entries of any other, and a package scanned alone doesn't remove the entries of the other packages of a workspace.
 
 #### What each mode does
 
@@ -252,16 +261,16 @@ Every mode writes the fingerprint, `ballerinaScanHash/v1`, in `partialFingerprin
 | --- | --- | --- | --- | --- |
 | `bal scan`, no baseline configured | No | No | Every unsuppressed finding | Not written |
 | `bal scan`, baseline configured | Yes | No | New findings | `new` or `unchanged` |
-| `bal scan --create-baseline` | No | Yes, replaces the file | Never trips | `unchanged` on every unsuppressed finding |
-| `bal scan --prune-baseline` | Yes | Yes, removes entries only | New findings | `new` or `unchanged` |
+| `bal scan --create-baseline` | Only to keep the entries outside the scope | Yes, replaces the entries in the scope | Never trips | `unchanged` on every unsuppressed finding |
+| `bal scan --prune-baseline` | Yes | Yes, removes entries in the scope only | New findings | `new` or `unchanged` |
 | `bal scan --ignore-baseline` | No | No | Every unsuppressed finding | Not written |
 
 `--baseline-path=<path>` isn't a row of its own. It replaces `[baseline] path` for whichever mode it is used with.
 
 - **`bal scan` with no baseline.** The scan behaves as it does today. The only addition to the reports is the fingerprint. No result carries `baselineState`.
 - **`bal scan` with a baseline.** The file is loaded and validated, and findings are matched by fingerprint, as described in [matching](#matching). The console prints only new findings, the summary and any stale-entry warning. The gate counts only new findings. The file isn't changed.
-- **`bal scan --create-baseline`.** The existing file isn't read. Every current unsuppressed finding is written to the file, which replaces it or is created. Once the file is written, every unsuppressed finding is in the baseline, so the run reports them as baselined, exactly as a plain `bal scan` straight afterwards would: the summary reads `0 new issues, 120 in baseline`, and every unsuppressed finding is `unchanged`. The gate is never tripped. A file that can't be written exits with `1`.
-- **`bal scan --prune-baseline`.** The scan matches and reports as a scan with a baseline does, and new findings still trip the gate. It then rewrites the file: stale entries are removed, and entries of an earlier fingerprint version are rewritten as the current one. New findings are never added.
+- **`bal scan --create-baseline`.** The existing file, if any, is read only for the entries outside the [scope](#scope-of-a-run) of the run, which are kept; one that isn't valid is a configuration error (exit code `1`), and deleting it starts over. Every current unsuppressed finding is written to the file, in place of the entries in the scope, or the file is created. Once the file is written, every unsuppressed finding is in the baseline, so the run reports them as baselined, exactly as a plain `bal scan` straight afterwards would: the summary reads `0 new issues, 120 in baseline`, and every unsuppressed finding is `unchanged`. The gate is never tripped. A file that can't be written exits with `1`.
+- **`bal scan --prune-baseline`.** The scan matches and reports as a scan with a baseline does, and new findings still trip the gate. It then rewrites the file: stale entries in the scope are removed, and each kept entry in the scope is rewritten with the current value of the finding it matches, which also migrates entries of an earlier fingerprint version. Entries outside the scope are kept as they are. New findings are never added.
 - **`bal scan --ignore-baseline`.** The file isn't read. The reports and the gate are the same as with no baseline configured.
 
 #### Walkthrough
@@ -291,7 +300,7 @@ The file is JSON, committed to the repository and written in a stable order: by 
       "ruleId": "ballerina:13",
       "package": "myorg/orders",
       "filePath": "modules/db/client.bal",
-      "snippet": "string password = \"admin123\";"
+      "snippet": "string password = \"***\";"
     }
   ]
 }
@@ -303,16 +312,18 @@ The file is JSON, committed to the repository and written in a stable order: by 
 | `fingerprint` | The fingerprint version of every entry |
 | `balScanVersion` | The version of the scan tool that last wrote the file. Informational |
 | `issues[].fingerprint` | The fingerprint, with its occurrence number, as written to `partialFingerprints`. Unique in the file |
-| `issues[].ruleId`, `package`, `filePath` | The inputs of the fingerprint, for review |
-| `issues[].snippet` | The first flagged line as written, with its whitespace, for review |
+| `issues[].ruleId`, `package`, `filePath` | The inputs of the fingerprint, for review. Also decide whether the entry is in the [scope](#scope-of-a-run) of a run |
+| `issues[].snippet` | The first flagged line as written, with its whitespace and every literal redacted, for review |
+
+**Snippets.** A baselined finding can be a hardcoded secret, and the baseline is committed and outlives the fix in the git history. So the snippet never holds the value of a literal: the content of every string, string template, numeric and byte array literal token on the line is replaced by `***`, keeping its delimiters, such as `"***"`. The snippet is only for review and isn't hashed, so the fingerprint is still computed from the literal as written.
 
 The file holds no line numbers and no dates, so an unrelated edit or a rerun doesn't change it. A file that isn't valid JSON, has an unknown `version` or field, or names a fingerprint version the scan tool doesn't support is a configuration error (exit code `1`), reported as a diagnostic at its line and column.
 
 #### Matching
 
-An unsuppressed finding is baselined when its fingerprint, occurrence number included, is the `fingerprint` of an entry, and new otherwise. An entry that matches no unsuppressed finding is stale.
+Findings and entries are matched by hash, the part of the value before the colon, and by count. For each hash, the unsuppressed findings with it are taken in source order. If the baseline has `k` entries with that hash, the first `k` of them are baselined and the rest are new. If it has more entries than findings, the entries with the highest occurrence numbers are stale.
 
-The occurrence number is a finding's position among all the findings with the same hash in the file, suppressed or not, so adding or removing one of them shifts the numbers of those after it. When one is added, the last of them in source order is new, whichever was added. When one is removed, the entry with the highest number is stale, whichever was removed.
+The occurrence number is a finding's position among all the findings with the same hash in the file, suppressed or not, so adding, removing or suppressing one of them shifts the numbers of those after it. Matching doesn't depend on those numbers, so such a shift never makes an unchanged unsuppressed finding new. For example, if the first of two identical findings is suppressed and the second is baselined as `:2`, removing the suppressed one renumbers the second as `:1`, and it is still baselined. When an unsuppressed one is added, the last of them in source order is new, whichever was added. When one is removed, the entry with the highest number is stale, whichever was removed. `--prune-baseline` rewrites the kept entries with the current numbers, so the file again holds the values the reports carry.
 
 A baseline written with an earlier fingerprint version is matched with that version, and the scan writes a warning that suggests `--prune-baseline` to migrate it.
 
@@ -381,14 +392,15 @@ The baseline is applied after the suppressions and before the gate.
 
 #### Workspaces
 
-There is one baseline for each `Scan.toml`. A package uses the baseline of the `Scan.toml` it uses, its own or the workspace one, as in [proposal 1497](1497_scan_exit_codes.md#gate). Every entry names its package, and the fingerprint includes it, so the entries of one package never match the findings of another, and each package is still gated on its own new findings.
+There is one baseline for each `Scan.toml`. A package uses the baseline of the `Scan.toml` it uses, its own or the workspace one, as in [proposal 1497](1497_scan_exit_codes.md#gate). Every entry names its package, and the fingerprint includes it, so the entries of one package never match the findings of another, and each package is still gated on its own new findings. A package scanned alone against the workspace baseline writes only its own entries: `--create-baseline` and `--prune-baseline` keep the entries of the other packages, as described in [scope of a run](#scope-of-a-run).
 
 #### Execution order
 
-The baseline adds two steps to the [execution order of proposal 1497](1497_scan_exit_codes.md#execution-order).
+The baseline adds three steps to the [execution order of proposal 1497](1497_scan_exit_codes.md#execution-order).
 
 - In step 4, preparing each package, load and validate its baseline. Fails with `1` on a missing or invalid file.
-- After step 7, applying the suppressions, compute the fingerprints, match the findings against the baseline and, with `--create-baseline` or `--prune-baseline`, write the file. Fails with `1` when the file can't be written.
+- At the end of step 6, after the analysis and before rule selection and suppressions are applied, compute the fingerprints and occurrence numbers of every finding.
+- After step 7, applying the rule selection and the suppressions, match the unsuppressed findings against the baseline and, with `--create-baseline` or `--prune-baseline`, write the entries in the scope of the run. A workspace baseline is written once, after every package that uses it has been scanned. Fails with `1` when the file can't be written.
 
 ## Alternatives
 
@@ -417,7 +429,7 @@ The cost is that a consumer can't loosen the match, for example to match a findi
 
 **5. Include the enclosing construct.** Hashing the function, method, resource or service that holds the finding tells apart the same line in two functions of one file. It needs a defined value for every kind of declaration, and it makes a renamed function rebaseline all its findings. Identical lines in one file are already kept apart by the occurrence number, so the construct adds cost for a case that is already handled.
 
-**6. Hash the text of the flagged line with its whitespace removed.** It needs no syntax tree, so the value can't depend on the parser at all. But a comment added at the end of a flagged line would make the finding new, and string contents would lose their spaces. The text of the tokens avoids both, depends on the parser only for which characters belong to tokens, and comes from a syntax tree the scan tool already holds.
+**6. Hash the text of the flagged line with its whitespace removed.** It needs no syntax tree, so the value can't depend on the parser at all. But a comment added at the end of a flagged line would make the finding new, and string contents would lose their spaces. The text of the tokens avoids both, and comes from a syntax tree the scan tool already holds.
 
 **7. Hash the whole flagged range.** A rule that flags a whole function would get a new fingerprint on every edit inside the function.
 
@@ -434,14 +446,15 @@ The cost is that a consumer can't loosen the match, for example to match a findi
 ## Testing
 
 - **Fingerprint stability.** Each test scans a fixture, edits a copy, scans again and compares the values against the [table of changes](#what-changes-the-fingerprint): lines added above the finding, the enclosing function moved, the file re-indented, the next lines edited and re-wrapped, comments added on other lines, a comment added at the end of the flagged line, CRLF and LF checkouts, the flagged line edited, an identical line added elsewhere in the file, and the file, function, service, class, package and rule renamed.
-- **Flagged line.** Spaces and tabs inside the line, a comment at the end of the line, a line that holds only a comment, spaces inside a string, a multi-line string template that starts on the line in CRLF and LF checkouts, a byte order mark, a range that starts in the middle of a line, a zero-length range and an empty line.
+- **Flagged line.** Spaces and tabs inside the line, `check foo()` and `checkfoo()` giving different values, a comment at the end of the line, a line that holds only a comment, spaces inside a string, a multi-line string template that starts on the line in CRLF and LF checkouts, a finding on a continuation line of a multi-line token, a byte order mark, a range that starts in the middle of a line, a zero-length range and an empty line.
 - **Workspace paths.** The same package scanned alone and in a workspace gives the same fingerprints.
 - **Occurrences.** Identical findings in one file, on one line and in two functions, get `:1`, `:2` and so on, and every value in a run is unique.
 - **Determinism.** Two runs on the same code give identical reports, on Windows and Linux.
 - **Plugins.** A finding from an external plugin gets a fingerprint.
 - **SARIF.** Every result has `partialFingerprints` with the key `ballerinaScanHash/v1`, and none has `fingerprints`. `baselineState` is on every result or none, in SARIF and in JSON.
-- **Baseline commands.** `--create-baseline` writes every unsuppressed finding, reports each as `unchanged` and exits with `0` with a gate set; `--prune-baseline` removes stale entries, migrates an earlier version and never adds an entry; `--ignore-baseline` reports everything and doesn't read a missing or broken file; `--baseline-path` works with each mode; each conflicting pair and a missing path are usage errors.
-- **Matching.** Fewer, as many and more identical findings than baselined entries for one hash, a new identical finding added above a baselined one, and a suppressed finding with and without `--ignore-suppressions`.
+- **Baseline commands.** `--create-baseline` writes every unsuppressed finding, reports each as `unchanged` and exits with `0` with a gate set; `--prune-baseline` removes stale entries, migrates an earlier version and never adds an entry; both keep the entries of rules excluded from the run and of workspace packages not scanned; `--ignore-baseline` reports everything and doesn't read a missing or broken file; `--baseline-path` works with each mode; each conflicting pair and a missing path are usage errors.
+- **Matching.** Fewer, as many and more identical findings than baselined entries for one hash, a new identical finding added above a baselined one, a suppressed identical finding removed before a baselined one, and a suppressed finding with and without `--ignore-suppressions`.
+- **Snippets.** String, string template, numeric and byte array literals are redacted in the written snippet, and the fingerprint is unchanged by the redaction.
 - **Files.** A missing configured file, a missing `--baseline-path` file, invalid JSON, an unknown version and an unsupported fingerprint version, each with its exit code and diagnostic. The written file is in a stable order and unchanged by a rerun.
 - **Results.** Console, summary, JSON, SARIF, HTML report and platforms, as listed in [results](#results), and the stale-entry warning.
 - **Workspaces.** A workspace baseline and a package baseline, the same file path in two packages, and each package gated on its own new findings.
@@ -452,7 +465,7 @@ The cost is that a consumer can't loosen the match, for example to match a findi
 - A new identical finding in a file that already has baselined findings is matched by occurrence number, so the finding reported as new may be an older one. Likewise, when one of several identical findings is fixed, `--prune-baseline` removes the entry with the highest number, not the one that was fixed. The total is always right. Common lines, such as the same call in several resources of one service, make this more likely than with a fingerprint that includes the enclosing construct.
 - Rule IDs become part of the fingerprint, so a renamed rule makes all its findings new. Rule IDs must stay stable once released.
 - The fingerprints are computed from the syntax tree of each file at report time. This assumes every finding, including those of external plugins, is reported in a `.bal` file of the package, and that its syntax tree is still available after analysis.
-- The value depends on the parser only for which characters of a line belong to tokens. A compiler release that changes this, for example by turning part of a comment into a token, would make the affected findings new, and needs a new fingerprint version.
+- The value depends on how the parser splits a line into tokens, and on which characters belong to tokens. A compiler release that changes either, for example by reading `>>` as two tokens instead of one, or by turning part of a comment into a token, would make the affected findings new, and needs a new fingerprint version.
 
 ## Dependencies
 
