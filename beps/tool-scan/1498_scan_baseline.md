@@ -114,7 +114,7 @@ The selected inputs therefore don't solve the following.
 
 - **Renames.** Renaming a file or a package, or a rule ID, makes the affected findings new. Renaming a function, class or service doesn't.
 - **Edits to the flagged line.** Any change to the code on the first flagged line makes the finding new. Whitespace and comments don't. Wrapping the flagged line, or joining it with the next, changes which tokens are on it, so it makes the finding new too.
-- **Identical findings.** For several identical findings in one file, the count of new ones is right, but not which ones are new. The same line in two functions of one file counts as the same finding.
+- **Identical findings.** For several identical findings in one file, only a change in their count is seen. Which ones are new isn't known, and one removed and another added in the same change cancel out, as described in [matching](#matching). The same line in two functions of one file counts as the same finding.
 - **Code moved to another file.** A finding that moves with its code to another file is new.
 
 #### `ballerinaScanHash/v1`
@@ -234,7 +234,7 @@ The rules are as follows.
 
 1. **Configured, never discovered.** The baseline is used only when `[baseline] path` or `--baseline-path` names it. A file named `scan-baseline.json` that appears in the repository doesn't change what the gate counts.
 2. **Accepting is explicit.** Only `--create-baseline` adds entries. It writes every current unsuppressed finding and replaces the entries in the [scope](#scope-of-a-run) of the run, so accepting new findings shows up as a diff in review. It never trips the gate, but errors still exit with a non-zero code.
-3. **Pruning only removes.** `--prune-baseline` removes the stale entries in the scope of the run, as defined in [matching](#matching). It rewrites the matched entries with the current fingerprint version, so it also migrates a baseline to a new version without accepting anything new. It reports the gate on new findings as a normal scan does.
+3. **Pruning only removes.** `--prune-baseline` removes the stale entries in the scope of the run, as defined in [matching](#matching). It rewrites the matched entries with the current value of the finding each matches. When its scope holds every entry of the file, it also writes them with the current fingerprint version, so it migrates a baseline to a new version without accepting anything new, as described in [fingerprint versions in the file](#fingerprint-versions-in-the-file). It reports the gate on new findings as a normal scan does.
 4. **No path.** `--create-baseline` or `--prune-baseline` without `[baseline] path` or `--baseline-path` is a usage error (exit code `2`) that says how to set one.
 5. **Missing file.** A configured baseline file that doesn't exist is a configuration error (exit code `1`), so a typo in the path doesn't turn the baseline off. A `--baseline-path` file that doesn't exist is a usage error (exit code `2`). With `--create-baseline`, neither is an error: the file is created, at either path.
 6. **Conflicting options.** `--create-baseline`, `--prune-baseline` and `--ignore-baseline` can't be combined. Each pair is a usage error (exit code `2`). `--baseline-path` can be combined with any one of them.
@@ -270,7 +270,7 @@ Every mode writes the fingerprint, `ballerinaScanHash/v1`, in `partialFingerprin
 - **`bal scan` with no baseline.** The scan behaves as it does today. The only addition to the reports is the fingerprint. No result carries `baselineState`.
 - **`bal scan` with a baseline.** The file is loaded and validated, and findings are matched by fingerprint, as described in [matching](#matching). The console prints only new findings, the summary and any stale-entry warning. The gate counts only new findings. The file isn't changed.
 - **`bal scan --create-baseline`.** The existing file, if any, is read only for the entries outside the [scope](#scope-of-a-run) of the run, which are kept; one that isn't valid is a configuration error (exit code `1`), and deleting it starts over. Every current unsuppressed finding is written to the file, in place of the entries in the scope, or the file is created. Once the file is written, every unsuppressed finding is in the baseline, so the run reports them as baselined, exactly as a plain `bal scan` straight afterwards would: the summary reads `0 new issues, 120 in baseline`, and every unsuppressed finding is `unchanged`. The gate is never tripped. A file that can't be written exits with `1`.
-- **`bal scan --prune-baseline`.** The scan matches and reports as a scan with a baseline does, and new findings still trip the gate. It then rewrites the file: stale entries in the scope are removed, and each kept entry in the scope is rewritten with the current value of the finding it matches, which also migrates entries of an earlier fingerprint version. Entries outside the scope are kept as they are. New findings are never added.
+- **`bal scan --prune-baseline`.** The scan matches and reports as a scan with a baseline does, and new findings still trip the gate. It then rewrites the file: stale entries in the scope are removed, and each kept entry in the scope is rewritten with the current value of the finding it matches. When the scope holds every entry of the file, this also migrates the file to the current fingerprint version, as described in [fingerprint versions in the file](#fingerprint-versions-in-the-file). Entries outside the scope are kept as they are. New findings are never added.
 - **`bal scan --ignore-baseline`.** The file isn't read. The reports and the gate are the same as with no baseline configured.
 
 #### Walkthrough
@@ -315,7 +315,7 @@ The file is JSON, committed to the repository and written in a stable order: by 
 | `issues[].ruleId`, `package`, `filePath` | The inputs of the fingerprint, for review. Also decide whether the entry is in the [scope](#scope-of-a-run) of a run |
 | `issues[].snippet` | The first flagged line as written, with its whitespace and every literal redacted, for review |
 
-**Snippets.** A baselined finding can be a hardcoded secret, and the baseline is committed and outlives the fix in the git history. So the snippet never holds the value of a literal: the content of every string, string template, numeric and byte array literal token on the line is replaced by `***`, keeping its delimiters, such as `"***"`. The snippet is only for review and isn't hashed, so the fingerprint is still computed from the literal as written.
+**Snippets.** A baselined finding can be a hardcoded secret, and the baseline is committed and outlives the fix in the git history. So the snippet never holds the value of a literal: the content of every string, string template, numeric and byte array literal token on the line is replaced by `***`, keeping its delimiters, such as `"***"`. The snippet is only for review and isn't hashed, so the fingerprint is still computed from the literal as written. The fingerprint can therefore be used to test guesses of a weak secret offline, a risk this proposal accepts, as described in [risks](#risks-and-assumptions).
 
 The file holds no line numbers and no dates, so an unrelated edit or a rerun doesn't change it. A file that isn't valid JSON, has an unknown `version` or field, or names a fingerprint version the scan tool doesn't support is a configuration error (exit code `1`), reported as a diagnostic at its line and column.
 
@@ -325,7 +325,13 @@ Findings and entries are matched by hash, the part of the value before the colon
 
 The occurrence number is a finding's position among all the findings with the same hash in the file, suppressed or not, so adding, removing or suppressing one of them shifts the numbers of those after it. Matching doesn't depend on those numbers, so such a shift never makes an unchanged unsuppressed finding new. For example, if the first of two identical findings is suppressed and the second is baselined as `:2`, removing the suppressed one renumbers the second as `:1`, and it is still baselined. When an unsuppressed one is added, the last of them in source order is new, whichever was added. When one is removed, the entry with the highest number is stale, whichever was removed. `--prune-baseline` rewrites the kept entries with the current numbers, so the file again holds the values the reports carry.
 
+Matching by count can't detect a replacement. When one of several identical findings in a file is removed and another identical one is added in the same change, the count doesn't change. The added finding is `unchanged`, and the gate passes. The two findings hash the same rule, package, path and tokens, and only their position, which the fingerprint leaves out by design, tells them apart. The gate counts new findings correctly in every other case.
+
+#### Fingerprint versions in the file
+
 A baseline written with an earlier fingerprint version is matched with that version, and the scan writes a warning that suggests `--prune-baseline` to migrate it.
+
+Every entry of a file has the version named in its top-level `fingerprint` field, so a file never mixes versions. A write changes the version only when the [scope](#scope-of-a-run) of the run holds every entry of the file. In that case `--prune-baseline` rewrites the kept entries with the current version, and `--create-baseline` writes the current version. A write whose scope leaves out some entries writes the entries in its scope with the version of the file, which the scan tool still computes, as described in [versioning](#versioning). For such a write, the migration warning says to run `--prune-baseline` with no rule filters on every package that uses the file. A file that is created, or that has no entries outside the scope, gets the current version.
 
 #### Order of filtering
 
@@ -452,8 +458,8 @@ The cost is that a consumer can't loosen the match, for example to match a findi
 - **Determinism.** Two runs on the same code give identical reports, on Windows and Linux.
 - **Plugins.** A finding from an external plugin gets a fingerprint.
 - **SARIF.** Every result has `partialFingerprints` with the key `ballerinaScanHash/v1`, and none has `fingerprints`. `baselineState` is on every result or none, in SARIF and in JSON.
-- **Baseline commands.** `--create-baseline` writes every unsuppressed finding, reports each as `unchanged` and exits with `0` with a gate set; `--prune-baseline` removes stale entries, migrates an earlier version and never adds an entry; both keep the entries of rules excluded from the run and of workspace packages not scanned; `--ignore-baseline` reports everything and doesn't read a missing or broken file; `--baseline-path` works with each mode; each conflicting pair and a missing path are usage errors.
-- **Matching.** Fewer, as many and more identical findings than baselined entries for one hash, a new identical finding added above a baselined one, a suppressed identical finding removed before a baselined one, and a suppressed finding with and without `--ignore-suppressions`.
+- **Baseline commands.** `--create-baseline` writes every unsuppressed finding, reports each as `unchanged` and exits with `0` with a gate set; `--prune-baseline` removes stale entries, migrates an earlier version and never adds an entry; both keep the entries of rules excluded from the run and of workspace packages not scanned; a scoped write to a file of an earlier version keeps that version for every entry, and an unscoped prune migrates it; `--ignore-baseline` reports everything and doesn't read a missing or broken file; `--baseline-path` works with each mode; each conflicting pair and a missing path are usage errors.
+- **Matching.** Fewer, as many and more identical findings than baselined entries for one hash, a new identical finding added above a baselined one, a suppressed identical finding removed before a baselined one, one identical finding removed and another added in the same change, reported as `unchanged`, and a suppressed finding with and without `--ignore-suppressions`.
 - **Snippets.** String, string template, numeric and byte array literals are redacted in the written snippet, and the fingerprint is unchanged by the redaction.
 - **Files.** A missing configured file, a missing `--baseline-path` file, invalid JSON, an unknown version and an unsupported fingerprint version, each with its exit code and diagnostic. The written file is in a stable order and unchanged by a rerun.
 - **Results.** Console, summary, JSON, SARIF, HTML report and platforms, as listed in [results](#results), and the stale-entry warning.
@@ -462,7 +468,11 @@ The cost is that a consumer can't loosen the match, for example to match a findi
 ## Risks and Assumptions
 
 - A rename of a file or package makes its findings new. Teams that rename widely have to rerun `--create-baseline`, and the release notes must say so.
-- A new identical finding in a file that already has baselined findings is matched by occurrence number, so the finding reported as new may be an older one. Likewise, when one of several identical findings is fixed, `--prune-baseline` removes the entry with the highest number, not the one that was fixed. The total is always right. Common lines, such as the same call in several resources of one service, make this more likely than with a fingerprint that includes the enclosing construct.
+- A new identical finding in a file that already has baselined findings is matched by occurrence number, so the finding reported as new may be an older one. Likewise, when one of several identical findings is fixed, `--prune-baseline` removes the entry with the highest number, not the one that was fixed. A change that removes one identical finding and adds another in the same file leaves the count as it was, so the added finding isn't reported as new. Common lines, such as the same call in several resources of one service, make this more likely than with a fingerprint that includes the enclosing construct.
+- The fingerprint hashes string literals as written, so someone who has the baseline and knows the rule, package and path can test guesses of a weak hardcoded secret against it offline. This proposal accepts that risk, for these reasons.
+  - The literal is already in the committed source and its git history, and in `region.snippet.text` of the SARIF report, so the fingerprint discloses nothing that the repository and reports don't.
+  - A secret that a scan finds must be rotated anyway.
+  - Leaving literal contents out of the hash would keep a finding baselined after its literal is edited, and would give lines that differ only in a literal the same hash.
 - Rule IDs become part of the fingerprint, so a renamed rule makes all its findings new. Rule IDs must stay stable once released.
 - The fingerprints are computed from the syntax tree of each file at report time. This assumes every finding, including those of external plugins, is reported in a `.bal` file of the package, and that its syntax tree is still available after analysis.
 - The value depends on how the parser splits a line into tokens, and on which characters belong to tokens. A compiler release that changes either, for example by reading `>>` as two tokens instead of one, or by turning part of a comment into a token, would make the affected findings new, and needs a new fingerprint version.
@@ -471,8 +481,9 @@ The cost is that a consumer can't loosen the match, for example to match a findi
 
 - [Scan tool #113](https://github.com/ballerina-platform/static-code-analysis-tool/issues/113), for the fingerprints. It must be released before, or with, the baseline, since a later change to the fingerprint would turn every baselined finding into a new one.
 - [Scan tool #193](https://github.com/ballerina-platform/static-code-analysis-tool/issues/193), for a stable order of issues in the reports.
-- [Proposal 1497](1497_scan_exit_codes.md), for the gate, the exit codes, the `Scan.toml` resolution in workspaces and the execution order.
-- [Proposal 1496](1496-in-source-scan-suppression.md), for `@scan:Suppress` and `--ignore-suppressions`.
+- [Proposal 1497](1497_scan_exit_codes.md), for the gate, the exit codes, the `Scan.toml` resolution in workspaces and the execution order. Under review in [#1517](https://github.com/ballerina-platform/ballerina-spec/pull/1517).
+- [Proposal 1496](1496-in-source-scan-suppression.md), for `@scan:Suppress` and `--ignore-suppressions`. Under review in [#1499](https://github.com/ballerina-platform/ballerina-spec/pull/1499).
+- The [GitHub Action proposal](1507_scan_github_action.md), referenced in [alternatives](#alternatives). Under review in [#1508](https://github.com/ballerina-platform/ballerina-spec/pull/1508).
 
 ## Future Work
 
