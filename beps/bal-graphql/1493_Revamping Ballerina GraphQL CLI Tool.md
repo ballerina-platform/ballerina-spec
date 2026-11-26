@@ -460,33 +460,36 @@ a GraphQL schema file with .graphql extension.
 **Proposed changes:**
 
 * Support three input forms for schema generation: a standalone .bal file, a package directory, and a module directory within a package (`<package>/modules/<name>`).
-* Load the input with the Ballerina project API (`ProjectLoader.load`) and decide what it is from the loaded project's kind and root, instead of the tool's own checks (CLI tool design guide TGT-2):
+* Load the input with the Ballerina project API (`ProjectLoader.load`) and decide what it is from the loaded project's kind and root, instead of the tool's own checks (CLI tool design guide TGT-2). Symbolic links and `..` in the input path are followed the way the file system follows them:
 
 | Input | Result |
 | :---- | :---- |
 | A standalone .bal file | Loaded as a single-file project |
-| A package directory | The default module of the package. Other modules are not included |
+| A package directory, including one reached through a symbolic link | The default module of the package. Other modules are not included |
 | A module directory (`<package>/modules/<name>`) | That module only |
 | A package that belongs to a workspace | The package is taken from the workspace, so the sibling packages it imports are resolved (TGT-7, TGT-10) |
 | A .bal file inside a package | Rejected with exit code 3, naming the package root to pass instead (TGT-5) |
 | A file under a package's `tests` directory | Rejected with exit code 3: test services are not supported |
 | A workspace root | Rejected with exit code 3, asking for the directory of one of its packages |
+| A Ballerina.toml with errors | Rejected with exit code 3, listing the errors in the file |
+| A path that does not exist, or a file that is not a supported input (e.g. a .bala) | Rejected with exit code 3 (TGT-6, TGT-8) |
 | A Ballerina.toml without a `[package]` table, a module directory that is a symbolic link (the compiler does not read its files), or any other directory | Rejected with exit code 3 (TGT-6) |
+| A package with a file that cannot be read | Fails with exit code 1, naming the file |
 
 * Compile packages and modules with locked dependencies (CMP-1 to CMP-4):
   * The project is loaded with the HARD locking mode, so the versions in Dependencies.toml are used as they are.
   * If the package has no Dependencies.toml, generation fails with exit code 1 and asks the developer to run `bal build` first, since the result could otherwise differ between runs.
   * Dependencies.toml is never created or changed.
   * Warnings about the dependencies, such as a Dependencies.toml written by an older distribution, are passed on.
-  * A standalone .bal file has no Dependencies.toml, so it uses the packages available in the distribution.
-* Test services are not supported. The test sources are removed from the loaded package (in memory only, the files are not changed) before compiling, so an error in a test file does not block the generation, and services in test files are never generated.
+* A standalone .bal file has no Dependencies.toml to lock its dependencies, so it uses only the packages in the distribution. It is loaded offline with an empty Ballerina home of its own, so it never downloads a package or uses a newer version from the local cache, and the developer's Ballerina home is not touched. A standalone file that imports a package outside the distribution fails with an error that asks the developer to put the service in a package.
+* Test services are not supported. The test sources are removed from the loaded package (in memory only, the files are not changed) before compiling, so an error in a test file does not block the generation, and services in test files are never generated. In a workspace, the test sources of every package of the workspace are removed, since the sibling packages are compiled together with the package.
 * Find the GraphQL services in every file of the selected module, and read the schema the ballerina/graphql compiler plugin encodes on each service while compiling. The plugin's annotation is identified by its module, so a file that imports ballerina/graphql with another prefix (`import ballerina/graphql as gql;`) works.
 
 **Expected Outcome:**
 
 * Schema generation works whether given a standalone file, a package directory, or a module directory, including a package that belongs to a workspace
 * Invalid input is rejected up front with a clear error and exit code 3, instead of being partly read
-* The same package always gives the same schema, since its dependencies are locked
+* The same package or standalone file always gives the same schema, since its dependencies are locked or come from the distribution
 * Users no longer need to know the exact file a service lives in when generating from a package
 
 ### 5.2.5 Deterministic Output Naming for Duplicate Base Paths
@@ -542,7 +545,7 @@ service /api on gql { }                                // api_gql.graphql
 
 Ballerina has two phases \- compile time and run time. Schema generation is a compile-time, static-analysis process; it never runs the service, which is why this always falls back to names and literals rather than resolved runtime values.
 
-* Different services can still end up with the same file name, e.g. a root (/) service in main.bal, which is named after its file, and a /main service in another file. Names can also differ only in case, which is the same file on some file systems. The final file names are compared ignoring case before writing, and a number is added to a name that is already taken, so a schema is never overwritten.
+* Different services can still end up with the same file name, e.g. a root (/) service in main.bal, which is named after its file, and a /main service in another file. Names can also differ only in case, which is the same file on some file systems. The final file names are compared ignoring case before writing, and a number is added to a name that is already taken, so a schema is never overwritten. The names are assigned across all the services before \--service selects one, so a service gets the same file name whether or not \--service is given.
 
 **Expected Outcome:**
 
@@ -711,9 +714,9 @@ bal graphql <graphql.config.yaml-path>
 | Code | Meaning |
 | :---- | :---- |
 | 0 | Generation succeeded |
-| 1 | Generation failed (e.g. an invalid schema, a Ballerina input that does not compile, or a package whose dependencies are not locked) |
+| 1 | Generation failed (e.g. an invalid schema, a Ballerina input that does not compile, a package whose dependencies are not locked, or a file that cannot be read) |
 | 2 | Invalid usage (e.g. an unknown flag, a missing input, or a flag used with the wrong mode, such as `--merge` with client generation) |
-| 3 | Invalid target (e.g. the output location is not a Ballerina package, or the schema generation input is a .bal file inside a package or a workspace root) |
+| 3 | Invalid target (e.g. the output location is not a Ballerina package, an input that does not exist or is not supported, or a schema generation input that is a .bal file inside a package, a workspace root, or a package with an invalid Ballerina.toml) |
 | 4 | Existing files were not written (the user answered no, or the run was non-interactive without `--force`) |
 | 130 | Interrupted by the user (Ctrl+C) |
 
@@ -852,8 +855,8 @@ The tool follows the Ballerina CLI Tool Design Guide. Where this proposal differ
 | Overwrite handling | Ask before overwriting, and exit with code 4 when the run is non-interactive | Follows the guide (see 5.2.8). The earlier design, which skipped existing files with a warning unless \--force was given, is dropped |
 | Short flags | Short forms only for the most common flags | Only \--service is supported for selecting a service; `-s` is removed. `-n` is kept as the short form of \--dry-run |
 | Test services | \- | Not supported. A file under `tests` is rejected, and test sources are left out of the compilation (see 5.2.4) |
-| Dependencies (CMP-1 to CMP-4) | HARD locking, Dependencies.toml must exist, never changed, dependency warnings passed on | Followed for packages and modules. Standalone files have no Dependencies.toml, so they use the packages available in the distribution |
-| Target checks (TGT-2, TGT-5, TGT-6) | Use the package API, and exit with code 3 for an invalid target | Followed (see 5.2.4) |
+| Dependencies (CMP-1 to CMP-4) | HARD locking, Dependencies.toml must exist, never changed, dependency warnings passed on | Followed for packages and modules. Standalone files have no Dependencies.toml, so they are compiled offline with an empty Ballerina home of their own, and use only the packages in the distribution (see 5.2.4) |
+| Target checks (TGT-2, TGT-5, TGT-6, TGT-8) | Use the package API, and exit with code 3 for an invalid target | Followed (see 5.2.4) |
 
 ## 6. Alternatives
 
@@ -916,7 +919,7 @@ Does not panic \- the service will keep running even if someone calls the unimpl
 
 **Rejected because:** It originates from the VS Code GraphQL plugin ecosystem, not Ballerina itself, and is inconsistent with Ballerina.toml being the standard configuration format across the rest of the toolchain.
 
-**Proposed instead:** Replace graphql.config.yaml with balGraphQL.toml. YAML support is removed as part of the client generation redesign (see 5.2.3), so the tool reads only balGraphQL.toml for client and service generation. A graphql.config.yaml input fails with a clear error that points to balGraphQL.toml.
+**Proposed instead:** Migrate to TOML (balGraphQL.toml). graphql.config.yaml is still accepted for client generation through a deprecated command form (see 5.2.7), and every run prints a deprecation warning that points to balGraphQL.toml. YAML support is removed in a later major release.
 
 **Impact of not doing this:** Client generation configuration stays tied to a format with no relationship to the rest of the Ballerina toolchain. Users already familiar with Ballerina.toml-based configuration everywhere else in Ballerina have to learn and maintain a second, inconsistent config format just for this one tool, with no path toward unifying it.
 
