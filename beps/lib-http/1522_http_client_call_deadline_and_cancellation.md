@@ -136,7 +136,7 @@ The native layer creates these as typed errors. A caller-visible `CallTimeoutErr
 
 Retries and redirects share the call deadline. When the remaining time is shorter than the next retry interval, the retry client does not sleep: it returns the last real response or error. `CallTimeoutError` is raised only when the deadline expires during an attempt.
 
-A `CallTimeoutError` counts as a circuit breaker failure only when the deadline came from the client's own `callTimeout`. A deadline set through `withDeadline` is the caller's own budget and says nothing about backend health, so it is not counted, because views share the breaker with the client and a short view deadline would otherwise open the circuit for every caller. A `CallCancelledError` is never counted. Only a timeout before the response headers arrive is recorded. A call whose headers have arrived is recorded as a success, and a later body-read timeout does not change that.
+A `CallTimeoutError` counts as a circuit breaker failure only when the deadline came from the client's own `callTimeout`. A deadline set through `withDeadline` is the caller's own budget and says nothing about backend health, so it is not counted, because views share the breaker with the client and a short view deadline would otherwise open the circuit for every caller. A `CallCancelledError` is never counted. For timeouts, only one that occurs before the response headers arrive is recorded. Once the headers have arrived, a later body-read timeout does not change how the call was recorded. Failures that the circuit breaker already counts, such as a response whose status code is listed in `statusCodes`, are unchanged.
 
 ### 6. Documentation of timeouts
 
